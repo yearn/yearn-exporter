@@ -1,10 +1,13 @@
 from brownie import interface
 
+from yearn import uniswap
+
+crv = interface.ERC20('0xD533a949740bb3306d119CC777fa900bA034cd52')
 gauge_controller = interface.CurveGaugeController('0x2F50D538606Fa9EDD2B11E2446BEb18C9D5846bB')
 voting_escrow = interface.CurveVotingEscrow('0x5f3b5DfEb7B28CDbD7FAba78963EE202a494e2A2')
 
 
-def caclulate_boost(gauge, addr):
+def calculate_boost(gauge, addr):
     gauge_balance = gauge.balanceOf(addr) / 1e18
     gauge_total = gauge.totalSupply() / 1e18
     working_balance = gauge.working_balances(addr) / 1e18
@@ -32,4 +35,26 @@ def caclulate_boost(gauge, addr):
         'boost': boost,
         'max boost': max_boost_possible,
         'min vecrv': min_vecrv,
+    }
+
+
+def calculate_apy(gauge, swap):
+    crv_price = uniswap.price_router(crv, uniswap.usdc)
+    gauge_controller = interface.CurveGaugeController(gauge.controller())
+    working_supply = gauge.working_supply() / 1e18
+    relative_weight = gauge_controller.gauge_relative_weight(gauge) / 1e18
+    inflation_rate = gauge.inflation_rate() / 1e18
+    virtual_price = swap.get_virtual_price() / 1e18
+    try:
+        rate = (inflation_rate * relative_weight * 86400 * 365 / working_supply * 0.4) / virtual_price
+    except ZeroDivisionError:
+        rate = 0
+
+    return {
+        'crv price': crv_price,
+        'relative weight': relative_weight,
+        'inflation rate': inflation_rate,
+        'virtual price': virtual_price,
+        'crv reward rate': rate,
+        'crv apy': rate * crv_price,
     }
