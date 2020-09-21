@@ -29,7 +29,7 @@ class Vault:
         self.controller = constants.CONTROLLER_INTERFACES[self.controller](self.controller)
         self.strategy = constants.STRATEGY_INTERFACES[self.strategy](self.strategy)
         self.token = interface.ERC20(self.token)
-        self.name = self.vault.name()
+        self.name = constants.VAULT_ALIASES[str(self.vault)]
 
     @property
     def scale(self):
@@ -72,19 +72,12 @@ def describe_vault(vault: Vault):
     return info
 
 
-def exporter():
+def develop():
     registry = load_registry()
     vaults = load_vaults(registry)
     for i, vault in enumerate(vaults):
-        # TODO: debug SBTC and BUSD for now
-        if vault.vault not in (
-            '0x2994529C0652D127b7842094103715ec5299bBed',
-            '0x7Ff566E1d69DEfF32a7b244aE7276b9f90e9D0f6',
-        ):
-            continue
-
-        secho(f'{i} {vault}', fg='green')
         secho(vault.name, fg='yellow')
+        secho(str(vault), dim=True)
         info = describe_vault(vault)
         for a, b in info.items():
             print(f'{a} = {b}')
