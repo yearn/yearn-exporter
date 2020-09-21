@@ -2,13 +2,12 @@ import warnings
 from dataclasses import dataclass
 from typing import Optional, Union
 
-from brownie import interface, web3
+from brownie import chain, interface, web3
 from brownie.network.contract import InterfaceContainer
 from click import secho
+from prometheus_client import start_http_server, Gauge
 
-from yearn import constants
-from yearn import curve
-from yearn import uniswap
+from yearn import constants, curve, uniswap
 
 warnings.simplefilter('ignore')
 
@@ -81,6 +80,22 @@ def develop():
         info = describe_vault(vault)
         for a, b in info.items():
             print(f'{a} = {b}')
+
+
+def exporter():
+    prom_gauge = Gauge('yearn', 'yearn stats', ['vault', 'param'])
+    start_http_server(8800)
+    registry = load_registry()
+    vaults = load_vaults(registry)
+    for block in chain.new_blocks():
+        secho(f'{block.number}', fg='green')
+        for vault in vaults:
+            secho(vault.name, fg='yellow')
+            # secho(str(vault), dim=True)
+            info = describe_vault(vault)
+            for param, value in info.items():
+                # print(f'{param} = {value}')
+                prom_gauge.labels(vault.name, param).set(value)
 
 
 def audit():
