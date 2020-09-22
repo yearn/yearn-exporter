@@ -1,6 +1,8 @@
 from brownie import interface
 
+from yearn import constants
 from yearn import uniswap
+
 
 crv = interface.ERC20('0xD533a949740bb3306d119CC777fa900bA034cd52')
 gauge_controller = interface.CurveGaugeController('0x2F50D538606Fa9EDD2B11E2446BEb18C9D5846bB')
@@ -45,8 +47,12 @@ def calculate_apy(gauge, swap):
     relative_weight = gauge_controller.gauge_relative_weight(gauge) / 1e18
     inflation_rate = gauge.inflation_rate() / 1e18
     virtual_price = swap.get_virtual_price() / 1e18
+    base_price = 1
+    if str(swap) in constants.CURVE_BTC_SWAPS:
+        base_price *= uniswap.price_router(uniswap.wbtc, uniswap.usdc)
+
     try:
-        rate = (inflation_rate * relative_weight * 86400 * 365 / working_supply * 0.4) / virtual_price
+        rate = (inflation_rate * relative_weight * 86400 * 365 / working_supply * 0.4) / (virtual_price * base_price)
     except ZeroDivisionError:
         rate = 0
 
@@ -55,6 +61,7 @@ def calculate_apy(gauge, swap):
         'relative weight': relative_weight,
         'inflation rate': inflation_rate,
         'virtual price': virtual_price,
+        'base price': base_price,
         'crv reward rate': rate,
         'crv apy': rate * crv_price,
     }
