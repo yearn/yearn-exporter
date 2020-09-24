@@ -24,6 +24,7 @@ STRATEGY_INTERFACES = {
     '0xF147b8125d2ef93FB6965Db97D6746952a133934': interface.CurveYCRVVoter,
     '0x134c08fAeE4F902999a616e31e0B7e42114aE320': interface.StrategyCurveBTCVoterProxy,
     '0x594a198048501A304267E63B3bAd0f0638da7628': interface.StrategyCurveYVoterProxy,
+    '0x395F93350D5102B6139Abfc84a7D6ee70488797C': interface.StrategyYFIGovernance,
 }
 
 VAULT_ALIASES = {
