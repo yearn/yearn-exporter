@@ -18,13 +18,14 @@ STRATEGY_INTERFACES = {
     '0xAa880345A3147a1fC6889080401C791813ed08Dc': interface.StrategyDAICurve,
     '0x787C771035bDE631391ced5C083db424A4A64bD8': interface.StrategyDForceUSDT,
     '0x40BD98e3ccE4F34c087a73DD3d05558733549afB': interface.StrategyCreamYFI,
-    '0x2EE856843bB65c244F527ad302d6d2853921727e': interface.StrategyCurveYBUSDVoterProxy,
+    '0xb9098DA5f8633999703F86385e3CE3a4564970d0': interface.StrategyCurveYBUSDVoterProxy,
     '0x4FEeaecED575239b46d70b50E13532ECB62e4ea8': interface.StrategyCurveSBTC,
     '0x932fc4fd0eEe66F22f1E23fBA74D7058391c0b15': interface.StrategyMKRVaultDAIDelegate,
     '0xF147b8125d2ef93FB6965Db97D6746952a133934': interface.CurveYCRVVoter,
-    '0x134c08fAeE4F902999a616e31e0B7e42114aE320': interface.StrategyCurveBTCVoterProxy,
-    '0x594a198048501A304267E63B3bAd0f0638da7628': interface.StrategyCurveYVoterProxy,
+    '0xeB8DEfc602E20b113B2E5a30498FB6E6A46f214F': interface.StrategyCurveBTCVoterProxy,
+    '0x8C6698dC64f69231E3dC509CD7Ad72164D2389F7': interface.StrategyCurveYVoterProxy,
     '0x395F93350D5102B6139Abfc84a7D6ee70488797C': interface.StrategyYFIGovernance,
+    '0xb15Ee8e74dac2d77F9d1080B32B0F3562954aeE9': interface.StrategyCurveYBUSD,
 }
 
 VAULT_ALIASES = {
