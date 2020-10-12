@@ -13,19 +13,16 @@ VAULT_INTERFACES = {
 STRATEGY_INTERFACES = {
     '0x25fAcA21dd2Ad7eDB3a027d543e617496820d8d6': interface.StrategyVaultUSDC,
     '0xA30d1D98C502378ad61Fe71BcDc3a808CF60b897': interface.StrategyDForceUSDC,
-    '0xc999fb87AcA383A63D804A575396F65A55aa5aC8': interface.StrategyCurveYCRVVoter,
     '0x1d91E3F77271ed069618b4BA06d19821BC2ed8b0': interface.StrategyTUSDCurve,
     '0xAa880345A3147a1fC6889080401C791813ed08Dc': interface.StrategyDAICurve,
     '0x787C771035bDE631391ced5C083db424A4A64bD8': interface.StrategyDForceUSDT,
-    '0x40BD98e3ccE4F34c087a73DD3d05558733549afB': interface.StrategyCreamYFI,
-    '0xb9098DA5f8633999703F86385e3CE3a4564970d0': interface.StrategyCurveYBUSDVoterProxy,
-    '0x4FEeaecED575239b46d70b50E13532ECB62e4ea8': interface.StrategyCurveSBTC,
     '0x932fc4fd0eEe66F22f1E23fBA74D7058391c0b15': interface.StrategyMKRVaultDAIDelegate,
     '0xF147b8125d2ef93FB6965Db97D6746952a133934': interface.CurveYCRVVoter,
-    '0xeB8DEfc602E20b113B2E5a30498FB6E6A46f214F': interface.StrategyCurveBTCVoterProxy,
-    '0x8C6698dC64f69231E3dC509CD7Ad72164D2389F7': interface.StrategyCurveYVoterProxy,
+    '0x112570655b32A8c747845E0215ad139661e66E7F': interface.StrategyCurveBUSDVoterProxy,
+    '0x6D6c1AD13A5000148Aa087E7CbFb53D402c81341': interface.StrategyCurveBTCVoterProxy,
+    '0x07DB4B9b3951094B9E278D336aDf46a036295DE7': interface.StrategyCurveYVoterProxy,
+    '0xC59601F0CC49baa266891b7fc63d2D5FE097A79D': interface.StrategyCurve3CrvVoterProxy,
     '0x395F93350D5102B6139Abfc84a7D6ee70488797C': interface.StrategyYFIGovernance,
-    '0xb15Ee8e74dac2d77F9d1080B32B0F3562954aeE9': interface.StrategyCurveYBUSD,
 }
 
 VAULT_ALIASES = {
@@ -40,6 +37,7 @@ VAULT_ALIASES = {
     '0x2994529C0652D127b7842094103715ec5299bBed': 'curve.fi/busd',
     '0x7Ff566E1d69DEfF32a7b244aE7276b9f90e9D0f6': 'curve.fi/sbtc',
     '0xe1237aA7f535b0CC33Fd973D66cBf830354D16c7': 'WETH',
+    '0x9cA85572E6A3EbF24dEDd195623F188735A5179f': 'curve.fi/3pool',
 }
 
 CURVE_BTC_SWAPS = {
