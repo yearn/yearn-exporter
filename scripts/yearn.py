@@ -2,7 +2,7 @@ import warnings
 from dataclasses import dataclass
 from typing import Optional, Union
 
-from brownie import chain, interface, web3
+from brownie import chain, interface, web3, accounts, rpc
 from brownie.network.contract import InterfaceContainer
 from click import secho
 from prometheus_client import start_http_server, Gauge
@@ -40,6 +40,7 @@ def load_registry(address='registry.ychad.eth'):
 
 
 def load_vaults(registry):
+    # TODO: this should be heavily cached
     return [Vault(*params) for params in zip(registry.getVaults(), *registry.getVaultsInfo())]
 
 
@@ -71,7 +72,10 @@ def describe_vault(vault: Vault):
     if vault.strategy._name == 'StrategyYFIGovernance':
         ygov = interface.YearnGovernance(vault.strategy.gov())
         info['earned'] = ygov.earned(vault.strategy) / 1e18
+        info['reward rate'] = ygov.rewardRate() / 1e18
         info['ygov balance'] = ygov.balanceOf(vault.strategy) / 1e18
+        info['ygov total'] = ygov.totalSupply() / 1e18
+        info['token price'] = uniswap.price_router(vault.token, uniswap.usdc)
 
     return info
 
@@ -82,22 +86,23 @@ def develop():
     for i, vault in enumerate(vaults):
         secho(vault.name, fg='yellow')
         secho(str(vault), dim=True)
-        info = describe_vault(vault)
-        for a, b in info.items():
-            print(f'{a} = {b}')
+        # info = describe_vault(vault)
+        # for a, b in info.items():
+            # print(f'{a} = {b}')
 
 
 def exporter():
     prom_gauge = Gauge('yearn', 'yearn stats', ['vault', 'param'])
+    timing = Gauge('yearn_timing', '', ['vault', 'action'])
     start_http_server(8800)
     registry = load_registry()
-    vaults = load_vaults(registry)
     for block in chain.new_blocks():
         secho(f'{block.number}', fg='green')
+        with timing.labels('registry', 'load').time():
+            vaults = load_vaults(registry)
         for vault in vaults:
-            secho(vault.name, fg='yellow')
-            # secho(str(vault), dim=True)
-            info = describe_vault(vault)
+            with timing.labels(vault.name, 'describe').time():
+                info = describe_vault(vault)
             for param, value in info.items():
                 # print(f'{param} = {value}')
                 prom_gauge.labels(vault.name, param).set(value)
@@ -166,3 +171,20 @@ def lp():
         swap = interface.CurveSwap(item['swap'])
         gauge = interface.CurveGauge(item['gauge'])
         print(name, curve.calculate_apy(gauge, swap))
+
+
+def harvest():
+    assert rpc.is_active()
+    andre = accounts.at('andrecronje.eth', force=True)
+    print(andre)
+    governance = web3.ens.resolve('ychad.eth')
+    registry = load_registry()
+    vaults = load_vaults(registry)
+    for v in vaults:
+        secho(v.name, fg='green')
+        print(v)
+        try:
+            tx = v.strategy.harvest({'from': andre})
+            tx.info()
+        except AttributeError:
+            pass
