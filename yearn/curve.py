@@ -5,7 +5,6 @@ from yearn import uniswap
 
 
 crv = interface.ERC20('0xD533a949740bb3306d119CC777fa900bA034cd52')
-gauge_controller = interface.CurveGaugeController('0x2F50D538606Fa9EDD2B11E2446BEb18C9D5846bB')
 voting_escrow = interface.CurveVotingEscrow('0x5f3b5DfEb7B28CDbD7FAba78963EE202a494e2A2')
 
 
