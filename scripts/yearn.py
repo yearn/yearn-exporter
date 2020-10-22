@@ -1,11 +1,12 @@
+import re
 import warnings
 from dataclasses import dataclass
 from typing import Optional, Union
 
-from brownie import chain, interface, web3, accounts, rpc
+from brownie import accounts, chain, interface, rpc, web3
 from brownie.network.contract import InterfaceContainer
 from click import secho
-from prometheus_client import start_http_server, Gauge
+from prometheus_client import Gauge, start_http_server
 
 from yearn import constants, curve, uniswap
 from yearn.vaults import Vault, load_registry, load_vaults
@@ -29,7 +30,7 @@ def describe_vault(vault: Vault):
         info["strategy buffer"] = vault.vault.min() / vault.vault.max()
 
     # new curve voter proxy vaults
-    if hasattr(vault.strategy, "proxy"):
+    if re.search(r"Curve.*VoterProxy", vault.strategy._name):
         vote_proxy = interface.CurveYCRVVoter(vault.strategy.voter())
         swap = interface.CurveSwap(vault.strategy.curve())
         gauge = interface.CurveGauge(vault.strategy.gauge())
@@ -67,10 +68,11 @@ def exporter():
     timing = Gauge("yearn_timing", "", ["vault", "action"])
     start_http_server(8800)
     registry = load_registry()
+    # load vaults once, todo: update params
+    with timing.labels("registry", "load").time():
+        vaults = load_vaults(registry)
     for block in chain.new_blocks():
         secho(f"{block.number}", fg="green")
-        with timing.labels("registry", "load").time():
-            vaults = load_vaults(registry)
         for vault in vaults:
             with timing.labels(vault.name, "describe").time():
                 info = describe_vault(vault)
