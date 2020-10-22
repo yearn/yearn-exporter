@@ -30,9 +30,10 @@ def describe_vault(vault: Vault):
         info["strategy buffer"] = vault.vault.min() / vault.vault.max()
 
     # new curve voter proxy vaults
-    if re.search(r"Curve.*VoterProxy", vault.strategy._name):
+    if hasattr(vault.strategy, "proxy"):
         vote_proxy = interface.CurveYCRVVoter(vault.strategy.voter())
-        swap = interface.CurveSwap(vault.strategy.curve())
+        swap_func = {'StrategyCurveGUSDProxy': 'SWAP'}.get(vault.strategy._name, 'curve')
+        swap = interface.CurveSwap(getattr(vault.strategy, swap_func)())
         gauge = interface.CurveGauge(vault.strategy.gauge())
         info.update(curve.calculate_boost(gauge, vote_proxy))
         info.update(curve.calculate_apy(gauge, swap))
