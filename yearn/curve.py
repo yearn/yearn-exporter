@@ -15,7 +15,10 @@ def calculate_boost(gauge, addr):
     working_supply = gauge.working_supply() / 1e18
     vecrv_balance = voting_escrow.balanceOf(addr) / 1e18
     vecrv_total = voting_escrow.totalSupply() / 1e18
-    boost = working_balance / gauge_balance * 2.5
+    try:
+        boost = working_balance / gauge_balance * 2.5
+    except ZeroDivisionError:
+        boost = 1
 
     min_vecrv = vecrv_total * gauge_balance / gauge_total
     lim = gauge_balance * 0.4 + gauge_total * min_vecrv / vecrv_total * 0.6
@@ -24,7 +27,10 @@ def calculate_boost(gauge, addr):
     _working_supply = working_supply + lim - working_balance
     noboost_lim = gauge_balance * 0.4
     noboost_supply = working_supply + noboost_lim - working_balance
-    max_boost_possible = (lim / _working_supply) / (noboost_lim / noboost_supply)
+    try:
+        max_boost_possible = (lim / _working_supply) / (noboost_lim / noboost_supply)
+    except ZeroDivisionError:
+        max_boost_possible = 1
 
     return {
         'gauge balance': gauge_balance,
