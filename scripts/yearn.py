@@ -72,6 +72,28 @@ def develop_v2():
         print(toml.dumps(vault.describe()))
 
 
+def exporter_v2():
+    vault_gauge = Gauge("yearn_vault", "", ["vault", "param"])
+    strat_gauge = Gauge("yearn_strategy", "", ["vault", "strategy", "param"])
+    timing = Gauge("yearn_timing", "", ["vault", "action"])
+    start_http_server(8801)
+    for block in chain.new_blocks():
+        secho(f"{block.number}", fg="green")
+        for vault in vaults_v2.VAULTS:
+            secho(vault.name)
+            with timing.labels(vault.name, "describe").time():
+                info = vault.describe()
+
+            for param, value in info.items():
+                if param == "strategies":
+                    continue
+                vault_gauge.labels(vault.name, param).set(value)
+
+            for strat in info["strategies"]:
+                for param, value in info["strategies"][strat].items():
+                    strat_gauge.labels(vault.name, strat, param).set(value)
+
+
 def exporter():
     prom_gauge = Gauge("yearn", "yearn stats", ["vault", "param"])
     timing = Gauge("yearn_timing", "", ["vault", "action"])
