@@ -37,6 +37,7 @@ class VaultV2:
             "strategies": {},
         }
         for strat in self.strategies:
+            params = self.vault.strategies(strat)
             info["strategies"][strat._name] = {
                 "debtOutstanding": self.vault.debtOutstanding(strat) / scale,
                 "creditAvailable": self.vault.creditAvailable(strat) / scale,
@@ -46,6 +47,13 @@ class VaultV2:
                 "expectedReturn": strat.expectedReturn() / scale,
                 "outstanding": strat.outstanding() / scale,
                 "reserve": strat.reserve() / scale,
+                "performanceFee": params[0],
+                "activation": params[1],
+                "debtLimit": params[2] / scale,
+                "rateLimit": params[3] / scale,
+                "lastReport": params[4],
+                "totalDebt": params[5] / scale,
+                "totalReturns": params[6] / scale,
             }
 
         return info
