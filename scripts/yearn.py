@@ -10,6 +10,8 @@ from prometheus_client import Gauge, start_http_server
 
 from yearn import constants, curve, uniswap
 from yearn.vaults import Vault, load_registry, load_vaults
+from yearn import vaults_v2
+import toml
 
 warnings.simplefilter("ignore")
 
@@ -32,7 +34,7 @@ def describe_vault(vault: Vault):
     # new curve voter proxy vaults
     if hasattr(vault.strategy, "proxy"):
         vote_proxy = interface.CurveYCRVVoter(vault.strategy.voter())
-        swap_func = {'StrategyCurveGUSDProxy': 'SWAP'}.get(vault.strategy._name, 'curve')
+        swap_func = {"StrategyCurveGUSDProxy": "SWAP"}.get(vault.strategy._name, "curve")
         swap = interface.CurveSwap(getattr(vault.strategy, swap_func)())
         gauge = interface.CurveGauge(vault.strategy.gauge())
         info.update(curve.calculate_boost(gauge, vote_proxy))
@@ -62,6 +64,12 @@ def develop():
         info = describe_vault(vault)
         for a, b in info.items():
             print(f"{a} = {b}")
+
+
+def develop_v2():
+    for vault in vaults_v2.VAULTS:
+        print(vault)
+        print(toml.dumps(vault.describe()))
 
 
 def exporter():
