@@ -1,7 +1,7 @@
 from typing import Optional
 from dataclasses import dataclass
 
-from brownie import interface
+from brownie import interface, web3
 from brownie.network.contract import InterfaceContainer
 
 from yearn import constants
@@ -33,7 +33,7 @@ class Vault:
 
 
 def load_registry(address="registry.ychad.eth"):
-    return interface.YRegistry(address)
+    return interface.YRegistry(web3.ens.resolve(address))
 
 
 def load_vaults(registry):
