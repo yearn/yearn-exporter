@@ -18,27 +18,27 @@ class VaultV2:
         scale = 10 ** self.vault.decimals()
         strats = [str(strat) for strat in self.strategies]
         strats.extend([ZERO_ADDRESS] * (40 - len(strats)))
-        # current block
-        # block => ts
-        # underlying price, incl. uniswap
-        info = {
-            "totalAssets": self.vault.totalAssets() / scale,
-            "totalBalanceSheet": self.vault.totalBalanceSheet(strats) / scale,
-            "maxAvailableShares": self.vault.maxAvailableShares() / scale,
-            "pricePerShare": self.vault.pricePerShare() / scale,
-            "debtOutstanding": self.vault.debtOutstanding() / scale,
-            "creditAvailable": self.vault.creditAvailable() / scale,
-            "expectedReturn": self.vault.expectedReturn() / scale,
-            "totalSupply": self.vault.totalSupply() / scale,
-            "emergencyShutdown": self.vault.emergencyShutdown(),
-            "depositLimit": self.vault.depositLimit() / scale,
-            "debtLimit": self.vault.debtLimit() / scale,
-            "totalDebt": self.vault.totalDebt() / scale,
-            "lastReport": self.vault.lastReport(),
-            "managementFee": self.vault.managementFee(),
-            "performanceFee": self.vault.performanceFee(),
-            "strategies": {},
-        }
+        try:
+            info = {
+                "totalAssets": self.vault.totalAssets() / scale,
+                "totalBalanceSheet": self.vault.totalBalanceSheet(strats) / scale,
+                "maxAvailableShares": self.vault.maxAvailableShares() / scale,
+                "pricePerShare": self.vault.pricePerShare() / scale,
+                "debtOutstanding": self.vault.debtOutstanding() / scale,
+                "creditAvailable": self.vault.creditAvailable() / scale,
+                "expectedReturn": self.vault.expectedReturn() / scale,
+                "totalSupply": self.vault.totalSupply() / scale,
+                "emergencyShutdown": self.vault.emergencyShutdown(),
+                "depositLimit": self.vault.depositLimit() / scale,
+                "debtLimit": self.vault.debtLimit() / scale,
+                "totalDebt": self.vault.totalDebt() / scale,
+                "lastReport": self.vault.lastReport(),
+                "managementFee": self.vault.managementFee(),
+                "performanceFee": self.vault.performanceFee(),
+                "strategies": {},
+            }
+        except ValueError:
+            info = {"strategies": {}}
         for strat in self.strategies:
             params = self.vault.strategies(strat)
             info["strategies"][strat._name] = {
@@ -58,6 +58,8 @@ class VaultV2:
                 "totalDebt": params[5] / scale,
                 "totalReturns": params[6] / scale,
             }
+            if hasattr(strat, 'wantPrice'):
+                info["strategies"][strat._name]["wantPrice"] = strat.wantPrice().to('ether')
 
         return info
 
@@ -75,6 +77,13 @@ VAULTS = [
         vault=interface.Vault("0x7095472D01a964E50349AA12cE4d5263Af77E0d7"),
         strategies=[
             interface.StrategyUniswapPairPickle("0x9D141b18716900e8CF2E75A78Fc8128D36Bb573B"),
+        ],
+    ),
+    VaultV2(
+        name="UNI-V2 DAI/WETH",
+        vault=interface.Vault("0x3a68bC59C500de3d5239b5e7F5BDaA1a3bCabBA3"),
+        strategies=[
+            interface.StrategyUniswapPairPickle("0x1cD7EAd07804163e2B186aa8c6f2fA9588Ca5A4d"),
         ],
     ),
 ]
