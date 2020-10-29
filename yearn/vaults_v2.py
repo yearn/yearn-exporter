@@ -18,6 +18,9 @@ class VaultV2:
         scale = 10 ** self.vault.decimals()
         strats = [str(strat) for strat in self.strategies]
         strats.extend([ZERO_ADDRESS] * (40 - len(strats)))
+        # current block
+        # block => ts
+        # underlying price, incl. uniswap
         info = {
             "totalAssets": self.vault.totalAssets() / scale,
             "totalBalanceSheet": self.vault.totalBalanceSheet(strats) / scale,
@@ -71,7 +74,7 @@ VAULTS = [
         name="UNI-V2 WBTC/WETH",
         vault=interface.Vault("0x7095472D01a964E50349AA12cE4d5263Af77E0d7"),
         strategies=[
-            interface.StrategyUniswapPairPickle("0xC102658e4a81261eD5eaA6dC0ef87A56A6B1084F"),
+            interface.StrategyUniswapPairPickle("0x9D141b18716900e8CF2E75A78Fc8128D36Bb573B"),
         ],
     ),
 ]
