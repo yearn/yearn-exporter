@@ -58,8 +58,8 @@ class VaultV2:
                 "totalDebt": params[5] / scale,
                 "totalReturns": params[6] / scale,
             }
-            if hasattr(strat, 'wantPrice'):
-                info["strategies"][strat._name]["wantPrice"] = strat.wantPrice().to('ether')
+            if hasattr(strat, "wantPrice"):
+                info["strategies"][strat._name]["wantPrice"] = strat.wantPrice().to("ether")
 
         return info
 
@@ -84,6 +84,13 @@ VAULTS = [
         vault=interface.Vault("0x3a68bC59C500de3d5239b5e7F5BDaA1a3bCabBA3"),
         strategies=[
             interface.StrategyUniswapPairPickle("0x1cD7EAd07804163e2B186aa8c6f2fA9588Ca5A4d"),
+        ],
+    ),
+    VaultV2(
+        name="DAI",
+        vault=interface.Vault("0x9B142C2CDAb89941E9dcd0B6C1cf6dEa378A8D7C"),
+        strategies=[
+            interface.LeveragedDaiCompStrategyV2("0x4C6e9d7E5d69429100Fcc8afB25Ea980065e2773"),
         ],
     ),
 ]
