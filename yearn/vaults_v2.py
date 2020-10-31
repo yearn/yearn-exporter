@@ -40,7 +40,8 @@ class VaultV2:
                 "performanceFee": self.vault.performanceFee(),
                 "strategies": {},
             }
-        except ValueError:
+        except ValueError as e:
+            print('rekt', e)
             info = {"strategies": {}}
         for strat in self.strategies:
             info["strategies"][strat.name] = strat.describe()
