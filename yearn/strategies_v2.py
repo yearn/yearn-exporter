@@ -32,23 +32,43 @@ class BaseStrategy:
             "lastReport": params[4],
             "totalDebt": params[5] / scale,
             "totalReturns": params[6] / scale,
+            "tendTrigger": self.strategy.tendTrigger(),
+            "harvestTrigger": self.strategy.harvestTrigger(),
         }
 
     def describe_strategy(self):
+        # override with strategy-specific params you want to track
         return {}
 
     def describe(self):
-        return {
-            **self.describe_base(),
-            **self.describe_strategy(),
-        }
+        info = self.describe_base()
+        info.update(self.describe_strategy())
+        return info
 
 
 @dataclass
-class StrategyUniswapPair(BaseStrategy):
-    interface = interface.StrategyUniswapPair
+class StrategyUniswapPairPickle(BaseStrategy):
+    interface = interface.StrategyUniswapPairPickle
 
     def describe_strategy(self):
         return {
             "wantPrice": self.strategy.wantPrice().to("ether"),
+        }
+
+
+@dataclass
+class LeveragedDaiCompStrategyV2(BaseStrategy):
+    interface = interface.LeveragedDaiCompStrategyV2
+
+    def describe_strategy(self):
+        position = self.strategy.getCurrentPosition()
+        return {
+            "collateralTarget": self.strategy.collateralTarget().to("ether"),
+            "getCompValInWei": self.strategy.getCompValInWei("1 ether").to("ether"),
+            "getCurrentPosition_supply": position[0].to("ether"),
+            "getCurrentPosition_borrow": position[1].to("ether"),
+            "getblocksUntilLiquidation": self.strategy.getblocksUntilLiquidation(),
+            "netBalanceLent": self.strategy.netBalanceLent().to("ether"),
+            "predictCompAccrued": self.strategy.predictCompAccrued().to("ether"),
+            "storedCollateralisation": self.strategy.storedCollateralisation.to("ether"),
         }
