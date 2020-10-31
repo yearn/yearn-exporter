@@ -1,17 +1,17 @@
-from abc import abstractmethod
 from dataclasses import dataclass
+
 from brownie import interface
-from brownie.network.contract import InterfaceContainer
 
 
-class BaseStrategy:
-    interface = None
+class Strategy:
+    def __init__(self, strategy, strategy_interface):
+        self.strategy = strategy_interface(strategy)
+        self.vault = interface.Vault(self.strategy.vault())
 
-    def __init__(self, strategy, strategy_interface=None):
-        if strategy_interface:
-            self.interface = strategy_interface
-        self.strategy = self.interface(strategy)
-        self.vault = interface.Vault(strategy.vault())
+    @property
+    def name(self):
+        # interface name
+        return self.strategy._name
 
     def describe_base(self):
         scale = 10 ** self.vault.decimals()
@@ -32,8 +32,6 @@ class BaseStrategy:
             "lastReport": params[4],
             "totalDebt": params[5] / scale,
             "totalReturns": params[6] / scale,
-            "tendTrigger": self.strategy.tendTrigger(),
-            "harvestTrigger": self.strategy.harvestTrigger(),
         }
 
     def describe_strategy(self):
@@ -47,8 +45,9 @@ class BaseStrategy:
 
 
 @dataclass
-class StrategyUniswapPairPickle(BaseStrategy):
-    interface = interface.StrategyUniswapPairPickle
+class StrategyUniswapPairPickle(Strategy):
+    def __init__(self, strategy):
+        super().__init__(strategy, interface.StrategyUniswapPairPickle)
 
     def describe_strategy(self):
         return {
@@ -57,8 +56,9 @@ class StrategyUniswapPairPickle(BaseStrategy):
 
 
 @dataclass
-class LeveragedDaiCompStrategyV2(BaseStrategy):
-    interface = interface.LeveragedDaiCompStrategyV2
+class LeveragedDaiCompStrategyV2(Strategy):
+    def __init__(self, strategy):
+        super().__init__(strategy, interface.LeveragedDaiCompStrategyV2)
 
     def describe_strategy(self):
         position = self.strategy.getCurrentPosition()
@@ -70,5 +70,5 @@ class LeveragedDaiCompStrategyV2(BaseStrategy):
             "getblocksUntilLiquidation": self.strategy.getblocksUntilLiquidation(),
             "netBalanceLent": self.strategy.netBalanceLent().to("ether"),
             "predictCompAccrued": self.strategy.predictCompAccrued().to("ether"),
-            "storedCollateralisation": self.strategy.storedCollateralisation.to("ether"),
+            "storedCollateralisation": self.strategy.storedCollateralisation().to("ether"),
         }
