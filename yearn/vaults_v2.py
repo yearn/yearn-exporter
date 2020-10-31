@@ -19,7 +19,7 @@ class VaultV2:
 
     def describe(self):
         scale = 10 ** self.vault.decimals()
-        strats = [str(strat) for strat in self.strategies]
+        strats = [str(strat.strategy) for strat in self.strategies]
         strats.extend([ZERO_ADDRESS] * (40 - len(strats)))
         try:
             info = {
