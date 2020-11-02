@@ -58,20 +58,6 @@ VAULTS = [
         ],
     ),
     VaultV2(
-        name="UNI-V2 WBTC/WETH",
-        vault=interface.Vault("0x7095472D01a964E50349AA12cE4d5263Af77E0d7"),
-        strategies=[
-            strategies.StrategyUniswapPairPickle("0x1d5BeB39779A7ab8261a8659c5a91d4351A7Fea1"),
-        ],
-    ),
-    VaultV2(
-        name="UNI-V2 DAI/WETH",
-        vault=interface.Vault("0x3a68bC59C500de3d5239b5e7F5BDaA1a3bCabBA3"),
-        strategies=[
-            strategies.StrategyUniswapPairPickle("0x1cD7EAd07804163e2B186aa8c6f2fA9588Ca5A4d"),
-        ],
-    ),
-    VaultV2(
         name="DAI",
         vault=interface.Vault("0x9B142C2CDAb89941E9dcd0B6C1cf6dEa378A8D7C"),
         strategies=[
