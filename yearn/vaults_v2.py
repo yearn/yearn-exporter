@@ -41,7 +41,7 @@ class VaultV2:
                 "strategies": {},
             }
         except ValueError as e:
-            print('rekt', e)
+            print("rekt", e)
             info = {"strategies": {}}
         for strat in self.strategies:
             info["strategies"][strat.name] = strat.describe()
@@ -76,6 +76,13 @@ VAULTS = [
         vault=interface.Vault("0x9B142C2CDAb89941E9dcd0B6C1cf6dEa378A8D7C"),
         strategies=[
             strategies.LeveragedDaiCompStrategyV2("0x4C6e9d7E5d69429100Fcc8afB25Ea980065e2773"),
+        ],
+    ),
+    VaultV2(
+        name="WETH",
+        vault=interface.Vault("0xF20731F26E98516dd83bb645DD757D33826a37b5"),
+        strategies=[
+            strategies.Strategy("0x97785a81B3505Ea9026b2aFFa709dfd0C9Ef24f6", interface.YearnWethCreamStratV2),
         ],
     ),
 ]
