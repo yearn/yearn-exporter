@@ -42,7 +42,8 @@ class Strategy:
         try:
             info = self.describe_base()
             info.update(self.describe_strategy())
-        except ValueError:
+        except (ValueError, AttributeError) as e:
+            print(f"error in {self.name}: {e}")
             info = {}
         return info
 
