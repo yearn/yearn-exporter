@@ -39,8 +39,11 @@ class Strategy:
         return {}
 
     def describe(self):
-        info = self.describe_base()
-        info.update(self.describe_strategy())
+        try:
+            info = self.describe_base()
+            info.update(self.describe_strategy())
+        except ValueError:
+            info = {}
         return info
 
 
