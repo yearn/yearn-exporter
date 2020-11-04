@@ -71,4 +71,9 @@ VAULTS = [
             strategies.Strategy("0x97785a81B3505Ea9026b2aFFa709dfd0C9Ef24f6", interface.YearnWethCreamStratV2),
         ],
     ),
+    VaultV2(
+        name="HEGIC",
+        vault=interface.Vault("0xBe77B53a165d3109AE9500EbAA9328b577960aBF"),
+        strategies=[strategies.Strategy("0xda7Fcc0740E39184FC675F2051582dff6552a2D5", interface.StrategyHegic)],
+    ),
 ]
