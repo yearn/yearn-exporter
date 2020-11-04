@@ -74,6 +74,6 @@ VAULTS = [
     VaultV2(
         name="HEGIC",
         vault=interface.Vault("0xBe77B53a165d3109AE9500EbAA9328b577960aBF"),
-        strategies=[strategies.Strategy("0xda7Fcc0740E39184FC675F2051582dff6552a2D5", interface.StrategyHegic)],
+        strategies=[strategies.Strategy("0x4141b5e7b687a89D994Bff1b35C8082404cA70A7", interface.StrategyHegic)],
     ),
 ]
