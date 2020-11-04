@@ -22,8 +22,6 @@ class Strategy:
             "expectedReturn": self.vault.expectedReturn(self.strategy) / scale,
             "emergencyExit": self.strategy.emergencyExit(),
             "estimatedTotalAssets": self.strategy.estimatedTotalAssets() / scale,
-            "outstanding": self.strategy.outstanding() / scale,
-            "reserve": self.strategy.reserve() / scale,
             "performanceFee": params[0],
             "activation": params[1],
             "debtLimit": params[2] / scale,
