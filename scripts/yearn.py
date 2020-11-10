@@ -61,9 +61,12 @@ def develop():
     for i, vault in enumerate(vaults):
         secho(vault.name, fg="yellow")
         secho(str(vault), dim=True)
-        info = describe_vault(vault)
-        for a, b in info.items():
-            print(f"{a} = {b}")
+        try:
+            info = describe_vault(vault)
+            for a, b in info.items():
+                print(f"{a} = {b}")
+        except ValueError as e:
+            print('error', e)
 
 
 def develop_v2():
@@ -106,7 +109,11 @@ def exporter():
         secho(f"{block.number}", fg="green")
         for vault in vaults:
             with timing.labels(vault.name, "describe").time():
-                info = describe_vault(vault)
+                try:
+                    info = describe_vault(vault)
+                except ValueError as e:
+                    print('error', e)
+                    continue
             for param, value in info.items():
                 # print(f'{param} = {value}')
                 prom_gauge.labels(vault.name, param).set(value)
