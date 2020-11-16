@@ -79,4 +79,11 @@ VAULTS = [
             strategies.Strategy("0xaE466D9Cb123E26b369C63ba89F8588be5f19E5b", interface.StrategyHegicWBTC),
         ],
     ),
+    VaultV2(
+        name="Uniswap DAI/WETH",
+        vault=interface.Vault("0x7b9CB3CfEE697Cd1761945e8B42032c8CCe407DA"),
+        strategies=[
+            strategies.StrategyUniswapPairPickle("0x1dc7aB3BBFAE5000FFDc4289E3D91717f3A9D898"),
+        ],
+    ),
 ]
