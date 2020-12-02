@@ -2,7 +2,7 @@ from typing import Optional
 from dataclasses import dataclass
 
 from brownie import interface, web3
-from brownie.network.contract import InterfaceContainer
+from brownie.network.contract import InterfaceContainer, Contract
 
 from yearn import constants
 
@@ -22,7 +22,7 @@ class Vault:
     def __post_init__(self):
         self.vault = constants.VAULT_INTERFACES.get(self.vault, interface.yVault)(self.vault)
         self.controller = constants.CONTROLLER_INTERFACES[self.controller](self.controller)
-        self.strategy = constants.STRATEGY_INTERFACES[self.strategy](self.strategy)
+        self.strategy = Contract.from_explorer(self.strategy)
         self.token = interface.ERC20(self.token)
         self.name = constants.VAULT_ALIASES[str(self.vault)]
         self.decimals = self.vault.decimals()  # vaults inherit decimals from token
