@@ -1,5 +1,6 @@
 import re
 import warnings
+import time
 from dataclasses import dataclass
 from typing import Optional, Union
 
@@ -101,6 +102,7 @@ def exporter_v2():
             for strat in info["strategies"]:
                 for param, value in info["strategies"][strat].items():
                     strat_gauge.labels(vault.name, strat, param).set(value)
+    time.sleep(450)
 
 
 def exporter():
@@ -123,6 +125,7 @@ def exporter():
             for param, value in info.items():
                 # print(f'{param} = {value}')
                 prom_gauge.labels(vault.name, param).set(value)
+    time.sleep(450)
 
 
 def audit():
