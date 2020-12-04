@@ -3,6 +3,7 @@ from dataclasses import dataclass
 
 from brownie import interface, web3
 from brownie.network.contract import InterfaceContainer, Contract
+
 from yearn import constants
 
 
