@@ -35,7 +35,13 @@ def describe_vault(vault: Vault):
     if hasattr(vault.strategy, "proxy"):
         vote_proxy = interface.CurveYCRVVoter(vault.strategy.voter())
         swap_func = {"StrategyCurveGUSDProxy": "SWAP"}.get(vault.strategy._name, "curve")
-        swap = interface.CurveSwap(getattr(vault.strategy, swap_func)())
+
+        if vault.strategy._name == "StrategyCurveCompoundVoterProxy":
+            deposit = interface.CurveDeposit(getattr(vault.strategy, swap_func)())
+            swap = interface.CurveSwap(getattr(deposit, "curve")())
+        else:
+            swap = interface.CurveSwap(getattr(vault.strategy, swap_func)())
+
         gauge = interface.CurveGauge(vault.strategy.gauge())
         info.update(curve.calculate_boost(gauge, vote_proxy))
         info.update(curve.calculate_apy(gauge, swap))
@@ -112,7 +118,7 @@ def exporter():
                 try:
                     info = describe_vault(vault)
                 except ValueError as e:
-                    print('error', e)
+                    print(f'{vault.vault.address} error {e}')
                     continue
             for param, value in info.items():
                 # print(f'{param} = {value}')

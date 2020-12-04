@@ -4,6 +4,7 @@ from yearn.strategies import LeveragedDaiCompStrategyV2, Strategy, StrategyUnisw
 
 from brownie import interface
 from brownie.network.contract import InterfaceContainer
+from brownie.network.transaction import TransactionReceipt
 
 from yearn import strategies
 
@@ -41,7 +42,7 @@ class VaultV2:
                 "strategies": {},
             }
         except ValueError as e:
-            print("rekt", e)
+            print(f'{self.vault} rekt {e}')
             info = {"strategies": {}}
         for strat in self.strategies:
             info["strategies"][strat.name] = strat.describe()
