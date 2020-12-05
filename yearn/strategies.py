@@ -15,21 +15,19 @@ class Strategy:
 
     def describe_base(self):
         scale = 10 ** self.vault.decimals()
-        params = self.vault.strategies(self.strategy)
-        return {
+        params = self.vault.strategies(self.strategy).dict()
+        # scaled params
+        for param in ["debtLimit", "rateLimit", "totalDebt", "totalGain", "totalLoss"]:
+            params[param] /= scale
+        info = {
             "debtOutstanding": self.vault.debtOutstanding(self.strategy) / scale,
             "creditAvailable": self.vault.creditAvailable(self.strategy) / scale,
             "expectedReturn": self.vault.expectedReturn(self.strategy) / scale,
-            "emergencyExit": self.strategy.emergencyExit(),
             "estimatedTotalAssets": self.strategy.estimatedTotalAssets() / scale,
-            "performanceFee": params[0],
-            "activation": params[1],
-            "debtLimit": params[2] / scale,
-            "rateLimit": params[3] / scale,
-            "lastReport": params[4],
-            "totalDebt": params[5] / scale,
-            "totalReturns": params[6] / scale,
+            "emergencyExit": self.strategy.emergencyExit(),
         }
+        info.update(params)
+        return info
 
     def describe_strategy(self):
         # override with strategy-specific params you want to track
