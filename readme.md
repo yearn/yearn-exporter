@@ -10,22 +10,10 @@ set up grafana for custom dashboards and alerts.
 ## usage
 
 ```
-brownie run yearn exporter --network mainnet
+brownie run yearn exporter_v1 --network mainnet
+brownie run yearn exporter_v2 --network mainnet
 ```
 
 ## supported vaults
 
 the goal of the project is to collect advanced metrics about vaults and strategies.
-if a strategy type is not marked here, only basic metrics are exposed.
-
-- [x] StrategyCurve*VoterProxy
-- [ ] StrategyVaultUSDC
-- [ ] StrategyDForceUSDC
-- [ ] StrategyCurveYCRVVoter
-- [ ] StrategyTUSDCurve
-- [ ] StrategyDAICurve
-- [ ] StrategyDForceUSDT
-- [ ] StrategyCreamYFI
-- [ ] StrategyCurveSBTC
-- [ ] StrategyMKRVaultDAIDelegate
-- [ ] CurveYCRVVoter
