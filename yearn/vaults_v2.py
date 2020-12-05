@@ -84,4 +84,9 @@ VAULTS = [
             strategies.Strategy("0x5A9D49679319FCF3AcFe5559602Dbf31A221BaD6", interface.GenericLevCompFarm),
         ],
     ),
+    VaultV2(
+        name="USDC",
+        vault=interface.Vault("0xe2F6b9773BF3A015E2aA70741Bde1498bdB9425b"),  # 0.2.2
+        strategies=[]
+    ),
 ]
