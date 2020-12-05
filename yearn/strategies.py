@@ -41,33 +41,3 @@ class Strategy:
             print(f"error in {self.name}: {e}")
             info = {}
         return info
-
-
-@dataclass
-class StrategyUniswapPairPickle(Strategy):
-    def __init__(self, strategy):
-        super().__init__(strategy, interface.StrategyUniswapPairPickle)
-
-    def describe_strategy(self):
-        return {
-            "wantPrice": self.strategy.wantPrice().to("ether"),
-        }
-
-
-@dataclass
-class LeveragedDaiCompStrategyV2(Strategy):
-    def __init__(self, strategy):
-        super().__init__(strategy, interface.LeveragedDaiCompStrategyV2)
-
-    def describe_strategy(self):
-        position = self.strategy.getCurrentPosition()
-        return {
-            "collateralTarget": self.strategy.collateralTarget().to("ether"),
-            "getCompValInWei": self.strategy.getCompValInWei("1 ether").to("ether"),
-            "getCurrentPosition_supply": position[0].to("ether"),
-            "getCurrentPosition_borrow": position[1].to("ether"),
-            "getblocksUntilLiquidation": self.strategy.getblocksUntilLiquidation(),
-            "netBalanceLent": self.strategy.netBalanceLent().to("ether"),
-            "predictCompAccrued": self.strategy.predictCompAccrued().to("ether"),
-            "storedCollateralisation": self.strategy.storedCollateralisation().to("ether"),
-        }
