@@ -54,14 +54,7 @@ VAULTS = [
         name="CRV",
         vault=interface.Vault("0x2832817633520BF0da1b57E2Fb7bb2Fba95014F9"),
         strategies=[
-            strategies.Strategy("0xACb5eBaa9bAc72581b269077Ef4D0BA3Eefac2b7", interface.StrategyCreamCRV),
-        ],
-    ),
-    VaultV2(
-        name="DAI",
-        vault=interface.Vault("0x9B142C2CDAb89941E9dcd0B6C1cf6dEa378A8D7C"),
-        strategies=[
-            strategies.LeveragedDaiCompStrategyV2("0x4C6e9d7E5d69429100Fcc8afB25Ea980065e2773"),
+            strategies.Strategy("0xACb5eBaa9bAc72581b269077Ef4D0BA3Eefac2b7", interface.StrategyCreamCRV)
         ],
     ),
     VaultV2(
