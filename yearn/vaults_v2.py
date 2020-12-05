@@ -75,8 +75,13 @@ VAULTS = [
     VaultV2(
         name="Uniswap DAI/WETH",
         vault=interface.Vault("0x7b9CB3CfEE697Cd1761945e8B42032c8CCe407DA"),
+        strategies=[strategies.StrategyUniswapPairPickle("0x1dc7aB3BBFAE5000FFDc4289E3D91717f3A9D898"),],
+    ),
+    VaultV2(
+        name="DAI",
+        vault=interface.Vault("0xBFa4D8AA6d8a379aBFe7793399D3DdaCC5bBECBB"),  # 0.2.2
         strategies=[
-            strategies.StrategyUniswapPairPickle("0x1dc7aB3BBFAE5000FFDc4289E3D91717f3A9D898"),
+            strategies.Strategy("0x5A9D49679319FCF3AcFe5559602Dbf31A221BaD6", interface.GenericLevCompFarm),
         ],
     ),
 ]
