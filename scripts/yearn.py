@@ -16,12 +16,9 @@ def develop_v1():
     for i, vault in enumerate(vaults):
         secho(vault.name, fg="yellow")
         secho(str(vault), dim=True)
-        try:
-            info = vault.describe()
-            for a, b in info.items():
-                print(f"{a} = {b}")
-        except ValueError as e:
-            print("error", e)
+        info = vault.describe()
+        for a, b in info.items():
+            print(f"{a} = {b}")
 
 
 def exporter_v1():
