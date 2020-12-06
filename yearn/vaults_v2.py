@@ -59,12 +59,12 @@ VAULTS = [
     VaultV2(
         name="DAI",
         vault=interface.Vault("0xBFa4D8AA6d8a379aBFe7793399D3DdaCC5bBECBB"),
-        strategies=[strategies.Strategy("0x5A9D49679319FCF3AcFe5559602Dbf31A221BaD6", interface.GenericLevCompFarm),],
+        strategies=[strategies.Strategy("0x5A9D49679319FCF3AcFe5559602Dbf31A221BaD6", interface.GenericLevCompFarm)],
     ),
     # 0.2.2 USDC
     VaultV2(
         name="USDC",
         vault=interface.Vault("0xe2F6b9773BF3A015E2aA70741Bde1498bdB9425b"),
-        strategies=[]
+        strategies=[strategies.Strategy("0x31576ac682ee0A15c48C4baC24c567f27CA1b7cD", interface.GenericLevCompFarm)],
     ),
 ]
