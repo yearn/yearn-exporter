@@ -77,4 +77,10 @@ def load_registry(address="registry.ychad.eth"):
 
 
 def load_vaults(registry):
-    return [VaultV1(*params) for params in zip(registry.getVaults(), *registry.getVaultsInfo())]
+    vaults = []
+    for vault in registry.getVaults():
+        try:
+            vaults.append(VaultV1(vault, *registry.getVaultInfo(vault)))
+        except ValueError:
+            print(f'failed to query vault: {vault}')
+    return vaults
