@@ -13,6 +13,8 @@ def price_router(token_in, token_out):
     Calculate a price based on Uniswap Router quote for selling one `token_in`.
     Always uses intermediate WETH pair.
     """
+    if token_in == token_out:
+        return 1
     amount_in = 10 ** interface.ERC20(token_in).decimals()
     path = [token_in, token_out] if weth in (token_in, token_out) else [token_in, weth, token_out]
     quote = router.getAmountsOut(amount_in, path)

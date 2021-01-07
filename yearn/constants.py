@@ -62,9 +62,9 @@ CURVE_BTC_SWAPS = {
 # we need the one which has `get_virtual_price()`, `swap` contract for newer pools
 # https://www.curve.fi/contracts
 CURVE_SWAP_OVERRIDES = {
-    'StrategyCurveGUSDVoterProxy': '0x4f062658EaAF2C1ccf8C8e36D6824CDf41167956',
-    'StrategyCurveCompoundVoterProxy': '0xA2B47E3D5c44877cca798226B7B8118F9BFb7A56',
-    'StrategyCurvemUSDVoterProxy': '0x8474DdbE98F5aA3179B3B3F5942D724aFcdec9f6',
+    "StrategyCurveGUSDVoterProxy": "0x4f062658EaAF2C1ccf8C8e36D6824CDf41167956",
+    "StrategyCurveCompoundVoterProxy": "0xA2B47E3D5c44877cca798226B7B8118F9BFb7A56",
+    "StrategyCurvemUSDVoterProxy": "0x8474DdbE98F5aA3179B3B3F5942D724aFcdec9f6",
 }
 
 DEPLOYED_BLOCKS = {

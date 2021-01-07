@@ -69,4 +69,5 @@ def calculate_apy(gauge, swap):
         'base price': base_price,
         'crv reward rate': rate,
         'crv apy': rate * crv_price,
+        'token price': base_price * virtual_price,
     }

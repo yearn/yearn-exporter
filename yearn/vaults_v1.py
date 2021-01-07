@@ -47,12 +47,7 @@ class VaultV1:
         if hasattr(self.strategy, "proxy"):
             vote_proxy = interface.CurveYCRVVoter(self.strategy.voter())
             # curve swap is broken across several strategies
-            if self.strategy._name == "StrategyCurveGUSDProxy":
-                swap = interface.CurveSwap(self.strategy.SWAP())
-            elif self.strategy._name == "StrategyCurveCompoundVoterProxy":
-                swap = interface.CurveSwap("0xA2B47E3D5c44877cca798226B7B8118F9BFb7A56")
-            else:
-                swap = interface.CurveSwap(self.strategy.curve())
+            swap = interface.CurveSwap(constants.CURVE_SWAP_OVERRIDES.get(self.strategy._name, self.strategy.curve()))
             gauge = interface.CurveGauge(self.strategy.gauge())
             info.update(curve.calculate_boost(gauge, vote_proxy))
             info.update(curve.calculate_apy(gauge, swap))
@@ -67,8 +62,16 @@ class VaultV1:
             info["reward rate"] = ygov.rewardRate() / 1e18
             info["ygov balance"] = ygov.balanceOf(self.strategy) / 1e18
             info["ygov total"] = ygov.totalSupply() / 1e18
-            info["token price"] = uniswap.price_router(self.token, uniswap.usdc)
 
+        if "token price" not in info:
+            if self.name in ["aLINK"]:
+                info["token price"] = uniswap.price_router(self.vault.underlying(), uniswap.usdc)
+            elif self.name in ["USDC", "TUSD", "DAI", "USDT"]:
+                info["token price"] = 1
+            else:
+                info["token price"] = uniswap.price_router(self.token, uniswap.usdc)
+
+        info["tvl"] = info["vault balance"] * info["token price"]
         return info
 
 
@@ -82,5 +85,5 @@ def load_vaults(registry):
         try:
             vaults.append(VaultV1(vault, *registry.getVaultInfo(vault)))
         except ValueError:
-            print(f'failed to query vault: {vault}')
+            print(f"failed to query vault: {vault}")
     return vaults
