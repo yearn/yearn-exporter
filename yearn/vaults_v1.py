@@ -65,11 +65,11 @@ class VaultV1:
 
         if "token price" not in info:
             if self.name in ["aLINK"]:
-                info["token price"] = uniswap.price_router(self.vault.underlying(), uniswap.usdc)
+                info["token price"] = uniswap.token_price(self.vault.underlying())
             elif self.name in ["USDC", "TUSD", "DAI", "USDT"]:
                 info["token price"] = 1
             else:
-                info["token price"] = uniswap.price_router(self.token, uniswap.usdc)
+                info["token price"] = uniswap.token_price(self.token)
 
         info["tvl"] = info["vault balance"] * info["token price"]
         return info

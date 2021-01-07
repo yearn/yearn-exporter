@@ -2,7 +2,7 @@ import warnings
 
 import toml
 from brownie import chain
-from click import secho
+from click import secho, style
 from prometheus_client import Gauge, start_http_server
 
 from yearn import vaults_v1, vaults_v2
@@ -44,7 +44,7 @@ def exporter_v1():
 
 
 def develop_v2():
-    for vault in vaults_v2.VAULTS:
+    for vault in vaults_v2.get_vaults():
         print(vault)
         print(toml.dumps(vault.describe()))
 
@@ -54,9 +54,10 @@ def exporter_v2():
     strat_gauge = Gauge("yearn_strategy", "", ["vault", "strategy", "param"])
     timing = Gauge("yearn_timing", "", ["vault", "action"])
     start_http_server(8801)
+    vaults = vaults_v2.get_vaults()
     for block in chain.new_blocks():
         secho(f"{block.number}", fg="green")
-        for vault in vaults_v2.VAULTS:
+        for vault in vaults:
             secho(vault.name)
             with timing.labels(vault.name, "describe").time():
                 info = vault.describe()
@@ -69,3 +70,30 @@ def exporter_v2():
             for strat in info["strategies"]:
                 for param, value in info["strategies"][strat].items():
                     strat_gauge.labels(vault.name, strat, param).set(value)
+
+
+def tvl():
+    secho('v1', fg='cyan', bold=True)
+    registry = vaults_v1.load_registry()
+    vaults = vaults_v1.load_vaults(registry)
+    total = 0
+    for vault in vaults:
+        info = vault.describe()
+        total += info["tvl"]
+        print(style(f'${info["tvl"]:12,.0f}', fg="green"), style(f"{vault.name}", fg="yellow"))
+
+    print(style(f"${total:12,.0f}", fg="green", bold=True), style(f"total", fg="yellow", bold=True))
+
+    secho('v2', fg='cyan', bold=True)
+    vaults = vaults_v2.get_vaults()
+    total = 0
+    for vault in vaults:
+        info = vault.describe()
+        if "tvl" not in info:
+            print(style("error".rjust(13), fg="red"), style(f"{vault.name}", fg="yellow"))
+            continue
+        total += info["tvl"]
+        print(style(f'${info["tvl"]:12,.0f}', fg="green"), style(f"{vault.name}", fg="yellow"))
+
+    print(style(f"${total:12,.0f}", fg="green", bold=True), style(f"total", fg="yellow", bold=True))
+
