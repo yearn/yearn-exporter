@@ -15,7 +15,7 @@ STRATEGY_INTERFACES = {
     "0x25fAcA21dd2Ad7eDB3a027d543e617496820d8d6": interface.StrategyVaultUSDC,
     "0xA30d1D98C502378ad61Fe71BcDc3a808CF60b897": interface.StrategyDForceUSDC,
     "0x1d91E3F77271ed069618b4BA06d19821BC2ed8b0": interface.StrategyTUSDCurve,
-    "0x9c211BFa6DC329C5E757A223Fb72F5481D676DC1": interface.StrategyDAI3pool,
+    "0xAa880345A3147a1fC6889080401C791813ed08Dc": interface.StrategyDAICurve,
     "0x787C771035bDE631391ced5C083db424A4A64bD8": interface.StrategyDForceUSDT,
     "0x932fc4fd0eEe66F22f1E23fBA74D7058391c0b15": interface.StrategyMKRVaultDAIDelegate,
     "0xF147b8125d2ef93FB6965Db97D6746952a133934": interface.CurveYCRVVoter,
