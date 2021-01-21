@@ -1,4 +1,4 @@
-import warnings, time
+import warnings
 
 import toml
 from brownie import chain
@@ -41,7 +41,6 @@ def exporter_v1():
             for param, value in info.items():
                 # print(f'{param} = {value}')
                 prom_gauge.labels(vault.name, param).set(value)
-    time.sleep(300)
 
 
 def develop_v2():
@@ -71,7 +70,6 @@ def exporter_v2():
             for strat in info["strategies"]:
                 for param, value in info["strategies"][strat].items():
                     strat_gauge.labels(vault.name, strat, param).set(value)
-    time.sleep(300)
 
 
 def tvl():
