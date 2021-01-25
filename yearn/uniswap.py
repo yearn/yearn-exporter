@@ -71,6 +71,10 @@ def uniswap_lp_price(address):
 def token_price(token):
     if token in STABLECOINS:
         return 1
+    # stETH Curve LP
+    if token == "0x06325440D014e39736583c165C2963BA99fAf14E":
+        virtual_price = interface.CurveSwap("0xDC24316b9AE028F1497c275EB9192a3Ea0f67022").get_virtual_price() / 1e18
+        return price_router(weth) * virtual_price
     if is_uniswap_pool(token):
         return uniswap_lp_price(token)
     return price_router(token)

@@ -32,6 +32,10 @@ STRATEGY_INTERFACES = {
     "0xBA0c07BBE9C22a1ee33FE988Ea3763f21D0909a0": interface.StrategyCurvemUSDVoterProxy,
     "0xD42eC70A590C6bc11e9995314fdbA45B4f74FABb": interface.StrategyCurveGUSDVoterProxy,
     "0xF4Fd9B4dAb557DD4C9cf386634d61231D54d03d6": interface.StrategyGUSDRescue,
+    "0x9c211BFa6DC329C5E757A223Fb72F5481D676DC1": interface.StrategyDAI3pool,
+    "0x39AFF7827B9D0de80D86De295FE62F7818320b76": interface.StrategyMKRVaultDAIDelegate,
+    "0x22422825e2dFf23f645b04A3f89190B69f174659": interface.StrategyCurveEURVoterProxy,
+    "0x6f1EbF5BBc5e32fffB6B3d237C3564C15134B8cF": interface.StrategymUSDCurve,
 }
 
 VAULT_ALIASES = {
@@ -51,6 +55,8 @@ VAULT_ALIASES = {
     "0x629c759D1E83eFbF63d84eb3868B564d9521C129": "curve.fi/compound",
     "0xcC7E70A958917cCe67B4B87a8C30E6297451aE98": "curve.fi/gusd",
     "0x0FCDAeDFb8A7DfDa2e9838564c5A1665d856AFDF": "curve.fi/musd",
+    "0x98B058b2CBacF5E99bC7012DF757ea7CFEbd35BC": "curve.fi/eurs",
+    "0xE0db48B4F71752C4bEf16De1DBD042B82976b8C7": "mUSD",
 }
 
 CURVE_BTC_SWAPS = {
