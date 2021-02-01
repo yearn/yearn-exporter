@@ -36,6 +36,17 @@ STRATEGY_INTERFACES = {
     "0x39AFF7827B9D0de80D86De295FE62F7818320b76": interface.StrategyMKRVaultDAIDelegate,
     "0x22422825e2dFf23f645b04A3f89190B69f174659": interface.StrategyCurveEURVoterProxy,
     "0x6f1EbF5BBc5e32fffB6B3d237C3564C15134B8cF": interface.StrategymUSDCurve,
+    "0x76B29E824C183dBbE4b27fe5D8EdF0f926340750": interface.StrategyCurveRENVoterProxy,
+    "0x406813fF2143d178d1Ebccd2357C20A424208912": interface.StrategyCurveUSDNVoterProxy,
+    "0x3be2717DA725f43b7d6C598D8f76AeC43e231B99": interface.StrategyCurveUSTVoterProxy,
+    "0x15CfA851403aBFbbD6fDB1f6fe0d32F22ddc846a": interface.StrategyCurveOBTCVoterProxy,
+    "0xD96041c5EC05735D965966bF51faEC40F3888f6e": interface.StrategyCurvePBTCVoterProxy,
+    "0x61A01a704665b3C0E6898C1B4dA54447f561889d": interface.StrategyCurveTBTCVoterProxy,
+    "0x551F41aD4ebeCa4F5d025D2B3082b7AB2383B768": interface.StrategyCurveBBTCVoterProxy,
+    "0xE02363cB1e4E1B77a74fAf38F3Dbb7d0B70F26D7": interface.StrategyCurveHBTCVoterProxy,
+    "0xd7F641697ca4e0e19F6C9cF84989ABc293D24f84": interface.StrategyCurvesUSDVoterProxy,
+    "0xb21C4d2f7b2F29109FF6243309647A01bEB9950a": interface.StrategyCurveHUSDVoterProxy,
+    "0x33F3f002b8f812f3E087E9245921C8355E777231": interface.StrategyCurveDUSDVoterProxy,
 }
 
 VAULT_ALIASES = {
@@ -57,6 +68,17 @@ VAULT_ALIASES = {
     "0x0FCDAeDFb8A7DfDa2e9838564c5A1665d856AFDF": "curve.fi/musd",
     "0x98B058b2CBacF5E99bC7012DF757ea7CFEbd35BC": "curve.fi/eurs",
     "0xE0db48B4F71752C4bEf16De1DBD042B82976b8C7": "mUSD",
+    "0x5334e150B938dd2b6bd040D9c4a03Cff0cED3765": "curve.fi/renbtc",
+    "0xFe39Ce91437C76178665D64d7a2694B0f6f17fE3": "curve.fi/usdn",
+    "0xF6C9E9AF314982A4b38366f4AbfAa00595C5A6fC": "curve.fi/ust",
+    "0x7F83935EcFe4729c4Ea592Ab2bC1A32588409797": "curve.fi/obtc",
+    "0x123964EbE096A920dae00Fb795FFBfA0c9Ff4675": "curve.fi/pbtc",
+    "0x07FB4756f67bD46B748b16119E802F1f880fb2CC": "curve.fi/tbtc",
+    "0xA8B1Cb4ed612ee179BDeA16CCa6Ba596321AE52D": "curve.fi/bbtc",
+    "0x46AFc2dfBd1ea0c0760CAD8262A5838e803A37e5": "curve.fi/hbtc",
+    "0x39546945695DCb1c037C836925B355262f551f55": "curve.fi/husd",
+    "0x8e6741b456a074F0Bc45B8b82A755d4aF7E965dF": "curve.fi/dusd",
+    "0x5533ed0a3b83F70c3c4a1f69Ef5546D3D4713E44": "curve.fi/susd",
 }
 
 CURVE_BTC_SWAPS = {
