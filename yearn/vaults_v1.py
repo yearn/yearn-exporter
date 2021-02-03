@@ -50,8 +50,7 @@ class VaultV1:
         # new curve voter proxy vaults
         if hasattr(self.strategy, "proxy"):
             vote_proxy = interface.CurveYCRVVoter(self.strategy.voter())
-            # curve swap is broken across several strategies
-            swap = interface.CurveSwap(constants.CURVE_SWAP_OVERRIDES.get(self.strategy._name, self.strategy.curve()))
+            swap = interface.CurveSwap(curve.registry.get_pool_from_lp_token(self.token))
             gauge = interface.CurveGauge(self.strategy.gauge())
             info.update(curve.calculate_boost(gauge, vote_proxy))
             info.update(curve.calculate_apy(gauge, swap))

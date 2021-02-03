@@ -93,25 +93,6 @@ CURVE_BTC_SWAPS = {
     "0x4CA9b3063Ec5866A4B82E437059D2C43d1be596F": "hbtc",
 }
 
-# some curve strategies specify `deposit` instead of `swap` contract as `curve()`
-# we need the one which has `get_virtual_price()`, `swap` contract for newer pools
-# https://www.curve.fi/contracts
-CURVE_SWAP_OVERRIDES = {
-    "StrategyCurveGUSDVoterProxy": "0x4f062658EaAF2C1ccf8C8e36D6824CDf41167956",
-    "StrategyCurveCompoundVoterProxy": "0xA2B47E3D5c44877cca798226B7B8118F9BFb7A56",
-    "StrategyCurvemUSDVoterProxy": "0x8474DdbE98F5aA3179B3B3F5942D724aFcdec9f6",
-    "StrategyCurveUSDNVoterProxy": "0x0f9cb53Ebe405d49A0bbdBD291A65Ff571bC83e1",
-    "StrategyCurveUSTVoterProxy": "0x890f4e345B1dAED0367A877a1612f86A1f86985f",
-    "StrategyCurveOBTCVoterProxy": "0xd81dA8D904b52208541Bade1bD6595D8a251F8dd",
-    "StrategyCurvePBTCVoterProxy": "0x7F55DDe206dbAD629C080068923b36fe9D6bDBeF",
-    "StrategyCurveTBTCVoterProxy": "0xC25099792E9349C7DD09759744ea681C7de2cb66",
-    "StrategyCurveBBTCVoterProxy": "0x071c661B4DeefB59E2a3DdB20Db036821eeE8F4b",
-    "StrategyCurveHBTCVoterProxy": "0x4CA9b3063Ec5866A4B82E437059D2C43d1be596F",
-    "StrategyCurvesUSDVoterProxy": "0xA5407eAE9Ba41422680e2e00537571bcC53efBfD",
-    "StrategyCurveHUSDVoterProxy": "0x3eF6A01A0f81D6046290f3e2A8c5b843e738E604",
-    "StrategyCurveDUSDVoterProxy": "0x8038C01A0390a8c547446a0b2c18fc9aEFEcc10c",
-}
-
 DEPLOYED_BLOCKS = {
     "0x29E240CFD7946BA20895a7a02eDb25C210f9f324": 10599617,
     "0x881b06da56BB5675c54E4Ed311c21E54C5025298": 10604016,

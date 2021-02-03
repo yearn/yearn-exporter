@@ -6,6 +6,7 @@ from yearn import uniswap
 
 crv = interface.ERC20('0xD533a949740bb3306d119CC777fa900bA034cd52')
 voting_escrow = interface.CurveVotingEscrow('0x5f3b5DfEb7B28CDbD7FAba78963EE202a494e2A2')
+registry = interface.CurveRegistry('0x7D86446dDb609eD0F5f8684AcF30380a356b2B4c')
 
 
 def calculate_boost(gauge, addr):
