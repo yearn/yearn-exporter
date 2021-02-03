@@ -33,7 +33,7 @@ class VaultV1:
             "vault balance": self.vault.balance() / scale,
             "vault total": self.vault.totalSupply() / scale,
             "strategy balance": self.strategy.balanceOf() / scale,
-            "share price": None,
+            "share price": 0,
         }
         try:
             info["share price"] = self.vault.getPricePerFullShare() / 1e18
