@@ -64,12 +64,13 @@ vaults = {
     "stETH 0.3.0": "0xdCD90C7f6324cfa40d7169ef80b12031770B4325",
     "WBTC 0.3.1": "0xcB550A6D4C8e3517A939BC79d0c7093eb7cF56B5",
 }
+
 experimental_vaults = {
     "sUSD Idle 0.3.1": "0x3466c90017F82DDA939B01E8DBd9b0f97AEF8DfC",
     # https://etherscan.io/address/0xA04fE40eD8a8a8d657E41276ec9e9Ee877675e34#code
     "WETH Gen Lender 0.3.1": "0x5f18C75AbDAe578b483E5F43f12a39cF75b973a9",
     # https://etherscan.io/address/0xac5DA2Ca938A7328dE563D7d7209370e24BFd21e#code
-    "Egyptian God sETH/ETH 0.3.0": "0x0e880118C29F095143dDA28e64d95333A9e75A47",
+    # "Egyptian God sETH/ETH 0.3.0": "0x0e880118C29F095143dDA28e64d95333A9e75A47",
     # https://etherscan.io/address/0x3B1a1AE6052ccD643a250fa843c1fB20F9246E1a#code
     "WETH Iron Lender 0.3.0": "0xED0244B688cF059f32f45E38A6ac6E479D6755f6",
     # https://etherscan.io/address/0xa35A4972D74d4B3e4486163066E5fFed6d62b213#code

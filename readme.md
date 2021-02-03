@@ -1,6 +1,6 @@
 # yearn exporter
 
-collects on-chain numeric data about yearn vault and exposes it in prometheus format.
+collects on-chain numeric data about Yearn Vaults and exposes it in prometheus format.
 
 point prometheus at this exporter persist the data and make it queryable.
 
@@ -12,11 +12,13 @@ set up grafana for custom dashboards and alerts.
 ```
 brownie run yearn exporter_v1 --network mainnet
 brownie run yearn exporter_v2 --network mainnet
+brownie run yearn exporter_experimental --network mainnet
 ```
 ### Stats
 ```
 brownie run yearn develop_v1 --network mainnet
 brownie run yearn develop_v2 --network mainnet
+brownie run yearn develop_experimental --network mainnet
 brownie run yearn tvl --network mainnet
 ```
 ## supported vaults
