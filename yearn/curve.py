@@ -4,9 +4,19 @@ from yearn import constants
 from yearn import uniswap
 
 
-crv = interface.ERC20('0xD533a949740bb3306d119CC777fa900bA034cd52')
-voting_escrow = interface.CurveVotingEscrow('0x5f3b5DfEb7B28CDbD7FAba78963EE202a494e2A2')
-registry = interface.CurveRegistry('0x7D86446dDb609eD0F5f8684AcF30380a356b2B4c')
+crv = interface.ERC20("0xD533a949740bb3306d119CC777fa900bA034cd52")
+voting_escrow = interface.CurveVotingEscrow("0x5f3b5DfEb7B28CDbD7FAba78963EE202a494e2A2")
+registry = interface.CurveRegistry("0x7D86446dDb609eD0F5f8684AcF30380a356b2B4c")
+
+
+def get_base_price(pool):
+    coins = set(registry.get_underlying_coins(pool))
+    if coins & constants.BTC_LIKE:
+        return uniswap.price_router(uniswap.wbtc, uniswap.usdc)
+    elif coins & constants.ETH_LIKE:
+        return uniswap.price_router(uniswap.weth, uniswap.usdc)
+    else:
+        return 1
 
 
 def calculate_boost(gauge, addr):
@@ -34,15 +44,15 @@ def calculate_boost(gauge, addr):
         max_boost_possible = 1
 
     return {
-        'gauge balance': gauge_balance,
-        'gauge total': gauge_total,
-        'vecrv balance': vecrv_balance,
-        'vecrv total': vecrv_total,
-        'working balance': working_balance,
-        'working total': working_supply,
-        'boost': boost,
-        'max boost': max_boost_possible,
-        'min vecrv': min_vecrv,
+        "gauge balance": gauge_balance,
+        "gauge total": gauge_total,
+        "vecrv balance": vecrv_balance,
+        "vecrv total": vecrv_total,
+        "working balance": working_balance,
+        "working total": working_supply,
+        "boost": boost,
+        "max boost": max_boost_possible,
+        "min vecrv": min_vecrv,
     }
 
 
@@ -53,22 +63,19 @@ def calculate_apy(gauge, swap):
     relative_weight = gauge_controller.gauge_relative_weight(gauge) / 1e18
     inflation_rate = gauge.inflation_rate() / 1e18
     virtual_price = swap.get_virtual_price() / 1e18
-    base_price = 1
-    if str(swap) in constants.CURVE_BTC_SWAPS:
-        base_price *= uniswap.price_router(uniswap.wbtc, uniswap.usdc)
-
+    base_price = get_base_price(swap)
     try:
         rate = (inflation_rate * relative_weight * 86400 * 365 / working_supply * 0.4) / (virtual_price * base_price)
     except ZeroDivisionError:
         rate = 0
 
     return {
-        'crv price': crv_price,
-        'relative weight': relative_weight,
-        'inflation rate': inflation_rate,
-        'virtual price': virtual_price,
-        'base price': base_price,
-        'crv reward rate': rate,
-        'crv apy': rate * crv_price,
-        'token price': base_price * virtual_price,
+        "crv price": crv_price,
+        "relative weight": relative_weight,
+        "inflation rate": inflation_rate,
+        "virtual price": virtual_price,
+        "base price": base_price,
+        "crv reward rate": rate,
+        "crv apy": rate * crv_price,
+        "token price": base_price * virtual_price,
     }
