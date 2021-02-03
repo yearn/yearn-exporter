@@ -31,10 +31,14 @@ class VaultV1:
         scale = 10 ** self.decimals
         info = {
             "vault balance": self.vault.balance() / scale,
-            "share price": self.vault.getPricePerFullShare() / 1e18,
             "vault total": self.vault.totalSupply() / scale,
             "strategy balance": self.strategy.balanceOf() / scale,
+            "share price": None,
         }
+        try:
+            info["share price"] = self.vault.getPricePerFullShare() / 1e18
+        except ValueError:
+            pass
 
         # some of the oldest vaults don't implement these methods
         if hasattr(self.vault, "available"):
