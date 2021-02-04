@@ -74,7 +74,6 @@ experimental_vaults = {
     # https://etherscan.io/address/0x3B1a1AE6052ccD643a250fa843c1fB20F9246E1a#code
     "WETH Iron Lender 0.3.0": "0xED0244B688cF059f32f45E38A6ac6E479D6755f6",
     # https://etherscan.io/address/0xa35A4972D74d4B3e4486163066E5fFed6d62b213#code
-    "WBTC 0.3.0": "0xcB550A6D4C8e3517A939BC79d0c7093eb7cF56B5",
     "yvSushi YFI-ETH 0.2.2": "0x27Eb83254D900AB4F9b15d5652d913963FeC35e3",
     # https://etherscan.io/address/0x3213a6389f3f4c287925a47A6D44fe1148FA0C0d#code
     "DEV Hugger 0.2.2": "0xFeD651936Af7e98F7F2A93c03B1E28a2DA7dfaD4",
