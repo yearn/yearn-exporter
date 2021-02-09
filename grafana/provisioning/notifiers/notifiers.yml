@@ -1,0 +1,3 @@
+apiVersion: 1
+
+# https://grafana.com/docs/grafana/latest/administration/provisioning/#example-alert-notification-channels-config-file

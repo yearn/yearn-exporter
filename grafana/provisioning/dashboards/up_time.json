@@ -55,7 +55,7 @@
   "links": [],
   "panels": [
     {
-      "datasource": "${DS_PROMETHEUS}",
+      "datasource": "DS_PROMETHEUS",
       "description": "",
       "fieldConfig": {
         "defaults": {
@@ -134,7 +134,7 @@
       "type": "stat"
     },
     {
-      "datasource": "${DS_PROMETHEUS}",
+      "datasource": "DS_PROMETHEUS",
       "description": "",
       "fieldConfig": {
         "defaults": {
@@ -201,7 +201,7 @@
       "pluginVersion": "7.4.0",
       "targets": [
         {
-          "expr": "up{job=\"yearn\"}",
+          "expr": "up{job=\"yearn-v1\"}",
           "instant": true,
           "interval": "",
           "legendFormat": "{{job}}",
@@ -213,7 +213,7 @@
       "type": "stat"
     },
     {
-      "datasource": "${DS_PROMETHEUS}",
+      "datasource": "DS_PROMETHEUS",
       "description": "",
       "fieldConfig": {
         "defaults": {
@@ -280,7 +280,7 @@
       "pluginVersion": "7.4.0",
       "targets": [
         {
-          "expr": "up{job=\"yearnv2\"}",
+          "expr": "up{job=\"yearn-v2\"}",
           "instant": true,
           "interval": "",
           "legendFormat": "{{job}}",
@@ -292,7 +292,7 @@
       "type": "stat"
     },
     {
-      "datasource": "${DS_PROMETHEUS}",
+      "datasource": "DS_PROMETHEUS",
       "description": "Experimental Vaults",
       "fieldConfig": {
         "defaults": {
@@ -359,7 +359,7 @@
       "pluginVersion": "7.4.0",
       "targets": [
         {
-          "expr": "up{job=\"yearn_experimental\"}",
+          "expr": "up{job=\"yearn-experimental\"}",
           "instant": true,
           "interval": "",
           "legendFormat": "{{job}}",
@@ -375,7 +375,7 @@
       "bars": false,
       "dashLength": 10,
       "dashes": false,
-      "datasource": "${DS_PROMETHEUS}",
+      "datasource": "DS_PROMETHEUS",
       "description": "",
       "fieldConfig": {
         "defaults": {
@@ -426,20 +426,20 @@
       "steppedLine": false,
       "targets": [
         {
-          "expr": "up{job=\"yearn\"}",
+          "expr": "up{job=\"yearn-v1\"}",
           "interval": "",
           "legendFormat": "{{job}}",
           "refId": "A"
         },
         {
-          "expr": "up{job=\"yearn_experimental\"}",
+          "expr": "up{job=\"yearn-experimental\"}",
           "hide": false,
           "interval": "",
           "legendFormat": "{{job}}",
           "refId": "B"
         },
         {
-          "expr": "up{job=\"yearnv2\"}",
+          "expr": "up{job=\"yearn-v2\"}",
           "hide": false,
           "interval": "",
           "legendFormat": "{{job}}",

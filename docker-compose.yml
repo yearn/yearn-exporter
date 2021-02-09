@@ -1,0 +1,104 @@
+version: '3.7'
+
+volumes:
+    grafana_data: {}
+    prometheus_data: {}
+
+networks:
+  yearn-exporter:
+
+services:
+  yearn-exporter-v1:
+    build: .
+    command: exporter_v1
+    environment:
+      - WEB3_INFURA_PROJECT_ID
+      - ALCHEMY_URL
+      - ETHERSCAN_TOKEN
+      - SLEEP_SECONDS
+    networks:
+      - yearn-exporter
+    restart: always
+
+  yearn-exporter-v2:
+    build: .
+    command: exporter_v2
+    environment:
+      - WEB3_INFURA_PROJECT_ID
+      - ALCHEMY_URL
+      - ETHERSCAN_TOKEN
+      - SLEEP_SECONDS
+    networks:
+      - yearn-exporter
+    restart: always
+
+  yearn-exporter-iearn:
+    build: .
+    command: exporter_iearn
+    environment:
+      - WEB3_INFURA_PROJECT_ID
+      - ALCHEMY_URL
+      - ETHERSCAN_TOKEN
+      - SLEEP_SECONDS
+    networks:
+      - yearn-exporter
+    restart: always
+
+  yearn-exporter-ironbank:
+    build: .
+    command: exporter_ironbank
+    environment:
+      - WEB3_INFURA_PROJECT_ID
+      - ALCHEMY_URL
+      - ETHERSCAN_TOKEN
+      - SLEEP_SECONDS
+    networks:
+      - yearn-exporter
+    restart: always
+
+  yearn-exporter-experimental:
+    build: .
+    command: exporter_experimental
+    environment:
+      - WEB3_INFURA_PROJECT_ID
+      - ALCHEMY_URL
+      - ETHERSCAN_TOKEN
+      - SLEEP_SECONDS
+    networks:
+      - yearn-exporter
+    restart: always
+
+  prometheus:
+    image: prom/prometheus:v2.23.0
+    volumes:
+      - ./prometheus/:/etc/prometheus/
+      - prometheus_data:/prometheus
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+      - '--storage.tsdb.retention.time=1y'
+      - '--web.console.libraries=/usr/share/prometheus/console_libraries'
+      - '--web.console.templates=/usr/share/prometheus/consoles'
+    ports:
+      - 9090:9090
+    networks:
+      - yearn-exporter
+    restart: always
+
+  grafana:
+    image: grafana/grafana
+    depends_on:
+      - prometheus
+    ports:
+      - 3000:3000
+    environment:
+      - GF_SECURITY_ADMIN_USER=${GF_SECURITY_ADMIN_USER:-admin}
+      - GF_SECURITY_ADMIN_PASSWORD=${GF_SECURITY_ADMIN_PASSWORD:-admin}
+      - GF_AUTH_ANONYMOUS_ENABLED=true
+      - GF_DASHBOARDS_DEFAULT_HOME_DASHBOARD_PATH=/etc/grafana/provisioning/dashboards/v1_vaults.json
+    volumes:
+      - grafana_data:/var/lib/grafana
+      - ./grafana/provisioning/:/etc/grafana/provisioning/
+    networks:
+      - yearn-exporter
+    restart: always
