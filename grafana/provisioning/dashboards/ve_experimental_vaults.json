@@ -59,7 +59,7 @@
       "bars": false,
       "dashLength": 10,
       "dashes": false,
-      "datasource": "${DS_PROMETHEUS}",
+      "datasource": "DS_PROMETHEUS",
       "description": "Rate of increase of Vault Share price. If this goes up the vaults are selling their farmed asset for more vault tokens! This helps normalize and show harvests compared to other vaults. The larger the spikes the more assets sold on that harvest call. The table shows the max value harvested for the timeframe selected.",
       "fieldConfig": {
         "defaults": {
@@ -107,7 +107,7 @@
       "steppedLine": false,
       "targets": [
         {
-          "expr": "rate(yearn_vault{param=\"pricePerShare\"}[2m])",
+          "expr": "rate(yearn_experimental{param=\"pricePerShare\"}[2m])",
           "interval": "",
           "legendFormat": "{{vault}}",
           "panelId": 6,
@@ -163,7 +163,7 @@
       "bars": false,
       "dashLength": 10,
       "dashes": false,
-      "datasource": "${DS_PROMETHEUS}",
+      "datasource": "DS_PROMETHEUS",
       "description": "The current price of the vault's lp token, should increase steadily as vault's farmed assets are sold.",
       "fieldConfig": {
         "defaults": {
@@ -211,7 +211,7 @@
       "steppedLine": false,
       "targets": [
         {
-          "expr": "yearn_vault{param=\"pricePerShare\"}",
+          "expr": "yearn_experimental{param=\"pricePerShare\"}",
           "interval": "",
           "legendFormat": "{{vault}}",
           "panelId": 6,
@@ -222,7 +222,7 @@
       "timeFrom": null,
       "timeRegions": [],
       "timeShift": null,
-      "title": "Share Price",
+      "title": "Price Per Share",
       "tooltip": {
         "shared": true,
         "sort": 2,
@@ -267,9 +267,9 @@
       "bars": false,
       "dashLength": 10,
       "dashes": false,
-      "datasource": "${DS_PROMETHEUS}",
+      "datasource": "DS_PROMETHEUS",
       "decimals": 7,
-      "description": "Amount of the deposit token in the vault. This includes funds in all strategies + idle funds yet to be deployed.",
+      "description": "Total Amount of AUM in the vault in their native deposit token.",
       "fieldConfig": {
         "defaults": {
           "custom": {}
@@ -316,7 +316,7 @@
       "steppedLine": true,
       "targets": [
         {
-          "expr": "yearn_vault{param=\"totalAssets\"}",
+          "expr": "yearn_experimental{param=\"totalAssets\"}",
           "interval": "",
           "legendFormat": "{{vault}}",
           "queryType": "randomWalk",
@@ -330,7 +330,7 @@
       "title": "Total Assets",
       "tooltip": {
         "shared": true,
-        "sort": 0,
+        "sort": 2,
         "value_type": "individual"
       },
       "transparent": true,
@@ -372,8 +372,8 @@
       "bars": false,
       "dashLength": 10,
       "dashes": false,
-      "datasource": "${DS_PROMETHEUS}",
-      "description": "Amount of the deposit asset in USD terms in the vault. This includes funds in all strategies + idle funds yet to be deployed.",
+      "datasource": "DS_PROMETHEUS",
+      "description": "Total amount of AUM in the vault in USD terms.",
       "fieldConfig": {
         "defaults": {
           "custom": {}
@@ -422,7 +422,7 @@
       "steppedLine": true,
       "targets": [
         {
-          "expr": "yearn_vault{param=\"tvl\"} ",
+          "expr": "yearn_experimental{param=\"tvl\"} ",
           "interval": "",
           "legendFormat": "{{vault}}",
           "queryType": "randomWalk",
@@ -440,144 +440,6 @@
         "value_type": "individual"
       },
       "transformations": [],
-      "transparent": true,
-      "type": "graph",
-      "xaxis": {
-        "buckets": null,
-        "mode": "time",
-        "name": null,
-        "show": true,
-        "values": []
-      },
-      "yaxes": [
-        {
-          "$$hashKey": "object:919",
-          "decimals": 2,
-          "format": "short",
-          "label": "",
-          "logBase": 1,
-          "max": null,
-          "min": null,
-          "show": true
-        },
-        {
-          "$$hashKey": "object:920",
-          "format": "short",
-          "label": "",
-          "logBase": 1,
-          "max": null,
-          "min": null,
-          "show": true
-        }
-      ],
-      "yaxis": {
-        "align": false,
-        "alignLevel": null
-      }
-    },
-    {
-      "aliasColors": {},
-      "bars": false,
-      "dashLength": 10,
-      "dashes": false,
-      "datasource": "${DS_PROMETHEUS}",
-      "description": "",
-      "fieldConfig": {
-        "defaults": {
-          "custom": {}
-        },
-        "overrides": []
-      },
-      "fill": 3,
-      "fillGradient": 3,
-      "gridPos": {
-        "h": 8,
-        "w": 24,
-        "x": 0,
-        "y": 17
-      },
-      "hiddenSeries": false,
-      "id": 17,
-      "legend": {
-        "alignAsTable": true,
-        "avg": false,
-        "current": true,
-        "hideEmpty": false,
-        "hideZero": false,
-        "max": false,
-        "min": false,
-        "rightSide": true,
-        "show": true,
-        "sort": "current",
-        "sortDesc": true,
-        "total": false,
-        "values": true
-      },
-      "lines": true,
-      "linewidth": 2,
-      "nullPointMode": "connected",
-      "options": {
-        "alertThreshold": false
-      },
-      "percentage": false,
-      "pluginVersion": "7.4.0",
-      "pointradius": 2,
-      "points": false,
-      "renderer": "flot",
-      "seriesOverrides": [],
-      "spaceLength": 10,
-      "stack": false,
-      "steppedLine": true,
-      "targets": [
-        {
-          "expr": "yearn_vault{param=\"tvl\"} ",
-          "interval": "",
-          "legendFormat": "{{vault}}",
-          "queryType": "randomWalk",
-          "refId": "A"
-        }
-      ],
-      "thresholds": [],
-      "timeFrom": null,
-      "timeRegions": [],
-      "timeShift": null,
-      "title": "Total Value Locked",
-      "tooltip": {
-        "shared": true,
-        "sort": 2,
-        "value_type": "individual"
-      },
-      "transformations": [
-        {
-          "id": "calculateField",
-          "options": {
-            "alias": "v2 - TVL",
-            "mode": "reduceRow",
-            "reduce": {
-              "reducer": "sum"
-            },
-            "replaceFields": true
-          }
-        },
-        {
-          "id": "filterByValue",
-          "options": {
-            "filters": [
-              {
-                "config": {
-                  "id": "equal",
-                  "options": {
-                    "value": 0
-                  }
-                },
-                "fieldName": "v2 - TVL"
-              }
-            ],
-            "match": "any",
-            "type": "exclude"
-          }
-        }
-      ],
       "transparent": true,
       "type": "graph",
       "xaxis": {
@@ -614,7 +476,145 @@
       }
     },
     {
-      "datasource": "${DS_PROMETHEUS}",
+      "aliasColors": {},
+      "bars": false,
+      "dashLength": 10,
+      "dashes": false,
+      "datasource": "DS_PROMETHEUS",
+      "description": "",
+      "fieldConfig": {
+        "defaults": {
+          "custom": {}
+        },
+        "overrides": []
+      },
+      "fill": 3,
+      "fillGradient": 3,
+      "gridPos": {
+        "h": 8,
+        "w": 24,
+        "x": 0,
+        "y": 17
+      },
+      "hiddenSeries": false,
+      "id": 16,
+      "legend": {
+        "alignAsTable": false,
+        "avg": false,
+        "current": true,
+        "hideEmpty": false,
+        "hideZero": false,
+        "max": false,
+        "min": false,
+        "rightSide": false,
+        "show": true,
+        "sort": "current",
+        "sortDesc": true,
+        "total": false,
+        "values": true
+      },
+      "lines": true,
+      "linewidth": 2,
+      "nullPointMode": "connected",
+      "options": {
+        "alertThreshold": false
+      },
+      "percentage": false,
+      "pluginVersion": "7.4.0",
+      "pointradius": 2,
+      "points": false,
+      "renderer": "flot",
+      "seriesOverrides": [],
+      "spaceLength": 10,
+      "stack": false,
+      "steppedLine": true,
+      "targets": [
+        {
+          "expr": "yearn_experimental{param=\"tvl\"} ",
+          "interval": "",
+          "legendFormat": "{{vault}}",
+          "queryType": "randomWalk",
+          "refId": "A"
+        }
+      ],
+      "thresholds": [],
+      "timeFrom": null,
+      "timeRegions": [],
+      "timeShift": null,
+      "title": "Total Value Locked",
+      "tooltip": {
+        "shared": true,
+        "sort": 2,
+        "value_type": "individual"
+      },
+      "transformations": [
+        {
+          "id": "calculateField",
+          "options": {
+            "alias": "vE - TVL",
+            "mode": "reduceRow",
+            "reduce": {
+              "reducer": "sum"
+            },
+            "replaceFields": true
+          }
+        },
+        {
+          "id": "filterByValue",
+          "options": {
+            "filters": [
+              {
+                "config": {
+                  "id": "equal",
+                  "options": {
+                    "value": ""
+                  }
+                },
+                "fieldName": "vE - TVL"
+              }
+            ],
+            "match": "any",
+            "type": "exclude"
+          }
+        }
+      ],
+      "transparent": true,
+      "type": "graph",
+      "xaxis": {
+        "buckets": null,
+        "mode": "time",
+        "name": null,
+        "show": true,
+        "values": []
+      },
+      "yaxes": [
+        {
+          "$$hashKey": "object:919",
+          "decimals": 2,
+          "format": "short",
+          "label": "Total Value locked in $",
+          "logBase": 1,
+          "max": null,
+          "min": null,
+          "show": true
+        },
+        {
+          "$$hashKey": "object:920",
+          "format": "short",
+          "label": "",
+          "logBase": 1,
+          "max": null,
+          "min": null,
+          "show": true
+        }
+      ],
+      "yaxis": {
+        "align": false,
+        "alignLevel": null
+      }
+    },
+    {
+      "datasource": "DS_PROMETHEUS",
       "fieldConfig": {
         "defaults": {
           "color": {
@@ -649,8 +649,8 @@
         ]
       },
       "gridPos": {
-        "h": 6,
-        "w": 24,
+        "h": 5,
+        "w": 23,
         "x": 0,
         "y": 25
       },
@@ -673,7 +673,7 @@
       "pluginVersion": "7.4.0",
       "targets": [
         {
-          "expr": "yearn_vault{param=\"depositLimit\"}",
+          "expr": "yearn_experimental{param=\"depositLimit\"}",
           "interval": "",
           "legendFormat": "{{vault}}",
           "queryType": "randomWalk",
@@ -687,7 +687,7 @@
       "type": "stat"
     },
     {
-      "datasource": "${DS_PROMETHEUS}",
+      "datasource": "DS_PROMETHEUS",
       "description": "0 is no 1 is yes",
       "fieldConfig": {
         "defaults": {
@@ -710,10 +710,10 @@
         "overrides": []
       },
       "gridPos": {
-        "h": 3,
-        "w": 24,
+        "h": 2,
+        "w": 22,
         "x": 0,
-        "y": 31
+        "y": 30
       },
       "id": 15,
       "options": {
@@ -734,7 +734,7 @@
       "pluginVersion": "7.4.0",
       "targets": [
         {
-          "expr": "yearn_vault{param=\"emergencyShutdown\", instance=\"localhost:8801\"}",
+          "expr": "yearn_experimental{param=\"emergencyShutdown\"}",
           "format": "time_series",
           "instant": false,
           "interval": "",
@@ -749,83 +749,9 @@
       "transformations": [],
       "transparent": true,
       "type": "stat"
-    },
-    {
-      "datasource": "${DS_PROMETHEUS}",
-      "description": "",
-      "fieldConfig": {
-        "defaults": {
-          "color": {
-            "mode": "thresholds"
-          },
-          "custom": {},
-          "mappings": [],
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              {
-                "color": "green",
-                "value": null
-              }
-            ]
-          },
-          "unit": "short"
-        },
-        "overrides": [
-          {
-            "matcher": {
-              "id": "byName",
-              "options": "Deposit Limit"
-            },
-            "properties": [
-              {
-                "id": "unit",
-                "value": "short"
-              }
-            ]
-          }
-        ]
-      },
-      "gridPos": {
-        "h": 6,
-        "w": 24,
-        "x": 0,
-        "y": 34
-      },
-      "id": 16,
-      "options": {
-        "colorMode": "value",
-        "graphMode": "none",
-        "justifyMode": "auto",
-        "orientation": "auto",
-        "reduceOptions": {
-          "calcs": [
-            "lastNotNull"
-          ],
-          "fields": "",
-          "values": false
-        },
-        "text": {},
-        "textMode": "auto"
-      },
-      "pluginVersion": "7.4.0",
-      "targets": [
-        {
-          "expr": "yearn_vault{param=\"token price\"}",
-          "instant": true,
-          "interval": "",
-          "legendFormat": "{{vault}}",
-          "queryType": "randomWalk",
-          "refId": "A"
-        }
-      ],
-      "timeFrom": null,
-      "timeShift": null,
-      "title": "Current Price of Token in USD",
-      "type": "stat"
     }
   ],
-  "refresh": "5s",
+  "refresh": "1m",
   "schemaVersion": 27,
   "style": "dark",
   "tags": [],
@@ -833,12 +759,12 @@
     "list": []
   },
   "time": {
-    "from": "now-6h",
+    "from": "now-24h",
     "to": "now"
   },
   "timepicker": {},
   "timezone": "",
-  "title": "V2 Vaults",
-  "uid": "OnWa9KoMk",
-  "version": 7
+  "title": "VE - Experimental Vaults",
+  "uid": "kY6zlEYGz",
+  "version": 5
 }

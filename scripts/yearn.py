@@ -1,7 +1,7 @@
 import warnings
 from collections import Counter
 
-import toml
+import toml, time, os
 from brownie import chain
 from brownie.exceptions import BrownieEnvironmentWarning
 from click import secho, style
@@ -43,6 +43,7 @@ def exporter_v1():
             for param, value in info.items():
                 # print(f'{param} = {value}')
                 prom_gauge.labels(vault.name, param).set(value)
+        try_sleep()
 
 
 def develop_v2():
@@ -72,6 +73,7 @@ def exporter_v2():
             for strat in info["strategies"]:
                 for param, value in info["strategies"][strat].items():
                     strat_gauge.labels(vault.name, strat, param).set(value)
+        try_sleep()
 
 
 def exporter_iearn():
@@ -84,6 +86,7 @@ def exporter_iearn():
         for name, data in output.items():
             for param, value in data.items():
                 earn_gauge.labels(name, param).set(value)
+        try_sleep()
 
 
 def exporter_ironbank():
@@ -98,6 +101,7 @@ def exporter_ironbank():
                 if value is None:
                     continue
                 ironbank_gauge.labels(name, param).set(value)
+        try_sleep()
 
 
 def develop_experimental():
@@ -107,10 +111,10 @@ def develop_experimental():
 
 
 def exporter_experimental():
-    vault_gauge = Gauge("yearn_vault", "", ["vault", "param"])
+    vault_gauge = Gauge("yearn_experimental", "", ["vault", "param"])
     strat_gauge = Gauge("yearn_strategy", "", ["vault", "strategy", "param"])
     timing = Gauge("yearn_timing", "", ["vault", "action"])
-    start_http_server(8802)
+    start_http_server(8804)
     experimental_vaults = vaults_v2.get_experimental_vaults()
     for block in chain.new_blocks():
         secho(f"{block.number}", fg="green")
@@ -127,3 +131,11 @@ def exporter_experimental():
             for strat in info["strategies"]:
                 for param, value in info["strategies"][strat].items():
                     strat_gauge.labels(vault.name, strat, param).set(value)
+        try_sleep()
+
+
+def try_sleep():
+    sleep_seconds = os.environ.get('SLEEP_SECONDS')
+    if sleep_seconds:
+        secho(f"sleeping for {sleep_seconds} seconds...", fg="green")
+        time.sleep(int(sleep_seconds))

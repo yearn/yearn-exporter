@@ -27,6 +27,12 @@
       "id": "prometheus",
       "name": "Prometheus",
       "version": "1.0.0"
+    },
+    {
+      "type": "panel",
+      "id": "stat",
+      "name": "Stat",
+      "version": ""
     }
   ],
   "annotations": {
@@ -49,48 +55,153 @@
   "links": [],
   "panels": [
     {
+      "datasource": "DS_PROMETHEUS",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "custom": {},
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "purple",
+                "value": 5.5
+              }
+            ]
+          }
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Yearn % total veCRV"
+            },
+            "properties": [
+              {
+                "id": "unit",
+                "value": "percentunit"
+              }
+            ]
+          }
+        ]
+      },
+      "gridPos": {
+        "h": 5,
+        "w": 24,
+        "x": 0,
+        "y": 0
+      },
+      "id": 9,
+      "options": {
+        "colorMode": "value",
+        "graphMode": "none",
+        "justifyMode": "center",
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": [
+            "last"
+          ],
+          "fields": "/^Yearn % total veCRV$/",
+          "values": false
+        },
+        "text": {},
+        "textMode": "value"
+      },
+      "pluginVersion": "7.4.0",
+      "targets": [
+        {
+          "expr": "avg(yearn{param=\"vecrv balance\"})",
+          "instant": true,
+          "interval": "",
+          "legendFormat": "Yearn veCRV locked",
+          "queryType": "randomWalk",
+          "refId": "A"
+        },
+        {
+          "expr": "avg(yearn{param=\"vecrv total\"})",
+          "instant": true,
+          "interval": "",
+          "legendFormat": "Total veCRV locked",
+          "refId": "B"
+        }
+      ],
+      "timeFrom": null,
+      "timeShift": null,
+      "title": "Yearn veCRV Share",
+      "transformations": [
+        {
+          "id": "calculateField",
+          "options": {
+            "alias": "Yearn % total veCRV",
+            "binary": {
+              "left": "Yearn veCRV locked",
+              "operator": "/",
+              "reducer": "sum",
+              "right": "Total veCRV locked"
+            },
+            "mode": "binary",
+            "reduce": {
+              "reducer": "sum"
+            },
+            "replaceFields": true
+          }
+        }
+      ],
+      "transparent": true,
+      "type": "stat"
+    },
+    {
       "aliasColors": {},
       "bars": false,
       "dashLength": 10,
       "dashes": false,
-      "datasource": "${DS_PROMETHEUS}",
-      "decimals": 12,
-      "description": "Rate of increase of Vault Share price. If this goes up the vaults are selling their farmed asset for more vault tokens! This helps normalize and show harvests compared to other vaults. The larger the spikes the more assets sold on that harvest call. The table shows the max value harvested for the timeframe selected.",
+      "datasource": "DS_PROMETHEUS",
+      "description": "This is the current boost the vaults are getting",
       "fieldConfig": {
         "defaults": {
-          "custom": {}
+          "custom": {},
+          "thresholds": {
+            "mode": "absolute",
+            "steps": []
+          }
         },
         "overrides": []
       },
-      "fill": 1,
-      "fillGradient": 1,
+      "fill": 0,
+      "fillGradient": 2,
       "gridPos": {
-        "h": 8,
+        "h": 9,
         "w": 12,
         "x": 0,
-        "y": 0
+        "y": 5
       },
       "hiddenSeries": false,
-      "id": 17,
+      "id": 2,
       "legend": {
         "alignAsTable": true,
         "avg": false,
-        "current": false,
+        "current": true,
         "hideEmpty": false,
         "hideZero": false,
-        "max": true,
+        "max": false,
         "min": false,
         "rightSide": true,
         "show": true,
-        "sideWidth": 255,
-        "sort": "max",
+        "sort": "current",
         "sortDesc": true,
         "total": false,
         "values": true
       },
       "lines": true,
-      "linewidth": 1,
-      "nullPointMode": "null",
+      "linewidth": 2,
+      "nullPointMode": "connected",
       "options": {
         "alertThreshold": false
       },
@@ -102,11 +213,12 @@
       "seriesOverrides": [],
       "spaceLength": 10,
       "stack": false,
-      "steppedLine": false,
+      "steppedLine": true,
       "targets": [
         {
-          "expr": "rate(yearn{param=\"share price\", vault!=\"GUSD\"}[2m])",
+          "expr": "yearn{param=\"boost\",vault!=\"GUSD\"}",
           "interval": "",
+          "intervalFactor": 1,
           "legendFormat": "{{vault}}",
           "queryType": "randomWalk",
           "refId": "A"
@@ -116,7 +228,7 @@
       "timeFrom": null,
       "timeRegions": [],
       "timeShift": null,
-      "title": "V1 - Share Price - Rate of Increase",
+      "title": "Boosties",
       "tooltip": {
         "shared": true,
         "sort": 2,
@@ -133,16 +245,16 @@
       },
       "yaxes": [
         {
-          "$$hashKey": "object:3977",
-          "format": "none",
-          "label": null,
-          "logBase": 1,
-          "max": null,
+          "$$hashKey": "object:302",
+          "format": "percentunit",
+          "label": "",
+          "logBase": 2,
+          "max": "2.75",
           "min": null,
           "show": true
         },
         {
-          "$$hashKey": "object:3978",
+          "$$hashKey": "object:303",
           "format": "short",
           "label": null,
           "logBase": 1,
@@ -161,47 +273,202 @@
       "bars": false,
       "dashLength": 10,
       "dashes": false,
-      "datasource": "${DS_PROMETHEUS}",
-      "decimals": 6,
-      "description": "The current price of the vault's lp token, should increase steadily as vault's farmed assets are sold.",
+      "datasource": "DS_PROMETHEUS",
+      "decimals": 4,
+      "description": "This show amount of veCRV yearn has locked via backscratcher vault vs all other veCRV locked in all of curve.",
       "fieldConfig": {
         "defaults": {
+          "color": {},
           "custom": {},
           "thresholds": {
             "mode": "absolute",
             "steps": []
-          }
+          },
+          "unit": "short"
         },
-        "overrides": []
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Yearn % total veCRV"
+            },
+            "properties": [
+              {
+                "id": "unit",
+                "value": "percentunit"
+              }
+            ]
+          }
+        ]
       },
-      "fill": 0,
-      "fillGradient": 0,
+      "fill": 4,
+      "fillGradient": 4,
       "gridPos": {
-        "h": 8,
+        "h": 9,
         "w": 12,
         "x": 12,
-        "y": 0
+        "y": 5
       },
       "hiddenSeries": false,
       "id": 10,
       "legend": {
-        "alignAsTable": true,
+        "alignAsTable": false,
         "avg": false,
         "current": true,
         "hideEmpty": false,
         "hideZero": false,
         "max": false,
         "min": false,
+        "rightSide": false,
+        "show": true,
+        "total": false,
+        "values": true
+      },
+      "lines": true,
+      "linewidth": 1,
+      "nullPointMode": "connected",
+      "options": {
+        "alertThreshold": false
+      },
+      "percentage": false,
+      "pluginVersion": "7.4.0",
+      "pointradius": 2,
+      "points": false,
+      "renderer": "flot",
+      "seriesOverrides": [
+        {
+          "$$hashKey": "object:6888",
+          "alias": "Yearn % total veCRV",
+          "lines": true,
+          "linewidth": 2,
+          "yaxis": 2
+        },
+        {
+          "$$hashKey": "object:7021",
+          "alias": "Yearn veCRV locked",
+          "linewidth": 2
+        }
+      ],
+      "spaceLength": 10,
+      "stack": false,
+      "steppedLine": false,
+      "targets": [
+        {
+          "expr": "yearn{param=\"vecrv total\", vault=\"curve.fi/3pool\"}",
+          "interval": "",
+          "legendFormat": "veCRV Locked Total",
+          "refId": "B"
+        },
+        {
+          "expr": "yearn{param=\"vecrv balance\", vault=\"curve.fi/3pool\"}",
+          "instant": false,
+          "interval": "",
+          "legendFormat": "Total veCRV Locked w/ Yearn",
+          "queryType": "randomWalk",
+          "refId": "A"
+        }
+      ],
+      "thresholds": [],
+      "timeFrom": null,
+      "timeRegions": [],
+      "timeShift": null,
+      "title": "Yearn veCRV Share",
+      "tooltip": {
+        "shared": true,
+        "sort": 2,
+        "value_type": "individual"
+      },
+      "transformations": [
+        {
+          "id": "calculateField",
+          "options": {
+            "alias": "Yearn % total veCRV",
+            "binary": {
+              "left": "Total veCRV Locked w/ Yearn",
+              "operator": "/",
+              "reducer": "sum",
+              "right": "veCRV Locked Total"
+            },
+            "mode": "binary",
+            "reduce": {
+              "reducer": "sum"
+            },
+            "replaceFields": false
+          }
+        }
+      ],
+      "transparent": true,
+      "type": "graph",
+      "xaxis": {
+        "buckets": null,
+        "mode": "time",
+        "name": null,
+        "show": true,
+        "values": []
+      },
+      "yaxes": [
+        {
+          "$$hashKey": "object:2569",
+          "format": "short",
+          "label": "Amount veCRV locked",
+          "logBase": 1,
+          "max": null,
+          "min": null,
+          "show": true
+        },
+        {
+          "$$hashKey": "object:2570",
+          "format": "percentunit",
+          "label": "",
+          "logBase": 1,
+          "max": null,
+          "min": null,
+          "show": true
+        }
+      ],
+      "yaxis": {
+        "align": false,
+        "alignLevel": null
+      }
+    },
+    {
+      "aliasColors": {},
+      "bars": false,
+      "dashLength": 10,
+      "dashes": false,
+      "datasource": "DS_PROMETHEUS",
+      "decimals": 2,
+      "fieldConfig": {
+        "defaults": {
+          "custom": {}
+        },
+        "overrides": []
+      },
+      "fill": 0,
+      "fillGradient": 0,
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 14
+      },
+      "hiddenSeries": false,
+      "id": 6,
+      "legend": {
+        "alignAsTable": true,
+        "avg": false,
+        "current": true,
+        "max": false,
+        "min": false,
         "rightSide": true,
         "show": true,
-        "sideWidth": 235,
         "sort": "current",
         "sortDesc": true,
         "total": false,
         "values": true
       },
       "lines": true,
-      "linewidth": 2,
+      "linewidth": 1,
       "nullPointMode": "connected",
       "options": {
         "alertThreshold": false
@@ -217,114 +484,7 @@
       "steppedLine": true,
       "targets": [
         {
-          "expr": "yearn{param=\"share price\", vault!=\"GUSD\"}",
-          "interval": "",
-          "legendFormat": "{{vault}}",
-          "refId": "A"
-        }
-      ],
-      "thresholds": [],
-      "timeFrom": null,
-      "timeRegions": [],
-      "timeShift": null,
-      "title": "V1 - Share Price",
-      "tooltip": {
-        "shared": true,
-        "sort": 2,
-        "value_type": "individual"
-      },
-      "transparent": true,
-      "type": "graph",
-      "xaxis": {
-        "buckets": null,
-        "mode": "time",
-        "name": null,
-        "show": true,
-        "values": []
-      },
-      "yaxes": [
-        {
-          "$$hashKey": "object:1936",
-          "format": "short",
-          "label": "Share Price",
-          "logBase": 1,
-          "max": null,
-          "min": "1",
-          "show": true
-        },
-        {
-          "$$hashKey": "object:1937",
-          "format": "string",
-          "label": "",
-          "logBase": 1,
-          "max": null,
-          "min": null,
-          "show": false
-        }
-      ],
-      "yaxis": {
-        "align": false,
-        "alignLevel": null
-      }
-    },
-    {
-      "aliasColors": {},
-      "bars": false,
-      "dashLength": 10,
-      "dashes": false,
-      "datasource": "${DS_PROMETHEUS}",
-      "decimals": 12,
-      "description": "Rate of increase of Vault Share price. If this goes up the vaults are selling their farmed asset for more vault tokens! This helps normalize and show harvests compared to other vaults. The larger the spikes the more assets sold on that harvest call. The table shows the max value harvested for the timeframe selected.",
-      "fieldConfig": {
-        "defaults": {
-          "custom": {}
-        },
-        "overrides": []
-      },
-      "fill": 1,
-      "fillGradient": 1,
-      "gridPos": {
-        "h": 8,
-        "w": 12,
-        "x": 0,
-        "y": 8
-      },
-      "hiddenSeries": false,
-      "id": 18,
-      "legend": {
-        "alignAsTable": true,
-        "avg": false,
-        "current": false,
-        "hideEmpty": false,
-        "hideZero": false,
-        "max": true,
-        "min": false,
-        "rightSide": true,
-        "show": true,
-        "sideWidth": 255,
-        "sort": "max",
-        "sortDesc": true,
-        "total": false,
-        "values": true
-      },
-      "lines": true,
-      "linewidth": 1,
-      "nullPointMode": "null",
-      "options": {
-        "alertThreshold": false
-      },
-      "percentage": false,
-      "pluginVersion": "7.4.0",
-      "pointradius": 2,
-      "points": false,
-      "renderer": "flot",
-      "seriesOverrides": [],
-      "spaceLength": 10,
-      "stack": false,
-      "steppedLine": false,
-      "targets": [
-        {
-          "expr": "rate(yearn_vault{param=\"pricePerShare\"}[2m])",
+          "expr": "sort(yearn{param=\"max boost\",vault!=\"GUSD\"})",
           "interval": "",
           "legendFormat": "{{vault}}",
           "queryType": "randomWalk",
@@ -335,7 +495,7 @@
       "timeFrom": null,
       "timeRegions": [],
       "timeShift": null,
-      "title": "V2 - Share Price - Rate of Increase",
+      "title": "Max Boost Possible",
       "tooltip": {
         "shared": true,
         "sort": 2,
@@ -352,129 +512,18 @@
       },
       "yaxes": [
         {
-          "$$hashKey": "object:3977",
-          "format": "none",
-          "label": null,
+          "$$hashKey": "object:716",
+          "format": "percentunit",
+          "label": "% boost",
           "logBase": 1,
-          "max": null,
-          "min": null,
-          "show": true
-        },
-        {
-          "$$hashKey": "object:3978",
-          "format": "short",
-          "label": null,
-          "logBase": 1,
-          "max": null,
-          "min": null,
-          "show": false
-        }
-      ],
-      "yaxis": {
-        "align": false,
-        "alignLevel": null
-      }
-    },
-    {
-      "aliasColors": {},
-      "bars": false,
-      "dashLength": 10,
-      "dashes": false,
-      "datasource": "${DS_PROMETHEUS}",
-      "decimals": 6,
-      "description": "The current price of the vault's lp token, should increase steadily as vault's farmed assets are sold.",
-      "fieldConfig": {
-        "defaults": {
-          "custom": {},
-          "thresholds": {
-            "mode": "absolute",
-            "steps": []
-          }
-        },
-        "overrides": []
-      },
-      "fill": 0,
-      "fillGradient": 0,
-      "gridPos": {
-        "h": 8,
-        "w": 12,
-        "x": 12,
-        "y": 8
-      },
-      "hiddenSeries": false,
-      "id": 21,
-      "legend": {
-        "alignAsTable": true,
-        "avg": false,
-        "current": true,
-        "hideEmpty": false,
-        "hideZero": false,
-        "max": false,
-        "min": false,
-        "rightSide": true,
-        "show": true,
-        "sideWidth": 235,
-        "sort": "current",
-        "sortDesc": true,
-        "total": false,
-        "values": true
-      },
-      "lines": true,
-      "linewidth": 2,
-      "nullPointMode": "connected",
-      "options": {
-        "alertThreshold": false
-      },
-      "percentage": false,
-      "pluginVersion": "7.4.0",
-      "pointradius": 2,
-      "points": false,
-      "renderer": "flot",
-      "seriesOverrides": [],
-      "spaceLength": 10,
-      "stack": false,
-      "steppedLine": true,
-      "targets": [
-        {
-          "expr": "yearn_vault{param=\"pricePerShare\"}",
-          "interval": "",
-          "legendFormat": "{{vault}}",
-          "refId": "A"
-        }
-      ],
-      "thresholds": [],
-      "timeFrom": null,
-      "timeRegions": [],
-      "timeShift": null,
-      "title": "V2 - Share Price",
-      "tooltip": {
-        "shared": true,
-        "sort": 2,
-        "value_type": "individual"
-      },
-      "transparent": true,
-      "type": "graph",
-      "xaxis": {
-        "buckets": null,
-        "mode": "time",
-        "name": null,
-        "show": true,
-        "values": []
-      },
-      "yaxes": [
-        {
-          "$$hashKey": "object:1936",
-          "format": "short",
-          "label": "Share Price",
-          "logBase": 1,
-          "max": null,
+          "max": "2.6",
           "min": "1",
           "show": true
         },
         {
-          "$$hashKey": "object:1937",
-          "format": "string",
-          "label": "",
+          "$$hashKey": "object:717",
+          "format": "short",
+          "label": null,
           "logBase": 1,
           "max": null,
           "min": null,
@@ -491,158 +540,42 @@
       "bars": false,
       "dashLength": 10,
       "dashes": false,
-      "datasource": "${DS_PROMETHEUS}",
-      "decimals": 12,
-      "description": "Rate of increase of Vault Share price. If this goes up the vaults are selling their farmed asset for more vault tokens! This helps normalize and show harvests compared to other vaults. The larger the spikes the more assets sold on that harvest call. The table shows the max value harvested for the timeframe selected.",
+      "datasource": "DS_PROMETHEUS",
+      "description": "If yearn's veCRV amount locked = the numbers listed here then the vault can have max boost!",
       "fieldConfig": {
         "defaults": {
           "custom": {}
         },
         "overrides": []
       },
-      "fill": 1,
-      "fillGradient": 1,
-      "gridPos": {
-        "h": 8,
-        "w": 12,
-        "x": 0,
-        "y": 16
-      },
-      "hiddenSeries": false,
-      "id": 19,
-      "legend": {
-        "alignAsTable": true,
-        "avg": false,
-        "current": false,
-        "hideEmpty": false,
-        "hideZero": false,
-        "max": true,
-        "min": false,
-        "rightSide": true,
-        "show": true,
-        "sideWidth": 255,
-        "sort": "max",
-        "sortDesc": true,
-        "total": false,
-        "values": true
-      },
-      "lines": true,
-      "linewidth": 1,
-      "nullPointMode": "null",
-      "options": {
-        "alertThreshold": false
-      },
-      "percentage": false,
-      "pluginVersion": "7.4.0",
-      "pointradius": 2,
-      "points": false,
-      "renderer": "flot",
-      "seriesOverrides": [],
-      "spaceLength": 10,
-      "stack": false,
-      "steppedLine": false,
-      "targets": [
-        {
-          "expr": "rate(yearn_experimental{param=\"pricePerShare\"}[2m])",
-          "interval": "",
-          "legendFormat": "{{vault}}",
-          "queryType": "randomWalk",
-          "refId": "A"
-        }
-      ],
-      "thresholds": [],
-      "timeFrom": null,
-      "timeRegions": [],
-      "timeShift": null,
-      "title": "VE - Share Price - Rate of Increase",
-      "tooltip": {
-        "shared": true,
-        "sort": 2,
-        "value_type": "individual"
-      },
-      "transparent": true,
-      "type": "graph",
-      "xaxis": {
-        "buckets": null,
-        "mode": "time",
-        "name": null,
-        "show": true,
-        "values": []
-      },
-      "yaxes": [
-        {
-          "$$hashKey": "object:3977",
-          "format": "none",
-          "label": null,
-          "logBase": 1,
-          "max": null,
-          "min": null,
-          "show": true
-        },
-        {
-          "$$hashKey": "object:3978",
-          "format": "short",
-          "label": null,
-          "logBase": 1,
-          "max": null,
-          "min": null,
-          "show": false
-        }
-      ],
-      "yaxis": {
-        "align": false,
-        "alignLevel": null
-      }
-    },
-    {
-      "aliasColors": {},
-      "bars": false,
-      "dashLength": 10,
-      "dashes": false,
-      "datasource": "${DS_PROMETHEUS}",
-      "decimals": 6,
-      "description": "The current price of the vault's lp token, should increase steadily as vault's farmed assets are sold.",
-      "fieldConfig": {
-        "defaults": {
-          "custom": {},
-          "thresholds": {
-            "mode": "absolute",
-            "steps": []
-          }
-        },
-        "overrides": []
-      },
       "fill": 0,
       "fillGradient": 0,
       "gridPos": {
         "h": 8,
         "w": 12,
         "x": 12,
-        "y": 16
+        "y": 14
       },
       "hiddenSeries": false,
-      "id": 20,
+      "id": 4,
       "legend": {
         "alignAsTable": true,
         "avg": false,
         "current": true,
-        "hideEmpty": false,
-        "hideZero": false,
         "max": false,
         "min": false,
         "rightSide": true,
         "show": true,
-        "sideWidth": 235,
         "sort": "current",
         "sortDesc": true,
         "total": false,
         "values": true
       },
       "lines": true,
-      "linewidth": 2,
+      "linewidth": 1,
       "nullPointMode": "connected",
       "options": {
-        "alertThreshold": false
+        "alertThreshold": true
       },
       "percentage": false,
       "pluginVersion": "7.4.0",
@@ -655,17 +588,26 @@
       "steppedLine": true,
       "targets": [
         {
-          "expr": "yearn_experimental{param=\"pricePerShare\"}",
+          "expr": "sort(yearn{param=\"min vecrv\",vault!=\"GUSD\"})",
           "interval": "",
+          "intervalFactor": 1,
           "legendFormat": "{{vault}}",
+          "queryType": "randomWalk",
           "refId": "A"
+        },
+        {
+          "expr": "avg(yearn{param=\"vecrv balance\"})",
+          "interval": "",
+          "intervalFactor": 1,
+          "legendFormat": "veCRV Balance",
+          "refId": "B"
         }
       ],
       "thresholds": [],
       "timeFrom": null,
       "timeRegions": [],
       "timeShift": null,
-      "title": "VE - Share Price",
+      "title": "veCRV Required for Max Boost",
       "tooltip": {
         "shared": true,
         "sort": 2,
@@ -682,18 +624,18 @@
       },
       "yaxes": [
         {
-          "$$hashKey": "object:1936",
+          "$$hashKey": "object:631",
           "format": "short",
-          "label": "Share Price",
-          "logBase": 1,
+          "label": null,
+          "logBase": 2,
           "max": null,
-          "min": "1",
+          "min": null,
           "show": true
         },
         {
-          "$$hashKey": "object:1937",
-          "format": "string",
-          "label": "",
+          "$$hashKey": "object:632",
+          "format": "short",
+          "label": null,
           "logBase": 1,
           "max": null,
           "min": null,
@@ -706,7 +648,7 @@
       }
     }
   ],
-  "refresh": false,
+  "refresh": "30s",
   "schemaVersion": 27,
   "style": "dark",
   "tags": [],
@@ -714,12 +656,12 @@
     "list": []
   },
   "time": {
-    "from": "now-2d",
+    "from": "now-24h",
     "to": "now"
   },
   "timepicker": {},
   "timezone": "",
-  "title": "Share Price",
-  "uid": "P0Gx7dEMz",
+  "title": "Boost Stats",
+  "uid": "XeOts7TMk",
   "version": 3
 }
