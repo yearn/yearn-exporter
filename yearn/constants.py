@@ -47,6 +47,7 @@ STRATEGY_INTERFACES = {
     "0xd7F641697ca4e0e19F6C9cF84989ABc293D24f84": interface.StrategyCurvesUSDVoterProxy,
     "0xb21C4d2f7b2F29109FF6243309647A01bEB9950a": interface.StrategyCurveHUSDVoterProxy,
     "0x33F3f002b8f812f3E087E9245921C8355E777231": interface.StrategyCurveDUSDVoterProxy,
+    "0x7A10bE29c4d9073E6B3B6b7D1fB5bCDBecA2AA1F": interface.StrategyCurvea3CRVVoterProxy,
 }
 
 VAULT_ALIASES = {
@@ -79,6 +80,7 @@ VAULT_ALIASES = {
     "0x39546945695DCb1c037C836925B355262f551f55": "curve.fi/husd",
     "0x8e6741b456a074F0Bc45B8b82A755d4aF7E965dF": "curve.fi/dusd",
     "0x5533ed0a3b83F70c3c4a1f69Ef5546D3D4713E44": "curve.fi/susd",
+    "0x03403154afc09Ce8e44C3B185C82C6aD5f86b9ab": "curve.fi/aave",
 }
 
 BTC_LIKE = {
