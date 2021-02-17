@@ -81,6 +81,7 @@ VAULT_ALIASES = {
     "0x8e6741b456a074F0Bc45B8b82A755d4aF7E965dF": "curve.fi/dusd",
     "0x5533ed0a3b83F70c3c4a1f69Ef5546D3D4713E44": "curve.fi/susd",
     "0x03403154afc09Ce8e44C3B185C82C6aD5f86b9ab": "curve.fi/aave",
+    "0xE625F5923303f1CE7A43ACFEFd11fd12f30DbcA4": "curve.fi/ankreth",
 }
 
 BTC_LIKE = {
