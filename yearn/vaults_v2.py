@@ -7,10 +7,40 @@ from packaging import version
 
 from yearn import strategies
 from yearn import uniswap
+from yearn.mutlicall import fetch_multicall
 
 
 ZERO_ADDRESS = "0x0000000000000000000000000000000000000000"
 MIN_VERSION = version.parse("0.2.0")
+VAULT_VIEWS = [
+    "decimals",
+    "totalAssets",
+    "maxAvailableShares",
+    "pricePerShare",
+    "debtOutstanding",
+    "creditAvailable",
+    "expectedReturn",
+    "totalSupply",
+    "emergencyShutdown",
+    "depositLimit",
+    "debtRatio",
+    "totalDebt",
+    "lastReport",
+    "managementFee",
+    "performanceFee",
+]
+
+VAULT_VIEWS_SCALED = [
+    "totalAssets",
+    "maxAvailableShares",
+    "pricePerShare",
+    "debtOutstanding",
+    "creditAvailable",
+    "expectedReturn",
+    "totalSupply",
+    "depositLimit",
+    "totalDebt",
+]
 
 
 @dataclass
@@ -28,23 +58,11 @@ class VaultV2:
         strats = [str(strat.strategy) for strat in self.strategies]
         strats.extend([ZERO_ADDRESS] * (40 - len(strats)))
         try:
-            info = {
-                "totalAssets": self.vault.totalAssets() / scale,
-                "maxAvailableShares": self.vault.maxAvailableShares() / scale,
-                "pricePerShare": self.vault.pricePerShare() / scale,
-                "debtOutstanding": self.vault.debtOutstanding() / scale,
-                "creditAvailable": self.vault.creditAvailable() / scale,
-                "expectedReturn": self.vault.expectedReturn() / scale,
-                "totalSupply": self.vault.totalSupply() / scale,
-                "emergencyShutdown": self.vault.emergencyShutdown(),
-                "depositLimit": self.vault.depositLimit() / scale,
-                "debtRatio": self.vault.debtRatio(),
-                "totalDebt": self.vault.totalDebt() / scale,
-                "lastReport": self.vault.lastReport(),
-                "managementFee": self.vault.managementFee(),
-                "performanceFee": self.vault.performanceFee(),
-                "strategies": {},
-            }
+            results = fetch_multicall(*[[self.vault, view] for view in VAULT_VIEWS])
+            info = dict(zip(VAULT_VIEWS, results))
+            for name in VAULT_VIEWS_SCALED:
+                info[name] /= scale
+            info['strategies'] = {}
         except ValueError as e:
             info = {"strategies": {}}
         for strat in self.strategies:
@@ -86,9 +104,13 @@ experimental_vaults = {
     # Left out Lido St. Ether Vault, and ApeTrump Vault
 }
 
+
 def get_vaults():
     # TODO: read from registry
     return [VaultV2(name=name, vault=interface.Vault(vault), strategies=[]) for name, vault in vaults.items()]
 
+
 def get_experimental_vaults():
-    return [VaultV2(name=name, vault=interface.Vault(vault), strategies=[]) for name, vault in experimental_vaults.items()]
+    return [
+        VaultV2(name=name, vault=interface.Vault(vault), strategies=[]) for name, vault in experimental_vaults.items()
+    ]
