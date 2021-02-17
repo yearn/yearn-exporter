@@ -2,12 +2,13 @@ import warnings
 
 import toml
 from brownie import chain
+from brownie.exceptions import BrownieEnvironmentWarning
 from click import secho, style
 from prometheus_client import Gauge, start_http_server
 
 from yearn import vaults_v1, vaults_v2
 
-warnings.simplefilter("ignore")
+warnings.simplefilter("ignore", BrownieEnvironmentWarning)
 
 
 def develop_v1():
