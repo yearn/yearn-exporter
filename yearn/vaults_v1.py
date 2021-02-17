@@ -1,7 +1,8 @@
 from dataclasses import dataclass
 from typing import Optional
+import warnings
 
-from brownie import interface, web3
+from brownie import interface, web3, Contract
 from brownie.network.contract import InterfaceContainer
 
 from yearn import constants, curve, uniswap
@@ -22,9 +23,13 @@ class VaultV1:
     def __post_init__(self):
         self.vault = constants.VAULT_INTERFACES.get(self.vault, interface.yVault)(self.vault)
         self.controller = constants.CONTROLLER_INTERFACES[self.controller](self.controller)
-        self.strategy = constants.STRATEGY_INTERFACES[self.strategy](self.strategy)
+        if self.strategy not in constants.STRATEGY_INTERFACES:
+            warnings.warn(f'no strategy interface for {self.strategy}, reading from etherscan')
+        self.strategy = constants.STRATEGY_INTERFACES.get(self.strategy, Contract)(self.strategy)
         self.token = interface.ERC20(self.token)
-        self.name = constants.VAULT_ALIASES[str(self.vault)]
+        if str(self.vault) not in constants.VAULT_ALIASES:
+            warnings.warn(f'no vault alias for {self.vault}, reading from vault.sybmol()')
+        self.name = constants.VAULT_ALIASES.get(str(self.vault), self.vault.symbol())
         self.decimals = self.vault.decimals()  # vaults inherit decimals from token
 
     def describe(self):
