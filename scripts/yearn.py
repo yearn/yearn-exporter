@@ -72,6 +72,34 @@ def exporter_v2():
                     strat_gauge.labels(vault.name, strat, param).set(value)
 
 
+def develop_experimental():
+    for vault in vaults_v2.get_experimental_vaults():
+        print(vault)
+        print(toml.dumps(vault.describe()))
+
+
+def exporter_experimental():
+    vault_gauge = Gauge("yearn_vault", "", ["vault", "param"])
+    strat_gauge = Gauge("yearn_strategy", "", ["vault", "strategy", "param"])
+    timing = Gauge("yearn_timing", "", ["vault", "action"])
+    start_http_server(8802)
+    experimental_vaults = vaults_v2.get_experimental_vaults()
+    for block in chain.new_blocks():
+        secho(f"{block.number}", fg="green")
+        for vault in experimental_vaults:
+            secho(vault.name)
+            with timing.labels(vault.name, "describe").time():
+                info = vault.describe()
+
+            for param, value in info.items():
+                if param == "strategies":
+                    continue
+                vault_gauge.labels(vault.name, param).set(value)
+
+            for strat in info["strategies"]:
+                for param, value in info["strategies"][strat].items():
+                    strat_gauge.labels(vault.name, strat, param).set(value)
+
 def tvl():
     secho('v1', fg='cyan', bold=True)
     registry = vaults_v1.load_registry()
