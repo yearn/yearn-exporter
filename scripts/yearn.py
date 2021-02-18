@@ -6,7 +6,7 @@ from brownie.exceptions import BrownieEnvironmentWarning
 from click import secho, style
 from prometheus_client import Gauge, start_http_server
 
-from yearn import vaults_v1, vaults_v2
+from yearn import vaults_v1, vaults_v2, instrumentation
 
 warnings.simplefilter("ignore", BrownieEnvironmentWarning)
 
@@ -125,4 +125,4 @@ def tvl():
         print(style(f'${info["tvl"]:12,.0f}', fg="green"), style(f"{vault.name}", fg="yellow"))
 
     print(style(f"${total:12,.0f}", fg="green", bold=True), style(f"total", fg="yellow", bold=True))
-
+    instrumentation.display()
