@@ -49,6 +49,10 @@ STRATEGY_INTERFACES = {
     "0x33F3f002b8f812f3E087E9245921C8355E777231": interface.StrategyCurveDUSDVoterProxy,
     "0x7A10bE29c4d9073E6B3B6b7D1fB5bCDBecA2AA1F": interface.StrategyCurvea3CRVVoterProxy,
     "0xBdCeae91e10A80dbD7ad5e884c86EAe56b075Caa": interface.StrategyCurveAnkrVoterProxy,
+    "0x2F90c531857a2086669520e772E9d433BbfD5496": interface.StrategyDAI3pool,
+    "0xBcC6abd115a32fC27f7B49F9e17D0BcefDd278aC": interface.StrategyCurvemUSDVoterProxy,
+    "0x83e7399113561ae691c413ed334137D3839e2302": interface.StrategyCurveEURVoterProxy,
+    "0x4f2fdebE0dF5C92EEe77Ff902512d725F6dfE65c": interface.StrategyUSDC3pool,
 }
 
 VAULT_ALIASES = {
