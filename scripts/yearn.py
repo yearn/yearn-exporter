@@ -1,13 +1,15 @@
 import warnings
+from collections import Counter
 
 import toml
 from brownie import chain
+from brownie.exceptions import BrownieEnvironmentWarning
 from click import secho, style
 from prometheus_client import Gauge, start_http_server
 
-from yearn import vaults_v1, vaults_v2
+from yearn import iearn, vaults_v1, vaults_v2, ironbank
 
-warnings.simplefilter("ignore")
+warnings.simplefilter("ignore", BrownieEnvironmentWarning)
 
 
 def develop_v1():
@@ -99,29 +101,3 @@ def exporter_experimental():
             for strat in info["strategies"]:
                 for param, value in info["strategies"][strat].items():
                     strat_gauge.labels(vault.name, strat, param).set(value)
-
-def tvl():
-    secho('v1', fg='cyan', bold=True)
-    registry = vaults_v1.load_registry()
-    vaults = vaults_v1.load_vaults(registry)
-    total = 0
-    for vault in vaults:
-        info = vault.describe()
-        total += info["tvl"]
-        print(style(f'${info["tvl"]:12,.0f}', fg="green"), style(f"{vault.name}", fg="yellow"))
-
-    print(style(f"${total:12,.0f}", fg="green", bold=True), style(f"total", fg="yellow", bold=True))
-
-    secho('v2', fg='cyan', bold=True)
-    vaults = vaults_v2.get_vaults()
-    total = 0
-    for vault in vaults:
-        info = vault.describe()
-        if "tvl" not in info:
-            print(style("error".rjust(13), fg="red"), style(f"{vault.name}", fg="yellow"))
-            continue
-        total += info["tvl"]
-        print(style(f'${info["tvl"]:12,.0f}', fg="green"), style(f"{vault.name}", fg="yellow"))
-
-    print(style(f"${total:12,.0f}", fg="green", bold=True), style(f"total", fg="yellow", bold=True))
-

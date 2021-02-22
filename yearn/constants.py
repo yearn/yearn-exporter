@@ -48,6 +48,13 @@ STRATEGY_INTERFACES = {
     "0xb21C4d2f7b2F29109FF6243309647A01bEB9950a": interface.StrategyCurveHUSDVoterProxy,
     "0x33F3f002b8f812f3E087E9245921C8355E777231": interface.StrategyCurveDUSDVoterProxy,
     "0x7A10bE29c4d9073E6B3B6b7D1fB5bCDBecA2AA1F": interface.StrategyCurvea3CRVVoterProxy,
+    "0xBdCeae91e10A80dbD7ad5e884c86EAe56b075Caa": interface.StrategyCurveAnkrVoterProxy,
+    "0x2F90c531857a2086669520e772E9d433BbfD5496": interface.StrategyDAI3pool,
+    "0xBcC6abd115a32fC27f7B49F9e17D0BcefDd278aC": interface.StrategyCurvemUSDVoterProxy,
+    "0x83e7399113561ae691c413ed334137D3839e2302": interface.StrategyCurveEURVoterProxy,
+    "0x4f2fdebE0dF5C92EEe77Ff902512d725F6dfE65c": interface.StrategyUSDC3pool,
+    "0xAa12d6c9d680EAfA48D8c1ECba3FCF1753940A12": interface.StrategyUSDT3pool,
+    "0x4BA03330338172fEbEb0050Be6940c6e7f9c91b0": interface.StrategyTUSDypool,
 }
 
 VAULT_ALIASES = {
@@ -81,6 +88,7 @@ VAULT_ALIASES = {
     "0x8e6741b456a074F0Bc45B8b82A755d4aF7E965dF": "curve.fi/dusd",
     "0x5533ed0a3b83F70c3c4a1f69Ef5546D3D4713E44": "curve.fi/susd",
     "0x03403154afc09Ce8e44C3B185C82C6aD5f86b9ab": "curve.fi/aave",
+    "0xE625F5923303f1CE7A43ACFEFd11fd12f30DbcA4": "curve.fi/ankreth",
 }
 
 BTC_LIKE = {

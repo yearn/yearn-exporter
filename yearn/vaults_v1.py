@@ -1,10 +1,12 @@
 from dataclasses import dataclass
 from typing import Optional
+import warnings
 
-from brownie import interface, web3
+from brownie import interface, web3, Contract
 from brownie.network.contract import InterfaceContainer
 
 from yearn import constants, curve, uniswap
+from yearn.mutlicall import fetch_multicall
 
 
 @dataclass
@@ -22,36 +24,48 @@ class VaultV1:
     def __post_init__(self):
         self.vault = constants.VAULT_INTERFACES.get(self.vault, interface.yVault)(self.vault)
         self.controller = constants.CONTROLLER_INTERFACES[self.controller](self.controller)
-        self.strategy = constants.STRATEGY_INTERFACES[self.strategy](self.strategy)
+        if self.strategy not in constants.STRATEGY_INTERFACES:
+            warnings.warn(f'no strategy interface for {self.strategy}, reading from etherscan')
+        self.strategy = constants.STRATEGY_INTERFACES.get(self.strategy, Contract)(self.strategy)
         self.token = interface.ERC20(self.token)
-        self.name = constants.VAULT_ALIASES[str(self.vault)]
+        if str(self.vault) not in constants.VAULT_ALIASES:
+            warnings.warn(f'no vault alias for {self.vault}, reading from vault.sybmol()')
+        self.name = constants.VAULT_ALIASES.get(str(self.vault), self.vault.symbol())
         self.decimals = self.vault.decimals()  # vaults inherit decimals from token
 
     def describe(self):
         scale = 10 ** self.decimals
-        info = {
-            "vault balance": self.vault.balance() / scale,
-            "vault total": self.vault.totalSupply() / scale,
-            "strategy balance": self.strategy.balanceOf() / scale,
-            "share price": 0,
-        }
+        info = {}
         try:
-            info["share price"] = self.vault.getPricePerFullShare() / 1e18
+            info['share price'] = self.vault.getPricePerFullShare() / 1e18
         except ValueError:
-            pass
+            # no money in vault, exit early
+            return {'tvl': 0}
+
+        attrs = {
+            'vault balance': [self.vault, 'balance'],
+            'vault total': [self.vault, 'totalSupply'],
+            'strategy balance': [self.strategy, 'balanceOf'],
+        }
 
         # some of the oldest vaults don't implement these methods
         if hasattr(self.vault, "available"):
-            info["available"] = self.vault.available() / scale
+            attrs['available'] = [self.vault, 'available']
 
         if hasattr(self.vault, "min") and hasattr(self.vault, "max"):
-            info["strategy buffer"] = self.vault.min() / self.vault.max()
+            attrs['min'] = [self.vault, 'min']
+            attrs['max'] = [self.vault, 'max']
 
         # new curve voter proxy vaults
         if hasattr(self.strategy, "proxy"):
-            vote_proxy = interface.CurveYCRVVoter(self.strategy.voter())
-            swap = interface.CurveSwap(curve.registry.get_pool_from_lp_token(self.token))
-            gauge = interface.CurveGauge(self.strategy.gauge())
+            results = fetch_multicall(
+                [self.strategy, 'voter'],
+                [curve.registry, 'get_pool_from_lp_token', self.token],
+                [self.strategy, 'gauge'],
+            )
+            vote_proxy = interface.CurveYCRVVoter(results[0])
+            swap = interface.CurveSwap(results[1])
+            gauge = interface.CurveGauge(results[2])
             info.update(curve.calculate_boost(gauge, vote_proxy))
             info.update(curve.calculate_apy(gauge, swap))
             info["earned"] = gauge.claimable_tokens.call(vote_proxy).to("ether")
@@ -61,10 +75,23 @@ class VaultV1:
 
         if self.strategy._name == "StrategyYFIGovernance":
             ygov = interface.YearnGovernance(self.strategy.gov())
-            info["earned"] = ygov.earned(self.strategy) / 1e18
-            info["reward rate"] = ygov.rewardRate() / 1e18
-            info["ygov balance"] = ygov.balanceOf(self.strategy) / 1e18
-            info["ygov total"] = ygov.totalSupply() / 1e18
+            attrs["earned"] = [ygov, 'earned', self.strategy]
+            attrs["reward rate"] = [ygov, 'rewardRate']
+            attrs["ygov balance"] = [ygov, 'balanceOf', self.strategy]
+            attrs["ygov total"] = [ygov, 'totalSupply']
+
+        # fetch attrs as multicall
+        try:
+            results = fetch_multicall(*attrs.values())
+        except ValueError:
+            pass
+        else:
+            for name, attr in zip(attrs, results):
+                info[name] = attr / scale
+        
+        # some additional post-processing
+        if 'min' in info:
+            info["strategy buffer"] = info.pop('min') / info.pop('max')
 
         if "token price" not in info:
             if self.name in ["aLINK"]:
