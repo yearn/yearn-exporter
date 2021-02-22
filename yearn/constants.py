@@ -53,6 +53,8 @@ STRATEGY_INTERFACES = {
     "0xBcC6abd115a32fC27f7B49F9e17D0BcefDd278aC": interface.StrategyCurvemUSDVoterProxy,
     "0x83e7399113561ae691c413ed334137D3839e2302": interface.StrategyCurveEURVoterProxy,
     "0x4f2fdebE0dF5C92EEe77Ff902512d725F6dfE65c": interface.StrategyUSDC3pool,
+    "0xAa12d6c9d680EAfA48D8c1ECba3FCF1753940A12": interface.StrategyUSDT3pool,
+    "0x4BA03330338172fEbEb0050Be6940c6e7f9c91b0": interface.StrategyTUSDypool,
 }
 
 VAULT_ALIASES = {
