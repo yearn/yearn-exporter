@@ -1,6 +1,9 @@
+from collections import defaultdict
+from itertools import product
+
 from brownie import Contract
 
-multicall = Contract('0xeefBa1e63905eF1D7ACbA5a8513c70307C1cE441')
+multicall = Contract("0xeefBa1e63905eF1D7ACbA5a8513c70307C1cE441")
 
 
 def fetch_multicall(*calls):
@@ -12,7 +15,7 @@ def fetch_multicall(*calls):
         fn = getattr(contract, fn_name)
 
         # check that there aren't multiple functions with the same name
-        if hasattr(fn, '_get_fn_from_args'):
+        if hasattr(fn, "_get_fn_from_args"):
             fn = fn._get_fn_from_args(fn_inputs)
 
         fn_list.append(fn)
@@ -25,3 +28,16 @@ def fetch_multicall(*calls):
         decoded.append(fn.decode_output(data.hex()))
 
     return decoded
+
+
+def multicall_matrix(contracts, params):
+    matrix = list(product(contracts, params))
+    calls = [[contract, param] for contract, param in matrix]
+
+    results = fetch_multicall(*calls)
+
+    output = defaultdict(dict)
+    for (contract, param), value in zip(matrix, results):
+        output[str(contract)][param] = value
+
+    return dict(output)
