@@ -38,6 +38,6 @@ def multicall_matrix(contracts, params):
 
     output = defaultdict(dict)
     for (contract, param), value in zip(matrix, results):
-        output[str(contract)][param] = value
+        output[contract][param] = value
 
     return dict(output)
