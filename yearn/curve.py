@@ -18,7 +18,7 @@ def lp_to_pool(addr):
 
 @cached(LRUCache(1000))
 def get_underlying(pool):
-    return registry.get_underlying_coins(pool)
+    return [coin for coin in registry.get_underlying_coins(pool) if coin != ZERO_ADDRESS]
 
 
 def is_curve_lp_token(addr):

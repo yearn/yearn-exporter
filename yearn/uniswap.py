@@ -89,13 +89,12 @@ def get_compound_markets():
 
 @cached(LRUCache(1000))
 def is_compound_market(addr):
-    comptroller = Contract('0x3d9819210A31b4961b30EF54bE2aeD79B9c9Cd3B')
-    return addr in comptroller.getAllMarkets()
+    return addr in get_compound_markets()
 
 
 def token_price(token):
     # stablecoin => 1
-    if token in STABLECOINS:
+    if str(token) in STABLECOINS:
         return 1
     # eth => weth
     if token == '0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE':
