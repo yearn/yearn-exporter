@@ -1,9 +1,8 @@
-from brownie import interface
+from brownie import ZERO_ADDRESS, interface
+from cachetools import LRUCache, cached
 
-from yearn import constants
 from yearn import uniswap
 from yearn.mutlicall import fetch_multicall
-
 
 crv = interface.ERC20("0xD533a949740bb3306d119CC777fa900bA034cd52")
 voting_escrow = interface.CurveVotingEscrow("0x5f3b5DfEb7B28CDbD7FAba78963EE202a494e2A2")
@@ -12,15 +11,30 @@ registry = interface.CurveRegistry("0x7D86446dDb609eD0F5f8684AcF30380a356b2B4c")
 underlying_coins = {}
 
 
-def get_base_price(pool):
-    if pool not in underlying_coins:
-        underlying_coins[pool] = set(registry.get_underlying_coins(pool))
-    if underlying_coins[pool] & constants.BTC_LIKE:
-        return uniswap.price_router(uniswap.wbtc, uniswap.usdc)
-    elif underlying_coins[pool] & constants.ETH_LIKE:
-        return uniswap.price_router(uniswap.weth, uniswap.usdc)
-    else:
-        return 1
+@cached(LRUCache(1000))
+def lp_to_pool(addr):
+    return registry.get_pool_from_lp_token(addr)
+
+
+@cached(LRUCache(1000))
+def get_underlying(pool):
+    return registry.get_underlying_coins(pool)
+
+
+def is_curve_lp_token(addr):
+    return lp_to_pool(addr) != ZERO_ADDRESS
+
+
+def get_base_price(pool_or_lp):
+    # try to find pool for lp, otherwise assume pool
+    pool = lp_to_pool(pool_or_lp)
+    if pool == ZERO_ADDRESS:
+        pool = pool_or_lp
+    return uniswap.token_price(get_underlying(pool)[0])
+
+
+def get_virtual_price(lp):
+    return interface.CurveSwap(lp_to_pool(lp)).get_virtual_price() / 1e18
 
 
 def calculate_boost(gauge, addr):
