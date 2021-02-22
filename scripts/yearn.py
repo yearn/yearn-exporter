@@ -74,6 +74,32 @@ def exporter_v2():
                     strat_gauge.labels(vault.name, strat, param).set(value)
 
 
+def exporter_iearn():
+    earn_gauge = Gauge("iearn", "", ["vault", "param"])
+    start_http_server(8802)
+    earns = iearn.load_iearn()
+    for block in chain.new_blocks():
+        secho(f"{block.number}", fg="green")
+        output = iearn.describe_iearn(earns)
+        for name, data in output.items():
+            for param, value in data.items():
+                earn_gauge.labels(name, param).set(value)
+
+
+def exporter_ironbank():
+    ironbank_gauge = Gauge("ironbank", "", ["vault", "param"])
+    start_http_server(8803)
+    markets = ironbank.load_ironbank()
+    for block in chain.new_blocks():
+        secho(f"{block.number}", fg="green")
+        output = ironbank.describe_ironbank(markets)
+        for name, data in output.items():
+            for param, value in data.items():
+                if value is None:
+                    continue
+                ironbank_gauge.labels(name, param).set(value)
+
+
 def develop_experimental():
     for vault in vaults_v2.get_experimental_vaults():
         print(vault)
