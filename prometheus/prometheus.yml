@@ -21,23 +21,20 @@ rule_files:
 scrape_configs:
   # The job name is added as a label `job=<job_name>` to any timeseries scraped from this config.
   - job_name: 'yearn'
+    honor_timestamps: true
+
     # metrics_path defaults to '/metrics'
     # scheme defaults to 'http'.
     static_configs:
     - targets: ['yearn-exporter:8800']
 
-  - job_name: 'prometheus'
-    # metrics_path defaults to '/metrics'
-    # scheme defaults to 'http'.
-    static_configs:
-    - targets: ['localhost:9090']
-
-  - job_name: 'nginx'
-    # metrics from the nginx
-    static_configs:
-    - targets: ['nginx-prometheus-exporter:9113']
-
   - job_name: node
     # node exporter metrics from https://grafana.com/grafana/dashboards/1860
     static_configs:
     - targets: ['node-exporter:9100']
+  
+  - job_name: 'victoria-metrics'
+    # metrics_path defaults to '/metrics'
+    # scheme defaults to 'http'.
+    static_configs:
+    - targets: ['victoria-metrics:8428']
