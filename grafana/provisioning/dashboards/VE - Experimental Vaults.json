@@ -59,7 +59,7 @@
       "bars": false,
       "dashLength": 10,
       "dashes": false,
-      "datasource": "DS_PROMETHEUS",
+      "datasource": "${DS_PROMETHEUS}",
       "description": "Rate of increase of Vault Share price. If this goes up the vaults are selling their farmed asset for more vault tokens! This helps normalize and show harvests compared to other vaults. The larger the spikes the more assets sold on that harvest call. The table shows the max value harvested for the timeframe selected.",
       "fieldConfig": {
         "defaults": {
@@ -163,7 +163,7 @@
       "bars": false,
       "dashLength": 10,
       "dashes": false,
-      "datasource": "DS_PROMETHEUS",
+      "datasource": "${DS_PROMETHEUS}",
       "description": "The current price of the vault's lp token, should increase steadily as vault's farmed assets are sold.",
       "fieldConfig": {
         "defaults": {
@@ -267,7 +267,7 @@
       "bars": false,
       "dashLength": 10,
       "dashes": false,
-      "datasource": "DS_PROMETHEUS",
+      "datasource": "${DS_PROMETHEUS}",
       "decimals": 7,
       "description": "Total Amount of AUM in the vault in their native deposit token.",
       "fieldConfig": {
@@ -372,7 +372,7 @@
       "bars": false,
       "dashLength": 10,
       "dashes": false,
-      "datasource": "DS_PROMETHEUS",
+      "datasource": "${DS_PROMETHEUS}",
       "description": "Total amount of AUM in the vault in USD terms.",
       "fieldConfig": {
         "defaults": {
@@ -480,7 +480,7 @@
       "bars": false,
       "dashLength": 10,
       "dashes": false,
-      "datasource": "DS_PROMETHEUS",
+      "datasource": "${DS_PROMETHEUS}",
       "description": "",
       "fieldConfig": {
         "defaults": {
@@ -614,7 +614,7 @@
       }
     },
     {
-      "datasource": "DS_PROMETHEUS",
+      "datasource": "${DS_PROMETHEUS}",
       "fieldConfig": {
         "defaults": {
           "color": {
@@ -687,7 +687,7 @@
       "type": "stat"
     },
     {
-      "datasource": "DS_PROMETHEUS",
+      "datasource": "${DS_PROMETHEUS}",
       "description": "0 is no 1 is yes",
       "fieldConfig": {
         "defaults": {

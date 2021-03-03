@@ -53,7 +53,7 @@
       "bars": false,
       "dashLength": 10,
       "dashes": false,
-      "datasource": "DS_PROMETHEUS",
+      "datasource": "${DS_PROMETHEUS}",
       "fieldConfig": {
         "defaults": {
           "custom": {}
@@ -169,7 +169,7 @@
       "bars": false,
       "dashLength": 10,
       "dashes": false,
-      "datasource": "DS_PROMETHEUS",
+      "datasource": "${DS_PROMETHEUS}",
       "fieldConfig": {
         "defaults": {
           "custom": {}
@@ -285,7 +285,7 @@
       "bars": true,
       "dashLength": 10,
       "dashes": false,
-      "datasource": "DS_PROMETHEUS",
+      "datasource": "${DS_PROMETHEUS}",
       "decimals": null,
       "description": "This show the curve vaults and their % of gauge weight compared to the rest of all the curve pools",
       "fieldConfig": {
@@ -409,7 +409,7 @@
       "bars": false,
       "dashLength": 10,
       "dashes": false,
-      "datasource": "DS_PROMETHEUS",
+      "datasource": "${DS_PROMETHEUS}",
       "description": "CRV price effects curve vault yields. Generally higher the price of crv the higher the yields",
       "fieldConfig": {
         "defaults": {
