@@ -13,6 +13,8 @@ set up grafana for custom dashboards and alerts.
 brownie run yearn exporter_v1 --network mainnet
 brownie run yearn exporter_v2 --network mainnet
 brownie run yearn exporter_experimental --network mainnet
+brownie run yearn exporter_ironbank --network mainnet
+brownie run yearn exporter_iearn --network mainnet
 ```
 
 ### Stats
