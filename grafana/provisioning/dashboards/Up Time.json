@@ -1,40 +1,4 @@
 {
-  "__inputs": [
-    {
-      "name": "DS_PROMETHEUS",
-      "label": "Prometheus",
-      "description": "",
-      "type": "datasource",
-      "pluginId": "prometheus",
-      "pluginName": "Prometheus"
-    }
-  ],
-  "__requires": [
-    {
-      "type": "grafana",
-      "id": "grafana",
-      "name": "Grafana",
-      "version": "7.4.0"
-    },
-    {
-      "type": "panel",
-      "id": "graph",
-      "name": "Graph",
-      "version": ""
-    },
-    {
-      "type": "datasource",
-      "id": "prometheus",
-      "name": "Prometheus",
-      "version": "1.0.0"
-    },
-    {
-      "type": "panel",
-      "id": "stat",
-      "name": "Stat",
-      "version": ""
-    }
-  ],
   "annotations": {
     "list": [
       {
@@ -51,11 +15,10 @@
   "editable": true,
   "gnetId": null,
   "graphTooltip": 0,
-  "id": null,
   "links": [],
   "panels": [
     {
-      "datasource": "DS_PROMETHEUS",
+      "datasource": "${DS_PROMETHEUS}",
       "description": "",
       "fieldConfig": {
         "defaults": {
@@ -98,9 +61,9 @@
         "overrides": []
       },
       "gridPos": {
-        "h": 7,
-        "w": 4,
-        "x": 1,
+        "h": 6,
+        "w": 3,
+        "x": 0,
         "y": 0
       },
       "id": 4,
@@ -119,7 +82,7 @@
         "text": {},
         "textMode": "value"
       },
-      "pluginVersion": "7.4.0",
+      "pluginVersion": "7.4.3",
       "targets": [
         {
           "expr": "up{job=\"prometheus\"}",
@@ -134,7 +97,7 @@
       "type": "stat"
     },
     {
-      "datasource": "DS_PROMETHEUS",
+      "datasource": "${DS_PROMETHEUS}",
       "description": "",
       "fieldConfig": {
         "defaults": {
@@ -177,9 +140,9 @@
         "overrides": []
       },
       "gridPos": {
-        "h": 7,
-        "w": 4,
-        "x": 7,
+        "h": 6,
+        "w": 3,
+        "x": 3,
         "y": 0
       },
       "id": 5,
@@ -198,7 +161,7 @@
         "text": {},
         "textMode": "value"
       },
-      "pluginVersion": "7.4.0",
+      "pluginVersion": "7.4.3",
       "targets": [
         {
           "expr": "up{job=\"yearn-v1\"}",
@@ -213,7 +176,7 @@
       "type": "stat"
     },
     {
-      "datasource": "DS_PROMETHEUS",
+      "datasource": "${DS_PROMETHEUS}",
       "description": "",
       "fieldConfig": {
         "defaults": {
@@ -256,9 +219,9 @@
         "overrides": []
       },
       "gridPos": {
-        "h": 7,
-        "w": 4,
-        "x": 13,
+        "h": 6,
+        "w": 3,
+        "x": 9,
         "y": 0
       },
       "id": 6,
@@ -277,7 +240,7 @@
         "text": {},
         "textMode": "value"
       },
-      "pluginVersion": "7.4.0",
+      "pluginVersion": "7.4.3",
       "targets": [
         {
           "expr": "up{job=\"yearn-v2\"}",
@@ -292,7 +255,7 @@
       "type": "stat"
     },
     {
-      "datasource": "DS_PROMETHEUS",
+      "datasource": "${DS_PROMETHEUS}",
       "description": "Experimental Vaults",
       "fieldConfig": {
         "defaults": {
@@ -335,9 +298,9 @@
         "overrides": []
       },
       "gridPos": {
-        "h": 7,
-        "w": 4,
-        "x": 19,
+        "h": 6,
+        "w": 3,
+        "x": 12,
         "y": 0
       },
       "id": 7,
@@ -356,7 +319,7 @@
         "text": {},
         "textMode": "value"
       },
-      "pluginVersion": "7.4.0",
+      "pluginVersion": "7.4.3",
       "targets": [
         {
           "expr": "up{job=\"yearn-experimental\"}",
@@ -371,11 +334,169 @@
       "type": "stat"
     },
     {
+      "datasource": "${DS_PROMETHEUS}",
+      "description": "",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "custom": {},
+          "mappings": [
+            {
+              "from": "",
+              "id": 1,
+              "text": "Up",
+              "to": "",
+              "type": 1,
+              "value": "1"
+            },
+            {
+              "from": "",
+              "id": 2,
+              "text": "Down",
+              "to": "",
+              "type": 1,
+              "value": "0"
+            }
+          ],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "red",
+                "value": null
+              },
+              {
+                "color": "green",
+                "value": 1
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 6,
+        "w": 3,
+        "x": 18,
+        "y": 0
+      },
+      "id": 9,
+      "options": {
+        "colorMode": "value",
+        "graphMode": "none",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "text": {},
+        "textMode": "value"
+      },
+      "pluginVersion": "7.4.3",
+      "targets": [
+        {
+          "expr": "up{job=\"iearn\"}",
+          "instant": true,
+          "interval": "",
+          "legendFormat": "{{job}}",
+          "refId": "A"
+        }
+      ],
+      "title": "Earn",
+      "transparent": true,
+      "type": "stat"
+    },
+    {
+      "datasource": "${DS_PROMETHEUS}",
+      "description": "",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "custom": {},
+          "mappings": [
+            {
+              "from": "",
+              "id": 1,
+              "text": "Up",
+              "to": "",
+              "type": 1,
+              "value": "1"
+            },
+            {
+              "from": "",
+              "id": 2,
+              "text": "Down",
+              "to": "",
+              "type": 1,
+              "value": "0"
+            }
+          ],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "red",
+                "value": null
+              },
+              {
+                "color": "green",
+                "value": 1
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 6,
+        "w": 3,
+        "x": 21,
+        "y": 0
+      },
+      "id": 8,
+      "options": {
+        "colorMode": "value",
+        "graphMode": "none",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "text": {},
+        "textMode": "value"
+      },
+      "pluginVersion": "7.4.3",
+      "targets": [
+        {
+          "expr": "up{job=\"ironbank\"}",
+          "instant": true,
+          "interval": "",
+          "legendFormat": "{{job}}",
+          "refId": "A"
+        }
+      ],
+      "title": "Ironbank",
+      "transparent": true,
+      "type": "stat"
+    },
+    {
       "aliasColors": {},
       "bars": false,
       "dashLength": 10,
       "dashes": false,
-      "datasource": "DS_PROMETHEUS",
+      "datasource": "${DS_PROMETHEUS}",
       "description": "",
       "fieldConfig": {
         "defaults": {
@@ -394,7 +515,7 @@
         "h": 16,
         "w": 24,
         "x": 0,
-        "y": 7
+        "y": 6
       },
       "hiddenSeries": false,
       "id": 2,
@@ -416,7 +537,7 @@
         "alertThreshold": true
       },
       "percentage": false,
-      "pluginVersion": "7.4.0",
+      "pluginVersion": "7.4.3",
       "pointradius": 2,
       "points": false,
       "renderer": "flot",
@@ -451,6 +572,20 @@
           "interval": "",
           "legendFormat": "{{job}}",
           "refId": "E"
+        },
+        {
+          "expr": "up{job=\"iearn\"}",
+          "hide": false,
+          "interval": "",
+          "legendFormat": "{{job}}",
+          "refId": "D"
+        },
+        {
+          "expr": "up{job=\"ironbank\"}",
+          "hide": false,
+          "interval": "",
+          "legendFormat": "{{job}}",
+          "refId": "F"
         }
       ],
       "thresholds": [],
@@ -506,12 +641,12 @@
     "list": []
   },
   "time": {
-    "from": "now-6h",
+    "from": "now-5m",
     "to": "now"
   },
   "timepicker": {},
   "timezone": "",
   "title": "Are the Exporters Working?",
   "uid": "ysHvMOPGk",
-  "version": 3
+  "version": 2
 }

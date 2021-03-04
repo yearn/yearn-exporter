@@ -11,6 +11,8 @@ services:
   yearn-exporter-v1:
     build: .
     command: exporter_v1
+    ports:
+      - 8800:8800
     environment:
       - WEB3_INFURA_PROJECT_ID
       - ALCHEMY_URL
@@ -23,6 +25,8 @@ services:
   yearn-exporter-v2:
     build: .
     command: exporter_v2
+    ports:
+      - 8801:8801
     environment:
       - WEB3_INFURA_PROJECT_ID
       - ALCHEMY_URL
@@ -35,6 +39,8 @@ services:
   yearn-exporter-iearn:
     build: .
     command: exporter_iearn
+    ports:
+      - 8802:8802
     environment:
       - WEB3_INFURA_PROJECT_ID
       - ALCHEMY_URL
@@ -47,6 +53,8 @@ services:
   yearn-exporter-ironbank:
     build: .
     command: exporter_ironbank
+    ports:
+      - 8803:8803
     environment:
       - WEB3_INFURA_PROJECT_ID
       - ALCHEMY_URL
@@ -59,6 +67,8 @@ services:
   yearn-exporter-experimental:
     build: .
     command: exporter_experimental
+    ports:
+      - 8804:8804
     environment:
       - WEB3_INFURA_PROJECT_ID
       - ALCHEMY_URL

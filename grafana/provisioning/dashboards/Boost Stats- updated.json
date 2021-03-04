@@ -1,7 +1,7 @@
 {
   "__inputs": [
     {
-      "name": "DS_PROMETHEUS",
+      "name": "${DS_PROMETHEUS}",
       "label": "Prometheus",
       "description": "",
       "type": "datasource",
@@ -55,7 +55,7 @@
   "links": [],
   "panels": [
     {
-      "datasource": "DS_PROMETHEUS",
+      "datasource": "${DS_PROMETHEUS}",
       "fieldConfig": {
         "defaults": {
           "color": {
@@ -162,7 +162,7 @@
       "bars": false,
       "dashLength": 10,
       "dashes": false,
-      "datasource": "DS_PROMETHEUS",
+      "datasource": "${DS_PROMETHEUS}",
       "description": "This is the current boost the vaults are getting",
       "fieldConfig": {
         "defaults": {
@@ -273,7 +273,7 @@
       "bars": false,
       "dashLength": 10,
       "dashes": false,
-      "datasource": "DS_PROMETHEUS",
+      "datasource": "${DS_PROMETHEUS}",
       "decimals": 4,
       "description": "This show amount of veCRV yearn has locked via backscratcher vault vs all other veCRV locked in all of curve.",
       "fieldConfig": {
@@ -436,7 +436,7 @@
       "bars": false,
       "dashLength": 10,
       "dashes": false,
-      "datasource": "DS_PROMETHEUS",
+      "datasource": "${DS_PROMETHEUS}",
       "decimals": 2,
       "fieldConfig": {
         "defaults": {
@@ -540,7 +540,7 @@
       "bars": false,
       "dashLength": 10,
       "dashes": false,
-      "datasource": "DS_PROMETHEUS",
+      "datasource": "${DS_PROMETHEUS}",
       "description": "If yearn's veCRV amount locked = the numbers listed here then the vault can have max boost!",
       "fieldConfig": {
         "defaults": {

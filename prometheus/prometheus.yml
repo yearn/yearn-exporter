@@ -43,3 +43,16 @@ scrape_configs:
     # scheme defaults to 'http'.
     static_configs:
     - targets: ['localhost:9090']
+
+  - job_name: 'iearn'
+    # metrics_path defaults to '/metrics'
+    # scheme defaults to 'http'.
+    static_configs:
+    - targets: ['yearn-exporter-iearn:8802']
+
+  - job_name: 'ironbank'
+    # metrics_path defaults to '/metrics'
+    # scheme defaults to 'http'.
+    static_configs:
+    - targets: ['yearn-exporter-ironbank:8803']
+
