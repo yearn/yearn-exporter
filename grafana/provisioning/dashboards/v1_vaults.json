@@ -20,7 +20,7 @@
       "type": "grafana",
       "id": "grafana",
       "name": "Grafana",
-      "version": "7.4.0"
+      "version": "7.4.3"
     },
     {
       "type": "panel",
@@ -33,6 +33,12 @@
       "id": "prometheus",
       "name": "Prometheus",
       "version": "1.0.0"
+    },
+    {
+      "type": "panel",
+      "id": "stat",
+      "name": "Stat",
+      "version": ""
     }
   ],
   "annotations": {
@@ -101,7 +107,7 @@
         "alertThreshold": false
       },
       "percentage": false,
-      "pluginVersion": "7.4.0",
+      "pluginVersion": "7.4.3",
       "pointradius": 2,
       "points": false,
       "renderer": "flot",
@@ -213,7 +219,7 @@
         "alertThreshold": false
       },
       "percentage": false,
-      "pluginVersion": "7.4.0",
+      "pluginVersion": "7.4.3",
       "pointradius": 2,
       "points": false,
       "renderer": "flot",
@@ -318,7 +324,7 @@
         "alertThreshold": false
       },
       "percentage": false,
-      "pluginVersion": "7.4.0",
+      "pluginVersion": "7.4.3",
       "pointradius": 2,
       "points": false,
       "renderer": "flot",
@@ -428,7 +434,7 @@
         "alertThreshold": false
       },
       "percentage": false,
-      "pluginVersion": "7.4.0",
+      "pluginVersion": "7.4.3",
       "pointradius": 2,
       "points": false,
       "renderer": "flot",
@@ -536,7 +542,7 @@
         "alertThreshold": false
       },
       "percentage": false,
-      "pluginVersion": "7.4.0",
+      "pluginVersion": "7.4.3",
       "pointradius": 2,
       "points": false,
       "renderer": "flot",
@@ -645,7 +651,7 @@
         "alertThreshold": false
       },
       "percentage": false,
-      "pluginVersion": "7.4.0",
+      "pluginVersion": "7.4.3",
       "pointradius": 2,
       "points": false,
       "renderer": "flot",
@@ -759,7 +765,7 @@
         "alertThreshold": true
       },
       "percentage": false,
-      "pluginVersion": "7.4.0",
+      "pluginVersion": "7.4.3",
       "pointradius": 2,
       "points": false,
       "renderer": "flot",
@@ -869,7 +875,7 @@
         "showUnfilled": true,
         "text": {}
       },
-      "pluginVersion": "7.4.0",
+      "pluginVersion": "7.4.3",
       "targets": [
         {
           "exemplar": false,
@@ -890,12 +896,110 @@
       "type": "bargauge"
     },
     {
+      "datasource": "DS_PROMETHEUS",
+      "description": "Yearn Vault Total",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "custom": {},
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 80
+              }
+            ]
+          }
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Value"
+            },
+            "properties": [
+              {
+                "id": "unit",
+                "value": "short"
+              }
+            ]
+          }
+        ]
+      },
+      "gridPos": {
+        "h": 6,
+        "w": 24,
+        "x": 0,
+        "y": 32
+      },
+      "id": 19,
+      "interval": "",
+      "options": {
+        "colorMode": "value",
+        "graphMode": "none",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "text": {},
+        "textMode": "auto"
+      },
+      "pluginVersion": "7.4.3",
+      "targets": [
+        {
+          "expr": "sum(yearn{param=\"tvl\"})",
+          "instant": false,
+          "interval": "",
+          "legendFormat": "{{vault}}",
+          "refId": "A"
+        }
+      ],
+      "timeFrom": null,
+      "timeShift": null,
+      "title": "V1 - Total Assets Under Management",
+      "transformations": [
+        {
+          "id": "filterByValue",
+          "options": {
+            "filters": [
+              {
+                "config": {
+                  "id": "lowerOrEqual",
+                  "options": {
+                    "value": 0
+                  }
+                },
+                "fieldName": "Value"
+              }
+            ],
+            "match": "any",
+            "type": "exclude"
+          }
+        }
+      ],
+      "transparent": true,
+      "type": "stat"
+    },
+    {
       "aliasColors": {},
       "bars": false,
       "dashLength": 10,
       "dashes": false,
       "datasource": "DS_PROMETHEUS",
-      "decimals": 5,
+      "decimals": 2,
       "description": "Yearn Vault Total",
       "fieldConfig": {
         "defaults": {
@@ -909,10 +1013,10 @@
         "h": 6,
         "w": 24,
         "x": 0,
-        "y": 32
+        "y": 38
       },
       "hiddenSeries": false,
-      "id": 19,
+      "id": 20,
       "interval": "",
       "legend": {
         "alignAsTable": false,
@@ -936,7 +1040,7 @@
         "alertThreshold": false
       },
       "percentage": false,
-      "pluginVersion": "7.4.0",
+      "pluginVersion": "7.4.3",
       "pointradius": 2,
       "points": false,
       "renderer": "flot",
@@ -946,9 +1050,9 @@
       "steppedLine": true,
       "targets": [
         {
-          "expr": "yearn{param=\"vault balance\"}",
+          "expr": "sum(yearn{param=\"tvl\"})",
           "interval": "",
-          "legendFormat": "{{vault}}",
+          "legendFormat": "V1 AUM",
           "refId": "A"
         }
       ],
@@ -964,35 +1068,17 @@
       },
       "transformations": [
         {
-          "id": "calculateField",
-          "options": {
-            "alias": "V1 - Total Balance",
-            "binary": {
-              "left": "DAI",
-              "operator": "+",
-              "reducer": "sum",
-              "right": ""
-            },
-            "mode": "reduceRow",
-            "reduce": {
-              "include": [],
-              "reducer": "sum"
-            },
-            "replaceFields": true
-          }
-        },
-        {
           "id": "filterByValue",
           "options": {
             "filters": [
               {
                 "config": {
-                  "id": "equal",
+                  "id": "lowerOrEqual",
                   "options": {
                     "value": 0
                   }
                 },
-                "fieldName": "V1 - Total Balance"
+                "fieldName": "Value"
               }
             ],
             "match": "any",
@@ -1014,10 +1100,10 @@
           "$$hashKey": "object:566",
           "decimals": 2,
           "format": "short",
-          "label": "Vault Shares ",
+          "label": "Total $ Amount in v1 Vaults",
           "logBase": 1,
           "max": null,
-          "min": "0",
+          "min": null,
           "show": true
         },
         {
@@ -1055,7 +1141,7 @@
         "h": 8,
         "w": 24,
         "x": 0,
-        "y": 38
+        "y": 44
       },
       "hiddenSeries": false,
       "id": 14,
@@ -1076,7 +1162,7 @@
         "alertThreshold": false
       },
       "percentage": false,
-      "pluginVersion": "7.4.0",
+      "pluginVersion": "7.4.3",
       "pointradius": 2,
       "points": false,
       "renderer": "flot",
@@ -1086,7 +1172,7 @@
       "steppedLine": false,
       "targets": [
         {
-          "expr": "yearn{param=\"crv price\", job=\"yearn\", vault=\"curve.fi/3pool\"}",
+          "expr": "avg(yearn{param=\"crv price\", job=\"yearn-v1\"})",
           "interval": "15s",
           "intervalFactor": 3,
           "legendFormat": "Crv Price",
@@ -1140,7 +1226,7 @@
       }
     }
   ],
-  "refresh": false,
+  "refresh": "5s",
   "schemaVersion": 27,
   "style": "dark",
   "tags": [],
@@ -1148,12 +1234,12 @@
     "list": []
   },
   "time": {
-    "from": "now-30m",
+    "from": "now-12h",
     "to": "now"
   },
   "timepicker": {},
   "timezone": "",
-  "title": "V1 Vaults",
-  "uid": "6n3HB1hMz",
-  "version": 6
+  "title": "V1 Vaults2",
+  "uid": "6n3HB1hMz2",
+  "version": 2
 }
