@@ -9,7 +9,7 @@ jobs:
   deployment:
     runs-on: ubuntu-latest
     steps:
-      - name: deploy to
+      - name: Deploy to production
         uses: appleboy/ssh-action@master
         with:
           host: ${{ secrets.HOST }}
