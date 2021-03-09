@@ -1,4 +1,30 @@
 {
+  "__requires": [
+    {
+      "type": "grafana",
+      "id": "grafana",
+      "name": "Grafana",
+      "version": "7.4.3"
+    },
+    {
+      "type": "panel",
+      "id": "graph",
+      "name": "Graph",
+      "version": ""
+    },
+    {
+      "type": "datasource",
+      "id": "prometheus",
+      "name": "Prometheus",
+      "version": "1.0.0"
+    },
+    {
+      "type": "panel",
+      "id": "stat",
+      "name": "Stat",
+      "version": ""
+    }
+  ],
   "annotations": {
     "list": [
       {
@@ -15,10 +41,11 @@
   "editable": true,
   "gnetId": null,
   "graphTooltip": 0,
+  "id": null,
   "links": [],
   "panels": [
     {
-      "datasource": "-- Grafana --",
+      "datasource": "DS_PROMETHEUS",
       "description": "Accurate TVL with duplicates subtracted. The ones below are simple sums",
       "fieldConfig": {
         "defaults": {
@@ -39,7 +66,20 @@
           },
           "unit": "currencyUSD"
         },
-        "overrides": []
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "sum(yearn{param=\"tvl\"}) + sum(yearn_vault{param=\"tvl\"}) + sum(iearn{param=\"tvl\"}) + sum(ironbank{param=\"tvl\"}) - sum(yearn{param=\"tvl\",vault=~\"curve.fi/(y|busd)\"})"
+            },
+            "properties": [
+              {
+                "id": "decimals",
+                "value": 4
+              }
+            ]
+          }
+        ]
       },
       "gridPos": {
         "h": 5,
@@ -55,7 +95,7 @@
         "orientation": "auto",
         "reduceOptions": {
           "calcs": [
-            "mean"
+            "lastNotNull"
           ],
           "fields": "",
           "values": false
@@ -67,9 +107,10 @@
       "targets": [
         {
           "expr": "sum(yearn{param=\"tvl\"}) + sum(yearn_vault{param=\"tvl\"}) + sum(iearn{param=\"tvl\"}) + sum(ironbank{param=\"tvl\"}) - sum(yearn{param=\"tvl\",vault=~\"curve.fi/(y|busd)\"})",
-          "instant": false,
+          "instant": true,
           "interval": "",
-          "legendFormat": "{{vault}}",
+          "legendFormat": "",
+          "queryType": "randomWalk",
           "refId": "A"
         }
       ],
@@ -1657,7 +1698,7 @@
       }
     }
   ],
-  "refresh": "5s",
+  "refresh": "1m",
   "schemaVersion": 27,
   "style": "dark",
   "tags": [],
@@ -1665,12 +1706,12 @@
     "list": []
   },
   "time": {
-    "from": "now-12h",
+    "from": "now-24h",
     "to": "now"
   },
   "timepicker": {},
   "timezone": "",
   "title": "Total Value Locked in Vaults",
   "uid": "AfqWt4PMz",
-  "version": 2
+  "version": 5
 }
