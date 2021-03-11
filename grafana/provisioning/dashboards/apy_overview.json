@@ -1,0 +1,907 @@
+{
+  "__inputs": [
+    {
+      "name": "DS_PROMETHEUS",
+      "label": "Prometheus",
+      "description": "",
+      "type": "datasource",
+      "pluginId": "prometheus",
+      "pluginName": "Prometheus"
+    }
+  ],
+  "__requires": [
+    {
+      "type": "panel",
+      "id": "bargauge",
+      "name": "Bar gauge",
+      "version": ""
+    },
+    {
+      "type": "grafana",
+      "id": "grafana",
+      "name": "Grafana",
+      "version": "7.4.3"
+    },
+    {
+      "type": "panel",
+      "id": "graph",
+      "name": "Graph",
+      "version": ""
+    },
+    {
+      "type": "datasource",
+      "id": "prometheus",
+      "name": "Prometheus",
+      "version": "1.0.0"
+    }
+  ],
+  "annotations": {
+    "list": [
+      {
+        "builtIn": 1,
+        "datasource": "-- Grafana --",
+        "enable": true,
+        "hide": true,
+        "iconColor": "rgba(0, 211, 255, 1)",
+        "name": "Annotations & Alerts",
+        "type": "dashboard"
+      }
+    ]
+  },
+  "description": "This dashboard give you an overview of net apy for vaults",
+  "editable": true,
+  "gnetId": null,
+  "graphTooltip": 0,
+  "id": null,
+  "links": [],
+  "panels": [
+    {
+      "datasource": "DS_PROMETHEUS",
+      "description": "This looks at the share price rate of increase and factors in compounding on a weekly basis. ",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "continuous-BlPu"
+          },
+          "custom": {},
+          "mappings": [],
+          "thresholds": {
+            "mode": "percentage",
+            "steps": [
+              {
+                "color": "super-light-blue",
+                "value": null
+              },
+              {
+                "color": "light-blue",
+                "value": 5
+              },
+              {
+                "color": "semi-dark-blue",
+                "value": 15
+              },
+              {
+                "color": "dark-blue",
+                "value": 25
+              },
+              {
+                "color": "purple",
+                "value": 50
+              },
+              {
+                "color": "dark-purple",
+                "value": 100
+              }
+            ]
+          },
+          "unit": "percentunit"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 20,
+        "w": 24,
+        "x": 0,
+        "y": 0
+      },
+      "id": 5,
+      "options": {
+        "displayMode": "basic",
+        "orientation": "horizontal",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "showUnfilled": false,
+        "text": {}
+      },
+      "pluginVersion": "7.4.3",
+      "targets": [
+        {
+          "expr": "sort_desc(((delta(yearn{param=\"share price\"}[1w]) + 1) ^ (1/7)) ^ 365 - 1 < 100 ) ",
+          "instant": true,
+          "interval": "",
+          "legendFormat": "{{vault}}",
+          "refId": "A"
+        }
+      ],
+      "timeFrom": null,
+      "timeShift": null,
+      "title": "v1 Net APY - Weekly Compounding ",
+      "transformations": [],
+      "transparent": true,
+      "type": "bargauge"
+    },
+    {
+      "datasource": "DS_PROMETHEUS",
+      "description": "This looks at the share price rate of increase and factors in compounding on a weekly basis. ",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "continuous-BlPu"
+          },
+          "custom": {},
+          "mappings": [],
+          "thresholds": {
+            "mode": "percentage",
+            "steps": [
+              {
+                "color": "super-light-blue",
+                "value": null
+              },
+              {
+                "color": "light-blue",
+                "value": 5
+              },
+              {
+                "color": "semi-dark-blue",
+                "value": 15
+              },
+              {
+                "color": "dark-blue",
+                "value": 25
+              },
+              {
+                "color": "purple",
+                "value": 50
+              },
+              {
+                "color": "dark-purple",
+                "value": 100
+              }
+            ]
+          },
+          "unit": "percentunit"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 11,
+        "w": 24,
+        "x": 0,
+        "y": 20
+      },
+      "id": 6,
+      "options": {
+        "displayMode": "basic",
+        "orientation": "horizontal",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "showUnfilled": false,
+        "text": {}
+      },
+      "pluginVersion": "7.4.3",
+      "targets": [
+        {
+          "expr": "sort_desc(((delta(yearn_vault{param=\"pricePerShare\"}[1w]) + 1) ^ (1/7)) ^ 365 - 1 < 100 ) ",
+          "instant": true,
+          "interval": "",
+          "legendFormat": "{{vault}}",
+          "refId": "A"
+        }
+      ],
+      "timeFrom": null,
+      "timeShift": null,
+      "title": "v2 Net APY - Weekly Compounding ",
+      "transformations": [],
+      "transparent": true,
+      "type": "bargauge"
+    },
+    {
+      "aliasColors": {},
+      "bars": false,
+      "dashLength": 10,
+      "dashes": false,
+      "datasource": "DS_PROMETHEUS",
+      "description": "This looks at the share price rate of increase and factors in compounding on a weekly basis. ",
+      "fieldConfig": {
+        "defaults": {
+          "custom": {},
+          "unit": "percentunit"
+        },
+        "overrides": []
+      },
+      "fill": 2,
+      "fillGradient": 3,
+      "gridPos": {
+        "h": 10,
+        "w": 24,
+        "x": 0,
+        "y": 31
+      },
+      "hiddenSeries": false,
+      "id": 2,
+      "legend": {
+        "alignAsTable": true,
+        "avg": false,
+        "current": true,
+        "hideEmpty": false,
+        "hideZero": false,
+        "max": false,
+        "min": false,
+        "rightSide": true,
+        "show": true,
+        "sort": "current",
+        "sortDesc": true,
+        "total": false,
+        "values": true
+      },
+      "lines": true,
+      "linewidth": 2,
+      "nullPointMode": "connected",
+      "options": {
+        "alertThreshold": true
+      },
+      "percentage": false,
+      "pluginVersion": "7.4.3",
+      "pointradius": 2,
+      "points": false,
+      "renderer": "flot",
+      "seriesOverrides": [],
+      "spaceLength": 10,
+      "stack": false,
+      "steppedLine": true,
+      "targets": [
+        {
+          "expr": "((delta(yearn{param=\"share price\"}[1w]) + 1) ^ (1/7)) ^ 365 - 1 < 100 ",
+          "interval": "",
+          "legendFormat": "{{vault}}",
+          "refId": "A"
+        }
+      ],
+      "thresholds": [],
+      "timeFrom": null,
+      "timeRegions": [],
+      "timeShift": null,
+      "title": "v1 Net APY - Weekly Compounding",
+      "tooltip": {
+        "shared": true,
+        "sort": 2,
+        "value_type": "individual"
+      },
+      "transformations": [],
+      "transparent": true,
+      "type": "graph",
+      "xaxis": {
+        "buckets": null,
+        "mode": "time",
+        "name": null,
+        "show": true,
+        "values": []
+      },
+      "yaxes": [
+        {
+          "$$hashKey": "object:532",
+          "decimals": null,
+          "format": "percentunit",
+          "label": null,
+          "logBase": 1,
+          "max": null,
+          "min": null,
+          "show": true
+        },
+        {
+          "$$hashKey": "object:533",
+          "format": "short",
+          "label": null,
+          "logBase": 1,
+          "max": null,
+          "min": null,
+          "show": true
+        }
+      ],
+      "yaxis": {
+        "align": false,
+        "alignLevel": null
+      }
+    },
+    {
+      "aliasColors": {},
+      "bars": false,
+      "dashLength": 10,
+      "dashes": false,
+      "datasource": "DS_PROMETHEUS",
+      "description": "This looks at the share price rate of increase and factors in compounding on a weekly basis. ",
+      "fieldConfig": {
+        "defaults": {
+          "custom": {},
+          "unit": "percentunit"
+        },
+        "overrides": []
+      },
+      "fill": 2,
+      "fillGradient": 3,
+      "gridPos": {
+        "h": 10,
+        "w": 24,
+        "x": 0,
+        "y": 41
+      },
+      "hiddenSeries": false,
+      "id": 3,
+      "legend": {
+        "alignAsTable": true,
+        "avg": false,
+        "current": true,
+        "hideEmpty": false,
+        "hideZero": false,
+        "max": false,
+        "min": false,
+        "rightSide": true,
+        "show": true,
+        "sort": "current",
+        "sortDesc": true,
+        "total": false,
+        "values": true
+      },
+      "lines": true,
+      "linewidth": 2,
+      "nullPointMode": "connected",
+      "options": {
+        "alertThreshold": true
+      },
+      "percentage": false,
+      "pluginVersion": "7.4.3",
+      "pointradius": 2,
+      "points": false,
+      "renderer": "flot",
+      "seriesOverrides": [],
+      "spaceLength": 10,
+      "stack": false,
+      "steppedLine": true,
+      "targets": [
+        {
+          "expr": "((delta(yearn_vault{param=\"pricePerShare\"}[1w]) + 1) ^ (1/7)) ^ 365 - 1 < 100 ",
+          "interval": "",
+          "legendFormat": "{{vault}}",
+          "refId": "A"
+        }
+      ],
+      "thresholds": [],
+      "timeFrom": null,
+      "timeRegions": [],
+      "timeShift": null,
+      "title": "v2 Net APY - Weekly Compouding",
+      "tooltip": {
+        "shared": true,
+        "sort": 2,
+        "value_type": "individual"
+      },
+      "transformations": [],
+      "transparent": true,
+      "type": "graph",
+      "xaxis": {
+        "buckets": null,
+        "mode": "time",
+        "name": null,
+        "show": true,
+        "values": []
+      },
+      "yaxes": [
+        {
+          "$$hashKey": "object:532",
+          "decimals": null,
+          "format": "percentunit",
+          "label": null,
+          "logBase": 1,
+          "max": null,
+          "min": null,
+          "show": true
+        },
+        {
+          "$$hashKey": "object:533",
+          "format": "short",
+          "label": null,
+          "logBase": 1,
+          "max": null,
+          "min": null,
+          "show": true
+        }
+      ],
+      "yaxis": {
+        "align": false,
+        "alignLevel": null
+      }
+    },
+    {
+      "datasource": "DS_PROMETHEUS",
+      "description": "This looks at the share price rate of increase and factors in compounding on a weekly basis. ",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "continuous-BlPu"
+          },
+          "custom": {},
+          "mappings": [],
+          "thresholds": {
+            "mode": "percentage",
+            "steps": [
+              {
+                "color": "super-light-blue",
+                "value": null
+              },
+              {
+                "color": "light-blue",
+                "value": 5
+              },
+              {
+                "color": "semi-dark-blue",
+                "value": 15
+              },
+              {
+                "color": "dark-blue",
+                "value": 25
+              },
+              {
+                "color": "purple",
+                "value": 50
+              },
+              {
+                "color": "dark-purple",
+                "value": 100
+              }
+            ]
+          },
+          "unit": "percentunit"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 11,
+        "w": 24,
+        "x": 0,
+        "y": 51
+      },
+      "id": 7,
+      "options": {
+        "displayMode": "basic",
+        "orientation": "horizontal",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "showUnfilled": false,
+        "text": {}
+      },
+      "pluginVersion": "7.4.3",
+      "targets": [
+        {
+          "expr": "sort_desc(((delta(iearn{param=\"price per share\", vault=~\".*v2\"}[1w]) + 1) ^ (1/7)) ^ 365 - 1 < 100 ) ",
+          "instant": true,
+          "interval": "",
+          "legendFormat": "{{vault}}",
+          "refId": "A"
+        }
+      ],
+      "timeFrom": null,
+      "timeShift": null,
+      "title": "y.curve.fi Earn v2 Net APY - Weekly Compounding ",
+      "transformations": [],
+      "transparent": true,
+      "type": "bargauge"
+    },
+    {
+      "datasource": "DS_PROMETHEUS",
+      "description": "This looks at the share price rate of increase and factors in compounding on a weekly basis. ",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "continuous-BlPu"
+          },
+          "custom": {},
+          "mappings": [],
+          "thresholds": {
+            "mode": "percentage",
+            "steps": [
+              {
+                "color": "super-light-blue",
+                "value": null
+              },
+              {
+                "color": "light-blue",
+                "value": 5
+              },
+              {
+                "color": "semi-dark-blue",
+                "value": 15
+              },
+              {
+                "color": "dark-blue",
+                "value": 25
+              },
+              {
+                "color": "purple",
+                "value": 50
+              },
+              {
+                "color": "dark-purple",
+                "value": 100
+              }
+            ]
+          },
+          "unit": "percentunit"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 11,
+        "w": 24,
+        "x": 0,
+        "y": 62
+      },
+      "id": 8,
+      "options": {
+        "displayMode": "basic",
+        "orientation": "horizontal",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "showUnfilled": false,
+        "text": {}
+      },
+      "pluginVersion": "7.4.3",
+      "targets": [
+        {
+          "expr": "sort_desc(((delta(iearn{param=\"price per share\", vault=~\".*v3\"}[1w]) + 1) ^ (1/7)) ^ 365 - 1 < 100 ) ",
+          "instant": true,
+          "interval": "",
+          "legendFormat": "{{vault}}",
+          "refId": "A"
+        }
+      ],
+      "timeFrom": null,
+      "timeShift": null,
+      "title": "busd.curve.fi Earn v3 Net APY - Weekly Compounding ",
+      "transformations": [],
+      "transparent": true,
+      "type": "bargauge"
+    },
+    {
+      "aliasColors": {},
+      "bars": false,
+      "dashLength": 10,
+      "dashes": false,
+      "datasource": "DS_PROMETHEUS",
+      "description": "This looks at the share price rate of increase and factors in compounding on a weekly basis. ",
+      "fieldConfig": {
+        "defaults": {
+          "custom": {},
+          "unit": "percentunit"
+        },
+        "overrides": []
+      },
+      "fill": 2,
+      "fillGradient": 3,
+      "gridPos": {
+        "h": 10,
+        "w": 24,
+        "x": 0,
+        "y": 73
+      },
+      "hiddenSeries": false,
+      "id": 4,
+      "legend": {
+        "alignAsTable": true,
+        "avg": false,
+        "current": true,
+        "hideEmpty": false,
+        "hideZero": false,
+        "max": false,
+        "min": false,
+        "rightSide": true,
+        "show": true,
+        "sort": "current",
+        "sortDesc": true,
+        "total": false,
+        "values": true
+      },
+      "lines": true,
+      "linewidth": 2,
+      "nullPointMode": "connected",
+      "options": {
+        "alertThreshold": true
+      },
+      "percentage": false,
+      "pluginVersion": "7.4.3",
+      "pointradius": 2,
+      "points": false,
+      "renderer": "flot",
+      "seriesOverrides": [],
+      "spaceLength": 10,
+      "stack": false,
+      "steppedLine": true,
+      "targets": [
+        {
+          "expr": "((delta(iearn{param=\"price per share\"}[1w]) + 1) ^ (1/7)) ^ 365 - 1 < 100 ",
+          "interval": "",
+          "legendFormat": "{{vault}}",
+          "refId": "A"
+        }
+      ],
+      "thresholds": [],
+      "timeFrom": null,
+      "timeRegions": [],
+      "timeShift": null,
+      "title": "Earn Net APY - Weekly Compouding",
+      "tooltip": {
+        "shared": true,
+        "sort": 2,
+        "value_type": "individual"
+      },
+      "transformations": [],
+      "transparent": true,
+      "type": "graph",
+      "xaxis": {
+        "buckets": null,
+        "mode": "time",
+        "name": null,
+        "show": true,
+        "values": []
+      },
+      "yaxes": [
+        {
+          "$$hashKey": "object:532",
+          "decimals": null,
+          "format": "percentunit",
+          "label": null,
+          "logBase": 1,
+          "max": null,
+          "min": null,
+          "show": true
+        },
+        {
+          "$$hashKey": "object:533",
+          "format": "short",
+          "label": null,
+          "logBase": 1,
+          "max": null,
+          "min": null,
+          "show": true
+        }
+      ],
+      "yaxis": {
+        "align": false,
+        "alignLevel": null
+      }
+    },
+    {
+      "datasource": "DS_PROMETHEUS",
+      "description": "This looks at the share price rate of increase and factors in compounding on a weekly basis. ",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "continuous-BlPu"
+          },
+          "custom": {},
+          "mappings": [],
+          "thresholds": {
+            "mode": "percentage",
+            "steps": [
+              {
+                "color": "super-light-blue",
+                "value": null
+              },
+              {
+                "color": "light-blue",
+                "value": 5
+              },
+              {
+                "color": "semi-dark-blue",
+                "value": 15
+              },
+              {
+                "color": "dark-blue",
+                "value": 25
+              },
+              {
+                "color": "purple",
+                "value": 50
+              },
+              {
+                "color": "dark-purple",
+                "value": 100
+              }
+            ]
+          },
+          "unit": "percentunit"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 11,
+        "w": 24,
+        "x": 0,
+        "y": 83
+      },
+      "id": 9,
+      "options": {
+        "displayMode": "basic",
+        "orientation": "horizontal",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "showUnfilled": false,
+        "text": {}
+      },
+      "pluginVersion": "7.4.3",
+      "targets": [
+        {
+          "expr": "sort_desc(((delta(yearn_experimental{param=\"pricePerShare\"}[1w]) + 1) ^ (1/7)) ^ 365 - 1 < 100 ) ",
+          "instant": true,
+          "interval": "",
+          "legendFormat": "{{vault}}",
+          "refId": "A"
+        }
+      ],
+      "timeFrom": null,
+      "timeShift": null,
+      "title": "Experimental Vault's Net APY - Weekly Compounding ",
+      "transformations": [],
+      "transparent": true,
+      "type": "bargauge"
+    },
+    {
+      "aliasColors": {},
+      "bars": false,
+      "dashLength": 10,
+      "dashes": false,
+      "datasource": "DS_PROMETHEUS",
+      "description": "This looks at the share price rate of increase and factors in compounding on a weekly basis. ",
+      "fieldConfig": {
+        "defaults": {
+          "custom": {},
+          "unit": "percentunit"
+        },
+        "overrides": []
+      },
+      "fill": 2,
+      "fillGradient": 3,
+      "gridPos": {
+        "h": 10,
+        "w": 24,
+        "x": 0,
+        "y": 94
+      },
+      "hiddenSeries": false,
+      "id": 11,
+      "legend": {
+        "alignAsTable": true,
+        "avg": false,
+        "current": true,
+        "hideEmpty": false,
+        "hideZero": false,
+        "max": false,
+        "min": false,
+        "rightSide": true,
+        "show": true,
+        "sort": "current",
+        "sortDesc": true,
+        "total": false,
+        "values": true
+      },
+      "lines": true,
+      "linewidth": 2,
+      "nullPointMode": "connected",
+      "options": {
+        "alertThreshold": true
+      },
+      "percentage": false,
+      "pluginVersion": "7.4.3",
+      "pointradius": 2,
+      "points": false,
+      "renderer": "flot",
+      "seriesOverrides": [],
+      "spaceLength": 10,
+      "stack": false,
+      "steppedLine": true,
+      "targets": [
+        {
+          "expr": "((delta(yearn_experimental{param=\"pricePerShare\"}[1w]) + 1) ^ (1/7)) ^ 365 - 1 < 100 ",
+          "interval": "",
+          "legendFormat": "{{vault}}",
+          "refId": "A"
+        }
+      ],
+      "thresholds": [],
+      "timeFrom": null,
+      "timeRegions": [],
+      "timeShift": null,
+      "title": "Experimental Vault's Net APY - Weekly Compouding",
+      "tooltip": {
+        "shared": true,
+        "sort": 2,
+        "value_type": "individual"
+      },
+      "transformations": [],
+      "transparent": true,
+      "type": "graph",
+      "xaxis": {
+        "buckets": null,
+        "mode": "time",
+        "name": null,
+        "show": true,
+        "values": []
+      },
+      "yaxes": [
+        {
+          "$$hashKey": "object:532",
+          "decimals": null,
+          "format": "percentunit",
+          "label": null,
+          "logBase": 1,
+          "max": null,
+          "min": null,
+          "show": true
+        },
+        {
+          "$$hashKey": "object:533",
+          "format": "short",
+          "label": null,
+          "logBase": 1,
+          "max": null,
+          "min": null,
+          "show": true
+        }
+      ],
+      "yaxis": {
+        "align": false,
+        "alignLevel": null
+      }
+    }
+  ],
+  "refresh": "1m",
+  "schemaVersion": 27,
+  "style": "dark",
+  "tags": [],
+  "templating": {
+    "list": []
+  },
+  "time": {
+    "from": "now-24h",
+    "to": "now"
+  },
+  "timepicker": {},
+  "timezone": "",
+  "title": "APY Overview",
+  "uid": "CRDOk-UGk",
+  "version": 7
+}
