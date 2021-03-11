@@ -24,6 +24,7 @@
       "dashLength": 10,
       "dashes": false,
       "datasource": "DS_PROMETHEUS",
+      "description": "This shows the curve vault's base APY. This is their current unboosted apys",
       "fieldConfig": {
         "defaults": {},
         "overrides": [
