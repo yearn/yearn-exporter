@@ -106,9 +106,24 @@ services:
       - GF_SECURITY_ADMIN_PASSWORD=${GF_SECURITY_ADMIN_PASSWORD:-admin}
       - GF_AUTH_ANONYMOUS_ENABLED=true
       - GF_DASHBOARDS_DEFAULT_HOME_DASHBOARD_PATH=/etc/grafana/provisioning/dashboards/tvl_vaults.json
+      - GF_SERVER_ROOT_URL=https://yearn.vision
+      - GF_RENDERING_SERVER_URL=http://renderer:8091/render
+      - GF_RENDERING_CALLBACK_URL=http://grafana:3000/
+      - GF_LOG_FILTERS=rendering:debug
     volumes:
       - grafana_data:/var/lib/grafana
       - ./grafana/provisioning/:/etc/grafana/provisioning/
+    networks:
+      - yearn-exporter
+    restart: always
+
+  renderer:
+    image: grafana/grafana-image-renderer:latest
+    ports:
+      - 8091:8091
+    environment:
+      - ENABLE_METRICS=true
+      - HTTP_PORT=8091
     networks:
       - yearn-exporter
     restart: always
