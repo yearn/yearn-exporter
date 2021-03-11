@@ -16,4 +16,4 @@ jobs:
           username: ${{ secrets.USERNAME }}
           key: ${{ secrets.KEY }}
           port: ${{ secrets.PORT }}
-          script: bash $HOME/yearn-exporter/deploy.sh
+          script: git -C $HOME/yearn-exporter pull && bash $HOME/yearn-exporter/deploy.sh
