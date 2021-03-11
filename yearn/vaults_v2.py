@@ -30,6 +30,9 @@ VAULT_VIEWS = [
     "lastReport",
     "managementFee",
     "performanceFee",
+    "governance",
+    "management",
+    "guardian",
 ]
 
 VAULT_VIEWS_SCALED = [
