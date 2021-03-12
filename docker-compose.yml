@@ -109,6 +109,11 @@ services:
     volumes:
       - grafana_data:/var/lib/grafana
       - ./grafana/provisioning/:/etc/grafana/provisioning/
+      - ./grafana/assets/apple-touch-icon.png:/usr/share/grafana/public/img/apple-touch-icon.png
+      - ./grafana/assets/fav32.png:/usr/share/grafana/public/img/fav32.png
+      - ./grafana/assets/grafana_mask_icon.svg:/usr/share/grafana/public/img/grafana_mask_icon.svg
+      - ./grafana/assets/grafana_mask_icon_white.svg:/usr/share/grafana/public/img/grafana_mask_icon_white.svg
+      - ./grafana/assets/grafana_icon.svg:/usr/share/grafana/public/img/grafana_icon.svg
     networks:
       - yearn-exporter
     restart: always
