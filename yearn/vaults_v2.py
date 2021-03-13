@@ -92,24 +92,17 @@ vaults = {
 }
 
 experimental_vaults = {
+    "Iron Llama 0.3.2": "0x27b7b1ad7288079A66d12350c828D3C00A6F07d7",
+    "Pool With Us 0.3.2": "0x2F194Da57aa855CAa02Ea3Ab991fa5d38178B9e6",
+    "True Idle 0.3.2": "0x49b3E44e54b6220aF892DbA48ae45F1Ea6bC4aE9",
+    "Idle Tether 0.3.2": "0xAf322a2eDf31490250fdEb0D712621484b09aBB6",
+    "Data Aave 0.3.2": "0xac1c90b9c76d56ba2e24f3995f7671c745f8f308",
+    "Full Metal Farmer 0.3.2": "0x56A5Fd5104a4956898753dfb060ff32882Ae0eb4",
+    "Creamy Swords SNX 0.3.1": "0x7356f09c294cb9c6428ac7327b24b0f29419c181",
     "sUSD Idle 0.3.1": "0x3466c90017F82DDA939B01E8DBd9b0f97AEF8DfC",
-    # https://etherscan.io/address/0xA04fE40eD8a8a8d657E41276ec9e9Ee877675e34#code
-    "WETH Gen Lender 0.3.1": "0x5f18C75AbDAe578b483E5F43f12a39cF75b973a9",
-    # https://etherscan.io/address/0xac5DA2Ca938A7328dE563D7d7209370e24BFd21e#code
-    # "Egyptian God sETH/ETH 0.3.0": "0x0e880118C29F095143dDA28e64d95333A9e75A47",
-    # https://etherscan.io/address/0x3B1a1AE6052ccD643a250fa843c1fB20F9246E1a#code
+    "WETH Gen Lender 0.3.1": "0xac333895ce1a73875cf7b4ecdc5a743c12f3d82b",
     "WETH Iron Lender 0.3.0": "0xED0244B688cF059f32f45E38A6ac6E479D6755f6",
-    # https://etherscan.io/address/0xa35A4972D74d4B3e4486163066E5fFed6d62b213#code
-    "yvSushi YFI-ETH 0.2.2": "0x27Eb83254D900AB4F9b15d5652d913963FeC35e3",
-    # https://etherscan.io/address/0x3213a6389f3f4c287925a47A6D44fe1148FA0C0d#code
-    "DEV Hugger 0.2.2": "0xFeD651936Af7e98F7F2A93c03B1E28a2DA7dfaD4",
-    # https://etherscan.io/address/0x2E949057Ce561BAA9d494895235ACCe310a73FDB#code
-    # https://etherscan.io/address/0x38a97cB34FCE4FAc87D1F7f8639e3341978613b6#code
-    "USDc Idle 0.2.2": "0x33bd0f9618cf38fea8f7f01e1514ab63b9bde64b",
-    # https://etherscan.io/address/0xc29CBe79F1a35a6AA00Df70851E36B14316Ab990#code
     "Mushroom Worker 0.3.0": "0x0e8A7717A4FD7694682E7005957dD5d7598bF14A"
-    # https://etherscan.io/address/0xE5dc99Cbf841A6721781E592214674A87a1A70BC#code
-    # Left out Lido St. Ether Vault, and ApeTrump Vault
 }
 
 
