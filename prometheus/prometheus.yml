@@ -56,3 +56,7 @@ scrape_configs:
     static_configs:
     - targets: ['yearn-exporter-ironbank:8803']
 
+  - job_name: 'nginx'
+    # metrics from the nginx
+    static_configs:
+    - targets: ['nginx-prometheus-exporter:9113']
