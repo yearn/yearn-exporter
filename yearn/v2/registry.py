@@ -1,5 +1,6 @@
 from threading import Thread
 import logging
+from joblib import Parallel, delayed
 
 from brownie import Contract, chain
 from yearn.events import create_filter, decode_logs
@@ -29,8 +30,8 @@ class Registry:
         self.process_events(self.events)
 
         # keep watching for new changes
-        self.thread = Thread(target=self.watch_events)
-        self.thread.start()
+        # self.thread = Thread(target=self.watch_events)
+        # self.thread.start()
 
     def __repr__(self) -> str:
         return f"<Registry releases={len(self.releases)} vaults={len(self.vaults)} experiments={len(self.experiments)}>"
@@ -55,13 +56,13 @@ class Registry:
                     vault = self.vault_from_event(event)
                     vault.name = f"{vault.vault.symbol()} {event['api_version']}"
                     self.vaults[event["vault"]] = vault
-                    logger.info("new vault %s", vault)
+                    logger.debug("new vault %s", vault)
 
             if event.name == "NewExperimentalVault":
                 vault = self.vault_from_event(event)
                 vault.name = f"{vault.vault.symbol()} {event['api_version']} {event['vault'][:8]}"
                 self.experiments[event["vault"]] = vault
-                logger.info("new experiment %s", vault)
+                logger.debug("new experiment %s", vault)
 
             if event.name == "VaultTagged":
                 self.tags[event["vault"]] = event["tag"]
@@ -78,3 +79,10 @@ class Registry:
         for block in chain.new_blocks(poll_interval=60):
             logs = self.log_filter.get_new_entries()
             self.process_events(decode_logs(logs))
+
+    def load_strategies(self):
+        vaults = list(self.vaults.values()) + list(self.experiments.values())
+        Parallel(8, 'threading')(
+            delayed(vault.load_strategies)()
+            for vault in vaults
+        )
