@@ -1,6 +1,5 @@
 from brownie import Contract
 from cachetools.func import ttl_cache
-from yearn.mutlicall import fetch_multicall
 
 
 feeds = {
@@ -16,12 +15,8 @@ feeds = {
 
 
 @ttl_cache(ttl=600)
-def fetch_prices(block=None):
-    result = fetch_multicall(*[[feed, "latestAnswer"] for feed in feeds.values()], block=block)
-    return {asset: price / 1e8 for asset, price in zip(feeds, result)}
-
-
 def price(asset, block=None):
-    if asset not in feeds:
-        return
-    return fetch_prices(block=block)[asset]
+    try:
+        return feeds[asset].latestAnswer(block_identifier=block) / 1e8
+    except (KeyError, ValueError):
+        return None
