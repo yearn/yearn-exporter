@@ -60,3 +60,8 @@ scrape_configs:
     # metrics from the nginx
     static_configs:
     - targets: ['nginx-prometheus-exporter:9113']
+
+  - job_name: node
+    # node exporter metrics from https://grafana.com/grafana/dashboards/1860
+    static_configs:
+    - targets: ['node-exporter:9100']

@@ -138,3 +138,15 @@ services:
     networks:
       - yearn-exporter
     restart: always
+
+  node-exporter:
+    image: quay.io/prometheus/node-exporter:latest
+    ports:
+      - 9100:9100
+    command:
+      - '--path.rootfs=/host'
+    networks:
+      - yearn-exporter
+    volumes:
+      - '/:/host:ro,rslave'
+    restart: always
