@@ -1,9 +1,6 @@
 from collections import defaultdict
-from dataclasses import dataclass
-from typing import List
 
 from brownie import Contract
-from brownie.network.contract import InterfaceContainer
 from joblib import Parallel, delayed
 
 from yearn.events import contract_creation_block
@@ -27,50 +24,49 @@ IEARN = {
 }
 
 
-@dataclass
-class iEarn:
-    name: str
-    contract: InterfaceContainer
-    token: InterfaceContainer
-    decimals: int
+class Earn:
+    def __init__(self, name, vault):
+        self.name = name
+        self.vault = Contract(vault)
+        self.token = self.vault.token()
+        self.scale = 10 ** self.vault.decimals()
 
-    def describe(self):
-        raise NotImplementedError("Use optimized `describe_iearn` with multiple instances.")
-
-
-def load_iearn() -> List[iEarn]:
-    contracts = [Contract(x) for x in IEARN.values()]
-    output = multicall_matrix(contracts, ["token", "decimals"])
-    return [iEarn(name, addr, output[addr]["token"], output[addr]["decimals"]) for name, addr in zip(IEARN, contracts)]
+    def __repr__(self) -> str:
+        return f"Earn({repr(self.name)}, {repr(self.vault.address)})"
 
 
-def describe_iearn(iearn: List[iEarn], block=None) -> dict:
-    contracts = [x.contract for x in iearn]
-    if block:
-        contracts = [contract for contract in contracts if contract_creation_block(str(contract)) < block]
-    
-    results = multicall_matrix(contracts, ["totalSupply", "pool", "getPricePerFullShare", "balance"], block=block)
-    output = defaultdict(dict)
+class Registry:
+    def __init__(self):
+        self.vaults = [Earn(name, vault) for name, vault in IEARN.items()]
 
-    for i in iearn:
-        res = results[i.contract]
-        price = magic.get_price(i.token, block=block)
-        output[i.name] = {
-            "total supply": res["totalSupply"] / 10 ** i.decimals,
-            "available balance": res["balance"] / 10 ** i.decimals,
-            "pooled balance": res["pool"] / 10 ** i.decimals,
-            "price per share": res["getPricePerFullShare"] / 1e18,
-            "token price": price,
-            "tvl": res["pool"] / 10 ** i.decimals * price,
-        }
+    def __repr__(self):
+        return f"<Earn vaults={len(self.vaults)}>"
 
-    return dict(output)
+    def describe(self, block=None) -> dict:
+        vaults = self.active_vaults_at_block(block)
+        results = multicall_matrix(vaults, ["totalSupply", "pool", "getPricePerFullShare", "balance"], block=block)
+        output = defaultdict(dict)
+        prices = Parallel(8, "threading")(delayed(magic.get_price)(vault.token, block=block) for vault in vaults)
+        for vault, price in zip(vaults, prices):
+            res = results[vault.vault]
+            output[vault.name] = {
+                "total supply": res["totalSupply"] / vault.scale,
+                "available balance": res["balance"] / vault.scale,
+                "pooled balance": res["pool"] / vault.scale,
+                "price per share": res["getPricePerFullShare"] / 1e18,
+                "token price": price,
+                "tvl": res["pool"] / vault.scale * price,
+            }
 
+        return dict(output)
 
-def total_value_at(iearns, block=None):
-    if block:
-        iearns = [earn for earn in iearns if contract_creation_block(str(earn.contract)) < block]
+    def total_value_at(self, block=None):
+        vaults = self.active_vaults_at_block(block)
+        prices = Parallel(8, "threading")(delayed(magic.get_price)(vault.token, block=block) for vault in vaults)
+        results = fetch_multicall(*[[vault.vault, "pool"] for vault in vaults], block=block)
+        return {vault.name: assets * price / vault.scale for vault, assets, price in zip(vaults, results, prices)}
 
-    prices = Parallel(8, "threading")(delayed(magic.get_price)(earn.token, block=block) for earn in iearns)
-    results = fetch_multicall(*[[earn.contract, "pool"] for earn in iearns], block=block)
-    return {earn.name: assets * price / 10 ** earn.decimals for earn, assets, price in zip(iearns, results, prices)}
+    def active_vaults_at_block(self, block=None):
+        if block is None:
+            return self.vaults
+        return [vault for vault in self.vaults if contract_creation_block(str(vault.vault)) < block]
