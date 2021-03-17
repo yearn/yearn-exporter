@@ -34,7 +34,7 @@ def multicall_matrix(contracts, params, block=None):
     matrix = list(product(contracts, params))
     calls = [[contract, param] for contract, param in matrix]
 
-    results = fetch_multicall(*calls, block_identifier=block)
+    results = fetch_multicall(*calls, block=block)
 
     output = defaultdict(dict)
     for (contract, param), value in zip(matrix, results):

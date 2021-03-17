@@ -4,9 +4,11 @@ from typing import List
 
 from brownie import Contract
 from brownie.network.contract import InterfaceContainer
+from joblib import Parallel, delayed
 
-from yearn.mutlicall import multicall_matrix
-from yearn.uniswap import token_price
+from yearn.events import contract_creation_block
+from yearn.mutlicall import fetch_multicall, multicall_matrix
+from yearn.prices import magic
 
 IEARN = {
     # v1 - deprecated
@@ -42,14 +44,17 @@ def load_iearn() -> List[iEarn]:
     return [iEarn(name, addr, output[addr]["token"], output[addr]["decimals"]) for name, addr in zip(IEARN, contracts)]
 
 
-def describe_iearn(iearn: List[iEarn]) -> dict:
+def describe_iearn(iearn: List[iEarn], block=None) -> dict:
     contracts = [x.contract for x in iearn]
-    results = multicall_matrix(contracts, ["totalSupply", "pool", "getPricePerFullShare", "balance"])
+    if block:
+        contracts = [contract for contract in contracts if contract_creation_block(str(contract)) < block]
+    
+    results = multicall_matrix(contracts, ["totalSupply", "pool", "getPricePerFullShare", "balance"], block=block)
     output = defaultdict(dict)
 
     for i in iearn:
         res = results[i.contract]
-        price = token_price(i.token)
+        price = magic.get_price(i.token, block=block)
         output[i.name] = {
             "total supply": res["totalSupply"] / 10 ** i.decimals,
             "available balance": res["balance"] / 10 ** i.decimals,
@@ -60,3 +65,12 @@ def describe_iearn(iearn: List[iEarn]) -> dict:
         }
 
     return dict(output)
+
+
+def total_value_at(iearns, block=None):
+    if block:
+        iearns = [earn for earn in iearns if contract_creation_block(str(earn.contract)) < block]
+
+    prices = Parallel(8, "threading")(delayed(magic.get_price)(earn.token, block=block) for earn in iearns)
+    results = fetch_multicall(*[[earn.contract, "pool"] for earn in iearns], block=block)
+    return {earn.name: assets * price / 10 ** earn.decimals for earn, assets, price in zip(iearns, results, prices)}
