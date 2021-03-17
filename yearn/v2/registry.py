@@ -86,3 +86,11 @@ class Registry:
             delayed(vault.load_strategies)()
             for vault in vaults
         )
+
+    def describe_vaults(self):
+        vaults = list(self.vaults.values()) + list(self.experiments.values())
+        results = Parallel(8, 'threading')(
+            delayed(vault.describe)()
+            for vault in vaults
+        )
+        return {vault.name: result for vault, result in zip(vaults, results)}

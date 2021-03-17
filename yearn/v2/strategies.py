@@ -9,6 +9,10 @@ STRATEGY_VIEWS_SCALED = [
     "totalDebt",
     "totalGain",
     "totalLoss",
+    "estimatedTotalAssets",
+    "lentTotalAssets",
+    "balanceOfPool",
+    "balanceOfWant",
 ]
 
 
