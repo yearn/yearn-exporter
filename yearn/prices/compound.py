@@ -1,4 +1,4 @@
-from brownie import Contract
+from brownie import Contract, interface
 from cachetools.func import ttl_cache
 from yearn.mutlicall import fetch_multicall
 
@@ -18,6 +18,19 @@ def get_markets():
     return dict(zip(names, results))
 
 
-def is_compound_market(addr):
+def is_compound_market(token):
     markets = get_markets()
-    return any(addr in market for market in markets.values())
+    return any(token in market for market in markets.values())
+
+
+def price(token, block=None):
+    token = interface.CErc20(token)
+    underlying, exchange_rate, decimals = fetch_multicall(
+        [token, 'underlying'],
+        [token, 'exchangeRateCurrent'],
+        [token, 'decimals'],
+        block=block
+    )
+    exchange_rate /= 1e18
+    under_decimals = interface.ERC20(underlying).decimals()
+    return [exchange_rate * 10 ** (decimals - under_decimals), underlying]

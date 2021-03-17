@@ -1,7 +1,6 @@
 from brownie import Contract, ZERO_ADDRESS
 from yearn.cache import memory
 from cachetools.func import ttl_cache
-from yearn.prices import magic
 
 curve_registry = Contract("0x7D86446dDb609eD0F5f8684AcF30380a356b2B4c")
 
@@ -39,4 +38,4 @@ def price(token, block=None):
         coin = coins[0]
 
     virtual_price = curve_registry.get_virtual_price_from_lp_token(token, block_identifier=block) / 1e18
-    return magic.price(coin, block=block) * virtual_price
+    return [virtual_price, coin]
