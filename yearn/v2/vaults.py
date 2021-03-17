@@ -2,7 +2,7 @@ from threading import Thread
 
 from brownie.network.contract import Contract
 from eth_utils import encode_hex, event_abi_to_log_topic
-from yearn import uniswap
+from yearn.prices import magic
 from yearn.events import create_filter, decode_logs
 from yearn.mutlicall import fetch_multicall
 from yearn.utils import safe_views
@@ -102,7 +102,7 @@ class VaultV2:
         for strategy in self.strategies.values():
             info["strategies"][strategy.name] = strategy.describe()
 
-        info["token price"] = uniswap.token_price(self.token)
+        info["token price"] = magic.get_price(self.token)
         if "totalAssets" in info:
             info["tvl"] = info["token price"] * info["totalAssets"]
 
