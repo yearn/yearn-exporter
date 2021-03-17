@@ -22,7 +22,7 @@ def get_price(token_in, token_out=usdc, router="uniswap", block=None):
     Calculate a price based on Uniswap Router quote for selling one `token_in`.
     Always uses intermediate WETH pair.
     """
-    tokens = [interface.ERC20(token) for token in [token_in, token_out]]
+    tokens = [Contract(token) for token in [token_in, token_out]]
     amount_in = 10 ** tokens[0].decimals()
     path = [token_in, token_out] if weth in (token_in, token_out) else [token_in, weth, token_out]
     fees = 0.997 ** (len(path) - 1)
@@ -40,7 +40,7 @@ def get_price(token_in, token_out=usdc, router="uniswap", block=None):
 def get_price_v1(asset, block=None):
     factory = Contract("0xc0a47dFe034B400B47bDaD5FecDa2621de6c4d95")
     try:
-        asset = interface.ERC20(asset)
+        asset = Contract(asset)
         exchange = interface.UniswapV1Exchange(factory.getExchange(asset))
         eth_bought = exchange.getTokenToEthInputPrice(10 ** asset.decimals(), block_identifier=block)
         exchange = interface.UniswapV1Exchange(factory.getExchange(usdc))
@@ -73,7 +73,7 @@ def lp_price(address, block=None):
         block=block
     )
     router = FACTORY_TO_ROUTER[factory]
-    tokens = [interface.ERC20(token) for token in [token0, token1]]
+    tokens = [Contract(token) for token in [token0, token1]]
     scales = [10 ** token.decimals() for token in tokens]
     prices = [get_price(token, router=router, block=block) for token in tokens]
     supply = supply / 1e18

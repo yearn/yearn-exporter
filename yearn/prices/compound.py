@@ -24,7 +24,7 @@ def is_compound_market(token):
 
 
 def get_price(token, block=None):
-    token = interface.CErc20(token)
+    token = Contract(token)
     underlying, exchange_rate, decimals = fetch_multicall(
         [token, 'underlying'],
         [token, 'exchangeRateCurrent'],
@@ -32,5 +32,5 @@ def get_price(token, block=None):
         block=block
     )
     exchange_rate /= 1e18
-    under_decimals = interface.ERC20(underlying).decimals()
+    under_decimals = Contract(underlying).decimals()
     return [exchange_rate * 10 ** (decimals - under_decimals), underlying]
