@@ -7,13 +7,20 @@ def is_yearn_vault(token):
     return hasattr(vault, 'pricePerShare') or hasattr(vault, 'getPricePerFullShare')
 
 
-def price(token, block=None):
+def get_price(token, block=None):
     vault = Contract(token)
-    price_per_share = 'pricePerShare' if hasattr(vault, 'pricePerShare') else 'getPricePerFullShare'
-    share_price, underlying, decimals = fetch_multicall(
-        [vault, price_per_share],
-        [vault, 'underlying'],
-        [vault, 'decimals'],
-        block=block
-    )
-    return [share_price / 10 ** decimals, underlying]
+    if hasattr(vault, 'pricePerShare'):
+        share_price, underlying, decimals = fetch_multicall(
+            [vault, 'pricePerShare'],
+            [vault, 'token'],
+            [vault, 'decimals'],
+            block=block
+        )
+        return [share_price / 10 ** decimals, underlying]
+    if hasattr(vault, 'getPricePerFullShare'):
+        share_price, underlying = fetch_multicall(
+            [vault, 'getPricePerFullShare'],
+            [vault, 'token'],
+            block=block
+        )
+        return [share_price / 1e18, underlying]

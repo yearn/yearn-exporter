@@ -3,7 +3,7 @@ from brownie.exceptions import ContractNotFound
 from cachetools.func import ttl_cache
 from yearn.cache import memory
 from yearn.mutlicall import fetch_multicall
-from yearn.prices.constants import weth, usdc, dai
+from yearn.prices.constants import weth, usdc
 
 FACTORIES = {
     "uniswap": "0x5C69bEe701ef814a2B6a3EDD4B1652CB9cc5aA6f",
@@ -17,7 +17,7 @@ FACTORY_TO_ROUTER = {FACTORIES[name]: ROUTERS[name] for name in FACTORIES}
 
 
 @ttl_cache(ttl=600)
-def price(token_in, token_out=usdc, router="uniswap", block=None):
+def get_price(token_in, token_out=usdc, router="uniswap", block=None):
     """
     Calculate a price based on Uniswap Router quote for selling one `token_in`.
     Always uses intermediate WETH pair.
@@ -37,7 +37,7 @@ def price(token_in, token_out=usdc, router="uniswap", block=None):
 
 
 @ttl_cache(ttl=600)
-def price_v1(asset, block=None):
+def get_price_v1(asset, block=None):
     factory = Contract("0xc0a47dFe034B400B47bDaD5FecDa2621de6c4d95")
     try:
         asset = interface.ERC20(asset)
@@ -75,7 +75,7 @@ def lp_price(address, block=None):
     router = FACTORY_TO_ROUTER[factory]
     tokens = [interface.ERC20(token) for token in [token0, token1]]
     scales = [10 ** token.decimals() for token in tokens]
-    prices = [price(token, router=router, block=block) for token in tokens]
+    prices = [get_price(token, router=router, block=block) for token in tokens]
     supply = supply / 1e18
     balances = [res / scale * price for res, scale, price in zip(reserves, scales, prices)]
     return sum(balances) / supply

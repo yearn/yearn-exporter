@@ -29,9 +29,8 @@ def underlying_coins(token):
 
 
 @ttl_cache(ttl=600)
-def price(token, block=None):
+def get_price(token, block=None):
     coins = underlying_coins(token)
-    print(token, coins)
     try:
         coin = (set(coins) & BASIC_TOKENS).pop()
     except KeyError:

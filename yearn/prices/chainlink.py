@@ -15,7 +15,7 @@ feeds = {
 
 
 @ttl_cache(ttl=600)
-def price(asset, block=None):
+def get_price(asset, block=None):
     try:
         return feeds[asset].latestAnswer(block_identifier=block) / 1e8
     except (KeyError, ValueError):

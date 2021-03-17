@@ -23,7 +23,7 @@ def is_compound_market(token):
     return any(token in market for market in markets.values())
 
 
-def price(token, block=None):
+def get_price(token, block=None):
     token = interface.CErc20(token)
     underlying, exchange_rate, decimals = fetch_multicall(
         [token, 'underlying'],
