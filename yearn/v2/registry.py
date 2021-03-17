@@ -1,8 +1,11 @@
 from threading import Thread
+import logging
 
 from brownie import Contract, chain
 from yearn.events import create_filter, decode_logs
 from yearn.v2.vaults import VaultV2
+
+logger = logging.getLogger(__name__)
 
 
 class Registry:
@@ -34,33 +37,42 @@ class Registry:
 
     def process_events(self, events):
         for event in events:
+            logger.debug("%s %s %s", event.address, event.name, dict(event))
             if event.name == "NewGovernance":
                 self.governance = event["governance"]
 
             if event.name == "NewRelease":
                 self.releases[event["api_version"]] = Contract(event["template"])
 
-            if event.name in ["NewVault", "NewExperimentalVault"]:
-                # if the vault was endorsed, we already have it as an experiment
-                vault = self.experiments.pop(
-                    event["vault"],
-                    VaultV2(
-                        vault=Contract.from_abi("Vault", event["vault"], self.releases[event["api_version"]].abi),
-                        token=event["token"],
-                        registry=self,
-                    ),
-                )
-                if event.name == "NewExperimentalVault":
-                    # there can be several experiments of the same version
-                    # disambiguate them by appending a part of the address
-                    vault.name = f"{vault.vault.symbol()} {event['api_version']} {event['vault'][:10]}"
-                    self.experiments[event["vault"]] = vault
-                if event.name == "NewVault":
+            if event.name == "NewVault":
+                # experiment was endorsed
+                if event["vault"] in self.experiments:
+                    vault = self.experiments.pop(event["vault"])
                     vault.name = f"{vault.vault.symbol()} {event['api_version']}"
                     self.vaults[event["vault"]] = vault
+                # we already know this vault from another registry
+                elif event["vault"] not in self.vaults:
+                    vault = self.vault_from_event(event)
+                    vault.name = f"{vault.vault.symbol()} {event['api_version']}"
+                    self.vaults[event["vault"]] = vault
+                    logger.info("new vault %s", vault)
+
+            if event.name == "NewExperimentalVault":
+                vault = self.vault_from_event(event)
+                vault.name = f"{vault.vault.symbol()} {event['api_version']} {event['vault'][:8]}"
+                self.experiments[event["vault"]] = vault
+                logger.info("new experiment %s", vault)
 
             if event.name == "VaultTagged":
                 self.tags[event["vault"]] = event["tag"]
+
+    def vault_from_event(self, event):
+        return VaultV2(
+            vault=Contract.from_abi("Vault", event["vault"], self.releases[event["api_version"]].abi),
+            token=event["token"],
+            api_version=event["api_version"],
+            registry=self,
+        )
 
     def watch_events(self):
         for block in chain.new_blocks(poll_interval=60):
