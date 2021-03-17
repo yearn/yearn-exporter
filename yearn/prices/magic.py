@@ -7,7 +7,7 @@ logger = logging.getLogger(__name__)
 
 def get_price(token, block=None):
     token = str(token)
-    logger.info("unwrapping %s", token)
+    logger.debug("unwrapping %s", token)
     price = None
 
     if token in constants.STABLECOINS:

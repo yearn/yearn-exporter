@@ -3,7 +3,9 @@ import logging
 from joblib import Parallel, delayed
 
 from brownie import Contract, chain
-from yearn.events import create_filter, decode_logs
+from yearn.events import create_filter, decode_logs, contract_creation_block
+from yearn.prices import magic
+from yearn.mutlicall import fetch_multicall
 from yearn.v2.vaults import VaultV2
 
 logger = logging.getLogger(__name__)
@@ -82,15 +84,17 @@ class Registry:
 
     def load_strategies(self):
         vaults = list(self.vaults.values()) + list(self.experiments.values())
-        Parallel(8, 'threading')(
-            delayed(vault.load_strategies)()
-            for vault in vaults
-        )
+        Parallel(8, "threading")(delayed(vault.load_strategies)() for vault in vaults)
 
     def describe_vaults(self):
         vaults = list(self.vaults.values()) + list(self.experiments.values())
-        results = Parallel(8, 'threading')(
-            delayed(vault.describe)()
-            for vault in vaults
-        )
+        results = Parallel(8, "threading")(delayed(vault.describe)() for vault in vaults)
         return {vault.name: result for vault, result in zip(vaults, results)}
+
+    def total_value_at(self, block=None):
+        vaults = list(self.vaults.values()) + list(self.experiments.values())
+        if block:
+            vaults = [vault for vault in vaults if contract_creation_block(str(vault.vault)) < block]
+        prices = Parallel(8, "threading")(delayed(magic.get_price)(vault.vault, block=block) for vault in vaults)
+        results = fetch_multicall(*[[vault.vault, "totalAssets"] for vault in vaults], block=block)
+        return {vault.name: assets * price / vault.scale for vault, assets, price in zip(vaults, results, prices)}
