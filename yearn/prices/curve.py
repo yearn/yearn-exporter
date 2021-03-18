@@ -16,14 +16,18 @@ BASIC_TOKENS = {
 
 
 @memory.cache()
+def get_pool(token):
+    return curve_registry.get_pool_from_lp_token(token)
+
+
+@memory.cache()
 def is_curve_lp_token(token):
-    pool = curve_registry.get_pool_from_lp_token(token)
-    return pool != ZERO_ADDRESS
+    return get_pool(token) != ZERO_ADDRESS
 
 
 @memory.cache()
 def underlying_coins(token):
-    pool = curve_registry.get_pool_from_lp_token(token)
+    pool = get_pool(token)
     coins = curve_registry.get_underlying_coins(pool)
     return [coin for coin in coins if coin != ZERO_ADDRESS]
 
@@ -36,5 +40,8 @@ def get_price(token, block=None):
     except KeyError:
         coin = coins[0]
 
-    virtual_price = curve_registry.get_virtual_price_from_lp_token(token, block_identifier=block) / 1e18
+    # there is a registry.get_virtual_price_from_lp_token,
+    # but we call pool in case the registry was not deployed at the block
+    pool = Contract(get_pool(token))
+    virtual_price = pool.get_virtual_price(block_identifier=block) / 1e18
     return [virtual_price, coin]
