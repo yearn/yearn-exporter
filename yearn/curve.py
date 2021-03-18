@@ -1,10 +1,10 @@
-from brownie import ZERO_ADDRESS, interface
+from brownie import ZERO_ADDRESS, interface, Contract
 from cachetools import LRUCache, cached
 
-from yearn import uniswap
+from yearn.prices import magic
 from yearn.mutlicall import fetch_multicall
 
-crv = interface.ERC20("0xD533a949740bb3306d119CC777fa900bA034cd52")
+crv = Contract("0xD533a949740bb3306d119CC777fa900bA034cd52")
 voting_escrow = interface.CurveVotingEscrow("0x5f3b5DfEb7B28CDbD7FAba78963EE202a494e2A2")
 gauge_controller = interface.CurveGaugeController("0x2F50D538606Fa9EDD2B11E2446BEb18C9D5846bB")
 registry = interface.CurveRegistry("0x7D86446dDb609eD0F5f8684AcF30380a356b2B4c")
@@ -30,7 +30,7 @@ def get_base_price(pool_or_lp):
     pool = lp_to_pool(pool_or_lp)
     if pool == ZERO_ADDRESS:
         pool = pool_or_lp
-    return uniswap.token_price(get_underlying(pool)[0])
+    return magic.get_price(get_underlying(pool)[0])
 
 
 def get_virtual_price(lp):
@@ -79,7 +79,7 @@ def calculate_boost(gauge, addr):
 
 
 def calculate_apy(gauge, swap):
-    crv_price = uniswap.price_router(crv, uniswap.usdc)
+    crv_price = magic.get_price(crv)
     results = fetch_multicall(
         [gauge, "working_supply"],
         [gauge_controller, "gauge_relative_weight", gauge],
