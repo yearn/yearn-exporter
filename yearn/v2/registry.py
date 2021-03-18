@@ -25,6 +25,8 @@ class Registry:
             "0xE15461B18EE31b7379019Dc523231C57d1Cbc18c",  # v2.0
             "0x50c1a2eA0a861A967D9d0FFE2AE4012c2E053804",  # v2.1
         ]
+        # force downloading abi for log decoding
+        [Contract(addr) for addr in self.addresses]
 
         # recover registry state from events
         self.log_filter = create_filter(self.addresses)
