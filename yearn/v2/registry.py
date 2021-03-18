@@ -92,9 +92,13 @@ class Registry:
         return {vault.name: result for vault, result in zip(vaults, results)}
 
     def total_value_at(self, block=None):
-        vaults = list(self.vaults.values()) + list(self.experiments.values())
-        if block:
-            vaults = [vault for vault in vaults if contract_creation_block(str(vault.vault)) < block]
+        vaults = self.active_vaults_at(block)
         prices = Parallel(8, "threading")(delayed(magic.get_price)(vault.vault, block=block) for vault in vaults)
         results = fetch_multicall(*[[vault.vault, "totalAssets"] for vault in vaults], block=block)
         return {vault.name: assets * price / vault.scale for vault, assets, price in zip(vaults, results, prices)}
+
+    def active_vaults_at(self, block=None):
+        vaults = list(self.vaults.values()) + list(self.experiments.values())
+        if block:
+            vaults = [vault for vault in vaults if contract_creation_block(str(vault.vault)) < block]
+        return vaults
