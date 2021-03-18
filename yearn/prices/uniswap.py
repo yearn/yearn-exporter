@@ -22,7 +22,7 @@ def get_price(token_in, token_out=usdc, router="uniswap", block=None):
     Calculate a price based on Uniswap Router quote for selling one `token_in`.
     Always uses intermediate WETH pair.
     """
-    tokens = [Contract(token) for token in [token_in, token_out]]
+    tokens = [Contract(str(token)) for token in [token_in, token_out]]
     amount_in = 10 ** tokens[0].decimals()
     path = [token_in, token_out] if weth in (token_in, token_out) else [token_in, weth, token_out]
     fees = 0.997 ** (len(path) - 1)
