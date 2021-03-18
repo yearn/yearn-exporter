@@ -39,6 +39,9 @@ class Registry:
             for market, token in zip(markets, underlying)
         ]
 
+    def __repr__(self):
+        return f"<IronBank markets={len(self.markets)}>"
+
     def describe(self, block=None):
         markets = self.active_markets_at_block(block)
         blocks_per_year = 365 * 86400 / 15
