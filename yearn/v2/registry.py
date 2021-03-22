@@ -62,7 +62,7 @@ class Registry:
             self.process_events(decode_logs(logs))
             if not self._done.is_set():
                 self._done.set()
-                logger.info("loaded v2 registry in %.3fs", time.time() - start)
+                logger.debug("loaded v2 registry in %.3fs", time.time() - start)
             time.sleep(300)
 
     def process_events(self, events):
@@ -80,13 +80,13 @@ class Registry:
                     vault = self._experiments.pop(event["vault"])
                     vault.name = f"{vault.vault.symbol()} {event['api_version']}"
                     self._vaults[event["vault"]] = vault
-                    logger.info("endorsed vault %s %s", vault.vault, vault.name)
+                    logger.debug("endorsed vault %s %s", vault.vault, vault.name)
                 # we already know this vault from another registry
                 elif event["vault"] not in self._vaults:
                     vault = self.vault_from_event(event)
                     vault.name = f"{vault.vault.symbol()} {event['api_version']}"
                     self._vaults[event["vault"]] = vault
-                    logger.info("new vault %s %s", vault.vault, vault.name)
+                    logger.debug("new vault %s %s", vault.vault, vault.name)
 
             if event.name == "NewExperimentalVault":
                 vault = self.vault_from_event(event)
