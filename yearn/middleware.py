@@ -7,7 +7,7 @@ from eth_utils import encode_hex, function_signature_to_4byte_selector as fourby
 
 logger = logging.getLogger(__name__)
 
-BATCH_SIZE = 1000
+BATCH_SIZE = 10000
 CACHED_CALLS = [
     "name()",
     "symbol()",
