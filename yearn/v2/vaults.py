@@ -1,10 +1,13 @@
-from threading import Thread
+import logging
+import threading
+import time
+from typing import List
 
-from brownie.network.contract import Contract
+from brownie import Contract, chain
 from eth_utils import encode_hex, event_abi_to_log_topic
-from yearn.prices import magic
 from yearn.events import create_filter, decode_logs
 from yearn.mutlicall import fetch_multicall
+from yearn.prices import magic
 from yearn.utils import safe_views
 from yearn.v2.strategies import Strategy
 
@@ -32,12 +35,15 @@ STRATEGY_EVENTS = [
     # "StrategyReported",
 ]
 
+logger = logging.getLogger(__name__)
 
-class VaultV2:
-    def __init__(self, vault, api_version, token=None, registry=None):
-        self.strategies = {}
-        self.revoked_strategies = {}
+
+class Vault:
+    def __init__(self, vault, api_version=None, token=None, registry=None):
+        self._strategies = {}
+        self._revoked = {}
         self.vault = vault
+        self.api_version = api_version
         if token is None:
             token = vault.token()
         self.token = Contract(token)
@@ -46,10 +52,41 @@ class VaultV2:
         # mutlicall-safe views with 0 inputs and numeric output.
         self._views = safe_views(self.vault.abi)
 
+        # load strategies from events and watch for freshly attached strategies
+        self._topics = [
+            [
+                encode_hex(event_abi_to_log_topic(event))
+                for event in self.vault.abi
+                if event["type"] == "event" and event["name"] in STRATEGY_EVENTS
+            ]
+        ]
+        self._done = threading.Event()
+        self._thread = threading.Thread(target=self.watch_events, daemon=True)
+
     def __repr__(self):
-        name = getattr(self, "name", self.vault.symbol())
-        strategies = ", ".join(f'{strategy}' for strategy in self.strategies.values())
-        return f'<Vault {self.vault} name="{name}" token={self.token} strategies=[{strategies}]>'
+        strategies = "..."  # don't block if we don't have the strategies loaded
+        if self._done.is_set():
+            strategies = ", ".join(f"{strategy}" for strategy in self.strategies)
+        return f'<Vault {self.vault} name="{self.name}" token={self.token} strategies=[{strategies}]>'
+
+    def __eq__(self, other):
+        if isinstance(other, Vault):
+            return self.vault == other.vault
+
+        if isinstance(other, str):
+            return self.vault == other
+
+        raise ValueError("Vault is only comparable with [Vault, str]")
+
+    @property
+    def strategies(self) -> List[Strategy]:
+        self.load_strategies()
+        return list(self._strategies.values())
+
+    @property
+    def revoked_strategies(self) -> List[Strategy]:
+        self.load_strategies()
+        return list(self._revoked.values())
 
     @property
     def is_endorsed(self):
@@ -59,38 +96,45 @@ class VaultV2:
     @property
     def is_experiment(self):
         assert self.registry, "Vault not from Registry"
-        return self.registry and str(self.vault) in self.registry.experiments
+        return str(self.vault) in self.registry.experiments
 
     def load_strategies(self):
-        topics = [
-            [
-                encode_hex(event_abi_to_log_topic(event))
-                for event in self.vault.abi
-                if event["type"] == "event" and event["name"] in STRATEGY_EVENTS
-            ]
-        ]
-        self.log_filter = create_filter(str(self.vault), topics=topics)
-        logs = self.log_filter.get_new_entries()
-        events = decode_logs(logs)
+        if not self._thread._started.is_set():
+            self._thread.start()
+        self._done.wait()
 
+    def watch_events(self):
+        start = time.time()
+        self.log_filter = create_filter(str(self.vault), topics=self._topics)
+        for block in chain.new_blocks():
+            logs = self.log_filter.get_new_entries()
+            events = decode_logs(logs)
+            self.process_events(events)
+            if not self._done.is_set():
+                self._done.set()
+                logger.debug("loaded %d strategies in %.3fs", len(self._strategies), self.name, time.time() - start)
+            time.sleep(300)
+
+    def process_events(self, events):
         for event in events:
             if event.name == "StrategyAdded":
-                self.strategies[event["strategy"]] = Strategy(event["strategy"], self)
+                logger.debug("%s strategy added %s", self.name, event["strategy"])
+                self._strategies[event["strategy"]] = Strategy(event["strategy"], self)
             elif event.name == "StrategyRevoked":
-                self.revoked_strategies[event["strategy"]] = self.strategies.pop(
+                logger.debug("%s strategy revoked %s", self.name, event["strategy"])
+                self._revoked[event["strategy"]] = self._strategies.pop(
                     event["strategy"], Strategy(event["strategy"], self)
                 )
             elif event.name == "StrategyMigrated":
-                self.revoked_strategies[event["oldVersion"]] = self.strategies.pop(
+                logger.debug("%s strategy migrated %s -> %s", self.name, event["oldVersion"], event["newVersion"])
+                self._revoked[event["oldVersion"]] = self._strategies.pop(
                     event["oldVersion"], Strategy(event["oldVersion"], self)
                 )
-                self.strategies[event["newVersion"]] = Strategy(event["newVersion"], self)
+                self._strategies[event["newVersion"]] = Strategy(event["newVersion"], self)
 
     def describe(self):
         try:
-            results = fetch_multicall(
-                *[[self.vault, view] for view in self._views],
-            )
+            results = fetch_multicall(*[[self.vault, view] for view in self._views])
             info = dict(zip(self._views, results))
             for name in info:
                 if name in VAULT_VIEWS_SCALED:
@@ -98,8 +142,8 @@ class VaultV2:
             info["strategies"] = {}
         except ValueError as e:
             info = {"strategies": {}}
-        
-        for strategy in self.strategies.values():
+
+        for strategy in self.strategies:
             info["strategies"][strategy.name] = strategy.describe()
 
         info["token price"] = magic.get_price(self.token)

@@ -24,7 +24,16 @@ class Strategy:
         self._views = safe_views(self.strategy.abi)
 
     def __repr__(self) -> str:
-        return f"<Strategy {self.strategy} name={self.name} vault={self.vault.name}>"
+        return f"<Strategy {self.strategy} name={self.name}>"
+
+    def __eq__(self, other):
+        if isinstance(other, Strategy):
+            return self.strategy == other.strategy
+
+        if isinstance(other, str):
+            return self.strategy == other
+
+        raise ValueError("Strategy is only comparable with [Strategy, str]")
 
     def describe(self):
         results = fetch_multicall(
