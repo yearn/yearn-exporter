@@ -1,11 +1,12 @@
-from threading import Thread
 import logging
-from joblib import Parallel, delayed
+import threading
+from time import time
 
 from brownie import Contract, chain
-from yearn.events import create_filter, decode_logs, contract_creation_block
-from yearn.prices import magic
+from joblib import Parallel, delayed
+from yearn.events import contract_creation_block, create_filter, decode_logs
 from yearn.mutlicall import fetch_multicall
+from yearn.prices import magic
 from yearn.v2.vaults import VaultV2
 
 logger = logging.getLogger(__name__)
@@ -29,13 +30,14 @@ class Registry:
         [Contract(addr) for addr in self.addresses]
 
         # recover registry state from events
-        self.log_filter = create_filter(self.addresses)
-        self.events = decode_logs(self.log_filter.get_new_entries())
-        self.process_events(self.events)
+        start = time()
+        self.done = threading.Event()
+        self.thread = threading.Thread(target=self.watch_events, daemon=True)
+        self.thread.start()
+        # fetch events in the background
+        self.done.wait()
+        logger.info('loaded v2 registry in %.3fs', time() - start)
 
-        # keep watching for new changes
-        # self.thread = Thread(target=self.watch_events)
-        # self.thread.start()
 
     def __repr__(self) -> str:
         return f"<Registry releases={len(self.releases)} vaults={len(self.vaults)} experiments={len(self.experiments)}>"
@@ -80,13 +82,18 @@ class Registry:
         )
 
     def watch_events(self):
+        # background task which keeps state in sync
+        self.log_filter = create_filter(self.addresses)
         for block in chain.new_blocks(poll_interval=60):
             logs = self.log_filter.get_new_entries()
             self.process_events(decode_logs(logs))
+            self.done.set()
 
     def load_strategies(self):
+        start = time()
         vaults = list(self.vaults.values()) + list(self.experiments.values())
         Parallel(8, "threading")(delayed(vault.load_strategies)() for vault in vaults)
+        logger.info('loaded v2 strategies in %.3fs', time() - start)
 
     def describe_vaults(self):
         vaults = list(self.vaults.values()) + list(self.experiments.values())
