@@ -7,6 +7,7 @@ from eth_utils import encode_hex, function_signature_to_4byte_selector as fourby
 
 logger = logging.getLogger(__name__)
 
+BATCH_SIZE = 1000
 CACHED_CALLS = [
     "name()",
     "symbol()",
@@ -20,7 +21,7 @@ def cache_middleware(make_request, w3):
         should_cache = (
             method == "eth_call" and params[0]["data"] in CACHED_CALLS
             or method == "eth_getCode" and params[1] == "latest"
-            or method == "eth_getLogs" and params[0]["toBlock"] - params[0]["fromBlock"] == 9999
+            or method == "eth_getLogs" and params[0]["toBlock"] - params[0]["fromBlock"] == BATCH_SIZE - 1
         )
         logger.debug("%s  %s %s", "🔴🟢"[should_cache], method, params)
         if should_cache:
@@ -36,7 +37,7 @@ def cache_middleware(make_request, w3):
 def setup_middleware():
     from web3.middleware import filter
 
-    filter.MAX_BLOCK_REQUEST = 10000
+    filter.MAX_BLOCK_REQUEST = BATCH_SIZE
     web3.provider._request_kwargs["timeout"] = 600
     web3.middleware_onion.add(filter.local_filter_middleware)
     web3.middleware_onion.add(cache_middleware)

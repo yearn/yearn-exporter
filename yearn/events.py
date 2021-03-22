@@ -2,8 +2,11 @@ import logging
 
 from brownie import chain, web3
 from brownie.network.event import EventDict, _decode_logs
+from joblib import Parallel, delayed
+from web3.middleware.filter import block_ranges
 
 from yearn.cache import memory
+from yearn.middleware import BATCH_SIZE
 
 logger = logging.getLogger(__name__)
 
@@ -49,4 +52,17 @@ def create_filter(address, topics=None):
         start_block = min(map(contract_creation_block, address))
     else:
         start_block = contract_creation_block(address)
+
     return web3.eth.filter({"address": address, "fromBlock": start_block, "topics": topics})
+
+
+def get_logs_asap(address, topics, from_block, to_block):
+    logs = []
+    batches = Parallel(8, "threading", verbose=10)(
+        delayed(web3.eth.getLogs)({"address": address, "topics": topics, "fromBlock": start, "toBlock": end})
+        for start, end in block_ranges(from_block, to_block, BATCH_SIZE)
+    )
+    for batch in batches:
+        logs.extend(batch)
+
+    return logs
