@@ -1,0 +1,6 @@
+eth-brownie=1.13.4
+web3=5.11.1
+click^7.1.2
+tabulate^0.8.7
+joblib^1.0.1
+cachetools^4.1.1
