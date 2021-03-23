@@ -116,6 +116,7 @@ class VaultV1:
 class Registry:
     def __init__(self):
         self.registry = interface.YRegistry(web3.ens.resolve("registry.ychad.eth"))
+        # NOTE: we assume no more v1 vaults are deployed
         self.vaults = [VaultV1(*params) for params in zip(self.registry.getVaults(), *self.registry.getVaultsInfo())]
 
     def __repr__(self) -> str:
