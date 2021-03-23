@@ -16,6 +16,8 @@ def export(data):
     for product, gauge in simple_gauges.items():
         for vault, params in data[product].items():
             for key, value in params.items():
+                if value is None:
+                    continue
                 gauge.labels(vault, key).set(value)
 
     for vault, params in data["v2"].items():
@@ -26,7 +28,8 @@ def export(data):
 
         # strategies can have nested structs
         for strategy, strategy_params in data["v2"][vault]["strategies"].items():
-            for key, value in flatten_dict(strategy_params):
+            flat = flatten_dict(strategy_params)
+            for key, value in flat.items():
                 v2_strategy_gauge.labels(vault, strategy, key).set(value)
 
 

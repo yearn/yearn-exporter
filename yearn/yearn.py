@@ -13,7 +13,7 @@ class Yearn:
 
     def __init__(self) -> None:
         self.registries = {
-            "iearn": yearn.iearn.Registry(),
+            "earn": yearn.iearn.Registry(),
             "v1": yearn.vaults_v1.Registry(),
             "v2": yearn.v2.registry.Registry(),
             "ib": yearn.ironbank.Registry(),
