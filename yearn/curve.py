@@ -1,43 +1,17 @@
-from brownie import ZERO_ADDRESS, interface
-from cachetools import LRUCache, cached
+from brownie import Contract, interface
 
-from yearn import uniswap
-from yearn.mutlicall import fetch_multicall
+from yearn.multicall2 import fetch_multicall
+from yearn.prices import magic
+from yearn.prices.curve import get_pool
 
-crv = interface.ERC20("0xD533a949740bb3306d119CC777fa900bA034cd52")
+crv = Contract("0xD533a949740bb3306d119CC777fa900bA034cd52")
 voting_escrow = interface.CurveVotingEscrow("0x5f3b5DfEb7B28CDbD7FAba78963EE202a494e2A2")
 gauge_controller = interface.CurveGaugeController("0x2F50D538606Fa9EDD2B11E2446BEb18C9D5846bB")
 registry = interface.CurveRegistry("0x7D86446dDb609eD0F5f8684AcF30380a356b2B4c")
 underlying_coins = {}
 
 
-@cached(LRUCache(1000))
-def lp_to_pool(addr):
-    return registry.get_pool_from_lp_token(addr)
-
-
-@cached(LRUCache(1000))
-def get_underlying(pool):
-    return [coin for coin in registry.get_underlying_coins(pool) if coin != ZERO_ADDRESS]
-
-
-def is_curve_lp_token(addr):
-    return lp_to_pool(addr) != ZERO_ADDRESS
-
-
-def get_base_price(pool_or_lp):
-    # try to find pool for lp, otherwise assume pool
-    pool = lp_to_pool(pool_or_lp)
-    if pool == ZERO_ADDRESS:
-        pool = pool_or_lp
-    return uniswap.token_price(get_underlying(pool)[0])
-
-
-def get_virtual_price(lp):
-    return interface.CurveSwap(lp_to_pool(lp)).get_virtual_price() / 1e18
-
-
-def calculate_boost(gauge, addr):
+def calculate_boost(gauge, addr, block=None):
     results = fetch_multicall(
         [gauge, "balanceOf", addr],
         [gauge, "totalSupply"],
@@ -45,6 +19,7 @@ def calculate_boost(gauge, addr):
         [gauge, "working_supply"],
         [voting_escrow, "balanceOf", addr],
         [voting_escrow, "totalSupply"],
+        block=block,
     )
     results = [x / 1e18 for x in results]
     gauge_balance, gauge_total, working_balance, working_supply, vecrv_balance, vecrv_total = results
@@ -78,19 +53,21 @@ def calculate_boost(gauge, addr):
     }
 
 
-def calculate_apy(gauge, swap):
-    crv_price = uniswap.price_router(crv, uniswap.usdc)
+def calculate_apy(gauge, lp_token, block=None):
+    crv_price = magic.get_price(crv)
+    pool = Contract(get_pool(lp_token))
     results = fetch_multicall(
         [gauge, "working_supply"],
         [gauge_controller, "gauge_relative_weight", gauge],
         [gauge, "inflation_rate"],
-        [swap, "get_virtual_price"],
+        [pool, "get_virtual_price"],
+        block=block,
     )
     results = [x / 1e18 for x in results]
     working_supply, relative_weight, inflation_rate, virtual_price = results
-    base_price = get_base_price(swap)
+    token_price = magic.get_price(lp_token, block=block)
     try:
-        rate = (inflation_rate * relative_weight * 86400 * 365 / working_supply * 0.4) / (virtual_price * base_price)
+        rate = (inflation_rate * relative_weight * 86400 * 365 / working_supply * 0.4) / token_price
     except ZeroDivisionError:
         rate = 0
 
@@ -99,8 +76,7 @@ def calculate_apy(gauge, swap):
         "relative weight": relative_weight,
         "inflation rate": inflation_rate,
         "virtual price": virtual_price,
-        "base price": base_price,
         "crv reward rate": rate,
         "crv apy": rate * crv_price,
-        "token price": base_price * virtual_price,
+        "token price": token_price,
     }

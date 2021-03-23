@@ -1,0 +1,128 @@
+import logging
+import threading
+import time
+from typing import List
+
+from brownie import Contract, chain
+from joblib import Parallel, delayed
+from yearn.events import contract_creation_block, create_filter, decode_logs
+from yearn.multicall2 import fetch_multicall
+from yearn.prices import magic
+from yearn.v2.vaults import Vault
+
+logger = logging.getLogger(__name__)
+
+
+class Registry:
+    def __init__(self):
+        self.releases = {}  # api_version => template
+        self._vaults = {}  # address -> Vault
+        self._experiments = {}  # address => Vault
+        self.governance = None
+        self.tags = {}
+
+        # latest registry is always available at v2.registry.ychad.eth
+        # but we also track older registries to pull experiments
+        self.addresses = [
+            "0xE15461B18EE31b7379019Dc523231C57d1Cbc18c",  # v2.0
+            "0x50c1a2eA0a861A967D9d0FFE2AE4012c2E053804",  # v2.1
+        ]
+        # force downloading abi for log decoding
+        [Contract(addr) for addr in self.addresses]
+
+        # load registry state in the background
+        self._done = threading.Event()
+        self._thread = threading.Thread(target=self.watch_events, daemon=True)
+        self._thread.start()
+
+    @property
+    def vaults(self) -> List[Vault]:
+        self._done.wait()
+        return list(self._vaults.values())
+
+    @property
+    def experiments(self) -> List[Vault]:
+        self._done.wait()
+        return list(self._experiments.values())
+
+    def __repr__(self) -> str:
+        self._done.wait()
+        return f"<Registry releases={len(self.releases)} vaults={len(self.vaults)} experiments={len(self.experiments)}>"
+
+    def load_vaults(self):
+        if not self._thread._started.is_set():
+            self._thread.start()
+        self._done.wait()
+
+    def watch_events(self):
+        start = time.time()
+        self.log_filter = create_filter(self.addresses)
+        for block in chain.new_blocks(poll_interval=600):
+            logs = self.log_filter.get_new_entries()
+            self.process_events(decode_logs(logs))
+            if not self._done.is_set():
+                self._done.set()
+                logger.debug("loaded v2 registry in %.3fs", time.time() - start)
+            time.sleep(300)
+
+    def process_events(self, events):
+        for event in events:
+            logger.debug("%s %s %s", event.address, event.name, dict(event))
+            if event.name == "NewGovernance":
+                self.governance = event["governance"]
+
+            if event.name == "NewRelease":
+                self.releases[event["api_version"]] = Contract(event["template"])
+
+            if event.name == "NewVault":
+                # experiment was endorsed
+                if event["vault"] in self._experiments:
+                    vault = self._experiments.pop(event["vault"])
+                    vault.name = f"{vault.vault.symbol()} {event['api_version']}"
+                    self._vaults[event["vault"]] = vault
+                    logger.debug("endorsed vault %s %s", vault.vault, vault.name)
+                # we already know this vault from another registry
+                elif event["vault"] not in self._vaults:
+                    vault = self.vault_from_event(event)
+                    vault.name = f"{vault.vault.symbol()} {event['api_version']}"
+                    self._vaults[event["vault"]] = vault
+                    logger.debug("new vault %s %s", vault.vault, vault.name)
+
+            if event.name == "NewExperimentalVault":
+                vault = self.vault_from_event(event)
+                vault.name = f"{vault.vault.symbol()} {event['api_version']} {event['vault'][:8]}"
+                self._experiments[event["vault"]] = vault
+                logger.debug("new experiment %s %s", vault.vault, vault.name)
+
+            if event.name == "VaultTagged":
+                self.tags[event["vault"]] = event["tag"]
+
+    def vault_from_event(self, event):
+        return Vault(
+            vault=Contract.from_abi("Vault", event["vault"], self.releases[event["api_version"]].abi),
+            token=event["token"],
+            api_version=event["api_version"],
+            registry=self,
+        )
+
+    def load_strategies(self):
+        # stagger loading strategies to not run out of connections in the pool
+        vaults = self.vaults + self.experiments
+        Parallel(8, "threading")(delayed(vault.load_strategies)() for vault in vaults)
+
+    def describe(self, block=None):
+        vaults = self.vaults + self.experiments
+        results = Parallel(8, "threading")(delayed(vault.describe)(block=block) for vault in vaults)
+        return {vault.name: result for vault, result in zip(vaults, results)}
+
+    def total_value_at(self, block=None):
+        vaults = self.active_vaults_at(block)
+        prices = Parallel(8, "threading")(delayed(magic.get_price)(vault.vault, block=block) for vault in vaults)
+        results = fetch_multicall(*[[vault.vault, "totalAssets"] for vault in vaults], block=block)
+        return {vault.name: assets * price / vault.scale for vault, assets, price in zip(vaults, results, prices)}
+
+    def active_vaults_at(self, block=None):
+        vaults = self.vaults + self.experiments
+        if block:
+            vaults = [vault for vault in vaults if contract_creation_block(str(vault.vault)) <= block]
+        return vaults

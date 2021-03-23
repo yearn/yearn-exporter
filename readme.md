@@ -1,32 +1,36 @@
-# yearn exporter
+# Yearn Exporter
 
-collects on-chain numeric data about Yearn Vaults and exposes it in prometheus format.
+Collects realtime on-chain numeric data about all Yearn products and exposes it in multiple formats.
 
-point prometheus at this exporter persist the data and make it queryable.
+Hosted version is available at https://yearn.vision.
 
-set up grafana for custom dashboards and alerts.
+# Installation
 
+You will need:
+- TurboGeth for querying historical data
+- Prometheus to pull the metrics, persist them and make them queryable
+- Grafana if you want to set up custom dashboards and alerts
 
-## usage
-### exporter
+## Usage
+
+### Prometheus exporter
+```bash
+# full info
+brownie run exporter
+# realtime tvl only
+brownie run exporter tvl
 ```
-brownie run yearn exporter_v1 --network mainnet
-brownie run yearn exporter_v2 --network mainnet
-brownie run yearn exporter_experimental --network mainnet
-brownie run yearn exporter_ironbank --network mainnet
-brownie run yearn exporter_iearn --network mainnet
-```
 
-### Stats
-```
-brownie run yearn develop_v1 --network mainnet
-brownie run yearn develop_v2 --network mainnet
-brownie run yearn develop_experimental --network mainnet
-brownie run yearn tvl --network mainnet
+### On-demand stats
+```bash
+# tvl summary
+brownie run tvl
+# info about live v2 strategies
+brownie run print_strategies
 ```
 
 ## Docker setup
-```
+```bash
 export GF_SECURITY_ADMIN_USER=<YOUR_ADMIN_USER> # change this if you want to have a different admin user name, default is admin
 export GF_SECURITY_ADMIN_PASSWORD=<YOUR_ADMIN_PASSWORD> # change this if you want to have a different admin password, default is admin
 export WEB3_INFURA_PROJECT_ID=<YOUR_PROJECT_ID> # this needs to be set
@@ -38,7 +42,3 @@ docker-compose up -d
 ```
 
 After successful startup you can go directly to grafana at `http://localhost:3000`. If you want to change your dashboards you can sign-in at the lower left with `admin:admin`.
-
-## supported vaults
-
-the goal of the project is to collect advanced metrics about vaults and strategies.

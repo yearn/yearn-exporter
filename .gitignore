@@ -5,3 +5,6 @@ build/
 reports/
 .vscode
 research/
+cache
+.ipynb_checkpoints
+*.ipynb

@@ -1,12 +1,18 @@
+import logging
 from dataclasses import dataclass
 from typing import Optional
-import warnings
 
-from brownie import interface, web3, Contract
+from brownie import Contract, ZERO_ADDRESS, interface, web3
 from brownie.network.contract import InterfaceContainer
+from joblib import Parallel, delayed
 
-from yearn import constants, curve, uniswap
-from yearn.mutlicall import fetch_multicall
+from yearn import constants, curve
+from yearn.events import contract_creation_block
+from yearn.multicall2 import fetch_multicall
+from yearn.prices import magic
+from pprint import pprint
+
+logger = logging.getLogger(__name__)
 
 
 @dataclass
@@ -22,92 +28,117 @@ class VaultV1:
     decimals: Optional[int] = None
 
     def __post_init__(self):
-        self.vault = constants.VAULT_INTERFACES.get(self.vault, interface.yVault)(self.vault)
-        self.controller = constants.CONTROLLER_INTERFACES[self.controller](self.controller)
-        if self.strategy not in constants.STRATEGY_INTERFACES:
-            warnings.warn(f'no strategy interface for {self.strategy}, reading from etherscan')
-        self.strategy = constants.STRATEGY_INTERFACES.get(self.strategy, Contract)(self.strategy)
-        self.token = interface.ERC20(self.token)
+        self.vault = Contract(self.vault)
+        self.controller = Contract(self.controller)
+        self.strategy = Contract(self.strategy)
+        self.token = Contract(self.token)
         if str(self.vault) not in constants.VAULT_ALIASES:
-            warnings.warn(f'no vault alias for {self.vault}, reading from vault.sybmol()')
+            logger.warning("no vault alias for %s, reading from vault.sybmol()", self.vault)
         self.name = constants.VAULT_ALIASES.get(str(self.vault), self.vault.symbol())
         self.decimals = self.vault.decimals()  # vaults inherit decimals from token
+        self.scale = 10 ** self.decimals
 
-    def describe(self):
-        scale = 10 ** self.decimals
+    def get_price(self, block=None):
+        if self.name == "aLINK":
+            return magic.get_price(self.vault.underlying(), block=block)
+        return magic.get_price(self.token, block=block)
+
+    def get_strategy(self, block=None):
+        if self.name in ["aLINK", "LINK"]:
+            return self.strategy
+        strategy = self.controller.strategies(self.token, block_identifier=block)
+        return Contract(strategy)
+
+    def describe(self, block=None):
         info = {}
-        try:
-            info['share price'] = self.vault.getPricePerFullShare() / 1e18
-        except ValueError:
-            # no money in vault, exit early
-            return {'tvl': 0}
+        strategy = self.strategy
+        if block is not None:
+            strategy = self.get_strategy(block=block)
 
+        # attrs are fetches as multicall and populate info
         attrs = {
-            'vault balance': [self.vault, 'balance'],
-            'vault total': [self.vault, 'totalSupply'],
-            'strategy balance': [self.strategy, 'balanceOf'],
+            "vault balance": [self.vault, "balance"],
+            "vault total": [self.vault, "totalSupply"],
+            "strategy balance": [strategy, "balanceOf"],
         }
 
         # some of the oldest vaults don't implement these methods
         if hasattr(self.vault, "available"):
-            attrs['available'] = [self.vault, 'available']
+            attrs["available"] = [self.vault, "available"]
 
         if hasattr(self.vault, "min") and hasattr(self.vault, "max"):
-            attrs['min'] = [self.vault, 'min']
-            attrs['max'] = [self.vault, 'max']
+            attrs["min"] = [self.vault, "min"]
+            attrs["max"] = [self.vault, "max"]
 
         # new curve voter proxy vaults
-        if hasattr(self.strategy, "proxy"):
-            results = fetch_multicall(
-                [self.strategy, 'voter'],
-                [curve.registry, 'get_pool_from_lp_token', self.token],
-                [self.strategy, 'gauge'],
+        if hasattr(strategy, "proxy"):
+            vote_proxy, gauge = fetch_multicall(
+                [strategy, "voter"],  # voter is static, can pin
+                [strategy, "gauge"],  # gauge is static per strategy, can cache
+                block=block,
             )
-            vote_proxy = interface.CurveYCRVVoter(results[0])
-            swap = interface.CurveSwap(results[1])
-            gauge = interface.CurveGauge(results[2])
-            info.update(curve.calculate_boost(gauge, vote_proxy))
-            info.update(curve.calculate_apy(gauge, swap))
-            info["earned"] = gauge.claimable_tokens.call(vote_proxy).to("ether")
+            vote_proxy = interface.CurveYCRVVoter(vote_proxy)
+            gauge = Contract(gauge)
+            info.update(curve.calculate_boost(gauge, vote_proxy, block=block))
+            info.update(curve.calculate_apy(gauge, self.token, block=block))
+            attrs["earned"] = [gauge, "claimable_tokens", vote_proxy]  # / scale
 
-        if hasattr(self.strategy, "earned"):
-            info["lifetime earned"] = self.strategy.earned() / scale
+        if hasattr(strategy, "earned"):
+            attrs["lifetime earned"] = [strategy, "earned"]  # /scale
 
-        if self.strategy._name == "StrategyYFIGovernance":
-            ygov = interface.YearnGovernance(self.strategy.gov())
-            attrs["earned"] = [ygov, 'earned', self.strategy]
-            attrs["reward rate"] = [ygov, 'rewardRate']
-            attrs["ygov balance"] = [ygov, 'balanceOf', self.strategy]
-            attrs["ygov total"] = [ygov, 'totalSupply']
+        if strategy._name == "StrategyYFIGovernance":
+            ygov = interface.YearnGovernance(strategy.gov())
+            attrs["earned"] = [ygov, "earned", strategy]
+            attrs["reward rate"] = [ygov, "rewardRate"]
+            attrs["ygov balance"] = [ygov, "balanceOf", strategy]
+            attrs["ygov total"] = [ygov, "totalSupply"]
 
         # fetch attrs as multicall
-        try:
-            results = fetch_multicall(*attrs.values())
-        except ValueError:
-            pass
-        else:
-            for name, attr in zip(attrs, results):
-                info[name] = attr / scale
-        
+        results = fetch_multicall(*attrs.values(), block=block)
+        for name, attr in zip(attrs, results):
+            if attr is not None:
+                info[name] = attr / self.scale
+            else:
+                logger.warning("attr %s rekt %s", name, attr)
+
         # some additional post-processing
-        if 'min' in info:
-            info["strategy buffer"] = info.pop('min') / info.pop('max')
+        if "min" in info:
+            info["strategy buffer"] = info.pop("min") / info.pop("max")
 
         if "token price" not in info:
-            if self.name in ["aLINK"]:
-                info["token price"] = uniswap.token_price(self.vault.underlying())
-            elif self.name in ["USDC", "TUSD", "DAI", "USDT"]:
-                info["token price"] = 1
-            else:
-                info["token price"] = uniswap.token_price(self.token)
+            info["token price"] = self.get_price(block=block)
 
         info["tvl"] = info["vault balance"] * info["token price"]
+
         return info
 
 
-def load_registry(address="registry.ychad.eth"):
-    return interface.YRegistry(web3.ens.resolve(address))
+class Registry:
+    def __init__(self):
+        self.registry = interface.YRegistry(web3.ens.resolve("registry.ychad.eth"))
+        # NOTE: we assume no more v1 vaults are deployed
+        self.vaults = [VaultV1(*params) for params in zip(self.registry.getVaults(), *self.registry.getVaultsInfo())]
 
+    def __repr__(self) -> str:
+        return f"<Registry vaults={len(self.vaults)}>"
 
-def load_vaults(registry):
-    return [VaultV1(*params) for params in zip(registry.getVaults(), *registry.getVaultsInfo())]
+    def describe(self, block=None):
+        vaults = self.active_vaults_at(block)
+        share_prices = fetch_multicall(*[[vault.vault, "getPricePerFullShare"] for vault in vaults], block=block)
+        vaults = [vault for vault, share_price in zip(vaults, share_prices) if share_price]
+        data = Parallel(8, "threading")(delayed(vault.describe)(block=block) for vault in vaults)
+        return {vault.name: desc for vault, desc in zip(vaults, data)}
+
+    def total_value_at(self, block=None):
+        vaults = self.active_vaults_at(block)
+        balances = fetch_multicall(*[[vault.vault, "balance"] for vault in vaults], block=block)
+        # skip vaults with zero or erroneous balance
+        vaults = [(vault, balance) for vault, balance in zip(vaults, balances) if balance]
+        prices = Parallel(8, "threading")(delayed(vault.get_price)(block) for (vault, balance) in vaults)
+        return {vault.name: balance * price / 10 ** vault.decimals for (vault, balance), price in zip(vaults, prices)}
+
+    def active_vaults_at(self, block=None):
+        vaults = list(self.vaults)
+        if block:
+            vaults = [vault for vault in vaults if contract_creation_block(str(vault.vault)) < block]
+        return vaults
