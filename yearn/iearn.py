@@ -4,7 +4,7 @@ from brownie import Contract
 from joblib import Parallel, delayed
 
 from yearn.events import contract_creation_block
-from yearn.mutlicall import fetch_multicall, multicall_matrix
+from yearn.multicall2 import fetch_multicall, multicall_matrix
 from yearn.prices import magic
 
 IEARN = {
@@ -44,7 +44,8 @@ class Registry:
 
     def describe(self, block=None) -> dict:
         vaults = self.active_vaults_at_block(block)
-        results = multicall_matrix(vaults, ["totalSupply", "pool", "getPricePerFullShare", "balance"], block=block)
+        contracts = [vault.vault for vault in vaults]
+        results = multicall_matrix(contracts, ["totalSupply", "pool", "getPricePerFullShare", "balance"], block=block)
         output = defaultdict(dict)
         prices = Parallel(8, "threading")(delayed(magic.get_price)(vault.token, block=block) for vault in vaults)
         for vault, price in zip(vaults, prices):

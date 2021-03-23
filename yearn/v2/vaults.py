@@ -6,7 +6,7 @@ from typing import List
 from brownie import Contract, chain
 from eth_utils import encode_hex, event_abi_to_log_topic
 from yearn.events import create_filter, decode_logs
-from yearn.mutlicall import fetch_multicall
+from yearn.multicall2 import fetch_multicall
 from yearn.prices import magic
 from yearn.utils import safe_views
 from yearn.v2.strategies import Strategy
@@ -49,7 +49,7 @@ class Vault:
         self.token = Contract(token)
         self.registry = registry
         self.scale = 10 ** self.vault.decimals()
-        # mutlicall-safe views with 0 inputs and numeric output.
+        # multicall-safe views with 0 inputs and numeric output.
         self._views = safe_views(self.vault.abi)
 
         # load strategies from events and watch for freshly attached strategies
@@ -132,9 +132,9 @@ class Vault:
                 )
                 self._strategies[event["newVersion"]] = Strategy(event["newVersion"], self)
 
-    def describe(self):
+    def describe(self, block=None):
         try:
-            results = fetch_multicall(*[[self.vault, view] for view in self._views])
+            results = fetch_multicall(*[[self.vault, view] for view in self._views], block=block)
             info = dict(zip(self._views, results))
             for name in info:
                 if name in VAULT_VIEWS_SCALED:
@@ -144,9 +144,9 @@ class Vault:
             info = {"strategies": {}}
 
         for strategy in self.strategies:
-            info["strategies"][strategy.name] = strategy.describe()
+            info["strategies"][strategy.name] = strategy.describe(block=block)
 
-        info["token price"] = magic.get_price(self.token)
+        info["token price"] = magic.get_price(self.token, block=block)
         if "totalAssets" in info:
             info["tvl"] = info["token price"] * info["totalAssets"]
 

@@ -1,5 +1,5 @@
 from brownie import Contract
-from yearn.mutlicall import fetch_multicall
+from yearn.multicall2 import fetch_multicall
 
 
 def is_yearn_vault(token):
@@ -8,6 +8,8 @@ def is_yearn_vault(token):
 
 
 def get_price(token, block=None):
+    # v1 vaults use getPricePerFullShare scaled to 18 decimals
+    # v2 vaults use pricePerShare scaled to underlying token decimals
     vault = Contract(token)
     if hasattr(vault, 'pricePerShare'):
         share_price, underlying, decimals = fetch_multicall(

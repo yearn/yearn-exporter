@@ -6,7 +6,7 @@ from typing import List
 from brownie import Contract, chain
 from joblib import Parallel, delayed
 from yearn.events import contract_creation_block, create_filter, decode_logs
-from yearn.mutlicall import fetch_multicall
+from yearn.multicall2 import fetch_multicall
 from yearn.prices import magic
 from yearn.v2.vaults import Vault
 
@@ -110,9 +110,9 @@ class Registry:
         vaults = self.vaults + self.experiments
         Parallel(8, "threading")(delayed(vault.load_strategies)() for vault in vaults)
 
-    def describe_vaults(self):
+    def describe(self, block=None):
         vaults = self.vaults + self.experiments
-        results = Parallel(8, "threading")(delayed(vault.describe)() for vault in vaults)
+        results = Parallel(8, "threading")(delayed(vault.describe)(block=block) for vault in vaults)
         return {vault.name: result for vault, result in zip(vaults, results)}
 
     def total_value_at(self, block=None):

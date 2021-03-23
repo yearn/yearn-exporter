@@ -1,12 +1,12 @@
 from collections import defaultdict
 from dataclasses import dataclass
 
-from brownie import Contract, interface
+from brownie import Contract
 from brownie.network.contract import InterfaceContainer
 from joblib import Parallel, delayed
 
 from yearn.events import contract_creation_block
-from yearn.mutlicall import fetch_multicall, multicall_matrix
+from yearn.multicall2 import multicall_matrix
 from yearn.prices import magic
 
 

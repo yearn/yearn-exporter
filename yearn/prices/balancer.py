@@ -2,7 +2,7 @@ from brownie import Contract
 from cachetools.func import ttl_cache
 
 from yearn.cache import memory
-from yearn.mutlicall import fetch_multicall
+from yearn.multicall2 import fetch_multicall
 from yearn.prices import magic
 
 

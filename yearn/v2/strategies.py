@@ -1,6 +1,6 @@
 from brownie import Contract
 from yearn.utils import safe_views
-from yearn.mutlicall import fetch_multicall
+from yearn.multicall2 import fetch_multicall
 
 
 STRATEGY_VIEWS_SCALED = [
@@ -35,14 +35,20 @@ class Strategy:
 
         raise ValueError("Strategy is only comparable with [Strategy, str]")
 
-    def describe(self):
+    def describe(self, block=None):
         results = fetch_multicall(
             *[[self.strategy, view] for view in self._views],
             [self.vault.vault, "strategies", self.strategy],
+            block=block
         )
         info = dict(zip(self._views, results))
         info.update(results[-1].dict())
         for view in STRATEGY_VIEWS_SCALED:
             if view in info:
                 info[view] /= self.vault.scale
+        # unwrap structs
+        for view in info:
+            if hasattr(info[view], '_dict'):
+                info[view] = info[view].dict()
+
         return info
