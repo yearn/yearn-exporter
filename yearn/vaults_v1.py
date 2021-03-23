@@ -7,7 +7,7 @@ from brownie.network.contract import InterfaceContainer
 from joblib import Parallel, delayed
 
 from yearn import constants, curve
-from yearn.events import contract_creation_block
+from yearn.utils import contract_creation_block
 from yearn.multicall2 import fetch_multicall
 from yearn.prices import magic
 from pprint import pprint
