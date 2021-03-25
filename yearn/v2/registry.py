@@ -5,9 +5,10 @@ from typing import List
 
 from brownie import Contract, chain
 from joblib import Parallel, delayed
-from yearn.events import contract_creation_block, create_filter, decode_logs
+from yearn.events import create_filter, decode_logs
 from yearn.multicall2 import fetch_multicall
 from yearn.prices import magic
+from yearn.utils import contract_creation_block
 from yearn.v2.vaults import Vault
 
 logger = logging.getLogger(__name__)

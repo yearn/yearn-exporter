@@ -21,6 +21,14 @@ brownie run exporter
 brownie run exporter tvl
 ```
 
+### Postgres exporter
+```bash
+# export historical tvl
+brownie run historical_tvl
+# complementary api server
+uvicorn yearn.api:app --port 8000 --reload
+```
+
 ### On-demand stats
 ```bash
 # tvl summary

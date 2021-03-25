@@ -3,6 +3,7 @@ import yearn.v2.registry
 import yearn.iearn
 import yearn.ironbank
 import yearn.vaults_v1
+import yearn.special
 from joblib import Parallel, delayed
 
 
@@ -17,6 +18,7 @@ class Yearn:
             "v1": yearn.vaults_v1.Registry(),
             "v2": yearn.v2.registry.Registry(),
             "ib": yearn.ironbank.Registry(),
+            "special": yearn.special.Registry(),
         }
         self.registries["v2"].load_strategies()
 
@@ -33,4 +35,3 @@ class Yearn:
             for key in self.registries
         )
         return dict(zip(self.registries, desc))
-

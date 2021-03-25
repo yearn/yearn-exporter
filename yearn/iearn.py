@@ -3,7 +3,7 @@ from collections import defaultdict
 from brownie import Contract
 from joblib import Parallel, delayed
 
-from yearn.events import contract_creation_block
+from yearn.utils import contract_creation_block
 from yearn.multicall2 import fetch_multicall, multicall_matrix
 from yearn.prices import magic
 

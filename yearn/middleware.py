@@ -38,6 +38,7 @@ def setup_middleware():
     from web3.middleware import filter
 
     filter.MAX_BLOCK_REQUEST = BATCH_SIZE
-    web3.provider._request_kwargs["timeout"] = 600
+    if web3.provider:
+        web3.provider._request_kwargs["timeout"] = 600
     web3.middleware_onion.add(filter.local_filter_middleware)
     web3.middleware_onion.add(cache_middleware)
