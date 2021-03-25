@@ -4,3 +4,6 @@ click^7.1.2
 tabulate^0.8.7
 joblib^1.0.1
 cachetools^4.1.1
+fastapi=0.63.0
+uvicorn^0.13.4
+pony^0.7.13

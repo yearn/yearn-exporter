@@ -35,4 +35,3 @@ class Yearn:
             for key in self.registries
         )
         return dict(zip(self.registries, desc))
-
