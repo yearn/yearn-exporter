@@ -1,11 +1,15 @@
-from itertools import product
-import yearn.v2.registry
-import yearn.iearn
-import yearn.ironbank
-import yearn.vaults_v1
-import yearn.special
+import logging
+from time import time
+
 from joblib import Parallel, delayed
 
+import yearn.iearn
+import yearn.ironbank
+import yearn.special
+import yearn.v2.registry
+import yearn.vaults_v1
+
+logger = logging.getLogger(__name__)
 
 class Yearn:
     """
@@ -13,6 +17,7 @@ class Yearn:
     """
 
     def __init__(self) -> None:
+        start = time()
         self.registries = {
             "earn": yearn.iearn.Registry(),
             "v1": yearn.vaults_v1.Registry(),
@@ -21,6 +26,7 @@ class Yearn:
             "special": yearn.special.Registry(),
         }
         self.registries["v2"].load_strategies()
+        logger.info('loaded yearn in %.3fs', time() - start)
 
     def describe(self, block=None):
         desc = Parallel(4, "threading")(

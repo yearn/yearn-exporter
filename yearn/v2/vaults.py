@@ -106,13 +106,13 @@ class Vault:
     def watch_events(self):
         start = time.time()
         self.log_filter = create_filter(str(self.vault), topics=self._topics)
-        for block in chain.new_blocks():
+        for block in chain.new_blocks(height_buffer=12):
             logs = self.log_filter.get_new_entries()
             events = decode_logs(logs)
             self.process_events(events)
             if not self._done.is_set():
                 self._done.set()
-                logger.debug("loaded %d strategies in %.3fs", len(self._strategies), self.name, time.time() - start)
+                logger.info("loaded %d strategies %s in %.3fs", len(self._strategies), self.name, time.time() - start)
             time.sleep(300)
 
     def process_events(self, events):

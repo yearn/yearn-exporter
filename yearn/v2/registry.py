@@ -58,12 +58,12 @@ class Registry:
     def watch_events(self):
         start = time.time()
         self.log_filter = create_filter(self.addresses)
-        for block in chain.new_blocks(poll_interval=600):
+        for block in chain.new_blocks(height_buffer=12):
             logs = self.log_filter.get_new_entries()
             self.process_events(decode_logs(logs))
             if not self._done.is_set():
                 self._done.set()
-                logger.debug("loaded v2 registry in %.3fs", time.time() - start)
+                logger.info("loaded v2 registry in %.3fs", time.time() - start)
             time.sleep(300)
 
     def process_events(self, events):
