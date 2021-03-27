@@ -30,10 +30,10 @@ def main():
 
         with db_session:
             if Block.get(snapshot=snapshot):
-                logger.info("block exists for snapshot=%s", snapshot)
+                logger.debug("block exists for snapshot=%s", snapshot)
                 continue
 
-            logger.info("inserting snapshot=%s", snapshot)
+            logger.debug("inserting snapshot=%s", snapshot)
             block = closest_block_after_timestamp(snapshot.timestamp())
             assert block is not None, "no block after timestamp found"
             assets = yearn.total_value_at(block)
