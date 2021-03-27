@@ -126,4 +126,6 @@ class Registry:
         vaults = self.vaults + self.experiments
         if block:
             vaults = [vault for vault in vaults if contract_creation_block(str(vault.vault)) <= block]
-        return vaults
+        # fixes edge case: a vault is not necessarily initialized on creation
+        activations = fetch_multicall(*[[vault.vault, 'activation'] for vault in vaults], block=block)
+        return [vault for vault, activation in zip(vaults, activations) if activation]
