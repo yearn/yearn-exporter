@@ -18,7 +18,7 @@ def generate_snapshot_range(start, interval):
 def main():
     yearn = Yearn()
     start = datetime(2020, 2, 12, tzinfo=timezone.utc)  # first iearn deployment
-    interval = timedelta(days=1)
+    interval = timedelta(hours=1)
     buffer = timedelta(minutes=5)
     synced = False
     for snapshot in generate_snapshot_range(start, interval):
