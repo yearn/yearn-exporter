@@ -2,10 +2,12 @@ from collections import defaultdict
 
 from cachetools.func import ttl_cache
 from fastapi import FastAPI, HTTPException
+from fastapi.middleware.cors import CORSMiddleware
 
 from yearn.entities import Snapshot, db_session, select
 
 app = FastAPI(title="Yearn Exporter")
+app.add_middleware(CORSMiddleware, allow_origins=["*"])
 tree = lambda: defaultdict(tree)
 ALLOWED_HOURLY_RESOLUTION = {1, 2, 4, 6, 8, 12, 24}
 
