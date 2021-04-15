@@ -3,14 +3,17 @@ version: '3.7'
 volumes:
     grafana_data: {}
     prometheus_data: {}
+    solidity_compilers: {}
+    vyper_compilers: {}
+    brownie: {}
 
 networks:
   yearn-exporter:
 
 services:
-  yearn-exporter-v1:
+  yearn-exporter:
     build: .
-    command: exporter_v1
+    command: exporter
     ports:
       - 8800:8800
     environment:
@@ -18,62 +21,12 @@ services:
       - ALCHEMY_URL
       - ETHERSCAN_TOKEN
       - SLEEP_SECONDS
-    networks:
-      - yearn-exporter
-    restart: always
-
-  yearn-exporter-v2:
-    build: .
-    command: exporter_v2
-    ports:
-      - 8801:8801
-    environment:
-      - WEB3_INFURA_PROJECT_ID
-      - ALCHEMY_URL
-      - ETHERSCAN_TOKEN
-      - SLEEP_SECONDS
-    networks:
-      - yearn-exporter
-    restart: always
-
-  yearn-exporter-iearn:
-    build: .
-    command: exporter_iearn
-    ports:
-      - 8802:8802
-    environment:
-      - WEB3_INFURA_PROJECT_ID
-      - ALCHEMY_URL
-      - ETHERSCAN_TOKEN
-      - SLEEP_SECONDS
-    networks:
-      - yearn-exporter
-    restart: always
-
-  yearn-exporter-ironbank:
-    build: .
-    command: exporter_ironbank
-    ports:
-      - 8803:8803
-    environment:
-      - WEB3_INFURA_PROJECT_ID
-      - ALCHEMY_URL
-      - ETHERSCAN_TOKEN
-      - SLEEP_SECONDS
-    networks:
-      - yearn-exporter
-    restart: always
-
-  yearn-exporter-experimental:
-    build: .
-    command: exporter_experimental
-    ports:
-      - 8804:8804
-    environment:
-      - WEB3_INFURA_PROJECT_ID
-      - ALCHEMY_URL
-      - ETHERSCAN_TOKEN
-      - SLEEP_SECONDS
+      - GOOGLE_APPLICATION_CREDENTIALS
+    volumes:
+      - ~/cred:/cred
+      - solidity_compilers:/root/.solcx
+      - vyper_compilers:/root/.vvm
+      - brownie:/root/.brownie
     networks:
       - yearn-exporter
     restart: always

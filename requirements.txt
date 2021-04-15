@@ -10,3 +10,5 @@ pony>=0.7.13
 psycopg2-binary>=2.8.5
 tokenlists>=0.1.0b0
 aiofiles>=0.6.0
+prometheus-client>=0.10.1
+google-cloud-bigquery>=2.13.1

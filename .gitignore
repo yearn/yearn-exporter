@@ -10,3 +10,4 @@ cache
 *.ipynb
 node_modules/
 static/
+.env

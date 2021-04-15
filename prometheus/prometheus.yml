@@ -20,41 +20,17 @@ rule_files:
 # Here it's Prometheus itself.
 scrape_configs:
   # The job name is added as a label `job=<job_name>` to any timeseries scraped from this config.
-  - job_name: 'yearn-v1'
+  - job_name: 'yearn'
     # metrics_path defaults to '/metrics'
     # scheme defaults to 'http'.
     static_configs:
-    - targets: ['yearn-exporter-v1:8800']
-
-  - job_name: 'yearn-v2'
-    # metrics_path defaults to '/metrics'
-    # scheme defaults to 'http'.
-    static_configs:
-    - targets: ['yearn-exporter-v2:8801']
-
-  - job_name: 'yearn-experimental'
-    # metrics_path defaults to '/metrics'
-    # scheme defaults to 'http'.
-    static_configs:
-    - targets: ['yearn-exporter-experimental:8804']
+    - targets: ['yearn-exporter:8800']
 
   - job_name: 'prometheus'
     # metrics_path defaults to '/metrics'
     # scheme defaults to 'http'.
     static_configs:
     - targets: ['localhost:9090']
-
-  - job_name: 'iearn'
-    # metrics_path defaults to '/metrics'
-    # scheme defaults to 'http'.
-    static_configs:
-    - targets: ['yearn-exporter-iearn:8802']
-
-  - job_name: 'ironbank'
-    # metrics_path defaults to '/metrics'
-    # scheme defaults to 'http'.
-    static_configs:
-    - targets: ['yearn-exporter-ironbank:8803']
 
   - job_name: 'nginx'
     # metrics from the nginx
