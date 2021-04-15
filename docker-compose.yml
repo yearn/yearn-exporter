@@ -10,6 +10,10 @@ volumes:
 networks:
   yearn-exporter:
 
+secrets:
+  google_credentials:
+    file: ~/google.json
+
 services:
   yearn-exporter:
     build: .
@@ -21,12 +25,13 @@ services:
       - ALCHEMY_URL
       - ETHERSCAN_TOKEN
       - SLEEP_SECONDS
-      - GOOGLE_APPLICATION_CREDENTIALS
+      - GOOGLE_APPLICATION_CREDENTIALS=/run/secrets/google_credentials
     volumes:
-      - ~/cred:/cred
       - solidity_compilers:/root/.solcx
       - vyper_compilers:/root/.vvm
       - brownie:/root/.brownie
+    secrets:
+      - google_credentials
     networks:
       - yearn-exporter
     restart: always
