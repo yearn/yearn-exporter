@@ -6,6 +6,7 @@ volumes:
     solidity_compilers: {}
     vyper_compilers: {}
     brownie: {}
+    cache: {}
 
 networks:
   yearn-exporter:
@@ -30,6 +31,7 @@ services:
       - solidity_compilers:/root/.solcx
       - vyper_compilers:/root/.vvm
       - brownie:/root/.brownie
+      - cache:/app/yearn-exporter/cache
     secrets:
       - google_credentials
     networks:
