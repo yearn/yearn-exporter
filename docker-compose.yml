@@ -12,7 +12,7 @@ networks:
 
 secrets:
   google_credentials:
-    file: ~/google.json
+    file: secrets/google.json
 
 services:
   yearn-exporter:
