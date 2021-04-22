@@ -1,0 +1,6 @@
+# Dockerfile
+# some build services need Dockerfile not to be ignored to build
+.git
+.github/
+docker-compose.yml
+deploy.sh

@@ -1,0 +1,25 @@
+command:
+  brownie:
+    exit-status: 0
+    stdout:
+    - Brownie v1.13.4 - Python development framework for Ethereum
+    - 'Usage:  brownie <command> [<args>...] [options <args>]'
+    - 'Commands:'
+    - init               Initialize a new brownie project
+    - bake               Initialize from a brownie-mix template
+    - pm                 Install and manage external packages
+    - compile            Compile the contract source files
+    - console            Load the console
+    - test               Run test cases in the tests/ folder
+    - run                Run a script in the scripts/ folder
+    - accounts           Manage local accounts
+    - networks           Manage network settings
+    - gui                Load the GUI to view opcodes and test coverage
+    - analyze            Find security vulnerabilities using the MythX API
+    - 'Options:'
+    - --help -h          Display this message
+    - --version          Show version and exit
+    - Type 'brownie <command> --help' for specific options and more information about
+    - each command.
+    stderr: []
+    timeout: 10000
