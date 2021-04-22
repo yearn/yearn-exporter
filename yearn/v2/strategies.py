@@ -45,7 +45,7 @@ class Strategy:
         info.update(results[-1].dict())
         for view in STRATEGY_VIEWS_SCALED:
             if view in info:
-                info[view] /= self.vault.scale
+                info[view] = (info[view] or 0) / self.vault.scale
         # unwrap structs
         for view in info:
             if hasattr(info[view], '_dict'):
