@@ -50,11 +50,11 @@ def get_price(token, block=None):
 
     # a few more attempts to fetch a price a token
     if not price:
-        price = uniswap.get_price(token, router="uniswap", block=block)
-        logger.debug("uniswap -> %s", price)
-    if not price:
         price = uniswap.get_price(token, router="sushiswap", block=block)
         logger.debug("sushiswap -> %s", price)
+    if not price:
+        price = uniswap.get_price(token, router="uniswap", block=block)
+        logger.debug("uniswap -> %s", price)
     if not price:
         price = uniswap.get_price_v1(token, block=block)
         logger.debug("uniswap v1 -> %s", price)
