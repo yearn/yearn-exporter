@@ -39,9 +39,11 @@ def create_filter(address, topics=None):
 
 def get_logs_asap(address, topics, from_block, to_block):
     logs = []
+    ranges = list(block_ranges(from_block, to_block, BATCH_SIZE))
+    logger.info('fetching %d batches', len(ranges))
     batches = Parallel(8, "threading", verbose=10)(
         delayed(web3.eth.getLogs)({"address": address, "topics": topics, "fromBlock": start, "toBlock": end})
-        for start, end in block_ranges(from_block, to_block, BATCH_SIZE)
+        for start, end in ranges
     )
     for batch in batches:
         logs.extend(batch)
