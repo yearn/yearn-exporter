@@ -54,8 +54,8 @@ def get_price_v1(asset, block=None):
 @memory.cache()
 def is_uniswap_pool(address):
     try:
-        return interface.UniswapPair(address).factory() in FACTORY_TO_ROUTER
-    except (ValueError, OverflowError):
+        return Contract(address).factory() in FACTORY_TO_ROUTER
+    except (ValueError, OverflowError, AttributeError):
         pass
     return False
 
@@ -63,7 +63,7 @@ def is_uniswap_pool(address):
 @ttl_cache(ttl=600)
 def lp_price(address, block=None):
     """ Get Uniswap/Sushiswap LP token price. """
-    pair = interface.UniswapPair(address)
+    pair = Contract(address)
     factory, token0, token1, supply, reserves = fetch_multicall(
         [pair, "factory"],
         [pair, "token0"],
