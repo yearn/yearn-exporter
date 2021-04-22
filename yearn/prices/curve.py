@@ -2,7 +2,10 @@ from brownie import Contract, ZERO_ADDRESS
 from yearn.cache import memory
 from cachetools.func import ttl_cache
 
-curve_registry = Contract("0x7D86446dDb609eD0F5f8684AcF30380a356b2B4c")
+# curve registry documentation https://curve.readthedocs.io/registry-address-provider.html
+address_provider = Contract('0x0000000022D53366457F9d5E68Ec105046FC4383')
+curve_registry = Contract(address_provider.get_address(0))
+metapool_factory = Contract(address_provider.get_address(3))
 
 # fold underlying tokens into one of the basic tokens
 BASIC_TOKENS = {
@@ -17,6 +20,8 @@ BASIC_TOKENS = {
 
 @memory.cache()
 def get_pool(token):
+    if set(metapool_factory.get_underlying_coins(token)) != {ZERO_ADDRESS}:
+        return token
     return curve_registry.get_pool_from_lp_token(token)
 
 
@@ -29,6 +34,8 @@ def is_curve_lp_token(token):
 def underlying_coins(token):
     pool = get_pool(token)
     coins = curve_registry.get_underlying_coins(pool)
+    if set(coins) == {ZERO_ADDRESS}:
+        coins = metapool_factory.get_underlying_coins(token)
     return [coin for coin in coins if coin != ZERO_ADDRESS]
 
 

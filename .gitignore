@@ -8,3 +8,4 @@ research/
 cache
 .ipynb_checkpoints
 *.ipynb
+node_modules/
