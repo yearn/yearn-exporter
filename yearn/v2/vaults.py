@@ -78,6 +78,13 @@ class Vault:
 
         raise ValueError("Vault is only comparable with [Vault, str]")
 
+    @classmethod
+    def from_address(cls, address):
+        vault = Contract(address)
+        instance = cls(vault=vault, token=vault.token(), api_version=vault.apiVersion())
+        instance.name = vault.name()
+        return instance
+
     @property
     def strategies(self) -> List[Strategy]:
         self.load_strategies()
