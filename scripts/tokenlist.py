@@ -25,9 +25,9 @@ def main():
                 TokenInfo(
                     chainId=1,
                     address=str(vault),
-                    name=aliases.get(str(vault), metadata[vault]["name"]),
+                    name=aliases.get(str(vault), metadata[vault])["name"],
                     decimals=metadata[vault]["decimals"],
-                    symbol=aliases.get(str(vault), metadata[vault]["symbol"]),
+                    symbol=aliases.get(str(vault), metadata[vault])["symbol"],
                     logoURI=f"https://raw.githubusercontent.com/yearn/yearn-assets/master/icons/tokens/{vault}/logo.svg",
                     tags=[product],
                 )
