@@ -16,7 +16,7 @@ class Yearn:
     Can describe all products.
     """
 
-    def __init__(self) -> None:
+    def __init__(self, load_strategies=True) -> None:
         start = time()
         self.registries = {
             "earn": yearn.iearn.Registry(),
@@ -25,7 +25,8 @@ class Yearn:
             "ib": yearn.ironbank.Registry(),
             "special": yearn.special.Registry(),
         }
-        self.registries["v2"].load_strategies()
+        if load_strategies:
+            self.registries["v2"].load_strategies()
         logger.info('loaded yearn in %.3fs', time() - start)
 
     def describe(self, block=None):
