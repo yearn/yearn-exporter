@@ -13,7 +13,7 @@ from yearn.prices import magic
 @dataclass
 class IronbankMarket:
     name: str
-    ctoken: InterfaceContainer
+    vault: InterfaceContainer
     token_name: str
     underlying: InterfaceContainer
     cdecimals: int
@@ -27,7 +27,7 @@ class Registry:
         cdata = multicall_matrix(markets, ["symbol", "underlying", "decimals"])
         underlying = [Contract(cdata[x]["underlying"]) for x in markets]
         data = multicall_matrix(underlying, ["symbol", "decimals"])
-        self.markets = [
+        self.vaults = [
             IronbankMarket(
                 cdata[market]["symbol"],
                 market,
@@ -40,12 +40,12 @@ class Registry:
         ]
 
     def __repr__(self):
-        return f"<IronBank markets={len(self.markets)}>"
+        return f"<IronBank markets={len(self.vaults)}>"
 
     def describe(self, block=None):
-        markets = self.active_markets_at_block(block)
+        markets = self.active_vaults_at(block)
         blocks_per_year = 365 * 86400 / 15
-        contracts = [m.ctoken for m in markets]
+        contracts = [m.vault for m in markets]
         results = multicall_matrix(
             contracts,
             [
@@ -64,7 +64,7 @@ class Registry:
         )
         output = defaultdict(dict)
         for m, price in zip(markets, prices):
-            res = results[m.ctoken]
+            res = results[m.vault]
             exchange_rate = res["exchangeRateCurrent"] * 10 ** (m.cdecimals - m.decimals - 18)
             for attr in ["getCash", "totalBorrows", "totalReserves"]:
                 res[attr] /= 10 ** m.decimals
@@ -91,21 +91,21 @@ class Registry:
         return dict(output)
 
     def total_value_at(self, block=None):
-        markets = self.active_markets_at_block(block)
+        markets = self.active_vaults_at(block)
         data = multicall_matrix(
-            [market.ctoken for market in markets],
+            [market.vault for market in markets],
             ["getCash", "totalBorrows", "totalReserves", "totalSupply"],
             block=block,
         )
-        prices = Parallel(8, "threading")(delayed(magic.get_price)(market.ctoken, block=block) for market in markets)
-        results = [data[market.ctoken] for market in markets]
+        prices = Parallel(8, "threading")(delayed(magic.get_price)(market.vault, block=block) for market in markets)
+        results = [data[market.vault] for market in markets]
         return {
             # market.name: (res["getCash"] + res["totalBorrows"] - res["totalReserves"]) / 10 ** market.decimals * price
             market.name: res["totalSupply"] / 10 ** market.cdecimals * price
             for market, price, res in zip(markets, prices, results)
         }
 
-    def active_markets_at_block(self, block=None):
+    def active_vaults_at(self, block=None):
         if block is None:
-            return self.markets
-        return [market for market in self.markets if contract_creation_block(str(market.ctoken)) < block]
+            return self.vaults
+        return [market for market in self.vaults if contract_creation_block(str(market.vault)) < block]
