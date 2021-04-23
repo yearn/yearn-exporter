@@ -2,6 +2,7 @@ import json
 from datetime import datetime, timezone
 from pathlib import Path
 
+import requests
 from semantic_version import Version
 from tokenlists import TokenInfo, TokenList
 
@@ -13,6 +14,8 @@ from yearn.yearn import Yearn
 def main():
     yearn = Yearn(load_strategies=False)
     excluded = {"0xBa37B002AbaFDd8E89a1995dA52740bbC013D992"}
+    resp = requests.get("https://raw.githubusercontent.com/iearn-finance/yearn-assets/master/icons/aliases.json").json()
+    aliases = {item["address"]: item for item in resp}
     tokens = []
     for product in yearn.registries:
         vaults = [item.vault for item in yearn.registries[product].vaults if str(item.vault) not in excluded]
@@ -22,9 +25,9 @@ def main():
                 TokenInfo(
                     chainId=1,
                     address=str(vault),
-                    name=metadata[vault]["name"],
+                    name=aliases.get(str(vault), metadata[vault]["name"]),
                     decimals=metadata[vault]["decimals"],
-                    symbol=metadata[vault]["symbol"],
+                    symbol=aliases.get(str(vault), metadata[vault]["symbol"]),
                     logoURI=f"https://raw.githubusercontent.com/yearn/yearn-assets/master/icons/tokens/{vault}/logo.svg",
                     tags=[product],
                 )
@@ -39,6 +42,8 @@ def main():
 
     print(f"{version=}\n{timestamp=}")
     tokenlist = TokenList("Yearn", timestamp, version, tokens, logoURI=logo)
+    for token in tokenlist.tokens:
+        assert len(token.symbol) <= 20, f"{token.symbol} > 20 chars, uniswap is unhappy"
 
     path = Path("static/tokenlist.json")
     path.parent.mkdir(exist_ok=True)
