@@ -19,6 +19,10 @@ class IronbankMarket:
     cdecimals: int
     decimals: int
 
+    @property
+    def token(self):
+        return self.underlying
+
 
 class Registry:
     def __init__(self):

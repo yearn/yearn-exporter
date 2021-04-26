@@ -67,7 +67,7 @@ def _contract_creation_block_binary_search(address):
     lo, hi = 0, height
     while hi - lo > 1:
         mid = lo + (hi - lo) // 2
-        if web3.eth.getCode(address, block_identifier=mid):
+        if web3.eth.get_code(address, block_identifier=mid):
             hi = mid
         else:
             lo = mid

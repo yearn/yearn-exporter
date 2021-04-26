@@ -16,15 +16,21 @@ CACHED_CALLS = [
 CACHED_CALLS = [encode_hex(fourbyte(data)) for data in CACHED_CALLS]
 
 
+def should_cache(method, params):
+    if method == "eth_call" and params[0]["data"] in CACHED_CALLS:
+        return True
+    if method == "eth_getCode" and params[1] == "latest":
+        return True
+    if method == "eth_getLogs":
+        return int(params[0]["toBlock"], 16) - int(params[0]["fromBlock"], 16) == BATCH_SIZE - 1
+    return False
+
+
 def cache_middleware(make_request, w3):
     def middleware(method, params):
-        should_cache = (
-            method == "eth_call" and params[0]["data"] in CACHED_CALLS
-            or method == "eth_getCode" and params[1] == "latest"
-            or method == "eth_getLogs" and params[0]["toBlock"] - params[0]["fromBlock"] == BATCH_SIZE - 1
-        )
-        logger.debug("%s  %s %s", "🔴🟢"[should_cache], method, params)
-        if should_cache:
+        logger.debug("%s %s", method, params)
+
+        if should_cache(method, params):
             response = memory.cache(make_request)(method, params)
         else:
             response = make_request(method, params)

@@ -9,6 +9,7 @@ class Backscratcher:
     def __init__(self):
         self.name = "yveCRV"
         self.vault = Contract("0xc5bDdf9843308380375a611c18B50Fb9341f502A")
+        self.token = Contract("0xD533a949740bb3306d119CC777fa900bA034cd52")
         self.proxy = Contract("0xF147b8125d2ef93FB6965Db97D6746952a133934")
 
     def total_value_at(self, block=None):
