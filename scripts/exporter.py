@@ -13,9 +13,11 @@ def main():
     prometheus.start(8800)
     yearn = Yearn()
     for block in chain.new_blocks(height_buffer=1):
+        start = time.time()
         data = yearn.describe()
         prometheus.export(data)
-        logger.info('exported block=%d', block.number)
+        tvl = sum(vault['tvl'] for product in data.values() for vault in product.values())
+        logger.info('exported block=%d tvl=%.0f took=%.3fs', block.number, tvl, time.time() - start)
         time.sleep(sleep_interval)
 
 
