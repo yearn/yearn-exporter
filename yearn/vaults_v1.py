@@ -60,6 +60,7 @@ class VaultV1:
             "vault balance": [self.vault, "balance"],
             "vault total": [self.vault, "totalSupply"],
             "strategy balance": [strategy, "balanceOf"],
+            "share price": [self.vault, "getPricePerFullShare"],
         }
 
         # some of the oldest vaults don't implement these methods
@@ -95,9 +96,10 @@ class VaultV1:
 
         # fetch attrs as multicall
         results = fetch_multicall(*attrs.values(), block=block)
+        scale_overrides = {"share price": 1e18}
         for name, attr in zip(attrs, results):
             if attr is not None:
-                info[name] = attr / self.scale
+                info[name] = attr / scale_overrides.get(name, self.scale)
             else:
                 logger.warning("attr %s rekt %s", name, attr)
 
