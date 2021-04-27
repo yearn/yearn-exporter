@@ -10,3 +10,6 @@ cache
 *.ipynb
 node_modules/
 static/
+.env
+secrets/*
+!secrets/.gitkeep
