@@ -5,7 +5,7 @@ ironbank_gauge = Gauge("ironbank", "", ["vault", "param"])
 v1_gauge = Gauge("yearn", "", ["vault", "param"])
 v2_gauge = Gauge("yearn_vault", "", ["vault", "param"])
 v2_strategy_gauge = Gauge("yearn_strategy", "", ["vault", "strategy", "param"])
-simple_gauges = {"v1": v1_gauge, "earn": earn_gauge, "ib": ironbank_gauge}
+simple_gauges = {"v1": v1_gauge, "earn": earn_gauge, "ib": ironbank_gauge, "special": v2_gauge}
 
 
 def start(port):
