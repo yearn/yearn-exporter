@@ -12,7 +12,7 @@ sleep_interval = int(os.environ.get('SLEEP_SECONDS', '0'))
 def main():
     prometheus.start(8800)
     yearn = Yearn()
-    for block in chain.new_blocks():
+    for block in chain.new_blocks(height_buffer=1):
         data = yearn.describe()
         prometheus.export(data)
         logger.info('exported block=%d', block.number)
@@ -21,7 +21,7 @@ def main():
 
 def tvl():
     yearn = Yearn()
-    for block in chain.new_blocks():
+    for block in chain.new_blocks(height_buffer=1):
         data = yearn.total_value_at()
         total = sum(sum(vaults.values()) for vaults in data.values())
         print(f"block={block.number} tvl={total}")
