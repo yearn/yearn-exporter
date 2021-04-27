@@ -1,9 +1,14 @@
-from brownie import web3
-from joblib import Memory
 import logging
 
+from brownie import web3 as w3
+from eth_utils import encode_hex
+from eth_utils import function_signature_to_4byte_selector as fourbyte
+from requests import Session
+from requests.adapters import HTTPAdapter
+from web3 import HTTPProvider
+from web3.middleware import filter
+
 from yearn.cache import memory
-from eth_utils import encode_hex, function_signature_to_4byte_selector as fourbyte
 
 logger = logging.getLogger(__name__)
 
@@ -41,10 +46,15 @@ def cache_middleware(make_request, w3):
 
 
 def setup_middleware():
-    from web3.middleware import filter
+    # patch web3 provider with more connections and higher timeout
+    assert w3.provider.endpoint_uri.startswith("http"), "only http and https providers are supported"
+    adapter = HTTPAdapter(pool_connections=100, pool_maxsize=100)
+    session = Session()
+    session.mount("http://", adapter)
+    session.mount("https://", adapter)
+    w3.provider = HTTPProvider(w3.provider.endpoint_uri, {"timeout": 600}, session)
 
+    # patch and inject local filter middleware
     filter.MAX_BLOCK_REQUEST = BATCH_SIZE
-    if web3.provider:
-        web3.provider._request_kwargs["timeout"] = 600
-    web3.middleware_onion.add(filter.local_filter_middleware)
-    web3.middleware_onion.add(cache_middleware)
+    w3.middleware_onion.add(filter.local_filter_middleware)
+    w3.middleware_onion.add(cache_middleware)
