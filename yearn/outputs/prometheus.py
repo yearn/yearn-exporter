@@ -22,7 +22,7 @@ def export(data):
 
     for vault, params in data["v2"].items():
         for key, value in params.items():
-            if key == "strategies":
+            if key == "strategies" or value is None:
                 continue
             v2_gauge.labels(vault, key).set(value)
 
@@ -30,7 +30,9 @@ def export(data):
         for strategy, strategy_params in data["v2"][vault]["strategies"].items():
             flat = flatten_dict(strategy_params)
             for key, value in flat.items():
-                v2_strategy_gauge.labels(vault, strategy, key).set(value)
+                if value is None:
+                    continue
+                v2_strategy_gauge.labels(vault, strategy, key).set(value or 0)
 
 
 def flatten_dict(d):
