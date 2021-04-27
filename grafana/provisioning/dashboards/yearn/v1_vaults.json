@@ -1286,7 +1286,7 @@
       "steppedLine": false,
       "targets": [
         {
-          "expr": "avg(yearn{param=\"crv price\", job=\"yearn-v1\"})",
+          "expr": "avg(yearn{param=\"crv price\"})",
           "interval": "15s",
           "intervalFactor": 3,
           "legendFormat": "Crv Price",
