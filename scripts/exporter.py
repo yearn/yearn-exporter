@@ -1,6 +1,7 @@
 import logging
 import os
 import time
+from tabulate import tabulate
 
 from brownie import chain
 from yearn.outputs import prometheus
@@ -14,7 +15,7 @@ def main():
     yearn = Yearn()
     for block in chain.new_blocks(height_buffer=1):
         start = time.time()
-        data = yearn.describe()
+        data = yearn.describe(block.number)
         prometheus.export(data)
         tvl = sum(vault['tvl'] for product in data.values() for vault in product.values())
         logger.info('exported block=%d tvl=%.0f took=%.3fs', block.number, tvl, time.time() - start)
