@@ -47,12 +47,13 @@ def cache_middleware(make_request, w3):
 
 def setup_middleware():
     # patch web3 provider with more connections and higher timeout
-    assert w3.provider.endpoint_uri.startswith("http"), "only http and https providers are supported"
-    adapter = HTTPAdapter(pool_connections=100, pool_maxsize=100)
-    session = Session()
-    session.mount("http://", adapter)
-    session.mount("https://", adapter)
-    w3.provider = HTTPProvider(w3.provider.endpoint_uri, {"timeout": 600}, session)
+    if w3.provider:
+        assert w3.provider.endpoint_uri.startswith("http"), "only http and https providers are supported"
+        adapter = HTTPAdapter(pool_connections=100, pool_maxsize=100)
+        session = Session()
+        session.mount("http://", adapter)
+        session.mount("https://", adapter)
+        w3.provider = HTTPProvider(w3.provider.endpoint_uri, {"timeout": 600}, session)
 
     # patch and inject local filter middleware
     filter.MAX_BLOCK_REQUEST = BATCH_SIZE
