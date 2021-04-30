@@ -9,7 +9,9 @@ cache
 .ipynb_checkpoints
 *.ipynb
 node_modules/
-static/
+static/*
+!static/.gitkeep
 .env
 secrets/*
 !secrets/.gitkeep
+.python-version

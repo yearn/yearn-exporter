@@ -23,7 +23,7 @@ services:
       - 8800:8800
     environment:
       - WEB3_INFURA_PROJECT_ID
-      - ALCHEMY_URL
+      - WEB3_PROVIDER
       - ETHERSCAN_TOKEN
       - SLEEP_SECONDS
       - GOOGLE_APPLICATION_CREDENTIALS=/run/secrets/google_credentials
