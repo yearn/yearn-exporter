@@ -1,0 +1,57 @@
+version: '3.7'
+
+volumes:
+    postgres_tvl_data: {}    
+    solidity_compilers: {}
+    vyper_compilers: {}
+    brownie: {}
+    cache: {}
+
+networks:
+  yearn-exporter-tvl:
+
+secrets:
+  google_credentials:
+    file: secrets/google.json
+    
+services:
+  api:
+    build: .
+    entrypoint: uvicorn yearn.api:app --host 0.0.0.0 --port 4000
+    ports: 
+      - 4000:4000
+    environment:
+      - PGUSER=postgres
+      - PGHOST=postgres
+    restart: always
+    networks:
+      - yearn-exporter-tvl
+  yearn-exporter-tvl:
+    build: .
+    command: historical_tvl
+    environment:
+      - WEB3_PROVIDER
+      - ETHERSCAN_TOKEN
+      - PGUSER=postgres
+      - PGHOST=postgres
+    volumes: 
+      - solidity_compilers:/root/.solcx
+      - vyper_compilers:/root/.vvm
+      - brownie:/root/.brownie
+      - cache:/app/yearn-exporter/cache
+    restart: always
+    secrets:
+      - google_credentials
+    networks:
+      - yearn-exporter-tvl
+  postgres:
+    image: postgres
+    environment:
+      - POSTGRES_HOST_AUTH_METHOD=trust
+      - POSTGRES_USER=postgres
+      - POSTGRES_DB=yearn
+    volumes:
+      - postgres_tvl_data:/var/lib/postgresql/data
+    restart: always
+    networks:
+      - yearn-exporter-tvl
