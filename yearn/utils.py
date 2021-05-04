@@ -8,6 +8,14 @@ from yearn.cache import memory
 logger = logging.getLogger(__name__)
 
 
+def pls(fn, *args, **kwargs):
+    """Inline try catch for verbose contract interactions"""
+    try:
+        return fn(*args, **kwargs)
+    except:
+        return None
+
+
 def safe_views(abi):
     return [
         item["name"]

@@ -34,6 +34,8 @@ services:
       - ETHERSCAN_TOKEN
       - PGUSER=postgres
       - PGHOST=postgres
+      - PGPASS=yearn
+      - GOOGLE_APPLICATION_CREDENTIALS=/run/secrets/google_credentials
     volumes: 
       - solidity_compilers:/root/.solcx
       - vyper_compilers:/root/.vvm
@@ -47,8 +49,8 @@ services:
   postgres:
     image: postgres
     environment:
-      - POSTGRES_HOST_AUTH_METHOD=trust
       - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=yearn
       - POSTGRES_DB=yearn
     volumes:
       - postgres_tvl_data:/var/lib/postgresql/data

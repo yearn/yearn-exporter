@@ -1,0 +1,35 @@
+version: '3.7'
+
+volumes:
+    solidity_compilers: {}
+    vyper_compilers: {}
+    brownie: {}
+    cache: {}
+
+networks:
+  yearn-exporter-apy:
+
+secrets:
+  google_credentials:
+    file: secrets/google.json
+    
+services:
+  yearn-exporter-apy:
+    build: .
+    command: apy
+    environment:
+      - WEB3_PROVIDER
+      - ETHERSCAN_TOKEN
+      - PGUSER=postgres
+      - PGHOST=postgres
+      - GOOGLE_APPLICATION_CREDENTIALS=/run/secrets/google_credentials
+    volumes: 
+      - solidity_compilers:/root/.solcx
+      - vyper_compilers:/root/.vvm
+      - brownie:/root/.brownie
+      - cache:/app/yearn-exporter/cache
+    restart: always
+    secrets:
+      - google_credentials
+    networks:
+      - yearn-exporter-apy
