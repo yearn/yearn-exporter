@@ -25,13 +25,13 @@ def simple(vault: VaultV1, samples: ApySamples) -> Apy:
 
     try:
         now_price = price_per_share(block_identifier=samples.now)
-    except:
+    except ValueError:
         now_price = inception_price
 
     if samples.week_ago > inception_block:
         try:
             week_ago_price = price_per_share(block_identifier=samples.week_ago)
-        except:
+        except ValueError:
             week_ago_price = now_price
     else:
         week_ago_price = now_price
@@ -39,7 +39,7 @@ def simple(vault: VaultV1, samples: ApySamples) -> Apy:
     if samples.month_ago > inception_block:
         try:
             month_ago_price = price_per_share(block_identifier=samples.month_ago)
-        except:
+        except ValueError:
             month_ago_price = week_ago_price
     else:
         month_ago_price = week_ago_price

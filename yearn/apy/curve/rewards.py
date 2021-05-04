@@ -42,12 +42,12 @@ def staking(address: str, pool_price: int, base_asset_price: int) -> float:
         apr = 0
         try:
             token = staking_rewards.rewardTokens(queue)
-        except:
+        except ValueError:
             token = None
         while token and token != ZERO_ADDRESS:
             try:
                 data = staking_rewards.rewardData(token)
-            except:
+            except ValueError:
                 token = None
             rate = data.rewardRate / 1e18 if data else 0
             token_price = get_price(token) or 0
@@ -55,7 +55,7 @@ def staking(address: str, pool_price: int, base_asset_price: int) -> float:
             queue += 1
             try:
                 token = staking_rewards.rewardTokens(queue)
-            except:
+            except ValueError:
                 token = None
         return apr
 
@@ -69,12 +69,12 @@ def multi(address: str, pool_price: int, base_asset_price: int) -> float:
     apr = 0
     try:
         token = multi_rewards.rewardTokens(queue)
-    except:
+    except ValueError:
         token = None
     while token and token != ZERO_ADDRESS:
         try:
             data = multi_rewards.rewardData(token)
-        except:
+        except ValueError:
             token = None
         if data.periodFinish >= time():
             rate = data.rewardRate / 1e18 if data else 0
@@ -83,6 +83,6 @@ def multi(address: str, pool_price: int, base_asset_price: int) -> float:
         queue += 1
         try:
             token = multi_rewards.rewardTokens(queue)
-        except:
+        except ValueError:
             token = None
     return apr

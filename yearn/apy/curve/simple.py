@@ -102,18 +102,21 @@ def simple(vault: Union[VaultV1, VaultV2], samples: ApySamples) -> Apy:
 
     boosted_apr = base_apr * boost
 
-    try:
-        reward_address = gauge.reward_contract()
-        assert reward_address != ZERO_ADDRESS
-        reward_apr = rewards(reward_address, pool_price, base_asset_price)
-    except:
+    if hasattr(gauge, "reward_contract"):
+        try:
+            reward_address = gauge.reward_contract()
+            assert reward_address != ZERO_ADDRESS
+            reward_apr = rewards(reward_address, pool_price, base_asset_price)
+        except ValueError:
+            reward_apr = 0
+    else:
         reward_apr = 0
 
     price_per_share = curve_registry.get_virtual_price_from_lp_token
     now_price = price_per_share(lp_token, block_identifier=samples.now)
     try:
         week_ago_price = price_per_share(lp_token, block_identifier=samples.week_ago)
-    except:
+    except ValueError:
         raise ApyError("crv", "insufficient data")
 
     now_point = SharePricePoint(samples.now, now_price)
