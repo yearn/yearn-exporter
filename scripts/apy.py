@@ -2,7 +2,7 @@ import warnings
 import logging
 from collections import Counter
 
-import semver
+from semantic_version import Version
 
 from brownie.exceptions import BrownieEnvironmentWarning
 
@@ -41,7 +41,7 @@ def main():
         try:
             if is_curve_lp_token(vault.token.address):
                 vault_apy = apy.curve.simple(vault, samples)
-            elif semver.compare(vault.api_version, "0.3.2") >= 0:
+            elif Version(vault.api_version) >= Version("0.3.2"):
                 vault_apy = apy.v2.average(vault, samples)
             else:
                 vault_apy = apy.v2.simple(vault, samples)
