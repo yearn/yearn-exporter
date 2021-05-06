@@ -111,6 +111,10 @@ class Registry:
         vaults = self.vaults + self.experiments
         Parallel(8, "threading")(delayed(vault.load_strategies)() for vault in vaults)
 
+    def load_harvests(self):
+        vaults = self.vaults + self.experiments
+        Parallel(8, "threading")(delayed(vault.load_harvests)() for vault in vaults)
+
     def describe(self, block=None):
         vaults = self.vaults + self.experiments
         results = Parallel(8, "threading")(delayed(vault.describe)(block=block) for vault in vaults)

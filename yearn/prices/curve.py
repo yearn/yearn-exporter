@@ -31,7 +31,7 @@ def is_curve_lp_token(token):
 
 
 @memory.cache()
-def underlying_coins(token):
+def get_underlying_coins(token):
     pool = get_pool(token)
     coins = curve_registry.get_underlying_coins(pool)
     if set(coins) == {ZERO_ADDRESS}:
@@ -41,7 +41,7 @@ def underlying_coins(token):
 
 @ttl_cache(ttl=600)
 def get_price(token, block=None):
-    coins = underlying_coins(token)
+    coins = get_underlying_coins(token)
     try:
         coin = (set(coins) & BASIC_TOKENS).pop()
     except KeyError:

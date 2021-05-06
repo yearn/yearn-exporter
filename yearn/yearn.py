@@ -11,12 +11,13 @@ import yearn.vaults_v1
 
 logger = logging.getLogger(__name__)
 
+
 class Yearn:
     """
     Can describe all products.
     """
 
-    def __init__(self, load_strategies=True) -> None:
+    def __init__(self, load_strategies=True, load_harvests=False) -> None:
         start = time()
         self.registries = {
             "earn": yearn.iearn.Registry(),
@@ -27,6 +28,8 @@ class Yearn:
         }
         if load_strategies:
             self.registries["v2"].load_strategies()
+        if load_harvests:
+            self.registries["v2"].load_harvests()
         logger.info('loaded yearn in %.3fs', time() - start)
 
     def describe(self, block=None):

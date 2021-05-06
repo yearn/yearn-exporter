@@ -29,6 +29,7 @@ db.bind(
     provider="postgres",
     user=os.environ.get("PGUSER", "postgres"),
     host=os.environ.get("PGHOST", "127.0.0.1"),
+    password=os.environ.get("PGPASS", None),
     database="yearn",
 )
 

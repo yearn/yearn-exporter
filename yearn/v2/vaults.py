@@ -5,6 +5,8 @@ from typing import List
 
 from brownie import Contract, chain
 from eth_utils import encode_hex, event_abi_to_log_topic
+from joblib import Parallel, delayed
+
 from yearn.events import create_filter, decode_logs
 from yearn.multicall2 import fetch_multicall
 from yearn.prices import magic
@@ -109,6 +111,9 @@ class Vault:
         if not self._thread._started.is_set():
             self._thread.start()
         self._done.wait()
+
+    def load_harvests(self):
+        Parallel(8, "threading")(delayed(strategy.load_harvests)() for strategy in self.strategies)
 
     def watch_events(self):
         start = time.time()
