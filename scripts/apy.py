@@ -7,7 +7,7 @@ from brownie.exceptions import BrownieEnvironmentWarning
 
 from tabulate import tabulate
 
-from yearn import v2, vaults_v1, apy
+from yearn import v2, v1, apy
 from yearn.prices.curve import is_curve_lp_token
 
 warnings.simplefilter("ignore", BrownieEnvironmentWarning)
@@ -21,7 +21,7 @@ def main():
 
     samples = apy.get_samples()
 
-    v1_registry = vaults_v1.Registry()
+    v1_registry = v1.registry.Registry()
 
     for vault in v1_registry.vaults:
         if is_curve_lp_token(vault.token.address):

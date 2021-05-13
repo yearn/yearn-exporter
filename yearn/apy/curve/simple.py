@@ -6,7 +6,7 @@ from brownie import Contract, ZERO_ADDRESS, interface
 from yearn.apy.curve.rewards import rewards
 
 from yearn.v2.registry import Vault as VaultV2
-from yearn.vaults_v1 import VaultV1
+from yearn.v1.vaults import VaultV1
 
 from yearn.prices.curve import get_pool, get_underlying_coins, curve_registry, get_price as get_virtual_price
 from yearn.prices.magic import get_price

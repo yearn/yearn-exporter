@@ -1,4 +1,4 @@
-from yearn.vaults_v1 import VaultV1
+from yearn.v1.vaults import VaultV1
 from yearn.utils import contract_creation_block
 
 from yearn.apy.common import (
