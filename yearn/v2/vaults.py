@@ -165,4 +165,6 @@ class Vault:
             info["tvl"] = info["token price"] * info["totalAssets"]
 
         info["experimental"] = self.is_experiment
+        info["address"] = self.vault
+        info["version"] = "v2"
         return info

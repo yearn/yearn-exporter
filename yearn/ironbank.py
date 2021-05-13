@@ -90,6 +90,8 @@ class Registry:
                 "borrow apy": res["borrowRatePerBlock"] / 1e18 * blocks_per_year,
                 "utilization": ratio,
                 "tvl": tvl,
+                "address": m.vault,
+                "version": "ib",
             }
 
         return dict(output)

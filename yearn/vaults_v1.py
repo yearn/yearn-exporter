@@ -112,6 +112,8 @@ class VaultV1:
 
         info["tvl"] = info["vault balance"] * info["token price"]
 
+        info["address"] = self.vault
+        info["version"] = "v1"
         return info
 
 
