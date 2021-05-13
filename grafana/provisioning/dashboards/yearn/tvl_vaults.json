@@ -472,7 +472,7 @@
       "pluginVersion": "7.4.3",
       "targets": [
         {
-          "expr": "sum(yearn_experimental{param=\"tvl\"})",
+          "expr": "sum(yearn_vault{param=\"tvl\",experimental=\"true\"})",
           "instant": false,
           "interval": "",
           "legendFormat": "{{vault}}",
@@ -1521,7 +1521,7 @@
       "steppedLine": true,
       "targets": [
         {
-          "expr": "yearn_experimental{param=\"tvl\"}",
+          "expr": "yearn_vault{param=\"tvl\",experimental=\"true\"}",
           "interval": "",
           "legendFormat": "{{vault}}",
           "refId": "A"
@@ -1635,7 +1635,7 @@
       "steppedLine": true,
       "targets": [
         {
-          "expr": "sum(yearn_experimental{param=\"tvl\"})",
+          "expr": "sum(yearn_vault{param=\"tvl\",experimental=\"true\"})",
           "instant": false,
           "interval": "",
           "legendFormat": "Experimental Total Value Locked -",

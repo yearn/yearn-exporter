@@ -57,6 +57,8 @@ class Registry:
                 "price per share": res["getPricePerFullShare"] / 1e18,
                 "token price": price,
                 "tvl": res["pool"] / vault.scale * price,
+                "address": vault.vault,
+                "version": "iearn",
             }
 
         return dict(output)

@@ -107,7 +107,7 @@
       "steppedLine": false,
       "targets": [
         {
-          "expr": "rate(yearn_experimental{param=\"pricePerShare\"}[2m])",
+          "expr": "rate(yearn_vault{param=\"pricePerShare\",experimental=\"true\"}[2m])",
           "interval": "",
           "legendFormat": "{{vault}}",
           "panelId": 6,
@@ -211,7 +211,7 @@
       "steppedLine": false,
       "targets": [
         {
-          "expr": "yearn_experimental{param=\"pricePerShare\"}",
+          "expr": "yearn_vault{param=\"pricePerShare\",experimental=\"true\"}",
           "interval": "",
           "legendFormat": "{{vault}}",
           "panelId": 6,
@@ -316,7 +316,7 @@
       "steppedLine": true,
       "targets": [
         {
-          "expr": "yearn_experimental{param=\"totalAssets\"}",
+          "expr": "yearn_vault{param=\"totalAssets\",experimental=\"true\"}",
           "interval": "",
           "legendFormat": "{{vault}}",
           "queryType": "randomWalk",
@@ -422,7 +422,7 @@
       "steppedLine": true,
       "targets": [
         {
-          "expr": "yearn_experimental{param=\"tvl\"} ",
+          "expr": "yearn_vault{param=\"tvl\",experimental=\"true\"}",
           "interval": "",
           "legendFormat": "{{vault}}",
           "queryType": "randomWalk",
@@ -530,7 +530,7 @@
       "steppedLine": true,
       "targets": [
         {
-          "expr": "yearn_experimental{param=\"tvl\"} ",
+          "expr": "yearn_vault{param=\"tvl\",experimental=\"true\"}",
           "interval": "",
           "legendFormat": "{{vault}}",
           "queryType": "randomWalk",
@@ -673,7 +673,7 @@
       "pluginVersion": "7.4.0",
       "targets": [
         {
-          "expr": "yearn_experimental{param=\"depositLimit\"}",
+          "expr": "yearn_vault{param=\"depositLimit\",experimental=\"true\"}",
           "interval": "",
           "legendFormat": "{{vault}}",
           "queryType": "randomWalk",
@@ -734,7 +734,7 @@
       "pluginVersion": "7.4.0",
       "targets": [
         {
-          "expr": "yearn_experimental{param=\"emergencyShutdown\"}",
+          "expr": "yearn_vault{param=\"emergencyShutdown\",experimental=\"true\"}",
           "format": "time_series",
           "instant": false,
           "interval": "",
