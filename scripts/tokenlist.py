@@ -54,7 +54,7 @@ def main():
                 name=aliases.get(str(token), metadata[token])["name"],
                 decimals=metadata[token]["decimals"],
                 symbol=aliases.get(str(token), metadata[token])["symbol"],
-                logoURI=f"https://raw.githubusercontent.com/yearn/yearn-assets/master/icons/tokens/{vault}/logo.svg",
+                logoURI=f"https://raw.githubusercontent.com/yearn/yearn-assets/master/icons/tokens/{token}/logo.svg",
                 tags=["special"],
             )
         )
