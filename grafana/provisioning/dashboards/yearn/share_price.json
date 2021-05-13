@@ -512,7 +512,7 @@
       "steppedLine": false,
       "targets": [
         {
-          "expr": "delta(yearn_experimental{param=\"pricePerShare\"}[2m])",
+          "expr": "delta(yearn_vault{param=\"pricePerShare\",experimental=\"true\"}[2m])",
           "interval": "",
           "legendFormat": "{{vault}}",
           "queryType": "randomWalk",
@@ -624,7 +624,7 @@
       "steppedLine": true,
       "targets": [
         {
-          "expr": "yearn_experimental{param=\"pricePerShare\"}",
+          "expr": "yearn_vault{param=\"pricePerShare\",experimental=\"true\"}",
           "interval": "",
           "legendFormat": "{{vault}}",
           "refId": "A"

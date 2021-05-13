@@ -765,7 +765,7 @@
       "pluginVersion": "7.4.3",
       "targets": [
         {
-          "expr": "sort_desc(((delta(yearn_experimental{param=\"pricePerShare\"}[1w]) + 1) ^ (1/7)) ^ 365 - 1 < 100 ) ",
+          "expr": "sort_desc(((delta(yearn_vault{param=\"pricePerShare\",experimental=\"true\"}[1w]) + 1) ^ (1/7)) ^ 365 - 1 < 100 ) ",
           "instant": true,
           "interval": "",
           "legendFormat": "{{vault}}",
@@ -835,7 +835,7 @@
       "steppedLine": true,
       "targets": [
         {
-          "expr": "((delta(yearn_experimental{param=\"pricePerShare\"}[1w]) + 1) ^ (1/7)) ^ 365 - 1 < 100 ",
+          "expr": "((delta(yearn_vault{param=\"pricePerShare\",experimental=\"true\"}[1w]) + 1) ^ (1/7)) ^ 365 - 1 < 100 ",
           "interval": "",
           "legendFormat": "{{vault}}",
           "refId": "A"

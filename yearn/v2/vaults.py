@@ -1,4 +1,5 @@
 import logging
+import re
 import threading
 import time
 from typing import List
@@ -105,7 +106,8 @@ class Vault:
     @property
     def is_experiment(self):
         assert self.registry, "Vault not from Registry"
-        return str(self.vault) in self.registry.experiments
+        # experimental vaults are either listed in the registry or have the 0x address suffix in the name
+        return str(self.vault) in self.registry.experiments or re.search(r"0x.*$", self.name) is not None
 
     def load_strategies(self):
         if not self._thread._started.is_set():
@@ -162,4 +164,5 @@ class Vault:
         if "totalAssets" in info:
             info["tvl"] = info["token price"] * info["totalAssets"]
 
+        info["experimental"] = self.is_experiment
         return info
