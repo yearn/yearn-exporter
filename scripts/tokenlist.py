@@ -3,6 +3,7 @@ from datetime import datetime, timezone
 from pathlib import Path
 
 import requests
+from brownie import Contract
 from semantic_version import Version
 from tokenlists import TokenInfo, TokenList
 from toolz import unique
@@ -22,6 +23,8 @@ def main():
     resp = requests.get("https://raw.githubusercontent.com/iearn-finance/yearn-assets/master/icons/aliases.json").json()
     aliases = {item["address"]: item for item in resp}
     tokens = []
+
+    # Token derived by products
     for product in yearn.registries:
         vaults = [item.vault for item in yearn.registries[product].vaults if str(item.vault) not in excluded]
         metadata = multicall_matrix(vaults, ["name", "symbol", "decimals"])
@@ -37,6 +40,24 @@ def main():
                     tags=[product],
                 )
             )
+
+    # Token from special / side projects
+    special = [
+        Contract("0xD0660cD418a64a1d44E9214ad8e459324D8157f1") # WOOFY
+    ]
+    metadata = multicall_matrix(special, ["name", "symbol", "decimals"])
+    for token in special:
+        tokens.append(
+            TokenInfo(
+                chainId=1,
+                address=str(token),
+                name=aliases.get(str(token), metadata[token])["name"],
+                decimals=metadata[token]["decimals"],
+                symbol=aliases.get(str(token), metadata[token])["symbol"],
+                logoURI=f"https://raw.githubusercontent.com/yearn/yearn-assets/master/icons/tokens/{token}/logo.svg",
+                tags=["special"],
+            )
+        )
 
     deploy_blocks = {token.address: contract_creation_block(token.address) for token in tokens}
     tokens = unique(tokens, key=lambda token: token.address)
