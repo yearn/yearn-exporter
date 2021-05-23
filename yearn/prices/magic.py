@@ -5,6 +5,10 @@ from yearn.prices import balancer, chainlink, compound, constants, curve, uniswa
 logger = logging.getLogger(__name__)
 
 
+class PriceError(Exception):
+    pass
+
+
 def get_price(token, block=None):
     token = str(token)
     logger.debug("unwrapping %s", token)
@@ -61,4 +65,7 @@ def get_price(token, block=None):
     if not price:
         logger.error("failed to get price for %s", token)
 
+    if not price:
+        raise PriceError(f'could not fetch price for {token}')
+    
     return price
