@@ -17,9 +17,19 @@ BASIC_TOKENS = {
     "0x514910771AF9Ca656af840dff83E8264EcF986CA",  # link
 }
 
+OVERRIDES = {
+    '0x53a901d48795C58f485cBB38df08FA96a24669D5': {
+        'name': 'reth',
+        'pool': '0xF9440930043eb3997fc70e1339dBb11F341de7A8',
+        'coins': ['0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE', '0x9559Aaa82d9649C7A7b220E7c461d2E74c9a3593'],
+    },
+}
+
 
 @memory.cache()
 def get_pool(token):
+    if token in OVERRIDES:
+        return OVERRIDES[token]['pool']
     if set(metapool_factory.get_underlying_coins(token)) != {ZERO_ADDRESS}:
         return token
     return curve_registry.get_pool_from_lp_token(token)
@@ -32,6 +42,8 @@ def is_curve_lp_token(token):
 
 @memory.cache()
 def get_underlying_coins(token):
+    if token in OVERRIDES:
+        return OVERRIDES[token]['coins']
     pool = get_pool(token)
     coins = curve_registry.get_underlying_coins(pool)
     if set(coins) == {ZERO_ADDRESS}:
