@@ -39,11 +39,12 @@ def create_filter(address, topics=None):
     return web3.eth.filter({"address": address, "fromBlock": start_block, "topics": topics})
 
 
-def get_logs_asap(address, topics, from_block, to_block):
+def get_logs_asap(address, topics, from_block, to_block, verbose=0):
     logs = []
     ranges = list(block_ranges(from_block, to_block, BATCH_SIZE))
-    logger.info('fetching %d batches', len(ranges))
-    batches = Parallel(8, "threading", verbose=10)(
+    if verbose > 0:
+        logger.info('fetching %d batches', len(ranges))
+    batches = Parallel(8, "threading", verbose=verbose)(
         delayed(web3.eth.get_logs)({"address": address, "topics": topics, "fromBlock": start, "toBlock": end})
         for start, end in ranges
     )
