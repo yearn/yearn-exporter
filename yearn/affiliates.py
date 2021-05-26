@@ -12,6 +12,7 @@ from yearn.events import create_filter, decode_logs, get_logs_asap, logs_to_bala
 from yearn.prices import magic
 from yearn.utils import contract_creation_block
 from yearn.v2.vaults import Vault
+import pandas as pd
 
 OPEX = 0.35
 TIERS = {
@@ -44,31 +45,31 @@ class Affiliate:
 
 affiliates = [
     Affiliate(
-        name='inverse',
+        name='inverse-dai-wbtc',
         vault='0x19D3364A399d251E894aC732651be8B0E4e85001',
         wrapper='0xB0B02c75Fc1D07d351C991EBf8B5F5b48F24F40B',
         treasury=None,
     ),
     Affiliate(
-        name='inverse',
+        name='inverse-dai-weth',
         vault='0x19D3364A399d251E894aC732651be8B0E4e85001',
         wrapper='0x57faa0dec960ed774674a45d61ecfe738eb32052',
         treasury=None,
     ),
     Affiliate(
-        name='inverse',
+        name='inverse-usdc-weth',
         vault='0x5f18C75AbDAe578b483E5F43f12a39cF75b973a9',
         wrapper='0x698c1d40574cd90f1920f61D347acCE60D3910af',
         treasury=None,
     ),
     Affiliate(
-        name='frax',
+        name='frax-usdc',
         vault='0x5f18C75AbDAe578b483E5F43f12a39cF75b973a9',
         wrapper='0xEE5825d5185a1D512706f9068E69146A54B6e076',
         treasury=None,
     ),
     Affiliate(
-        name='alchemix',
+        name='alchemix-dai',
         vault='0x19D3364A399d251E894aC732651be8B0E4e85001',
         wrapper='0x014dE182c147f8663589d77eAdB109Bf86958f13',
         treasury=None,
@@ -127,5 +128,19 @@ def process_affilliate(affiliate: Affiliate):
 
     print('7. calculating payouts')
     shares = [balance / supply for balance, supply in zip(balances, supplies)]
+    print(max(shares), 'max share')
     payouts = [fee * share * tier * (1 - OPEX) for fee, share, tier in zip(fees, shares, tiers)]
     print(sum(payouts), 'to pay')
+
+    df = pd.DataFrame({
+        'block': blocks,
+        'fee': fees,
+        'balance': balances,
+        'supply': supplies,
+        'price': prices,
+        'tier': tiers,
+        'share': shares,
+        'payout': payouts,
+    }).set_index('block')
+    df.to_csv(f'research/affiliates/{affiliate.name}.csv')
+    return df
