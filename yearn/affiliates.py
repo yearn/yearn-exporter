@@ -74,6 +74,18 @@ affiliates = [
         wrapper='0x014dE182c147f8663589d77eAdB109Bf86958f13',
         treasury=None,
     ),
+    Affiliate(
+        name='pickle-usdc',
+        vault='0x5f18C75AbDAe578b483E5F43f12a39cF75b973a9',
+        wrapper='0xEecEE2637c7328300846622c802B2a29e65f3919',
+        treasury=None,
+    ),
+    Affiliate(
+        name='pickle-lusd',
+        vault='0x5fA5B62c8AF877CB37031e0a3B2f34A78e3C56A6',
+        wrapper='0x699cF8fE0C1A6948527cD4737454824c6E3828f1',
+        treasury=None,
+    ),
 ]
 
 
