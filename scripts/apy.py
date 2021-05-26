@@ -1,16 +1,11 @@
 import warnings
 import logging
-from collections import Counter
 
 from semantic_version import Version
 
 from brownie.exceptions import BrownieEnvironmentWarning
 
 from tabulate import tabulate
-from click import secho, style
-from toolz import groupby
-
-from yearn.yearn import Yearn
 
 from yearn import v2, vaults_v1, apy
 from yearn.prices.curve import is_curve_lp_token

@@ -25,15 +25,7 @@ OVERRIDES = {
             '0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE',  # ETH
             '0x9559Aaa82d9649C7A7b220E7c461d2E74c9a3593',  # rETH
         ],
-    },
-    '0x43b4FdFD4Ff969587185cDB6f0BD875c5Fc83f8c': {
-        'name': 'alusd',
-        'pool': '0x43b4FdFD4Ff969587185cDB6f0BD875c5Fc83f8c',
-        'coins': [
-            '0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48',  # USDC
-            '0xBC6DA0FE9aD5f3b0d58160288917AA56653660E9',  # alUSD
-        ],
-    },
+    }
 }
 
 
