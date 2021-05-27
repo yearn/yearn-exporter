@@ -21,8 +21,11 @@ OVERRIDES = {
     '0x53a901d48795C58f485cBB38df08FA96a24669D5': {
         'name': 'reth',
         'pool': '0xF9440930043eb3997fc70e1339dBb11F341de7A8',
-        'coins': ['0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE', '0x9559Aaa82d9649C7A7b220E7c461d2E74c9a3593'],
-    },
+        'coins': [
+            '0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE',  # ETH
+            '0x9559Aaa82d9649C7A7b220E7c461d2E74c9a3593',  # rETH
+        ],
+    }
 }
 
 

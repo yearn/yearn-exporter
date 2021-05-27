@@ -1,14 +1,14 @@
 import logging
 from typing import Union
 
-from brownie import Contract, interface
+from brownie import Contract, ZERO_ADDRESS, interface
 
 from yearn.apy.curve.rewards import rewards
 
 from yearn.v2.registry import Vault as VaultV2
 from yearn.vaults_v1 import VaultV1
 
-from yearn.prices.curve import get_pool, get_underlying_coins, curve_registry
+from yearn.prices.curve import get_pool, get_underlying_coins, curve_registry, get_price as get_virtual_price
 from yearn.prices.magic import get_price
 
 from yearn.apy.common import (
@@ -56,9 +56,11 @@ def simple(vault: Union[VaultV1, VaultV2], samples: ApySamples) -> Apy:
 
     gauge_address = gauge_addresses[0][0]
 
-    # FIXME: crvUSDP doesn't have a gauge connected in the registry
-    if vault.vault.address == "0x1B5eb1173D2Bf770e50F10410C9a96F7a8eB6e75":
-        gauge = "0x055be5DDB7A925BfEF3417FC157f53CA77cA7222"
+    if vault.vault.address == "0xBfedbcbe27171C418CDabC2477042554b1904857":
+        gauge_address = "0x824f13f1a2f29cfeea81154b46c0fc820677a637"
+
+    if vault.vault.address == "0xA74d4B67b3368E83797a35382AFB776bAAE4F5C8":
+        gauge_address = "0x9582c4adacb3bce56fea3e590f05c3ca2fb9c477"
 
     gauge = interface.CurveGauge(gauge_address)
     controller = gauge.controller()
@@ -68,7 +70,8 @@ def simple(vault: Union[VaultV1, VaultV2], samples: ApySamples) -> Apy:
     gauge_weight = controller.gauge_relative_weight(gauge_address)
 
     gauge_inflation_rate = gauge.inflation_rate()
-    pool_price = curve_registry.get_virtual_price_from_lp_token(lp_token)
+    pool = interface.CurveSwap(pool_address)
+    pool_price = pool.get_virtual_price()
 
     underlying_coins = get_underlying_coins(lp_token)
 
@@ -112,10 +115,10 @@ def simple(vault: Union[VaultV1, VaultV2], samples: ApySamples) -> Apy:
     else:
         reward_apr = 0
 
-    price_per_share = curve_registry.get_virtual_price_from_lp_token
-    now_price = price_per_share(lp_token, block_identifier=samples.now)
+    price_per_share = pool.get_virtual_price
+    now_price = price_per_share(block_identifier=samples.now)
     try:
-        week_ago_price = price_per_share(lp_token, block_identifier=samples.week_ago)
+        week_ago_price = price_per_share(block_identifier=samples.week_ago)
     except ValueError:
         raise ApyError("crv", "insufficient data")
 
