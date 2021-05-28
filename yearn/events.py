@@ -2,7 +2,7 @@ import logging
 from collections import Counter, defaultdict
 from itertools import zip_longest
 
-from brownie import web3
+from brownie import web3, chain
 from brownie.network.event import EventDict, _decode_logs
 from joblib import Parallel, delayed
 from toolz import groupby
@@ -39,11 +39,18 @@ def create_filter(address, topics=None):
     return web3.eth.filter({"address": address, "fromBlock": start_block, "topics": topics})
 
 
-def get_logs_asap(address, topics, from_block, to_block, verbose=0):
+def get_logs_asap(address, topics, from_block=None, to_block=None, verbose=0):
     logs = []
+
+    if from_block is None:
+        from_block = contract_creation_block(address)
+    if to_block is None:
+        to_block = chain.height
+
     ranges = list(block_ranges(from_block, to_block, BATCH_SIZE))
     if verbose > 0:
         logger.info('fetching %d batches', len(ranges))
+
     batches = Parallel(8, "threading", verbose=verbose)(
         delayed(web3.eth.get_logs)({"address": address, "topics": topics, "fromBlock": start, "toBlock": end})
         for start, end in ranges
