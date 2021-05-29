@@ -100,12 +100,14 @@ class Vault:
 
     @property
     def is_endorsed(self):
-        assert self.registry, "Vault not from Registry"
+        if not self.registry:
+            return None
         return str(self.vault) in self.registry.vaults
 
     @property
     def is_experiment(self):
-        assert self.registry, "Vault not from Registry"
+        if not self.registry:
+            return None
         # experimental vaults are either listed in the registry or have the 0x address suffix in the name
         return str(self.vault) in self.registry.experiments or re.search(r"0x.*$", self.name) is not None
 
