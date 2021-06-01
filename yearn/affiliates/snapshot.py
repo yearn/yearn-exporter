@@ -32,6 +32,7 @@ from joblib.parallel import Parallel, delayed
 from web3._utils.abi import filter_by_name
 from web3._utils.events import construct_event_topic_set
 
+from yearn.affiliates.charts import make_partner_charts
 from yearn.events import decode_logs, get_logs_asap
 from yearn.multicall2 import batch_call
 from yearn.prices import magic
@@ -130,8 +131,10 @@ class Partner:
         partner['payout'] = partner.payout_base * partner.tier
         partner.to_csv(Path(f'research/affiliates/{self.name}/partner.csv'))
 
-        # export monthly payouts by vault
         payouts = self.export_payouts(partner)
+
+        make_partner_charts(self, partner)
+
         return partner, payouts
 
     def export_payouts(self, partner):
