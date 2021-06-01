@@ -10,31 +10,10 @@ from brownie import web3
 from joblib.parallel import Parallel, delayed
 from web3._utils.abi import filter_by_name
 from web3._utils.events import construct_event_topic_set
-
 from yearn.events import decode_logs, get_logs_asap
 from yearn.multicall2 import batch_call
-from yearn.prices import magic
-from yearn.utils import get_block_timestamp
-from yearn.v2.vaults import Vault
-
-from yearn.affiliates.constants import get_tier, OPEX_COST
-
-from bisect import bisect_right
-from dataclasses import dataclass
-from functools import lru_cache
-from pathlib import Path
-from typing import List
-
-import matplotlib.pyplot as plt
-import pandas as pd
-from brownie import web3
-from joblib.parallel import Parallel, delayed
-from web3._utils.abi import filter_by_name
-from web3._utils.events import construct_event_topic_set
-
-from yearn.affiliates.charts import make_partner_charts
-from yearn.events import decode_logs, get_logs_asap
-from yearn.multicall2 import batch_call
+from yearn.partners.charts import make_partner_charts
+from yearn.partners.constants import OPEX_COST, get_tier
 from yearn.prices import magic
 from yearn.utils import get_block_timestamp
 from yearn.v2.vaults import Vault
@@ -118,8 +97,6 @@ class Partner:
             wrap = wrap.set_index('block')
             wrappers.append(wrap)
             # save a csv for reporting
-            path = Path(f'research/affiliates/{self.name}/{wrapper.name}.csv')
-            path.parent.mkdir(parents=True, exist_ok=True)
 
         # calculate partner fee tier from cummulative wrapper balances
         partner = pd.concat(wrappers)
@@ -129,13 +106,17 @@ class Partner:
         # calculate final payout by vault after tier adjustments
         partner = partner.join(tiers)
         partner['payout'] = partner.payout_base * partner.tier
-        partner.to_csv(Path(f'research/affiliates/{self.name}/partner.csv'))
-
+        
+        self.export_csv(partner)
         payouts = self.export_payouts(partner)
-
-        make_partner_charts(self, partner)
+        self.export_chart(partner)
 
         return partner, payouts
+
+    def export_csv(self, partner):
+        path = Path(f'research/partners/{self.name}/partner.csv')
+        path.parent.mkdir(parents=True, exist_ok=True)
+        partner.to_csv(path)
 
     def export_payouts(self, partner):
         # calculate payouts grouped by month and vault token
@@ -147,18 +128,14 @@ class Partner:
         # reorder columns
         payouts.columns = ['timestamp', 'token', 'amount', 'treasury', 'partner']
         payouts = payouts[['timestamp', 'partner', 'token', 'treasury', 'amount']]
-        payouts.to_csv(Path(f'research/affiliates/{self.name}/payouts.csv'), index=False)
+        payouts.to_csv(Path(f'research/partners/{self.name}/payouts.csv'), index=False)
         return payouts
 
-    def export_chart(self, total_balances, tiers):
-        total_balances.plot(title=f'yearn x {self.name}', legend=True)
-        tiers.plot(secondary_y=True, legend=True)
-        path = Path(f'research/affiliates/{self.name}/balance.png')
-        plt.savefig(path, dpi=300)
-        plt.close()
+    def export_chart(self, partner):
+        make_partner_charts(self, partner)
 
 
-def process_affiliates(partners):
+def process_partners(partners):
     total = 0
     payouts = []
     for partner in partners:
@@ -169,6 +146,6 @@ def process_affiliates(partners):
         total += usd
 
     print(total, 'total so far')
-    path = Path('research/affiliates/payouts.csv')
+    path = Path('research/partners/payouts.csv')
     pd.concat(payouts).sort_values('timestamp').to_csv(path, index=False)
     print(f'saved to {path}')

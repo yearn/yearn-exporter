@@ -49,11 +49,11 @@ def make_partner_charts(partner, data):
     ax[3].yaxis.set_major_formatter(PercentFormatter(1))
 
     # visual fixes
-    for axis in ax[:2]: #???
+    for axis in ax[:2]:
         axis.set_facecolor('none')
         axis.set_zorder(2)
         axis.grid(alpha=0.5)
 
     plt.tight_layout()
-    plt.savefig(Path(f'research/affiliates/{partner.name}/chart.png'), dpi=300, facecolor='white')
+    plt.savefig(Path(f'research/partners/{partner.name}/chart.png'), dpi=300, facecolor='white')
     plt.close()

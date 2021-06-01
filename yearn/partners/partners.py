@@ -1,4 +1,4 @@
-from yearn.affiliates.snapshot import Partner, Wrapper
+from yearn.partners.snapshot import Partner, Wrapper
 
 
 partners = [
