@@ -3,7 +3,6 @@ from dataclasses import dataclass
 from functools import lru_cache
 from pathlib import Path
 from typing import List
-from yearn.utils import get_block_timestamp
 
 import matplotlib.pyplot as plt
 import pandas as pd
@@ -15,6 +14,7 @@ from web3._utils.events import construct_event_topic_set
 from yearn.events import decode_logs, get_logs_asap
 from yearn.multicall2 import batch_call
 from yearn.prices import magic
+from yearn.utils import get_block_timestamp
 from yearn.v2.vaults import Vault
 
 TIERS = {
@@ -117,7 +117,6 @@ class Partner:
             # save a csv for reporting
             path = Path(f'research/affiliates/{self.name}/{wrapper.name}.csv')
             path.parent.mkdir(parents=True, exist_ok=True)
-            wrap.to_csv(path)
 
         # calculate partner fee tier from cummulative wrapper balances
         partner = pd.concat(wrappers)
@@ -132,10 +131,24 @@ class Partner:
         # calculate final payout by vault after tier adjustments
         partner = partner.join(tiers)
         partner['payout'] = partner.payout_base * partner.tier
-        payouts = partner.groupby('vault').payout.sum()
-        print(payouts)
-        path = Path(f'research/affiliates/{self.name}/payouts.csv')
-        payouts.to_csv(path)
+        partner.to_csv(Path(f'research/affiliates/{self.name}/partner.csv'))
+
+        # export monthly payouts by vault
+        payouts = self.export_payouts(partner)
+        return partner, payouts
+
+    def export_payouts(self, partner):
+        # calculate payouts grouped by month and vault token
+        payouts = pd.pivot_table(partner, 'payout', 'timestamp', 'vault', 'sum').resample('1M').sum()
+        # stack from wide to long format with one payment per line
+        payouts = payouts.stack().reset_index()
+        payouts['treasury'] = self.treasury
+        payouts['partner'] = self.name
+        # reorder columns
+        payouts.columns = ['timestamp', 'token', 'amount', 'treasury', 'partner']
+        payouts = payouts[['timestamp', 'partner', 'token', 'treasury', 'amount']]
+        payouts.to_csv(Path(f'research/affiliates/{self.name}/payouts.csv'), index=False)
+        return payouts
 
 
 affiliates = [
@@ -215,3 +228,19 @@ affiliates = [
         ],
     ),
 ]
+
+
+def process_affiliates():
+    total = 0
+    payouts = []
+    for partner in affiliates:
+        result, payout = partner.process()
+        payouts.append(payout)
+        usd = (result.payout * result.vault_price).sum()
+        print(partner.name, usd, 'usd to pay')
+        total += usd
+
+    print(total, 'total so far')
+    path = Path('research/affiliates/payouts.csv')
+    pd.concat(payouts).sort_values('timestamp').to_csv(path, index=False)
+    print(f'saved to {path}')
