@@ -141,6 +141,7 @@ class Partner:
 affiliates = [
     Partner(
         name='alchemix',
+        treasury='0x8392F6669292fA56123F71949B52d883aE57e225',
         wrappers=[
             Wrapper(
                 name='dai',
@@ -156,6 +157,7 @@ affiliates = [
     ),
     Partner(
         name='inverse',
+        treasury='0x926dF14a23BE491164dCF93f4c468A50ef659D5B',
         wrappers=[
             Wrapper(
                 name='dai-wbtc',
@@ -176,6 +178,7 @@ affiliates = [
     ),
     Partner(
         name='frax',
+        treasury='0x8d0C5D009b128315715388844196B85b41D9Ea30',
         wrappers=[
             Wrapper(
                 name='usdc',
@@ -186,6 +189,7 @@ affiliates = [
     ),
     Partner(
         name='pickle',
+        treasury='0x066419EaEf5DE53cc5da0d8702b990c5bc7D1AB3',
         wrappers=[
             Wrapper(
                 name='usdc',
@@ -201,6 +205,7 @@ affiliates = [
     ),
     Partner(
         name='badger',
+        treasury='0xB65cef03b9B89f99517643226d76e286ee999e77',
         wrappers=[
             Wrapper(
                 name='wbtc',
