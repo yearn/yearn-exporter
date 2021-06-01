@@ -35,7 +35,7 @@ STRATEGY_EVENTS = [
     "StrategyAdded",
     "StrategyMigrated",
     "StrategyRevoked",
-    # "StrategyReported",
+    "StrategyReported",
 ]
 
 logger = logging.getLogger(__name__)
@@ -45,6 +45,7 @@ class Vault:
     def __init__(self, vault, api_version=None, token=None, registry=None):
         self._strategies = {}
         self._revoked = {}
+        self._reports = []
         self.vault = vault
         self.api_version = api_version
         if token is None:
@@ -100,12 +101,14 @@ class Vault:
 
     @property
     def is_endorsed(self):
-        assert self.registry, "Vault not from Registry"
+        if not self.registry:
+            return None
         return str(self.vault) in self.registry.vaults
 
     @property
     def is_experiment(self):
-        assert self.registry, "Vault not from Registry"
+        if not self.registry:
+            return None
         # experimental vaults are either listed in the registry or have the 0x address suffix in the name
         return str(self.vault) in self.registry.experiments or re.search(r"0x.*$", self.name) is not None
 
@@ -145,6 +148,8 @@ class Vault:
                     event["oldVersion"], Strategy(event["oldVersion"], self)
                 )
                 self._strategies[event["newVersion"]] = Strategy(event["newVersion"], self)
+            elif event.name == "StrategyReported":
+                self._reports.append(event)
 
     def describe(self, block=None):
         try:

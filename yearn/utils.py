@@ -24,6 +24,7 @@ def is_archive_node():
     return web3.clientVersion.startswith("TurboGeth")
 
 
+@memory.cache()
 def get_block_timestamp(height):
     if is_archive_node():
         header = web3.manager.request_blocking("tg_getHeaderByNumber", [height])

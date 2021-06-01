@@ -1,5 +1,7 @@
 import logging
 
+from cachetools.func import ttl_cache
+
 from yearn.prices import balancer, chainlink, compound, constants, curve, uniswap, yearn
 
 logger = logging.getLogger(__name__)
@@ -9,6 +11,7 @@ class PriceError(Exception):
     pass
 
 
+@ttl_cache(10000)
 def get_price(token, block=None):
     token = str(token)
     logger.debug("unwrapping %s", token)
@@ -67,5 +70,5 @@ def get_price(token, block=None):
 
     if not price:
         raise PriceError(f'could not fetch price for {token}')
-    
+
     return price

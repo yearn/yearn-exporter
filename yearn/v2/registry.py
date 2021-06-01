@@ -3,9 +3,11 @@ import threading
 import time
 from typing import List
 
-from brownie import Contract, chain
+from brownie import Contract, chain, web3
 from joblib import Parallel, delayed
-from yearn.events import create_filter, decode_logs
+from web3._utils.abi import filter_by_name
+from web3._utils.events import construct_event_topic_set
+from yearn.events import create_filter, decode_logs, get_logs_asap
 from yearn.multicall2 import fetch_multicall
 from yearn.prices import magic
 from yearn.utils import contract_creation_block
@@ -21,20 +23,23 @@ class Registry:
         self._experiments = {}  # address => Vault
         self.governance = None
         self.tags = {}
-
-        # latest registry is always available at v2.registry.ychad.eth
-        # but we also track older registries to pull experiments
-        self.addresses = [
-            "0xE15461B18EE31b7379019Dc523231C57d1Cbc18c",  # v2.0
-            "0x50c1a2eA0a861A967D9d0FFE2AE4012c2E053804",  # v2.1
-        ]
-        # force downloading abi for log decoding
-        [Contract(addr) for addr in self.addresses]
-
+        # track older registries to pull experiments
+        self.registries = self.load_from_ens()
         # load registry state in the background
         self._done = threading.Event()
         self._thread = threading.Thread(target=self.watch_events, daemon=True)
         self._thread.start()
+
+    def load_from_ens(self):
+        resolver = Contract('0x4976fb03C32e5B8cfe2b6cCB31c09Ba78EBaBa41')
+        topics = construct_event_topic_set(
+            filter_by_name('AddressChanged', resolver.abi)[0],
+            web3.codec,
+            {'node': web3.ens.namehash('v2.registry.ychad.eth')},
+        )
+        events = decode_logs(get_logs_asap(str(resolver), topics))
+        logger.info('loaded %d registry versions', len(events))
+        return [Contract(event['newAddress']) for event in events]
 
     @property
     def vaults(self) -> List[Vault]:
@@ -57,7 +62,7 @@ class Registry:
 
     def watch_events(self):
         start = time.time()
-        self.log_filter = create_filter(self.addresses)
+        self.log_filter = create_filter([str(addr) for addr in self.registries])
         for block in chain.new_blocks(height_buffer=12):
             logs = self.log_filter.get_new_entries()
             self.process_events(decode_logs(logs))

@@ -7,7 +7,7 @@ import yearn.iearn
 import yearn.ironbank
 import yearn.special
 import yearn.v2.registry
-import yearn.vaults_v1
+import yearn.v1.registry
 
 logger = logging.getLogger(__name__)
 
@@ -21,7 +21,7 @@ class Yearn:
         start = time()
         self.registries = {
             "earn": yearn.iearn.Registry(),
-            "v1": yearn.vaults_v1.Registry(),
+            "v1": yearn.v1.registry.Registry(),
             "v2": yearn.v2.registry.Registry(),
             "ib": yearn.ironbank.Registry(),
             "special": yearn.special.Registry(),
