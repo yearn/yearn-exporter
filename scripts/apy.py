@@ -1,14 +1,16 @@
 import warnings
 import logging
 
-from semantic_version import Version
-
 from brownie.exceptions import BrownieEnvironmentWarning
 
 from tabulate import tabulate
 
-from yearn import v2, v1, apy
-from yearn.prices.curve import is_curve_lp_token
+from yearn.apy import calculate_apy, get_samples, ApyError
+from yearn.v1.registry import Registry as RegistryV1
+from yearn.v2.registry import Registry as RegistryV2
+
+from yearn.v2.vaults import Vault as VaultV2
+from yearn.v2.strategies import Strategy as StrategyV2
 
 warnings.simplefilter("ignore", BrownieEnvironmentWarning)
 
@@ -19,29 +21,21 @@ logger = logging.getLogger("yearn.apy")
 def main():
     data = []
 
-    samples = apy.get_samples()
+    samples = get_samples()
 
-    v1_registry = v1.registry.Registry()
+    v1_registry = RegistryV1()
 
     for vault in v1_registry.vaults:
-        if is_curve_lp_token(vault.token.address):
-            vault_apy = apy.curve.simple(vault, samples)
-        else:
-            vault_apy = apy.v1.simple(vault, samples)
-        data.append({"product": vault_apy.type, "name": vault.name, "apy": vault_apy.net_apy})
+        apy = calculate_apy(vault, samples)
+        data.append({"product": apy.type, "name": vault.name, "apy": apy.net_apy})
 
-    v2_registry = v2.registry.Registry()
+    v2_registry = RegistryV2()
 
     for vault in v2_registry.vaults:
         try:
-            if is_curve_lp_token(vault.token.address):
-                vault_apy = apy.curve.simple(vault, samples)
-            elif Version(vault.api_version) >= Version("0.3.2"):
-                vault_apy = apy.v2.average(vault, samples)
-            else:
-                vault_apy = apy.v2.simple(vault, samples)
-            data.append({"product": vault_apy.type, "name": vault.name, "apy": vault_apy.net_apy})
-        except apy.ApyError as error:
+            apy = calculate_apy(vault, samples)
+            data.append({"product": apy.type, "name": vault.name, "apy": apy.net_apy})
+        except ApyError as error:
             logger.error(error)
         except Exception as error:
             print(vault)
@@ -49,3 +43,12 @@ def main():
 
     data.sort(key=lambda x: -x["apy"])
     print(tabulate(data, floatfmt=",.0%"))
+
+def yvboost():
+    samples = get_samples()
+    address = "0x9d409a0A012CFbA9B15F6D4B36Ac57A46966Ab9a"
+    vault = VaultV2.from_address(address)
+    vault.load_strategies()
+    vault._strategies["0x9d409a0A012CFbA9B15F6D4B36Ac57A46966Ab9a"] = StrategyV2("0x9d409a0A012CFbA9B15F6D4B36Ac57A46966Ab9a", vault)
+    vault._strategies["0x683b5C88D48FcCfB3e778FF0fA954F84cA7Ce9DF"] = StrategyV2("0x683b5C88D48FcCfB3e778FF0fA954F84cA7Ce9DF", vault)
+    print(calculate_apy(vault, samples))
