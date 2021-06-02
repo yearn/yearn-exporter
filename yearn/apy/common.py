@@ -49,7 +49,7 @@ class ApySamples:
     month_ago: int
 
 
-class ApyError(Exception):
+class ApyError(ValueError):
     type: str
     message: str
 
