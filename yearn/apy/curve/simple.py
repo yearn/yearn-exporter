@@ -1,7 +1,7 @@
 import logging
 from typing import Union
 
-from brownie import Contract, ZERO_ADDRESS, interface
+from brownie import Contract, ZERO_ADDRESS
 
 from yearn.apy.curve.rewards import rewards
 
@@ -62,15 +62,15 @@ def simple(vault: Union[VaultV1, VaultV2], samples: ApySamples) -> Apy:
     if vault.vault.address == "0xA74d4B67b3368E83797a35382AFB776bAAE4F5C8":
         gauge_address = "0x9582c4adacb3bce56fea3e590f05c3ca2fb9c477"
 
-    gauge = interface.CurveGauge(gauge_address)
+    gauge = Contract(gauge_address)
     controller = gauge.controller()
-    controller = interface.CurveGaugeController(controller)
+    controller = Contract(controller)
 
     gauge_working_supply = gauge.working_supply()
     gauge_weight = controller.gauge_relative_weight(gauge_address)
 
     gauge_inflation_rate = gauge.inflation_rate()
-    pool = interface.CurveSwap(pool_address)
+    pool = Contract(pool_address)
     pool_price = pool.get_virtual_price()
 
     underlying_coins = get_underlying_coins(lp_token)
