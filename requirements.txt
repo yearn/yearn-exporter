@@ -13,3 +13,4 @@ aiofiles>=0.6.0
 prometheus-client>=0.10.1
 google-cloud-bigquery>=2.13.1
 semantic-version>=2.8.5
+ipfshttpclient==0.8.0a2
