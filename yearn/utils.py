@@ -1,4 +1,5 @@
 import logging
+import re
 
 from brownie import chain, web3
 from cachetools.func import lru_cache
@@ -21,7 +22,7 @@ def safe_views(abi):
 
 @lru_cache(1)
 def is_archive_node():
-    return web3.clientVersion.startswith("TurboGeth")
+    return re.search(r'^(TurboGeth|Erigon)', web3.clientVersion)
 
 
 @memory.cache()
