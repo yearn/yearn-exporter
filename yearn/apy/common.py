@@ -23,6 +23,7 @@ class ApyFees:
     withdrawal: Optional[float] = None
     management: Optional[float] = None
     keep_crv: Optional[float] = None
+    cvx_keep_crv: Optional[float] = None
 
 
 @dataclass

@@ -39,9 +39,11 @@ ETH_LIKE = [
     "0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE",  # pure eth
 ]
 
-CRV = "0xD533a949740bb3306d119CC777fa900bA034cd52"
+CRV = Contract("0xD533a949740bb3306d119CC777fa900bA034cd52")
+CVX = Contract("0x4e3FBD56CD56c3e72c1403e103b45Db9da5B9D2B")
 
 YVECRV_VOTER = "0xF147b8125d2ef93FB6965Db97D6746952a133934"
+CONVEX_VOTER = "0x989AEb4d175e16225E39E87d0D97A3360524AD80"
 
 COMPOUNDING = 52
 MAX_BOOST = 2.5
@@ -103,7 +105,6 @@ def simple(vault: Union[VaultV1, VaultV2], samples: ApySamples) -> Apy:
     if vault.vault.address == "0x46AFc2dfBd1ea0c0760CAD8262A5838e803A37e5":
         boost = 1
 
-    boosted_apr = base_apr * boost
 
     if hasattr(gauge, "reward_contract"):
         try:
@@ -132,43 +133,89 @@ def simple(vault: Union[VaultV1, VaultV2], samples: ApySamples) -> Apy:
     if vault.vault.address == "0xE625F5923303f1CE7A43ACFEFd11fd12f30DbcA4":
         pool_apy = 0
 
+    
     if type(vault) is VaultV2:
+        crv_strategy = vault.strategies[0].strategy
         contract = vault.vault
-        keep_crv = sum([strategy.keepCRV() for strategy in vault.strategies if hasattr(strategy, "keepCRV")])
-        performance = (contract.performanceFee() * 2) if hasattr(contract, "performanceFee") else 0
-        management = contract.managementFee() if hasattr(contract, "managementFee") else 0
+        keep_crv = crv_strategy.keepCRV() / 1e4 if hasattr(crv_strategy, "keep_crv") else 0
+        performance = (contract.performanceFee() * 2) / 1e4 if hasattr(contract, "performanceFee") else 0
+        management = contract.managementFee() / 1e4 if hasattr(contract, "managementFee") else 0
     else:
         strategy = vault.strategy
         strategist_performance = strategy.performanceFee() if hasattr(strategy, "performanceFee") else 0
         strategist_reward = strategy.strategistReward() if hasattr(strategy, "strategistReward") else 0
         treasury = strategy.treasuryFee() if hasattr(strategy, "treasuryFee") else 0
-        keep_crv = strategy.keepCRV() if hasattr(strategy, "keepCRV") else 0
+        keep_crv = strategy.keepCRV() / 1e4 if hasattr(strategy, "keepCRV") else 0
 
-        performance = strategist_reward + strategist_performance + treasury
+        performance = (strategist_reward + strategist_performance + treasury) / 1e4
         management = 0
 
-    keep_crv /= 1e4
-    performance /= 1e4
-    management /= 1e4
+    if type(vault) is VaultV2 and len(vault.strategies) == 2:
+        cvx_strategy = vault.strategies[1].strategy
+        cvx_working_balance = gauge.working_balances(CONVEX_VOTER)
+        cvx_gauge_balance = gauge.balanceOf(CONVEX_VOTER)
 
-    lose_crv = 1 - keep_crv
+        if cvx_gauge_balance > 0:
+            cvx_boost = cvx_working_balance / (PER_MAX_BOOST * cvx_gauge_balance) or 1
+        else:
+            cvx_boost = MAX_BOOST
+        
+        cvx_booster = Contract("0xF403C135812408BFbE8713b5A23a04b3D48AAE31")
+        cvx_lock_incentive = cvx_booster.lockIncentive() 
+        cvx_staker_incentive = cvx_booster.stakerIncentive()
+        cvx_earmark_incentive = cvx_booster.earmarkIncentive()
+        cvx_fee = (cvx_lock_incentive + cvx_staker_incentive + cvx_earmark_incentive) / 1e4
+        cvx_keep_crv = cvx_strategy.keepCRV() / 1e4
 
-    gross_farmed_apy = (
-        (boosted_apr * keep_crv) + (((boosted_apr * lose_crv + reward_apr) / COMPOUNDING) + 1) ** COMPOUNDING
-    ) - 1
+        total_cliff = 1e3
+        max_supply = 1e2 * 1e6 * 1e18 # ?
+        reduction_per_cliff = 1e23
+        supply = CVX.totalSupply()
+        cliff = supply / reduction_per_cliff
+        if supply >= max_supply:
+            reduction = total_cliff - cliff
+            cvx_minted_as_crv = reduction / total_cliff
+            cvx_price = get_price(CVX)
+            converted_cvx = cvx_price / crv_price
+            cvx_printed_as_crv = cvx_minted_as_crv * converted_cvx
+        else:
+            cvx_printed_as_crv = 0
 
-    apy = (gross_farmed_apy + 1) * (pool_apy + 1) - 1
+        cvx_apr = ((1 - cvx_fee) * cvx_boost * base_apr) * (1 + cvx_printed_as_crv)
+        cvx_gross_farmed_apy = ((cvx_keep_crv * cvx_apr) + (1 + (cvx_apr * (1 - cvx_keep_crv) + reward_apr) / COMPOUNDING)) ** COMPOUNDING - 1
+        
+        crv_debt_ratio = vault.vault.strategies(crv_strategy)[2] / 1e4
+        cvx_debt_ratio = vault.vault.strategies(cvx_strategy)[2] / 1e4
+    else:
+        cvx_apr = 0
+        cvx_keep_crv = 0
+        cvx_gross_farmed_apy = 0
+        crv_debt_ratio = 1
+        cvx_debt_ratio = 0
 
-    net_curve_apr = (boosted_apr * lose_crv + reward_apr) * (1 - performance) - management
 
-    net_farmed_apy = ((net_curve_apr / COMPOUNDING) + 1) ** COMPOUNDING - 1
-    net_apy = (net_farmed_apy + 1) * (pool_apy + 1) - 1
+    crv_apr = base_apr * boost
+    crv_gross_farmed_apy = ((crv_apr * keep_crv) + (((crv_apr * (1 - keep_crv) + reward_apr) / COMPOUNDING) + 1) ** COMPOUNDING) - 1
 
-    fees = ApyFees(performance=performance, management=management, keep_crv=keep_crv)
+    apy = ((crv_gross_farmed_apy + 1) * (pool_apy + 1) - 1) * crv_debt_ratio + \
+            ((cvx_gross_farmed_apy + 1) * (pool_apy + 1) - 1) * cvx_debt_ratio
+
+    crv_net_apr = (crv_apr * (1 - keep_crv) + reward_apr) * (1 - performance) - management
+    crv_net_farmed_apy = ((crv_net_apr / COMPOUNDING) + 1) ** COMPOUNDING - 1
+    
+    cvx_net_apr = (cvx_apr * (1 - cvx_keep_crv) + reward_apr) * (1 - performance) - management
+    cvx_net_farmed_apy = ((cvx_net_apr / COMPOUNDING) + 1) ** COMPOUNDING - 1
+    
+    crv_net_apy = ((crv_net_farmed_apy + 1) * (pool_apy + 1) - 1)
+    cvx_net_apy = ((cvx_net_farmed_apy + 1) * (pool_apy + 1) - 1)
+
+    net_apy = crv_net_apy * crv_debt_ratio + cvx_net_apy * cvx_debt_ratio
+
+    fees = ApyFees(performance=performance, management=management, keep_crv=keep_crv, cvx_keep_crv=cvx_keep_crv)
     composite = {
         "boost": boost,
         "pool_apy": pool_apy,
-        "boosted_apr": boosted_apr,
+        "boosted_apr": crv_apr,
         "base_apr": base_apr,
         "rewards_apr": reward_apr,
     }

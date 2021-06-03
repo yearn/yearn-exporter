@@ -1,3 +1,5 @@
+import json
+import dataclasses
 import warnings
 import logging
 
@@ -44,11 +46,8 @@ def main():
     data.sort(key=lambda x: -x["apy"])
     print(tabulate(data, floatfmt=",.0%"))
 
-def yvboost():
+def lusd():
     samples = get_samples()
-    address = "0x9d409a0A012CFbA9B15F6D4B36Ac57A46966Ab9a"
+    address = "0x5fA5B62c8AF877CB37031e0a3B2f34A78e3C56A6"
     vault = VaultV2.from_address(address)
-    vault.load_strategies()
-    vault._strategies["0x9d409a0A012CFbA9B15F6D4B36Ac57A46966Ab9a"] = StrategyV2("0x9d409a0A012CFbA9B15F6D4B36Ac57A46966Ab9a", vault)
-    vault._strategies["0x683b5C88D48FcCfB3e778FF0fA954F84cA7Ce9DF"] = StrategyV2("0x683b5C88D48FcCfB3e778FF0fA954F84cA7Ce9DF", vault)
-    print(calculate_apy(vault, samples))
+    print(json.dumps(dataclasses.asdict(calculate_apy(vault, samples)), indent=2))
