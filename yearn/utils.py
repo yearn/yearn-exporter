@@ -21,14 +21,20 @@ def safe_views(abi):
 
 
 @lru_cache(1)
-def is_archive_node():
-    return re.search(r'^(TurboGeth|Erigon)', web3.clientVersion)
+def get_ethereum_client():
+    client = web3.clientVersion
+    if client.startswith('TurboGeth'):
+        return 'tg'
+    if client.startswith('Erigon'):
+        return 'erigon'
+    return client
 
 
 @memory.cache()
 def get_block_timestamp(height):
-    if is_archive_node():
-        header = web3.manager.request_blocking("tg_getHeaderByNumber", [height])
+    client = get_ethereum_client()
+    if client in ['tg', 'erigon']:
+        header = web3.manager.request_blocking(f"{client}_getHeaderByNumber", [height])
         return int(header.timestamp, 16)
     else:
         return chain[height].timestamp
@@ -54,7 +60,8 @@ def contract_creation_block(address) -> int:
     Determine the block when a contract was created.
     """
     logger.info("contract creation block %s", address)
-    if is_archive_node():
+    client = get_ethereum_client()
+    if client in ['tg', 'erigon']:
         return _contract_creation_block_binary_search(address)
     else:
         return _contract_creation_block_bigquery(address)

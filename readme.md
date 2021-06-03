@@ -8,7 +8,7 @@ Hosted version is available at https://yearn.vision.
 
 You will need:
 
-- TurboGeth for querying historical data
+- Erigon for querying historical data
 - Prometheus to pull the metrics, persist them and make them queryable
 - Grafana if you want to set up custom dashboards and alerts
 - Etherscan API key 
