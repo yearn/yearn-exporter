@@ -16,7 +16,7 @@ def make_partner_charts(partner, data):
     ax = list(ax)
 
     # aggregate balance of wrappers
-    agg_balance = pd.pivot_table(df, 'balance_usd', 'timestamp', 'vault', 'sum').sum(axis=1).resample('1D').mean().ffill()
+    agg_balance = pd.pivot_table(df, 'balance_usd', 'timestamp', 'vault', 'sum').ffill().sum(axis=1).resample('1D').mean().ffill()
     agg_balance.plot(title=f'yearn x {partner.name}', label='balance, usd', legend=True, ax=ax[0], c=colors['blue'])
 
     # tier assigned at the end of each day
