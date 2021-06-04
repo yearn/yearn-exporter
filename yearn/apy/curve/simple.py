@@ -58,12 +58,6 @@ def simple(vault: Union[VaultV1, VaultV2], samples: ApySamples) -> Apy:
 
     gauge_address = gauge_addresses[0][0]
 
-    if vault.vault.address == "0xBfedbcbe27171C418CDabC2477042554b1904857":
-        gauge_address = "0x824f13f1a2f29cfeea81154b46c0fc820677a637"
-
-    if vault.vault.address == "0xA74d4B67b3368E83797a35382AFB776bAAE4F5C8":
-        gauge_address = "0x9582c4adacb3bce56fea3e590f05c3ca2fb9c477"
-
     gauge = Contract(gauge_address)
     controller = gauge.controller()
     controller = Contract(controller)
@@ -95,6 +89,13 @@ def simple(vault: Union[VaultV1, VaultV2], samples: ApySamples) -> Apy:
         * (PER_MAX_BOOST / pool_price)
         * crv_price
     ) / base_asset_price
+
+    print(f"{gauge_inflation_rate=}")
+    print(f"{gauge_weight=}")
+    print(f"{gauge_working_supply=}")
+    print(f"{pool_price=}")
+    print(f"{crv_price=}")
+    print(f"{base_asset_price=}")
 
     if y_gauge_balance > 0:
         boost = y_working_balance / (PER_MAX_BOOST * y_gauge_balance) or 1
@@ -172,7 +173,7 @@ def simple(vault: Union[VaultV1, VaultV2], samples: ApySamples) -> Apy:
         reduction_per_cliff = 1e23
         supply = CVX.totalSupply()
         cliff = supply / reduction_per_cliff
-        if supply >= max_supply:
+        if supply <= max_supply:
             reduction = total_cliff - cliff
             cvx_minted_as_crv = reduction / total_cliff
             cvx_price = get_price(CVX)
@@ -182,7 +183,7 @@ def simple(vault: Union[VaultV1, VaultV2], samples: ApySamples) -> Apy:
             cvx_printed_as_crv = 0
 
         cvx_apr = ((1 - cvx_fee) * cvx_boost * base_apr) * (1 + cvx_printed_as_crv)
-        cvx_gross_farmed_apy = ((cvx_keep_crv * cvx_apr) + (1 + (cvx_apr * (1 - cvx_keep_crv) + reward_apr) / COMPOUNDING)) ** COMPOUNDING - 1
+        cvx_gross_farmed_apy = ((cvx_keep_crv * cvx_apr) + (((cvx_apr * (1 - cvx_keep_crv) + reward_apr) / COMPOUNDING) + 1) ** COMPOUNDING) - 1
         
         crv_debt_ratio = vault.vault.strategies(crv_strategy)[2] / 1e4
         cvx_debt_ratio = vault.vault.strategies(cvx_strategy)[2] / 1e4
@@ -192,7 +193,6 @@ def simple(vault: Union[VaultV1, VaultV2], samples: ApySamples) -> Apy:
         cvx_gross_farmed_apy = 0
         crv_debt_ratio = 1
         cvx_debt_ratio = 0
-
 
     crv_apr = base_apr * boost
     crv_gross_farmed_apy = ((crv_apr * keep_crv) + (((crv_apr * (1 - keep_crv) + reward_apr) / COMPOUNDING) + 1) ** COMPOUNDING) - 1
@@ -219,4 +219,17 @@ def simple(vault: Union[VaultV1, VaultV2], samples: ApySamples) -> Apy:
         "base_apr": base_apr,
         "rewards_apr": reward_apr,
     }
+    
+    print(f"{base_apr=:.2%}")
+    print(f"{crv_apr=:.2%}")
+    print(f"{cvx_apr=:.2%}")
+    print(f"{crv_gross_farmed_apy=:.2%}")
+    print(f"{cvx_gross_farmed_apy=:.2%}")
+    print(f"{crv_net_apr=:.2%}")
+    print(f"{cvx_net_apr=:.2%}")
+    print(f"{crv_net_farmed_apy=:.2%}")
+    print(f"{cvx_net_farmed_apy=:.2%}")
+    print(f"{apy=:.2%}")
+    print(f"{net_apy=:.2%}")
+
     return Apy("crv", apy, net_apy, fees, composite=composite)
