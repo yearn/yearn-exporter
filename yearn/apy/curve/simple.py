@@ -1,5 +1,5 @@
 import logging
-from typing import Union
+from typing import Counter, Union
 
 from brownie import Contract, ZERO_ADDRESS
 
@@ -90,13 +90,6 @@ def simple(vault: Union[VaultV1, VaultV2], samples: ApySamples) -> Apy:
         * crv_price
     ) / base_asset_price
 
-    print(f"{gauge_inflation_rate=}")
-    print(f"{gauge_weight=}")
-    print(f"{gauge_working_supply=}")
-    print(f"{pool_price=}")
-    print(f"{crv_price=}")
-    print(f"{base_asset_price=}")
-
     if y_gauge_balance > 0:
         boost = y_working_balance / (PER_MAX_BOOST * y_gauge_balance) or 1
     else:
@@ -134,11 +127,10 @@ def simple(vault: Union[VaultV1, VaultV2], samples: ApySamples) -> Apy:
     if vault.vault.address == "0xE625F5923303f1CE7A43ACFEFd11fd12f30DbcA4":
         pool_apy = 0
 
-    
     if type(vault) is VaultV2:
         crv_strategy = vault.strategies[0].strategy
         contract = vault.vault
-        keep_crv = crv_strategy.keepCRV() / 1e4 if hasattr(crv_strategy, "keep_crv") else 0
+        crv_keep_crv = crv_strategy.keepCRV() / 1e4 if hasattr(crv_strategy, "keep_crv") else 0
         performance = (contract.performanceFee() * 2) / 1e4 if hasattr(contract, "performanceFee") else 0
         management = contract.managementFee() / 1e4 if hasattr(contract, "managementFee") else 0
     else:
@@ -146,7 +138,7 @@ def simple(vault: Union[VaultV1, VaultV2], samples: ApySamples) -> Apy:
         strategist_performance = strategy.performanceFee() if hasattr(strategy, "performanceFee") else 0
         strategist_reward = strategy.strategistReward() if hasattr(strategy, "strategistReward") else 0
         treasury = strategy.treasuryFee() if hasattr(strategy, "treasuryFee") else 0
-        keep_crv = strategy.keepCRV() / 1e4 if hasattr(strategy, "keepCRV") else 0
+        crv_keep_crv = strategy.keepCRV() / 1e4 if hasattr(strategy, "keepCRV") else 0
 
         performance = (strategist_reward + strategist_performance + treasury) / 1e4
         management = 0
@@ -182,36 +174,33 @@ def simple(vault: Union[VaultV1, VaultV2], samples: ApySamples) -> Apy:
         else:
             cvx_printed_as_crv = 0
 
-        cvx_apr = ((1 - cvx_fee) * cvx_boost * base_apr) * (1 + cvx_printed_as_crv)
-        cvx_gross_farmed_apy = ((cvx_keep_crv * cvx_apr) + (((cvx_apr * (1 - cvx_keep_crv) + reward_apr) / COMPOUNDING) + 1) ** COMPOUNDING) - 1
+        cvx_apr = ((1 - cvx_fee) * cvx_boost * base_apr) * (1 + cvx_printed_as_crv) + reward_apr
+        cvx_apr_minus_keep_crv = ((1 - cvx_fee) * cvx_boost * base_apr) * ((1 - cvx_keep_crv) + cvx_printed_as_crv)
         
         crv_debt_ratio = vault.vault.strategies(crv_strategy)[2] / 1e4
         cvx_debt_ratio = vault.vault.strategies(cvx_strategy)[2] / 1e4
     else:
         cvx_apr = 0
         cvx_keep_crv = 0
-        cvx_gross_farmed_apy = 0
         crv_debt_ratio = 1
         cvx_debt_ratio = 0
 
-    crv_apr = base_apr * boost
-    crv_gross_farmed_apy = ((crv_apr * keep_crv) + (((crv_apr * (1 - keep_crv) + reward_apr) / COMPOUNDING) + 1) ** COMPOUNDING) - 1
+    crv_apr = base_apr * boost + reward_apr
+    crv_apr_minus_keep_crv = base_apr * boost * (1 - crv_keep_crv)
 
-    apy = ((crv_gross_farmed_apy + 1) * (pool_apy + 1) - 1) * crv_debt_ratio + \
-            ((cvx_gross_farmed_apy + 1) * (pool_apy + 1) - 1) * cvx_debt_ratio
+    gross_apr = crv_apr * crv_debt_ratio + cvx_apr * cvx_debt_ratio
 
-    crv_net_apr = (crv_apr * (1 - keep_crv) + reward_apr) * (1 - performance) - management
-    crv_net_farmed_apy = ((crv_net_apr / COMPOUNDING) + 1) ** COMPOUNDING - 1
-    
-    cvx_net_apr = (cvx_apr * (1 - cvx_keep_crv) + reward_apr) * (1 - performance) - management
-    cvx_net_farmed_apy = ((cvx_net_apr / COMPOUNDING) + 1) ** COMPOUNDING - 1
-    
-    crv_net_apy = ((crv_net_farmed_apy + 1) * (pool_apy + 1) - 1)
-    cvx_net_apy = ((cvx_net_farmed_apy + 1) * (pool_apy + 1) - 1)
+    cvx_net_apr = (cvx_apr_minus_keep_crv + reward_apr) * ((1 - performance) - management)
+    cvx_net_farmed_apy = (1 + (cvx_net_apr / COMPOUNDING)) ** COMPOUNDING - 1
+    cvx_net_apy = ((1 + cvx_net_farmed_apy) * (1 + pool_apy)) - 1
+
+    crv_net_apr = (crv_apr_minus_keep_crv + reward_apr) * ((1 - performance) - management)
+    crv_net_farmed_apy = (1 + (crv_net_apr / COMPOUNDING)) ** COMPOUNDING - 1
+    crv_net_apy = ((1 + crv_net_farmed_apy) * (1 + pool_apy)) - 1
 
     net_apy = crv_net_apy * crv_debt_ratio + cvx_net_apy * cvx_debt_ratio
 
-    fees = ApyFees(performance=performance, management=management, keep_crv=keep_crv, cvx_keep_crv=cvx_keep_crv)
+    fees = ApyFees(performance=performance, management=management, keep_crv=crv_keep_crv, cvx_keep_crv=cvx_keep_crv)
     composite = {
         "boost": boost,
         "pool_apy": pool_apy,
@@ -219,17 +208,5 @@ def simple(vault: Union[VaultV1, VaultV2], samples: ApySamples) -> Apy:
         "base_apr": base_apr,
         "rewards_apr": reward_apr,
     }
-    
-    print(f"{base_apr=:.2%}")
-    print(f"{crv_apr=:.2%}")
-    print(f"{cvx_apr=:.2%}")
-    print(f"{crv_gross_farmed_apy=:.2%}")
-    print(f"{cvx_gross_farmed_apy=:.2%}")
-    print(f"{crv_net_apr=:.2%}")
-    print(f"{cvx_net_apr=:.2%}")
-    print(f"{crv_net_farmed_apy=:.2%}")
-    print(f"{cvx_net_farmed_apy=:.2%}")
-    print(f"{apy=:.2%}")
-    print(f"{net_apy=:.2%}")
 
-    return Apy("crv", apy, net_apy, fees, composite=composite)
+    return Apy("crv", gross_apr, net_apy, fees, composite=composite)

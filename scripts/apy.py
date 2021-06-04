@@ -48,6 +48,6 @@ def main():
 
 def lusd():
     samples = get_samples()
-    address = "0xB4AdA607B9d6b2c9Ee07A275e9616B84AC560139"
+    address = "0xA74d4B67b3368E83797a35382AFB776bAAE4F5C8"
     vault = VaultV2.from_address(address)
     print(json.dumps(dataclasses.asdict(calculate_apy(vault, samples)), indent=2))
