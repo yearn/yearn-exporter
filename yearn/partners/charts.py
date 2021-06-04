@@ -10,18 +10,16 @@ colors = {'blue': '#0657F9', 'yellow': '#FABF06'}
 
 
 def currency_formatter(value, index):
-    """
-    Concise currency formatter: $500, $10k, $500k, $1m, $2.5m
-    """
     powers = [10 ** x for x in (3, 6, 9, 12)]
     suffixes = ['k', 'm', 'b', 't']
-
+    
     if value < powers[0]:
         return f'${value:.0f}'
-
+    
     i = bisect_right(powers, value) - 1
 
-    if float(f'{value / powers[i - 1]:.1f}') == 1000 or value < powers[1]:
+    # drop a decimal place for round values
+    if value / powers[i] % 1 < 0.1:
         return f'${value / powers[i]:.0f}{suffixes[i]}'
     else:
         return f'${value / powers[i]:.1f}{suffixes[i]}'
