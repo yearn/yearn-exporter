@@ -28,6 +28,11 @@ partners = [
                 wrapper='0xB0B02c75Fc1D07d351C991EBf8B5F5b48F24F40B',
             ),
             Wrapper(
+                name='dai-yfi',
+                vault='0x19D3364A399d251E894aC732651be8B0E4e85001',
+                wrapper='0xbE21650b126b08c8b0FbC8356a8B291010ee901a',
+            ),
+            Wrapper(
                 name='dai-weth',
                 vault='0x19D3364A399d251E894aC732651be8B0E4e85001',
                 wrapper='0x57faa0dec960ed774674a45d61ecfe738eb32052',
@@ -36,6 +41,11 @@ partners = [
                 name='usdc-weth',
                 vault='0x5f18C75AbDAe578b483E5F43f12a39cF75b973a9',
                 wrapper='0x698c1d40574cd90f1920f61D347acCE60D3910af',
+            ),
+            Wrapper(
+                name='dola-stabilizer',
+                vault='0x19D3364A399d251E894aC732651be8B0E4e85001',
+                wrapper='0x973F509c695cffcF355787456923637FF8A34b29',
             ),
         ],
     ),
