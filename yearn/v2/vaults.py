@@ -4,15 +4,20 @@ import threading
 import time
 from typing import List
 
+from semantic_version.base import Version
+
 from brownie import Contract, chain
 from eth_utils import encode_hex, event_abi_to_log_topic
 from joblib import Parallel, delayed
 
+from yearn import apy
 from yearn.events import create_filter, decode_logs
 from yearn.multicall2 import fetch_multicall
 from yearn.prices import magic
 from yearn.utils import safe_views
 from yearn.v2.strategies import Strategy
+from yearn.prices.curve import is_curve_lp_token
+from yearn.apy.common import ApySamples
 
 VAULT_VIEWS_SCALED = [
     "totalAssets",
@@ -173,3 +178,11 @@ class Vault:
         info["address"] = self.vault
         info["version"] = "v2"
         return info
+
+    def apy(self, samples: ApySamples):
+        if is_curve_lp_token(self.token.address):
+            return apy.curve.simple(self, samples)
+        elif Version(self.api_version) >= Version("0.3.2"):
+            return apy.v2.average(self, samples)
+        else:
+            return apy.v2.simple(self, samples)

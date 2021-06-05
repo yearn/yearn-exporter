@@ -1,4 +1,5 @@
 import dataclasses
+import itertools
 import warnings
 import logging
 import json
@@ -6,6 +7,7 @@ import os
 
 from typing import Union
 from time import time
+from yearn.special import Backscratcher
 
 import ipfshttpclient
 import requests
@@ -28,17 +30,11 @@ warnings.simplefilter("ignore", BrownieEnvironmentWarning)
 logging.basicConfig(level=logging.DEBUG)
 logger = logging.getLogger("yearn.apy")
 
-
-def imerge(a, b):
-    for i, j in zip(a,b):
-        yield i
-        yield j
-
 ICON = "https://raw.githubusercontent.com/yearn/yearn-assets/master/icons/tokens/%s/logo-128.png"
 
 def wrap_vault(vault: Union[VaultV1, VaultV2], samples: ApySamples, aliases: dict) -> dict:
-    apy = calculate_apy(vault, samples)
-    if isinstance(vault, VaultV2):
+    apy = vault.apy(samples)
+    if isinstance(vault, VaultV2) or isinstance(vault, Backscratcher):
         strategies = [{"address": str(strategy.strategy), "name": strategy.name} for strategy in vault.strategies]
     else:
         strategies = [{"address": str(vault.strategy), "name": vault.strategy.getName() if hasattr(vault.strategy, "getName") else vault.strategy._name}]
@@ -102,10 +98,11 @@ def main():
 
     samples = get_samples()
 
+    special = [Backscratcher()]
     v1_registry = RegistryV1()
     v2_registry = RegistryV2()
 
-    for vault in imerge(v1_registry.vaults, v2_registry.vaults):
+    for vault in itertools.chain(special, v1_registry.vaults, v2_registry.vaults):
         try:
             data.append(wrap_vault(vault, samples, aliases))
         except ValueError as error:

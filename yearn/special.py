@@ -1,10 +1,17 @@
+import math
+
+from time import time
+from yearn.apy.common import Apy, ApyFees
+
+import requests
+
 from brownie.network.contract import Contract
 from joblib import Parallel, delayed
 
 from yearn.curve import crv, voting_escrow
 from yearn.prices import magic
 from yearn.utils import contract_creation_block
-
+from yearn.apy import ApySamples
 
 class Backscratcher:
     def __init__(self):
@@ -26,6 +33,38 @@ class Backscratcher:
         crv_locked = voting_escrow.balanceOf["address"](self.proxy, block_identifier=block) / 1e18
         crv_price = magic.get_price(crv, block=block)
         return crv_locked * crv_price
+
+    @property
+    def strategies(self):
+        return []
+
+    def apy(self, samples: ApySamples) -> Apy:
+        curve_3_pool = Contract("0xbEbc44782C7dB0a1A60Cb6fe97d0b483032FF1C7")
+        curve_reward_distribution = Contract("0xA464e6DCda8AC41e03616F95f4BC98a13b8922Dc")
+        curve_voting_escrow = Contract("0x5f3b5DfEb7B28CDbD7FAba78963EE202a494e2A2")
+        voter = "0xF147b8125d2ef93FB6965Db97D6746952a133934"
+        graph = requests.get("https://api.coingecko.com/api/v3/simple/price?ids=curve-dao-token,vecrv-dao-yvault&vs_currencies=usd").json()
+        crv_price = graph["curve-dao-token"]["usd"]
+        yvecrv_price = graph["vecrv-dao-yvault"]["usd"]
+        
+        total_vecrv = curve_voting_escrow.totalSupply()
+        yearn_vecrv = curve_voting_escrow.balanceOf(voter)
+        vault_supply = self.vault.totalSupply()
+
+        week = 7 * 86400
+        epoch = math.floor(time() / week) * week - week
+        tokens_per_week = curve_reward_distribution.tokens_per_week(epoch) / 1e18
+        virtual_price = curve_3_pool.get_virtual_price() / 1e18
+        apy = (tokens_per_week * virtual_price * 52) / ((total_vecrv / 1e18) * crv_price)
+        vault_boost = (yearn_vecrv / vault_supply) * (crv_price / yvecrv_price)
+        composite = {
+            "currentBoost": vault_boost,
+            "boostedApy": apy * vault_boost,
+            "totalApy": apy * vault_boost,
+            "poolApy": apy,
+            "baseApy": apy,
+        }
+        return Apy("backscratcher", apy, apy, ApyFees(), composite=composite)
 
 
 class Ygov:

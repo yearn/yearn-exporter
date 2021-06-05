@@ -1,5 +1,6 @@
 import logging
 from typing import Counter, Union
+from yearn.v2.strategies import Strategy
 
 from brownie import Contract, ZERO_ADDRESS
 
@@ -128,9 +129,11 @@ def simple(vault: Union[VaultV1, VaultV2], samples: ApySamples) -> Apy:
         pool_apy = 0
 
     if type(vault) is VaultV2:
-        crv_strategy = vault.strategies[0].strategy
         contract = vault.vault
-        crv_keep_crv = crv_strategy.keepCRV() / 1e4 if hasattr(crv_strategy, "keep_crv") else 0
+        if len(vault.strategies) > 0 and hasattr(vault.strategies[0], "keep_crv"):
+            crv_keep_crv = vault.strategies[0].keepCRV()
+        else:
+            crv_keep_crv = 0
         performance = (contract.performanceFee() * 2) / 1e4 if hasattr(contract, "performanceFee") else 0
         management = contract.managementFee() / 1e4 if hasattr(contract, "managementFee") else 0
     else:
@@ -144,6 +147,7 @@ def simple(vault: Union[VaultV1, VaultV2], samples: ApySamples) -> Apy:
         management = 0
 
     if type(vault) is VaultV2 and len(vault.strategies) == 2:
+        crv_strategy = vault.strategies[0].strategy
         cvx_strategy = vault.strategies[1].strategy
         cvx_working_balance = gauge.working_balances(CONVEX_VOTER)
         cvx_gauge_balance = gauge.balanceOf(CONVEX_VOTER)
@@ -181,6 +185,7 @@ def simple(vault: Union[VaultV1, VaultV2], samples: ApySamples) -> Apy:
         cvx_debt_ratio = vault.vault.strategies(cvx_strategy)[2] / 1e4
     else:
         cvx_apr = 0
+        cvx_apr_minus_keep_crv = 0
         cvx_keep_crv = 0
         crv_debt_ratio = 1
         cvx_debt_ratio = 0
