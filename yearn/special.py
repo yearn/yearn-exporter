@@ -38,14 +38,13 @@ class Backscratcher:
     def strategies(self):
         return []
 
-    def apy(self, samples: ApySamples) -> Apy:
+    def apy(self, _: ApySamples) -> Apy:
         curve_3_pool = Contract("0xbEbc44782C7dB0a1A60Cb6fe97d0b483032FF1C7")
         curve_reward_distribution = Contract("0xA464e6DCda8AC41e03616F95f4BC98a13b8922Dc")
         curve_voting_escrow = Contract("0x5f3b5DfEb7B28CDbD7FAba78963EE202a494e2A2")
         voter = "0xF147b8125d2ef93FB6965Db97D6746952a133934"
-        graph = requests.get("https://api.coingecko.com/api/v3/simple/price?ids=curve-dao-token,vecrv-dao-yvault&vs_currencies=usd").json()
-        crv_price = graph["curve-dao-token"]["usd"]
-        yvecrv_price = graph["vecrv-dao-yvault"]["usd"]
+        crv_price = magic.get_price("0xD533a949740bb3306d119CC777fa900bA034cd52")
+        yvecrv_price = magic.get_price("0xc5bDdf9843308380375a611c18B50Fb9341f502A")
         
         total_vecrv = curve_voting_escrow.totalSupply()
         yearn_vecrv = curve_voting_escrow.balanceOf(voter)
