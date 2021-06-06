@@ -2,6 +2,7 @@ import dataclasses
 import itertools
 import warnings
 import logging
+import shutil
 import json
 import os
 
@@ -108,4 +109,10 @@ def main():
         except ValueError as error:
             logger.error(error)
 
-    print(json.dumps(data))
+    out = "generated"
+    if os.path.isdir(out):
+        shutil.rmtree(out)
+
+    for vault in data:
+        with open(os.path.join(out, vault["address"])) as f:
+            json.dump(vault, f)
