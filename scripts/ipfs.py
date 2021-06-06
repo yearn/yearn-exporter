@@ -33,12 +33,18 @@ logger = logging.getLogger("yearn.apy")
 
 ICON = "https://raw.githubusercontent.com/yearn/yearn-assets/master/icons/tokens/%s/logo-128.png"
 
+
 def wrap_vault(vault: Union[VaultV1, VaultV2], samples: ApySamples, aliases: dict) -> dict:
     apy = vault.apy(samples)
     if isinstance(vault, VaultV2) or isinstance(vault, Backscratcher):
         strategies = [{"address": str(strategy.strategy), "name": strategy.name} for strategy in vault.strategies]
     else:
-        strategies = [{"address": str(vault.strategy), "name": vault.strategy.getName() if hasattr(vault.strategy, "getName") else vault.strategy._name}]
+        strategies = [
+            {
+                "address": str(vault.strategy),
+                "name": vault.strategy.getName() if hasattr(vault.strategy, "getName") else vault.strategy._name,
+            }
+        ]
     inception = contract_creation_block(str(vault.vault))
     total_assets = vault.vault.totalAssets() if hasattr(vault.vault, "totalAssets") else vault.vault.balance()
     try:
@@ -55,21 +61,18 @@ def wrap_vault(vault: Union[VaultV1, VaultV2], samples: ApySamples, aliases: dic
         "address": str(vault.vault),
         "symbol": vault.vault.symbol(),
         "name": vault.name,
-        "displayName": vault_alias, 
+        "displayName": vault_alias,
         "icon": ICON % str(vault.vault),
         "token": {
             "name": vault.token.name() if hasattr(vault.token, "name") else vault.token._name,
             "symbol": vault.token.symbol() if hasattr(vault.token, "symbol") else None,
             "address": str(vault.token),
             "decimals": vault.token.decimals() if hasattr(vault.token, "decimals") else None,
-            "displayName": token_alias, 
+            "displayName": token_alias,
             "icon": ICON % str(vault.token),
-            "price": price
+            "price": price,
         },
-        "tvl": {
-            "totalAssets": total_assets,
-            "value": tvl 
-        },
+        "tvl": {"totalAssets": total_assets, "value": tvl},
         "apy": dataclasses.asdict(apy),
         "fees": dataclasses.asdict(apy.fees),
         "strategies": strategies,
@@ -84,16 +87,16 @@ def wrap_vault(vault: Union[VaultV1, VaultV2], samples: ApySamples, aliases: dic
 
 
 def main():
-    # address = os.environ.get("IPFS_NODE_ADDRESS")
-    # key = os.environ.get("IPFS_NODE_KEY")
-    # secret = os.environ.get("IPFS_NODE_SECRET")
+    address = os.environ.get("IPFS_NODE_ADDRESS")
+    key = os.environ.get("IPFS_NODE_KEY")
+    secret = os.environ.get("IPFS_NODE_SECRET")
 
-    # client = ipfshttpclient.connect(address, auth=(key, secret))
-    # print(client.id())
+    client = ipfshttpclient.connect(address, auth=(key, secret))
+    print(f"Connected to IPFS node id: {client.id()}")
 
     data = []
 
-    aliases_url = "https://raw.githubusercontent.com/yearn/yearn-assets/master/icons/aliases.json" 
+    aliases_url = "https://raw.githubusercontent.com/yearn/yearn-assets/master/icons/aliases.json"
     aliases = requests.get(aliases_url).json()
     aliases = {alias["address"]: alias for alias in aliases}
 
@@ -113,6 +116,24 @@ def main():
     if os.path.isdir(out):
         shutil.rmtree(out)
 
+    os.mkdir(out)
+
     for vault in data:
-        with open(os.path.join(out, vault["address"])) as f:
+        with open(os.path.join(out, vault["address"]), "w+") as f:
             json.dump(vault, f)
+
+    with open(os.path.join(out, "all"), "w+") as f:
+        json.dump(data, f)
+
+    with open(os.path.join(out, "index"), "w+") as f:
+        json.dump([vault["address"] for vault in data], f)
+
+    uploads = client.add(out, recursive=True)
+    
+    print(f"Uploaded \"{out}\"")
+    for upload in uploads:
+        if upload["Name"] == out:
+            hash = upload["Hash"]
+            size = upload["Size"]
+            print(f"- Hash: {hash}")
+            print(f"- Size: {size} bytes")
