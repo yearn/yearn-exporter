@@ -211,6 +211,7 @@ def simple(vault: Union[VaultV1, VaultV2], samples: ApySamples) -> Apy:
         "pool_apy": pool_apy,
         "boosted_apr": crv_apr,
         "base_apr": base_apr,
+        "cvx_apr": cvx_apr,
         "rewards_apr": reward_apr,
     }
 

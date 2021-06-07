@@ -12,6 +12,7 @@ from yearn.special import Backscratcher
 
 import ipfshttpclient
 import requests
+import boto3
 
 from brownie import Contract
 from brownie.exceptions import BrownieEnvironmentWarning
@@ -61,37 +62,37 @@ def wrap_vault(vault: Union[VaultV1, VaultV2], samples: ApySamples, aliases: dic
         "address": str(vault.vault),
         "symbol": vault.vault.symbol(),
         "name": vault.name,
-        "displayName": vault_alias,
+        "display_name": vault_alias,
         "icon": ICON % str(vault.vault),
         "token": {
             "name": vault.token.name() if hasattr(vault.token, "name") else vault.token._name,
             "symbol": vault.token.symbol() if hasattr(vault.token, "symbol") else None,
             "address": str(vault.token),
             "decimals": vault.token.decimals() if hasattr(vault.token, "decimals") else None,
-            "displayName": token_alias,
+            "display_name": token_alias,
             "icon": ICON % str(vault.token),
             "price": price,
         },
-        "tvl": {"totalAssets": total_assets, "value": tvl},
+        "tvl": {"total": total_assets, "value": tvl},
         "apy": dataclasses.asdict(apy),
         "fees": dataclasses.asdict(apy.fees),
         "strategies": strategies,
         "endorsed": vault.is_endorsed if hasattr(vault, "is_endorsed") else True,
-        "apiVersion": vault.api_version if hasattr(vault, "api_version") else "0.1",
+        "version": vault.api_version if hasattr(vault, "api_version") else "0.1",
         "decimals": vault.vault.decimals(),
-        "type": "v2" if isinstance(vault, VaultV1) else "v1",
-        "emergencyShutdown": vault.vault.emergencyShutdown() if hasattr(vault.vault, "emergencyShutdown") else False,
+        "type": "v2" if isinstance(vault, VaultV2) else "v1",
+        "emergency_shutdown": vault.vault.emergencyShutdown() if hasattr(vault.vault, "emergencyShutdown") else False,
         "tags": [],
         "updated": int(time()),
     }
 
 
 def main():
-    address = os.environ.get("IPFS_NODE_ADDRESS")
-    key = os.environ.get("IPFS_NODE_KEY")
-    secret = os.environ.get("IPFS_NODE_SECRET")
+    ipfs_address = os.environ.get("IPFS_NODE_ADDRESS")
+    ipfs_key = os.environ.get("IPFS_NODE_KEY")
+    ipfs_secret = os.environ.get("IPFS_NODE_SECRET")
 
-    client = ipfshttpclient.connect(address, auth=(key, secret))
+    client = ipfshttpclient.connect(ipfs_address, auth=(ipfs_key, ipfs_secret))
     print(f"Connected to IPFS node id: {client.id()}")
 
     data = []
@@ -115,21 +116,30 @@ def main():
     out = "generated"
     if os.path.isdir(out):
         shutil.rmtree(out)
+    os.makedirs(out, exist_ok=True)
 
-    os.mkdir(out)
+    keep = os.path.join(out, ".keep")
+    with open(keep, 'a'):
+        try:
+            os.utime(keep, None)
+        except OSError:
+            pass
+
+    prefix = os.path.join(out, "v1", "chains", "1")
+    os.makedirs(prefix, exist_ok=True)
+
+    ns_vaults = os.path.join(prefix, "vaults")
+    os.makedirs(ns_vaults, exist_ok=True)
 
     for vault in data:
-        with open(os.path.join(out, vault["address"]), "w+") as f:
+        with open(os.path.join(ns_vaults, vault["address"]), "w+") as f:
             json.dump(vault, f)
 
-    with open(os.path.join(out, "all"), "w+") as f:
+    with open(os.path.join(ns_vaults, "all"), "w+") as f:
         json.dump(data, f)
 
-    with open(os.path.join(out, "index"), "w+") as f:
-        json.dump([vault["address"] for vault in data], f)
-
     uploads = client.add(out, recursive=True)
-    
+
     print(f"Uploaded \"{out}\"")
     for upload in uploads:
         if upload["Name"] == out:
@@ -137,3 +147,36 @@ def main():
             size = upload["Size"]
             print(f"- Hash: {hash}")
             print(f"- Size: {size} bytes")
+
+    dnslink = f"\"dnslink=/ipfs/{hash}\""
+
+    aws_key = os.environ.get("AWS_ACCESS_KEY")
+    aws_secret = os.environ.get("AWS_ACCESS_SECRET")
+    aws_zone_id = os.environ.get("AWS_ZONE_ID")
+    aws_zone_record = os.environ.get("AWS_ZONE_RECORD")
+
+    dns = boto3.client(
+        "route53", 
+        aws_access_key_id=aws_key,
+        aws_secret_access_key=aws_secret
+    )
+    try:
+        dns.change_resource_record_sets(
+            HostedZoneId=aws_zone_id,
+            ChangeBatch={
+                'Comment': dnslink,
+                'Changes': [
+                    {
+                        'Action': 'UPSERT',
+                        'ResourceRecordSet': {
+                            'Name': aws_zone_record,
+                            'Type': 'TXT',
+                            'TTL': 300,
+                            'ResourceRecords': [{'Value': dnslink}],
+                        },
+                    }
+                ],
+            },
+        )
+    except Exception as error:
+        print(error)
