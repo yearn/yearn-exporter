@@ -94,7 +94,7 @@ partners = [
             Wrapper(
                 name='crvLINK-v2',
                 vault='0xf2db9a7c0ACd427A680D640F02d90f6186E71725',
-                wrapper='	0x0309c98B1bffA350bcb3F9fB9780970CA32a5060',
+                wrapper='0x0309c98B1bffA350bcb3F9fB9780970CA32a5060',
             ),
             Wrapper(
                 name='yvBOOST',
