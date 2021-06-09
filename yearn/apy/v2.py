@@ -69,12 +69,19 @@ def simple(vault: Vault, samples: ApySamples) -> Apy:
     # performance fee is doubled since 1x strategists + 1x treasury
     performance = (contract.performanceFee() * 2) if hasattr(contract, "performanceFee") else 0
     management = contract.managementFee() if hasattr(contract, "managementFee") else 0
+    
+    # assume we are compounding every week
+    compounding = 52
 
-    apy = net_apy / (1 - performance / 1e4) + (management / 1e4)
+    # calculate our APR after fees
+    apr_after_fees = compounding * ((net_apy + 1) ** (1 / compounding)) - compounding
+    
+    # calculate our pre-fee APR
+    pre_fee_apr = apr_after_fees / (1 - perf_fee) + mgmt_fee
 
     points = ApyPoints(week_ago_apy, month_ago_apy, inception_apy)
     fees = ApyFees(performance=performance, management=management)
-    return Apy("v2:simple", apy, net_apy, fees, points=points)
+    return Apy("v2:simple", pre_fee_apr, net_apy, fees, points=points)
 
 
 def average(vault: Vault, samples: ApySamples) -> Apy:
@@ -117,8 +124,15 @@ def average(vault: Vault, samples: ApySamples) -> Apy:
     performance = (contract.performanceFee() * 2) if hasattr(contract, "performanceFee") else 0
     management = contract.managementFee() if hasattr(contract, "managementFee") else 0
 
-    apy = net_apy / (1 - performance / 1e4) + (management / 1e4)
+    # assume we are compounding every week
+    compounding = 52
 
+    # calculate our APR after fees
+    apr_after_fees = compounding * ((net_apy + 1) ** (1 / compounding)) - compounding
+    
+    # calculate our pre-fee APR
+    pre_fee_apr = apr_after_fees / (1 - perf_fee) + mgmt_fee
+    
     points = ApyPoints(week_ago_apy, month_ago_apy, inception_apy)
     fees = ApyFees(performance=performance, management=management)
-    return Apy("v2:averaged", apy, net_apy, fees, points=points)
+    return Apy("v2:averaged", pre_fee_apr, net_apy, fees, points=points)
