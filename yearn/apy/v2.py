@@ -77,7 +77,7 @@ def simple(vault: Vault, samples: ApySamples) -> Apy:
     apr_after_fees = compounding * ((net_apy + 1) ** (1 / compounding)) - compounding
     
     # calculate our pre-fee APR
-    pre_fee_apr = apr_after_fees / (1 - performance) + management
+    pre_fee_apr = apr_after_fees / (1 - performance/1e4) + management/1e4
 
     points = ApyPoints(week_ago_apy, month_ago_apy, inception_apy)
     fees = ApyFees(performance=performance, management=management)
@@ -131,7 +131,7 @@ def average(vault: Vault, samples: ApySamples) -> Apy:
     apr_after_fees = compounding * ((net_apy + 1) ** (1 / compounding)) - compounding
     
     # calculate our pre-fee APR
-    pre_fee_apr = apr_after_fees / (1 - performance) + management
+    pre_fee_apr = apr_after_fees / (1 - performance/1e4) + management/1e4
     
     points = ApyPoints(week_ago_apy, month_ago_apy, inception_apy)
     fees = ApyFees(performance=performance, management=management)
