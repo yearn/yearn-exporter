@@ -23,6 +23,7 @@ class ApyFees:
     withdrawal: Optional[float] = None
     management: Optional[float] = None
     keep_crv: Optional[float] = None
+    cvx_keep_crv: Optional[float] = None
 
 
 @dataclass
@@ -35,7 +36,7 @@ class ApyPoints:
 @dataclass
 class Apy:
     type: str
-    apy: float
+    gross_apy: float
     net_apy: float
     fees: ApyFees
     points: Optional[ApyPoints] = None
@@ -49,7 +50,7 @@ class ApySamples:
     month_ago: int
 
 
-class ApyError(Exception):
+class ApyError(ValueError):
     type: str
     message: str
 

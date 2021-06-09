@@ -7,29 +7,23 @@ volumes:
     cache: {}
 
 networks:
-  yearn-exporter-apy:
+  yearn-exporter-ipfs:
 
-secrets:
-  google_credentials:
-    file: secrets/google.json
-    
 services:
-  yearn-exporter-apy:
+  yearn-exporter-ipfs:
     build: .
-    command: apy
+    command: ipfs
     environment:
       - WEB3_PROVIDER
       - ETHERSCAN_TOKEN
-      - PGUSER=postgres
-      - PGHOST=postgres
-      - GOOGLE_APPLICATION_CREDENTIALS=/run/secrets/google_credentials
-    volumes: 
+      - IPFS_NODE_ADDRESS
+      - IPFS_NODE_KEY
+      - IPFS_NODE_SECRET
+    volumes:
       - solidity_compilers:/root/.solcx
       - vyper_compilers:/root/.vvm
       - brownie:/root/.brownie
       - cache:/app/yearn-exporter/cache
     restart: always
-    secrets:
-      - google_credentials
     networks:
-      - yearn-exporter-apy
+      - yearn-exporter-ipfs
