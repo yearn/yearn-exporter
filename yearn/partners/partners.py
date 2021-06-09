@@ -87,4 +87,15 @@ partners = [
             ),
         ],
     ),
+    Partner(
+        name='deus',
+        treasury='0x4e8a7c429192bfda8c9a1ef0f3b749d0f66657aa',
+        wrappers=[
+            Wrapper(
+                name='aeth',
+                vault='0x132d8D2C76Db3812403431fAcB00F3453Fc42125',
+                wrapper='0x4e8a7c429192bfda8c9a1ef0f3b749d0f66657aa',
+            ),
+        ],
+    ),
 ]
