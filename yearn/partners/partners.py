@@ -95,6 +95,22 @@ partners = [
                 name='aeth',
                 vault='0x132d8D2C76Db3812403431fAcB00F3453Fc42125',
                 wrapper='0x4e8a7c429192bfda8c9a1ef0f3b749d0f66657aa',
+            )
+        ],
+    ),
+    Partner(
+        name='basketdao',
+        treasury='0x7301C46be73bB04847576b6Af107172bF5e8388e',
+        wrappers=[
+            Wrapper(
+                name='crvLINK-v2',
+                vault='0xf2db9a7c0ACd427A680D640F02d90f6186E71725',
+                wrapper='0x0309c98B1bffA350bcb3F9fB9780970CA32a5060',
+            ),
+            Wrapper(
+                name='yvBOOST',
+                vault='0x9d409a0A012CFbA9B15F6D4B36Ac57A46966Ab9a',
+                wrapper='0x0309c98B1bffA350bcb3F9fB9780970CA32a5060',
             ),
         ],
     ),
