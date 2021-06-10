@@ -17,7 +17,7 @@ import boto3
 from brownie import Contract
 from brownie.exceptions import BrownieEnvironmentWarning
 
-from yearn.apy import calculate_apy, get_samples, ApySamples
+from yearn.apy import get_samples, ApySamples
 from yearn.v1.registry import Registry as RegistryV1
 from yearn.v2.registry import Registry as RegistryV2
 

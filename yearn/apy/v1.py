@@ -1,4 +1,3 @@
-from yearn.v1.vaults import VaultV1
 from yearn.utils import contract_creation_block
 
 from yearn.apy.common import (
@@ -12,7 +11,7 @@ from yearn.apy.common import (
 )
 
 
-def simple(vault: VaultV1, samples: ApySamples) -> Apy:
+def simple(vault, samples: ApySamples) -> Apy:
     inception_block = contract_creation_block(vault.vault.address)
 
     if not inception_block:

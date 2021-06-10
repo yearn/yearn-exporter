@@ -1,7 +1,5 @@
 from bisect import bisect_left
 
-from yearn.v2.vaults import Vault
-
 from yearn.apy.common import (
     Apy,
     ApyError,
@@ -27,7 +25,7 @@ def closest(haystack, needle):
         return before
 
 
-def simple(vault: Vault, samples: ApySamples) -> Apy:
+def simple(vault, samples: ApySamples) -> Apy:
     harvests = sorted([harvest for strategy in vault.strategies for harvest in strategy.harvests])
 
     if len(harvests) < 10:
@@ -77,7 +75,7 @@ def simple(vault: Vault, samples: ApySamples) -> Apy:
     return Apy("v2:simple", apy, net_apy, fees, points=points)
 
 
-def average(vault: Vault, samples: ApySamples) -> Apy:
+def average(vault, samples: ApySamples) -> Apy:
     harvests = sorted([harvest for strategy in vault.strategies for harvest in strategy.harvests])
 
     if len(harvests) < 10:

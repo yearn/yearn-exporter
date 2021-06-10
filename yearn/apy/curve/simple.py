@@ -1,13 +1,9 @@
 import logging
-from typing import Counter, Union
-from yearn.v2.strategies import Strategy
+from typing import Union
 
 from brownie import Contract, ZERO_ADDRESS
 
 from yearn.apy.curve.rewards import rewards
-
-from yearn.v2.registry import Vault as VaultV2
-from yearn.v1.vaults import VaultV1
 
 from yearn.prices.curve import get_pool, get_underlying_coins, curve_registry, get_price as get_virtual_price
 from yearn.prices.magic import get_price
@@ -51,7 +47,7 @@ MAX_BOOST = 2.5
 PER_MAX_BOOST = 1.0 / MAX_BOOST
 
 
-def simple(vault: Union[VaultV1, VaultV2], samples: ApySamples) -> Apy:
+def simple(vault, samples: ApySamples) -> Apy:
     lp_token = vault.token.address
 
     pool_address = get_pool(lp_token)
@@ -127,6 +123,8 @@ def simple(vault: Union[VaultV1, VaultV2], samples: ApySamples) -> Apy:
     # FIXME: crvANKR's pool apy going crazy
     if vault.vault.address == "0xE625F5923303f1CE7A43ACFEFd11fd12f30DbcA4":
         pool_apy = 0
+
+    from yearn.v2.vaults import Vault as VaultV2
 
     if type(vault) is VaultV2:
         contract = vault.vault
