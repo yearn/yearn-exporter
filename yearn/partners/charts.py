@@ -65,7 +65,7 @@ def make_partner_charts(partner, data):
     ax[2].autoscale_view()
 
     # axis labels
-    ax[0].set_ylabel('aggregate wrapper balance')
+    ax[0].set_ylabel('aggregate partner balance')
     ax[1].set_ylabel('partner earnings')
     ax[2].set_ylabel('partner tier')
     ax[3].set_ylabel('share of gross revenue')
