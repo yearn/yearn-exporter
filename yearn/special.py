@@ -1,7 +1,8 @@
 import math
 
 from time import time
-from yearn.apy.common import Apy, ApyFees
+from yearn.common import Tvl
+from yearn.apy.common import Apy, ApyFees, ApyPoints
 
 import requests
 
@@ -12,6 +13,36 @@ from yearn.curve import crv, voting_escrow
 from yearn.prices import magic
 from yearn.utils import contract_creation_block
 from yearn.apy import ApySamples
+
+class YveCRVJar:
+    def __init__(self):
+        self.id = "yvecrv-eth"
+        self.name = "pickling SushiSwap LP Token"
+        self.vault = Contract("0xbD17B1ce622d73bD438b9E658acA5996dc394b0d")
+        self.token = Contract("0x5Eff6d166D66BacBC1BF52E2C54dD391AE6b1f48")
+
+    @property
+    def strategies(self):
+        return []
+
+    @property
+    def decimals(self):
+        return 18
+
+    @property
+    def symbol(self):
+        return 'pSLP'
+
+    def apy(self, _: ApySamples) -> Apy:
+        data = requests.get("https://stkpowy01i.execute-api.us-west-1.amazonaws.com/prod/protocol/jar/yvecrv-eth/performance").json()
+        apy = data["thirtyDayFarm"]  / 100.
+        points = ApyPoints(data["sevenDayFarm"] / 100., apy, apy)
+        return Apy("yvecrv-jar", apy, apy, ApyFees(), points=points)
+
+    def tvl(self, block=None) -> Tvl:
+        data = requests.get("https://stkpowy01i.execute-api.us-west-1.amazonaws.com/prod/protocol/value").json()
+        tvl = data[self.id]
+        return Tvl(tvl=tvl)
 
 class Backscratcher:
     def __init__(self):
@@ -64,6 +95,17 @@ class Backscratcher:
             "baseApy": apy,
         }
         return Apy("backscratcher", apy, apy, ApyFees(), composite=composite)
+
+    def tvl(self, block=None) -> Tvl:
+        total_assets = self.vault.totalSupply(block_identifier=block)
+        try:
+            price = magic.get_price(self.token, block=block)
+        except magic.PriceError:
+            price = None
+        tvl = total_assets * price / 10 ** self.vault.decimals(block_identifier=block) if price else None
+        return Tvl(total_assets, price, tvl) 
+
+        
 
 
 class Ygov:
