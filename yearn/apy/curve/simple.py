@@ -130,7 +130,7 @@ def simple(vault, samples: ApySamples) -> Apy:
         contract = vault.vault
         if len(vault.strategies) > 0 and hasattr(vault.strategies[0].strategy, "keepCRV"):
             crv_keep_crv = vault.strategies[0].strategy.keepCRV() / 1e4
-        else if len(vault.strategies) > 0 and hasattr(vault.strategies[0].strategy, "keepCrvPercent"):
+        elif len(vault.strategies) > 0 and hasattr(vault.strategies[0].strategy, "keepCrvPercent"):
             crv_keep_crv = vault.strategies[0].strategy.keepCrvPercent() / 1e4
         else:
             crv_keep_crv = 0

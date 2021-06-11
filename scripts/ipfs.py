@@ -8,13 +8,13 @@ import os
 
 from typing import Union
 from time import time
+
 from yearn.special import Backscratcher, YveCRVJar
 
 import ipfshttpclient
 import requests
 import boto3
 
-from brownie import Contract
 from brownie.exceptions import BrownieEnvironmentWarning
 
 from yearn.apy import get_samples, ApySamples
@@ -25,7 +25,6 @@ from yearn.v1.vaults import VaultV1
 from yearn.v2.vaults import Vault as VaultV2
 
 from yearn.utils import contract_creation_block
-from yearn.prices import magic
 
 warnings.simplefilter("ignore", BrownieEnvironmentWarning)
 
@@ -49,8 +48,8 @@ def wrap_vault(vault: Union[VaultV1, VaultV2], samples: ApySamples, aliases: dic
 
     inception = contract_creation_block(str(vault.vault))
     
-    token_alias = aliases[str(vault.token)]["name"] if str(vault.token) in aliases else vault.token.symbol()
-    vault_alias = aliases[str(vault.vault)]["name"] if str(vault.vault) in aliases else token_alias
+    token_alias = aliases[str(vault.token)]["symbol"] if str(vault.token) in aliases else vault.token.symbol()
+    vault_alias = token_alias
 
     tvl = vault.tvl()
 
@@ -67,8 +66,7 @@ def wrap_vault(vault: Union[VaultV1, VaultV2], samples: ApySamples, aliases: dic
             "address": str(vault.token),
             "decimals": vault.token.decimals() if hasattr(vault.token, "decimals") else None,
             "display_name": token_alias,
-            "icon": ICON % str(vault.token),
-            "price": tvl.price,
+            "icon": ICON % str(vault.token)
         },
         "tvl": dataclasses.asdict(tvl),
         "apy": dataclasses.asdict(apy),
@@ -81,6 +79,7 @@ def wrap_vault(vault: Union[VaultV1, VaultV2], samples: ApySamples, aliases: dic
         "emergency_shutdown": vault.vault.emergencyShutdown() if hasattr(vault.vault, "emergencyShutdown") else False,
         "tags": [],
         "updated": int(time()),
+        "special": any([isinstance(vault, t) for t in [Backscratcher, YveCRVJar]]),
     }
 
 
