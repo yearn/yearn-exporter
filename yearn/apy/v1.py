@@ -69,7 +69,7 @@ def simple(vault, samples: ApySamples) -> Apy:
     apr_after_fees = compounding * ((net_apy + 1) ** (1 / compounding)) - compounding
 
     # calculate our pre-fee APR
-    gross_apr = apr_after_fees / (1 - performance/1e4) + management/1e4
+    gross_apr = apr_after_fees / (1 - performance/1e4)
     
     points = ApyPoints(week_ago_apy, month_ago_apy, inception_apy)
     fees = ApyFees(performance=performance, withdrawal=withdrawal)

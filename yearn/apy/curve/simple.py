@@ -96,14 +96,11 @@ def simple(vault, samples: ApySamples) -> Apy:
     if vault.vault.address == "0x46AFc2dfBd1ea0c0760CAD8262A5838e803A37e5":
         boost = 1
 
-
+    reward_apr = 0
     if hasattr(gauge, "reward_contract"):
-        try:
-            reward_address = gauge.reward_contract()
-            assert reward_address != ZERO_ADDRESS
+        reward_address = gauge.reward_contract()
+        if reward_address != ZERO_ADDRESS:
             reward_apr = rewards(reward_address, pool_price, base_asset_price)
-        except ValueError:
-            reward_apr = 0
     else:
         reward_apr = 0
 
@@ -130,7 +127,7 @@ def simple(vault, samples: ApySamples) -> Apy:
         contract = vault.vault
         if len(vault.strategies) > 0 and hasattr(vault.strategies[0].strategy, "keepCRV"):
             crv_keep_crv = vault.strategies[0].strategy.keepCRV() / 1e4
-        else if len(vault.strategies) > 0 and hasattr(vault.strategies[0].strategy, "keepCrvPercent"):
+        elif len(vault.strategies) > 0 and hasattr(vault.strategies[0].strategy, "keepCrvPercent"):
             crv_keep_crv = vault.strategies[0].strategy.keepCrvPercent() / 1e4
         else:
             crv_keep_crv = 0
