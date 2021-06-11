@@ -36,7 +36,7 @@ class ApyPoints:
 @dataclass
 class Apy:
     type: str
-    gross_apy: float
+    gross_apr: float
     net_apy: float
     fees: ApyFees
     points: Optional[ApyPoints] = None
