@@ -8,7 +8,7 @@ import os
 
 from typing import Union
 from time import time
-from yearn.special import Backscratcher
+from yearn.special import Backscratcher, YveCRVJar
 
 import ipfshttpclient
 import requests
@@ -37,30 +37,27 @@ ICON = "https://raw.githubusercontent.com/yearn/yearn-assets/master/icons/tokens
 
 def wrap_vault(vault: Union[VaultV1, VaultV2], samples: ApySamples, aliases: dict) -> dict:
     apy = vault.apy(samples)
-    if isinstance(vault, VaultV2) or isinstance(vault, Backscratcher):
-        strategies = [{"address": str(strategy.strategy), "name": strategy.name} for strategy in vault.strategies]
-    else:
+    if isinstance(vault, VaultV1):
         strategies = [
             {
                 "address": str(vault.strategy),
                 "name": vault.strategy.getName() if hasattr(vault.strategy, "getName") else vault.strategy._name,
             }
         ]
+    else:
+        strategies = [{"address": str(strategy.strategy), "name": strategy.name} for strategy in vault.strategies]
+
     inception = contract_creation_block(str(vault.vault))
-    total_assets = vault.vault.totalAssets() if hasattr(vault.vault, "totalAssets") else vault.vault.balance()
-    try:
-        price = magic.get_price(vault.token)
-    except magic.PriceError:
-        price = None
+    
     token_alias = aliases[str(vault.token)]["name"] if str(vault.token) in aliases else vault.token.symbol()
     vault_alias = aliases[str(vault.vault)]["name"] if str(vault.vault) in aliases else token_alias
 
-    tvl = total_assets * price / 10 ** vault.vault.decimals() if price else None
+    tvl = vault.tvl()
 
     return {
         "inception": inception,
         "address": str(vault.vault),
-        "symbol": vault.vault.symbol(),
+        "symbol": vault.symbol if hasattr(vault, "symbol") else vault.vault.symbol(),
         "name": vault.name,
         "display_name": vault_alias,
         "icon": ICON % str(vault.vault),
@@ -71,15 +68,15 @@ def wrap_vault(vault: Union[VaultV1, VaultV2], samples: ApySamples, aliases: dic
             "decimals": vault.token.decimals() if hasattr(vault.token, "decimals") else None,
             "display_name": token_alias,
             "icon": ICON % str(vault.token),
-            "price": price,
+            "price": tvl.price,
         },
-        "tvl": {"total": total_assets, "value": tvl},
+        "tvl": dataclasses.asdict(tvl),
         "apy": dataclasses.asdict(apy),
         "fees": dataclasses.asdict(apy.fees),
         "strategies": strategies,
         "endorsed": vault.is_endorsed if hasattr(vault, "is_endorsed") else True,
         "version": vault.api_version if hasattr(vault, "api_version") else "0.1",
-        "decimals": vault.vault.decimals(),
+        "decimals": vault.decimals if hasattr(vault, "decimals") else vault.vault.decimals(),
         "type": "v2" if isinstance(vault, VaultV2) else "v1",
         "emergency_shutdown": vault.vault.emergencyShutdown() if hasattr(vault.vault, "emergencyShutdown") else False,
         "tags": [],
@@ -103,7 +100,7 @@ def main():
 
     samples = get_samples()
 
-    special = [Backscratcher()]
+    special = [YveCRVJar(), Backscratcher()]
     v1_registry = RegistryV1()
     v2_registry = RegistryV2()
 

@@ -3,6 +3,7 @@ import re
 import threading
 import time
 from typing import List
+from yearn.common import Tvl
 
 from semantic_version.base import Version
 
@@ -186,3 +187,12 @@ class Vault:
             return apy.v2.average(self, samples)
         else:
             return apy.v2.simple(self, samples)
+
+    def tvl(self, block=None):
+        total_assets = self.vault.totalAssets(block_identifier=block)
+        try:
+            price = magic.get_price(self.token, block=None)
+        except magic.PriceError:
+            price = None
+        tvl = total_assets * price / 10 ** self.vault.decimals(block_identifier=block) if price else None
+        return Tvl(total_assets, price, tvl)

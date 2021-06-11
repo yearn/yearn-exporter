@@ -1,6 +1,7 @@
 import logging
 from dataclasses import dataclass
 from typing import Optional
+from yearn.common import Tvl
 
 from brownie import Contract, ZERO_ADDRESS, interface, web3
 from brownie.network.contract import InterfaceContainer
@@ -121,3 +122,12 @@ class VaultV1:
             return apy.curve.simple(self, samples)
         else:
             return apy.v1.simple(self, samples)
+
+    def tvl(self, block=None):
+        total_assets = self.vault.balance(block_identifier=block)
+        try:
+            price = magic.get_price(self.token, block=block)
+        except magic.PriceError:
+            price = None
+        tvl = total_assets * price / 10 ** self.vault.decimals(block_identifier=block) if price else None
+        return Tvl(total_assets, price, tvl) 
