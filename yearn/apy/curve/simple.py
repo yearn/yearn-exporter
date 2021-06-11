@@ -195,7 +195,7 @@ def simple(vault: Union[VaultV1, VaultV2], samples: ApySamples) -> Apy:
     crv_apr = base_apr * boost + reward_apr
     crv_apr_minus_keep_crv = base_apr * boost * (1 - crv_keep_crv)
 
-    gross_apr = crv_apr * crv_debt_ratio + cvx_apr * cvx_debt_ratio
+    gross_apr = (1 + (crv_apr * crv_debt_ratio + cvx_apr * cvx_debt_ratio)) * (1 + pool_apy) - 1
 
     cvx_net_apr = (cvx_apr_minus_keep_crv + reward_apr) * ((1 - performance) - management)
     cvx_net_farmed_apy = (1 + (cvx_net_apr / COMPOUNDING)) ** COMPOUNDING - 1
