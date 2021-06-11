@@ -68,11 +68,18 @@ def simple(vault, samples: ApySamples) -> Apy:
     performance = (contract.performanceFee() * 2) if hasattr(contract, "performanceFee") else 0
     management = contract.managementFee() if hasattr(contract, "managementFee") else 0
 
-    apy = net_apy / (1 - performance / 1e4) + (management / 1e4)
+    # assume we are compounding every week
+    compounding = 52
 
+    # calculate our APR after fees
+    apr_after_fees = compounding * ((net_apy + 1) ** (1 / compounding)) - compounding
+
+    # calculate our pre-fee APR
+    gross_apr = apr_after_fees / (1 - performance/1e4) + management/1e4
+    
     points = ApyPoints(week_ago_apy, month_ago_apy, inception_apy)
     fees = ApyFees(performance=performance, management=management)
-    return Apy("v2:simple", apy, net_apy, fees, points=points)
+    return Apy("v2:simple", gross_apr, net_apy, fees, points=points)
 
 
 def average(vault, samples: ApySamples) -> Apy:
@@ -115,8 +122,15 @@ def average(vault, samples: ApySamples) -> Apy:
     performance = (contract.performanceFee() * 2) if hasattr(contract, "performanceFee") else 0
     management = contract.managementFee() if hasattr(contract, "managementFee") else 0
 
-    apy = net_apy / (1 - performance / 1e4) + (management / 1e4)
+    # assume we are compounding every week
+    compounding = 52
 
+    # calculate our APR after fees
+    apr_after_fees = compounding * ((net_apy + 1) ** (1 / compounding)) - compounding
+
+    # calculate our pre-fee APR
+    gross_apr = apr_after_fees / (1 - performance/1e4) + management/1e4
+    
     points = ApyPoints(week_ago_apy, month_ago_apy, inception_apy)
     fees = ApyFees(performance=performance, management=management)
-    return Apy("v2:averaged", apy, net_apy, fees, points=points)
+    return Apy("v2:averaged", gross_apr, net_apy, fees, points=points)

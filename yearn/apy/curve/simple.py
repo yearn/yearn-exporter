@@ -130,6 +130,8 @@ def simple(vault, samples: ApySamples) -> Apy:
         contract = vault.vault
         if len(vault.strategies) > 0 and hasattr(vault.strategies[0].strategy, "keepCRV"):
             crv_keep_crv = vault.strategies[0].strategy.keepCRV() / 1e4
+        else if len(vault.strategies) > 0 and hasattr(vault.strategies[0].strategy, "keepCrvPercent"):
+            crv_keep_crv = vault.strategies[0].strategy.keepCrvPercent() / 1e4
         else:
             crv_keep_crv = 0
         performance = (contract.performanceFee() * 2) / 1e4 if hasattr(contract, "performanceFee") else 0
@@ -191,13 +193,13 @@ def simple(vault, samples: ApySamples) -> Apy:
     crv_apr = base_apr * boost + reward_apr
     crv_apr_minus_keep_crv = base_apr * boost * (1 - crv_keep_crv)
 
-    gross_apr = crv_apr * crv_debt_ratio + cvx_apr * cvx_debt_ratio
+    gross_apr = (1 + (crv_apr * crv_debt_ratio + cvx_apr * cvx_debt_ratio)) * (1 + pool_apy) - 1
 
-    cvx_net_apr = (cvx_apr_minus_keep_crv + reward_apr) * ((1 - performance) - management)
+    cvx_net_apr = (cvx_apr_minus_keep_crv + reward_apr) * (1 - performance) - management
     cvx_net_farmed_apy = (1 + (cvx_net_apr / COMPOUNDING)) ** COMPOUNDING - 1
     cvx_net_apy = ((1 + cvx_net_farmed_apy) * (1 + pool_apy)) - 1
 
-    crv_net_apr = (crv_apr_minus_keep_crv + reward_apr) * ((1 - performance) - management)
+    crv_net_apr = (crv_apr_minus_keep_crv + reward_apr) * (1 - performance) - management
     crv_net_farmed_apy = (1 + (crv_net_apr / COMPOUNDING)) ** COMPOUNDING - 1
     crv_net_apy = ((1 + crv_net_farmed_apy) * (1 + pool_apy)) - 1
 
