@@ -97,13 +97,11 @@ def simple(vault, samples: ApySamples) -> Apy:
         boost = 1
 
 
+    reward_apr = 0
     if hasattr(gauge, "reward_contract"):
-        try:
-            reward_address = gauge.reward_contract()
-            assert reward_address != ZERO_ADDRESS
+        reward_address = gauge.reward_contract()
+        if reward_address != ZERO_ADDRESS:
             reward_apr = rewards(reward_address, pool_price, base_asset_price)
-        except ValueError:
-            reward_apr = 0
     else:
         reward_apr = 0
 

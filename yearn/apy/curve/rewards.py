@@ -67,9 +67,9 @@ def multi(address: str, pool_price: int, base_asset_price: int) -> float:
 
     queue = 0
     apr = 0
-    try:
+    if hasattr(multi_rewards, "rewardsToken"):
         token = multi_rewards.rewardTokens(queue)
-    except ValueError:
+    else:
         token = None
     while token and token != ZERO_ADDRESS:
         try:
