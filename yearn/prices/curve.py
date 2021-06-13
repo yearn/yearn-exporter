@@ -84,7 +84,8 @@ def cryptopool_lp_price(token, block=None):
     balances = [balance / scale for balance, scale in zip(take(n, result), scales)]
     # oracles return price with the first coin as a quote currency
     prices = [1] + [price / 1e18 for price in take(n - 1, result)]
-    return sum(balance * price for balance, price in zip(balances, prices)) / supply
+    scale = sum(balance * price for balance, price in zip(balances, prices)) / supply
+    return [scale, str(tokens[0])]
 
 
 @ttl_cache(ttl=600)
