@@ -5,7 +5,7 @@ from brownie import Contract, ZERO_ADDRESS
 
 from yearn.apy.curve.rewards import rewards
 
-from yearn.prices.curve import get_pool, get_underlying_coins, curve_registry, get_price as get_virtual_price
+from yearn.prices.curve import get_pool, get_underlying_coins, curve_registry, get_price as get_virtual_price, CRYPTOPOOLS
 from yearn.prices.magic import get_price
 
 from yearn.apy.common import (
@@ -70,8 +70,9 @@ def simple(vault, samples: ApySamples) -> Apy:
 
     btc_like = any([coin in BTC_LIKE for coin in underlying_coins])
     eth_like = any([coin in ETH_LIKE for coin in underlying_coins])
+    crypto_pool = lp_token in CRYPTOPOOLS
 
-    base_asset = WBTC if btc_like else WETH if eth_like else underlying_coins[0]
+    base_asset = WBTC if btc_like else WETH if eth_like else lp_token if crypto_pool else underlying_coins[0]
     base_asset_price = get_price(base_asset) or 1
 
     crv_price = get_price(CRV)
