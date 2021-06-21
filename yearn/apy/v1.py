@@ -53,7 +53,7 @@ def simple(vault, samples: ApySamples) -> Apy:
     inception_apy = calculate_roi(now_point, inception_point)
 
     # Default to higher sample as the result is largely dependent on number of harvests (usually one week sample is sufficient)
-    net_apy = max(month_ago_apy, week_ago_apy)
+    net_apy = max(month_ago_apy, week_ago_apy, inception_apy)
 
     strategy = vault.strategy
     withdrawal = strategy.withdrawalFee() if hasattr(strategy, "withdrawalFee") else 0
