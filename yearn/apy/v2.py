@@ -62,7 +62,9 @@ def simple(vault, samples: ApySamples) -> Apy:
     month_ago_apy = calculate_roi(now_point, month_ago_point)
     inception_apy = calculate_roi(now_point, inception_point)
 
-    net_apy = month_ago_apy
+    # use the first non-zero apy, ordered by precedence
+    apys = [week_ago_apy, month_ago_apy, inception_apy] 
+    net_apy = next((value for value in apys if value != 0), 0)
 
     # performance fee is doubled since 1x strategists + 1x treasury
     performance = (contract.performanceFee() * 2) if hasattr(contract, "performanceFee") else 0
@@ -116,7 +118,9 @@ def average(vault, samples: ApySamples) -> Apy:
     month_ago_apy = calculate_roi(now_point, month_ago_point)
     inception_apy = calculate_roi(now_point, inception_point)
 
-    net_apy = month_ago_apy
+    # use the first non-zero apy, ordered by precedence
+    apys = [week_ago_apy, month_ago_apy, inception_apy] 
+    net_apy = next((value for value in apys if value != 0), 0)
 
     # performance fee is doubled since 1x strategists + 1x treasury
     performance = (contract.performanceFee() * 2) if hasattr(contract, "performanceFee") else 0
