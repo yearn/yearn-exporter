@@ -3,6 +3,17 @@ from yearn.partners.snapshot import Partner, Wrapper
 
 partners = [
     Partner(
+        name='coinomo',
+        treasury='0xd3877d9df3cb52006b7d932e8db4b36e22e89242',
+        wrappers=[
+            Wrapper(
+                name='yvUSDC',
+                vault='0x5f18C75AbDAe578b483E5F43f12a39cF75b973a9',
+                wrapper='0xd3877d9df3cb52006b7d932e8db4b36e22e89242',
+            ),
+        ],
+    ),
+    Partner(
         name='alchemix',
         treasury='0x8392F6669292fA56123F71949B52d883aE57e225',
         wrappers=[
