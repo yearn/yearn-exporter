@@ -11,10 +11,10 @@ from time import time
 
 from yearn.special import Backscratcher, YveCRVJar
 
-import ipfshttpclient
 import requests
 import boto3
 
+from botocore.exceptions import ClientError
 from brownie.exceptions import BrownieEnvironmentWarning
 
 from yearn.apy import get_samples, ApySamples
@@ -31,10 +31,8 @@ warnings.simplefilter("ignore", BrownieEnvironmentWarning)
 logging.basicConfig(level=logging.DEBUG)
 logger = logging.getLogger("yearn.apy")
 
-ICON = "https://raw.githubusercontent.com/yearn/yearn-assets/master/icons/tokens/%s/logo-128.png"
 
-
-def wrap_vault(vault: Union[VaultV1, VaultV2], samples: ApySamples, aliases: dict) -> dict:
+def wrap_vault(vault: Union[VaultV1, VaultV2], samples: ApySamples, aliases: dict, icon_url: str) -> dict:
     apy = vault.apy(samples)
     if isinstance(vault, VaultV1):
         strategies = [
@@ -53,45 +51,46 @@ def wrap_vault(vault: Union[VaultV1, VaultV2], samples: ApySamples, aliases: dic
 
     tvl = vault.tvl()
 
-    return {
+    object = {
         "inception": inception,
         "address": str(vault.vault),
         "symbol": vault.symbol if hasattr(vault, "symbol") else vault.vault.symbol(),
         "name": vault.name,
         "display_name": vault_alias,
-        "icon": ICON % str(vault.vault),
+        "icon": icon_url % str(vault.vault),
         "token": {
             "name": vault.token.name() if hasattr(vault.token, "name") else vault.token._name,
             "symbol": vault.token.symbol() if hasattr(vault.token, "symbol") else None,
             "address": str(vault.token),
             "decimals": vault.token.decimals() if hasattr(vault.token, "decimals") else None,
             "display_name": token_alias,
-            "icon": ICON % str(vault.token)
+            "icon": icon_url % str(vault.token)
         },
         "tvl": dataclasses.asdict(tvl),
         "apy": dataclasses.asdict(apy),
-        "fees": dataclasses.asdict(apy.fees),
         "strategies": strategies,
         "endorsed": vault.is_endorsed if hasattr(vault, "is_endorsed") else True,
         "version": vault.api_version if hasattr(vault, "api_version") else "0.1",
         "decimals": vault.decimals if hasattr(vault, "decimals") else vault.vault.decimals(),
         "type": "v2" if isinstance(vault, VaultV2) else "v1",
         "emergency_shutdown": vault.vault.emergencyShutdown() if hasattr(vault.vault, "emergencyShutdown") else False,
-        "tags": [],
         "updated": int(time()),
-        "special": any([isinstance(vault, t) for t in [Backscratcher, YveCRVJar]]),
     }
+
+    if any([isinstance(vault, t) for t in [Backscratcher, YveCRVJar]]):
+        object["special"] = True
+    
+    return object
 
 
 def main():
-    ipfs_address = os.environ.get("IPFS_NODE_ADDRESS")
-    ipfs_key = os.environ.get("IPFS_NODE_KEY")
-    ipfs_secret = os.environ.get("IPFS_NODE_SECRET")
-
-    client = ipfshttpclient.connect(ipfs_address, auth=(ipfs_key, ipfs_secret))
-    print(f"Connected to IPFS node id: {client.id()}")
-
     data = []
+
+    aliases_repo_url = "https://api.github.com/repos/yearn/yearn-assets/git/refs/heads/master"
+    aliases_repo = requests.get(aliases_repo_url).json()
+    commit = aliases_repo["object"]["sha"]
+
+    icon_url = f"https://rawcdn.githack.com/yearn/yearn-assets/{commit}/icons/tokens/%s/logo-128.png"
 
     aliases_url = "https://raw.githubusercontent.com/yearn/yearn-assets/master/icons/aliases.json"
     aliases = requests.get(aliases_url).json()
@@ -105,7 +104,7 @@ def main():
 
     for vault in itertools.chain(special, v1_registry.vaults, v2_registry.vaults):
         try:
-            data.append(wrap_vault(vault, samples, aliases))
+            data.append(wrap_vault(vault, samples, aliases, icon_url))
         except ValueError as error:
             logger.error(error)
 
@@ -114,65 +113,38 @@ def main():
         shutil.rmtree(out)
     os.makedirs(out, exist_ok=True)
 
-    keep = os.path.join(out, ".keep")
-    with open(keep, 'a'):
-        try:
-            os.utime(keep, None)
-        except OSError:
-            pass
+    vaults_api_path = os.path.join("v1", "chains", "1", "vaults")
 
-    prefix = os.path.join(out, "v1", "chains", "1")
-    os.makedirs(prefix, exist_ok=True)
+    os.makedirs(os.path.join(out, vaults_api_path), exist_ok=True)
 
-    ns_vaults = os.path.join(prefix, "vaults")
-    os.makedirs(ns_vaults, exist_ok=True)
+    # for vault in data:
+    #     with open(os.path.join(namespace_vaults, vault["address"]), "w+") as f:
+    #         json.dump(vault, f)
 
-    for vault in data:
-        with open(os.path.join(ns_vaults, vault["address"]), "w+") as f:
-            json.dump(vault, f)
-
-    with open(os.path.join(ns_vaults, "all"), "w+") as f:
+    vault_api_all = os.path.join(vaults_api_path, "all")
+    with open(os.path.join(out, vault_api_all), "w+") as f:
         json.dump(data, f)
-
-    uploads = client.add(out, recursive=True)
-
-    print(f"Uploaded \"{out}\"")
-    for upload in uploads:
-        if upload["Name"] == out:
-            hash = upload["Hash"]
-            size = upload["Size"]
-            print(f"- Hash: {hash}")
-            print(f"- Size: {size} bytes")
-
-    dnslink = f"\"dnslink=/ipfs/{hash}\""
 
     aws_key = os.environ.get("AWS_ACCESS_KEY")
     aws_secret = os.environ.get("AWS_ACCESS_SECRET")
-    aws_zone_id = os.environ.get("AWS_ZONE_ID")
-    aws_zone_record = os.environ.get("AWS_ZONE_RECORD")
+    aws_bucket = os.environ.get("AWS_BUCKET")
 
-    dns = boto3.client(
-        "route53", 
+    s3 = boto3.client(
+        "s3", 
         aws_access_key_id=aws_key,
         aws_secret_access_key=aws_secret
     )
+
     try:
-        dns.change_resource_record_sets(
-            HostedZoneId=aws_zone_id,
-            ChangeBatch={
-                'Comment': dnslink,
-                'Changes': [
-                    {
-                        'Action': 'UPSERT',
-                        'ResourceRecordSet': {
-                            'Name': aws_zone_record,
-                            'Type': 'TXT',
-                            'TTL': 300,
-                            'ResourceRecords': [{'Value': dnslink}],
-                        },
-                    }
-                ],
-            },
+        response = s3.upload_file(
+            os.path.join(out, vault_api_all),
+            aws_bucket,
+            vault_api_all,
+            ExtraArgs={
+                'ContentType': "application/json",
+                'CacheControl': "max-age=600"
+            }
         )
-    except Exception as error:
-        print(error)
+        logger.info(response)
+    except ClientError as e:
+        logging.error(e)
