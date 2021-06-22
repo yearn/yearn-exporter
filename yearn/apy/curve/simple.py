@@ -5,7 +5,7 @@ from brownie import Contract, ZERO_ADDRESS
 
 from yearn.apy.curve.rewards import rewards
 
-from yearn.prices.curve import get_pool, get_underlying_coins, curve_registry, get_price as get_virtual_price
+from yearn.prices.curve import get_pool, get_underlying_coins, curve_registry
 from yearn.prices.magic import get_price
 
 from yearn.apy.common import (
@@ -19,22 +19,6 @@ from yearn.apy.common import (
 )
 
 logger = logging.getLogger(__name__)
-
-
-WBTC = "0x2260FAC5E5542a773Aa44fBCfeDf7C193bc2C599"
-BTC_LIKE = [
-    WBTC,
-    "0xfE18be6b3Bd88A2D2A7f928d00292E7a9963CfC6",  # sBTC
-    "0xEB4C2781e4ebA804CE9a9803C67d0893436bB27D",  # renBTC
-]
-
-WETH = "0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2"
-ETH_LIKE = [
-    WETH,
-    "0x5e74C9036fb86BD7eCdcb084a0673EFc32eA31cb",  # sETH
-    "0xae7ab96520DE3A18E5e111B5EaAb095312D7fE84",  # stETH
-    "0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE",  # pure eth
-]
 
 CRV = Contract("0xD533a949740bb3306d119CC777fa900bA034cd52")
 CVX = Contract("0x4e3FBD56CD56c3e72c1403e103b45Db9da5B9D2B")
@@ -68,11 +52,7 @@ def simple(vault, samples: ApySamples) -> Apy:
 
     underlying_coins = get_underlying_coins(lp_token)
 
-    btc_like = any([coin in BTC_LIKE for coin in underlying_coins])
-    eth_like = any([coin in ETH_LIKE for coin in underlying_coins])
-
-    base_asset = WBTC if btc_like else WETH if eth_like else underlying_coins[0]
-    base_asset_price = get_price(base_asset) or 1
+    base_asset_price = get_price(lp_token) or 1
 
     crv_price = get_price(CRV)
 
