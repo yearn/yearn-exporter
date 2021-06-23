@@ -57,3 +57,9 @@ def rai():
     address = "0x873fB544277FD7b977B196a826459a69E27eA4ea"
     vault = VaultV2.from_address(address)
     print(json.dumps(dataclasses.asdict(vault.apy(samples)), indent=2))
+    
+def tricrypto():
+    samples = get_samples()
+    address = "0x3D980E50508CFd41a13837A60149927a11c03731"
+    vault = VaultV2.from_address(address)
+    print(json.dumps(dataclasses.asdict(vault.apy(samples)), indent=2))
