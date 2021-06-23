@@ -29,6 +29,20 @@ def get_block_timestamp(height):
 
 
 @memory.cache()
+def closest_block_before_timestamp(timestamp):
+    logger.info('closest block after timestamp %d', timestamp)
+    height = chain.height
+    lo, hi = 0, height
+    while hi - lo > 1:
+        mid = lo + (hi - lo) // 2
+        if get_block_timestamp(mid) < timestamp:
+            hi = mid
+        else:
+            lo = mid
+    return hi if hi != height else None
+
+
+@memory.cache()
 def closest_block_after_timestamp(timestamp):
     logger.debug('closest block after timestamp %d', timestamp)
     height = chain.height
