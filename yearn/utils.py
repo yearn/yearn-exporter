@@ -1,3 +1,4 @@
+import datetime
 import logging
 import re
 
@@ -65,6 +66,43 @@ def closest_block_after_timestamp(timestamp):
             hi = mid
         else:
             lo = mid
+    return hi if hi != height else None
+
+
+@memory.cache()
+def first_block_on_date(date_string):
+    logger.info('first block on date %d', date_string)
+    date = datetime.datetime.strptime(date_string, "%Y-%m-%d")
+    date = date.date()
+    previousdate = date - datetime.timedelta(days=1)
+    height = chain.height
+    lo, hi = 0, height
+    while hi - lo > 1:
+        mid = lo + (hi - lo) // 2
+        if datetime.date.fromtimestamp(get_block_timestamp(mid)) > previousdate:
+            hi = mid
+        else:
+            lo = mid
+    return hi if hi != height else None
+    
+
+@memory.cache()
+def last_block_on_date(date_string):
+    logger.info('first block on date %d', date_string)
+    date = datetime.datetime.strptime(date_string, "%Y-%m-%d")
+    date = date.date()
+    height = chain.height
+    lo, hi = 0, height
+    while hi - lo > 1:
+        mid = lo + (hi - lo) // 2
+        print('block: ' + str(mid))
+        print('mid: ' + str(datetime.date.fromtimestamp(get_block_timestamp(mid))))
+        print(date)
+        if datetime.date.fromtimestamp(get_block_timestamp(mid)) > date:
+            hi = mid
+        else:
+            lo = mid
+    hi = hi - 1
     return hi if hi != height else None
 
 
