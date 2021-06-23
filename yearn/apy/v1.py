@@ -68,7 +68,8 @@ def simple(vault, samples: ApySamples) -> Apy:
     compounding = 52
 
     # calculate our APR after fees
-    apr_after_fees = compounding * ((net_apy + 1) ** (1 / compounding)) - compounding
+    # if net_apy is negative no fees are charged
+    apr_after_fees = compounding * ((net_apy + 1) ** (1 / compounding)) - compounding if net_apy > 0 else net_apy
 
     # calculate our pre-fee APR
     gross_apr = apr_after_fees / (1 - performance)
