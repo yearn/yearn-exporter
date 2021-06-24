@@ -2,16 +2,11 @@ import json
 import pickle
 from collections import defaultdict
 from concurrent.futures import ThreadPoolExecutor
-from datetime import datetime
 from pathlib import Path
-from tokenize import group
 
-import click
-import pandas as pd
 from brownie import ZERO_ADDRESS, Contract, web3
-from brownie.utils.output import build_tree
 from click import secho, style
-from toolz import groupby, unique
+from toolz import concat, groupby, unique
 from tqdm import tqdm
 from web3._utils.abi import filter_by_name
 from web3._utils.events import construct_event_topic_set
@@ -159,62 +154,86 @@ def v1():
     json.dump(fees, path.open('wt'), indent=2)
 
 
-def get_protocol_fees(vault):
-    try:
-        rewards = [
+def fetch_vault_rewards(vault):
+    if 'UpdateRewards' in vault.vault.topics:
+        return [
             x['rewards'] for x in decode_logs(get_logs_asap(str(vault.vault), [vault.vault.topics['UpdateRewards']]))
         ]
-    except KeyError:
-        rewards = [vault.vault.rewards()]
-        print('fallback rewards', rewards)
+    else:
+        return [vault.vault.rewards()]
+
+
+def get_protocol_fees(vault):
+    rewards = fetch_vault_rewards(vault)
+
     strategies = [x.strategy for x in vault.strategies + vault.revoked_strategies]
     targets = [str(x) for x in unique(rewards + strategies)]
+
+    # use gains to separate management fees from performance fees
+    gains = {x.transaction_hash: x['gain'] for x in vault._reports}
+
+    # fees are paid by issuing new vault shares
     topics = construct_event_topic_set(
         filter_by_name('Transfer', vault.vault.abi)[0],
         web3.codec,
         {'sender': str(vault.vault), 'receiver': targets},
     )
-    fees = []
     logs = decode_logs(get_logs_asap(str(vault.vault), topics))
 
-    for log in tqdm(logs):
+    fees = []
+    progress = tqdm(logs, desc=vault.name.ljust(20)[:20])
+
+    for log in progress:
         sender, receiver, amount = log.values()
         if amount == 0:
             return None
-        fee_dest = 'unknown'
-        if receiver in rewards:
-            fee_dest = 'rewards'
-        if receiver in strategies:
-            fee_dest = 'strategist'
-
         price = magic.get_price(str(vault.vault), log.block_number)
-        fees.append(
-            {
-                'block_number': log.block_number,
-                'timestamp': get_block_timestamp(log.block_number),
-                'transaction_hash': log.transaction_hash.hex(),
-                'vault': str(vault.vault),
-                'token': str(vault.vault),
-                'strategy': sender,
-                'recipient': receiver,
-                'fee_type': 'harvest',
-                'fee_dest': fee_dest,
-                'func': None,
-                'token_price': price,
-                'amount_native': amount / vault.scale,
-                'amount_usd': price * amount / vault.scale,
-            }
-        )
-    secho(f'protocol fees: {sum(x["amount_usd"] for x in fees)} usd from {len(fees)} harvests', fg='bright_green')
+        if receiver in rewards:
+            pps = vault.vault.pricePerShare(block_identifier=log.block_number) / vault.scale
+            # TODO optimize using events
+            perf = vault.vault.performanceFee(block_identifier=log.block_number) / 10_000
+            # gain is in vault token, while fee is in vault shares
+            gain = gains[log.transaction_hash]
+            perf_fee = gain * perf / pps  # wei
+            mgmt_fee = amount - perf_fee  # wei
+
+            log_fees = [
+                ('performance', perf_fee),
+                ('management', mgmt_fee),
+            ]
+        elif receiver in strategies:
+            log_fees = [
+                ('strategist', amount),
+            ]
+        else:
+            raise ValueError('unknown fee type')
+
+        for dest, fee in log_fees:
+            fees.append(
+                {
+                    'block_number': log.block_number,
+                    'timestamp': get_block_timestamp(log.block_number),
+                    'transaction_hash': log.transaction_hash.hex(),
+                    'vault': str(vault.vault),
+                    'token': str(vault.vault),
+                    'strategy': sender,
+                    'recipient': receiver,
+                    'fee_type': 'harvest',
+                    'fee_dest': dest,
+                    'token_price': price,
+                    'amount_native': fee / vault.scale,
+                    'amount_usd': price * fee / vault.scale,
+                }
+            )
+        progress.set_postfix({'total': int(sum(x['amount_usd'] for x in fees))})
+
     return fees
 
 
 def v2():
     registry = Registry()
     fees = []
-    for vault in registry.vaults:
-        click.secho(f'{vault}', fg='yellow')
-        fees.extend(get_protocol_fees(vault))
+    fees = list(concat(ThreadPoolExecutor().map(get_protocol_fees, registry.vaults)))
 
     path = Path('research/traces/07-fees-v2.json')
     json.dump(fees, path.open('wt'), indent=2)
