@@ -3,10 +3,11 @@ import pickle
 from collections import defaultdict
 from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
+from time import perf_counter
 
-from brownie import ZERO_ADDRESS, Contract, web3
+from brownie import ZERO_ADDRESS, Contract, web3, chain
 from click import secho, style
-from toolz import concat, groupby, unique
+from toolz import concat, groupby, unique, valmap
 from tqdm import tqdm
 from web3._utils.abi import filter_by_name
 from web3._utils.events import construct_event_topic_set
@@ -16,6 +17,16 @@ from yearn.traces import decode_traces, get_traces
 from yearn.utils import get_block_timestamp
 from yearn.v2.registry import Registry
 from yearn.v2.vaults import Vault
+from semantic_version import Version
+from pprint import pprint
+from pytest import approx
+from yearn.multicall2 import fetch_multicall
+from functools import wraps
+import click
+from collections import Counter
+from tabulate import tabulate
+import atexit
+import os
 
 
 def v1():
@@ -163,11 +174,150 @@ def fetch_vault_rewards(vault):
         return [vault.vault.rewards()]
 
 
+## debug
+times = Counter()
+counts = Counter()
+reconciliation = Counter()
+
+
+def profile(f):
+    @wraps(f)
+    def inner(*args, **kwds):
+        start = perf_counter()
+        result = f(*args, **kwds)
+        eta = perf_counter() - start
+        click.secho(f'{f.__name__} took {eta:.3f}s', fg='bright_blue')
+        times[f.__name__] += eta
+        counts[f.__name__] += 1
+        return result
+
+    return inner
+
+
+def profile_summary():
+    header = ['func', 'cum_time', 'call_count', 'avg_time']
+    data = [[f, times[f], counts[f], times[f] / counts[f]] for f in times]
+    print(tabulate(data, headers=header))
+
+    print()
+    print(f'{reconciliation=}')
+
+
+atexit.register(profile_summary)
+
+
+@profile
+def assess_fees(vault: Vault, report):
+    MAX_BPS = 10_000
+    api_version = Version(vault.api_version)
+    block_timestamp = get_block_timestamp(report.block_number)
+
+    
+    SECS_PER_YEAR = 31_556_952
+    if api_version < Version('0.3.3'):
+        SECS_PER_YEAR = 31_557_600
+    
+    management_bps, performance_bps = fetch_multicall(
+        [vault.vault, 'managementFee'],
+        [vault.vault, 'performanceFee'],
+        block=report.block_number,
+    )
+    last_report, strategies, price_per_share = fetch_multicall(
+        [vault.vault, 'lastReport'],
+        [vault.vault, 'strategies', report['strategy']],
+        [vault.vault, 'pricePerShare'],
+        block=report.block_number - 1,
+    )
+
+    # total debt
+    if api_version <= Version('0.3.0'):
+        total_debt = vault.vault.totalAssets()
+    elif api_version <= Version('0.3.3'):
+        total_debt = vault.vault.totalDebt()
+    elif api_version <= Version('0.3.4'):
+        total_debt, delegated_assets = fetch_multicall(
+            [vault.vault, 'totalDebt'],
+            [vault.vault, 'delegatedAssets'],
+            block=report.block_number - 1,
+        )
+        total_debt -= delegated_assets
+    elif api_version <= Version('0.3.5'):
+        total_debt = strategies['totalDebt']
+        delegated_assets = Contract(report['strategy']).delegatedAssets(block_identifier=report.block_number - 1)
+        total_debt -= delegated_assets
+    
+    management_fee = (total_debt * (block_timestamp - last_report) * management_bps) / MAX_BPS / SECS_PER_YEAR
+    strategist_fee = (report['gain'] * strategies['performanceFee']) / MAX_BPS
+    performance_fee = report['gain'] * performance_bps / MAX_BPS
+    
+    total_fee = management_fee + strategist_fee + performance_fee
+    if api_version > Version('0.3.5') and total_fee > report['gain']:
+        management_fee = report['gain'] - performance_fee - strategist_fee
+
+    return {
+        'block_number': report.block_number,
+        'timestamp': block_timestamp,
+        'transaction_hash': report.transaction_hash,
+        'vault': str(vault.vault),
+        'strategy': report['strategy'],
+        'gain': report['gain'] / vault.scale,
+        'loss': report['loss'] / vault.scale,
+        'duration': block_timestamp - last_report,
+        'total_debt': total_debt / vault.scale,
+        'price_per_share': price_per_share / vault.scale,
+        'management_fee': management_fee / price_per_share,
+        'performance_fee': performance_fee / price_per_share,
+        'strategist_fee': strategist_fee / price_per_share,
+        'treasury_fee': (management_fee + performance_fee) / price_per_share,
+    }
+
+
+@profile
+def reconcile(vault, ass, check):
+    if check is None:
+        print_status('no events', False)
+    
+    elif len(check) == 2:
+        rec = ass["strategist_fee"] == approx(check[0]["value"] / vault.scale, rel=1e-3)
+        reconciliation[rec] += 1
+        print_status(
+            f'strategist {ass["strategist_fee"]} got {check[0]["value"] / vault.scale}',
+            rec
+        )
+
+        rec = ass["treasury_fee"] == approx(check[1]["value"] / vault.scale, rel=1e-3)
+        reconciliation[rec] += 1
+        print_status(
+            f'protocol {ass["treasury_fee"]} got {check[1]["value"] / vault.scale}',
+            rec
+        )
+    else:
+        rec = ass["treasury_fee"] == approx(check[0]["value"] / vault.scale, rel=1e-3)
+        reconciliation[rec] += 1
+        print_status(
+            f'protocol {ass["treasury_fee"]} got {check[0]["value"] / vault.scale}',
+            rec
+        )
+
+
+def print_status(message, status):
+    color = {True: 'green', False: 'red'}[status]
+    sym = {True: '✔︎', False: '✗'}[status]
+    click.secho(f'{sym} {message}', fg=color)
+
+
 def get_protocol_fees(vault):
+    vault.load_strategies()
     rewards = fetch_vault_rewards(vault)
 
-    strategies = [x.strategy for x in vault.strategies + vault.revoked_strategies]
+    # older strategies missed migration events, so we rely on StrategyRerported
+    strategies_from_reports = valmap(len, groupby('strategy', vault._reports))
+    print('known reports:', strategies_from_reports)
+    
+    strategies = list(strategies_from_reports)
+
     targets = [str(x) for x in unique(rewards + strategies)]
+    print(strategies)
 
     # use gains to separate management fees from performance fees
     gains = {x.transaction_hash: x['gain'] for x in vault._reports}
@@ -179,11 +329,59 @@ def get_protocol_fees(vault):
         {'sender': str(vault.vault), 'receiver': targets},
     )
     logs = decode_logs(get_logs_asap(str(vault.vault), topics))
+    logs_by_tx = groupby(lambda x: x.transaction_hash, logs)
+    # print(len(logs), len(logs_by_tx))
 
     fees = []
-    progress = tqdm(logs, desc=vault.name.ljust(20)[:20])
+    # progress = tqdm(vault._reports, desc=vault.name.ljust(20)[:20])
 
-    for log in progress:
+    MAX_BPS = 10_000
+    SECS_PER_YEAR = 31_556_952
+
+    strategies_from_reports = valmap(len, groupby('strategy', vault._reports))
+    print(strategies_from_reports)
+
+    for report in vault._reports[-5:]:
+        click.secho(f"[{report.block_number}] {dict(report)}\ntx={report.transaction_hash.hex()}", fg='bright_blue')
+        ass = assess_fees(vault, report)
+        click.secho(f'{ass}', fg='yellow')
+        reconcile(vault, ass, logs_by_tx.get(report.transaction_hash))
+        continue
+        vault_strategies = vault.vault.strategies(report['strategy'], block_identifier=report.block_number - 1)
+        last_report = vault_strategies['lastReport']
+        duration = get_block_timestamp(report.block_number) - last_report
+        print(last_report, duration)
+        if report['gain'] == 0:
+            continue
+
+        strategy = Contract(report['strategy'])
+        print(strategy)
+        print(vault.api_version)
+        delegated_assets = strategy.delegatedAssets(block_identifier=report.block_number - 1)
+        management_fee = (
+            (
+                (vault_strategies['totalDebt'] - delegated_assets)
+                * duration
+                * vault.vault.managementFee(block_identifier=report.block_number - 1)
+            )
+            / MAX_BPS
+            / SECS_PER_YEAR
+        )
+        strategist_fee = report['gain'] * vault_strategies['performanceFee'] / MAX_BPS
+        # NOTE: Unlikely to throw unless strategy reports >1e72 harvest profit
+        performance_fee = (
+            report['gain'] * vault.vault.performanceFee(block_identifier=report.block_number - 1) / MAX_BPS
+        )
+
+        print(management_fee / 1e18, strategist_fee / 1e18, performance_fee / 1e18, sep='\n')
+        pps = vault.vault.pricePerShare(block_identifier=report.block_number - 1) / 1e18
+        check = logs_by_tx[report.transaction_hash]
+        print(
+            f'* protocol {(management_fee + performance_fee) / 1e18 / pps} got {check[1]["value"] / 1e18}',
+            f'* strateg  {(strategist_fee) / 1e18 / pps} got {check[0]["value"] / 1e18}',
+            sep='\n',
+        )
+        continue
         sender, receiver, amount = log.values()
         if amount == 0:
             return None
@@ -233,7 +431,15 @@ def get_protocol_fees(vault):
 def v2():
     registry = Registry()
     fees = []
-    fees = list(concat(ThreadPoolExecutor().map(get_protocol_fees, registry.vaults)))
+    vaults = [x for x in registry.vaults if Version(x.api_version) < Version('0.3.5')]
+    # vaults = registry.vaults
+    width = os.get_terminal_size().columns - 1
+    for vault in vaults:
+        print('-' * width)
+        print(vault)
+        print('-' * width)
+        get_protocol_fees(vault)
+    # fees = list(concat(ThreadPoolExecutor().map(get_protocol_fees, vaults)))
 
-    path = Path('research/traces/07-fees-v2.json')
-    json.dump(fees, path.open('wt'), indent=2)
+    # path = Path('research/traces/07-fees-v2.json')
+    # json.dump(fees, path.open('wt'), indent=2)
