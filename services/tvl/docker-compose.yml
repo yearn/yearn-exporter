@@ -9,10 +9,6 @@ volumes:
 
 networks:
   yearn-exporter-tvl:
-
-secrets:
-  google_credentials:
-    file: secrets/google.json
     
 services:
   api:
@@ -35,15 +31,12 @@ services:
       - PGUSER=postgres
       - PGHOST=postgres
       - PGPASS=yearn
-      - GOOGLE_APPLICATION_CREDENTIALS=/run/secrets/google_credentials
     volumes: 
       - solidity_compilers:/root/.solcx
       - vyper_compilers:/root/.vvm
       - brownie:/root/.brownie
       - cache:/app/yearn-exporter/cache
     restart: always
-    secrets:
-      - google_credentials
     networks:
       - yearn-exporter-tvl
   postgres:

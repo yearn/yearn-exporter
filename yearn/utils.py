@@ -64,7 +64,7 @@ def contract_creation_block(address) -> int:
     if client in ['tg', 'erigon']:
         return _contract_creation_block_binary_search(address)
     else:
-        return _contract_creation_block_bigquery(address)
+        raise Exception("An erigon (fka turbogeth) node is needed correctly estimate contract creation block.")
 
 
 def _contract_creation_block_binary_search(address):
@@ -81,21 +81,3 @@ def _contract_creation_block_binary_search(address):
         else:
             lo = mid
     return hi if hi != height else None
-
-
-def _contract_creation_block_bigquery(address):
-    """
-    Query contract creation block using BigQuery.
-    NOTE Requires GOOGLE_APPLICATION_CREDENTIALS
-         https://cloud.google.com/bigquery/docs/quickstarts/quickstart-client-libraries
-    """
-    from google.cloud import bigquery
-
-    client = bigquery.Client()
-    query = "select block_number from `bigquery-public-data.crypto_ethereum.contracts` where address = @address limit 1"
-    job_config = bigquery.QueryJobConfig(
-        query_parameters=[bigquery.ScalarQueryParameter("address", "STRING", address.lower())]
-    )
-    query_job = client.query(query, job_config=job_config)
-    for row in query_job:
-        return row["block_number"]
