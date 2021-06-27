@@ -56,7 +56,7 @@ services:
     restart: always
 
   grafana:
-    image: grafana/grafana
+    image: grafana/grafana:7.5.9
     depends_on:
       - prometheus
     ports:
