@@ -85,6 +85,7 @@ class Backscratcher:
         epoch = math.floor(time() / week) * week - week
         tokens_per_week = curve_reward_distribution.tokens_per_week(epoch) / 1e18
         virtual_price = curve_3_pool.get_virtual_price() / 1e18
+        # although we call this APY, this is actually APR since there is no compounding
         apy = (tokens_per_week * virtual_price * 52) / ((total_vecrv / 1e18) * crv_price)
         vault_boost = (yearn_vecrv / vault_supply) * (crv_price / yvecrv_price)
         composite = {
