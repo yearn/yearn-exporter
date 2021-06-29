@@ -34,9 +34,10 @@ class YveCRVJar:
         return 'pSLP'
 
     def apy(self, _: ApySamples) -> Apy:
-        data = requests.get("https://stkpowy01i.execute-api.us-west-1.amazonaws.com/prod/protocol/jar/yvecrv-eth/performance").json()
-        apy = data["thirtyDayFarm"]  / 100.
-        points = ApyPoints(data["sevenDayFarm"] / 100., apy, apy)
+        data = requests.get("https://stkpowy01i.execute-api.us-west-1.amazonaws.com/prod/protocol/pools").json()
+        yvboost_eth_pool  = [pool for pool in data if pool["identifier"] == "yvboost-eth"][0]
+        apy = yvboost_eth_pool["apy"]  / 100.
+        points = ApyPoints(apy, apy, apy)
         return Apy("yvecrv-jar", apy, apy, ApyFees(), points=points)
 
     def tvl(self, block=None) -> Tvl:

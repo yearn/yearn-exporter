@@ -14,6 +14,8 @@ from yearn.v2.registry import Registry as RegistryV2
 from yearn.v2.vaults import Vault as VaultV2
 from yearn.v2.strategies import Strategy as StrategyV2
 
+from yearn.special import Backscratcher, YveCRVJar
+
 warnings.simplefilter("ignore", BrownieEnvironmentWarning)
 
 logging.basicConfig(level=logging.DEBUG)
@@ -63,3 +65,8 @@ def tricrypto():
     address = "0x3D980E50508CFd41a13837A60149927a11c03731"
     vault = VaultV2.from_address(address)
     print(json.dumps(dataclasses.asdict(vault.apy(samples)), indent=2))
+
+def pickleJar():
+    samples = get_samples()
+    special = YveCRVJar()
+    print(json.dumps(dataclasses.asdict(special.apy(samples)), indent=2))
