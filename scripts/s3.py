@@ -6,8 +6,10 @@ import shutil
 import json
 import os
 
-from typing import Union
+from typing import Any, Union
 from time import time
+
+from brownie.network.contract import Contract
 
 from yearn.special import Backscratcher, YveCRVJar
 
@@ -32,7 +34,7 @@ logging.basicConfig(level=logging.DEBUG)
 logger = logging.getLogger("yearn.apy")
 
 
-def wrap_vault(vault: Union[VaultV1, VaultV2], samples: ApySamples, aliases: dict, icon_url: str) -> dict:
+def wrap_vault(vault: Union[VaultV1, VaultV2], samples: ApySamples, aliases: dict, icon_url: str, assets_metadata_dict: dict) -> dict:
     apy = vault.apy(samples)
     if isinstance(vault, VaultV1):
         strategies = [
@@ -50,6 +52,13 @@ def wrap_vault(vault: Union[VaultV1, VaultV2], samples: ApySamples, aliases: dic
     vault_alias = token_alias
 
     tvl = vault.tvl()
+    migrations_available = None
+    latest_vault_address = None
+    assets_metadata = assets_metadata_dict.get(str(vault.vault))
+    if assets_metadata is not None:
+        migrations_available = assets_metadata[1]
+        latest_vault_address = assets_metadata[2]
+
 
     object = {
         "inception": inception,
@@ -75,12 +84,25 @@ def wrap_vault(vault: Union[VaultV1, VaultV2], samples: ApySamples, aliases: dic
         "type": "v2" if isinstance(vault, VaultV2) else "v1",
         "emergency_shutdown": vault.vault.emergencyShutdown() if hasattr(vault.vault, "emergencyShutdown") else False,
         "updated": int(time()),
+        "migrations_available": migrations_available,
+        "latest_vault_address": latest_vault_address,
     }
 
     if any([isinstance(vault, t) for t in [Backscratcher, YveCRVJar]]):
         object["special"] = True
+
+    print(object)
     
     return object
+
+def getAssetsMetadataDict(v2_vaults: list) -> dict:
+    v2_registry_adapter = Contract('0x240315db938d44bb124ae619f5fd0269a02d1271')
+    v2_addresses = map(lambda vault: str(vault.vault), v2_vaults)
+    assets_dynamic_data = v2_registry_adapter.assetsDynamic(list(v2_addresses))
+    assets_metadata_dict = {}
+    for datum in assets_dynamic_data:
+        assets_metadata_dict[datum[0]] = datum[-1]
+    return assets_metadata_dict
 
 
 def main():
@@ -102,9 +124,11 @@ def main():
     v1_registry = RegistryV1()
     v2_registry = RegistryV2()
 
+    assets_metadata_dict = getAssetsMetadataDict(v2_registry.vaults)
+
     for vault in itertools.chain(special, v1_registry.vaults, v2_registry.vaults):
         try:
-            data.append(wrap_vault(vault, samples, aliases, icon_url))
+            data.append(wrap_vault(vault, samples, aliases, icon_url, assets_metadata_dict))
         except ValueError as error:
             logger.error(error)
 
