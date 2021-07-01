@@ -1,4 +1,5 @@
 import dataclasses
+import traceback
 import itertools
 import warnings
 import logging
@@ -6,6 +7,7 @@ import shutil
 import json
 import os
 
+from datetime import datetime
 from typing import Union
 from time import time
 
@@ -14,9 +16,7 @@ from yearn.special import Backscratcher, YveCRVJar
 import requests
 import boto3
 
-from botocore.exceptions import ClientError
 from brownie.exceptions import BrownieEnvironmentWarning
-
 from yearn.apy import get_samples, ApySamples
 from yearn.v1.registry import Registry as RegistryV1
 from yearn.v2.registry import Registry as RegistryV2
@@ -30,7 +30,6 @@ warnings.simplefilter("ignore", BrownieEnvironmentWarning)
 
 logging.basicConfig(level=logging.DEBUG)
 logger = logging.getLogger("yearn.apy")
-
 
 def wrap_vault(vault: Union[VaultV1, VaultV2], samples: ApySamples, aliases: dict, icon_url: str) -> dict:
     apy = vault.apy(samples)
@@ -121,9 +120,16 @@ def main():
     #     with open(os.path.join(namespace_vaults, vault["address"]), "w+") as f:
     #         json.dump(vault, f)
 
+    endorsed = [vault for vault in data if vault["endorsed"]]
+    experimental = [vault for vault in data if not vault["endorsed"]]
+
     vault_api_all = os.path.join(vaults_api_path, "all")
     with open(os.path.join(out, vault_api_all), "w+") as f:
-        json.dump(data, f)
+        json.dump(endorsed, f)
+
+    vault_api_experimental = os.path.join(vaults_api_path, "experimental")
+    with open(os.path.join(out, vault_api_experimental), "w+") as f:
+        json.dump(experimental, f)
 
     aws_key = os.environ.get("AWS_ACCESS_KEY")
     aws_secret = os.environ.get("AWS_ACCESS_SECRET")
@@ -135,16 +141,43 @@ def main():
         aws_secret_access_key=aws_secret
     )
 
+    s3.upload_file(
+        os.path.join(out, vault_api_all),
+        aws_bucket,
+        vault_api_all,
+        ExtraArgs={
+            'ContentType': "application/json",
+            'CacheControl': "max-age=600"
+        }
+    )
+
+    s3.upload_file(
+        os.path.join(out, vault_api_experimental),
+        aws_bucket,
+        vault_api_experimental,
+        ExtraArgs={
+            'ContentType': "application/json",
+            'CacheControl': "max-age=600"
+        }
+    )
+
+
+def with_monitoring():
+    from telegram.ext import Updater
+
+    group = os.environ.get('TG_YFIREBOT_GROUP_INTERNAL')
+    updater = Updater(os.environ.get('TG_YFIREBOT'))
+    now = datetime.now()
+    message = f"`[{now}]`\n⚙️ API is updating..."
+    ping = updater.bot.send_message(chat_id=group, text=message, parse_mode="Markdown")
+    ping = ping.message_id
     try:
-        response = s3.upload_file(
-            os.path.join(out, vault_api_all),
-            aws_bucket,
-            vault_api_all,
-            ExtraArgs={
-                'ContentType': "application/json",
-                'CacheControl': "max-age=600"
-            }
-        )
-        logger.info(response)
-    except ClientError as e:
-        logging.error(e)
+        main()
+    except Exception as error:
+        tb = traceback.format_exc()
+        now = datetime.now()
+        message = f"`[{now}]`\n🔥 API update failed!\n```\n{tb}\n```"
+        updater.bot.send_message(chat_id=group, text=message, parse_mode="Markdown", reply_to_message_id=ping)
+        raise error
+    message = "✅ API update successful!"
+    updater.bot.send_message(chat_id=group, text="✅ API update successful!", reply_to_message_id=ping)
