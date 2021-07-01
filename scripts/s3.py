@@ -91,8 +91,6 @@ def wrap_vault(vault: Union[VaultV1, VaultV2], samples: ApySamples, aliases: dic
     if any([isinstance(vault, t) for t in [Backscratcher, YveCRVJar]]):
         object["special"] = True
 
-    print(object)
-    
     return object
 
 def getAssetsMetadataDict(v2_vaults: list) -> dict:
