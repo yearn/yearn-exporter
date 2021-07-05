@@ -165,11 +165,12 @@ def main():
 def with_monitoring():
     from telegram.ext import Updater
 
-    group = os.environ.get('TG_YFIREBOT_GROUP_INTERNAL')
+    private_group = os.environ.get('TG_YFIREBOT_GROUP_INTERNAL')
+    public_group = os.environ.get('TG_YFIREBOT_GROUP_EXTERNAL')
     updater = Updater(os.environ.get('TG_YFIREBOT'))
     now = datetime.now()
     message = f"`[{now}]`\n⚙️ API is updating..."
-    ping = updater.bot.send_message(chat_id=group, text=message, parse_mode="Markdown")
+    ping = updater.bot.send_message(chat_id=private_group, text=message, parse_mode="Markdown")
     ping = ping.message_id
     try:
         main()
@@ -177,7 +178,8 @@ def with_monitoring():
         tb = traceback.format_exc()
         now = datetime.now()
         message = f"`[{now}]`\n🔥 API update failed!\n```\n{tb}\n```"
-        updater.bot.send_message(chat_id=group, text=message, parse_mode="Markdown", reply_to_message_id=ping)
+        updater.bot.send_message(chat_id=private_group, text=message, parse_mode="Markdown", reply_to_message_id=ping)
+        updater.bot.send_message(chat_id=public_group, text=message, parse_mode="Markdown", reply_to_message_id=ping)
         raise error
     message = "✅ API update successful!"
-    updater.bot.send_message(chat_id=group, text="✅ API update successful!", reply_to_message_id=ping)
+    updater.bot.send_message(chat_id=private_group, text="✅ API update successful!", reply_to_message_id=ping)
