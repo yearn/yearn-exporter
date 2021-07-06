@@ -179,7 +179,7 @@ def with_monitoring():
         now = datetime.now()
         message = f"`[{now}]`\n🔥 API update failed!\n```\n{tb}\n```"
         updater.bot.send_message(chat_id=private_group, text=message, parse_mode="Markdown", reply_to_message_id=ping)
-        updater.bot.send_message(chat_id=public_group, text=message, parse_mode="Markdown", reply_to_message_id=ping)
+        updater.bot.send_message(chat_id=public_group, text=message, parse_mode="Markdown")
         raise error
     message = "✅ API update successful!"
     updater.bot.send_message(chat_id=private_group, text="✅ API update successful!", reply_to_message_id=ping)
