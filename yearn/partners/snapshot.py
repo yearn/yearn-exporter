@@ -106,7 +106,8 @@ class Partner:
         # calculate final payout by vault after tier adjustments
         partner = partner.join(tiers)
         partner['payout'] = partner.payout_base * partner.tier
-        
+        partner['payout_usd'] = partner.payout * partner.vault_price
+
         self.export_csv(partner)
         payouts = self.export_payouts(partner)
         self.export_chart(partner)
@@ -119,15 +120,23 @@ class Partner:
         partner.to_csv(path)
 
     def export_payouts(self, partner):
+
+        def vault_prices_now(row):
+            return row.amount * magic.get_price(row.token)
+
         # calculate payouts grouped by month and vault token
-        payouts = pd.pivot_table(partner, 'payout', 'timestamp', 'vault', 'sum').resample('1M').sum()
+        payouts = pd.pivot_table(partner, ['payout','payout_usd'], 'timestamp', 'vault','sum').resample('1M').sum()
+
         # stack from wide to long format with one payment per line
         payouts = payouts.stack().reset_index()
         payouts['treasury'] = self.treasury
         payouts['partner'] = self.name
+
         # reorder columns
-        payouts.columns = ['timestamp', 'token', 'amount', 'treasury', 'partner']
-        payouts = payouts[['timestamp', 'partner', 'token', 'treasury', 'amount']]
+        payouts.columns = ['timestamp', 'token', 'amount', 'value_usd', 'treasury', 'partner']
+        payouts['current_value_usd'] = payouts.apply(vault_prices_now,axis=1) 
+        payouts = payouts[['timestamp','token','amount','value_usd','current_value_usd','treasury','partner']]
+        
         payouts.to_csv(Path(f'research/partners/{self.name}/payouts.csv'), index=False)
         return payouts
 
