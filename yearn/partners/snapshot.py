@@ -4,9 +4,10 @@ from functools import lru_cache
 from pathlib import Path
 from typing import List
 
+import logging
 import matplotlib.pyplot as plt
 import pandas as pd
-from brownie import web3
+from brownie import Contract, web3
 from joblib.parallel import Parallel, delayed
 from web3._utils.abi import filter_by_name
 from web3._utils.events import construct_event_topic_set
@@ -77,25 +78,29 @@ class Partner:
         # snapshot wrapper share at each harvest
         wrappers = []
         for wrapper in self.wrappers:
-            protocol_fees = wrapper.protocol_fees()
-            blocks, protocol_fees = zip(*protocol_fees.items())
-            wrap = pd.DataFrame(
-                {
-                    'block': blocks,
-                    'timestamp': get_timestamps(blocks),
-                    'protocol_fee': protocol_fees,
-                    'balance': wrapper.balances(blocks),
-                    'total_supply': wrapper.total_supplies(blocks),
-                    'vault_price': wrapper.vault_prices(blocks),
-                }
-            )
-            wrap['balance_usd'] = wrap.balance * wrap.vault_price
-            wrap['share'] = wrap.balance / wrap.total_supply
-            wrap['payout_base'] = wrap.share * wrap.protocol_fee * (1 - OPEX_COST)
-            wrap['wrapper'] = wrapper.wrapper
-            wrap['vault'] = wrapper.vault
-            wrap = wrap.set_index('block')
-            wrappers.append(wrap)
+            try:
+                protocol_fees = wrapper.protocol_fees()
+                blocks, protocol_fees = zip(*protocol_fees.items())
+                wrap = pd.DataFrame(
+                    {
+                        'block': blocks,
+                        'timestamp': get_timestamps(blocks),
+                        'protocol_fee': protocol_fees,
+                        'balance': wrapper.balances(blocks),
+                        'total_supply': wrapper.total_supplies(blocks),
+                        'vault_price': wrapper.vault_prices(blocks),
+                    }
+                )
+                wrap['balance_usd'] = wrap.balance * wrap.vault_price
+                wrap['share'] = wrap.balance / wrap.total_supply
+                wrap['payout_base'] = wrap.share * wrap.protocol_fee * (1 - OPEX_COST)
+                wrap['wrapper'] = wrapper.wrapper
+                wrap['vault'] = wrapper.vault
+                wrap['vault_name'] = wrap.apply(self.vault_names,axis=1) 
+                wrap = wrap.set_index('block')
+                wrappers.append(wrap)
+            except ValueError as e: # Runs if protocol_fees.items() is empty
+                logging.warn(f"{wrapper.vault} {str(e)}")
             # save a csv for reporting
 
         # calculate partner fee tier from cummulative wrapper balances
@@ -110,7 +115,10 @@ class Partner:
 
         self.export_csv(partner)
         payouts = self.export_payouts(partner)
-        self.export_chart(partner)
+        try:
+            self.export_chart(partner)
+        except Exception as e:
+            logging.warn(f"couldn't export chart for {self.name}: {e}")
 
         return partner, payouts
 
@@ -120,10 +128,6 @@ class Partner:
         partner.to_csv(path)
 
     def export_payouts(self, partner):
-
-        def vault_prices_now(row):
-            return row.amount * magic.get_price(row.token)
-
         # calculate payouts grouped by month and vault token
         payouts = pd.pivot_table(partner, ['payout','payout_usd'], 'timestamp', 'vault','sum').resample('1M').sum()
 
@@ -131,17 +135,24 @@ class Partner:
         payouts = payouts.stack().reset_index()
         payouts['treasury'] = self.treasury
         payouts['partner'] = self.name
+        payouts['token_name'] = payouts.apply(self.vault_names, axis=1)
 
         # reorder columns
-        payouts.columns = ['timestamp', 'token', 'amount', 'value_usd', 'treasury', 'partner']
-        payouts['current_value_usd'] = payouts.apply(vault_prices_now,axis=1) 
-        payouts = payouts[['timestamp','token','amount','value_usd','current_value_usd','treasury','partner']]
+        payouts.columns = ['timestamp', 'token', 'amount', 'value_usd', 'treasury', 'partner', 'token_name']
+        payouts['current_value_usd'] = payouts.apply(self.vault_prices_now,axis=1) 
+        payouts = payouts[['timestamp','token','token_name','amount','value_usd','current_value_usd','treasury','partner']]
         
         payouts.to_csv(Path(f'research/partners/{self.name}/payouts.csv'), index=False)
         return payouts
 
     def export_chart(self, partner):
         make_partner_charts(self, partner)
+
+    def vault_names(self, row):
+        return Contract(row.vault).symbol()
+
+    def vault_prices_now(self, row):
+        return row.amount * magic.get_price(row.token)
 
 
 def process_partners(partners):
