@@ -34,9 +34,10 @@ class YveCRVJar:
         return 'pSLP'
 
     def apy(self, _: ApySamples) -> Apy:
-        data = requests.get("https://stkpowy01i.execute-api.us-west-1.amazonaws.com/prod/protocol/jar/yvecrv-eth/performance").json()
-        apy = data["thirtyDayFarm"]  / 100.
-        points = ApyPoints(data["sevenDayFarm"] / 100., apy, apy)
+        data = requests.get("https://stkpowy01i.execute-api.us-west-1.amazonaws.com/prod/protocol/pools").json()
+        yvboost_eth_pool  = [pool for pool in data if pool["identifier"] == "yvboost-eth"][0]
+        apy = yvboost_eth_pool["apy"]  / 100.
+        points = ApyPoints(apy, apy, apy)
         return Apy("yvecrv-jar", apy, apy, ApyFees(), points=points)
 
     def tvl(self, block=None) -> Tvl:
@@ -85,6 +86,7 @@ class Backscratcher:
         epoch = math.floor(time() / week) * week - week
         tokens_per_week = curve_reward_distribution.tokens_per_week(epoch) / 1e18
         virtual_price = curve_3_pool.get_virtual_price() / 1e18
+        # although we call this APY, this is actually APR since there is no compounding
         apy = (tokens_per_week * virtual_price * 52) / ((total_vecrv / 1e18) * crv_price)
         vault_boost = (yearn_vecrv / vault_supply) * (crv_price / yvecrv_price)
         composite = {
