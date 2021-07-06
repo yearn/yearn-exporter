@@ -13,6 +13,7 @@ from typing import Any, Union
 from time import time
 
 from brownie.network.contract import Contract
+from brownie import web3
 
 from yearn.special import Backscratcher, YveCRVJar
 
@@ -94,7 +95,7 @@ def wrap_vault(vault: Union[VaultV1, VaultV2], samples: ApySamples, aliases: dic
     return object
 
 def getAssetsMetadataDict(v2_vaults: list) -> dict:
-    v2_registry_adapter = Contract('0x240315db938d44bb124ae619f5fd0269a02d1271')
+    v2_registry_adapter = Contract(web3.ens.resolve("lens.ychad.eth"))
     v2_addresses = map(lambda vault: str(vault.vault), v2_vaults)
     assets_dynamic_data = v2_registry_adapter.assetsDynamic(list(v2_addresses))
     assets_metadata_dict = {}
