@@ -1,11 +1,10 @@
 import logging
-from typing import Union
 
 from brownie import Contract, ZERO_ADDRESS
 
 from yearn.apy.curve.rewards import rewards
 
-from yearn.prices.curve import get_pool, get_underlying_coins, curve_registry
+from yearn.prices.curve import get_pool, curve_registry
 from yearn.prices.magic import get_price
 
 from yearn.apy.common import (
@@ -49,8 +48,6 @@ def simple(vault, samples: ApySamples) -> Apy:
     gauge_inflation_rate = gauge.inflation_rate()
     pool = Contract(pool_address)
     pool_price = pool.get_virtual_price()
-
-    underlying_coins = get_underlying_coins(lp_token)
 
     base_asset_price = get_price(lp_token) or 1
 

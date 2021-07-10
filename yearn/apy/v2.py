@@ -28,8 +28,8 @@ def closest(haystack, needle):
 def simple(vault, samples: ApySamples) -> Apy:
     harvests = sorted([harvest for strategy in vault.strategies for harvest in strategy.harvests])
 
-    if len(harvests) < 10:
-        raise ApyError("v2:harvests", "harvests are < 10")
+    if len(harvests) < 4:
+        raise ApyError("v2:harvests", "harvests are < 4")
 
     now = harvests[-1]
     week_ago = closest(harvests, samples.week_ago)
@@ -70,6 +70,9 @@ def simple(vault, samples: ApySamples) -> Apy:
     performance = (contract.performanceFee() * 2) if hasattr(contract, "performanceFee") else 0
     management = contract.managementFee() if hasattr(contract, "managementFee") else 0
 
+    performance /= 1e4
+    management /= 1e4
+
     # assume we are compounding every week
     compounding = 52
 
@@ -77,7 +80,7 @@ def simple(vault, samples: ApySamples) -> Apy:
     apr_after_fees = compounding * ((net_apy + 1) ** (1 / compounding)) - compounding
 
     # calculate our pre-fee APR
-    gross_apr = apr_after_fees / (1 - performance/1e4) + management/1e4
+    gross_apr = apr_after_fees / (1 - performance) + management
     
     points = ApyPoints(week_ago_apy, month_ago_apy, inception_apy)
     fees = ApyFees(performance=performance, management=management)

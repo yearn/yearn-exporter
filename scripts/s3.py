@@ -35,8 +35,15 @@ warnings.simplefilter("ignore", BrownieEnvironmentWarning)
 logging.basicConfig(level=logging.DEBUG)
 logger = logging.getLogger("yearn.apy")
 
-def wrap_vault(vault: Union[VaultV1, VaultV2], samples: ApySamples, aliases: dict, icon_url: str, assets_metadata_dict: dict) -> dict:
+def wrap_vault(vault: Union[VaultV1, VaultV2], samples: ApySamples, aliases: dict, icon_url: str, assets_metadata: dict) -> dict:
     apy = vault.apy(samples)
+
+    new = False
+    if isinstance(vault, VaultV2):
+        harvests = [harvest for strategy in vault.strategies for harvest in strategy.harvests]
+        if len(harvests) < 4:
+            new = True
+    
     if isinstance(vault, VaultV1):
         strategies = [
             {
@@ -53,12 +60,14 @@ def wrap_vault(vault: Union[VaultV1, VaultV2], samples: ApySamples, aliases: dic
     vault_alias = token_alias
 
     tvl = vault.tvl()
-    migrations_available = None
-    latest_vault_address = None
-    assets_metadata = assets_metadata_dict.get(str(vault.vault))
-    if assets_metadata is not None:
-        migrations_available = assets_metadata[1]
-        latest_vault_address = assets_metadata[2]
+
+    # migration = None
+
+    # if str(vault.vault) in assets_metadata:
+    #     migration = {
+    #         "available": assets_metadata[str(vault.vault)][1],
+    #         "address": assets_metadata[str(vault.vault)][2]
+    #     }
 
 
     object = {
@@ -85,8 +94,8 @@ def wrap_vault(vault: Union[VaultV1, VaultV2], samples: ApySamples, aliases: dic
         "type": "v2" if isinstance(vault, VaultV2) else "v1",
         "emergency_shutdown": vault.vault.emergencyShutdown() if hasattr(vault.vault, "emergencyShutdown") else False,
         "updated": int(time()),
-        "migrations_available": migrations_available,
-        "latest_vault_address": latest_vault_address,
+        # "migration": migration,
+        "new": new
     }
 
     if any([isinstance(vault, t) for t in [Backscratcher, YveCRVJar]]):
@@ -94,14 +103,16 @@ def wrap_vault(vault: Union[VaultV1, VaultV2], samples: ApySamples, aliases: dic
 
     return object
 
-def getAssetsMetadataDict(v2_vaults: list) -> dict:
-    v2_registry_adapter = Contract(web3.ens.resolve("lens.ychad.eth"))
-    v2_addresses = map(lambda vault: str(vault.vault), v2_vaults)
-    assets_dynamic_data = v2_registry_adapter.assetsDynamic(list(v2_addresses))
-    assets_metadata_dict = {}
+def get_assets_metadata(vault_v2: list) -> dict:
+    # TODO: not working! @jstashh
+    registry_v2_adapter = Contract(web3.ens.resolve("lens.ychad.eth"))
+    addresses = [str(vault.vault) for vault in vault_v2]
+    print(addresses)
+    assets_dynamic_data = registry_v2_adapter.assetsDynamic(addresses)
+    assets_metadata = {}
     for datum in assets_dynamic_data:
-        assets_metadata_dict[datum[0]] = datum[-1]
-    return assets_metadata_dict
+        assets_metadata[datum[0]] = datum[-1]
+    return assets_metadata
 
 
 def main():
@@ -120,14 +131,15 @@ def main():
     samples = get_samples()
 
     special = [YveCRVJar(), Backscratcher()]
-    v1_registry = RegistryV1()
-    v2_registry = RegistryV2()
+    registry_v1 = RegistryV1()
+    registry_v2 = RegistryV2()
 
-    assets_metadata_dict = getAssetsMetadataDict(v2_registry.vaults)
+    # assets_metadata = get_assets_metadata(registry_v2.vaults)
+    assets_metadata = {}
 
-    for vault in itertools.chain(special, v1_registry.vaults, v2_registry.vaults):
+    for vault in itertools.chain(special, registry_v1.vaults, registry_v2.vaults):
         try:
-            data.append(wrap_vault(vault, samples, aliases, icon_url, assets_metadata_dict))
+            data.append(wrap_vault(vault, samples, aliases, icon_url, assets_metadata))
         except ValueError as error:
             logger.error(error)
 
@@ -171,7 +183,7 @@ def main():
         vault_api_all,
         ExtraArgs={
             'ContentType': "application/json",
-            'CacheControl': "max-age=600"
+            'CacheControl': "max-age=1800"
         }
     )
 
@@ -181,7 +193,7 @@ def main():
         vault_api_experimental,
         ExtraArgs={
             'ContentType': "application/json",
-            'CacheControl': "max-age=600"
+            'CacheControl': "max-age=1800"
         }
     )
 
