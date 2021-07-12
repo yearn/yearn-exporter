@@ -1,11 +1,13 @@
 import logging
-from typing import Union
 
 from brownie import Contract, ZERO_ADDRESS
+from semantic_version import Version
 
 from yearn.apy.curve.rewards import rewards
 
-from yearn.prices.curve import get_pool, get_underlying_coins, curve_registry
+from yearn.v2.vaults import Vault as VaultV2
+
+from yearn.prices.curve import get_pool, curve_registry
 from yearn.prices.magic import get_price
 
 from yearn.apy.common import (
@@ -49,8 +51,6 @@ def simple(vault, samples: ApySamples) -> Apy:
     gauge_inflation_rate = gauge.inflation_rate()
     pool = Contract(pool_address)
     pool_price = pool.get_virtual_price()
-
-    underlying_coins = get_underlying_coins(lp_token)
 
     base_asset_price = get_price(lp_token) or 1
 
@@ -102,9 +102,7 @@ def simple(vault, samples: ApySamples) -> Apy:
     if vault.vault.address == "0xE625F5923303f1CE7A43ACFEFd11fd12f30DbcA4":
         pool_apy = 0
 
-    from yearn.v2.vaults import Vault as VaultV2
-
-    if type(vault) is VaultV2:
+    if isinstance(vault, VaultV2):
         contract = vault.vault
         if len(vault.strategies) > 0 and hasattr(vault.strategies[0].strategy, "keepCRV"):
             crv_keep_crv = vault.strategies[0].strategy.keepCRV() / 1e4
@@ -124,7 +122,7 @@ def simple(vault, samples: ApySamples) -> Apy:
         performance = (strategist_reward + strategist_performance + treasury) / 1e4
         management = 0
 
-    if type(vault) is VaultV2 and len(vault.strategies) == 2:
+    if isinstance(vault, VaultV2) and len(vault.strategies) == 2:
         crv_strategy = vault.strategies[0].strategy
         cvx_strategy = vault.strategies[1].strategy
         cvx_working_balance = gauge.working_balances(CONVEX_VOTER)
@@ -182,6 +180,10 @@ def simple(vault, samples: ApySamples) -> Apy:
     crv_net_apy = ((1 + crv_net_farmed_apy) * (1 + pool_apy)) - 1
 
     net_apy = crv_net_apy * crv_debt_ratio + cvx_net_apy * cvx_debt_ratio
+
+    # 0.3.5+ should never be < 0% because of management
+    if isinstance(vault, VaultV2) and net_apy < 0 and Version(vault.api_version) >= Version("0.3.5"):
+        net_apy = 0
 
     fees = ApyFees(performance=performance, management=management, keep_crv=crv_keep_crv, cvx_keep_crv=cvx_keep_crv)
     composite = {

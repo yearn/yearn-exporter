@@ -1,5 +1,8 @@
 from bisect import bisect_left
 
+from semantic_version.base import Version
+
+from yearn.v2.vaults import Vault as VaultV2
 from yearn.apy.common import (
     Apy,
     ApyError,
@@ -25,11 +28,11 @@ def closest(haystack, needle):
         return before
 
 
-def simple(vault, samples: ApySamples) -> Apy:
+def simple(vault: VaultV2, samples: ApySamples) -> Apy:
     harvests = sorted([harvest for strategy in vault.strategies for harvest in strategy.harvests])
 
-    if len(harvests) < 10:
-        raise ApyError("v2:harvests", "harvests are < 10")
+    if len(harvests) < 4:
+        raise ApyError("v2:harvests", "harvests are < 4")
 
     now = harvests[-1]
     week_ago = closest(harvests, samples.week_ago)
@@ -70,6 +73,9 @@ def simple(vault, samples: ApySamples) -> Apy:
     performance = (contract.performanceFee() * 2) if hasattr(contract, "performanceFee") else 0
     management = contract.managementFee() if hasattr(contract, "managementFee") else 0
 
+    performance /= 1e4
+    management /= 1e4
+
     # assume we are compounding every week
     compounding = 52
 
@@ -77,14 +83,18 @@ def simple(vault, samples: ApySamples) -> Apy:
     apr_after_fees = compounding * ((net_apy + 1) ** (1 / compounding)) - compounding
 
     # calculate our pre-fee APR
-    gross_apr = apr_after_fees / (1 - performance/1e4) + management/1e4
+    gross_apr = apr_after_fees / (1 - performance) + management
+
+    # 0.3.5+ should never be < 0% because of management
+    if net_apy < 0 and Version(vault.api_version) >= Version("0.3.5"):
+        net_apy = 0
     
     points = ApyPoints(week_ago_apy, month_ago_apy, inception_apy)
     fees = ApyFees(performance=performance, management=management)
     return Apy("v2:simple", gross_apr, net_apy, fees, points=points)
 
 
-def average(vault, samples: ApySamples) -> Apy:
+def average(vault: VaultV2, samples: ApySamples) -> Apy:
     harvests = sorted([harvest for strategy in vault.strategies for harvest in strategy.harvests])
 
     if len(harvests) < 4:
@@ -138,6 +148,10 @@ def average(vault, samples: ApySamples) -> Apy:
 
     # calculate our pre-fee APR
     gross_apr = apr_after_fees / (1 - performance) + management
+
+    # 0.3.5+ should never be < 0% because of management
+    if net_apy < 0 and Version(vault.api_version) >= Version("0.3.5"):
+        net_apy = 0
     
     points = ApyPoints(week_ago_apy, month_ago_apy, inception_apy)
     fees = ApyFees(performance=performance, management=management)
