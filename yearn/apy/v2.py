@@ -1,5 +1,8 @@
 from bisect import bisect_left
 
+from semantic_version.base import Version
+
+from yearn.v2.vaults import Vault as VaultV2
 from yearn.apy.common import (
     Apy,
     ApyError,
@@ -25,7 +28,7 @@ def closest(haystack, needle):
         return before
 
 
-def simple(vault, samples: ApySamples) -> Apy:
+def simple(vault: VaultV2, samples: ApySamples) -> Apy:
     harvests = sorted([harvest for strategy in vault.strategies for harvest in strategy.harvests])
 
     if len(harvests) < 4:
@@ -81,13 +84,17 @@ def simple(vault, samples: ApySamples) -> Apy:
 
     # calculate our pre-fee APR
     gross_apr = apr_after_fees / (1 - performance) + management
+
+    # 0.3.5+ should never be < 0% because of management
+    if net_apy < 0 and Version(vault.api_version) >= Version("0.3.5"):
+        net_apy = 0
     
     points = ApyPoints(week_ago_apy, month_ago_apy, inception_apy)
     fees = ApyFees(performance=performance, management=management)
     return Apy("v2:simple", gross_apr, net_apy, fees, points=points)
 
 
-def average(vault, samples: ApySamples) -> Apy:
+def average(vault: VaultV2, samples: ApySamples) -> Apy:
     harvests = sorted([harvest for strategy in vault.strategies for harvest in strategy.harvests])
 
     if len(harvests) < 4:
@@ -141,6 +148,10 @@ def average(vault, samples: ApySamples) -> Apy:
 
     # calculate our pre-fee APR
     gross_apr = apr_after_fees / (1 - performance) + management
+
+    # 0.3.5+ should never be < 0% because of management
+    if net_apy < 0 and Version(vault.api_version) >= Version("0.3.5"):
+        net_apy = 0
     
     points = ApyPoints(week_ago_apy, month_ago_apy, inception_apy)
     fees = ApyFees(performance=performance, management=management)
