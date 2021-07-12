@@ -93,5 +93,4 @@ def get_price(token, block=None):
     if not price:
         logger.error("failed to get price for %s", token)
         raise PriceError(f'could not fetch price for {token}')
-
     return price

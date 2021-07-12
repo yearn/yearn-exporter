@@ -109,3 +109,152 @@ ETH_LIKE = {
 
 YEARN_ADDRESSES_PROVIDER = "0x9be19Ee7Bc4099D62737a7255f5c227fBcd6dB93"
 CURVE_ADDRESSES_PROVIDER = "0x0000000022D53366457F9d5E68Ec105046FC4383"
+
+CURVE_SWAP_POOLS = [
+    {
+        "has_single_sided_deposit": "true",
+        "address": "0x7F55DDe206dbAD629C080068923b36fe9D6bDBeF",
+        "name": "pBTC",
+    },
+    {
+        "has_single_sided_deposit": "false",
+        "address": "0x80466c64868E1ab14a1Ddf27A676C3fcBE638Fe5",
+        "name": "TriCrypto",
+    },
+    {
+        "has_single_sided_deposit": "true",
+        "address": "0xbEbc44782C7dB0a1A60Cb6fe97d0b483032FF1C7",
+        "name": "3Pool",
+    },
+    {
+        "has_single_sided_deposit": "false",
+        "address": "0xDeBF20617708857ebe4F679508E7b7863a8A8EeE",
+        "name": "AAVE",
+    },
+    {
+        "has_single_sided_deposit": "false",
+        "address": "0xA96A65c051bF88B4095Ee1f2451C2A9d43F53Ae2",
+        "name": "ankrETH",
+    },
+    {
+        "has_single_sided_deposit": "false",
+        "address": "0x79a8C46DeA5aDa233ABaFFD40F3A0A2B1e5A4F27",
+        "name": "BUSD",
+    },
+    {
+        "has_single_sided_deposit": "false",
+        "address": "0xA2B47E3D5c44877cca798226B7B8118F9BFb7A56",
+        "name": "Compound",
+    },
+    {
+        "has_single_sided_deposit": "false",
+        "address": "0x0Ce6a5fF5217e38315f87032CF90686C96627CAA",
+        "name": "EURS",
+    },
+    {
+        "has_single_sided_deposit": "false",
+        "address": "0x4CA9b3063Ec5866A4B82E437059D2C43d1be596F",
+        "name": "hBTC",
+    },
+    {
+        "has_single_sided_deposit": "true",
+        "address": "0x2dded6Da1BF5DBdF597C45fcFaa3194e53EcfeAF",
+        "name": "IronBank",
+    },
+    {
+        "has_single_sided_deposit": "false",
+        "address": "0xf178c0b5bb7e7abf4e12a4838c7b7c5ba2c623c0",
+        "name": "Link",
+    },
+    {
+        "has_single_sided_deposit": "false",
+        "address": "0x06364f10B501e868329afBc005b3492902d6C763",
+        "name": "PAX",
+    },
+    {
+        "has_single_sided_deposit": "false",
+        "address": "0x93054188d876f558f4a66B2EF1d97d16eDf0895B",
+        "name": "renBTC",
+    },
+    {
+        "has_single_sided_deposit": "false",
+        "address": "0xF9440930043eb3997fc70e1339dBb11F341de7A8",
+        "name": "rETH",
+    },
+    {
+        "has_single_sided_deposit": "true",
+        "address": "0xEB16Ae0052ed37f479f7fe63849198Df1765a733",
+        "name": "sAAVE",
+    },
+    {
+        "has_single_sided_deposit": "true",
+        "address": "0x7fC77b5c7614E1533320Ea6DDc2Eb61fa00A9714",
+        "name": "sBTC",
+    },
+    {
+        "has_single_sided_deposit": "true",
+        "address": "0xc5424B857f758E906013F3555Dad202e4bdB4567",
+        "name": "sETH",
+    },
+    {
+        "has_single_sided_deposit": "true",
+        "address": "0xDC24316b9AE028F1497c275EB9192a3Ea0f67022",
+        "name": "stETH",
+    },
+    {
+        "has_single_sided_deposit": "false",
+        "address": "0xA5407eAE9Ba41422680e2e00537571bcC53efBfD",
+        "name": "sUSD",
+    },
+    {
+        "has_single_sided_deposit": "false",
+        "address": "0x52EA46506B9CC5Ef470C5bf89f17Dc28bB35D85C",
+        "name": "USDT",
+    },
+    {
+        "has_single_sided_deposit": "false",
+        "address": "0x45F783CCE6B7FF23B2ab2D70e416cdb7D6055f51",
+        "name": "Y",
+    },
+    {
+        "has_single_sided_deposit": "false",
+        "address": "0x8925D9d9B4569D737a48499DeF3f67BaA5a144b9",
+        "name": "Yv2",
+    },
+]
+
+POOL_INFO_CONTRACT = '0xe64608E223433E8a03a1DaaeFD8Cb638C14B552C'
+
+SINGLE_SIDED_UNDERLYING_TOKENS = {
+    "0x6B175474E89094C44Da98b954EedeAC495271d0F": "DAI",
+    "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48": "USDC",
+    "0xdAC17F958D2ee523a2206206994597C13D831ec7": "USDT",
+    "0x57Ab1ec28D129707052df4dF418D58a2D46d5f51": "SUSD",
+    "0x2260FAC5E5542a773Aa44fBCfeDf7C193bc2C599": "WBTC",
+    "0xfE18be6b3Bd88A2D2A7f928d00292E7a9963CfC6": "sBTC",
+    "0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE": "ETH",
+    "0x5e74C9036fb86BD7eCdcb084a0673EFc32eA31cb": "sETH",
+    "0xae7ab96520DE3A18E5e111B5EaAb095312D7fE84": "stETH",
+    "0x5228a22e72ccC52d415EcFd199F99D0665E7733b": "pBTC",
+    "0x075b1bb99792c9E1041bA13afEf80C91a1e70fB3": "sBTC",
+}
+
+SINGLE_SIDED_TOKENS = {
+    "0x6B175474E89094C44Da98b954EedeAC495271d0F": "DAI",
+    "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48": "USDC",
+    "0xdAC17F958D2ee523a2206206994597C13D831ec7": "USDT",
+    "0x57Ab1ec28D129707052df4dF418D58a2D46d5f51": "SUSD",
+    "0x2260FAC5E5542a773Aa44fBCfeDf7C193bc2C599": "WBTC",
+    "0xfE18be6b3Bd88A2D2A7f928d00292E7a9963CfC6": "sBTC",
+    "0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE": "ETH",
+    "0x5e74C9036fb86BD7eCdcb084a0673EFc32eA31cb": "sETH",
+    "0xae7ab96520DE3A18E5e111B5EaAb095312D7fE84": "stETH",
+    "0x8e595470Ed749b85C6F7669de83EAe304C2ec68F": "cyDAI",
+    "0x76Eb2FE28b36B3ee97F3Adae0C69606eeDB2A37c": "cyUSDC",
+    "0x48759F220ED983dB51fA7A8C0D2AAb8f3ce4166a": "cyUSDT",
+    "0x028171bCA77440897B824Ca71D1c56caC55b68A3": "aDAI",
+    "0x6C5024Cd4F8A59110119C56f8933403A539555EB": "aSUSD",
+    "0xEB4C2781e4ebA804CE9a9803C67d0893436bB27D": "renBTC",
+    "0x5228a22e72ccC52d415EcFd199F99D0665E7733b": "pBTC",
+    "0x075b1bb99792c9E1041bA13afEf80C91a1e70fB3": "sBTC",
+}

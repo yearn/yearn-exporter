@@ -8,6 +8,7 @@ import yearn.ironbank
 import yearn.special
 import yearn.v2.registry
 import yearn.v1.registry
+import yearn.single_sided_curve
 
 logger = logging.getLogger(__name__)
 
@@ -25,6 +26,7 @@ class Yearn:
             "v2": yearn.v2.registry.Registry(),
             "ib": yearn.ironbank.Registry(),
             "special": yearn.special.Registry(),
+            "single_sided_curve": yearn.single_sided_curve.Registry(),
         }
         if load_strategies:
             self.registries["v2"].load_strategies()
@@ -33,15 +35,11 @@ class Yearn:
         logger.info('loaded yearn in %.3fs', time() - start)
 
     def describe(self, block=None):
-        desc = Parallel(4, "threading")(
-            delayed(self.registries[key].describe)(block=block)
-            for key in self.registries
-        )
+        desc = Parallel(4, "threading")(delayed(self.registries[key].describe)(block=block) for key in self.registries)
         return dict(zip(self.registries, desc))
 
     def total_value_at(self, block=None):
         desc = Parallel(4, "threading")(
-            delayed(self.registries[key].total_value_at)(block=block)
-            for key in self.registries
+            delayed(self.registries[key].total_value_at)(block=block) for key in self.registries
         )
         return dict(zip(self.registries, desc))

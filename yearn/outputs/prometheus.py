@@ -1,3 +1,4 @@
+from yearn import single_sided_curve
 from prometheus_client import Gauge, start_http_server
 
 earn_gauge = Gauge("iearn", "", ["vault", "param", "address", "version"])
@@ -6,6 +7,22 @@ v1_gauge = Gauge("yearn", "", ["vault", "param", "address", "version"])
 v2_gauge = Gauge("yearn_vault", "", ["vault", "param", "address", "version", "experimental"])
 v2_strategy_gauge = Gauge("yearn_strategy", "", ["vault", "strategy", "param", "address", "version", "experimental"])
 simple_gauges = {"v1": v1_gauge, "earn": earn_gauge, "ib": ironbank_gauge, "special": v2_gauge}
+single_sided_gauges_attributes = [
+    'pool_name',
+    'address',
+    'balance',
+    'decimals',
+    'token',
+]
+
+
+single_sided_curve_3pool = Gauge("single_sided_curve_3pool", "", single_sided_gauges_attributes)
+single_sided_curve_IronBank = Gauge("single_sided_curve_IronBank", "", single_sided_gauges_attributes)
+single_sided_curve_sAAVE = Gauge("single_sided_curve_sAAVE", "", single_sided_gauges_attributes)
+single_sided_curve_sBTC = Gauge("single_sided_curve_sBTC", "", single_sided_gauges_attributes)
+single_sided_curve_sETH = Gauge("single_sided_curve_sETH", "", single_sided_gauges_attributes)
+single_sided_curve_stETH = Gauge("single_sided_curve_stETH", "", single_sided_gauges_attributes)
+single_sided_curve_pBTC = Gauge("single_sided_curve_pBTC", "", single_sided_gauges_attributes)
 
 
 def start(port):
@@ -40,6 +57,28 @@ def export(data):
 
                 label_values = _get_label_values(params, [vault, strategy, key], True)
                 v2_strategy_gauge.labels(*label_values).set(value or 0)
+    for coin in data["single_sided_curve"]:
+        label_values = [
+            coin['pool_name'],
+            coin['address'],
+            coin['balance'],
+            coin['decimals'],
+            coin['token'],
+        ]
+        if coin['pool_name'] == '3Pool':
+            single_sided_curve_3pool.labels(*label_values).set(coin['ratio'] or 0)
+        elif coin['pool_name'] == 'IronBank':
+            single_sided_curve_IronBank.labels(*label_values).set(coin['ratio'] or 0)
+        elif coin['pool_name'] == 'sAAVE':
+            single_sided_curve_sAAVE.labels(*label_values).set(coin['ratio'] or 0)
+        elif coin['pool_name'] == 'sBTC':
+            single_sided_curve_sBTC.labels(*label_values).set(coin['ratio'] or 0)
+        elif coin['pool_name'] == 'sETH':
+            single_sided_curve_sETH.labels(*label_values).set(coin['ratio'] or 0)
+        elif coin['pool_name'] == 'stETH':
+            single_sided_curve_stETH.labels(*label_values).set(coin['ratio'] or 0)
+        elif coin['pool_name'] == 'pBTC':
+            single_sided_curve_pBTC.labels(*label_values).set(coin['ratio'] or 0)
 
 
 def flatten_dict(d):
@@ -54,7 +93,7 @@ def flatten_dict(d):
     return dict(items())
 
 
-def _get_label_values(params, inital_labels, experimental = False):
+def _get_label_values(params, inital_labels, experimental=False):
     address = _get_string_label(params, "address")
     version = _get_string_label(params, "version")
     label_values = inital_labels + [address, version]
