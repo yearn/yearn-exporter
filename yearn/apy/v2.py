@@ -2,7 +2,6 @@ from bisect import bisect_left
 
 from semantic_version.base import Version
 
-from yearn.v2.vaults import Vault as VaultV2
 from yearn.apy.common import (
     Apy,
     ApyError,
@@ -28,7 +27,7 @@ def closest(haystack, needle):
         return before
 
 
-def simple(vault: VaultV2, samples: ApySamples) -> Apy:
+def simple(vault, samples: ApySamples) -> Apy:
     harvests = sorted([harvest for strategy in vault.strategies for harvest in strategy.harvests])
 
     if len(harvests) < 4:
@@ -66,7 +65,7 @@ def simple(vault: VaultV2, samples: ApySamples) -> Apy:
     inception_apy = calculate_roi(now_point, inception_point)
 
     # use the first non-zero apy, ordered by precedence
-    apys = [week_ago_apy, month_ago_apy, inception_apy] 
+    apys = [week_ago_apy, month_ago_apy, inception_apy]
     net_apy = next((value for value in apys if value != 0), 0)
 
     # performance fee is doubled since 1x strategists + 1x treasury
@@ -88,13 +87,13 @@ def simple(vault: VaultV2, samples: ApySamples) -> Apy:
     # 0.3.5+ should never be < 0% because of management
     if net_apy < 0 and Version(vault.api_version) >= Version("0.3.5"):
         net_apy = 0
-    
+
     points = ApyPoints(week_ago_apy, month_ago_apy, inception_apy)
     fees = ApyFees(performance=performance, management=management)
     return Apy("v2:simple", gross_apr, net_apy, fees, points=points)
 
 
-def average(vault: VaultV2, samples: ApySamples) -> Apy:
+def average(vault, samples: ApySamples) -> Apy:
     harvests = sorted([harvest for strategy in vault.strategies for harvest in strategy.harvests])
 
     if len(harvests) < 4:
@@ -129,7 +128,7 @@ def average(vault: VaultV2, samples: ApySamples) -> Apy:
     inception_apy = calculate_roi(now_point, inception_point)
 
     # use the first non-zero apy, ordered by precedence
-    apys = [week_ago_apy, month_ago_apy, inception_apy] 
+    apys = [week_ago_apy, month_ago_apy, inception_apy]
     net_apy = next((value for value in apys if value != 0), 0)
 
     # performance fee is doubled since 1x strategists + 1x treasury
@@ -152,7 +151,7 @@ def average(vault: VaultV2, samples: ApySamples) -> Apy:
     # 0.3.5+ should never be < 0% because of management
     if net_apy < 0 and Version(vault.api_version) >= Version("0.3.5"):
         net_apy = 0
-    
+
     points = ApyPoints(week_ago_apy, month_ago_apy, inception_apy)
     fees = ApyFees(performance=performance, management=management)
     return Apy("v2:averaged", gross_apr, net_apy, fees, points=points)

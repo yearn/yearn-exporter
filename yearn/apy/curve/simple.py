@@ -5,8 +5,6 @@ from semantic_version import Version
 
 from yearn.apy.curve.rewards import rewards
 
-from yearn.v2.vaults import Vault as VaultV2
-
 from yearn.prices.curve import get_pool, curve_registry
 from yearn.prices.magic import get_price
 
@@ -101,6 +99,9 @@ def simple(vault, samples: ApySamples) -> Apy:
     # FIXME: crvANKR's pool apy going crazy
     if vault.vault.address == "0xE625F5923303f1CE7A43ACFEFd11fd12f30DbcA4":
         pool_apy = 0
+
+    # prevent circular import for partners calculations
+    from yearn.v2.vaults import Vault as VaultV2
 
     if isinstance(vault, VaultV2):
         contract = vault.vault
