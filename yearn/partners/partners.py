@@ -135,4 +135,15 @@ partners = [
             ),
         ],
     ),
+    Partner(
+        name='donutapp',
+        treasury='0x9eaCFF404BAC19195CbD131a4BeA880Abd09B35e',
+        wrappers=[
+            Wrapper(
+                name='yvDAI',
+                vault='0x19D3364A399d251E894aC732651be8B0E4e85001',
+                wrapper='0x9eaCFF404BAC19195CbD131a4BeA880Abd09B35e',
+            ),
+        ],
+    ),
 ]
