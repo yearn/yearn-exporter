@@ -15,24 +15,55 @@
   "editable": true,
   "gnetId": null,
   "graphTooltip": 0,
+  "id": 18,
   "links": [],
   "panels": [
     {
+      "alert": {
+        "alertRuleTags": {},
+        "conditions": [
+          {
+            "evaluator": {
+              "params": [
+                -1e-7
+              ],
+              "type": "lt"
+            },
+            "operator": {
+              "type": "and"
+            },
+            "query": {
+              "params": [
+                "A",
+                "5m",
+                "now"
+              ]
+            },
+            "reducer": {
+              "params": [],
+              "type": "min"
+            },
+            "type": "query"
+          }
+        ],
+        "executionErrorState": "alerting",
+        "for": "5m",
+        "frequency": "1m",
+        "handler": 1,
+        "message": "V1 Share price has dipped negative",
+        "name": "V2 - Share Price - Rate of Change alert",
+        "noDataState": "no_data",
+        "notifications": []
+      },
       "aliasColors": {},
       "bars": false,
       "dashLength": 10,
       "dashes": false,
       "datasource": "DS_PROMETHEUS",
-      "decimals": 12,
+      "decimals": 8,
       "description": "Rate of increase of Vault Share price. If this goes up the vaults are selling their farmed asset for more vault tokens! This helps normalize and show harvests compared to other vaults. The larger the spikes the more assets sold on that harvest call. The table shows the max value harvested for the timeframe selected.",
-      "fieldConfig": {
-        "defaults": {
-          "custom": {}
-        },
-        "overrides": []
-      },
-      "fill": 1,
-      "fillGradient": 1,
+      "fill": 9,
+      "fillGradient": 10,
       "gridPos": {
         "h": 8,
         "w": 12,
@@ -40,52 +71,62 @@
         "y": 0
       },
       "hiddenSeries": false,
-      "id": 17,
+      "id": 24,
       "legend": {
         "alignAsTable": true,
         "avg": false,
         "current": false,
         "hideEmpty": false,
-        "hideZero": false,
+        "hideZero": true,
         "max": true,
-        "min": false,
+        "min": true,
         "rightSide": true,
         "show": true,
-        "sideWidth": 255,
+        "sideWidth": null,
         "sort": "max",
         "sortDesc": true,
         "total": false,
         "values": true
       },
       "lines": true,
-      "linewidth": 1,
-      "nullPointMode": "null",
+      "linewidth": 2,
+      "nullPointMode": "null as zero",
       "options": {
-        "alertThreshold": false
+        "alertThreshold": true
       },
       "percentage": false,
-      "pluginVersion": "7.4.3",
+      "pluginVersion": "8.0.3",
       "pointradius": 2,
       "points": false,
       "renderer": "flot",
       "seriesOverrides": [],
       "spaceLength": 10,
       "stack": false,
-      "steppedLine": false,
+      "steppedLine": true,
       "targets": [
         {
-          "expr": "delta(yearn{param=\"share price\", vault!=\"GUSD\"}[2m])",
+          "exemplar": true,
+          "expr": "delta(yearn{param=\"share price\"}[1m])",
           "interval": "",
           "legendFormat": "{{vault}}",
           "queryType": "randomWalk",
           "refId": "A"
         }
       ],
-      "thresholds": [],
+      "thresholds": [
+        {
+          "colorMode": "critical",
+          "fill": true,
+          "line": true,
+          "op": "lt",
+          "value": -1e-7,
+          "visible": true
+        }
+      ],
       "timeFrom": null,
       "timeRegions": [],
       "timeShift": null,
-      "title": "V1 - Share Price - Rate of Increase",
+      "title": "V1 - Share Price - Rate of Change",
       "tooltip": {
         "shared": true,
         "sort": 2,
@@ -102,7 +143,7 @@
       },
       "yaxes": [
         {
-          "$$hashKey": "object:3977",
+          "$$hashKey": "object:157",
           "format": "none",
           "label": null,
           "logBase": 1,
@@ -111,7 +152,7 @@
           "show": true
         },
         {
-          "$$hashKey": "object:3978",
+          "$$hashKey": "object:158",
           "format": "short",
           "label": null,
           "logBase": 1,
@@ -133,16 +174,6 @@
       "datasource": "DS_PROMETHEUS",
       "decimals": 6,
       "description": "The current price of the vault's lp token, should increase steadily as vault's farmed assets are sold.",
-      "fieldConfig": {
-        "defaults": {
-          "custom": {},
-          "thresholds": {
-            "mode": "absolute",
-            "steps": []
-          }
-        },
-        "overrides": []
-      },
       "fill": 0,
       "fillGradient": 0,
       "gridPos": {
@@ -152,7 +183,7 @@
         "y": 0
       },
       "hiddenSeries": false,
-      "id": 10,
+      "id": 26,
       "legend": {
         "alignAsTable": true,
         "avg": false,
@@ -163,7 +194,7 @@
         "min": false,
         "rightSide": true,
         "show": true,
-        "sideWidth": 235,
+        "sideWidth": null,
         "sort": "current",
         "sortDesc": true,
         "total": false,
@@ -176,17 +207,29 @@
         "alertThreshold": false
       },
       "percentage": false,
-      "pluginVersion": "7.4.3",
+      "pluginVersion": "8.0.3",
       "pointradius": 2,
       "points": false,
       "renderer": "flot",
-      "seriesOverrides": [],
+      "seriesOverrides": [
+        {
+          "$$hashKey": "object:5051",
+          "alias": "curve.fi/ust",
+          "hiddenSeries": true
+        },
+        {
+          "$$hashKey": "object:5324",
+          "alias": "curve.fi/pbtc",
+          "hiddenSeries": true
+        }
+      ],
       "spaceLength": 10,
       "stack": false,
       "steppedLine": true,
       "targets": [
         {
-          "expr": "yearn{param=\"share price\", vault!=\"GUSD\"}",
+          "exemplar": true,
+          "expr": "yearn{param=\"share price\"}",
           "interval": "",
           "legendFormat": "{{vault}}",
           "refId": "A"
@@ -213,16 +256,17 @@
       },
       "yaxes": [
         {
-          "$$hashKey": "object:1936",
+          "$$hashKey": "object:238",
+          "decimals": 6,
           "format": "short",
           "label": "Share Price",
           "logBase": 1,
           "max": null,
-          "min": "1",
+          "min": null,
           "show": true
         },
         {
-          "$$hashKey": "object:1937",
+          "$$hashKey": "object:239",
           "format": "string",
           "label": "",
           "logBase": 1,
@@ -237,21 +281,55 @@
       }
     },
     {
+      "alert": {
+        "alertRuleTags": {},
+        "conditions": [
+          {
+            "evaluator": {
+              "params": [
+                -0.00015
+              ],
+              "type": "lt"
+            },
+            "operator": {
+              "type": "and"
+            },
+            "query": {
+              "params": [
+                "A",
+                "5m",
+                "now"
+              ]
+            },
+            "reducer": {
+              "params": [],
+              "type": "last"
+            },
+            "type": "query"
+          }
+        ],
+        "executionErrorState": "alerting",
+        "for": "5m",
+        "frequency": "1m",
+        "handler": 1,
+        "message": "A v2 Vault Share price has changed below or above recommended values please check. Could be a big increase in share price or a dip in share price.",
+        "name": "V2 - Share Price - Rate of Increase alert",
+        "noDataState": "no_data",
+        "notifications": [
+          {
+            "uid": "eDdE_U6Gk"
+          }
+        ]
+      },
       "aliasColors": {},
       "bars": false,
       "dashLength": 10,
       "dashes": false,
       "datasource": "DS_PROMETHEUS",
-      "decimals": 12,
+      "decimals": 8,
       "description": "Rate of increase of Vault Share price. If this goes up the vaults are selling their farmed asset for more vault tokens! This helps normalize and show harvests compared to other vaults. The larger the spikes the more assets sold on that harvest call. The table shows the max value harvested for the timeframe selected.",
-      "fieldConfig": {
-        "defaults": {
-          "custom": {}
-        },
-        "overrides": []
-      },
-      "fill": 1,
-      "fillGradient": 1,
+      "fill": 9,
+      "fillGradient": 10,
       "gridPos": {
         "h": 8,
         "w": 12,
@@ -265,46 +343,56 @@
         "avg": false,
         "current": false,
         "hideEmpty": false,
-        "hideZero": false,
+        "hideZero": true,
         "max": true,
-        "min": false,
+        "min": true,
         "rightSide": true,
         "show": true,
-        "sideWidth": 255,
+        "sideWidth": null,
         "sort": "max",
         "sortDesc": true,
         "total": false,
         "values": true
       },
       "lines": true,
-      "linewidth": 1,
-      "nullPointMode": "null",
+      "linewidth": 2,
+      "nullPointMode": "null as zero",
       "options": {
-        "alertThreshold": false
+        "alertThreshold": true
       },
       "percentage": false,
-      "pluginVersion": "7.4.3",
+      "pluginVersion": "8.0.3",
       "pointradius": 2,
       "points": false,
       "renderer": "flot",
       "seriesOverrides": [],
       "spaceLength": 10,
       "stack": false,
-      "steppedLine": false,
+      "steppedLine": true,
       "targets": [
         {
-          "expr": "delta(yearn_vault{param=\"pricePerShare\"}[2m])",
+          "exemplar": true,
+          "expr": "delta(yearn_vault{param=\"pricePerShare\"}[1m])",
           "interval": "",
           "legendFormat": "{{vault}}",
           "queryType": "randomWalk",
           "refId": "A"
         }
       ],
-      "thresholds": [],
+      "thresholds": [
+        {
+          "colorMode": "critical",
+          "fill": true,
+          "line": true,
+          "op": "lt",
+          "value": -0.00015,
+          "visible": true
+        }
+      ],
       "timeFrom": null,
       "timeRegions": [],
       "timeShift": null,
-      "title": "V2 - Share Price - Rate of Increase",
+      "title": "V2 - Share Price - Rate of Change",
       "tooltip": {
         "shared": true,
         "sort": 2,
@@ -321,7 +409,7 @@
       },
       "yaxes": [
         {
-          "$$hashKey": "object:3977",
+          "$$hashKey": "object:157",
           "format": "none",
           "label": null,
           "logBase": 1,
@@ -330,7 +418,7 @@
           "show": true
         },
         {
-          "$$hashKey": "object:3978",
+          "$$hashKey": "object:158",
           "format": "short",
           "label": null,
           "logBase": 1,
@@ -352,16 +440,6 @@
       "datasource": "DS_PROMETHEUS",
       "decimals": 6,
       "description": "The current price of the vault's lp token, should increase steadily as vault's farmed assets are sold.",
-      "fieldConfig": {
-        "defaults": {
-          "custom": {},
-          "thresholds": {
-            "mode": "absolute",
-            "steps": []
-          }
-        },
-        "overrides": []
-      },
       "fill": 0,
       "fillGradient": 0,
       "gridPos": {
@@ -382,7 +460,7 @@
         "min": false,
         "rightSide": true,
         "show": true,
-        "sideWidth": 235,
+        "sideWidth": null,
         "sort": "current",
         "sortDesc": true,
         "total": false,
@@ -395,17 +473,24 @@
         "alertThreshold": false
       },
       "percentage": false,
-      "pluginVersion": "7.4.3",
+      "pluginVersion": "8.0.3",
       "pointradius": 2,
       "points": false,
       "renderer": "flot",
-      "seriesOverrides": [],
+      "seriesOverrides": [
+        {
+          "$$hashKey": "object:5051",
+          "alias": "yvCurve-sETH 0.3.2",
+          "hiddenSeries": true
+        }
+      ],
       "spaceLength": 10,
       "stack": false,
       "steppedLine": true,
       "targets": [
         {
-          "expr": "yearn_vault{param=\"pricePerShare\"}",
+          "exemplar": true,
+          "expr": "yearn_vault{param=\"pricePerShare\", experimental=\"false\", version=\"v2\"}",
           "interval": "",
           "legendFormat": "{{vault}}",
           "refId": "A"
@@ -432,16 +517,17 @@
       },
       "yaxes": [
         {
-          "$$hashKey": "object:1936",
+          "$$hashKey": "object:238",
+          "decimals": 6,
           "format": "short",
           "label": "Share Price",
           "logBase": 1,
           "max": null,
-          "min": "1",
+          "min": null,
           "show": true
         },
         {
-          "$$hashKey": "object:1937",
+          "$$hashKey": "object:239",
           "format": "string",
           "label": "",
           "logBase": 1,
@@ -461,16 +547,10 @@
       "dashLength": 10,
       "dashes": false,
       "datasource": "DS_PROMETHEUS",
-      "decimals": 12,
+      "decimals": null,
       "description": "Rate of increase of Vault Share price. If this goes up the vaults are selling their farmed asset for more vault tokens! This helps normalize and show harvests compared to other vaults. The larger the spikes the more assets sold on that harvest call. The table shows the max value harvested for the timeframe selected.",
-      "fieldConfig": {
-        "defaults": {
-          "custom": {}
-        },
-        "overrides": []
-      },
-      "fill": 1,
-      "fillGradient": 1,
+      "fill": 9,
+      "fillGradient": 10,
       "gridPos": {
         "h": 8,
         "w": 12,
@@ -478,7 +558,7 @@
         "y": 16
       },
       "hiddenSeries": false,
-      "id": 19,
+      "id": 25,
       "legend": {
         "alignAsTable": true,
         "avg": false,
@@ -486,33 +566,34 @@
         "hideEmpty": false,
         "hideZero": false,
         "max": true,
-        "min": false,
+        "min": true,
         "rightSide": true,
         "show": true,
-        "sideWidth": 255,
+        "sideWidth": null,
         "sort": "max",
         "sortDesc": true,
         "total": false,
         "values": true
       },
       "lines": true,
-      "linewidth": 1,
-      "nullPointMode": "null",
+      "linewidth": 2,
+      "nullPointMode": "connected",
       "options": {
-        "alertThreshold": false
+        "alertThreshold": true
       },
       "percentage": false,
-      "pluginVersion": "7.4.3",
+      "pluginVersion": "8.0.3",
       "pointradius": 2,
       "points": false,
       "renderer": "flot",
       "seriesOverrides": [],
       "spaceLength": 10,
       "stack": false,
-      "steppedLine": false,
+      "steppedLine": true,
       "targets": [
         {
-          "expr": "delta(yearn_vault{param=\"pricePerShare\",experimental=\"true\"}[2m])",
+          "exemplar": true,
+          "expr": "delta(yearn_vault{experimental=\"true\",param=\"pricePerShare\",version=\"v2\"}[2m])",
           "interval": "",
           "legendFormat": "{{vault}}",
           "queryType": "randomWalk",
@@ -523,7 +604,7 @@
       "timeFrom": null,
       "timeRegions": [],
       "timeShift": null,
-      "title": "VE - Share Price - Rate of Increase",
+      "title": "VE - Share Price - Rate of Change",
       "tooltip": {
         "shared": true,
         "sort": 2,
@@ -540,7 +621,7 @@
       },
       "yaxes": [
         {
-          "$$hashKey": "object:3977",
+          "$$hashKey": "object:157",
           "format": "none",
           "label": null,
           "logBase": 1,
@@ -549,7 +630,7 @@
           "show": true
         },
         {
-          "$$hashKey": "object:3978",
+          "$$hashKey": "object:158",
           "format": "short",
           "label": null,
           "logBase": 1,
@@ -571,16 +652,6 @@
       "datasource": "DS_PROMETHEUS",
       "decimals": 6,
       "description": "The current price of the vault's lp token, should increase steadily as vault's farmed assets are sold.",
-      "fieldConfig": {
-        "defaults": {
-          "custom": {},
-          "thresholds": {
-            "mode": "absolute",
-            "steps": []
-          }
-        },
-        "overrides": []
-      },
       "fill": 0,
       "fillGradient": 0,
       "gridPos": {
@@ -590,7 +661,7 @@
         "y": 16
       },
       "hiddenSeries": false,
-      "id": 20,
+      "id": 27,
       "legend": {
         "alignAsTable": true,
         "avg": false,
@@ -601,7 +672,7 @@
         "min": false,
         "rightSide": true,
         "show": true,
-        "sideWidth": 235,
+        "sideWidth": null,
         "sort": "current",
         "sortDesc": true,
         "total": false,
@@ -614,17 +685,29 @@
         "alertThreshold": false
       },
       "percentage": false,
-      "pluginVersion": "7.4.3",
+      "pluginVersion": "8.0.3",
       "pointradius": 2,
       "points": false,
       "renderer": "flot",
-      "seriesOverrides": [],
+      "seriesOverrides": [
+        {
+          "$$hashKey": "object:5051",
+          "alias": "yvUSDC 0.3.3 0x477faf",
+          "hiddenSeries": true
+        },
+        {
+          "$$hashKey": "object:5503",
+          "alias": "yvALCX 0.3.2 0x56A5Fd",
+          "hiddenSeries": true
+        }
+      ],
       "spaceLength": 10,
       "stack": false,
       "steppedLine": true,
       "targets": [
         {
-          "expr": "yearn_vault{param=\"pricePerShare\",experimental=\"true\"}",
+          "exemplar": true,
+          "expr": "yearn_vault{experimental=\"true\",param=\"pricePerShare\",version=\"v2\"}",
           "interval": "",
           "legendFormat": "{{vault}}",
           "refId": "A"
@@ -651,16 +734,17 @@
       },
       "yaxes": [
         {
-          "$$hashKey": "object:1936",
+          "$$hashKey": "object:238",
+          "decimals": 6,
           "format": "short",
           "label": "Share Price",
           "logBase": 1,
           "max": null,
-          "min": "1",
+          "min": null,
           "show": true
         },
         {
-          "$$hashKey": "object:1937",
+          "$$hashKey": "object:239",
           "format": "string",
           "label": "",
           "logBase": 1,
@@ -675,6 +759,46 @@
       }
     },
     {
+      "alert": {
+        "alertRuleTags": {},
+        "conditions": [
+          {
+            "evaluator": {
+              "params": [
+                -0.001
+              ],
+              "type": "lt"
+            },
+            "operator": {
+              "type": "and"
+            },
+            "query": {
+              "params": [
+                "A",
+                "5m",
+                "now"
+              ]
+            },
+            "reducer": {
+              "params": [],
+              "type": "min"
+            },
+            "type": "query"
+          }
+        ],
+        "executionErrorState": "alerting",
+        "for": "5m",
+        "frequency": "1m",
+        "handler": 1,
+        "message": "Earn had a dip in share price",
+        "name": "Earn - Share Price - Rate of Increase alert",
+        "noDataState": "no_data",
+        "notifications": [
+          {
+            "uid": "eDdE_U6Gk"
+          }
+        ]
+      },
       "aliasColors": {},
       "bars": false,
       "dashLength": 10,
@@ -682,12 +806,6 @@
       "datasource": "DS_PROMETHEUS",
       "decimals": 12,
       "description": "Rate of increase of Vault Share price. If this goes up the vaults are selling their farmed asset for more vault tokens! This helps normalize and show harvests compared to other vaults. The larger the spikes the more assets sold on that harvest call. The table shows the max value harvested for the timeframe selected.",
-      "fieldConfig": {
-        "defaults": {
-          "custom": {}
-        },
-        "overrides": []
-      },
       "fill": 1,
       "fillGradient": 1,
       "gridPos": {
@@ -705,7 +823,7 @@
         "hideEmpty": false,
         "hideZero": false,
         "max": true,
-        "min": false,
+        "min": true,
         "rightSide": true,
         "show": true,
         "sideWidth": 255,
@@ -721,7 +839,7 @@
         "alertThreshold": false
       },
       "percentage": false,
-      "pluginVersion": "7.4.3",
+      "pluginVersion": "8.0.3",
       "pointradius": 2,
       "points": false,
       "renderer": "flot",
@@ -739,7 +857,16 @@
           "refId": "A"
         }
       ],
-      "thresholds": [],
+      "thresholds": [
+        {
+          "colorMode": "critical",
+          "fill": false,
+          "line": false,
+          "op": "lt",
+          "value": -0.001,
+          "visible": true
+        }
+      ],
       "timeFrom": null,
       "timeRegions": [],
       "timeShift": null,
@@ -760,7 +887,7 @@
       },
       "yaxes": [
         {
-          "$$hashKey": "object:3977",
+          "$$hashKey": "object:5931",
           "format": "none",
           "label": null,
           "logBase": 1,
@@ -769,7 +896,7 @@
           "show": true
         },
         {
-          "$$hashKey": "object:3978",
+          "$$hashKey": "object:5932",
           "format": "short",
           "label": null,
           "logBase": 1,
@@ -791,16 +918,6 @@
       "datasource": "DS_PROMETHEUS",
       "decimals": 6,
       "description": "The current price of the vault's lp token, should increase steadily as vault's farmed assets are sold.",
-      "fieldConfig": {
-        "defaults": {
-          "custom": {},
-          "thresholds": {
-            "mode": "absolute",
-            "steps": []
-          }
-        },
-        "overrides": []
-      },
       "fill": 0,
       "fillGradient": 0,
       "gridPos": {
@@ -810,7 +927,7 @@
         "y": 24
       },
       "hiddenSeries": false,
-      "id": 23,
+      "id": 28,
       "legend": {
         "alignAsTable": true,
         "avg": false,
@@ -821,7 +938,7 @@
         "min": false,
         "rightSide": true,
         "show": true,
-        "sideWidth": 235,
+        "sideWidth": null,
         "sort": "current",
         "sortDesc": true,
         "total": false,
@@ -834,16 +951,28 @@
         "alertThreshold": false
       },
       "percentage": false,
-      "pluginVersion": "7.4.3",
+      "pluginVersion": "8.0.3",
       "pointradius": 2,
       "points": false,
       "renderer": "flot",
-      "seriesOverrides": [],
+      "seriesOverrides": [
+        {
+          "$$hashKey": "object:5051",
+          "alias": "yvUSDC 0.3.3 0x477faf",
+          "hiddenSeries": true
+        },
+        {
+          "$$hashKey": "object:5503",
+          "alias": "yvALCX 0.3.2 0x56A5Fd",
+          "hiddenSeries": true
+        }
+      ],
       "spaceLength": 10,
       "stack": false,
       "steppedLine": true,
       "targets": [
         {
+          "exemplar": true,
           "expr": "iearn{param=\"price per share\"}",
           "interval": "",
           "legendFormat": "{{vault}}",
@@ -871,16 +1000,17 @@
       },
       "yaxes": [
         {
-          "$$hashKey": "object:1936",
+          "$$hashKey": "object:238",
+          "decimals": 6,
           "format": "short",
           "label": "Share Price",
           "logBase": 1,
           "max": null,
-          "min": "1",
+          "min": null,
           "show": true
         },
         {
-          "$$hashKey": "object:1937",
+          "$$hashKey": "object:239",
           "format": "string",
           "label": "",
           "logBase": 1,
@@ -895,20 +1025,23 @@
       }
     }
   ],
-  "refresh": "5s",
-  "schemaVersion": 27,
+  "refresh": "1m",
+  "schemaVersion": 30,
   "style": "dark",
-  "tags": [],
+  "tags": [
+    "Share Price",
+    "Overview"
+  ],
   "templating": {
     "list": []
   },
   "time": {
-    "from": "now-3h",
+    "from": "now-24h",
     "to": "now"
   },
   "timepicker": {},
   "timezone": "",
   "title": "Share Price",
-  "uid": "P0Gx7dEMz",
-  "version": 2
+  "uid": "glll0Iznz",
+  "version": 6
 }
