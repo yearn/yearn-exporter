@@ -1,4 +1,4 @@
-from yearn.partners.snapshot import Partner, Wrapper
+from yearn.partners.snapshot import Partner, Wrapper, WildcardWrapper
 
 
 partners = [
@@ -129,8 +129,8 @@ partners = [
         name='gb',
         treasury='0x6965292e29514e527df092659FB4638dc39e7248',
         wrappers=[
-            Wrapper(
-                vault='None',
+            WildcardWrapper(
+                name='gb1',
                 wrapper='0x6965292e29514e527df092659FB4638dc39e7248',
             ),
         ],

@@ -1,10 +1,10 @@
-from bisect import bisect_right
+import logging
+from concurrent.futures import ThreadPoolExecutor
 from dataclasses import dataclass
 from functools import lru_cache
 from pathlib import Path
 from typing import List
 
-import matplotlib.pyplot as plt
 import pandas as pd
 from brownie import web3
 from joblib.parallel import Parallel, delayed
@@ -15,8 +15,11 @@ from yearn.multicall2 import batch_call
 from yearn.partners.charts import make_partner_charts
 from yearn.partners.constants import OPEX_COST, get_tier
 from yearn.prices import magic
-from yearn.utils import get_block_timestamp
+from yearn.utils import contract_creation_block, get_block_timestamp
+from yearn.v2.registry import Registry
 from yearn.v2.vaults import Vault
+
+logger = logging.getLogger(__name__)
 
 
 def get_timestamps(blocks):
@@ -68,16 +71,52 @@ class Wrapper:
 
 
 @dataclass
+class WildcardWrapper:
+    name: str
+    wrapper: str
+
+    def unwrap(self) -> List[Wrapper]:
+        registry = Registry()
+        topics = construct_event_topic_set(
+            filter_by_name('Transfer', registry.vaults[0].vault.abi)[0],
+            web3.codec,
+            {'receiver': self.wrapper},
+        )
+        addresses = [str(vault.vault) for vault in registry.vaults]
+        from_block = min(ThreadPoolExecutor().map(contract_creation_block, addresses))
+        deposits = {log.address for log in get_logs_asap(addresses, topics, from_block)}
+
+        return [
+            Wrapper(name=vault.name, vault=str(vault.vault), wrapper=self.wrapper)
+            for vault in registry.vaults
+            if str(vault.vault) in deposits
+        ]
+
+
+@dataclass
 class Partner:
     name: str
     wrappers: List[Wrapper]
     treasury: str = None
 
     def process(self):
+        # unwrap wildcard wrappers to a flat list
+        flat_wrappers = []
+        for wrapper in self.wrappers:
+            if isinstance(wrapper, Wrapper):
+                flat_wrappers.append(wrapper)
+            elif isinstance(wrapper, WildcardWrapper):
+                flat_wrappers.extend(wrapper.unwrap())
+
         # snapshot wrapper share at each harvest
         wrappers = []
-        for wrapper in self.wrappers:
+        for wrapper in flat_wrappers:
+            logger.info(wrapper.name)
             protocol_fees = wrapper.protocol_fees()
+            if not protocol_fees:
+                logger.info('no fees for %s', wrapper.name)
+                continue
+
             blocks, protocol_fees = zip(*protocol_fees.items())
             wrap = pd.DataFrame(
                 {
@@ -102,14 +141,16 @@ class Partner:
         partner = pd.concat(wrappers)
         total_balances = pd.pivot_table(partner, 'balance_usd', 'block', 'vault', 'sum').ffill().sum(axis=1)
         tiers = total_balances.apply(get_tier).rename('tier')
-        
+
         # calculate final payout by vault after tier adjustments
         partner = partner.join(tiers)
         partner['payout'] = partner.payout_base * partner.tier
-        
+
         self.export_csv(partner)
         payouts = self.export_payouts(partner)
-        self.export_chart(partner)
+
+        if partner.payout.sum():
+            make_partner_charts(self, partner)
 
         return partner, payouts
 
@@ -130,9 +171,6 @@ class Partner:
         payouts = payouts[['timestamp', 'partner', 'token', 'treasury', 'amount']]
         payouts.to_csv(Path(f'research/partners/{self.name}/payouts.csv'), index=False)
         return payouts
-
-    def export_chart(self, partner):
-        make_partner_charts(self, partner)
 
 
 def process_partners(partners):
