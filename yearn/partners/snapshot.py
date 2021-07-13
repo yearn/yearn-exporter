@@ -15,8 +15,10 @@ from yearn.multicall2 import batch_call
 from yearn.partners.charts import make_partner_charts
 from yearn.partners.constants import OPEX_COST, get_tier
 from yearn.prices import magic
-from yearn.utils import get_block_timestamp
+from yearn.utils import contract_creation_block, get_block_timestamp
 from yearn.v2.vaults import Vault
+from yearn.v2.registry import Registry
+from concurrent.futures import ThreadPoolExecutor
 
 
 def get_timestamps(blocks):
@@ -65,6 +67,28 @@ class Wrapper:
     def vault_prices(self, blocks):
         prices = Parallel(50, 'threading')(delayed(magic.get_price)(self.vault, block=block) for block in blocks)
         return prices
+
+
+@dataclass
+class WildcardWrapper:
+    name: str
+    wrapper: str
+
+    def unwrap(self) -> List[Wrapper]:
+        registry = Registry()
+        topics = construct_event_topic_set(
+            filter_by_name('Transfer', registry.vaults[0].vault.abi)[0],
+            web3.codec,
+            {'receiver': self.wrapper},
+        )
+        addresses = [str(vault.vault) for vault in registry.vaults]
+        from_block = min(ThreadPoolExecutor().map(contract_creation_block, addresses))
+        deposits = {log.address for log in get_logs_asap(addresses, topics, from_block)}
+        return [
+            Wrapper(name=vault.name, vault=str(vault.vault), wrapper=self.wrapper)
+            for vault in registry.vaults
+            if str(vault.vault) in deposits
+        ]
 
 
 @dataclass
