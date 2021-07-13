@@ -57,27 +57,19 @@ def closest_block_after_timestamp(timestamp):
 @memory.cache()
 def contract_creation_block(address) -> int:
     """
-    Determine the block when a contract was created.
-    """
-    logger.info("contract creation block %s", address)
-    client = get_ethereum_client()
-    if client in ['tg', 'erigon']:
-        return _contract_creation_block_binary_search(address)
-    else:
-        raise Exception("An erigon (fka turbogeth) node is needed correctly estimate contract creation block.")
-
-
-def _contract_creation_block_binary_search(address):
-    """
     Find contract creation block using binary search.
     NOTE Requires access to historical state. Doesn't account for CREATE2 or SELFDESTRUCT.
     """
+    logger.info("contract creation block %s", address)
+    
     height = chain.height
     lo, hi = 0, height
+    
     while hi - lo > 1:
         mid = lo + (hi - lo) // 2
         if web3.eth.get_code(address, block_identifier=mid):
             hi = mid
         else:
             lo = mid
+    
     return hi if hi != height else None
