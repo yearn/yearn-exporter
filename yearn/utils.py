@@ -57,45 +57,19 @@ def closest_block_after_timestamp(timestamp):
 @memory.cache()
 def contract_creation_block(address) -> int:
     """
-    Determine the block when a contract was created.
-    """
-    logger.info("contract creation block %s", address)
-    client = get_ethereum_client()
-    if client in ['tg', 'erigon']:
-        return _contract_creation_block_binary_search(address)
-    else:
-        return _contract_creation_block_bigquery(address)
-
-
-def _contract_creation_block_binary_search(address):
-    """
     Find contract creation block using binary search.
     NOTE Requires access to historical state. Doesn't account for CREATE2 or SELFDESTRUCT.
     """
+    logger.info("contract creation block %s", address)
+    
     height = chain.height
     lo, hi = 0, height
+    
     while hi - lo > 1:
         mid = lo + (hi - lo) // 2
         if web3.eth.get_code(address, block_identifier=mid):
             hi = mid
         else:
             lo = mid
+    
     return hi if hi != height else None
-
-
-def _contract_creation_block_bigquery(address):
-    """
-    Query contract creation block using BigQuery.
-    NOTE Requires GOOGLE_APPLICATION_CREDENTIALS
-         https://cloud.google.com/bigquery/docs/quickstarts/quickstart-client-libraries
-    """
-    from google.cloud import bigquery
-
-    client = bigquery.Client()
-    query = "select block_number from `bigquery-public-data.crypto_ethereum.contracts` where address = @address limit 1"
-    job_config = bigquery.QueryJobConfig(
-        query_parameters=[bigquery.ScalarQueryParameter("address", "STRING", address.lower())]
-    )
-    query_job = client.query(query, job_config=job_config)
-    for row in query_job:
-        return row["block_number"]

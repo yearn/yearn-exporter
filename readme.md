@@ -12,7 +12,6 @@ You will need:
 - Prometheus to pull the metrics, persist them and make them queryable
 - Grafana if you want to set up custom dashboards and alerts
 - Etherscan API key 
-- _Optional:_ Google Cloud's Big Query credentials
 
 ## Usage
 
