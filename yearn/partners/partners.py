@@ -125,4 +125,14 @@ partners = [
             ),
         ],
     ),
+    Partner(
+        name='gb',
+        treasury='0x6965292e29514e527df092659FB4638dc39e7248',
+        wrappers=[
+            Wrapper(
+                vault='None',
+                wrapper='0x6965292e29514e527df092659FB4638dc39e7248',
+            ),
+        ],
+    ),
 ]
