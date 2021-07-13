@@ -100,6 +100,7 @@ class Partner:
     treasury: str = None
 
     def process(self):
+        logger.info(self.name)
         # unwrap wildcard wrappers to a flat list
         flat_wrappers = []
         for wrapper in self.wrappers:
@@ -111,7 +112,6 @@ class Partner:
         # snapshot wrapper share at each harvest
         wrappers = []
         for wrapper in flat_wrappers:
-            logger.info(wrapper.name)
             protocol_fees = wrapper.protocol_fees()
             if not protocol_fees:
                 logger.info('no fees for %s', wrapper.name)
@@ -145,6 +145,7 @@ class Partner:
         # calculate final payout by vault after tier adjustments
         partner = partner.join(tiers)
         partner['payout'] = partner.payout_base * partner.tier
+        partner['payout_usd'] = partner.payout * partner.vault_price
 
         self.export_csv(partner)
         payouts = self.export_payouts(partner)
@@ -161,14 +162,14 @@ class Partner:
 
     def export_payouts(self, partner):
         # calculate payouts grouped by month and vault token
-        payouts = pd.pivot_table(partner, 'payout', 'timestamp', 'vault', 'sum').resample('1M').sum()
+        payouts = pd.pivot_table(partner, ['payout', 'payout_usd'], 'timestamp', 'vault', 'sum').resample('1M').sum()
         # stack from wide to long format with one payment per line
         payouts = payouts.stack().reset_index()
         payouts['treasury'] = self.treasury
         payouts['partner'] = self.name
         # reorder columns
-        payouts.columns = ['timestamp', 'token', 'amount', 'treasury', 'partner']
-        payouts = payouts[['timestamp', 'partner', 'token', 'treasury', 'amount']]
+        payouts.columns = ['timestamp', 'token', 'amount', 'amount_usd', 'treasury', 'partner']
+        payouts = payouts[['timestamp', 'partner', 'token', 'treasury', 'amount', 'amount_usd']]
         payouts.to_csv(Path(f'research/partners/{self.name}/payouts.csv'), index=False)
         return payouts
 
