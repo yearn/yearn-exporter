@@ -34,7 +34,7 @@ def simple(vault: VaultV2, samples: ApySamples) -> Apy:
     if len(harvests) < 4:
         raise ApyError("v2:harvests", "harvests are < 4")
 
-    now = harvests[-1]
+    now = closest(harvests, samples.now)
     week_ago = closest(harvests, samples.week_ago)
     month_ago = closest(harvests, samples.month_ago)
     inception_block = harvests[2]
