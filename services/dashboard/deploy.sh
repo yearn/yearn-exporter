@@ -3,7 +3,7 @@
 set -e
 
 WORKDIR="$HOME/yearn-exporter"
-COMPOSE="$WORKDIR/docker-compose.yml"
+COMPOSE="$WORKDIR/services/dashboard/docker-compose.yml"
 REPOSITORY="https://github.com/yearn/yearn-exporter"
 
 echo "[*] Starting deployment"
@@ -49,9 +49,10 @@ else
 fi
 
 echo "[*] Stopping existing service"
-docker-compose -f "$COMPOSE" down --remove-orphans
+docker-compose --file "$COMPOSE" --project-directory . down --remove-orphans
 
 echo "[*] Building and deploying..."
-docker-compose -f "$COMPOSE" up --build -d
+docker-compose --file "$COMPOSE" --project-directory . up --build --detach
 
-echo "[*] Finished!" 
+echo "[*] Finished!"
+
