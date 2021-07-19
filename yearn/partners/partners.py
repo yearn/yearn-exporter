@@ -123,6 +123,46 @@ partners = [
                 vault='0x9d409a0A012CFbA9B15F6D4B36Ac57A46966Ab9a',
                 wrapper='0x0309c98B1bffA350bcb3F9fB9780970CA32a5060',
             ),
+            Wrapper(
+                name='ycrvALUSD',
+                vault='0xA74d4B67b3368E83797a35382AFB776bAAE4F5C8',
+                wrapper='0x0aC00355F80E289f53BF368C9Bdb70f5c114C44B',
+            ),
+            Wrapper(
+                name='ycrvDUSD',
+                vault='0x30FCf7c6cDfC46eC237783D94Fc78553E79d4E9C',
+                wrapper='0x0aC00355F80E289f53BF368C9Bdb70f5c114C44B',
+            ),
+            Wrapper(
+                name='ycrvFRAX',
+                vault='0xB4AdA607B9d6b2c9Ee07A275e9616B84AC560139',
+                wrapper='0x0aC00355F80E289f53BF368C9Bdb70f5c114C44B',
+            ),
+            Wrapper(
+                name='ycrvLUSD',
+                vault='0x5fA5B62c8AF877CB37031e0a3B2f34A78e3C56A6',
+                wrapper='0x0aC00355F80E289f53BF368C9Bdb70f5c114C44B',
+            ),
+            Wrapper(
+                name='ycrvSUSD',
+                vault='0x5a770DbD3Ee6bAF2802D29a901Ef11501C44797A',
+                wrapper='0x0aC00355F80E289f53BF368C9Bdb70f5c114C44B',
+            ),
+            Wrapper(
+                name='ycrvUSDN',
+                vault='0x3B96d491f067912D18563d56858Ba7d6EC67a6fa',
+                wrapper='0x0aC00355F80E289f53BF368C9Bdb70f5c114C44B',
+            ),
+            Wrapper(
+                name='ycrvUSDP',
+                vault='0xC4dAf3b5e2A9e93861c3FBDd25f1e943B8D87417',
+                wrapper='0x0aC00355F80E289f53BF368C9Bdb70f5c114C44B',
+            ),
+            Wrapper(
+                name='ycrvUST',
+                vault='0x1C6a9783F812b3Af3aBbf7de64c3cD7CC7D1af44',
+                wrapper='0x0aC00355F80E289f53BF368C9Bdb70f5c114C44B',
+            ),
         ],
     ),
     Partner(
