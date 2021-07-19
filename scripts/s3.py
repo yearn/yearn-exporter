@@ -61,13 +61,13 @@ def wrap_vault(vault: Union[VaultV1, VaultV2], samples: ApySamples, aliases: dic
 
     tvl = vault.tvl()
 
-    # migration = None
+    migration = None
 
-    # if str(vault.vault) in assets_metadata:
-    #     migration = {
-    #         "available": assets_metadata[str(vault.vault)][1],
-    #         "address": assets_metadata[str(vault.vault)][2]
-    #     }
+    if str(vault.vault) in assets_metadata:
+        migration = {
+            "available": assets_metadata[str(vault.vault)][1],
+            "address": assets_metadata[str(vault.vault)][2]
+        }
 
 
     object = {
@@ -94,7 +94,7 @@ def wrap_vault(vault: Union[VaultV1, VaultV2], samples: ApySamples, aliases: dic
         "type": "v2" if isinstance(vault, VaultV2) else "v1",
         "emergency_shutdown": vault.vault.emergencyShutdown() if hasattr(vault.vault, "emergencyShutdown") else False,
         "updated": int(time()),
-        # "migration": migration,
+        "migration": migration,
         "new": new
     }
 
@@ -104,10 +104,8 @@ def wrap_vault(vault: Union[VaultV1, VaultV2], samples: ApySamples, aliases: dic
     return object
 
 def get_assets_metadata(vault_v2: list) -> dict:
-    # TODO: not working! @jstashh
     registry_v2_adapter = Contract(web3.ens.resolve("lens.ychad.eth"))
     addresses = [str(vault.vault) for vault in vault_v2]
-    print(addresses)
     assets_dynamic_data = registry_v2_adapter.assetsDynamic(addresses)
     assets_metadata = {}
     for datum in assets_dynamic_data:
@@ -134,8 +132,7 @@ def main():
     registry_v1 = RegistryV1()
     registry_v2 = RegistryV2()
 
-    # assets_metadata = get_assets_metadata(registry_v2.vaults)
-    assets_metadata = {}
+    assets_metadata = get_assets_metadata(registry_v2.vaults)
 
     for vault in itertools.chain(special, registry_v1.vaults, registry_v2.vaults):
         try:
