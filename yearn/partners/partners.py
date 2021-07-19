@@ -124,6 +124,21 @@ partners = [
                 wrapper='0x0309c98B1bffA350bcb3F9fB9780970CA32a5060',
             ),
             Wrapper(
+                name='yvYFI',
+                vault='0xe14d13d8b3b85af791b2aadd661cdbd5e6097db1',
+                wrapper='0x0309c98B1bffA350bcb3F9fB9780970CA32a5060',
+            ),
+            Wrapper(
+                name='yvSNX',
+                vault='0xf29ae508698bdef169b89834f76704c3b205aedf',
+                wrapper='0x0309c98B1bffA350bcb3F9fB9780970CA32a5060',
+            ),
+            Wrapper(
+                name='yvUNI',
+                vault='0xfbeb78a723b8087fd2ea7ef1afec93d35e8bed42',
+                wrapper='0x0309c98B1bffA350bcb3F9fB9780970CA32a5060',
+            ),
+            Wrapper(
                 name='ycrvALUSD',
                 vault='0xA74d4B67b3368E83797a35382AFB776bAAE4F5C8',
                 wrapper='0x0aC00355F80E289f53BF368C9Bdb70f5c114C44B',
