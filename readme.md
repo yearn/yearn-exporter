@@ -12,7 +12,6 @@ You will need:
 - Prometheus to pull the metrics, persist them and make them queryable
 - Grafana if you want to set up custom dashboards and alerts
 - Etherscan API key 
-- _Optional:_ Google Cloud's Big Query credentials
 
 ## Usage
 
@@ -55,7 +54,7 @@ export WEB3_PROVIDER=<YOUR_WEB3_PROVIDER> # if this is set, it overrides Infura,
 export ETHERSCAN_TOKEN=<YOUR_ETHERSCAN_TOKEN> # this needs to be set
 export SLEEP_SECONDS=<YOUR_SLEEP_SECONDS> # if this is set, the exporters will wait the given amount of time between subsequent invocations to your web3 provider.
 
-docker-compose up --detach
+docker-compose --file services/dashboard/docker-compose.yml --project-directory . up --build
 ```
 
 After successful startup you can go directly to grafana at `http://localhost:3000`. If you want to change your dashboards you can sign-in at the lower left with `admin:admin`.

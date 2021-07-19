@@ -23,6 +23,7 @@ class ApyFees:
     withdrawal: Optional[float] = None
     management: Optional[float] = None
     keep_crv: Optional[float] = None
+    cvx_keep_crv: Optional[float] = None
 
 
 @dataclass
@@ -35,7 +36,7 @@ class ApyPoints:
 @dataclass
 class Apy:
     type: str
-    apy: float
+    gross_apr: float
     net_apy: float
     fees: ApyFees
     points: Optional[ApyPoints] = None
@@ -49,7 +50,7 @@ class ApySamples:
     month_ago: int
 
 
-class ApyError(Exception):
+class ApyError(ValueError):
     type: str
     message: str
 
@@ -62,9 +63,12 @@ def calculate_roi(after: SharePricePoint, before: SharePricePoint) -> float:
     return annualized
 
 
-def get_samples() -> ApySamples:
-    today = datetime.today()
-    now = web3.eth.block_number
-    week_ago = closest_block_after_timestamp((today - timedelta(days=7)).timestamp())
-    month_ago = closest_block_after_timestamp((today - timedelta(days=31)).timestamp())
+def get_samples(now_time: Optional[datetime] = None) -> ApySamples:
+    if now_time is None:
+        now_time = datetime.today()
+        now = web3.eth.block_number
+    else:
+        now = closest_block_after_timestamp(now_time.timestamp())
+    week_ago = closest_block_after_timestamp((now_time - timedelta(days=7)).timestamp())
+    month_ago = closest_block_after_timestamp((now_time - timedelta(days=31)).timestamp())
     return ApySamples(now, week_ago, month_ago)

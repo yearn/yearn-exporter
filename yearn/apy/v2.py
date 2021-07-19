@@ -1,6 +1,6 @@
 from bisect import bisect_left
 
-from yearn.v2.vaults import Vault
+from semantic_version.base import Version
 
 from yearn.apy.common import (
     Apy,
@@ -27,13 +27,13 @@ def closest(haystack, needle):
         return before
 
 
-def simple(vault: Vault, samples: ApySamples) -> Apy:
+def simple(vault, samples: ApySamples) -> Apy:
     harvests = sorted([harvest for strategy in vault.strategies for harvest in strategy.harvests])
 
-    if len(harvests) < 10:
-        raise ApyError("v2:harvests", "harvests are < 10")
+    if len(harvests) < 4:
+        raise ApyError("v2:harvests", "harvests are < 4")
 
-    now = harvests[-1]
+    now = closest(harvests, samples.now)
     week_ago = closest(harvests, samples.week_ago)
     month_ago = closest(harvests, samples.month_ago)
     inception_block = harvests[2]
@@ -64,24 +64,40 @@ def simple(vault: Vault, samples: ApySamples) -> Apy:
     month_ago_apy = calculate_roi(now_point, month_ago_point)
     inception_apy = calculate_roi(now_point, inception_point)
 
-    net_apy = month_ago_apy
+    # use the first non-zero apy, ordered by precedence
+    apys = [week_ago_apy, month_ago_apy, inception_apy]
+    net_apy = next((value for value in apys if value != 0), 0)
 
     # performance fee is doubled since 1x strategists + 1x treasury
     performance = (contract.performanceFee() * 2) if hasattr(contract, "performanceFee") else 0
     management = contract.managementFee() if hasattr(contract, "managementFee") else 0
 
-    apy = net_apy / (1 - performance / 1e4) + (management / 1e4)
+    performance /= 1e4
+    management /= 1e4
+
+    # assume we are compounding every week
+    compounding = 52
+
+    # calculate our APR after fees
+    apr_after_fees = compounding * ((net_apy + 1) ** (1 / compounding)) - compounding
+
+    # calculate our pre-fee APR
+    gross_apr = apr_after_fees / (1 - performance) + management
+
+    # 0.3.5+ should never be < 0% because of management
+    if net_apy < 0 and Version(vault.api_version) >= Version("0.3.5"):
+        net_apy = 0
 
     points = ApyPoints(week_ago_apy, month_ago_apy, inception_apy)
     fees = ApyFees(performance=performance, management=management)
-    return Apy("v2:simple", apy, net_apy, fees, points=points)
+    return Apy("v2:simple", gross_apr, net_apy, fees, points=points)
 
 
-def average(vault: Vault, samples: ApySamples) -> Apy:
+def average(vault, samples: ApySamples) -> Apy:
     harvests = sorted([harvest for strategy in vault.strategies for harvest in strategy.harvests])
 
-    if len(harvests) < 10:
-        raise ApyError("v2:harvests", "harvests are < 10")
+    if len(harvests) < 4:
+        raise ApyError("v2:harvests", "harvests are < 4")
 
     inception_block = harvests[2]
 
@@ -111,14 +127,31 @@ def average(vault: Vault, samples: ApySamples) -> Apy:
     month_ago_apy = calculate_roi(now_point, month_ago_point)
     inception_apy = calculate_roi(now_point, inception_point)
 
-    net_apy = month_ago_apy
+    # use the first non-zero apy, ordered by precedence
+    apys = [week_ago_apy, month_ago_apy, inception_apy]
+    net_apy = next((value for value in apys if value != 0), 0)
 
     # performance fee is doubled since 1x strategists + 1x treasury
     performance = (contract.performanceFee() * 2) if hasattr(contract, "performanceFee") else 0
     management = contract.managementFee() if hasattr(contract, "managementFee") else 0
 
-    apy = net_apy / (1 - performance / 1e4) + (management / 1e4)
+    performance /= 1e4
+    management /= 1e4
+
+    # assume we are compounding every week
+    compounding = 52
+
+    # calculate our APR after fees
+    # if net_apy is negative no fees are charged
+    apr_after_fees = compounding * ((net_apy + 1) ** (1 / compounding)) - compounding if net_apy > 0 else net_apy
+
+    # calculate our pre-fee APR
+    gross_apr = apr_after_fees / (1 - performance) + management
+
+    # 0.3.5+ should never be < 0% because of management
+    if net_apy < 0 and Version(vault.api_version) >= Version("0.3.5"):
+        net_apy = 0
 
     points = ApyPoints(week_ago_apy, month_ago_apy, inception_apy)
     fees = ApyFees(performance=performance, management=management)
-    return Apy("v2:averaged", apy, net_apy, fees, points=points)
+    return Apy("v2:averaged", gross_apr, net_apy, fees, points=points)

@@ -10,13 +10,13 @@ from web3._utils.events import construct_event_topic_set
 from yearn.events import create_filter, decode_logs, get_logs_asap
 from yearn.multicall2 import fetch_multicall
 from yearn.prices import magic
-from yearn.utils import contract_creation_block
+from yearn.utils import contract_creation_block, Singleton
 from yearn.v2.vaults import Vault
 
 logger = logging.getLogger(__name__)
 
 
-class Registry:
+class Registry(metaclass=Singleton):
     def __init__(self):
         self.releases = {}  # api_version => template
         self._vaults = {}  # address -> Vault

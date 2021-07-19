@@ -1,4 +1,3 @@
-from yearn.v1.vaults import VaultV1
 from yearn.utils import contract_creation_block
 
 from yearn.apy.common import (
@@ -12,7 +11,7 @@ from yearn.apy.common import (
 )
 
 
-def simple(vault: VaultV1, samples: ApySamples) -> Apy:
+def simple(vault, samples: ApySamples) -> Apy:
     inception_block = contract_creation_block(vault.vault.address)
 
     if not inception_block:
@@ -53,7 +52,9 @@ def simple(vault: VaultV1, samples: ApySamples) -> Apy:
     month_ago_apy = calculate_roi(now_point, month_ago_point)
     inception_apy = calculate_roi(now_point, inception_point)
 
-    net_apy = month_ago_apy
+    # use the first non-zero apy, ordered by precedence
+    apys = [week_ago_apy, month_ago_apy, inception_apy] 
+    net_apy = next((value for value in apys if value != 0), 0)
 
     strategy = vault.strategy
     withdrawal = strategy.withdrawalFee() if hasattr(strategy, "withdrawalFee") else 0
@@ -61,10 +62,18 @@ def simple(vault: VaultV1, samples: ApySamples) -> Apy:
     strategist_reward = strategy.strategistReward() if hasattr(strategy, "strategistReward") else 0
     treasury = strategy.treasuryFee() if hasattr(strategy, "treasuryFee") else 0
 
-    performance = strategist_reward + strategist_performance + treasury
+    performance = (strategist_reward + strategist_performance + treasury) / 1e4
 
-    apy = net_apy / (1 - performance / 1e4)
+    # assume we are compounding every week
+    compounding = 52
 
+    # calculate our APR after fees
+    # if net_apy is negative no fees are charged
+    apr_after_fees = compounding * ((net_apy + 1) ** (1 / compounding)) - compounding if net_apy > 0 else net_apy
+
+    # calculate our pre-fee APR
+    gross_apr = apr_after_fees / (1 - performance)
+    
     points = ApyPoints(week_ago_apy, month_ago_apy, inception_apy)
     fees = ApyFees(performance=performance, withdrawal=withdrawal)
-    return Apy("v1:simple", apy, net_apy, fees, points=points)
+    return Apy("v1:simple", gross_apr, net_apy, fees, points=points)

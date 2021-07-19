@@ -18,3 +18,12 @@ providers:
   editable: false
   options:
     path: /etc/grafana/provisioning/dashboards/system
+
+- name: 'Strategists dashboards'
+  orgId: 1
+  folder: 'strategists'
+  type: file
+  disableDeletion: true
+  editable: false
+  options:
+    path: /etc/grafana/provisioning/dashboards/strategists

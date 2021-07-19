@@ -15,6 +15,7 @@
   "editable": true,
   "gnetId": null,
   "graphTooltip": 0,
+  "id": 25,
   "links": [],
   "panels": [
     {
@@ -24,7 +25,6 @@
           "color": {
             "mode": "thresholds"
           },
-          "custom": {},
           "mappings": [],
           "thresholds": {
             "mode": "absolute",
@@ -32,10 +32,6 @@
               {
                 "color": "green",
                 "value": null
-              },
-              {
-                "color": "purple",
-                "value": 5.5
               }
             ]
           }
@@ -44,7 +40,7 @@
           {
             "matcher": {
               "id": "byName",
-              "options": "Yearn % total veCRV"
+              "options": "veCRV % share"
             },
             "properties": [
               {
@@ -69,54 +65,30 @@
         "orientation": "auto",
         "reduceOptions": {
           "calcs": [
-            "last"
+            "lastNotNull"
           ],
-          "fields": "/^Yearn % total veCRV$/",
+          "fields": "/^veCRV % share$/",
           "values": false
         },
         "text": {},
         "textMode": "value"
       },
-      "pluginVersion": "7.4.3",
+      "pluginVersion": "8.0.3",
       "targets": [
         {
-          "expr": "avg(yearn{param=\"vecrv balance\"})",
-          "instant": true,
+          "exemplar": true,
+          "expr": "avg(yearn{vault=\"curve.fi/3pool\",param=\"vecrv balance\"}) / avg(yearn{vault=\"curve.fi/3pool\",param=\"vecrv total\"})",
+          "instant": false,
           "interval": "",
-          "legendFormat": "Yearn veCRV locked",
+          "legendFormat": "veCRV % share",
           "queryType": "randomWalk",
           "refId": "A"
-        },
-        {
-          "expr": "avg(yearn{param=\"vecrv total\"})",
-          "instant": true,
-          "interval": "",
-          "legendFormat": "Total veCRV locked",
-          "refId": "B"
         }
       ],
       "timeFrom": null,
       "timeShift": null,
       "title": "Yearn veCRV Share",
-      "transformations": [
-        {
-          "id": "calculateField",
-          "options": {
-            "alias": "Yearn % total veCRV",
-            "binary": {
-              "left": "Yearn veCRV locked",
-              "operator": "/",
-              "reducer": "sum",
-              "right": "Total veCRV locked"
-            },
-            "mode": "binary",
-            "reduce": {
-              "reducer": "sum"
-            },
-            "replaceFields": true
-          }
-        }
-      ],
+      "transformations": [],
       "transparent": true,
       "type": "stat"
     },
@@ -128,20 +100,10 @@
       "datasource": "DS_PROMETHEUS",
       "decimals": 2,
       "description": "This is the current boost the vaults are getting",
-      "fieldConfig": {
-        "defaults": {
-          "custom": {},
-          "thresholds": {
-            "mode": "absolute",
-            "steps": []
-          }
-        },
-        "overrides": []
-      },
       "fill": 0,
       "fillGradient": 2,
       "gridPos": {
-        "h": 15,
+        "h": 12,
         "w": 24,
         "x": 0,
         "y": 5
@@ -170,7 +132,7 @@
         "alertThreshold": false
       },
       "percentage": false,
-      "pluginVersion": "7.4.3",
+      "pluginVersion": "8.0.3",
       "pointradius": 2,
       "points": false,
       "renderer": "flot",
@@ -180,6 +142,7 @@
       "steppedLine": true,
       "targets": [
         {
+          "exemplar": true,
           "expr": "yearn{param=\"boost\"}",
           "interval": "",
           "intervalFactor": 1,
@@ -214,8 +177,8 @@
           "format": "percentunit",
           "label": "",
           "logBase": 1,
-          "max": null,
-          "min": null,
+          "max": "2.6",
+          "min": "1",
           "show": true
         },
         {
@@ -243,12 +206,6 @@
       "description": "This show amount of veCRV yearn has locked via backscratcher vault vs all other veCRV locked in all of curve.",
       "fieldConfig": {
         "defaults": {
-          "color": {},
-          "custom": {},
-          "thresholds": {
-            "mode": "absolute",
-            "steps": []
-          },
           "unit": "short"
         },
         "overrides": [
@@ -272,7 +229,7 @@
         "h": 13,
         "w": 12,
         "x": 0,
-        "y": 20
+        "y": 17
       },
       "hiddenSeries": false,
       "id": 10,
@@ -296,7 +253,7 @@
         "alertThreshold": false
       },
       "percentage": false,
-      "pluginVersion": "7.4.3",
+      "pluginVersion": "8.0.3",
       "pointradius": 2,
       "points": false,
       "renderer": "flot",
@@ -306,7 +263,8 @@
           "alias": "Yearn % total veCRV",
           "lines": true,
           "linewidth": 2,
-          "yaxis": 2
+          "yaxis": 2,
+          "zindex": 2
         },
         {
           "$$hashKey": "object:7021",
@@ -319,18 +277,28 @@
       "steppedLine": false,
       "targets": [
         {
+          "exemplar": true,
           "expr": "yearn{param=\"vecrv total\", vault=\"curve.fi/3pool\"}",
           "interval": "",
           "legendFormat": "veCRV Locked Total",
           "refId": "B"
         },
         {
+          "exemplar": true,
           "expr": "yearn{param=\"vecrv balance\", vault=\"curve.fi/3pool\"}",
           "instant": false,
           "interval": "",
           "legendFormat": "Total veCRV Locked w/ Yearn",
           "queryType": "randomWalk",
           "refId": "A"
+        },
+        {
+          "exemplar": true,
+          "expr": "avg(yearn{param=\"vecrv balance\", vault=\"curve.fi/3pool\"}) / avg(yearn{param=\"vecrv total\", vault=\"curve.fi/3pool\"}) ",
+          "hide": false,
+          "interval": "",
+          "legendFormat": "Yearn % total veCRV",
+          "refId": "C"
         }
       ],
       "thresholds": [],
@@ -343,25 +311,7 @@
         "sort": 2,
         "value_type": "individual"
       },
-      "transformations": [
-        {
-          "id": "calculateField",
-          "options": {
-            "alias": "Yearn % total veCRV",
-            "binary": {
-              "left": "Total veCRV Locked w/ Yearn",
-              "operator": "/",
-              "reducer": "sum",
-              "right": "veCRV Locked Total"
-            },
-            "mode": "binary",
-            "reduce": {
-              "reducer": "sum"
-            },
-            "replaceFields": false
-          }
-        }
-      ],
+      "transformations": [],
       "transparent": true,
       "type": "graph",
       "xaxis": {
@@ -403,19 +353,13 @@
       "dashes": false,
       "datasource": "DS_PROMETHEUS",
       "description": "If yearn's veCRV amount locked = the numbers listed here then the vault can have max boost!",
-      "fieldConfig": {
-        "defaults": {
-          "custom": {}
-        },
-        "overrides": []
-      },
       "fill": 0,
       "fillGradient": 0,
       "gridPos": {
         "h": 13,
         "w": 12,
         "x": 12,
-        "y": 20
+        "y": 17
       },
       "hiddenSeries": false,
       "id": 4,
@@ -439,17 +383,25 @@
         "alertThreshold": true
       },
       "percentage": false,
-      "pluginVersion": "7.4.3",
+      "pluginVersion": "8.0.3",
       "pointradius": 2,
       "points": false,
       "renderer": "flot",
-      "seriesOverrides": [],
+      "seriesOverrides": [
+        {
+          "$$hashKey": "object:94",
+          "alias": "veCRV Balance",
+          "color": "#C0D8FF",
+          "hiddenSeries": true
+        }
+      ],
       "spaceLength": 10,
       "stack": false,
       "steppedLine": true,
       "targets": [
         {
-          "expr": "sort(yearn{param=\"min vecrv\",vault!=\"GUSD\"})",
+          "exemplar": true,
+          "expr": "sort(yearn{param=\"min vecrv\"})",
           "interval": "",
           "intervalFactor": 1,
           "legendFormat": "{{vault}}",
@@ -487,20 +439,21 @@
         {
           "$$hashKey": "object:631",
           "format": "short",
-          "label": null,
-          "logBase": 2,
+          "label": "veCRV",
+          "logBase": 1,
           "max": null,
           "min": null,
           "show": true
         },
         {
           "$$hashKey": "object:632",
+          "decimals": 2,
           "format": "short",
-          "label": null,
+          "label": "",
           "logBase": 1,
           "max": null,
           "min": null,
-          "show": false
+          "show": true
         }
       ],
       "yaxis": {
@@ -510,9 +463,13 @@
     }
   ],
   "refresh": "30s",
-  "schemaVersion": 27,
+  "schemaVersion": 30,
   "style": "dark",
-  "tags": [],
+  "tags": [
+    "Curve yVault",
+    "Boost",
+    "veCRV"
+  ],
   "templating": {
     "list": []
   },
@@ -523,6 +480,6 @@
   "timepicker": {},
   "timezone": "",
   "title": "Boost Stats",
-  "uid": "XeOts7TMk",
-  "version": 1
+  "uid": "XeOts7TMkk",
+  "version": 7
 }

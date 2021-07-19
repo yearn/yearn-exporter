@@ -1,7 +1,18 @@
-from yearn.partners.snapshot import Partner, Wrapper
+from yearn.partners.snapshot import Partner, Wrapper, WildcardWrapper
 
 
 partners = [
+    Partner(
+        name='coinomo',
+        treasury='0xd3877d9df3cb52006b7d932e8db4b36e22e89242',
+        wrappers=[
+            Wrapper(
+                name='yvUSDC',
+                vault='0x5f18C75AbDAe578b483E5F43f12a39cF75b973a9',
+                wrapper='0xd3877d9df3cb52006b7d932e8db4b36e22e89242',
+            ),
+        ],
+    ),
     Partner(
         name='alchemix',
         treasury='0x8392F6669292fA56123F71949B52d883aE57e225',
@@ -88,6 +99,17 @@ partners = [
         ],
     ),
     Partner(
+        name='deus',
+        treasury='0x4e8a7c429192bfda8c9a1ef0f3b749d0f66657aa',
+        wrappers=[
+            Wrapper(
+                name='aeth',
+                vault='0x132d8D2C76Db3812403431fAcB00F3453Fc42125',
+                wrapper='0x4e8a7c429192bfda8c9a1ef0f3b749d0f66657aa',
+            )
+        ],
+    ),
+    Partner(
         name='basketdao',
         treasury='0x7301C46be73bB04847576b6Af107172bF5e8388e',
         wrappers=[
@@ -100,6 +122,27 @@ partners = [
                 name='yvBOOST',
                 vault='0x9d409a0A012CFbA9B15F6D4B36Ac57A46966Ab9a',
                 wrapper='0x0309c98B1bffA350bcb3F9fB9780970CA32a5060',
+            ),
+        ],
+    ),
+    Partner(
+        name='gb',
+        treasury='0x6965292e29514e527df092659FB4638dc39e7248',
+        wrappers=[
+            WildcardWrapper(
+                name='gb1',
+                wrapper='0x6965292e29514e527df092659FB4638dc39e7248',
+            ),
+        ],
+    ),
+    Partner(
+        name='donutapp',
+        treasury='0x9eaCFF404BAC19195CbD131a4BeA880Abd09B35e',
+        wrappers=[
+            Wrapper(
+                name='yvDAI',
+                vault='0x19D3364A399d251E894aC732651be8B0E4e85001',
+                wrapper='0x9eaCFF404BAC19195CbD131a4BeA880Abd09B35e',
             ),
         ],
     ),

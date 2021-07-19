@@ -1,15 +1,18 @@
 import logging
 from dataclasses import dataclass
 from typing import Optional
+from yearn.common import Tvl
 
 from brownie import Contract, ZERO_ADDRESS, interface, web3
 from brownie.network.contract import InterfaceContainer
 from joblib import Parallel, delayed
 
-from yearn import constants, curve
+from yearn import constants, curve, apy
 from yearn.utils import contract_creation_block
 from yearn.multicall2 import fetch_multicall
 from yearn.prices import magic
+from yearn.prices.curve import is_curve_lp_token
+from yearn.apy.common import ApySamples
 from pprint import pprint
 
 logger = logging.getLogger(__name__)
@@ -113,3 +116,18 @@ class VaultV1:
         info["tvl"] = info["vault balance"] * info["token price"]
 
         return info
+
+    def apy(self, samples: ApySamples):
+        if is_curve_lp_token(self.token.address):
+            return apy.curve.simple(self, samples)
+        else:
+            return apy.v1.simple(self, samples)
+
+    def tvl(self, block=None):
+        total_assets = self.vault.balance(block_identifier=block)
+        try:
+            price = magic.get_price(self.token, block=block)
+        except magic.PriceError:
+            price = None
+        tvl = total_assets * price / 10 ** self.vault.decimals(block_identifier=block) if price else None
+        return Tvl(total_assets, price, tvl) 
