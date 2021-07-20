@@ -81,17 +81,6 @@ services:
       - yearn-exporter
     restart: always
 
-  nginx-prometheus-exporter:
-    image: nginx/nginx-prometheus-exporter:0.8.0
-    ports:
-      - 9113:9113
-    command:
-      - '-nginx.scrape-uri'
-      - 'https://yearn.vision/stub_status'
-    networks:
-      - yearn-exporter
-    restart: always
-
   node-exporter:
     image: quay.io/prometheus/node-exporter:latest
     ports:
