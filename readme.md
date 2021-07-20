@@ -53,8 +53,7 @@ export WEB3_INFURA_PROJECT_ID=<YOUR_PROJECT_ID> # this needs to be set
 export WEB3_PROVIDER=<YOUR_WEB3_PROVIDER> # if this is set, it overrides Infura, and instead a custom url is used as the web3 provider
 export ETHERSCAN_TOKEN=<YOUR_ETHERSCAN_TOKEN> # this needs to be set
 export SLEEP_SECONDS=<YOUR_SLEEP_SECONDS> # if this is set, the exporters will wait the given amount of time between subsequent invocations to your web3 provider.
-
-docker-compose --file services/dashboard/docker-compose.yml --project-directory . up --build
+make dashboards-up
 ```
 
 After successful startup you can go directly to grafana at `http://localhost:3000`. If you want to change your dashboards you can sign-in at the lower left with `admin:admin`.
@@ -65,8 +64,7 @@ After successful startup you can go directly to grafana at `http://localhost:300
 export WEB3_INFURA_PROJECT_ID=<YOUR_PROJECT_ID> # this needs to be set
 export WEB3_PROVIDER=<YOUR_WEB3_PROVIDER> # if this is set, it overrides Infura, and instead a custom url is used as the web3 provider
 export ETHERSCAN_TOKEN=<YOUR_ETHERSCAN_TOKEN> # this needs to be set
-
-docker-compose --file services/tvl/docker-compose.yml --project-directory . up --build --detach
+make tvl-up
 ```
 
 After successful startup you can access the tvl rest endpoint at `http://localhost:4000`.
