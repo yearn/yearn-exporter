@@ -66,9 +66,7 @@ def get_price(token, block=None):
         price = uniswap.get_price_v1(token, block=block)
         logger.debug("uniswap v1 -> %s", price)
     if not price:
-        logger.error("failed to get price for %s", token)
-
-    if not price:
-        raise PriceError(f'could not fetch price for {token}')
+        price = 0
+        logger.error("failed to get price for %s, setting price=0", token)
 
     return price
