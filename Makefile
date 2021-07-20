@@ -34,3 +34,16 @@ tvl-clean-volumes:
 	$(tvl_command) down -v
 
 clean-volumes: dashboards-clean-volumes tvl-clean-volumes
+
+dashboards: dashboards-up
+tvl: tvl-up
+
+up: dashboards-up
+build: dashboards-build
+down: dashboards-down
+
+clean-cache: dashboards-clean-cache
+clean-volumes: dashboards-clean-volumes
+
+rebuild: down build up
+scratch: clean-volumes build up
