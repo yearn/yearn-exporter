@@ -13,7 +13,7 @@ networks:
 
 services:
   yearn-exporter:
-    build: .
+    image: ghcr.io/yearn/yearn-exporter
     command: exporter
     environment:
       - WEB3_INFURA_PROJECT_ID

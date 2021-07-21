@@ -11,7 +11,7 @@ networks:
 
 services:
   yearn-exporter-ipfs:
-    build: .
+    image: ghcr.io/yearn/yearn-exporter
     command: ipfs
     environment:
       - WEB3_PROVIDER

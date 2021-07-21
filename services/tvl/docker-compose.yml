@@ -12,7 +12,7 @@ networks:
     
 services:
   api:
-    build: .
+    image: ghcr.io/yearn/yearn-exporter
     entrypoint: uvicorn yearn.api:app --host 0.0.0.0 --port 4000
     ports: 
       - 4000:4000
@@ -23,7 +23,7 @@ services:
     networks:
       - yearn-exporter-tvl
   yearn-exporter-tvl:
-    build: .
+    image: ghcr.io/yearn/yearn-exporter
     command: historical_tvl
     environment:
       - WEB3_PROVIDER
