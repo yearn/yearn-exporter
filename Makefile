@@ -6,44 +6,39 @@ endif
 dashboards_command := docker-compose --file services/dashboard/docker-compose.yml --project-directory .
 tvl_command := docker-compose --file services/tvl/docker-compose.yml --project-directory .
 
-dashboards-up:
+# general
+build-docker:
+	docker build -t ghcr.io/yearn/yearn-exporter . --no-cache
+
+# dashboards
+up:
 	$(dashboards_command) up $(flags)
 
-dashboards-down:
+down:
 	$(dashboards_command) down
 
-dashboards-build:
-	$(dashboards_command) build --no-cache
-
-dashboards-clean-volumes:
+clean-volumes:
 	$(dashboards_command) down -v
 
-dashboards-clean-cache:
+clean-cache: down
 	docker volume rm yearn-exporter_cache
 
+dashboards: up
+
+rebuild: down build-docker up
+
+restart: down up
+
+fresh: clean-volumes build-docker up
+
+# tvl
 tvl-up:
 	$(tvl_command) up $(flags)
 
 tvl-down:
 	$(tvl_command) down
 
-tvl-build:
-	$(tvl_command) build --no-cache
-
 tvl-clean-volumes:
 	$(tvl_command) down -v
 
-clean-volumes: dashboards-clean-volumes tvl-clean-volumes
-
-dashboards: dashboards-up
 tvl: tvl-up
-
-up: dashboards-up
-build: dashboards-build
-down: dashboards-down
-
-clean-cache: dashboards-clean-cache
-clean-volumes: dashboards-clean-volumes
-
-rebuild: down build up
-scratch: clean-volumes build up
