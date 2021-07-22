@@ -152,8 +152,9 @@ partners = [
         wrappers=[
             Wrapper(
                 name="liva-one",
-                wrapper="0x2747ce11793f7059567758cc35d34f63cee8ac00"
+                vault=None,
+                wrapper="0x2747ce11793F7059567758cc35D34F63ceE8Ac00"
                 ),
             ],
-        )
+        ),
 ]
