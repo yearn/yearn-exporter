@@ -26,19 +26,17 @@ def fetch_multicall(*calls, block=None):
         fn_list.append(fn)
         multicall_input.append((contract, fn.encode_input(*fn_inputs)))
 
-    # circumvent middlewares because web3.py formatter breaks if third parameter is specified
-    response = web3.provider.make_request(
-        "eth_call",
-        [
-            {"to": str(multicall2), "data": multicall2.tryAggregate.encode_input(False, multicall_input)},
+    if isinstance(block, int) and block < 12336033:
+        # use state override to resurrect the contract prior to deployment
+        data = multicall2.tryAggregate.encode_input(False, multicall_input)
+        call = web3.eth.call(
+            {'to': str(multicall2), 'data': data},
             block or 'latest',
-            {str(multicall2): {"code": code}},
-        ],
-    )
-    if "result" not in response:
-        raise ValueError(response)
-
-    result = multicall2.tryAggregate.decode_output(response["result"])
+            {str(multicall2): {'code': code}},
+        )
+        result = multicall2.tryAggregate.decode_output(call)
+    else:
+        result = multicall2.tryAggregate.call(False, multicall_input, block_identifier=block or 'latest')
 
     for fn, (ok, data) in zip(fn_list, result):
         try:
