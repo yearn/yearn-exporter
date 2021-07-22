@@ -146,4 +146,14 @@ partners = [
             ),
         ],
     ),
+    Partner(
+        name="yieldster",
+        treasury='0x2955278aBCE187315D6d72B0d626f1217786DF60',
+        wrappers=[
+            Wrapper(
+                name="liva-one",
+                wrapper="0x2747ce11793f7059567758cc35d34f63cee8ac00"
+                ),
+            ],
+        )
 ]
