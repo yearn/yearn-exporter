@@ -19,24 +19,13 @@ def safe_views(abi):
     ]
 
 
-@lru_cache(1)
-def get_ethereum_client():
-    client = web3.clientVersion
-    if client.startswith('TurboGeth'):
-        return 'tg'
-    if client.startswith('Erigon'):
-        return 'erigon'
-    return client
-
-
 @memory.cache()
 def get_block_timestamp(height):
-    client = get_ethereum_client()
-    if client in ['tg', 'erigon']:
-        header = web3.manager.request_blocking(f"{client}_getHeaderByNumber", [height])
-        return int(header.timestamp, 16)
-    else:
-        return chain[height].timestamp
+    """
+    An optimized variant of `chain[height].timestamp`
+    """
+    header = web3.manager.request_blocking(f"erigon_getHeaderByNumber", [height])
+    return int(header.timestamp, 16)
 
 
 @memory.cache()
