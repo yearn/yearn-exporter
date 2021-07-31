@@ -9,6 +9,7 @@ v2_strategy_gauge = Gauge("yearn_strategy", "", ["vault", "strategy", "param", "
 simple_gauges = {"v1": v1_gauge, "earn": earn_gauge, "ib": ironbank_gauge, "special": v2_gauge}
 single_sided_curve_gauge = Gauge("single_sided_curve", "", ["pool_name", "address", "balance", "decimals", "token"])
 
+
 def start(port):
     start_http_server(port)
 
@@ -49,20 +50,7 @@ def export(data):
             coin['decimals'],
             coin['token'],
         ]
-        if coin['pool_name'] == '3Pool':
-            single_sided_curve_gauge.labels(*label_values).set(coin['ratio'] or 0)
-        elif coin['pool_name'] == 'IronBank':
-            single_sided_curve_gauge.labels(*label_values).set(coin['ratio'] or 0)
-        elif coin['pool_name'] == 'sAAVE':
-            single_sided_curve_gauge.labels(*label_values).set(coin['ratio'] or 0)
-        elif coin['pool_name'] == 'sBTC':
-            single_sided_curve_gauge.labels(*label_values).set(coin['ratio'] or 0)
-        elif coin['pool_name'] == 'sETH':
-            single_sided_curve_gauge.labels(*label_values).set(coin['ratio'] or 0)
-        elif coin['pool_name'] == 'stETH':
-            single_sided_curve_gauge.labels(*label_values).set(coin['ratio'] or 0)
-        elif coin['pool_name'] == 'pBTC':
-            single_sided_curve_gauge.labels(*label_values).set(coin['ratio'] or 0)
+        single_sided_curve_gauge.labels(*label_values).set(coin['ratio'] or 0)
 
 
 def flatten_dict(d):
