@@ -7,7 +7,9 @@ v1_gauge = Gauge("yearn", "", ["vault", "param", "address", "version"])
 v2_gauge = Gauge("yearn_vault", "", ["vault", "param", "address", "version", "experimental"])
 v2_strategy_gauge = Gauge("yearn_strategy", "", ["vault", "strategy", "param", "address", "version", "experimental"])
 simple_gauges = {"v1": v1_gauge, "earn": earn_gauge, "ib": ironbank_gauge, "special": v2_gauge}
-single_sided_curve_gauge = Gauge("single_sided_curve", "", ["pool_name", "address", "balance", "decimals", "token"])
+single_sided_curve_gauge = Gauge(
+    "single_sided_curve", "", ["pool_name", "address", "balance", "decimals", "token", "param"]
+)
 
 
 def start(port):
@@ -43,14 +45,16 @@ def export(data):
                 label_values = _get_label_values(params, [vault, strategy, key], True)
                 v2_strategy_gauge.labels(*label_values).set(value or 0)
     for coin in data["single_sided_curve"]:
-        label_values = [
-            coin['pool_name'],
-            coin['address'],
-            coin['balance'],
-            coin['decimals'],
-            coin['token'],
-        ]
+        label_values = [coin['pool_name'], coin['address'], coin['balance'], coin['decimals'], coin['token'], "ratio"]
         single_sided_curve_gauge.labels(*label_values).set(coin['ratio'] or 0)
+        label_values[5] = 'balance'
+        single_sided_curve_gauge.labels(*label_values).set(coin['balance'] or 0)
+        label_values[5] = 'get_virtual_price'
+        single_sided_curve_gauge.labels(*label_values).set(coin['get_virtual_price'] or 0)
+        label_values[5] = 'calc_token_amount_deposit'
+        single_sided_curve_gauge.labels(*label_values).set(coin['calc_token_amount_deposit'] or 0)
+        label_values[5] = 'calc_withdraw_one_coin'
+        single_sided_curve_gauge.labels(*label_values).set(coin['calc_withdraw_one_coin'] or 0)
 
 
 def flatten_dict(d):
