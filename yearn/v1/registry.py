@@ -17,7 +17,7 @@ class Registry:
         addresses_generator_v1_vaults = Contract(addresses_provider.addressById("ADDRESSES_GENERATOR_V1_VAULTS"))
 
         # NOTE: we assume no more v1 vaults are deployed
-        self.vaults = [(vault_address, *self.registry.getVaultInfo(vault_address)) for vault_address in addresses_generator_v1_vaults.assetsAddresses()]
+        self.vaults = [VaultV1(vault_address, *self.registry.getVaultInfo(vault_address)) for vault_address in addresses_generator_v1_vaults.assetsAddresses()]
 
     def __repr__(self) -> str:
         return f"<Registry V1 vaults={len(self.vaults)}>"
