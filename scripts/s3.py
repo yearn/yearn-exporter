@@ -194,7 +194,7 @@ def main():
         }
     )
 
-
+telegram_users_to_alert = ["@nymmrx", "@x48114", "@dudesahn"]
 def with_monitoring():
     from telegram.ext import Updater
 
@@ -210,7 +210,8 @@ def with_monitoring():
     except Exception as error:
         tb = traceback.format_exc()
         now = datetime.now()
-        message = f"`[{now}]`\n🔥 API update failed!\n```\n{tb}\n```"
+        tags = " ".join(telegram_users_to_alert)
+        message = f"`[{now}]`\n🔥 API update failed!\n```\n{tb}\n```\n{tags}"
         updater.bot.send_message(chat_id=private_group, text=message, parse_mode="Markdown", reply_to_message_id=ping)
         updater.bot.send_message(chat_id=public_group, text=message, parse_mode="Markdown")
         raise error
