@@ -1,8 +1,8 @@
-from yearn.special import Backscratcher, YveCRVJar
+from yearn.special import Backscratcher
 from yearn.v2.registry import Registry as RegistryV2
-from yearn.v1.registry import Registry as RegistryV1
+from yearn.v2.vaults import Vault as VaultV2
 from yearn.prices import curve
-from yearn.apy import get_samples
+from yearn.apy import get_samples, ApySamples
 from brownie import web3
 from brownie.network.contract import Contract
 from brownie.exceptions import BrownieEnvironmentWarning
@@ -13,7 +13,6 @@ import json
 import shutil
 import logging
 import warnings
-import itertools
 import traceback
 from dotenv import find_dotenv, load_dotenv
 load_dotenv(find_dotenv())
@@ -35,6 +34,24 @@ def get_assets_metadata(vault_v2: list) -> dict:
     return assets_metadata
 
 
+def get_formatted_lend_rates(vault: VaultV2, samples: ApySamples) -> list:
+    apy = vault.apy(samples)
+    lend_rate_apy = apy.net_apy
+    lend_rate_apr = ((apy.net_apy + 1)**(1/365) - 1) * 365
+    if apy.type == 'crv':
+        return [{
+            "apr": lend_rate_apr,
+            "apy": lend_rate_apy,
+            "tokenSymbol": Contract(curve_pool_token_address).symbol()
+        } for curve_pool_token_address in curve.get_underlying_coins(vault.token)]
+    else:
+        return [{
+            "apr": lend_rate_apr,
+            "apy": lend_rate_apy,
+            "tokenSymbol": vault.token.symbol()
+        }]
+
+
 def write_json(json_dict: dict, path: str):
     try:
         with open(path, "w+") as f:
@@ -46,16 +63,31 @@ def write_json(json_dict: dict, path: str):
 
 def main():
     samples = get_samples()
-
-    special = [YveCRVJar(), Backscratcher()]
-    registry_v1 = RegistryV1()
     registry_v2 = RegistryV2()
-
     assets_metadata = get_assets_metadata(registry_v2.vaults)
 
     loanscan_vault_symbols = []
     loanscan_vault_json = []
-    for vault in itertools.chain(special, registry_v1.vaults, registry_v2.vaults):
+
+    yveCrvVault = Backscratcher()
+    try:
+        # Get vault symbol and lend rates BEFORE appending to corresponding lists
+        # If there is an exception with either, lists won't de-sync
+        # Don't simplify below this comment
+        yveCrv_symbol = yveCrvVault.vault.symbol()
+        yveCrv_lend_rates = get_formatted_lend_rates(yveCrvVault, samples)
+        loanscan_vault_symbols.append(yveCrv_symbol)
+        loanscan_vault_json.append({
+            "symbol": yveCrv_symbol,
+            "lendRates": yveCrv_lend_rates
+        })
+        # Don't simplify above this comment
+    except Exception as yveCrvException:
+        logger.info(
+            f'failed to reduce yveCrv lendRate, {str(yveCrvVault.vault)} {yveCrvVault}')
+        logger.error(yveCrvException)
+
+    for vault in registry_v2.vaults:
         try:
             vault_not_endorsed = not (
                 hasattr(vault, "is_endorsed") and vault.is_endorsed)
@@ -68,34 +100,20 @@ def main():
             if vault_not_migrated:
                 continue
 
-            apy = vault.apy(samples)
-            lend_rate_apy = apy.net_apy
-            lend_rate_apr = ((apy.net_apy + 1)**(1/365) - 1) * 365
-            lend_rates = []
-            if apy.type == 'crv':
-                for curve_pool_token_address in curve.get_underlying_coins(vault.token):
-                    lend_rates.append({
-                        "apr": lend_rate_apr,
-                        "apy": lend_rate_apy,
-                        "tokenSymbol": Contract(curve_pool_token_address).symbol()
-                    })
-            else:
-                vault_token_symbol = vault.token.symbol() if hasattr(
-                    vault.token, "symbol") else None
-                lend_rates.append({
-                    "apr": lend_rate_apr,
-                    "apy": lend_rate_apy,
-                    "tokenSymbol": vault_token_symbol
-                })
+            # Get vault symbol and lend rates BEFORE appending to corresponding lists
+            # If there is an exception with either, lists won't de-sync
+            # Don't simplify below this comment
             vault_symbol = vault.vault.symbol()
+            vault_lend_rates = get_formatted_lend_rates(vault, samples)
             loanscan_vault_symbols.append(vault_symbol)
             loanscan_vault_json.append({
                 "symbol": vault_symbol,
-                "lendRates": lend_rates
+                "lendRates": vault_lend_rates
             })
+            # Don't simplify above this comment
         except Exception as error:
             logger.info(
-                f'failed to reduce loanscan lendRate for vault {str(vault.vault)} {vault.vault.symbol()}')
+                f'failed to reduce loanscan lendRate for vault {str(vault.vault)} {vault}')
             logger.error(error)
 
     out_path = "generated"
