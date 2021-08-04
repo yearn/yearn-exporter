@@ -148,7 +148,7 @@ def with_monitoring():
     public_group = os.environ.get('TG_YFIREBOT_GROUP_EXTERNAL')
     updater = Updater(os.environ.get('TG_YFIREBOT'))
     now = datetime.now()
-    message = f"`[{now}]`\n⚙️ API is updating..."
+    message = f"`[{now}]`\n⚙️ API (loanscan) is updating..."
     ping = updater.bot.send_message(chat_id=private_group, text=message, parse_mode="Markdown")
     ping = ping.message_id
     try:
@@ -157,9 +157,9 @@ def with_monitoring():
         tb = traceback.format_exc()
         now = datetime.now()
         tags = " ".join(telegram_users_to_alert)
-        message = f"`[{now}]`\n🔥 API update failed!\n```\n{tb}\n```\n{tags}"
+        message = f"`[{now}]`\n🔥 API (loanscan) update failed!\n```\n{tb}\n```\n{tags}"
         updater.bot.send_message(chat_id=private_group, text=message, parse_mode="Markdown", reply_to_message_id=ping)
         updater.bot.send_message(chat_id=public_group, text=message, parse_mode="Markdown")
         raise error
-    message = "✅ API update successful!"
-    updater.bot.send_message(chat_id=private_group, text="✅ API update successful!", reply_to_message_id=ping)
+    message = "✅ API (loanscan) update successful!"
+    updater.bot.send_message(chat_id=private_group, text=message, reply_to_message_id=ping)
