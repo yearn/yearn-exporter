@@ -143,7 +143,7 @@ def main():
             s3.upload_file(
                 os.path.join(file_path),
                 aws_bucket,
-                loanscan_json_filename,
+                os.path.join("v1", "chains", "1", "loanscan", loanscan_json_filename),
                 ExtraArgs={
                     'ContentType': "application/json",
                     'CacheControl': "max-age=1800"
