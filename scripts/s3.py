@@ -35,7 +35,10 @@ warnings.simplefilter("ignore", BrownieEnvironmentWarning)
 logging.basicConfig(level=logging.DEBUG)
 logger = logging.getLogger("yearn.apy")
 
-def wrap_vault(vault: Union[VaultV1, VaultV2], samples: ApySamples, aliases: dict, icon_url: str, assets_metadata: dict) -> dict:
+
+def wrap_vault(
+    vault: Union[VaultV1, VaultV2], samples: ApySamples, aliases: dict, icon_url: str, assets_metadata: dict
+) -> dict:
     apy = vault.apy(samples)
 
     new = False
@@ -43,7 +46,7 @@ def wrap_vault(vault: Union[VaultV1, VaultV2], samples: ApySamples, aliases: dic
         harvests = [harvest for strategy in vault.strategies for harvest in strategy.harvests]
         if len(harvests) < 4:
             new = True
-    
+
     if isinstance(vault, VaultV1):
         strategies = [
             {
@@ -55,7 +58,7 @@ def wrap_vault(vault: Union[VaultV1, VaultV2], samples: ApySamples, aliases: dic
         strategies = [{"address": str(strategy.strategy), "name": strategy.name} for strategy in vault.strategies]
 
     inception = contract_creation_block(str(vault.vault))
-    
+
     token_alias = aliases[str(vault.token)]["symbol"] if str(vault.token) in aliases else vault.token.symbol()
     vault_alias = token_alias
 
@@ -64,11 +67,7 @@ def wrap_vault(vault: Union[VaultV1, VaultV2], samples: ApySamples, aliases: dic
     migration = None
 
     if str(vault.vault) in assets_metadata:
-        migration = {
-            "available": assets_metadata[str(vault.vault)][1],
-            "address": assets_metadata[str(vault.vault)][2]
-        }
-
+        migration = {"available": assets_metadata[str(vault.vault)][1], "address": assets_metadata[str(vault.vault)][2]}
 
     object = {
         "inception": inception,
@@ -83,7 +82,7 @@ def wrap_vault(vault: Union[VaultV1, VaultV2], samples: ApySamples, aliases: dic
             "address": str(vault.token),
             "decimals": vault.token.decimals() if hasattr(vault.token, "decimals") else None,
             "display_name": token_alias,
-            "icon": icon_url % str(vault.token)
+            "icon": icon_url % str(vault.token),
         },
         "tvl": dataclasses.asdict(tvl),
         "apy": dataclasses.asdict(apy),
@@ -95,13 +94,14 @@ def wrap_vault(vault: Union[VaultV1, VaultV2], samples: ApySamples, aliases: dic
         "emergency_shutdown": vault.vault.emergencyShutdown() if hasattr(vault.vault, "emergencyShutdown") else False,
         "updated": int(time()),
         "migration": migration,
-        "new": new
+        "new": new,
     }
 
     if any([isinstance(vault, t) for t in [Backscratcher, YveCRVJar]]):
         object["special"] = True
 
     return object
+
 
 def get_assets_metadata(vault_v2: list) -> dict:
     registry_v2_adapter = Contract(web3.ens.resolve("lens.ychad.eth"))
@@ -168,33 +168,26 @@ def main():
     aws_secret = os.environ.get("AWS_ACCESS_SECRET")
     aws_bucket = os.environ.get("AWS_BUCKET")
 
-    s3 = boto3.client(
-        "s3", 
-        aws_access_key_id=aws_key,
-        aws_secret_access_key=aws_secret
-    )
+    s3 = boto3.client("s3", aws_access_key_id=aws_key, aws_secret_access_key=aws_secret)
 
     s3.upload_file(
         os.path.join(out, vault_api_all),
         aws_bucket,
         vault_api_all,
-        ExtraArgs={
-            'ContentType': "application/json",
-            'CacheControl': "max-age=1800"
-        }
+        ExtraArgs={'ContentType': "application/json", 'CacheControl': "max-age=1800"},
     )
 
     s3.upload_file(
         os.path.join(out, vault_api_experimental),
         aws_bucket,
         vault_api_experimental,
-        ExtraArgs={
-            'ContentType': "application/json",
-            'CacheControl': "max-age=1800"
-        }
+        ExtraArgs={'ContentType': "application/json", 'CacheControl': "max-age=1800"},
     )
 
+
 telegram_users_to_alert = ["@nymmrx", "@x48114", "@dudesahn"]
+
+
 def with_monitoring():
     from telegram.ext import Updater
 
