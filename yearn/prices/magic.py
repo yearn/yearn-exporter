@@ -68,7 +68,7 @@ def get_price(token, block=None):
     if not price:
         # TODO - used for 0xBC19712FEB3a26080eBf6f2F7849b417FdD792CA whose low liquidity 
         # means price can not be fetched from Uni V2. Support for Uni V3 pricing should be
-        # added to remove the reliance on coingecko, which can not query at a specific block
+        # added to remove the reliance on coingecko
         price = coingecko.get_price(token, block=block)
         logger.debug("coingecko -> %s", price)
     if not price:
