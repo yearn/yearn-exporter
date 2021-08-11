@@ -13,6 +13,9 @@ You will need:
 - Grafana if you want to set up custom dashboards and alerts
 - Etherscan API key 
 
+To run treasury.py, you will need:
+- Environment variable `MORALIS_TOKEN` set to your Moralis API Key
+
 ## Usage
 
 ### Prometheus exporter
