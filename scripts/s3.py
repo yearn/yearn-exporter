@@ -139,6 +139,8 @@ def main():
             data.append(wrap_vault(vault, samples, aliases, icon_url, assets_metadata))
         except ValueError as error:
             logger.error(error)
+        except:
+            pass
 
     out = "generated"
     if os.path.isdir(out):
