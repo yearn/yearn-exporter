@@ -2,7 +2,7 @@ import logging
 
 from cachetools.func import ttl_cache
 
-from yearn.prices import balancer, chainlink, compound, constants, curve, uniswap, coingecko, yearn
+from yearn.prices import balancer, chainlink, compound, constants, curve, uniswap, yearn
 
 logger = logging.getLogger(__name__)
 
