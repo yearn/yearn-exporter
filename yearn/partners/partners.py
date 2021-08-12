@@ -27,6 +27,26 @@ partners = [
                 vault='0x19D3364A399d251E894aC732651be8B0E4e85001',
                 wrapper='0x491EAFC47D019B44e13Ef7cC649bbA51E15C61d7',
             ),
+            Wrapper(
+                name='dai-3',
+                vault='0xdA816459F1AB5631232FE5e97a05BBBb94970c95',
+                wrapper='0xb039eA6153c827e59b620bDCd974F7bbFe68214A',
+            ),
+            Wrapper(
+                name='dai-4',
+                vault='0xdA816459F1AB5631232FE5e97a05BBBb94970c95',
+                wrapper='0x6Fe02BE0EC79dCF582cBDB936D7037d2eB17F661',
+            ),
+            Wrapper(
+                name='weth-1',
+                vault='0xa258C4606Ca8206D8aA700cE2143D7db854D168c',
+                wrapper='0x546E6711032Ec744A7708D4b7b283A210a85B3BC',
+            ),
+            Wrapper(
+                name='weth-2',
+                vault='0xa258C4606Ca8206D8aA700cE2143D7db854D168c',
+                wrapper='0x6d75657771256C7a8CB4d475fDf5047B70160132',
+            ),
         ],
     ),
     Partner(
