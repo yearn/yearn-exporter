@@ -51,8 +51,10 @@ def export(data):
         single_sided_curve_gauge.labels(*label_values).set(coin['get_virtual_price'] or 0)
         label_values[4] = 'calc_token_amount_deposit'
         single_sided_curve_gauge.labels(*label_values).set(coin['calc_token_amount_deposit'] or 0)
-        label_values[4] = 'calc_withdraw_one_coin'
-        single_sided_curve_gauge.labels(*label_values).set(coin['calc_withdraw_one_coin'] or 0)
+        label_values[4] = 'deposit_slippage'
+        single_sided_curve_gauge.labels(*label_values).set(coin['deposit_slippage'] or 0)
+        label_values[4] = 'withdraw_slippage'
+        single_sided_curve_gauge.labels(*label_values).set(coin['withdraw_slippage'] or 0)
 
 
 def flatten_dict(d):

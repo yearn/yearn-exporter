@@ -113,13 +113,8 @@ CURVE_ADDRESSES_PROVIDER = "0x0000000022D53366457F9d5E68Ec105046FC4383"
 CURVE_SWAP_POOLS = [
     {
         "has_single_sided_deposit": "true",
-        "address": "0x7F55DDe206dbAD629C080068923b36fe9D6bDBeF",
-        "name": "pBTC",
-    },
-    {
-        "has_single_sided_deposit": "false",
-        "address": "0x80466c64868E1ab14a1Ddf27A676C3fcBE638Fe5",
-        "name": "TriCrypto",
+        "address": "0x7fC77b5c7614E1533320Ea6DDc2Eb61fa00A9714",
+        "name": "sBTC",
     },
     {
         "has_single_sided_deposit": "true",
@@ -127,32 +122,78 @@ CURVE_SWAP_POOLS = [
         "name": "3Pool",
     },
     {
-        "has_single_sided_deposit": "false",
-        "address": "0xDeBF20617708857ebe4F679508E7b7863a8A8EeE",
-        "name": "AAVE",
+        "has_single_sided_deposit": "true",
+        "has_no_pool_info": "true",
+        "address": "0xd632f22692FaC7611d2AA1C0D552930D43CAEd3B",
+        "name": "Frax",
+    },
+    {
+        "has_single_sided_deposit": "true",
+        "has_no_pool_info": "true",
+        "address": "0x4807862AA8b2bF68830e4C8dc86D0e9A998e085a",
+        "name": "Binance USD",
+    },
+    {
+        "has_single_sided_deposit": "true",
+        "has_no_pool_info": "true",
+        "address": "0x43b4FdFD4Ff969587185cDB6f0BD875c5Fc83f8c",
+        "name": "Alchemix USD",
+    },
+    {
+        "has_single_sided_deposit": "true",
+        "has_no_pool_info": "true",
+        "address": "0xFD5dB7463a3aB53fD211b4af195c5BCCC1A03890",
+        "name": "Euro Tether",
+    },
+    {
+        "has_single_sided_deposit": "true",
+        "has_no_pool_info": "true",
+        "address": "0x5a6A4D54456819380173272A5E8E9B9904BdF41B",
+        "name": "MIM",
     },
     {
         "has_single_sided_deposit": "false",
+        "has_no_pool_info": "true",
+        "address": "0xD51a44d3FaE010294C616388b506AcdA1bfAAE46",
+        "name": "TriCrypto 2",
+    },
+    {
+        "has_single_sided_deposit": "true",
+        "address": "0xEcd5e75AFb02eFa118AF914515D6521aaBd189F1",
+        "name": "TrueUSD",
+    },
+    {
+        "has_single_sided_deposit": "true",
+        "address": "0x8925D9d9B4569D737a48499DeF3f67BaA5a144b9",
+        "name": "Yv2",
+    },
+    {
+        "has_single_sided_deposit": "true",
         "address": "0xA96A65c051bF88B4095Ee1f2451C2A9d43F53Ae2",
         "name": "ankrETH",
     },
     {
-        "has_single_sided_deposit": "false",
+        "has_single_sided_deposit": "true",
+        "address": "0xDeBF20617708857ebe4F679508E7b7863a8A8EeE",
+        "name": "AAVE",
+    },
+    {
+        "has_single_sided_deposit": "true",
         "address": "0x79a8C46DeA5aDa233ABaFFD40F3A0A2B1e5A4F27",
         "name": "BUSD",
     },
     {
-        "has_single_sided_deposit": "false",
+        "has_single_sided_deposit": "true",
         "address": "0xA2B47E3D5c44877cca798226B7B8118F9BFb7A56",
         "name": "Compound",
     },
     {
-        "has_single_sided_deposit": "false",
+        "has_single_sided_deposit": "true",
         "address": "0x0Ce6a5fF5217e38315f87032CF90686C96627CAA",
         "name": "EURS",
     },
     {
-        "has_single_sided_deposit": "false",
+        "has_single_sided_deposit": "true",
         "address": "0x4CA9b3063Ec5866A4B82E437059D2C43d1be596F",
         "name": "hBTC",
     },
@@ -162,22 +203,22 @@ CURVE_SWAP_POOLS = [
         "name": "IronBank",
     },
     {
-        "has_single_sided_deposit": "false",
+        "has_single_sided_deposit": "true",
         "address": "0xf178c0b5bb7e7abf4e12a4838c7b7c5ba2c623c0",
         "name": "Link",
     },
     {
-        "has_single_sided_deposit": "false",
+        "has_single_sided_deposit": "true",
         "address": "0x06364f10B501e868329afBc005b3492902d6C763",
         "name": "PAX",
     },
     {
-        "has_single_sided_deposit": "false",
+        "has_single_sided_deposit": "true",
         "address": "0x93054188d876f558f4a66B2EF1d97d16eDf0895B",
         "name": "renBTC",
     },
     {
-        "has_single_sided_deposit": "false",
+        "has_single_sided_deposit": "true",
         "address": "0xF9440930043eb3997fc70e1339dBb11F341de7A8",
         "name": "rETH",
     },
@@ -185,11 +226,6 @@ CURVE_SWAP_POOLS = [
         "has_single_sided_deposit": "true",
         "address": "0xEB16Ae0052ed37f479f7fe63849198Df1765a733",
         "name": "sAAVE",
-    },
-    {
-        "has_single_sided_deposit": "true",
-        "address": "0x7fC77b5c7614E1533320Ea6DDc2Eb61fa00A9714",
-        "name": "sBTC",
     },
     {
         "has_single_sided_deposit": "true",
@@ -202,7 +238,7 @@ CURVE_SWAP_POOLS = [
         "name": "stETH",
     },
     {
-        "has_single_sided_deposit": "false",
+        "has_single_sided_deposit": "true",
         "address": "0xA5407eAE9Ba41422680e2e00537571bcC53efBfD",
         "name": "sUSD",
     },
@@ -212,14 +248,94 @@ CURVE_SWAP_POOLS = [
         "name": "USDT",
     },
     {
-        "has_single_sided_deposit": "false",
+        "has_single_sided_deposit": "true",
         "address": "0x45F783CCE6B7FF23B2ab2D70e416cdb7D6055f51",
         "name": "Y",
     },
     {
+        "has_single_sided_deposit": "true",
+        "address": "0x7F55DDe206dbAD629C080068923b36fe9D6bDBeF",
+        "name": "pBTC",
+    },
+    {
+        "has_single_sided_deposit": "true",
+        "address": "0x0Ce6a5fF5217e38315f87032CF90686C96627CAA",
+        "name": "EURS",
+    },
+    {
+        "has_single_sided_deposit": "true",
+        "address": "0x8038C01A0390a8c547446a0b2c18fc9aEFEcc10c",
+        "name": "DUSD",
+    },
+    {
+        "has_single_sided_deposit": "true",
+        "address": "0x4f062658EaAF2C1ccf8C8e36D6824CDf41167956",
+        "name": "GUSD",
+    },
+    {
         "has_single_sided_deposit": "false",
-        "address": "0x8925D9d9B4569D737a48499DeF3f67BaA5a144b9",
-        "name": "Yv2",
+        "address": "0x3eF6A01A0f81D6046290f3e2A8c5b843e738E604",
+        "name": "HUSD",
+    },
+    {
+        "has_single_sided_deposit": "false",
+        "address": "0xE7a24EF0C5e95Ffb0f6684b813A78F2a3AD7D171",
+        "name": "LinkUSD",
+    },
+    {
+        "has_single_sided_deposit": "true",
+        "address": "0x8474DdbE98F5aA3179B3B3F5942D724aFcdec9f6",
+        "name": "MUSD",
+    },
+    {
+        "has_single_sided_deposit": "true",
+        "address": "0xC18cC39da8b11dA8c3541C598eE022258F9744da",
+        "name": "RSV",
+    },
+    {
+        "has_single_sided_deposit": "false",
+        "address": "0x3E01dD8a5E1fb3481F0F589056b428Fc308AF0Fb",
+        "name": "USDK",
+    },
+    {
+        "has_single_sided_deposit": "true",
+        "address": "0x0f9cb53Ebe405d49A0bbdBD291A65Ff571bC83e1",
+        "name": "USDN",
+    },
+    {
+        "has_single_sided_deposit": "true",
+        "address": "0x42d7025938bEc20B69cBae5A77421082407f053A",
+        "name": "USDP",
+    },
+    {
+        "has_single_sided_deposit": "true",
+        "address": "0x890f4e345B1dAED0367A877a1612f86A1f86985f",
+        "name": "UST",
+    },
+    {
+        "has_single_sided_deposit": "true",
+        "address": "0x071c661B4DeefB59E2a3DdB20Db036821eeE8F4b",
+        "name": "bBTC",
+    },
+    {
+        "has_single_sided_deposit": "true",
+        "address": "0xd81dA8D904b52208541Bade1bD6595D8a251F8dd",
+        "name": "oBTC",
+    },
+    {
+        "has_single_sided_deposit": "true",
+        "address": "0x7F55DDe206dbAD629C080068923b36fe9D6bDBeF",
+        "name": "pBTC",
+    },
+    {
+        "has_single_sided_deposit": "true",
+        "address": "0xC25099792E9349C7DD09759744ea681C7de2cb66",
+        "name": "tBTC",
+    },
+    {
+        "has_single_sided_deposit": "false",
+        "address": "0xEd279fDD11cA84bEef15AF5D39BB4d4bEE23F0cA",
+        "name": "Liquity",
     },
 ]
 
