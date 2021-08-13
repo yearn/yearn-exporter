@@ -65,7 +65,7 @@ class Registry:
         )
 
         prices = Parallel(8, "threading")(
-            delayed(magic.get_price_safe)(market.underlying, block=block) for market in markets
+            delayed(magic.get_price)(market.underlying, block=block) for market in markets
         )
         output = defaultdict(dict)
         for m, price in zip(markets, prices):
@@ -105,9 +105,7 @@ class Registry:
             block=block,
         )
 
-        prices = Parallel(8, "threading")(
-            delayed(magic.get_price_safe)(market.underlying, block=block) for market in markets
-        )
+        prices = Parallel(8, "threading")(delayed(magic.get_price)(market.vault, block=block) for market in markets)
         results = [data[market.vault] for market in markets]
         return {
             # market.name: (res["getCash"] + res["totalBorrows"] - res["totalReserves"]) / 10 ** market.decimals * price
