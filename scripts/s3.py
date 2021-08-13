@@ -30,6 +30,8 @@ from yearn.v2.vaults import Vault as VaultV2
 
 from yearn.utils import contract_creation_block
 
+from yearn.prices.magic import PriceError
+
 warnings.simplefilter("ignore", BrownieEnvironmentWarning)
 
 logging.basicConfig(level=logging.DEBUG)
@@ -139,6 +141,8 @@ def main():
             data.append(wrap_vault(vault, samples, aliases, icon_url, assets_metadata))
         except ValueError as error:
             logger.error(error)
+        except PriceError:
+            pass
 
     out = "generated"
     if os.path.isdir(out):
