@@ -179,21 +179,21 @@ def dataframe(block):
 
     return df
 
-def main(block=None):
+def main():
     #logging.basicConfig(level=logging.DEBUG)
-    if block == None:
-        block = chain[-1].number
+    block = chain[-1].number
     print(f'querying data at block {block}')
     df = dataframe(block)
     path = './reports/treasury_balances.csv'
     df.to_csv(path, index=False)
     print(f'csv exported to {path}')
+    return df
 
-def allocations(block=None):
-    if block == None:
+def allocations(df=None):
+    if df is None:
         block = chain[-1].number
-    print(f'querying data at block {block}')
-    df = dataframe(block)
+        print(f'querying data at block {block}')
+        df = dataframe(block)
     df = df.groupby(['category'])['value'].sum().reset_index()
     sumassets = df.loc[df['value'] > 0, 'value'].sum()
     df['pct_of_assets'] = df['value'] / sumassets * 100
@@ -201,13 +201,11 @@ def allocations(block=None):
     path = './reports/treasury_allocation.csv'
     df.to_csv(path, index=False)
     print(f'csv exported to {path}')
+    
 
-def all(block=None):
-    if block == None:
-        block = chain[-1].number
-    print(f'querying data at block {block}')
-    main(block)
-    allocations(block)
+def all():
+    df = main()
+    allocations(df=df)
 
 YEARN_WALLETS = {
     '0xb99a40fce04cb740eb79fc04976ca15af69aaaae': 'Treasury V1'
