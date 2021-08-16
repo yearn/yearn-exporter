@@ -11,8 +11,8 @@ from ypricemagic.utils.utils import Contract_with_erc20_fallback
 from eth_abi import encode_single
 
 moralis = 'https://deep-index.moralis.io/api/'
-moralis_key = os.environ['MORALIS_KEY']
-headers = {"x-api-key": moralis_key}
+moralis_token = os.environ['MORALIS_TOKEN']
+headers = {"x-api-key": moralis_token}
 
 def walletdataframe(wallet, block):
     # NOTE: Moralis API is returning absurd values for token balances,
