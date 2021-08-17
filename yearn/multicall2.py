@@ -1,4 +1,4 @@
-import json
+from operator import itemgetter
 from collections import defaultdict
 from itertools import count, product
 
@@ -89,5 +89,6 @@ def batch_call(calls):
             }
         )
 
+    # NOTE: Erigon can send batch responses out of order, you need to track them by id
     response = requests.post(web3.provider.endpoint_uri, json=jsonrpc_batch).json()
-    return [fn.decode_output(res['result']) for res in response]
+    return [fn.decode_output(res['result']) for res in sorted(response, key=itemgetter('id'))]
