@@ -174,5 +174,47 @@ partners = [
             ),
         ],
     ),
+    Partner(
+        name="yapeswap",
+        treasury='0x44DeD95dB022FeA1C78a5a909a337291F0D081b6',
+        wrappers=[
+            WildcardWrapper(
+                name="USDC/DAI YLP",
+                wrapper="0x23c1653E9e13Eefe2e1b5954Bfef00a2DB0483b6",
+            ),
+            WildcardWrapper(
+                name="ETH/USDC YLP",
+                wrapper="0x8e5b9D85C8BBd309F571dba0c82DdacAcA897805",
+            ),
+            WildcardWrapper(
+                name="ETH/USDT YLP",
+                wrapper="0xE3b43bE5aB96629493F948229EFBEe2c0787Ed25",
+            ),
+            WildcardWrapper(
+                name="ETH/DAI YLP",
+                wrapper="0xEC5ED926ed8cFE13dae06Ed5649d0C497F2216B6",
+            ),
+            WildcardWrapper(
+                name="ETH/WBTC YLP",
+                wrapper="0x0415Af9F90a1F774eDC426047d945b474417c0AA",
+            ),
+            WildcardWrapper(
+                name="WBTC/DAI YLP",
+                wrapper="0x435566318b61d0e4c8e17302ac2FA9e3D6b564bd",
+            ),
+            WildcardWrapper(
+                name="WBTC/USDC YLP",
+                wrapper="0x4A034E9E5C9AE28A8D56506c0aB2FD06D67144da",
+            ),
+            WildcardWrapper(
+                name="WBTC/USDT YLP",
+                wrapper="0x386A1b3f23F6B6046604842356911DCF0273a56b",
+            ),
+            WildcardWrapper(
+                name="USDC/USDT YLP",
+                wrapper="0xB8eF9ae19bAcd37bfeD71495b98B10A6f0370C0d",
+            ),
+        ],
+    ),
 ]
 
