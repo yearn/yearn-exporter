@@ -131,6 +131,7 @@ class Partner:
             wrap['balance_usd'] = wrap.balance * wrap.vault_price
             wrap['share'] = wrap.balance / wrap.total_supply
             wrap['payout_base'] = wrap.share * wrap.protocol_fee * (1 - OPEX_COST)
+            wrap['protocol_fee'] = wrap.protocol_fee
             wrap['wrapper'] = wrapper.wrapper
             wrap['vault'] = wrapper.vault
             wrap = wrap.set_index('block')
@@ -146,6 +147,7 @@ class Partner:
         partner = partner.join(tiers)
         partner['payout'] = partner.payout_base * partner.tier
         partner['payout_usd'] = partner.payout * partner.vault_price
+        partner['protocol_fee_usd'] = partner.protocol_fee * partner.vault_price
 
         self.export_csv(partner)
         payouts = self.export_payouts(partner)
@@ -162,14 +164,14 @@ class Partner:
 
     def export_payouts(self, partner):
         # calculate payouts grouped by month and vault token
-        payouts = pd.pivot_table(partner, ['payout', 'payout_usd'], 'timestamp', 'vault', 'sum').resample('1M').sum()
+        payouts = pd.pivot_table(partner, ['payout', 'payout_usd', 'protocol_fee', 'protocol_fee_usd'], 'timestamp', 'vault', 'sum').resample('1M').sum()
         # stack from wide to long format with one payment per line
         payouts = payouts.stack().reset_index()
         payouts['treasury'] = self.treasury
         payouts['partner'] = self.name
         # reorder columns
-        payouts.columns = ['timestamp', 'token', 'amount', 'amount_usd', 'treasury', 'partner']
-        payouts = payouts[['timestamp', 'partner', 'token', 'treasury', 'amount', 'amount_usd']]
+        payouts.columns = ['timestamp', 'token', 'amount', 'amount_usd', 'protocol_fee', 'protocol_fee_usd', 'treasury', 'partner']
+        payouts = payouts[['timestamp', 'partner', 'token', 'treasury', 'amount', 'amount_usd', 'protocol_fee', 'protocol_fee_usd']]
         payouts.to_csv(Path(f'research/partners/{self.name}/payouts.csv'), index=False)
         return payouts
 
