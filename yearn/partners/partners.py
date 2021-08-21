@@ -176,7 +176,7 @@ partners = [
     ),
     Partner(
         name="yapeswap",
-        treasury='0x44DeD95dB022FeA1C78a5a909a337291F0D081b6',
+        treasury='0x10DE513EE154BfA97f1c2841Cab91E8C389c7c72',
         wrappers=[
             WildcardWrapper(
                 name="USDC/DAI YLP",
