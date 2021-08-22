@@ -4,11 +4,11 @@ from toolz import take
 
 from yearn.cache import memory
 from yearn.multicall2 import fetch_multicall
+from yearn.constants import CURVE_ADDRESSES_PROVIDER
 
 # curve registry documentation https://curve.readthedocs.io/registry-address-provider.html
-address_provider = Contract('0x0000000022D53366457F9d5E68Ec105046FC4383')
+address_provider = Contract(CURVE_ADDRESSES_PROVIDER)
 curve_registry = Contract(address_provider.get_address(0))
-metapool_factory = Contract(address_provider.get_address(3))
 
 # fold underlying tokens into one of the basic tokens
 BASIC_TOKENS = {
@@ -30,47 +30,58 @@ OVERRIDES = {
         ],
     }
 }
-CRYPTOPOOLS = {
-    '0xcA3d75aC011BF5aD07a98d02f18225F9bD9A6BDF': {
-        'pool': '0x80466c64868E1ab14a1Ddf27A676C3fcBE638Fe5',
-    },
-    '0xc4AD29ba4B3c580e6D59105FFf484999997675Ff': {
-        'pool': '0xD51a44d3FaE010294C616388b506AcdA1bfAAE46',
-    },
-}
 
 
 @memory.cache()
 def get_pool(token):
-    if token in OVERRIDES:
-        return OVERRIDES[token]['pool']
-    if token in CRYPTOPOOLS:
-        return CRYPTOPOOLS[token]['pool']
-    if set(metapool_factory.get_underlying_coins(token)) != {ZERO_ADDRESS}:
+    coins = get_coins_from_pool(token)
+    if len(coins) > 0:
         return token
     return curve_registry.get_pool_from_lp_token(token)
 
 
 @memory.cache()
+def get_coins_from_pool(pool_address):
+    pool = Contract(pool_address)
+    try:
+        all_coins = fetch_multicall(*[[pool, 'coins', i] for i in range(8)])
+        coins = [coin for coin in all_coins if coin != ZERO_ADDRESS and coin is not None]
+        return coins
+    except AttributeError:
+        return []
+
+
+@memory.cache()
 def is_curve_lp_token(token):
-    return get_pool(token) != ZERO_ADDRESS
+    try:
+        return get_pool(token) != ZERO_ADDRESS
+    except ValueError as error:
+        return False
+        
+
+@memory.cache()
+def is_curve_lp_crypto_pool(token):
+    pool = Contract(get_pool(token))
+    if hasattr(pool, "price_oracle"):
+        return True
+    else:
+        return False
+        
 
 
 @memory.cache()
 def get_underlying_coins(token):
-    if token in OVERRIDES:
-        return OVERRIDES[token]['coins']
     pool = get_pool(token)
     coins = curve_registry.get_underlying_coins(pool)
     if set(coins) == {ZERO_ADDRESS}:
-        coins = metapool_factory.get_underlying_coins(token)
+        coins = get_coins_from_pool(pool)
     return [coin for coin in coins if coin != ZERO_ADDRESS]
 
 
 def cryptopool_lp_price(token, block=None):
-    pool = Contract(CRYPTOPOOLS[token]['pool'])
+    pool = Contract(get_pool(token))
     token = Contract(token)
-    result = fetch_multicall(*[[pool, 'coins', i] for i in range(8)])
+    result = get_coins_from_pool(pool.address)
     tokens = [Contract(token) for token in result if token]
     n = len(tokens)
     result = iter(
@@ -93,7 +104,7 @@ def cryptopool_lp_price(token, block=None):
 
 @ttl_cache(ttl=600)
 def get_price(token, block=None):
-    if token in CRYPTOPOOLS:
+    if is_curve_lp_crypto_pool(token):
         return cryptopool_lp_price(token, block)
 
     coins = get_underlying_coins(token)
