@@ -174,5 +174,15 @@ partners = [
             ),
         ],
     ),
+    Partner(
+        name="akropolis",
+        treasury='0xC5aF91F7D10dDe118992ecf536Ed227f276EC60D',
+        wrappers=[
+            WildcardWrapper(
+                name="vaults-savings-v2",
+                wrapper="0x6511D8686EB43Eac9D4852458435c1beC4D67bc6",
+            ),
+        ],
+    ),
 ]
 
