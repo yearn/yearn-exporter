@@ -25,7 +25,7 @@ def get_price(token, block=None):
         token = str(constants.weth)
 
     # we can exit early with known tokens
-    if token in chainlink.feeds:
+    if token in chainlink.chainlink:
         price = chainlink.get_price(token, block=block)
         logger.debug("chainlink -> %s", price)
 

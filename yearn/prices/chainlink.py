@@ -50,6 +50,10 @@ class Chainlink(metaclass=Singleton):
         self.load_feeds()
         return Contract(self.feeds[asset])
 
+    def __contains__(self, asset):
+        self.load_feeds()
+        return asset in self.feeds
+
     def get_price(self, asset, block=None):
         return self.get_feed(asset).latestAnswer(block_identifier=block) / SCALE
 
