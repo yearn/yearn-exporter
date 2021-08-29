@@ -1,3 +1,4 @@
+from brownie import ZERO_ADDRESS
 import pytest
 from yearn.prices import chainlink
 
@@ -19,14 +20,23 @@ assets = [
 
 
 @pytest.mark.parametrize('asset', assets)
-def test_chainlink(asset):
+def test_chainlink_latest(asset):
     price = chainlink.get_price(asset)
-    print(asset, price)
     assert price, 'no feed available'
 
 
 @pytest.mark.parametrize('asset', assets)
-def test_chainlink_old(asset):
-    price = chainlink.get_price(asset, block=12864088)
-    print(asset, price)
+def test_chainlink_before_registry(asset):
+    price = chainlink.get_price(asset, block=12800000)
     assert price, 'no feed available'
+
+
+def test_chainlink_nonexistent():
+    price = chainlink.get_price(ZERO_ADDRESS)
+    assert price is None
+
+
+def test_chainlink_before_feed():
+    # try to fetch yfi price one block before feed is deployed
+    price = chainlink.get_price('0x0bc529c00C6401aEF6D220BE8C6Ea1667F6Ad93e', 12742718)
+    assert price is None
