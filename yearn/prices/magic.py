@@ -22,7 +22,7 @@ def get_price(token, block=None):
         return 1
 
     if token == "0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE":
-        token = str(constants.weth)
+        token = constants.weth
 
     # we can exit early with known tokens
     if token in chainlink.chainlink:
