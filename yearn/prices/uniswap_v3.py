@@ -2,6 +2,7 @@ from brownie import Contract, multicall
 from eth_abi.packed import encode_abi_packed
 from itertools import cycle
 from yearn.multicall2 import fetch_multicall
+import math
 
 # https://github.com/Uniswap/uniswap-v3-periphery/blob/main/deploys.md
 UNISWAP_V3_FACTORY = '0x1F98431c8aD98523631AE4a59f267346ea31F984'
@@ -12,6 +13,8 @@ USDC = '0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48'
 
 FEE_TIERS = [500, 3000, 10_000]
 DEFAULT_FEE = 3000
+FEE_DENOMINATOR = 1_000_000
+USDC_SCALE = 10 ** 6
 
 
 def get_quoter():
@@ -21,6 +24,11 @@ def get_quoter():
 def encode_path(path):
     types = [type for _, type in zip(path, cycle(['address', 'uint24']))]
     return encode_abi_packed(types, path)
+
+
+def undo_fees(path):
+    fees = [1 - fee / FEE_DENOMINATOR for fee in path if isinstance(fee, int)]
+    return math.prod(fees)
 
 
 def get_price(asset, block=None):
@@ -43,7 +51,10 @@ def get_price(asset, block=None):
     )
 
     print('res:', results)
-    results = [(res or 0) / 1e6 for res in results]
-    for path, res in zip(paths, results):
-        print(res, path)
-    return results
+    outputs = []
+    for amount, path in zip(results, paths):
+        if amount:
+            outputs.append(amount / undo_fees(path) / USDC_SCALE)
+
+    print(outputs)
+    return max(outputs)  # note: max([]) == None
