@@ -1,8 +1,10 @@
-from brownie import Contract, multicall
-from eth_abi.packed import encode_abi_packed
-from itertools import cycle
-from yearn.multicall2 import fetch_multicall
 import math
+from itertools import cycle
+
+from brownie import Contract
+from eth_abi.packed import encode_abi_packed
+
+from yearn.multicall2 import fetch_multicall
 
 # https://github.com/Uniswap/uniswap-v3-periphery/blob/main/deploys.md
 UNISWAP_V3_FACTORY = '0x1F98431c8aD98523631AE4a59f267346ea31F984'
@@ -15,10 +17,6 @@ FEE_TIERS = [500, 3000, 10_000]
 DEFAULT_FEE = 3000
 FEE_DENOMINATOR = 1_000_000
 USDC_SCALE = 10 ** 6
-
-
-def get_quoter():
-    return Contract(UNISWAP_V3_QUOTER)
 
 
 def encode_path(path):
@@ -39,22 +37,17 @@ def get_price(asset, block=None):
     if asset != WETH:
         paths += [[asset, fee, WETH, DEFAULT_FEE, USDC] for fee in FEE_TIERS]
 
-    print(f'{paths=}')
-
     scale = 10 ** Contract(asset).decimals()
-
-    quoter = get_quoter()
+    quoter = Contract(UNISWAP_V3_QUOTER)
 
     results = fetch_multicall(
         *[[quoter, 'quoteExactInput', encode_path(path), scale] for path in paths],
         block=block,
     )
 
-    print('res:', results)
-    outputs = []
-    for amount, path in zip(results, paths):
-        if amount:
-            outputs.append(amount / undo_fees(path) / USDC_SCALE)
-
-    print(outputs)
-    return max(outputs)  # note: max([]) == None
+    outputs = [
+        amount / undo_fees(path) / USDC_SCALE
+        for amount, path in zip(results, paths)
+        if amount
+    ]
+    return max(outputs) if outputs else None
