@@ -1,7 +1,7 @@
 import logging
 
-from brownie import chain, web3
-from cachetools.func import lru_cache
+from brownie import chain, web3, Contract
+from functools import lru_cache
 
 from yearn.cache import memory
 
@@ -79,3 +79,8 @@ class Singleton(type):
             return self.__instance
         else:
             return self.__instance
+
+
+@lru_cache(maxsize=None)
+def contract(address):
+    return Contract(address)
