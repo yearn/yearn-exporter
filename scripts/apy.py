@@ -70,3 +70,9 @@ def pickleJar():
     samples = get_samples()
     special = YveCRVJar()
     print(json.dumps(dataclasses.asdict(special.apy(samples)), indent=2))
+
+def mim():
+    samples = get_samples()
+    address = "0x2DfB14E32e2F8156ec15a2c21c3A6c053af52Be8"
+    vault = VaultV2.from_address(address)
+    print(json.dumps(dataclasses.asdict(vault.apy(samples)), indent=2))

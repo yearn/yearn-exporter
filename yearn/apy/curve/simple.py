@@ -20,6 +20,8 @@ from yearn.apy.common import (
 
 logger = logging.getLogger(__name__)
 
+CRV_CONTROLLER = Contract("0x2F50D538606Fa9EDD2B11E2446BEb18C9D5846bB")
+
 CRV = Contract("0xD533a949740bb3306d119CC777fa900bA034cd52")
 CVX = Contract("0x4e3FBD56CD56c3e72c1403e103b45Db9da5B9D2B")
 
@@ -40,13 +42,17 @@ def simple(vault, samples: ApySamples) -> Apy:
     gauge_address = gauge_addresses[0][0]
 
     gauge = Contract(gauge_address)
-    controller = gauge.controller()
-    controller = Contract(controller)
+
+    try:
+        controller = gauge.controller()
+        controller = Contract(controller)
+    except:
+        # newer gauges do not have a 'controller' method
+        controller = CRV_CONTROLLER
 
     block = samples.now
-
-    gauge_working_supply = gauge.working_supply(block_identifier=block)
     gauge_weight = controller.gauge_relative_weight.call(gauge_address, block_identifier=block) 
+    gauge_working_supply = gauge.working_supply(block_identifier=block)
 
     gauge_inflation_rate = gauge.inflation_rate(block_identifier=block)
     pool = Contract(pool_address)
