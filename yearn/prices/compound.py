@@ -1,4 +1,4 @@
-from brownie import Contract, interface
+from brownie import Contract
 from cachetools.func import ttl_cache
 from yearn.multicall2 import fetch_multicall
 
