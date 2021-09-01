@@ -1,35 +1,42 @@
-from yearn.events import create_filter, decode_logs
-from brownie import ZERO_ADDRESS, Contract, multicall
-from cachetools.func import ttl_cache
-from toolz import take, concat
-from functools import cached_property, lru_cache
-from collections import defaultdict
-from yearn.utils import Singleton, contract
-from yearn.cache import memory
-from yearn.multicall2 import fetch_multicall
-import logging
-
 """
-Registry versions:
-id 0 (Main Registry)
+Curve Registry adapter. Supports regular pools, factory pools and crypto pools.
+See also https://curve.readthedocs.io/registry-address-provider.html
+
+Main Registry (id 0)
     v1 = 0x7D86446dDb609eD0F5f8684AcF30380a356b2B4c
     v2 = 0x90E00ACe148ca3b23Ac1bC8C240C2a7Dd9c2d7f5
-id 2 (Exchanges)
+Exchanges (id 2)
     v1 = 0xD1602F68CC7C4c7B59D686243EA35a9C73B0c6a2
     v2 = 0x2393c368C70B42f055a4932a3fbeC2AC9C548011
-id 3 (Metapool Factory)
+Metapool Factory (id 3)
     v1 = 0x0959158b6040D32d04c301A72CBFD6b39E21c9AE
     v2 = 0xB9fC157394Af804a3578134A6585C0dc9cc990d4
 """
+import logging
+from collections import defaultdict
+from functools import lru_cache
+
+from brownie import ZERO_ADDRESS, Contract, multicall
+from cachetools.func import ttl_cache
+from toolz import take
+
+from yearn.cache import memory
+from yearn.events import create_filter, decode_logs
+from yearn.multicall2 import fetch_multicall
+from yearn.utils import Singleton, contract
 
 logger = logging.getLogger(__name__)
+
+# HACK: Curve registry misses some gauges. This should be removed once fixed on their side.
+MISSING_POOL_TO_GAUGE = {
+    '0x5a6A4D54456819380173272A5E8E9B9904BdF41B': '0xd8b712d29381748db89c36bca0138d7c75866ddf',
+}
 
 
 class NonCurvePool(ValueError):
     pass
 
 
-# https://curve.readthedocs.io/registry-address-provider.html
 class CurveRegistry(metaclass=Singleton):
     def __init__(self):
         self.pools = set()
@@ -39,6 +46,8 @@ class CurveRegistry(metaclass=Singleton):
         self.watch_events()
 
     def watch_events(self):
+        # TODO keep fresh in background
+
         # fetch all registries and factories from address provider
         log_filter = create_filter(str(self.addres_provider))
         for event in decode_logs(log_filter.get_new_entries()):
@@ -62,30 +71,44 @@ class CurveRegistry(metaclass=Singleton):
         return contract(self.identifiers[0][-1])
 
     @property
-    def metapool_factories(self):
-        return [contract(factory) for factory in self.identifiers[3]]
-
-    @property
     @ttl_cache(ttl=3600)
     def metapools_by_factory(self):
+        """
+        Read cached pools spawned by each factory.
+        TODO Update on factory events
+        """
+        metapool_factories = [contract(factory) for factory in self.identifiers[3]]
         with multicall:
             data = {
                 str(factory): [
                     factory.pool_list(i) for i in range(factory.pool_count())
                 ]
-                for factory in self.metapool_factories
+                for factory in metapool_factories
             }
         return data
 
-    def is_factory_pool(self, pool):
-        return str(pool) in concat(self.metapools_by_factory.values())
+    def get_factory(self, pool):
+        """
+        Get metapool factory that has spawned a pool.
+        """
+        try:
+            return next(
+                factory
+                for factory, factory_pools in self.metapools_by_factory.items()
+                if str(pool) in factory_pools
+            )
+        except StopIteration:
+            return None
 
     @lru_cache(maxsize=None)
     def _pool_from_lp_token(self, token):
         return self.latest_registry.get_pool_from_lp_token(token)
 
     def get_pool(self, token):
-        if self.is_factory_pool(token):
+        """
+        Get Curve pool (swap) address by LP token address. Supports factory pools.
+        """
+        if self.get_factory(token):
             return token
 
         pool = self._pool_from_lp_token(token)
@@ -93,6 +116,37 @@ class CurveRegistry(metaclass=Singleton):
             raise NonCurvePool(token)
 
         return pool
+
+    def get_gauge(self, pool):
+        if pool in MISSING_POOL_TO_GAUGE:
+            return MISSING_POOL_TO_GAUGE[pool]
+
+        factory = self.get_factory(pool)
+        if factory and hasattr(contract(factory), 'get_gauge'):
+            return contract(factory).get_gauge(pool)
+
+        gauges, types = self.latest_registry.get_gauges(pool)
+        if gauges[0] != ZERO_ADDRESS:
+            return gauges[0]
+
+    def get_coins(self, pool):
+        factory = self.get_factory(pool)
+        if factory:
+            coins = contract(factory).get_coins(pool)
+        else:
+            coins = self.latest_registry.get_coins(pool)
+
+        return [coin for coin in coins if coin != ZERO_ADDRESS]
+
+    def get_underlying_coins(self, pool):
+        # TODO test thoroughly
+        factory = self.get_factory(pool)
+        if factory:
+            coins = contract(factory).get_underlying_coins(pool)
+        else:
+            coins = self.latest_registry.get_underlying_coins(pool)
+
+        return [coin for coin in coins if coin != ZERO_ADDRESS]
 
 
 # fold underlying tokens into one of the basic tokens
