@@ -27,15 +27,6 @@ from yearn.utils import Singleton, contract
 
 logger = logging.getLogger(__name__)
 
-# HACK: Curve registry misses some gauges. This should be removed once fixed on their side.
-MISSING_POOL_TO_GAUGE = {
-    '0x5a6A4D54456819380173272A5E8E9B9904BdF41B': '0xd8b712d29381748db89c36bca0138d7c75866ddf',
-}
-
-
-class NonCurvePool(ValueError):
-    pass
-
 
 class CurveRegistry(metaclass=Singleton):
     def __init__(self):
@@ -112,15 +103,11 @@ class CurveRegistry(metaclass=Singleton):
             return token
 
         pool = self._pool_from_lp_token(token)
-        if pool == ZERO_ADDRESS:
-            raise NonCurvePool(token)
 
-        return pool
+        if pool != ZERO_ADDRESS:
+            return pool
 
     def get_gauge(self, pool):
-        if pool in MISSING_POOL_TO_GAUGE:
-            return MISSING_POOL_TO_GAUGE[pool]
-
         factory = self.get_factory(pool)
         if factory and hasattr(contract(factory), 'get_gauge'):
             return contract(factory).get_gauge(pool)
