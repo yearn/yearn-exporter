@@ -2,7 +2,7 @@ import logging
 
 from cachetools.func import ttl_cache
 
-from yearn.prices import balancer, chainlink, compound, constants, curve, uniswap, yearn
+from yearn.prices import aave, balancer, chainlink, compound, constants, curve, uniswap, yearn
 
 logger = logging.getLogger(__name__)
 
@@ -24,6 +24,8 @@ def get_price(token, block=None):
     if token == "0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE":
         token = constants.weth
 
+    token = aave.atoken_underlying(token) or token
+
     # we can exit early with known tokens
     if token in chainlink.chainlink:
         price = chainlink.get_price(token, block=block)
@@ -33,8 +35,8 @@ def get_price(token, block=None):
         price = yearn.get_price(token, block=block)
         logger.debug("yearn -> %s", price)
 
-    elif curve.is_curve_lp_token(token):
-        price = curve.get_price(token, block=block)
+    elif curve.curve.get_pool(token):
+        price = curve.curve.get_price(token, block=block)
         logger.debug("curve lp -> %s", price)
 
     elif compound.is_compound_market(token):
