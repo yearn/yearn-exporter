@@ -16,8 +16,9 @@ def test_synthetix_detection():
     assert synthetix.is_synth(sLINK)
 
 
-@pytest.mark.parametrize('token', SYNTHS)
-def test_synthetix_price(token):
+@pytest.mark.parametrize('target', SYNTHS)
+def test_synthetix_price(target):
+    token = contract(target).proxy()
     price = synthetix.get_price(token)
-    # print(price, contract(token).currencyKey().decode().rstrip('\x00'))
+    print(price, contract(target).currencyKey().decode().rstrip('\x00'))
     return price

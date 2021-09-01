@@ -46,11 +46,17 @@ def is_synth(token):
     return False
 
 
+@lru_cache(maxsize=None)
+def get_currency_key(token):
+    target = contract(token).target()
+    return contract(target).currencyKey()
+
+
 @ttl_cache(ttl=600)
 def get_price(token, block=None):
     """
     Get a price of a synth in dollars.
     """
     exchnage_rates = get_address('ExchangeRates')
-    currency_key = contract(token).currencyKey()
+    currency_key = get_currency_key(token)
     return exchnage_rates.rateForCurrency(currency_key, block_identifier=block) / 1e18
