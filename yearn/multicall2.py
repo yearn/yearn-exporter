@@ -1,5 +1,4 @@
 from collections import defaultdict
-from functools import lru_cache
 from itertools import count, product
 from operator import itemgetter
 
@@ -7,15 +6,11 @@ import requests
 from brownie import Contract, web3
 from eth_abi.exceptions import InsufficientDataBytes
 
-
-@lru_cache()
-def get_multicall():
-    # https://github.com/makerdao/multicall
-    return Contract('0x5BA1e12693Dc8F9c48aAD8770482f4739bEeD696')
+multicall2 = Contract('0x5BA1e12693Dc8F9c48aAD8770482f4739bEeD696')
 
 
 def fetch_multicall(*calls, block=None):
-    multicall2 = get_multicall()
+    # https://github.com/makerdao/multicall
     multicall_input = []
     fn_list = []
     decoded = []
@@ -36,11 +31,13 @@ def fetch_multicall(*calls, block=None):
         call = web3.eth.call(
             {'to': str(multicall2), 'data': data},
             block or 'latest',
-            {str(multicall2): {'code': multicall2.bytecode}},
+            {str(multicall2): {'code': f'0x{multicall2.bytecode}'}},
         )
         result = multicall2.tryAggregate.decode_output(call)
     else:
-        result = multicall2.tryAggregate.call(False, multicall_input, block_identifier=block or 'latest')
+        result = multicall2.tryAggregate.call(
+            False, multicall_input, block_identifier=block or 'latest'
+        )
 
     for fn, (ok, data) in zip(fn_list, result):
         try:
@@ -93,6 +90,8 @@ def batch_call(calls):
             }
         )
 
-    # NOTE: Erigon can send batch responses out of order, you need to track them by id
     response = requests.post(web3.provider.endpoint_uri, json=jsonrpc_batch).json()
-    return [fn.decode_output(res['result']) for res in sorted(response, key=itemgetter('id'))]
+    return [
+        fn.decode_output(res['result'])
+        for res in sorted(response, key=itemgetter('id'))
+    ]

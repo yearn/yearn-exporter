@@ -15,11 +15,13 @@ Metapool Factory (id 3)
 import logging
 from collections import defaultdict
 from functools import lru_cache
+from itertools import islice
 
-from brownie import ZERO_ADDRESS, multicall
+from brownie import ZERO_ADDRESS
 from cachetools.func import ttl_cache
 
 from yearn.events import create_filter, decode_logs
+from yearn.multicall2 import fetch_multicall
 from yearn.prices import magic
 from yearn.utils import Singleton, contract
 
@@ -65,14 +67,22 @@ class CurveRegistry(metaclass=Singleton):
         TODO Update on factory events
         """
         metapool_factories = [contract(factory) for factory in self.identifiers[3]]
-        with multicall:
-            data = {
-                str(factory): [
-                    factory.pool_list(i) for i in range(int(factory.pool_count()))
+        pool_counts = fetch_multicall(
+            *[[factory, 'pool_count'] for factory in metapool_factories]
+        )
+        pool_lists = iter(
+            fetch_multicall(
+                *[
+                    [factory, 'pool_list', i]
+                    for factory, pool_count in zip(metapool_factories, pool_counts)
+                    for i in range(pool_count)
                 ]
-                for factory in metapool_factories
-            }
-        return data
+            )
+        )
+        return {
+            str(factory): list(islice(pool_lists, pool_count))
+            for factory, pool_count in zip(metapool_factories, pool_counts)
+        }
 
     def get_factory(self, pool):
         """
@@ -133,14 +143,15 @@ class CurveRegistry(metaclass=Singleton):
         """
         factory = self.get_factory(pool)
         source = contract(factory) if factory else self.registry
-        with multicall(block_identifier=block):
-            coins = source.get_coins(pool)
-            balances = source.get_balances(pool)
-            decimals = source.get_decimals(pool)
-
+        data = fetch_multicall(
+            *[
+                [source, view, pool]
+                for view in ['get_coins', 'get_balances', 'get_decimals']
+            ]
+        )
         return {
             coin: balance / 10 ** dec
-            for coin, balance, dec in zip(coins, balances, decimals)
+            for coin, balance, dec in zip(*data)
             if coin != ZERO_ADDRESS
         }
 

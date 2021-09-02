@@ -1,7 +1,7 @@
-from brownie import multicall
 from cachetools.func import lru_cache, ttl_cache
 from eth_abi import encode_single
 
+from yearn.multicall2 import fetch_multicall
 from yearn.utils import contract
 
 
@@ -23,12 +23,12 @@ def get_synths():
     Get target addresses of all synths.
     """
     proxy_erc20 = get_address('ProxyERC20')
-    with multicall:
-        synths = [
-            proxy_erc20.availableSynths(i)
-            for i in range(int(proxy_erc20.availableSynthCount()))
+    return fetch_multicall(
+        *[
+            [proxy_erc20, 'availableSynths', i]
+            for i in range(proxy_erc20.availableSynthCount())
         ]
-    return synths
+    )
 
 
 @ttl_cache(ttl=3600)

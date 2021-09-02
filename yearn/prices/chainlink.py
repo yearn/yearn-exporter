@@ -34,12 +34,17 @@ class Chainlink(metaclass=Singleton):
         # https://docs.chain.link/docs/feed-registry/#contract-addresses
         return Contract('0x47Fb2585D2C56Fe188D0E6ec628a38b74fCeeeDf')
 
+    @ttl_cache(ttl=3600)
     def load_feeds(self):
         if self.feeds:
             return
-        logs = decode_logs(get_logs_asap(str(self.registry), [self.registry.topics['FeedConfirmed']]))
+        logs = decode_logs(
+            get_logs_asap(str(self.registry), [self.registry.topics['FeedConfirmed']])
+        )
         self.feeds = {
-            log['asset']: log['latestAggregator'] for log in logs if log['denomination'] == DENOMINATIONS['USD']
+            log['asset']: log['latestAggregator']
+            for log in logs
+            if log['denomination'] == DENOMINATIONS['USD']
         }
         self.feeds.update(ADDITIONAL_FEEDS)
         logger.info(f'loaded {len(self.feeds)} feeds')
@@ -60,7 +65,7 @@ class Chainlink(metaclass=Singleton):
 chainlink = Chainlink()
 
 
-@ttl_cache(ttl=600)
+@ttl_cache(maxsize=None, ttl=600)
 def get_price(asset, block=None):
     try:
         return chainlink.get_price(asset, block)

@@ -9,7 +9,7 @@ from brownie.network.contract import InterfaceContainer
 from yearn import constants, curve, apy
 from yearn.multicall2 import fetch_multicall
 from yearn.prices import magic
-from yearn.prices.curve import curve
+from yearn.prices.curve import curve as curve_oracle
 from yearn.apy.common import ApySamples
 
 logger = logging.getLogger(__name__)
@@ -115,7 +115,7 @@ class VaultV1:
         return info
 
     def apy(self, samples: ApySamples):
-        if curve.get_pool(self.token.address):
+        if curve_oracle.get_pool(self.token.address):
             return apy.curve.simple(self, samples)
         else:
             return apy.v1.simple(self, samples)
