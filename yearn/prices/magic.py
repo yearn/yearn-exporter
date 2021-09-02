@@ -9,6 +9,7 @@ from yearn.prices import (
     compound,
     constants,
     curve,
+    fixed_forex,
     synthetix,
     uniswap,
     yearn,
@@ -52,6 +53,10 @@ def get_price(token, block=None):
     elif compound.is_compound_market(token):
         price = compound.get_price(token, block=block)
         logger.debug("compound -> %s", price)
+
+    elif fixed_forex.is_fixed_forex(token):
+        price = fixed_forex.get_price(token, block=block)
+        logger.debug("fixed forex -> %s", price)
 
     elif synthetix.is_synth(token):
         price = synthetix.get_price(token, block=block)
