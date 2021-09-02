@@ -12,6 +12,7 @@ from yearn.prices import (
     fixed_forex,
     synthetix,
     uniswap,
+    uniswap_v3,
     yearn,
 )
 
@@ -81,8 +82,11 @@ def get_price(token, block=None):
         price = uniswap.get_price(token, router="sushiswap", block=block)
         logger.debug("sushiswap -> %s", price)
     if not price:
+        price = uniswap_v3.get_price(token, block=block)
+        logger.debug("uniswap v3 -> %s", price)
+    if not price:
         price = uniswap.get_price(token, router="uniswap", block=block)
-        logger.debug("uniswap -> %s", price)
+        logger.debug("uniswap v2 -> %s", price)
     if not price:
         price = uniswap.get_price_v1(token, block=block)
         logger.debug("uniswap v1 -> %s", price)

@@ -1,10 +1,10 @@
 import math
 from itertools import cycle
 
-from brownie import Contract
 from eth_abi.packed import encode_abi_packed
 
 from yearn.multicall2 import fetch_multicall
+from yearn.utils import contract
 
 # https://github.com/Uniswap/uniswap-v3-periphery/blob/main/deploys.md
 UNISWAP_V3_FACTORY = '0x1F98431c8aD98523631AE4a59f267346ea31F984'
@@ -37,8 +37,8 @@ def get_price(asset, block=None):
     if asset != WETH:
         paths += [[asset, fee, WETH, DEFAULT_FEE, USDC] for fee in FEE_TIERS]
 
-    scale = 10 ** Contract(asset).decimals()
-    quoter = Contract(UNISWAP_V3_QUOTER)
+    scale = 10 ** contract(asset).decimals()
+    quoter = contract(UNISWAP_V3_QUOTER)
 
     results = fetch_multicall(
         *[[quoter, 'quoteExactInput', encode_path(path), scale] for path in paths],
