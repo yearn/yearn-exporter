@@ -47,7 +47,3 @@ You should further use `joblib.Parallel` to run tasks simultaneously, but be awa
 # Caching
 
 Yearn exporter comes with an event caching middleware powered by `joblib.Memory`. This allows to query logs once and significantly reduces hot startup time. Feel free to use this type of disk caching for other things if you are certain they can't change.
-
-# Testing
-
-Do not instantiate contracts on module load, this breaks tests, which only create a connection after the tests have been collected.

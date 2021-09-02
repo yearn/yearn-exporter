@@ -34,9 +34,7 @@ class Registry:
         balances = fetch_multicall(*[[vault.vault, "balance"] for vault in vaults], block=block)
         # skip vaults with zero or erroneous balance
         vaults = [(vault, balance) for vault, balance in zip(vaults, balances) if balance]
-        # FIXME some weird errors, brownie.multicall not thread-safe?
-        # prices = Parallel(8, "threading")(delayed(vault.get_price)(block) for (vault, balance) in vaults)
-        prices = [vault.get_price(block) for (vault, balance) in vaults]
+        prices = Parallel(8, "threading")(delayed(vault.get_price)(block) for (vault, balance) in vaults)
         return {vault.name: balance * price / 10 ** vault.decimals for (vault, balance), price in zip(vaults, prices)}
 
     def active_vaults_at(self, block=None):
