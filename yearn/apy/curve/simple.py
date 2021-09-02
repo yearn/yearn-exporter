@@ -5,7 +5,7 @@ from semantic_version import Version
 
 from yearn.apy.curve.rewards import rewards
 
-from yearn.prices.curve import get_pool, curve_registry
+from yearn.prices.curve import curve
 from yearn.prices.magic import get_price
 
 from yearn.apy.common import (
@@ -34,10 +34,9 @@ PER_MAX_BOOST = 1.0 / MAX_BOOST
 def simple(vault, samples: ApySamples) -> Apy:
     lp_token = vault.token.address
 
-    pool_address = get_pool(lp_token)
-    gauge_addresses = curve_registry.get_gauges(pool_address)
+    pool_address = curve.get_pool(lp_token)
 
-    gauge_address = gauge_addresses[0][0]
+    gauge_address = curve.get_gauge(pool_address)
 
     gauge = Contract(gauge_address)
     controller = gauge.controller()
