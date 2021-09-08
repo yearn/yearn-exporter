@@ -127,7 +127,7 @@ class Registry(metaclass=Singleton):
 
     def total_value_at(self, block=None):
         vaults = self.active_vaults_at(block)
-        prices = Parallel(8, "threading")(delayed(magic.get_price)(vault.token, block=block) for vault in vaults)
+        prices = Parallel(8, "threading")(delayed(magic.get_price)(str(vault.token), block=block) for vault in vaults)
         results = fetch_multicall(*[[vault.vault, "totalAssets"] for vault in vaults], block=block)
         return {vault.name: assets * price / vault.scale for vault, assets, price in zip(vaults, results, prices)}
 

@@ -21,7 +21,7 @@ import requests
 import boto3
 
 from brownie.exceptions import BrownieEnvironmentWarning
-from yearn.apy import get_samples, ApySamples
+from yearn.apy import ApyFees, ApyPoints, Apy, get_samples, ApySamples, ApyError
 from yearn.v1.registry import Registry as RegistryV1
 from yearn.v2.registry import Registry as RegistryV2
 
@@ -41,13 +41,22 @@ logger = logging.getLogger("yearn.apy")
 def wrap_vault(
     vault: Union[VaultV1, VaultV2], samples: ApySamples, aliases: dict, icon_url: str, assets_metadata: dict
 ) -> dict:
-    apy = vault.apy(samples)
-
+    apy_error = Apy("error", 0, 0, ApyFees(0, 0), ApyPoints(0, 0, 0))
+    try:
+        apy = vault.apy(samples)
+    except ValueError as error:
+        logger.error(error)
+        apy = apy_error
+    except PriceError as error:
+        logger.error(error)
+        apy = apy_error
     new = False
     if isinstance(vault, VaultV2):
         harvests = [harvest for strategy in vault.strategies for harvest in strategy.harvests]
         if len(harvests) < 4:
             new = True
+            apy.net_apy = 0.0
+            apy.gross_apr = 0.0
 
     if isinstance(vault, VaultV1):
         strategies = [
@@ -137,12 +146,7 @@ def main():
     assets_metadata = get_assets_metadata(registry_v2.vaults)
 
     for vault in itertools.chain(special, registry_v1.vaults, registry_v2.vaults):
-        try:
-            data.append(wrap_vault(vault, samples, aliases, icon_url, assets_metadata))
-        except ValueError as error:
-            logger.error(error)
-        except PriceError:
-            pass
+        data.append(wrap_vault(vault, samples, aliases, icon_url, assets_metadata))
 
     out = "generated"
     if os.path.isdir(out):
@@ -173,6 +177,8 @@ def main():
     aws_bucket = os.environ.get("AWS_BUCKET")
 
     s3 = boto3.client("s3", aws_access_key_id=aws_key, aws_secret_access_key=aws_secret)
+
+    print(json.dumps(data))
 
     s3.upload_file(
         os.path.join(out, vault_api_all),

@@ -5,15 +5,12 @@ from yearn.common import Tvl
 
 from brownie import Contract, ZERO_ADDRESS, interface, web3
 from brownie.network.contract import InterfaceContainer
-from joblib import Parallel, delayed
 
 from yearn import constants, curve, apy
-from yearn.utils import contract_creation_block
 from yearn.multicall2 import fetch_multicall
 from yearn.prices import magic
-from yearn.prices.curve import is_curve_lp_token
+from yearn.prices.curve import curve as curve_oracle
 from yearn.apy.common import ApySamples
-from pprint import pprint
 
 logger = logging.getLogger(__name__)
 
@@ -118,7 +115,7 @@ class VaultV1:
         return info
 
     def apy(self, samples: ApySamples):
-        if is_curve_lp_token(self.token.address):
+        if curve_oracle.get_pool(self.token.address):
             return apy.curve.simple(self, samples)
         else:
             return apy.v1.simple(self, samples)

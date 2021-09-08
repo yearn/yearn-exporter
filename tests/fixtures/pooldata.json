@@ -1,0 +1,1276 @@
+{
+  "3pool": {
+    "coins": [
+      {
+        "decimals": 18,
+        "name": "DAI",
+        "tethered": false,
+        "underlying_address": "0x6b175474e89094c44da98b954eedeac495271d0f"
+      },
+      {
+        "decimals": 6,
+        "name": "USDC",
+        "tethered": false,
+        "underlying_address": "0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48"
+      },
+      {
+        "decimals": 6,
+        "name": "USDT",
+        "tethered": true,
+        "underlying_address": "0xdac17f958d2ee523a2206206994597c13d831ec7"
+      }
+    ],
+    "gauge_addresses": [
+      "0xbFcF63294aD7105dEa65aA58F8AE5BE2D9d0952A"
+    ],
+    "lp_contract": "CurveTokenV2",
+    "lp_token_address": "0x6c3F90f043a72FA612cbac8115EE7e52BDe6E490",
+    "swap_address": "0xbebc44782c7db0a1a60cb6fe97d0b483032ff1c7"
+  },
+  "aave": {
+    "coins": [
+      {
+        "decimals": 18,
+        "name": "DAI",
+        "tethered": false,
+        "underlying_address": "0x6b175474e89094c44da98b954eedeac495271d0f",
+        "wrapped_address": "0x028171bCA77440897B824Ca71D1c56caC55b68A3",
+        "wrapped_decimals": 18
+      },
+      {
+        "decimals": 6,
+        "name": "USDC",
+        "tethered": false,
+        "underlying_address": "0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48",
+        "wrapped_address": "0xBcca60bB61934080951369a648Fb03DF4F96263C",
+        "wrapped_decimals": 6
+      },
+      {
+        "decimals": 6,
+        "name": "USDT",
+        "tethered": true,
+        "underlying_address": "0xdac17f958d2ee523a2206206994597c13d831ec7",
+        "wrapped_address": "0x3Ed3B47Dd13EC9a98b44e6204A523E766B225811",
+        "wrapped_decimals": 6
+      }
+    ],
+    "gauge_addresses": [
+      "0xd662908ADA2Ea1916B3318327A97eB18aD588b5d"
+    ],
+    "lp_constructor": {
+      "name": "Curve.fi aDAI/aUSDC/aUSDT",
+      "symbol": "a3CRV"
+    },
+    "lp_contract": "CurveTokenV3",
+    "lp_token_address": "0xFd2a8fA60Abd58Efe3EeE34dd494cD491dC14900",
+    "swap_address": "0xDeBF20617708857ebe4F679508E7b7863a8A8EeE",
+    "swap_constructor": {
+      "_A": 200,
+      "_aave_lending_pool": "0x7d2768dE32b0b80b7a3454c06BdAc94A69DDc7A9",
+      "_admin_fee": 5000000000,
+      "_fee": 4000000,
+      "_offpeg_fee_multiplier": 20000000000
+    },
+    "wrapped_contract": "ATokenMock"
+  },
+  "aeth": {
+    "coins": [
+      {
+        "decimals": 18,
+        "name": "ETH",
+        "tethered": false,
+        "underlying_address": "0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE"
+      },
+      {
+        "decimals": 18,
+        "name": "ankrETH",
+        "tethered": false,
+        "wrapped_address": "0xE95A203B1a91a908F9B9CE46459d101078c2c3cb",
+        "wrapped_decimals": 18,
+        "underlying_address": "0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE"
+      }
+    ],
+    "gauge_addresses": [
+      "0x6d10ed2cF043E6fcf51A0e7b4C2Af3Fa06695707"
+    ],
+    "lp_constructor": {
+      "name": "Curve.fi ETH/aETH",
+      "symbol": "ankrCRV"
+    },
+    "lp_contract": "CurveTokenV3",
+    "lp_token_address": "0xaA17A236F2bAdc98DDc0Cf999AbB47D47Fc0A6Cf",
+    "swap_address": "0xA96A65c051bF88B4095Ee1f2451C2A9d43F53Ae2",
+    "swap_constructor": {
+      "_A": 10,
+      "_admin_fee": 5000000000,
+      "_fee": 4000000
+    },
+    "testing": {
+      "initial_amount": 10000
+    },
+    "wrapped_contract": "aETH"
+  },
+  "bbtc": {
+    "base_pool": "sbtc",
+    "coins": [
+      {
+        "decimals": 8,
+        "name": "bBTC",
+        "tethered": false,
+        "underlying_address": "0x9be89d2a4cd102d8fecc6bf9da793be995c22541",
+        "wrapped": false
+      },
+      {
+        "base_pool_token": true,
+        "decimals": 18,
+        "name": "sbtcCRV",
+        "underlying_address": "0x075b1bb99792c9E1041bA13afEf80C91a1e70fB3",
+        "wrapped": false
+      }
+    ],
+    "gauge_addresses": [
+      "0xdFc7AdFa664b08767b735dE28f9E84cd30492aeE"
+    ],
+    "lp_constructor": {
+      "name": "Curve.fi bBTC/sbtcCRV",
+      "symbol": "bBTC/sbtcCRV"
+    },
+    "lp_contract": "CurveTokenV3",
+    "lp_token_address": "0x410e3E86ef427e30B9235497143881f717d93c2A",
+    "swap_address": "0x071c661B4DeefB59E2a3DdB20Db036821eeE8F4b",
+    "swap_constructor": {
+      "_A": 200,
+      "_admin_fee": 5000000000,
+      "_fee": 4000000
+    },
+    "testing": {
+      "initial_amount": 100
+    },
+    "zap_address": "0xC45b2EEe6e09cA176Ca3bB5f7eEe7C47bF93c756"
+  },
+  "busd": {
+    "coins": [
+      {
+        "decimals": 18,
+        "name": "DAI",
+        "tethered": false,
+        "underlying_address": "0x6b175474e89094c44da98b954eedeac495271d0f",
+        "wrapped_address": "0xc2cb1040220768554cf699b0d863a3cd4324ce32",
+        "wrapped_decimals": 18
+      },
+      {
+        "decimals": 6,
+        "name": "USDC",
+        "tethered": false,
+        "underlying_address": "0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48",
+        "wrapped_address": "0x26ea744e5b887e5205727f55dfbe8685e3b21951",
+        "wrapped_decimals": 6
+      },
+      {
+        "decimals": 6,
+        "name": "USDT",
+        "tethered": true,
+        "underlying_address": "0xdac17f958d2ee523a2206206994597c13d831ec7",
+        "wrapped_address": "0xe6354ed5bc4b393a5aad09f21c46e101e692d447",
+        "wrapped_decimals": 6
+      },
+      {
+        "decimals": 18,
+        "name": "BUSD",
+        "tethered": false,
+        "underlying_address": "0x4fabb145d64652a948d72533023f6e7a623c7c53",
+        "wrapped_address": "0x04bc0ab673d88ae9dbc9da2380cb6b79c4bca9ae",
+        "wrapped_decimals": 18
+      }
+    ],
+    "gauge_addresses": [
+      "0x69Fb7c45726cfE2baDeE8317005d3F94bE838840"
+    ],
+    "lp_contract": "CurveTokenV1",
+    "lp_token_address": "0x3B3Ac5386837Dc563660FB6a0937DFAa5924333B",
+    "swap_address": "0x79a8C46DeA5aDa233ABaFFD40F3A0A2B1e5A4F27",
+    "wrapped_contract": "yERC20",
+    "zap_address": "0xb6c057591e073249f2d9d88ba59a46cfc9b59edb"
+  },
+  "compound": {
+    "coins": [
+      {
+        "decimals": 18,
+        "name": "DAI",
+        "tethered": false,
+        "underlying_address": "0x6b175474e89094c44da98b954eedeac495271d0f",
+        "wrapped_address": "0x5d3a536e4d6dbd6114cc1ead35777bab948e3643",
+        "wrapped_decimals": 8
+      },
+      {
+        "decimals": 6,
+        "name": "USDC",
+        "tethered": false,
+        "underlying_address": "0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48",
+        "wrapped_address": "0x39aa39c021dfbae8fac545936693ac917d5e7563",
+        "wrapped_decimals": 8
+      }
+    ],
+    "gauge_addresses": [
+      "0x7ca5b0a2910B33e9759DC7dDB0413949071D7575"
+    ],
+    "lp_contract": "CurveTokenV1",
+    "lp_token_address": "0x845838DF265Dcd2c412A1Dc9e959c7d08537f8a2",
+    "swap_address": "0xA2B47E3D5c44877cca798226B7B8118F9BFb7A56",
+    "wrapped_contract": "cERC20",
+    "zap_address": "0xeb21209ae4c2c9ff2a86aca31e123764a3b6bc06"
+  },
+  "dusd": {
+    "base_pool": "3pool",
+    "coins": [
+      {
+        "decimals": 18,
+        "name": "DUSD",
+        "tethered": false,
+        "underlying_address": "0x5bc25f649fc4e26069ddf4cf4010f9f706c23831"
+      },
+      {
+        "base_pool_token": true,
+        "decimals": 18,
+        "name": "3CRV",
+        "underlying_address": "0x6c3F90f043a72FA612cbac8115EE7e52BDe6E490"
+      }
+    ],
+    "gauge_addresses": [
+      "0xAEA6c312f4b3E04D752946d329693F7293bC2e6D"
+    ],
+    "lp_constructor": {
+      "name": "Curve.fi DUSD/3Crv",
+      "symbol": "dusd3CRV"
+    },
+    "lp_contract": "CurveTokenV2",
+    "lp_token_address": "0x3a664Ab939FD8482048609f652f9a0B0677337B9",
+    "swap_address": "0x8038C01A0390a8c547446a0b2c18fc9aEFEcc10c",
+    "swap_constructor": {
+      "_A": 200,
+      "_admin_fee": 0,
+      "_fee": 4000000
+    },
+    "zap_address": "0x61E10659fe3aa93d036d099405224E4Ac24996d0"
+  },
+  "eurs": {
+    "coins": [
+      {
+        "decimals": 2,
+        "name": "EURS",
+        "tethered": false,
+        "underlying_address": "0xdB25f211AB05b1c97D595516F45794528a807ad8"
+      },
+      {
+        "decimals": 18,
+        "name": "sEUR",
+        "tethered": false,
+        "underlying_address": "0xD71eCFF9342A5Ced620049e616c5035F1dB98620"
+      }
+    ],
+    "gauge_addresses": [
+      "0x90Bb609649E0451E5aD952683D64BD2d1f245840"
+    ],
+    "lp_constructor": {
+      "name": "Curve.fi EURS/sEUR",
+      "symbol": "eursCRV"
+    },
+    "lp_contract": "CurveTokenV3",
+    "lp_token_address": "0x194eBd173F6cDacE046C53eACcE9B953F28411d1",
+    "swap_address": "0x0Ce6a5fF5217e38315f87032CF90686C96627CAA",
+    "swap_constructor": {
+      "_A": 100,
+      "_admin_fee": 5000000000,
+      "_fee": 4000000
+    },
+    "testing": {
+      "initial_amount": 10000
+    }
+  },
+  "gusd": {
+    "base_pool": "3pool",
+    "coins": [
+      {
+        "decimals": 2,
+        "name": "GUSD",
+        "tethered": false,
+        "underlying_address": "0x056fd409e1d7a124bd7017459dfea2f387b6d5cd"
+      },
+      {
+        "base_pool_token": true,
+        "decimals": 18,
+        "name": "3CRV",
+        "underlying_address": "0x6c3F90f043a72FA612cbac8115EE7e52BDe6E490"
+      }
+    ],
+    "gauge_addresses": [
+      "0xC5cfaDA84E902aD92DD40194f0883ad49639b023"
+    ],
+    "lp_constructor": {
+      "name": "Curve.fi GUSD/3Crv",
+      "symbol": "gusd3CRV"
+    },
+    "lp_contract": "CurveTokenV2",
+    "lp_token_address": "0xD2967f45c4f384DEEa880F807Be904762a3DeA07",
+    "swap_address": "0x4f062658EaAF2C1ccf8C8e36D6824CDf41167956",
+    "swap_constructor": {
+      "_A": 200,
+      "_admin_fee": 0,
+      "_fee": 4000000
+    },
+    "zap_address": "0x64448B78561690B70E17CBE8029a3e5c1bB7136e"
+  },
+  "hbtc": {
+    "coins": [
+      {
+        "decimals": 18,
+        "name": "hBTC",
+        "tethered": false,
+        "underlying_address": "0x0316EB71485b0Ab14103307bf65a021042c6d380"
+      },
+      {
+        "decimals": 8,
+        "name": "wBTC",
+        "tethered": false,
+        "underlying_address": "0x2260fac5e5542a773aa44fbcfedf7c193bc2c599"
+      }
+    ],
+    "gauge_addresses": [
+      "0x4c18E409Dc8619bFb6a1cB56D114C3f592E0aE79"
+    ],
+    "lp_contract": "CurveTokenV2",
+    "lp_token_address": "0xb19059ebb43466C323583928285a49f558E572Fd",
+    "swap_address": "0x4CA9b3063Ec5866A4B82E437059D2C43d1be596F"
+  },
+  "husd": {
+    "base_pool": "3pool",
+    "coins": [
+      {
+        "decimals": 8,
+        "name": "HUSD",
+        "tethered": false,
+        "underlying_address": "0xdf574c24545e5ffecb9a659c229253d4111d87e1"
+      },
+      {
+        "base_pool_token": true,
+        "decimals": 18,
+        "name": "3CRV",
+        "underlying_address": "0x6c3F90f043a72FA612cbac8115EE7e52BDe6E490"
+      }
+    ],
+    "gauge_addresses": [
+      "0x2db0E83599a91b508Ac268a6197b8B14F5e72840"
+    ],
+    "lp_constructor": {
+      "name": "Curve.fi HUSD/3Crv",
+      "symbol": "husd3CRV"
+    },
+    "lp_contract": "CurveTokenV2",
+    "lp_token_address": "0x5B5CFE992AdAC0C9D48E05854B2d91C73a003858",
+    "swap_address": "0x3eF6A01A0f81D6046290f3e2A8c5b843e738E604",
+    "swap_constructor": {
+      "_A": 200,
+      "_admin_fee": 0,
+      "_fee": 4000000
+    },
+    "zap_address": "0x09672362833d8f703D5395ef3252D4Bfa51c15ca"
+  },
+  "ib": {
+    "coins": [
+      {
+        "decimals": 18,
+        "name": "DAI",
+        "tethered": false,
+        "underlying_address": "0x6b175474e89094c44da98b954eedeac495271d0f",
+        "wrapped_address": "0x8e595470ed749b85c6f7669de83eae304c2ec68f",
+        "wrapped_decimals": 8
+      },
+      {
+        "decimals": 6,
+        "name": "USDC",
+        "tethered": false,
+        "underlying_address": "0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48",
+        "wrapped_address": "0x76eb2fe28b36b3ee97f3adae0c69606eedb2a37c",
+        "wrapped_decimals": 8
+      },
+      {
+        "decimals": 6,
+        "name": "USDT",
+        "tethered": true,
+        "underlying_address": "0xdac17f958d2ee523a2206206994597c13d831ec7",
+        "wrapped_address": "0x48759f220ed983db51fa7a8c0d2aab8f3ce4166a",
+        "wrapped_decimals": 8
+      }
+    ],
+    "gauge_addresses": [
+      "0xF5194c3325202F456c95c1Cf0cA36f8475C1949F"
+    ],
+    "lp_constructor": {
+      "name": "Curve.fi cyDAI/cyUSDC/cyUSDT",
+      "symbol": "ib3CRV"
+    },
+    "lp_contract": "CurveTokenV3",
+    "lp_token_address": "0x5282a4eF67D9C33135340fB3289cc1711c13638C",
+    "swap_address": "0x2dded6Da1BF5DBdF597C45fcFaa3194e53EcfeAF",
+    "swap_constructor": {
+      "_A": 600,
+      "_admin_fee": 5000000000,
+      "_fee": 4000000
+    },
+    "wrapped_contract": "cERC20"
+  },
+  "link": {
+    "coins": [
+      {
+        "decimals": 18,
+        "name": "LINK",
+        "tethered": false,
+        "underlying_address": "0x514910771AF9Ca656af840dff83E8264EcF986CA"
+      },
+      {
+        "decimals": 18,
+        "name": "sLINK",
+        "tethered": false,
+        "underlying_address": "0xbBC455cb4F1B9e4bFC4B73970d360c8f032EfEE6"
+      }
+    ],
+    "gauge_addresses": [
+      "0xFD4D8a17df4C27c1dD245d153ccf4499e806C87D"
+    ],
+    "lp_constructor": {
+      "name": "Curve.fi LINK/sLINK",
+      "symbol": "linkCRV"
+    },
+    "lp_contract": "CurveTokenV3",
+    "lp_token_address": "0xcee60cfa923170e4f8204ae08b4fa6a3f5656f3a",
+    "swap_address": "0xf178c0b5bb7e7abf4e12a4838c7b7c5ba2c623c0",
+    "swap_constructor": {
+      "_A": 100,
+      "_admin_fee": 5000000000,
+      "_fee": 4000000
+    },
+    "testing": {
+      "initial_amount": 10000
+    }
+  },
+  "linkusd": {
+    "base_pool": "3pool",
+    "coins": [
+      {
+        "decimals": 18,
+        "name": "LINKUSD",
+        "tethered": false,
+        "underlying_address": "0x0E2EC54fC0B509F445631Bf4b91AB8168230C752"
+      },
+      {
+        "base_pool_token": true,
+        "decimals": 18,
+        "name": "3CRV",
+        "underlying_address": "0x6c3F90f043a72FA612cbac8115EE7e52BDe6E490"
+      }
+    ],
+    "gauge_addresses": [],
+    "lp_constructor": {
+      "name": "Curve.fi LinkUSD/3Crv",
+      "symbol": "LinkUSD3CRV"
+    },
+    "lp_contract": "CurveTokenV2",
+    "lp_token_address": "0x6D65b498cb23deAba52db31c93Da9BFFb340FB8F",
+    "swap_address": "0xE7a24EF0C5e95Ffb0f6684b813A78F2a3AD7D171",
+    "swap_constructor": {
+      "_A": 5,
+      "_admin_fee": 0,
+      "_fee": 15000000
+    },
+    "zap_address": "0x1de7f0866e2c4adAC7b457c58Cc25c8688CDa1f2"
+  },
+  "musd": {
+    "base_pool": "3pool",
+    "coins": [
+      {
+        "decimals": 18,
+        "name": "MUSD",
+        "tethered": false,
+        "underlying_address": "0xe2f2a5C287993345a840Db3B0845fbC70f5935a5"
+      },
+      {
+        "base_pool_token": true,
+        "decimals": 18,
+        "name": "3CRV",
+        "underlying_address": "0x6c3F90f043a72FA612cbac8115EE7e52BDe6E490"
+      }
+    ],
+    "gauge_addresses": [
+      "0x5f626c30EC1215f4EdCc9982265E8b1F411D1352"
+    ],
+    "lp_constructor": {
+      "name": "Curve.fi MUSD/3Crv",
+      "symbol": "musd3CRV"
+    },
+    "lp_contract": "CurveTokenV2",
+    "lp_token_address": "0x1AEf73d49Dedc4b1778d0706583995958Dc862e6",
+    "swap_address": "0x8474DdbE98F5aA3179B3B3F5942D724aFcdec9f6",
+    "swap_constructor": {
+      "_A": 200,
+      "_admin_fee": 0,
+      "_fee": 4000000
+    },
+    "zap_address": "0x803A2B40c5a9BB2B86DD630B274Fa2A9202874C2"
+  },
+  "obtc": {
+    "base_pool": "sbtc",
+    "coins": [
+      {
+        "decimals": 18,
+        "name": "oBTC",
+        "tethered": false,
+        "underlying_address": "0x8064d9Ae6cDf087b1bcd5BDf3531bD5d8C537a68",
+        "wrapped": false
+      },
+      {
+        "base_pool_token": true,
+        "decimals": 18,
+        "name": "sbtcCRV",
+        "underlying_address": "0x075b1bb99792c9E1041bA13afEf80C91a1e70fB3",
+        "wrapped": false
+      }
+    ],
+    "gauge_addresses": [
+      "0x11137B10C210b579405c21A07489e28F3c040AB1"
+    ],
+    "lp_constructor": {
+      "name": "Curve.fi oBTC/sbtcCRV",
+      "symbol": "oBTC/sbtcCRV"
+    },
+    "lp_contract": "CurveTokenV3",
+    "lp_token_address": "0x2fE94ea3d5d4a175184081439753DE15AeF9d614",
+    "swap_address": "0xd81dA8D904b52208541Bade1bD6595D8a251F8dd",
+    "swap_constructor": {
+      "_A": 200,
+      "_admin_fee": 5000000000,
+      "_fee": 4000000
+    },
+    "testing": {
+      "initial_amount": 100
+    },
+    "zap_address": "0xd5BCf53e2C81e1991570f33Fa881c49EEa570C8D"
+  },
+  "pax": {
+    "coins": [
+      {
+        "name": "DAI",
+        "decimals": 18,
+        "tethered": false,
+        "underlying_address": "0x6b175474e89094c44da98b954eedeac495271d0f",
+        "wrapped_address": "0x99d1fa417f94dcd62bfe781a1213c092a47041bc",
+        "wrapped_decimals": 18
+      },
+      {
+        "name": "USDC",
+        "decimals": 6,
+        "tethered": false,
+        "underlying_address": "0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48",
+        "wrapped_address": "0x9777d7e2b60bb01759d0e2f8be2095df444cb07e",
+        "wrapped_decimals": 6
+      },
+      {
+        "name": "USDT",
+        "decimals": 6,
+        "tethered": true,
+        "underlying_address": "0xdac17f958d2ee523a2206206994597c13d831ec7",
+        "wrapped_address": "0x1be5d71f2da660bfdee8012ddc58d024448a0a59",
+        "wrapped_decimals": 6
+      },
+      {
+        "name": "PAX",
+        "decimals": 18,
+        "tethered": false,
+        "underlying_address": "0x8e870d67f660d95d5be530380d0ec0bd388289e1"
+      }
+    ],
+    "gauge_addresses": [
+      "0x64E3C23bfc40722d3B649844055F1D51c1ac041d"
+    ],
+    "lp_contract": "CurveTokenV1",
+    "lp_token_address": "0xD905e2eaeBe188fc92179b6350807D8bd91Db0D8",
+    "swap_address": "0x06364f10B501e868329afBc005b3492902d6C763",
+    "wrapped_contract": "yERC20",
+    "zap_address": "0xa50ccc70b6a011cffddf45057e39679379187287"
+  },
+  "pbtc": {
+    "base_pool": "sbtc",
+    "coins": [
+      {
+        "decimals": 18,
+        "name": "pBTC",
+        "tethered": false,
+        "underlying_address": "0x5228a22e72ccC52d415EcFd199F99D0665E7733b",
+        "wrapped": false
+      },
+      {
+        "base_pool_token": true,
+        "decimals": 18,
+        "name": "sbtcCRV",
+        "underlying_address": "0x075b1bb99792c9E1041bA13afEf80C91a1e70fB3",
+        "wrapped": false
+      }
+    ],
+    "gauge_addresses": [
+      "0xd7d147c6Bb90A718c3De8C0568F9B560C79fa416"
+    ],
+    "lp_constructor": {
+      "name": "Curve.fi pBTC/sbtcCRV",
+      "symbol": "pBTC/sbtcCRV"
+    },
+    "lp_contract": "CurveTokenV2",
+    "lp_token_address": "0xDE5331AC4B3630f94853Ff322B66407e0D6331E8",
+    "swap_address": "0x7F55DDe206dbAD629C080068923b36fe9D6bDBeF",
+    "swap_constructor": {
+      "_A": 200,
+      "_admin_fee": 5000000000,
+      "_fee": 4000000
+    },
+    "testing": {
+      "initial_amount": 100
+    },
+    "zap_address": "0x11F419AdAbbFF8d595E7d5b223eee3863Bb3902C"
+  },
+  "ren": {
+    "coins": [
+      {
+        "name": "renBTC",
+        "tethered": false,
+        "underlying_address": "0xeb4c2781e4eba804ce9a9803c67d0893436bb27d",
+        "wrapped_address": "0xeb4c2781e4eba804ce9a9803c67d0893436bb27d",
+        "wrapped_decimals": 8
+      },
+      {
+        "name": "WBTC",
+        "decimals": 8,
+        "tethered": false,
+        "underlying_address": "0x2260fac5e5542a773aa44fbcfedf7c193bc2c599"
+      }
+    ],
+    "gauge_addresses": [
+      "0xB1F2cdeC61db658F091671F5f199635aEF202CAC"
+    ],
+    "lp_contract": "CurveTokenV1",
+    "lp_token_address": "0x49849C98ae39Fff122806C06791Fa73784FB3675",
+    "swap_address": "0x93054188d876f558f4a66B2EF1d97d16eDf0895B",
+    "testing": {
+      "initial_amount": 1000
+    },
+    "wrapped_contract": "renERC20"
+  },
+  "rsv": {
+    "base_pool": "3pool",
+    "coins": [
+      {
+        "decimals": 18,
+        "name": "RSV",
+        "tethered": false,
+        "underlying_address": "0x196f4727526eA7FB1e17b2071B3d8eAA38486988"
+      },
+      {
+        "base_pool_token": true,
+        "decimals": 18,
+        "name": "3CRV",
+        "underlying_address": "0x6c3F90f043a72FA612cbac8115EE7e52BDe6E490"
+      }
+    ],
+    "gauge_addresses": [
+      "0x4dC4A289a8E33600D8bD4cf5F6313E43a37adec7"
+    ],
+    "lp_constructor": {
+      "name": "Curve.fi RSV/3Crv",
+      "symbol": "rsv3CRV"
+    },
+    "lp_contract": "CurveTokenV2",
+    "lp_token_address": "0xC2Ee6b0334C261ED60C72f6054450b61B8f18E35",
+    "swap_address": "0xC18cC39da8b11dA8c3541C598eE022258F9744da",
+    "swap_constructor": {
+      "_A": 200,
+      "_admin_fee": 0,
+      "_fee": 4000000
+    },
+    "zap_address": "0xBE175115BF33E12348ff77CcfEE4726866A0Fbd5"
+  },
+  "saave": {
+    "coins": [
+      {
+        "decimals": 18,
+        "name": "DAI",
+        "tethered": false,
+        "underlying_address": "0x6b175474e89094c44da98b954eedeac495271d0f",
+        "wrapped_address": "0x028171bCA77440897B824Ca71D1c56caC55b68A3",
+        "wrapped_decimals": 18
+      },
+      {
+        "decimals": 18,
+        "name": "SUSD",
+        "tethered": false,
+        "underlying_address": "0x57ab1ec28d129707052df4df418d58a2d46d5f51",
+        "wrapped_address": "0x6c5024cd4f8a59110119c56f8933403a539555eb",
+        "wrapped_decimals": 18
+      }
+    ],
+    "gauge_addresses": [
+      "0x462253b8F74B72304c145DB0e4Eebd326B22ca39"
+    ],
+    "lp_constructor": {
+      "name": "Curve.fi aDAI/aSUSD",
+      "symbol": "saCRV"
+    },
+    "lp_contract": "CurveTokenV3",
+    "lp_token_address": "0x02d341CcB60fAaf662bC0554d13778015d1b285C",
+    "swap_address": "0xeb16ae0052ed37f479f7fe63849198df1765a733",
+    "swap_constructor": {
+      "_A": 100,
+      "_aave_lending_pool": "0x7d2768dE32b0b80b7a3454c06BdAc94A69DDc7A9",
+      "_admin_fee": 5000000000,
+      "_fee": 4000000,
+      "_offpeg_fee_multiplier": 20000000000
+    },
+    "wrapped_contract": "ATokenMock"
+  },
+  "sbtc": {
+    "coins": [
+      {
+        "name": "renBTC",
+        "tethered": false,
+        "underlying_address": "0xeb4c2781e4eba804ce9a9803c67d0893436bb27d",
+        "wrapped_address": "0xeb4c2781e4eba804ce9a9803c67d0893436bb27d",
+        "wrapped_decimals": 8
+      },
+      {
+        "name": "WBTC",
+        "decimals": 8,
+        "tethered": false,
+        "underlying_address": "0x2260fac5e5542a773aa44fbcfedf7c193bc2c599"
+      },
+      {
+        "name": "sBTC",
+        "decimals": 18,
+        "tethered": false,
+        "underlying_address": "0xfe18be6b3bd88a2d2a7f928d00292e7a9963cfc6"
+      }
+    ],
+    "gauge_addresses": [
+      "0x705350c4BcD35c9441419DdD5d2f097d7a55410F"
+    ],
+    "lp_contract": "CurveTokenV1",
+    "lp_token_address": "0x075b1bb99792c9E1041bA13afEf80C91a1e70fB3",
+    "swap_address": "0x7fC77b5c7614E1533320Ea6DDc2Eb61fa00A9714",
+    "testing": {
+      "initial_amount": 1000
+    },
+    "wrapped_contract": "renERC20"
+  },
+  "seth": {
+    "coins": [
+      {
+        "decimals": 18,
+        "name": "ETH",
+        "tethered": false,
+        "underlying_address": "0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE"
+      },
+      {
+        "decimals": 18,
+        "name": "sETH",
+        "tethered": false,
+        "underlying_address": "0x5e74C9036fb86BD7eCdcb084a0673EFc32eA31cb"
+      }
+    ],
+    "gauge_addresses": [
+      "0x3C0FFFF15EA30C35d7A85B85c0782D6c94e1d238"
+    ],
+    "lp_constructor": {
+      "name": "Curve.fi ETH/sETH",
+      "symbol": "eCRV"
+    },
+    "lp_contract": "CurveTokenV3",
+    "lp_token_address": "0xA3D87FffcE63B53E0d54fAa1cc983B7eB0b74A9c",
+    "swap_address": "0xc5424b857f758e906013f3555dad202e4bdb4567",
+    "swap_constructor": {
+      "_A": 100,
+      "_admin_fee": 5000000000,
+      "_fee": 4000000
+    },
+    "testing": {
+      "initial_amount": 10000
+    }
+  },
+  "steth": {
+    "coins": [
+      {
+        "decimals": 18,
+        "name": "ETH",
+        "tethered": false,
+        "underlying_address": "0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE"
+      },
+      {
+        "decimals": 18,
+        "name": "stETH",
+        "tethered": false,
+        "underlying_address": "0xae7ab96520DE3A18E5e111B5EaAb095312D7fE84"
+      }
+    ],
+    "gauge_addresses": [
+      "0x182B723a58739a9c974cFDB385ceaDb237453c28"
+    ],
+    "lp_constructor": {
+      "name": "Curve.fi ETH/stETH",
+      "symbol": "steCRV"
+    },
+    "lp_contract": "CurveTokenV3",
+    "lp_token_address": "0x06325440D014e39736583c165C2963BA99fAf14E",
+    "swap_address": "0xDC24316b9AE028F1497c275EB9192a3Ea0f67022",
+    "swap_constructor": {
+      "_A": 5,
+      "_admin_fee": 5000000000,
+      "_fee": 4000000
+    },
+    "testing": {
+      "initial_amount": 10000
+    }
+  },
+  "susd": {
+    "coins": [
+      {
+        "decimals": 18,
+        "name": "DAI",
+        "tethered": false,
+        "underlying_address": "0x6b175474e89094c44da98b954eedeac495271d0f"
+      },
+      {
+        "decimals": 6,
+        "name": "USDC",
+        "tethered": false,
+        "underlying_address": "0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48"
+      },
+      {
+        "decimals": 6,
+        "name": "USDT",
+        "tethered": true,
+        "underlying_address": "0xdac17f958d2ee523a2206206994597c13d831ec7"
+      },
+      {
+        "decimals": 18,
+        "name": "SUSD",
+        "tethered": false,
+        "underlying_address": "0x57ab1ec28d129707052df4df418d58a2d46d5f51"
+      }
+    ],
+    "gauge_addresses": [
+      "0xA90996896660DEcC6E997655E065b23788857849"
+    ],
+    "lp_contract": "CurveTokenV1",
+    "lp_token_address": "0xC25a3A3b969415c80451098fa907EC722572917F",
+    "swap_address": "0xA5407eAE9Ba41422680e2e00537571bcC53efBfD",
+    "zap_address": "0xfcba3e75865d2d561be8d220616520c171f12851"
+  },
+  "tbtc": {
+    "base_pool": "sbtc",
+    "coins": [
+      {
+        "decimals": 18,
+        "name": "tBTC",
+        "tethered": false,
+        "underlying_address": "0x8dAEBADE922dF735c38C80C7eBD708Af50815fAa",
+        "wrapped": false
+      },
+      {
+        "base_pool_token": true,
+        "decimals": 18,
+        "name": "sbtcCRV",
+        "underlying_address": "0x075b1bb99792c9E1041bA13afEf80C91a1e70fB3",
+        "wrapped": false
+      }
+    ],
+    "gauge_addresses": [
+      "0x6828bcF74279eE32f2723eC536c22c51Eed383C6"
+    ],
+    "lp_constructor": {
+      "name": "Curve.fi tBTC/sbtcCRV",
+      "symbol": "tBTC/sbtcCRV"
+    },
+    "lp_contract": "CurveTokenV2",
+    "lp_token_address": "0x64eda51d3Ad40D56b9dFc5554E06F94e1Dd786Fd",
+    "swap_address": "0xC25099792E9349C7DD09759744ea681C7de2cb66",
+    "swap_constructor": {
+      "_A": 200,
+      "_admin_fee": 0,
+      "_fee": 4000000
+    },
+    "testing": {
+      "initial_amount": 100
+    },
+    "zap_address": "0xaa82ca713D94bBA7A89CEAB55314F9EfFEdDc78c"
+  },
+  "tusd": {
+    "base_pool": "3pool",
+    "coins": [
+      {
+        "decimals": 18,
+        "name": "TUSD",
+        "tethered": false,
+        "underlying_address": "0x0000000000085d4780B73119b644AE5ecd22b376"
+      },
+      {
+        "base_pool_token": true,
+        "decimals": 18,
+        "name": "3CRV",
+        "underlying_address": "0x6c3F90f043a72FA612cbac8115EE7e52BDe6E490"
+      }
+    ],
+    "gauge_addresses": [
+      "0x359FD5d6417aE3D8D6497d9B2e7A890798262BA4"
+    ],
+    "lp_token_address": "0xEcd5e75AFb02eFa118AF914515D6521aaBd189F1",
+    "swap_address": "0xEcd5e75AFb02eFa118AF914515D6521aaBd189F1",
+    "zap_address": ""
+  },
+  "usdk": {
+    "base_pool": "3pool",
+    "coins": [
+      {
+        "decimals": 18,
+        "name": "USDK",
+        "tethered": false,
+        "underlying_address": "0x1c48f86ae57291f7686349f12601910bd8d470bb"
+      },
+      {
+        "base_pool_token": true,
+        "decimals": 18,
+        "name": "3CRV",
+        "underlying_address": "0x6c3F90f043a72FA612cbac8115EE7e52BDe6E490"
+      }
+    ],
+    "gauge_addresses": [
+      "0xC2b1DF84112619D190193E48148000e3990Bf627"
+    ],
+    "lp_constructor": {
+      "name": "Curve.fi USDK/3Crv",
+      "symbol": "usdk3CRV"
+    },
+    "lp_contract": "CurveTokenV2",
+    "lp_token_address": "0x97E2768e8E73511cA874545DC5Ff8067eB19B787",
+    "swap_address": "0x3E01dD8a5E1fb3481F0F589056b428Fc308AF0Fb",
+    "swap_constructor": {
+      "_A": 200,
+      "_admin_fee": 0,
+      "_fee": 4000000
+    },
+    "zap_address": "0xF1f85a74AD6c64315F85af52d3d46bF715236ADc"
+  },
+  "usdn": {
+    "base_pool": "3pool",
+    "coins": [
+      {
+        "decimals": 18,
+        "name": "USDN",
+        "tethered": false,
+        "underlying_address": "0x674C6Ad92Fd080e4004b2312b45f796a192D27a0"
+      },
+      {
+        "base_pool_token": true,
+        "decimals": 18,
+        "name": "3CRV",
+        "underlying_address": "0x6c3F90f043a72FA612cbac8115EE7e52BDe6E490"
+      }
+    ],
+    "gauge_addresses": [
+      "0xF98450B5602fa59CC66e1379DFfB6FDDc724CfC4"
+    ],
+    "lp_constructor": {
+      "name": "Curve.fi USDN/3Crv",
+      "symbol": "usdn3CRV"
+    },
+    "lp_contract": "CurveTokenV2",
+    "lp_token_address": "0x4f3E8F405CF5aFC05D68142F3783bDfE13811522",
+    "swap_address": "0x0f9cb53Ebe405d49A0bbdBD291A65Ff571bC83e1",
+    "swap_constructor": {
+      "_A": 100,
+      "_admin_fee": 0,
+      "_fee": 4000000
+    },
+    "zap_address": "0x094d12e5b541784701FD8d65F11fc0598FBC6332"
+  },
+  "usdp": {
+    "base_pool": "3pool",
+    "coins": [
+      {
+        "decimals": 18,
+        "name": "USDP",
+        "tethered": false,
+        "underlying_address": "0x1456688345527bE1f37E9e627DA0837D6f08C925"
+      },
+      {
+        "base_pool_token": true,
+        "decimals": 18,
+        "name": "3CRV",
+        "underlying_address": "0x6c3F90f043a72FA612cbac8115EE7e52BDe6E490"
+      }
+    ],
+    "gauge_addresses": [
+      "0x055be5DDB7A925BfEF3417FC157f53CA77cA7222"
+    ],
+    "lp_constructor": {
+      "name": "Curve.fi USDP/3Crv",
+      "symbol": "usdp3CRV"
+    },
+    "lp_contract": "CurveTokenV3",
+    "lp_token_address": "0x7Eb40E450b9655f4B3cC4259BCC731c63ff55ae6",
+    "swap_address": "0x42d7025938bEc20B69cBae5A77421082407f053A",
+    "swap_constructor": {
+      "_A": 100,
+      "_admin_fee": 5000000000,
+      "_fee": 4000000
+    },
+    "zap_address": "0x3c8cAee4E09296800f8D29A68Fa3837e2dae4940"
+  },
+  "usdt": {
+    "coins": [
+      {
+        "decimals": 18,
+        "name": "DAI",
+        "tethered": false,
+        "underlying_address": "0x6b175474e89094c44da98b954eedeac495271d0f",
+        "wrapped_address": "0x5d3a536e4d6dbd6114cc1ead35777bab948e3643",
+        "wrapped_decimals": 8
+      },
+      {
+        "decimals": 6,
+        "name": "USDC",
+        "tethered": false,
+        "underlying_address": "0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48",
+        "wrapped_address": "0x39aa39c021dfbae8fac545936693ac917d5e7563",
+        "wrapped_decimals": 8
+      },
+      {
+        "decimals": 6,
+        "name": "USDT",
+        "tethered": true,
+        "underlying_address": "0xdac17f958d2ee523a2206206994597c13d831ec7"
+      }
+    ],
+    "gauge_addresses": [
+      "0xBC89cd85491d81C6AD2954E6d0362Ee29fCa8F53"
+    ],
+    "lp_contract": "CurveTokenV1",
+    "lp_token_address": "0x9fC689CCaDa600B6DF723D9E47D84d76664a1F23",
+    "swap_address": "0x52EA46506B9CC5Ef470C5bf89f17Dc28bB35D85C",
+    "wrapped_contract": "cERC20",
+    "zap_address": "0xac795d2c97e60df6a99ff1c814727302fd747a80"
+  },
+  "ust": {
+    "base_pool": "3pool",
+    "coins": [
+      {
+        "decimals": 18,
+        "name": "UST",
+        "tethered": false,
+        "underlying_address": "0xa47c8bf37f92aBed4A126BDA807A7b7498661acD"
+      },
+      {
+        "base_pool_token": true,
+        "decimals": 18,
+        "name": "3CRV",
+        "underlying_address": "0x6c3F90f043a72FA612cbac8115EE7e52BDe6E490"
+      }
+    ],
+    "gauge_addresses": [
+      "0x3B7020743Bc2A4ca9EaF9D0722d42E20d6935855"
+    ],
+    "lp_constructor": {
+      "name": "Curve.fi UST/3Crv",
+      "symbol": "ust3CRV"
+    },
+    "lp_contract": "CurveTokenV3",
+    "lp_token_address": "0x94e131324b6054c0D789b190b2dAC504e4361b53",
+    "swap_address": "0x890f4e345B1dAED0367A877a1612f86A1f86985f",
+    "swap_constructor": {
+      "_A": 100,
+      "_admin_fee": 5000000000,
+      "_fee": 4000000
+    },
+    "zap_address": "0xB0a0716841F2Fc03fbA72A891B8Bb13584F52F2d"
+  },
+  "y": {
+    "coins": [
+      {
+        "decimals": 18,
+        "name": "DAI",
+        "tethered": false,
+        "underlying_address": "0x6b175474e89094c44da98b954eedeac495271d0f",
+        "wrapped_address": "0x16de59092dAE5CcF4A1E6439D611fd0653f0Bd01",
+        "wrapped_decimals": 18
+      },
+      {
+        "decimals": 6,
+        "name": "USDC",
+        "tethered": false,
+        "underlying_address": "0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48",
+        "wrapped_address": "0xd6aD7a6750A7593E092a9B218d66C0A814a3436e",
+        "wrapped_decimals": 6
+      },
+      {
+        "decimals": 6,
+        "name": "USDT",
+        "tethered": true,
+        "underlying_address": "0xdac17f958d2ee523a2206206994597c13d831ec7",
+        "wrapped_address": "0x83f798e925BcD4017Eb265844FDDAbb448f1707D",
+        "wrapped_decimals": 6
+      },
+      {
+        "decimals": 18,
+        "name": "TUSD",
+        "tethered": false,
+        "underlying_address": "0x0000000000085d4780b73119b644ae5ecd22b376",
+        "wrapped_address": "0x73a052500105205d34daf004eab301916da8190f",
+        "wrapped_decimals": 18
+      }
+    ],
+    "gauge_addresses": [
+      "0xFA712EE4788C042e2B7BB55E6cb8ec569C4530c1"
+    ],
+    "lp_contract": "CurveTokenV1",
+    "lp_token_address": "0xdF5e0e81Dff6FAF3A7e52BA697820c5e32D806A8",
+    "swap_address": "0x45F783CCE6B7FF23B2ab2D70e416cdb7D6055f51",
+    "wrapped_contract": "yERC20",
+    "zap_address": "0xbbc81d23ea2c3ec7e56d39296f0cbb648873a5d3"
+  },
+  "lusd": {
+      "base_pool": "3pool",
+      "lp_token_address": "0xEd279fDD11cA84bEef15AF5D39BB4d4bEE23F0cA",
+      "swap_address": "0xEd279fDD11cA84bEef15AF5D39BB4d4bEE23F0cA",
+      "gauge_addresses": ["0x9B8519A9a00100720CCdC8a120fBeD319cA47a14"],
+      "coins": [{
+        "decimals": 18,
+        "name": "LUSD",
+        "tethered": false,
+        "underlying_address": "0x5f98805A4E8be255a32880FDeC7F6728C6568bA0"
+      },
+      {
+        "base_pool_token": true,
+        "decimals": 18,
+        "name": "3CRV",
+        "underlying_address": "0x6c3F90f043a72FA612cbac8115EE7e52BDe6E490"
+      }]
+  },
+  "busdv2": {
+    "base_pool": "3pool",
+    "lp_token_address": "0x4807862AA8b2bF68830e4C8dc86D0e9A998e085a",
+    "swap_address": "0x4807862AA8b2bF68830e4C8dc86D0e9A998e085a",
+    "gauge_addresses": ["0xd4B22fEdcA85E684919955061fDf353b9d38389b"],
+    "coins": [{
+        "decimals": 18,
+        "name": "BUSD",
+        "tethered": false,
+        "underlying_address": "0x4fabb145d64652a948d72533023f6e7a623c7c53"
+      },
+      {
+        "base_pool_token": true,
+        "decimals": 18,
+        "name": "3CRV",
+        "underlying_address": "0x6c3F90f043a72FA612cbac8115EE7e52BDe6E490"
+      }]
+    },
+    "reth": {
+        "coins": [
+          {
+            "decimals": 18,
+            "name": "ETH",
+            "tethered": false,
+            "underlying_address": "0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE"
+          },
+          {
+            "decimals": 18,
+            "name": "rETH",
+            "tethered": false,
+            "wrapped_address": "0x9559aaa82d9649c7a7b220e7c461d2e74c9a3593",
+            "wrapped_decimals": 18,
+            "underlying_address": "0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE"
+          }
+        ],
+        "gauge_addresses": [
+          "0x824F13f1a2F29cFEEa81154b46C0fc820677A637"
+        ],
+        "lp_constructor": {
+          "name": "Curve.fi ETH/rETH",
+          "symbol": "ankrCRV"
+        },
+        "lp_contract": "CurveTokenV3",
+        "lp_token_address": "0x53a901d48795C58f485cBB38df08FA96a24669D5",
+        "swap_address": "0xF9440930043eb3997fc70e1339dBb11F341de7A8",
+        "swap_constructor": {
+          "_A": 10,
+          "_admin_fee": 5000000000,
+          "_fee": 4000000
+        }
+    },
+    "tricrypto": {
+        "lp_token_address": "0xcA3d75aC011BF5aD07a98d02f18225F9bD9A6BDF",
+        "swap_address": "0x80466c64868E1ab14a1Ddf27A676C3fcBE638Fe5",
+        "gauge_addresses": ["0x6955a55416a06839309018A8B0cB72c4DDC11f15"],
+        "coins": [{
+            "decimals": 6,
+            "name": "USDT",
+            "tethered": true,
+            "underlying_address": "0xdac17f958d2ee523a2206206994597c13d831ec7"
+          },
+          {
+            "decimals": 8,
+            "name": "wBTC",
+            "tethered": false,
+            "underlying_address": "0x2260fac5e5542a773aa44fbcfedf7c193bc2c599"
+          },
+          {
+            "decimals": 18,
+            "name": "wETH",
+            "tethered": false,
+            "underlying_address": "0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2"
+          }]
+    },
+    "tricrypto2": {
+        "lp_token_address": "0xc4AD29ba4B3c580e6D59105FFf484999997675Ff",
+        "swap_address": "0xD51a44d3FaE010294C616388b506AcdA1bfAAE46",
+        "gauge_addresses": ["0xdefd8fdd20e0f34115c7018ccfb655796f6b2168"],
+        "coins": [{
+            "decimals": 6,
+            "name": "USDT",
+            "tethered": true,
+            "underlying_address": "0xdac17f958d2ee523a2206206994597c13d831ec7"
+          },
+          {
+            "decimals": 8,
+            "name": "wBTC",
+            "tethered": false,
+            "underlying_address": "0x2260fac5e5542a773aa44fbcfedf7c193bc2c599"
+          },
+          {
+            "decimals": 18,
+            "name": "wETH",
+            "tethered": false,
+            "underlying_address": "0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2"
+          }]
+    },
+    "mim": {
+        "base_pool": "3pool",
+        "lp_token_address": "0x5a6A4D54456819380173272A5E8E9B9904BdF41B",
+        "swap_address": "0x5a6A4D54456819380173272A5E8E9B9904BdF41B",
+        "gauge_addresses": ["0xd8b712d29381748db89c36bca0138d7c75866ddf"],
+        "coins": [{
+            "decimals": 18,
+            "name": "MIM",
+            "tethered": false,
+            "underlying_address": "0x99D8a9C45b2ecA8864373A26D1459e3Dff1e17F3"
+        },
+        {
+            "base_pool_token": true,
+            "decimals": 18,
+            "name": "3CRV",
+            "underlying_address": "0x6c3F90f043a72FA612cbac8115EE7e52BDe6E490"
+        }]
+    }
+}

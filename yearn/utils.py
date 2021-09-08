@@ -1,7 +1,7 @@
 import logging
 
-from brownie import chain, web3
-from cachetools.func import lru_cache
+from brownie import chain, web3, Contract
+from functools import lru_cache
 
 from yearn.cache import memory
 
@@ -40,10 +40,10 @@ def closest_block_after_timestamp(timestamp):
             hi = mid
         else:
             lo = mid
-    
+
     if get_block_timestamp(hi) < timestamp:
         raise IndexError('timestamp is in the future')
-    
+
     return hi
 
 
@@ -54,17 +54,17 @@ def contract_creation_block(address) -> int:
     NOTE Requires access to historical state. Doesn't account for CREATE2 or SELFDESTRUCT.
     """
     logger.info("contract creation block %s", address)
-    
+
     height = chain.height
     lo, hi = 0, height
-    
+
     while hi - lo > 1:
         mid = lo + (hi - lo) // 2
         if web3.eth.get_code(address, block_identifier=mid):
             hi = mid
         else:
             lo = mid
-    
+
     return hi if hi != height else None
 
 
@@ -79,3 +79,7 @@ class Singleton(type):
             return self.__instance
         else:
             return self.__instance
+
+
+# Contract instance singleton, saves about 20ms of init time
+contract = lru_cache(maxsize=None)(Contract)
