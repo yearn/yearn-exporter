@@ -1,9 +1,11 @@
-import pytest
 import json
+from functools import lru_cache
+
+import pytest
+import requests
+from brownie import multicall, web3
 from yearn.prices import curve
 from yearn.utils import contract
-from brownie import web3, multicall
-from functools import lru_cache
 
 pooldata = json.load(open('tests/fixtures/pooldata.json'))
 
@@ -27,23 +29,15 @@ new_metapools = [
     "0x6c7Fc04FEE277eABDd387C5B498A8D0f4CB9C6A6",
     "0xDa5B670CcD418a187a3066674A8002Adc9356Ad1",
     "0x99AE07e7Ab61DCCE4383A86d14F61C68CdCCbf27",
-    "0x87650D7bbfC3A9F10587d7778206671719d9910D",
     "0x6A274dE3e2462c7614702474D64d376729831dCa",
     "0x06cb22615BA53E60D67Bf6C341a0fD5E718E1655",
     "0x43b4FdFD4Ff969587185cDB6f0BD875c5Fc83f8c",
     "0xd632f22692FaC7611d2AA1C0D552930D43CAEd3B",
-    "0xf5A95ccDe486B5fE98852bB02d8eC80a4b9422BD",
-    "0x2009f19A8B46642E92Ea19adCdFB23ab05fC20A6",
     "0xEd279fDD11cA84bEef15AF5D39BB4d4bEE23F0cA",
-    "0x883F7d4B6B24F8BF1dB980951Ad08930D9AEC6Bc",
-    "0x46f5ab27914A670CFE260A2DEDb87f84c264835f",
-    "0x2206cF41E7Db9393a3BcbB6Ad35d344811523b46",
     "0x5a6A4D54456819380173272A5E8E9B9904BdF41B",
-    "0x67d9eAe741944D4402eB0D1cB3bC3a168EC1764c",
     "0x9D0464996170c6B9e75eED71c68B99dDEDf279e8",
     "0x5B3b5DF2BF2B6543f78e053bD91C4Bdd820929f1",
     "0x3CFAa1596777CAD9f5004F9a0c443d912E262243",
-    "0x9f6664205988C3bf4B12B851c075102714869535",
     "0x6d0Bd8365e2fCd0c2acf7d218f629A319B6c9d47",
     "0xAA5A67c256e27A5d80712c51971408db3370927D",
     "0x8818a9bb44Fbf33502bE7c15c500d0C783B73067",
@@ -174,27 +168,36 @@ def convex_gauge_map():
     return {pool['lptoken']: pool['gauge'] for pool in pools}
 
 
-# @pytest.mark.parametrize('name', pooldata)
-# def test_curve_pool_from_lp_token(name):
-#     lp_token = pooldata[name]['lp_token_address']
-#     pool = curve.curve.get_pool(lp_token)
-#     assert pool == pooldata[name]['swap_address']
+@pytest.fixture(scope='session')
+@lru_cache
+def curve_tvl_api():
+    data = requests.get('https://api.curve.fi/api/getTVL').json()
+    return {
+        web3.toChecksumAddress(pool['pool_address']): pool['balance']
+        for pool in data['data']['allPools']
+    }
 
 
-# @pytest.mark.parametrize('pool', range(len(metapools)))
-# def test_curve_metapool_from_lp_token(pool):
-#     # metapool are both swap and lp
-#     assert metapools[pool] == curve.curve.get_pool(metapools[pool])
+@pytest.mark.parametrize('name', pooldata)
+def test_curve_pool_from_lp_token(name):
+    lp_token = pooldata[name]['lp_token_address']
+    pool = curve.curve.get_pool(lp_token)
+    assert pool == pooldata[name]['swap_address']
 
 
-# def test_curve_pool_from_lp_token_invalid():
-#     with pytest.raises(curve.NonCurvePool):
-#         curve.curve.get_pool('0x0bc529c00C6401aEF6D220BE8C6Ea1667F6Ad93e')
+@pytest.mark.parametrize('pool', range(len(metapools)))
+def test_curve_metapool_from_lp_token(pool):
+    # metapool are both swap and lp
+    assert metapools[pool] == curve.curve.get_pool(metapools[pool])
 
 
-# @pytest.mark.parametrize('pool', range(len(metapools)))
-# def test_curve_registry_is_factory(pool):
-#     assert curve.curve.is_factory_pool(metapools[pool])
+def test_curve_pool_from_lp_token_invalid():
+    assert not curve.curve.get_pool('0x0bc529c00C6401aEF6D220BE8C6Ea1667F6Ad93e')
+
+
+@pytest.mark.parametrize('pool', range(len(metapools)))
+def test_curve_registry_get_factory(pool):
+    assert curve.curve.get_factory(metapools[pool]) in meta_factories.values()
 
 
 @pytest.mark.parametrize('name', pooldata)
@@ -213,41 +216,45 @@ def test_curve_gauge_convex(name, convex_gauge_map):
     assert convex_gauge == pooldata[name]['gauge_addresses'][0]
 
 
-# @pytest.mark.parametrize('pool', range(len(new_metapools)))
-# def test_curve_meta_gauge(pool):
-#     pool = new_metapools[pool]
-#     gauge = curve.curve.get_gauge(pool)
-#     print(pool, gauge)
-#     assert gauge
+@pytest.mark.parametrize('pool', range(len(new_metapools)))
+def test_curve_meta_gauge(pool):
+    pool = new_metapools[pool]
+    gauge = curve.curve.get_gauge(pool)
+    print(pool, gauge)
+    assert gauge
 
 
-def get_underlying_coins(name):
-    pool = pooldata[name]
-    underlying_coins = []
-    for coin in pool['coins']:
-        if coin.get('base_pool_token'):
-            underlying_coins.extend(get_underlying_coins(pool['base_pool']))
-        else:
-            underlying_coins.append(web3.toChecksumAddress(coin['underlying_address']))
+@pytest.mark.parametrize('name', pooldata)
+def test_curve_balances_from_registry(name):
+    if name in ['linkusd']:
+        pytest.xfail('no active market')
 
-    return underlying_coins
-
-
-# @pytest.mark.parametrize('name', pooldata)
-# def test_curve_underlying_coins(name):
-#     pool = pooldata[name]['swap_address']
-#     coins = curve.curve.get_underlying_coins(pool)
-#     underlying_coins = get_underlying_coins(name)
-#     print(coins)
-#     print(underlying_coins)
-#     assert coins == underlying_coins
+    pool = pooldata[name]['swap_address']
+    tvl = curve.curve.get_tvl(pool)
+    print(tvl)
+    assert tvl
 
 
-# @pytest.mark.parametrize('name', pooldata)
-# def test_curve_coins(name):
-#     pool = pooldata[name]
-#     coins = curve.curve.get_coins(pool['swap_address'])
-#     underlying_coins = [web3.toChecksumAddress(coin.get('wrapped_address', coin['underlying_address'])) for coin in pool['coins']]
-#     print(coins)
-#     print(underlying_coins)
-#     assert coins == underlying_coins
+@pytest.mark.parametrize('name', pooldata)
+def test_curve_lp_price_oracle(name):
+    if name in ['linkusd']:
+        pytest.xfail('no active market')
+
+    token = pooldata[name]['lp_token_address']
+    price = curve.curve.get_price(token)
+    print(price)
+    assert price
+
+
+@pytest.mark.parametrize('name', pooldata)
+def test_curve_total_value(name, curve_tvl_api):
+    if name in ['linkusd']:
+        pytest.xfail('no active market')
+
+    pool = web3.toChecksumAddress(pooldata[name]['swap_address'])
+    tvl = curve.curve.get_tvl(pool)
+    print(name, tvl)
+    assert tvl
+
+    # FIXME pending curve api update
+    # assert tvl == pytest.approx(curve_tvl_api[pool], rel=2e-2)

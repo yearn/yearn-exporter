@@ -11,6 +11,7 @@ MARKETS = [
 ]
 REGISTRY_DEPLOY_BLOCK = 13145626
 
+
 @pytest.mark.parametrize('token', MARKETS)
 def test_is_fixed_forex(token):
     assert fixed_forex.is_fixed_forex(token)
