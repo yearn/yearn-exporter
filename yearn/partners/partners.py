@@ -135,6 +135,16 @@ partners = [
         ],
     ),
     Partner(
+        name='abracadabra',
+        treasury='0x5A7C5505f3CFB9a0D9A8493EC41bf27EE48c406D',
+        wrappers=[
+            WildcardWrapper(
+                name='magic1',
+                wrapper='0xF5BCE5077908a1b7370B9ae04AdC565EBd643966',
+            )
+        ],
+    ),
+    Partner(
         name='basketdao',
         treasury='0x7301C46be73bB04847576b6Af107172bF5e8388e',
         wrappers=[
