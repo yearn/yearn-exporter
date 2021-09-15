@@ -218,6 +218,8 @@ def test_curve_gauge_convex(name, convex_gauge_map):
 
 @pytest.mark.parametrize('pool', range(len(new_metapools)))
 def test_curve_meta_gauge(pool):
+    if pool in [0, 4, 5, 6, 7, 9, 16, 17, 18, 24, 25]:
+        pytest.xfail('no gauge')
     pool = new_metapools[pool]
     gauge = curve.curve.get_gauge(pool)
     print(pool, gauge)
