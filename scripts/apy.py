@@ -76,3 +76,9 @@ def mim():
     address = "0x2DfB14E32e2F8156ec15a2c21c3A6c053af52Be8"
     vault = VaultV2.from_address(address)
     print(json.dumps(dataclasses.asdict(vault.apy(samples)), indent=2))
+
+def eurt():
+    samples = get_samples()
+    address = "0x0d4EA8536F9A13e4FBa16042a46c30f092b06aA5"
+    vault = VaultV2.from_address(address)
+    print(json.dumps(dataclasses.asdict(vault.apy(samples)), indent=2))

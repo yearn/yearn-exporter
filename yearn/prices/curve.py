@@ -119,7 +119,9 @@ class CurveRegistry(metaclass=Singleton):
         """
         factory = self.get_factory(pool)
         if factory and hasattr(contract(factory), 'get_gauge'):
-            return contract(factory).get_gauge(pool)
+            gauge = contract(factory).get_gauge(pool)
+            if gauge != ZERO_ADDRESS:
+                return gauge
 
         gauges, types = self.registry.get_gauges(pool)
         if gauges[0] != ZERO_ADDRESS:
