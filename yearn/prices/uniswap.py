@@ -13,7 +13,7 @@ ROUTERS = {
     "uniswap": "0x7a250d5630B4cF539739dF2C5dAcb4c659F2488D",
     "sushiswap": "0xD9E1CE17F2641F24AE83637AB66A2CCA9C378B9F",
 }
-FACTORY_TO_ROUTER = {FACTORIES[name]: ROUTERS[name] for name in FACTORIES}
+FACTORY_TO_ROUTER = {FACTORIES[name]: name for name in FACTORIES}
 
 
 @ttl_cache(ttl=600)
