@@ -169,7 +169,6 @@ class Partner:
             wrap['vault'] = wrapper.vault
             wrap = wrap.set_index('block')
             wrappers.append(wrap)
-            # save a csv for reporting
 
         # calculate partner fee tier from cummulative wrapper balances
         partner = pd.concat(wrappers)
