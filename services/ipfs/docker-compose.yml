@@ -16,6 +16,7 @@ services:
     environment:
       - WEB3_PROVIDER
       - ETHERSCAN_TOKEN
+      - EXPLORER
       - IPFS_NODE_ADDRESS
       - IPFS_NODE_KEY
       - IPFS_NODE_SECRET
