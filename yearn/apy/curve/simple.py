@@ -87,6 +87,23 @@ def simple(vault, samples: ApySamples) -> Apy:
         reward_address = gauge.reward_contract()
         if reward_address != ZERO_ADDRESS:
             reward_apr = rewards(reward_address, pool_price, base_asset_price, block=block)
+    elif hasattr(gauge, "reward_data"): # this is how new gauges, starting with MIM, show rewards
+        # get our token
+        gauge_reward_token = gauge.reward_tokens(0)
+        
+        # get our period end
+        period_finish = gauge.reward_data(gauge_reward_token)[2]
+        
+        # get our total supply
+        _distributor = gauge.reward_data(gauge_reward_token)[1]
+        token_contract = Contract(gauge_reward_token)
+        total_supply = token_contract.balanceOf(_distributor)
+        
+        # get our rate
+        rate = gauge.reward_data(gauge_reward_token)[3]
+        
+        token_price = get_price(gauge_reward_token, block=block)
+        rewards_apr = (SECONDS_PER_YEAR * (rate / 1e18) * token_price) / ((pool_price / 1e18) * (total_supply / 1e18) * base_asset_price)
     else:
         reward_apr = 0
 
