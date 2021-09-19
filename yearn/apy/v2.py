@@ -12,7 +12,6 @@ from yearn.apy.common import (
     calculate_roi,
 )
 
-
 def closest(haystack, needle):
     pos = bisect_left(sorted(haystack), needle)
     if pos == 0:
@@ -68,9 +67,26 @@ def simple(vault, samples: ApySamples) -> Apy:
     apys = [week_ago_apy, month_ago_apy, inception_apy]
     net_apy = next((value for value in apys if value != 0), 0)
 
-    # performance fee is doubled since 1x strategists + 1x treasury
-    performance = (contract.performanceFee() * 2) if hasattr(contract, "performanceFee") else 0
+    # for performance fee, half comes from strategy (strategist share) and half from the vault (treasury share)
+    strategy_fees = []
+    for x in range[20]: # we can have up to 20 strategies
+        try:
+            strategy_to_check = contract.withdrawalQueue(x)
+        except AttributeError:
+            strategy_fees = 0
+            break
+        if strategy_to_check = "0x0000000000000000000000000000000000000000":
+            break
+        else:
+            debt_ratio = contract.strategies(strategy_to_check)[2]
+            performance_fee = contract.strategies(strategy_to_check)[0]
+            proportional_fee = debt_ratio * performance_fee / 10000
+            strategy_fees.append(proportional_fee)
+    
+    strategy_performance = sum(strategy_fees)
+    vault_performance = (contract.performanceFee() * 2) if hasattr(contract, "performanceFee") else 0
     management = contract.managementFee() if hasattr(contract, "managementFee") else 0
+    performance = vault_performance + strategy_performance
 
     performance /= 1e4
     management /= 1e4
