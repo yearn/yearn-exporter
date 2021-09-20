@@ -82,3 +82,9 @@ def eurt():
     address = "0x0d4EA8536F9A13e4FBa16042a46c30f092b06aA5"
     vault = VaultV2.from_address(address)
     print(json.dumps(dataclasses.asdict(vault.apy(samples)), indent=2))
+
+def yvboost():
+    samples = get_samples()
+    address = "0x9d409a0A012CFbA9B15F6D4B36Ac57A46966Ab9a"
+    vault = VaultV2.from_address(address)
+    print(json.dumps(dataclasses.asdict(vault.apy(samples)), indent=2))
