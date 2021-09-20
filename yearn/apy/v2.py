@@ -74,7 +74,7 @@ def simple(vault, samples: ApySamples) -> Apy:
             strategy_to_check = contract.withdrawalQueue(x)
         except AttributeError:
             break
-        if strategy_to_check = "0x0000000000000000000000000000000000000000":
+        if strategy_to_check == "0x0000000000000000000000000000000000000000":
             break
         else:
             debt_ratio = contract.strategies(strategy_to_check)[2]
