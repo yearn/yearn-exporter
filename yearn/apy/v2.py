@@ -73,7 +73,6 @@ def simple(vault, samples: ApySamples) -> Apy:
         try:
             strategy_to_check = contract.withdrawalQueue(x)
         except AttributeError:
-            strategy_fees = 0
             break
         if strategy_to_check = "0x0000000000000000000000000000000000000000":
             break
