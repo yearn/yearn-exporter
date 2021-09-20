@@ -1,7 +1,9 @@
 import logging
+from time import time
 
 from brownie import Contract, ZERO_ADDRESS
 from semantic_version import Version
+from yearn.utils import get_block_timestamp
 
 from yearn.apy.curve.rewards import rewards
 
@@ -91,19 +93,23 @@ def simple(vault, samples: ApySamples) -> Apy:
         # get our token
         gauge_reward_token = gauge.reward_tokens(0)
         
-        # get our period end
-        period_finish = gauge.reward_data(gauge_reward_token)[2]
-        
         # get our total supply
         _distributor = gauge.reward_data(gauge_reward_token)[1]
         token_contract = Contract(gauge_reward_token)
-        total_supply = token_contract.balanceOf(_distributor)
+        total_supply = gauge.totalSupply()
         
         # get our rate
         rate = gauge.reward_data(gauge_reward_token)[3]
         
         token_price = get_price(gauge_reward_token, block=block)
-        reward_apr = (SECONDS_PER_YEAR * (rate / 1e18) * token_price) / ((pool_price / 1e18) * (total_supply / 1e18) * base_asset_price)
+        
+        # get our period end
+        period_finish = gauge.reward_data(gauge_reward_token)[2]
+        current_time = time() if block is None else get_block_timestamp(block)
+        if period_finish < current_time:
+            reward_apr = 0
+        else:
+            reward_apr = (SECONDS_PER_YEAR * (rate / 1e18) * token_price) / ((pool_price / 1e18) * (total_supply / 1e18) * base_asset_price)
     else:
         reward_apr = 0
 
