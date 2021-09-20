@@ -84,7 +84,7 @@ def simple(vault, samples: ApySamples) -> Apy:
             strategy_fees.append(proportional_fee)
     
     strategy_performance = sum(strategy_fees)
-    vault_performance = (contract.performanceFee() * 2) if hasattr(contract, "performanceFee") else 0
+    vault_performance = contract.performanceFee() if hasattr(contract, "performanceFee") else 0
     management = contract.managementFee() if hasattr(contract, "managementFee") else 0
     performance = vault_performance + strategy_performance
 
