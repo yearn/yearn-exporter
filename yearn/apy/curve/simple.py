@@ -103,7 +103,7 @@ def simple(vault, samples: ApySamples) -> Apy:
         rate = gauge.reward_data(gauge_reward_token)[3]
         
         token_price = get_price(gauge_reward_token, block=block)
-        rewards_apr = (SECONDS_PER_YEAR * (rate / 1e18) * token_price) / ((pool_price / 1e18) * (total_supply / 1e18) * base_asset_price)
+        reward_apr = (SECONDS_PER_YEAR * (rate / 1e18) * token_price) / ((pool_price / 1e18) * (total_supply / 1e18) * base_asset_price)
     else:
         reward_apr = 0
 
