@@ -27,6 +27,8 @@ from yearn.utils import Singleton, contract
 
 logger = logging.getLogger(__name__)
 
+WBTC = "0x2260FAC5E5542a773Aa44fBCfeDf7C193bc2C599"
+WETH = "0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2"
 
 class CurveRegistry(metaclass=Singleton):
     def __init__(self):
@@ -172,6 +174,12 @@ class CurveRegistry(metaclass=Singleton):
         Get price of a Curve LP token.
         """
         pool = contract(self.get_pool(token))
+
+        underlying_coins = curve.registry.get_underlying_coins(pool)
+        if WBTC in underlying_coins and WETH not in underlying_coins:
+            virtual_price = pool.get_virtual_price(block_identifier=block) / 1e18
+            return [virtual_price, WBTC]
+
         tvl = self.get_tvl(pool, block=block)
         supply = contract(token).totalSupply(block_identifier=block) / 1e18
         return tvl / supply
