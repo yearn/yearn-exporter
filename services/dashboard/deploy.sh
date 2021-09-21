@@ -43,11 +43,8 @@ else
 fi
 
 cd $WORKDIR
-echo "[*] Stopping existing service"
-make down
-
-echo "[*] Building and deploying..."
-make up
+echo "[*] Rebuilding and deploying..."
+make rebuild
 
 LOGIN_RESPONSE=$(curl -X POST \
         -d '{"user":"admin","password":"admin"}' \
