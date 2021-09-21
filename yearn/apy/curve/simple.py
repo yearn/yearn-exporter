@@ -1,7 +1,9 @@
 import logging
+from time import time
 
 from brownie import Contract, ZERO_ADDRESS
 from semantic_version import Version
+from yearn.utils import get_block_timestamp
 
 from yearn.apy.curve.rewards import rewards
 
@@ -27,6 +29,7 @@ CVX = Contract("0x4e3FBD56CD56c3e72c1403e103b45Db9da5B9D2B")
 
 YVECRV_VOTER = "0xF147b8125d2ef93FB6965Db97D6746952a133934"
 CONVEX_VOTER = "0x989AEb4d175e16225E39E87d0D97A3360524AD80"
+RKP3R_REWARDS = "0xEdB67Ee1B171c4eC66E6c10EC43EDBbA20FaE8e9"
 
 COMPOUNDING = 52
 MAX_BOOST = 2.5
@@ -81,12 +84,29 @@ def simple(vault, samples: ApySamples) -> Apy:
     if vault.vault.address == "0x46AFc2dfBd1ea0c0760CAD8262A5838e803A37e5":
         boost = 1
 
-
+    # TODO: come up with cleaner way to deal with these new gauge rewards
     reward_apr = 0
     if hasattr(gauge, "reward_contract"):
         reward_address = gauge.reward_contract()
         if reward_address != ZERO_ADDRESS:
             reward_apr = rewards(reward_address, pool_price, base_asset_price, block=block)
+    elif hasattr(gauge, "reward_data"): # this is how new gauges, starting with MIM, show rewards
+        # get our token
+        gauge_reward_token = gauge.reward_tokens(0) # TODO: consider adding for loop with [gauge.reward_tokens(i) for i in range(gauge.reward_count())] for multiple rewards tokens
+        if gauge_reward_token in [RKP3R_REWARDS, ZERO_ADDRESS]:
+            print("\nrKP3R gauge or no reward token")
+        else:
+            reward_data = gauge.reward_data(gauge_reward_token)
+            rate = reward_data['rate']
+            period_finish = reward_data['period_finish']
+            token_contract = Contract(gauge_reward_token)
+            total_supply = gauge.totalSupply()
+            token_price = get_price(gauge_reward_token, block=block)
+            current_time = time() if block is None else get_block_timestamp(block)
+            if period_finish < current_time:
+                reward_apr = 0
+            else:
+                reward_apr = (SECONDS_PER_YEAR * (rate / 1e18) * token_price) / ((pool_price / 1e18) * (total_supply / 1e18) * base_asset_price)
     else:
         reward_apr = 0
 
