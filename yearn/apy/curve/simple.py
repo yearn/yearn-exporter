@@ -94,7 +94,7 @@ def simple(vault, samples: ApySamples) -> Apy:
     elif hasattr(gauge, "reward_data"): # this is how new gauges, starting with MIM, show rewards
         # get our token
         gauge_reward_token = gauge.reward_tokens(0)
-        if gauge_reward_token == RKP3R_REWARDS or NULL_ADDRESS:
+        if gauge_reward_token == RKP3R_REWARDS or gauge_reward_token == NULL_ADDRESS:
             print("\nrKP3R gauge or no reward token")
         else:
             # get our total supply
