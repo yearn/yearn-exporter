@@ -80,8 +80,8 @@ def simple(vault, samples: ApySamples) -> Apy:
             break
         else:
             print("This is our strategy", strategy_to_check)
-            debt_ratio = contract.strategies(strategy_to_check)[2] / 10000
-            performance_fee = contract.strategies(strategy_to_check)[0]
+            debt_ratio = contract.strategies(strategy_to_check)['debtRatio'] / 10000
+            performance_fee = contract.strategies(strategy_to_check)['performanceFee']
             proportional_fee = debt_ratio * performance_fee
             strategy_fees.append(proportional_fee)
     
