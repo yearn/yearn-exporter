@@ -43,8 +43,9 @@ else
 fi
 
 cd $WORKDIR
-echo "[*] Rebuilding and deploying..."
-make rebuild
+docker pull ghcr.io/yearn/yearn-exporter
+echo "[*] Redeploying..."
+make restart
 
 LOGIN_RESPONSE=$(curl -X POST \
         -d '{"user":"admin","password":"admin"}' \
