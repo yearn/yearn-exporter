@@ -9,12 +9,12 @@ echo "[*] Starting deployment"
 
 echo "[*] Sourcing environment"
 
-if ! [ -f "$HOME/env" ]; then
-        echo "[!] env file not found in \$HOME. Exiting..."
+if ! [ -f "$HOME/.env" ]; then
+        echo "[!] .env file not found in \$HOME. Exiting..."
         exit 1
 fi
 
-source $HOME/env
+source $HOME/.env
 
 if ! [ -d "$WORKDIR" ]; then
         echo "[*] Workdir does not exist, cloning now..."
