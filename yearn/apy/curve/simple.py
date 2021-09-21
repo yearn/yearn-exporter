@@ -30,7 +30,6 @@ CVX = Contract("0x4e3FBD56CD56c3e72c1403e103b45Db9da5B9D2B")
 YVECRV_VOTER = "0xF147b8125d2ef93FB6965Db97D6746952a133934"
 CONVEX_VOTER = "0x989AEb4d175e16225E39E87d0D97A3360524AD80"
 RKP3R_REWARDS = "0xEdB67Ee1B171c4eC66E6c10EC43EDBbA20FaE8e9"
-NULL_ADDRESS = "0x0000000000000000000000000000000000000000"
 
 COMPOUNDING = 52
 MAX_BOOST = 2.5
@@ -93,7 +92,7 @@ def simple(vault, samples: ApySamples) -> Apy:
             reward_apr = rewards(reward_address, pool_price, base_asset_price, block=block)
     elif hasattr(gauge, "reward_data"): # this is how new gauges, starting with MIM, show rewards
         # get our token
-        gauge_reward_token = gauge.reward_tokens(0)
+        gauge_reward_token = gauge.reward_tokens(0) # TODO: consider adding for loop with [gauge.reward_tokens(i) for i in range(gauge.reward_count())] for multiple rewards tokens
         if gauge_reward_token in [RKP3R_REWARDS, ZERO_ADDRESS]:
             print("\nrKP3R gauge or no reward token")
         else:
