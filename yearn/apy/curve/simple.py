@@ -97,18 +97,12 @@ def simple(vault, samples: ApySamples) -> Apy:
         if gauge_reward_token == RKP3R_REWARDS or gauge_reward_token == NULL_ADDRESS:
             print("\nrKP3R gauge or no reward token")
         else:
-            # get our total supply
-            _distributor = gauge.reward_data(gauge_reward_token)[1]
+            reward_data = gauge.reward_data(gauge_reward_token)
+            rate = reward_data['rate']
+            period_finish = reward_data['period_finish']
             token_contract = Contract(gauge_reward_token)
             total_supply = gauge.totalSupply()
-            
-            # get our rate
-            rate = gauge.reward_data(gauge_reward_token)[3]
-            
             token_price = get_price(gauge_reward_token, block=block)
-            
-            # get our period end
-            period_finish = gauge.reward_data(gauge_reward_token)[2]
             current_time = time() if block is None else get_block_timestamp(block)
             if period_finish < current_time:
                 reward_apr = 0
