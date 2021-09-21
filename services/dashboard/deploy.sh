@@ -3,7 +3,6 @@
 set -e
 
 WORKDIR="$HOME/yearn-exporter"
-COMPOSE="$WORKDIR/services/dashboard/docker-compose.yml"
 REPOSITORY="https://github.com/yearn/yearn-exporter"
 
 echo "[*] Starting deployment"
@@ -20,11 +19,6 @@ source $HOME/env
 if ! [ -d "$WORKDIR" ]; then
         echo "[*] Workdir does not exist, cloning now..."
         git clone $REPOSITORY "$WORKDIR"
-fi
-
-if ! [ -f "$COMPOSE" ]; then
-        echo "[!] Compose file does not exist in repository. Exiting..."
-        exit 1
 fi
 
 echo "[*] Checking repo state"
@@ -48,11 +42,12 @@ else
         exit 1
 fi
 
+cd $WORKDIR
 echo "[*] Stopping existing service"
-docker-compose --file "$COMPOSE" --project-directory . down --remove-orphans
+make down
 
 echo "[*] Building and deploying..."
-docker-compose --file "$COMPOSE" --project-directory . up --build --detach
+make up
 
 echo "[*] Finished!"
 
