@@ -88,3 +88,27 @@ def yvboost():
     address = "0x9d409a0A012CFbA9B15F6D4B36Ac57A46966Ab9a"
     vault = VaultV2.from_address(address)
     print(json.dumps(dataclasses.asdict(vault.apy(samples)), indent=2))
+
+def ibEUR():
+    samples = get_samples()
+    address = "0x67e019bfbd5a67207755D04467D6A70c0B75bF60"
+    vault = VaultV2.from_address(address)
+    print(json.dumps(dataclasses.asdict(vault.apy(samples)), indent=2))
+
+def cvxCRV():
+    samples = get_samples()
+    address = "0x4560b99C904aAD03027B5178CCa81584744AC01f"
+    vault = VaultV2.from_address(address)
+    print(json.dumps(dataclasses.asdict(vault.apy(samples)), indent=2))
+
+def ibJPY():
+    samples = get_samples()
+    address = "0x59518884EeBFb03e90a18ADBAAAB770d4666471e"
+    vault = VaultV2.from_address(address)
+    print(json.dumps(dataclasses.asdict(vault.apy(samples)), indent=2))
+    
+def ibKRW():
+    samples = get_samples()
+    address = "0x528D50dC9a333f01544177a924893FA1F5b9F748"
+    vault = VaultV2.from_address(address)
+    print(json.dumps(dataclasses.asdict(vault.apy(samples)), indent=2))
