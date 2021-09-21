@@ -56,7 +56,7 @@ LOGIN_RESPONSE=$(curl -X POST \
         -o /dev/null \
         -sw '%{http_code}')
 
-if [ "$LOGIN_RESPONSE" != "401" ]; then
+if [ "$LOGIN_RESPONSE" = "200" ]; then
         echo "[*] ! SER ! Grafana admin password is not good. Please change the admin password manually with the grafana UI."
         echo "[*] Stopping existing service"
         make down
