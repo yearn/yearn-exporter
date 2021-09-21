@@ -29,6 +29,8 @@ CVX = Contract("0x4e3FBD56CD56c3e72c1403e103b45Db9da5B9D2B")
 
 YVECRV_VOTER = "0xF147b8125d2ef93FB6965Db97D6746952a133934"
 CONVEX_VOTER = "0x989AEb4d175e16225E39E87d0D97A3360524AD80"
+RKP3R_REWARDS = "0xEdB67Ee1B171c4eC66E6c10EC43EDBbA20FaE8e9"
+NULL_ADDRESS = "0x0000000000000000000000000000000000000000"
 
 COMPOUNDING = 52
 MAX_BOOST = 2.5
@@ -83,7 +85,7 @@ def simple(vault, samples: ApySamples) -> Apy:
     if vault.vault.address == "0x46AFc2dfBd1ea0c0760CAD8262A5838e803A37e5":
         boost = 1
 
-    # TO-DO: come up with cleaner way to deal with these new gauge rewards
+    # TODO: come up with cleaner way to deal with these new gauge rewards
     reward_apr = 0
     if hasattr(gauge, "reward_contract"):
         reward_address = gauge.reward_contract()
@@ -92,8 +94,8 @@ def simple(vault, samples: ApySamples) -> Apy:
     elif hasattr(gauge, "reward_data"): # this is how new gauges, starting with MIM, show rewards
         # get our token
         gauge_reward_token = gauge.reward_tokens(0)
-        if gauge_reward_token == "0xEdB67Ee1B171c4eC66E6c10EC43EDBbA20FaE8e9" or gauge_reward_token == "0x0000000000000000000000000000000000000000":
-            print("rKP3R gauge or no reward token")
+        if gauge_reward_token == RKP3R_REWARDS or NULL_ADDRESS:
+            print("\nrKP3R gauge or no reward token")
         else:
             # get our total supply
             _distributor = gauge.reward_data(gauge_reward_token)[1]

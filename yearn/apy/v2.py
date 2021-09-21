@@ -154,14 +154,11 @@ def average(vault, samples: ApySamples) -> Apy:
     for x in range(20): # we can have up to 20 strategies
         try:
             strategy_to_check = contract.withdrawalQueue(x)
-            print("Strategy to check", strategy_to_check)
         except AttributeError:
             break
         if strategy_to_check == "0x0000000000000000000000000000000000000000":
-            print("No more strategies")
             break
         else:
-            print("This is our strategy", strategy_to_check)
             debt_ratio = contract.strategies(strategy_to_check)[2] / 10000
             performance_fee = contract.strategies(strategy_to_check)[0]
             proportional_fee = debt_ratio * performance_fee
