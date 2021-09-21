@@ -2,7 +2,6 @@ import json
 import dataclasses
 import warnings
 import logging
-from yearn.prices.magic import get_price
 
 from brownie.exceptions import BrownieEnvironmentWarning
 
