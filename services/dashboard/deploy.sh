@@ -49,5 +49,19 @@ make down
 echo "[*] Building and deploying..."
 make up
 
+LOGIN_RESPONSE=$(curl -X POST \
+        -d '{"user":"admin","password":"admin"}' \
+        -H 'Content-Type: application/json' \
+        https://yearn.vision/login \
+        -o /dev/null \
+        -sw '%{http_code}')
+
+if [ "$LOGIN_RESPONSE" != "401" ]; then
+        echo "[*] ! SER ! Grafana admin password is not good. Please change the admin password manually with the grafana UI."
+        echo "[*] Stopping existing service"
+        make down
+        exit 1
+fi
+
 echo "[*] Finished!"
 
