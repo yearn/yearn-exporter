@@ -50,13 +50,6 @@ def wrap_vault(
     except PriceError as error:
         logger.error(error)
         apy = apy_error
-    new = False
-    if isinstance(vault, VaultV2):
-        harvests = [harvest for strategy in vault.strategies for harvest in strategy.harvests]
-        if len(harvests) < 4:
-            new = True
-            apy.net_apy = 0.0
-            apy.gross_apr = 0.0
 
     if isinstance(vault, VaultV1):
         strategies = [
@@ -105,7 +98,6 @@ def wrap_vault(
         "emergency_shutdown": vault.vault.emergencyShutdown() if hasattr(vault.vault, "emergencyShutdown") else False,
         "updated": int(time()),
         "migration": migration,
-        "new": new,
     }
 
     if any([isinstance(vault, t) for t in [Backscratcher, YveCRVJar]]):
