@@ -28,6 +28,7 @@ services:
     environment:
       - WEB3_PROVIDER
       - ETHERSCAN_TOKEN
+      - EXPLORER
       - PGUSER=postgres
       - PGHOST=postgres
       - PGPASS=yearn
