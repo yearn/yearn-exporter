@@ -175,6 +175,9 @@ class CurveRegistry(metaclass=Singleton):
         """
         pool = contract(self.get_pool(token))
 
+        # TODO - This logic was added to handle the low liquidity of btc coins
+        # A different way should be found to handle low liquidity tokens rather than 
+        # assuming the price is the same as wbtc
         underlying_coins = curve.registry.get_underlying_coins(pool)
         if WBTC in underlying_coins and WETH not in underlying_coins:
             virtual_price = pool.get_virtual_price(block_identifier=block) / 1e18
