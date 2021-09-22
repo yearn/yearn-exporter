@@ -1,13 +1,17 @@
-import datetime
 import logging
 
 from brownie import chain, web3, Contract
+from datetime import datetime, timedelta
+from enum import Enum
 from functools import lru_cache
 
 from yearn.cache import memory
 
 logger = logging.getLogger(__name__)
 
+class Direction(Enum):
+    AFTER = 1
+    BEFORE = -1
 
 def safe_views(abi):
     return [
@@ -29,29 +33,38 @@ def get_block_timestamp(height):
     return int(header.timestamp, 16)
 
 
-@memory.cache()
-def closest_block_before_timestamp(timestamp):
-    logger.info('closest block after timestamp %d', timestamp)
-    height = chain.height
-    lo, hi = 0, height
-    while hi - lo > 1:
-        mid = lo + (hi - lo) // 2
-        if get_block_timestamp(mid) < timestamp:
-            hi = mid
-        else:
-            lo = mid
-    return hi if hi != height else None
-
-
-@memory.cache()
 def closest_block_after_timestamp(timestamp):
-    logger.debug('closest block after timestamp %d', timestamp)
+    return timestamp_to_block(timestamp, Direction.AFTER)
+
+
+def closest_block_before_timestamp(timestamp):
+    return timestamp_to_block(timestamp, Direction.BEFORE)
+
+
+def first_block_on_date(date_string):
+    logger.info('first block on date %s', date_string)
+    date = datetime.strptime(date_string, "%Y-%m-%d")
+    timestamp = datetime.timestamp(date)
+    return closest_block_after_timestamp(timestamp)
+
+
+def last_block_on_date(date_string):
+    logger.info('last block on date %s', date_string)
+    date = datetime.strptime(date_string, "%Y-%m-%d")
+    tomorrow = date + timedelta(days=1)
+    timestamp = datetime.timestamp(tomorrow)
+    return closest_block_before_timestamp(timestamp)
+
+
+@memory.cache()
+def timestamp_to_block(timestamp, direction):
+    logger.debug('timestamp_to_block %d, direction %d', timestamp, direction)
     height = chain.height
     lo, hi = 0, height
 
     while hi - lo > 1:
         mid = lo + (hi - lo) // 2
-        if get_block_timestamp(mid) > timestamp:
+        if get_block_timestamp(mid) >= timestamp:
             hi = mid
         else:
             lo = mid
@@ -59,44 +72,7 @@ def closest_block_after_timestamp(timestamp):
     if get_block_timestamp(hi) < timestamp:
         raise IndexError('timestamp is in the future')
 
-    return hi
-
-
-@memory.cache()
-def first_block_on_date(date_string):
-    logger.info('first block on date %d', date_string)
-    date = datetime.datetime.strptime(date_string, "%Y-%m-%d")
-    date = date.date()
-    previousdate = date - datetime.timedelta(days=1)
-    height = chain.height
-    lo, hi = 0, height
-    while hi - lo > 1:
-        mid = lo + (hi - lo) // 2
-        if datetime.date.fromtimestamp(get_block_timestamp(mid)) > previousdate:
-            hi = mid
-        else:
-            lo = mid
-    return hi if hi != height else None
-    
-
-@memory.cache()
-def last_block_on_date(date_string):
-    logger.info('first block on date %d', date_string)
-    date = datetime.datetime.strptime(date_string, "%Y-%m-%d")
-    date = date.date()
-    height = chain.height
-    lo, hi = 0, height
-    while hi - lo > 1:
-        mid = lo + (hi - lo) // 2
-        print('block: ' + str(mid))
-        print('mid: ' + str(datetime.date.fromtimestamp(get_block_timestamp(mid))))
-        print(date)
-        if datetime.date.fromtimestamp(get_block_timestamp(mid)) > date:
-            hi = mid
-        else:
-            lo = mid
-    hi = hi - 1
-    return hi if hi != height else None
+    return hi if direction == Direction.AFTER else hi - 1
 
 
 @memory.cache()
