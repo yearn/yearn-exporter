@@ -112,3 +112,9 @@ def ibKRW():
     address = "0x528D50dC9a333f01544177a924893FA1F5b9F748"
     vault = VaultV2.from_address(address)
     print(json.dumps(dataclasses.asdict(vault.apy(samples)), indent=2))
+
+def yfi():
+    samples = get_samples()
+    address = "0xE14d13d8B3b85aF791b2AADD661cDBd5E6097Db1"
+    vault = VaultV2.from_address(address)
+    print(json.dumps(dataclasses.asdict(vault.apy(samples)), indent=2))
