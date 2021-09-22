@@ -147,16 +147,25 @@ class CurveRegistry(metaclass=Singleton):
         """
         factory = self.get_factory(pool)
         source = contract(factory) if factory else self.registry
-        data = fetch_multicall(
-            *[
-                [source, view, pool]
-                for view in ['get_coins', 'get_balances', 'get_decimals']
-            ],
-            block=block,
+        coins, decimals = fetch_multicall(
+            [source, 'get_coins', pool], [source, 'get_decimals', pool]
         )
+        num_coins = len([coin for coin in coins if coin != ZERO_ADDRESS])
+
+        try:
+            balances = source.get_balances(pool, block_identifier=block)
+        # fallback for historical queries
+        except ValueError:
+            balances = fetch_multicall(
+                *[[contract(pool), 'balances', i] for i in range(num_coins)]
+            )
+
+        if not any(balances):
+            return None
+
         return {
             coin: balance / 10 ** dec
-            for coin, balance, dec in zip(*data)
+            for coin, balance, dec in zip(coins, balances, decimals)
             if coin != ZERO_ADDRESS
         }
 
@@ -165,6 +174,9 @@ class CurveRegistry(metaclass=Singleton):
         Get total value in Curve pool.
         """
         balances = self.get_balances(pool, block=block)
+        if balances is None:
+            return None
+
         return sum(
             balances[coin] * magic.get_price(coin, block=block) for coin in balances
         )
@@ -172,7 +184,8 @@ class CurveRegistry(metaclass=Singleton):
     @ttl_cache(maxsize=None, ttl=600)
     def get_price(self, token, block=None):
         """
-        Get price of a Curve LP token.
+        Get price of a Curve LP token from individual tokens.
+        Universal but can behave poorly for low liquidity tokens which mostly trade on Curve.
         """
         pool = contract(self.get_pool(token))
 
@@ -185,6 +198,9 @@ class CurveRegistry(metaclass=Singleton):
             return [virtual_price, WBTC]
 
         tvl = self.get_tvl(pool, block=block)
+        if tvl is None:
+            return None
+
         supply = contract(token).totalSupply(block_identifier=block) / 1e18
         return tvl / supply
 
