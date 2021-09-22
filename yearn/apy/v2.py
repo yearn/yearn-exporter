@@ -1,4 +1,5 @@
 from bisect import bisect_left
+from datetime import datetime, timedelta
 
 from semantic_version.base import Version
 
@@ -136,7 +137,13 @@ def average(vault, samples: ApySamples) -> Apy:
     inception_apy = calculate_roi(now_point, inception_point)
 
     # use the first non-zero apy, ordered by precedence
-    apys = [week_ago_apy, month_ago_apy, inception_apy]
+    apys = [week_ago_apy, month_ago_apy]
+    two_months_ago = datetime.now() - timedelta(days=60)
+    if contract.activation() > two_months_ago.timestamp():
+        # if the vault was activated less than two months ago then it's ok to use
+        # the inception apy, otherwise using it isn't representative of the current apy
+        apys.append(inception_apy)
+
     net_apy = next((value for value in apys if value != 0), 0)
 
     # for performance fee, half comes from strategy (strategist share) and half from the vault (treasury share)
