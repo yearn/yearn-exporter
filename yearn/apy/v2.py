@@ -141,7 +141,7 @@ def average(vault, samples: ApySamples) -> Apy:
     two_months_ago = datetime.now() - timedelta(days=60)
     if contract.activation() > two_months_ago.timestamp():
         # if the vault was activated less than two months ago then it's ok to use
-        # the inception apy, otherwise using it isn't very representative of the current apy
+        # the inception apy, otherwise using it isn't representative of the current apy
         apys.append(inception_apy)
 
     net_apy = next((value for value in apys if value != 0), 0)
