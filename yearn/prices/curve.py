@@ -151,7 +151,8 @@ class CurveRegistry(metaclass=Singleton):
             *[
                 [source, view, pool]
                 for view in ['get_coins', 'get_balances', 'get_decimals']
-            ]
+            ],
+            block=block,
         )
         return {
             coin: balance / 10 ** dec
