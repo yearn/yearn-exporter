@@ -59,4 +59,7 @@ def get_price(token, block=None):
     """
     exchnage_rates = get_address('ExchangeRates')
     currency_key = get_currency_key(token)
-    return exchnage_rates.rateForCurrency(currency_key, block_identifier=block) / 1e18
+    try:
+        return exchnage_rates.rateForCurrency(currency_key, block_identifier=block) / 1e18
+    except ValueError:
+        return None
