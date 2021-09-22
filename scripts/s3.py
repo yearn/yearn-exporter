@@ -137,7 +137,7 @@ def main():
 
     assets_metadata = get_assets_metadata(registry_v2.vaults)
 
-    for vault in itertools.chain(special, registry_v1.vaults, registry_v2.vaults):
+    for vault in itertools.chain(special, registry_v1.vaults, registry_v2.vaults, registry_v2.experiments):
         data.append(wrap_vault(vault, samples, aliases, icon_url, assets_metadata))
 
     out = "generated"
@@ -170,7 +170,8 @@ def main():
 
     s3 = boto3.client("s3", aws_access_key_id=aws_key, aws_secret_access_key=aws_secret)
 
-    print(json.dumps(data))
+    print(json.dumps(experimental))
+    return
 
     s3.upload_file(
         os.path.join(out, vault_api_all),
