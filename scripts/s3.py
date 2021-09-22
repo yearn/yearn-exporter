@@ -137,7 +137,7 @@ def main():
 
     assets_metadata = get_assets_metadata(registry_v2.vaults)
 
-    for vault in itertools.chain(special, registry_v1.vaults, registry_v2.vaults):
+    for vault in itertools.chain(special, registry_v1.vaults, registry_v2.vaults, registry_v2.experiments):
         data.append(wrap_vault(vault, samples, aliases, icon_url, assets_metadata))
 
     out = "generated"
