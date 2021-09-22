@@ -4,7 +4,7 @@ from itertools import cycle
 from eth_abi.packed import encode_abi_packed
 
 from yearn.multicall2 import fetch_multicall
-from yearn.utils import contract
+from yearn.utils import contract, contract_creation_block
 
 # https://github.com/Uniswap/uniswap-v3-periphery/blob/main/deploys.md
 UNISWAP_V3_FACTORY = '0x1F98431c8aD98523631AE4a59f267346ea31F984'
@@ -30,6 +30,9 @@ def undo_fees(path):
 
 
 def get_price(asset, block=None):
+    if block and block < contract_creation_block(UNISWAP_V3_QUOTER):
+        return None
+
     if asset == USDC:
         return 1
 
