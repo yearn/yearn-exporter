@@ -1,11 +1,14 @@
 import json
 from functools import lru_cache
 
+import numpy as np
 import pytest
 import requests
-from brownie import multicall, web3
+from brownie import chain, multicall, web3
+from tabulate import tabulate
 from yearn.prices import curve
-from yearn.utils import contract
+from yearn.prices.magic import PriceError
+from yearn.utils import contract, contract_creation_block
 
 pooldata = json.load(open('tests/fixtures/pooldata.json'))
 
@@ -249,6 +252,28 @@ def test_curve_lp_price_oracle(name):
 
 
 @pytest.mark.parametrize('name', pooldata)
+def test_curve_lp_price_oracle_historical(name):
+    if name in ['linkusd']:
+        pytest.xfail('no active market')
+
+    token = web3.toChecksumAddress(pooldata[name]['lp_token_address'])
+    swap = web3.toChecksumAddress(pooldata[name]['swap_address'])
+    deploy = contract_creation_block(swap)
+    # sample 10 blocks over the pool lifetime
+    blocks = [int(block) for block in np.linspace(deploy + 10000, chain.height, 10)]
+    prices = []
+    for block in blocks:
+        try:
+            prices.append(curve.curve.get_price(token, block))
+        except (PriceError, TypeError):
+            prices.append(None)
+
+    virtual_prices = [contract(swap).get_virtual_price(block_identifier=block) / 1e18 for block in blocks]
+
+    print(tabulate(list(zip(blocks, prices, virtual_prices)), headers=['block', 'price', 'vp']))
+
+
+@pytest.mark.parametrize('name', pooldata)
 def test_curve_total_value(name, curve_tvl_api):
     if name in ['linkusd']:
         pytest.xfail('no active market')
@@ -260,3 +285,12 @@ def test_curve_total_value(name, curve_tvl_api):
 
     # FIXME pending curve api update
     # assert tvl == pytest.approx(curve_tvl_api[pool], rel=2e-2)
+
+
+@pytest.mark.parametrize('name', pooldata)
+def test_get_balances_fallback(name):
+    registry_deploy = 12195750
+    pool = web3.toChecksumAddress(pooldata[name]['swap_address'])
+    if curve.curve.get_factory(pool):
+        pytest.skip('not applicable to metapools')
+    print(name, curve.curve.get_balances(pool, block=registry_deploy))
