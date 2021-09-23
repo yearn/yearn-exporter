@@ -1,37 +1,89 @@
-from prometheus_client import Gauge, start_http_server
+import requests
+import os
+import math
 
-earn_gauge = Gauge("iearn", "", ["vault", "param", "address", "version"])
-ironbank_gauge = Gauge("ironbank", "", ["vault", "param", "address", "version"])
-v1_gauge = Gauge("yearn", "", ["vault", "param", "address", "version"])
-v2_gauge = Gauge("yearn_vault", "", ["vault", "param", "address", "version", "experimental"])
-v2_strategy_gauge = Gauge("yearn_strategy", "", ["vault", "strategy", "param", "address", "version", "experimental"])
-simple_gauges = {"v1": v1_gauge, "earn": earn_gauge, "ib": ironbank_gauge, "special": v2_gauge}
+mapping = {
+    "earn": {
+        "metric": "iearn",
+        "labels": ["vault", "param", "address", "version"]
+    },
+    "ib": {
+        "metric": "ironbank",
+        "labels": ["vault", "param", "address", "version"]
+    },
+    "v1": {
+        "metric": "yearn",
+        "labels": ["vault", "param", "address", "version"]
+    },
+    "v2": {
+        "metric": "yearn_vault",
+        "labels": ["vault", "param", "address", "version", "experimental"]
+    },
+    "v2_strategy": {
+        "metric": "yearn_strategy",
+        "labels": ["vault", "strategy", "param", "address", "version", "experimental"]
+    },
+    "special": {
+        "metric": "yearn_vault",
+        "labels": ["vault", "param", "address", "version", "experimental"]
+    }
+}
+
+simple_products = ["v1", "earn", "ib", "special"]
+
+#label_names = {
+#    "earn": ["vault", "param", "address", "version"],
+#    "ib": ["vault", "param", "address", "version"],
+#    "v1": ["vault", "param", "address", "version"],
+#    "v2": ["vault", "param", "address", "version", "experimental"],
+#    "v2_strategy": ["vault", "strategy", "param", "address", "version", "experimental"],
+#    "special": ["vault", "param", "address", "version", "experimental"],
+#}
+
+#metric_names = {
+#    "earn": ,
+#    "ib": "ironbank",
+#    "v1": "yearn",
+#    "v2": "yearn_vault",
+#    "v2_strategy": "yearn_strategy",
+#    "special": "yearn_vault"
+#}
 
 
-def start(port):
-    start_http_server(port)
+def export(timestamp, data):
 
-
-def export(data):
-    for product, gauge in simple_gauges.items():
+    for product in simple_products:
+        metric = mapping[product]["metric"]
         for vault, params in data[product].items():
+
             for key, value in params.items():
                 if key in ["address", "version", "experimental"] or value is None:
                     continue
 
                 has_experiments = product == "special"
+
                 label_values = _get_label_values(params, [vault, key], has_experiments)
-                gauge.labels(*label_values).set(value)
+                label_names = mapping[product]["labels"]
+                csv_format = _get_csv_format(label_names, metric)
+                csv_payload = _get_csv_payload(label_values, value, timestamp)
+
+                _post(csv_format, csv_payload)
 
     for vault, params in data["v2"].items():
+        metric = mapping["v2"]["metric"]
         for key, value in params.items():
             if key in ["address", "version", "experimental", "strategies"] or value is None:
                 continue
 
             label_values = _get_label_values(params, [vault, key], True)
-            v2_gauge.labels(*label_values).set(value)
+            label_names = mapping["v2"]["labels"]
+            csv_format = _get_csv_format(label_names, metric)
+            csv_payload = _get_csv_payload(label_values, value, timestamp)
+
+            _post(csv_format, csv_payload)
 
         # strategies can have nested structs
+        metric = mapping["v2_strategy"]["metric"]
         for strategy, strategy_params in data["v2"][vault]["strategies"].items():
             flat = flatten_dict(strategy_params)
             for key, value in flat.items():
@@ -39,7 +91,56 @@ def export(data):
                     continue
 
                 label_values = _get_label_values(params, [vault, strategy, key], True)
-                v2_strategy_gauge.labels(*label_values).set(value or 0)
+                label_names = mapping["v2_strategy"]["labels"]
+                csv_format = _get_csv_format(label_names, metric)
+                csv_payload = _get_csv_payload(label_values, value or 0, timestamp)
+
+                _post(csv_format, csv_payload)
+
+
+def _post(csv_format, csv_payload):
+    base_url = os.environ.get('VM_URL', 'http://victoria-metrics:8428')
+    url = f'{base_url}/api/v1/import/csv?format={csv_format}'
+    requests.post(
+        url = url,
+        data = csv_payload
+    )
+
+
+def _get_csv_format(label_names, metric):
+    csv_format = []
+    i = 0
+    for name in label_names:
+        i += 1
+        csv_format.append(f'{i}:label:{name}')
+
+    i += 1
+    csv_format.append(f'{i}:metric:{metric}')
+    i += 1
+    csv_format.append(f'{i}:time:unix_s')
+
+    return ",".join(map(str, csv_format))
+
+
+def _get_csv_payload(label_values, value, timestamp):
+    csv_payload = []
+    for label in label_values:
+        csv_payload.append(_sanitize_value(label))
+
+    csv_payload.append(_sanitize_value(value))
+    csv_payload.append(math.floor(timestamp))
+
+    return ",".join(map(str, csv_payload))
+
+
+def _sanitize_value(value):
+    v = value
+    if type(value) == bool:
+        v = 1 if value == True else 0
+    elif type(value) == str:
+        v = v.replace('"', '') # e.g. '"yvrenBTC" 0.3.5 0x340832'
+
+    return v
 
 
 def flatten_dict(d):

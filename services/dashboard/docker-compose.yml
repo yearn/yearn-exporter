@@ -42,13 +42,14 @@ services:
     links:
       - victoria-metrics:victoria-metrics
     depends_on:
+      - yearn-exporter
       - victoria-metrics
     networks:
       - yearn-exporter
     restart: always
 
   victoria-metrics:
-    image: victoriametrics/victoria-metrics:v1.49.0
+    image: victoriametrics/victoria-metrics
     volumes:
       - victoria_metrics_data:/victoria-metrics-data
     ports:
