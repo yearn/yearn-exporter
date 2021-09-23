@@ -4,7 +4,7 @@ import time
 from datetime import datetime, timedelta, timezone
 
 from brownie import chain
-from yearn.outputs import prometheus
+from yearn.outputs import victoria
 from yearn.yearn import Yearn
 from yearn.utils import closest_block_after_timestamp
 
@@ -19,7 +19,7 @@ def main():
     for block in chain.new_blocks(height_buffer=1):
         start = time.time()
         data = yearn.describe(block.number)
-        prometheus.export(block.timestamp, data)
+        victoria.export(block.timestamp, data)
         tvl = sum(vault['tvl'] for product in data.values() for vault in product.values())
         logger.info('exported block=%d tvl=%.0f took=%.3fs', block.number, tvl, time.time() - start)
         time.sleep(sleep_interval)
@@ -48,7 +48,7 @@ def historical(start=datetime(2020, 2, 12, tzinfo=timezone.utc), end=datetime.no
         block = closest_block_after_timestamp(snapshot.timestamp())
         assert block is not None, "no block after timestamp found"
         data = yearn.describe(block)
-        prometheus.export(snapshot.timestamp(), data)
+        victoria.export(snapshot.timestamp(), data)
         tvl = sum(vault['tvl'] for product in data.values() for vault in product.values())
 
         logger.info("inserted snapshot=%s tvl=%.0f took=%.3fs", snapshot, tvl, time.time() - start)
