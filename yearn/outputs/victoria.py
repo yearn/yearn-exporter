@@ -31,25 +31,6 @@ mapping = {
 
 simple_products = ["v1", "earn", "ib", "special"]
 
-#label_names = {
-#    "earn": ["vault", "param", "address", "version"],
-#    "ib": ["vault", "param", "address", "version"],
-#    "v1": ["vault", "param", "address", "version"],
-#    "v2": ["vault", "param", "address", "version", "experimental"],
-#    "v2_strategy": ["vault", "strategy", "param", "address", "version", "experimental"],
-#    "special": ["vault", "param", "address", "version", "experimental"],
-#}
-
-#metric_names = {
-#    "earn": ,
-#    "ib": "ironbank",
-#    "v1": "yearn",
-#    "v2": "yearn_vault",
-#    "v2_strategy": "yearn_strategy",
-#    "special": "yearn_vault"
-#}
-
-
 def export(timestamp, data):
 
     for product in simple_products:
