@@ -10,7 +10,7 @@ from ypricemagic.utils.utils import Contract_with_erc20_fallback
 
 from eth_abi import encode_single
 
-moralis = 'https://deep-index.moralis.io/api/'
+moralis = 'https://deep-index.moralis.io/api/v2/'
 moralis_key = os.environ['MORALIS_KEY']
 headers = {"x-api-key": moralis_key}
 
@@ -20,7 +20,7 @@ def walletdataframe(wallet, block):
     # the API to fetch a list of tokens in the wallet. We then use the
     # token list to query correct balances from the blockchain.
 
-    url = f'{moralis}account/erc20/balances?address={wallet}'
+    url = f'{moralis}{wallet}/erc20'
     df = pd.DataFrame(get(url, headers=headers).json())
 
     # NOTE: Remove spam tokens
