@@ -14,7 +14,7 @@ You will need:
 - Etherscan API key 
 
 To run treasury.py, you will need:
-- Environment variable `MORALIS_TOKEN` set to your Moralis API Key
+- Environment variable `MORALIS_KEY` set to your Moralis API Key
 
 ## Usage
 
