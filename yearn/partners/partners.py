@@ -1,4 +1,9 @@
-from yearn.partners.snapshot import Partner, Wrapper
+from yearn.partners.snapshot import (
+    Partner,
+    Wrapper,
+    WildcardWrapper,
+    YApeSwapFactoryWrapper,
+)
 
 
 partners = [
@@ -18,14 +23,34 @@ partners = [
         treasury='0x8392F6669292fA56123F71949B52d883aE57e225',
         wrappers=[
             Wrapper(
-                name='dai',
+                name='dai 0.3.0',
                 vault='0x19D3364A399d251E894aC732651be8B0E4e85001',
                 wrapper='0x014dE182c147f8663589d77eAdB109Bf86958f13',
             ),
             Wrapper(
-                name='dai-2',
+                name='dai 0.3.0 transmuter',
                 vault='0x19D3364A399d251E894aC732651be8B0E4e85001',
                 wrapper='0x491EAFC47D019B44e13Ef7cC649bbA51E15C61d7',
+            ),
+            Wrapper(
+                name='dai 0.4.3',
+                vault='0xdA816459F1AB5631232FE5e97a05BBBb94970c95',
+                wrapper='0xb039eA6153c827e59b620bDCd974F7bbFe68214A',
+            ),
+            Wrapper(
+                name='dai 0.4.3 transmuter',
+                vault='0xdA816459F1AB5631232FE5e97a05BBBb94970c95',
+                wrapper='0x6Fe02BE0EC79dCF582cBDB936D7037d2eB17F661',
+            ),
+            Wrapper(
+                name='weth 0.4.2',
+                vault='0xa258C4606Ca8206D8aA700cE2143D7db854D168c',
+                wrapper='0x546E6711032Ec744A7708D4b7b283A210a85B3BC',
+            ),
+            Wrapper(
+                name='weth 0.4.2 transmuter',
+                vault='0xa258C4606Ca8206D8aA700cE2143D7db854D168c',
+                wrapper='0x6d75657771256C7a8CB4d475fDf5047B70160132',
             ),
         ],
     ),
@@ -113,15 +138,74 @@ partners = [
         name='basketdao',
         treasury='0x7301C46be73bB04847576b6Af107172bF5e8388e',
         wrappers=[
-            Wrapper(
-                name='crvLINK-v2',
-                vault='0xf2db9a7c0ACd427A680D640F02d90f6186E71725',
+            WildcardWrapper(
+                name='bdi',
                 wrapper='0x0309c98B1bffA350bcb3F9fB9780970CA32a5060',
             ),
+            WildcardWrapper(
+                name='bmi',
+                wrapper='0x0aC00355F80E289f53BF368C9Bdb70f5c114C44B',
+            ),
+        ],
+    ),
+    Partner(
+        name='gb',
+        treasury='0x6965292e29514e527df092659FB4638dc39e7248',
+        wrappers=[
+            WildcardWrapper(
+                name='gb1',
+                wrapper='0x6965292e29514e527df092659FB4638dc39e7248',
+            ),
+        ],
+    ),
+    Partner(
+        name='donutapp',
+        treasury='0x9eaCFF404BAC19195CbD131a4BeA880Abd09B35e',
+        wrappers=[
             Wrapper(
-                name='yvBOOST',
-                vault='0x9d409a0A012CFbA9B15F6D4B36Ac57A46966Ab9a',
-                wrapper='0x0309c98B1bffA350bcb3F9fB9780970CA32a5060',
+                name='yvDAI',
+                vault='0x19D3364A399d251E894aC732651be8B0E4e85001',
+                wrapper='0x9eaCFF404BAC19195CbD131a4BeA880Abd09B35e',
+            ),
+        ],
+    ),
+    Partner(
+        name="yieldster",
+        treasury='0x2955278aBCE187315D6d72B0d626f1217786DF60',
+        wrappers=[
+            WildcardWrapper(
+                name="liva-one",
+                wrapper="0x2747ce11793F7059567758cc35D34F63ceE8Ac00",
+            ),
+        ],
+    ),
+    Partner(
+        name="akropolis",
+        treasury='0xC5aF91F7D10dDe118992ecf536Ed227f276EC60D',
+        wrappers=[
+            WildcardWrapper(
+                name="vaults-savings-v2",
+                wrapper="0x6511D8686EB43Eac9D4852458435c1beC4D67bc6",
+            ),
+        ],
+    ),
+    Partner(
+        name="Mover",
+        treasury='0xf6A0307cb6aA05D7C19d080A0DA9B14eAB1050b7',
+        wrappers=[
+            Wrapper(
+                name="savings_yUSDCv2",
+                vault='0x5f18C75AbDAe578b483E5F43f12a39cF75b973a9',
+                wrapper="0x541d78076352a884C8358a2ac3f36408b99a18dB",
+            ),
+        ],
+    ),
+    Partner(
+        name='yapeswap',
+        treasury='0x10DE513EE154BfA97f1c2841Cab91E8C389c7c72',
+        wrappers=[
+            YApeSwapFactoryWrapper(
+                'yapeswap', '0x46aDc1C052Fafd590F56C42e379d7d16622835a2'
             ),
         ],
     ),

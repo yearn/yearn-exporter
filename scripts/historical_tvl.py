@@ -2,6 +2,7 @@ import logging
 import time
 from datetime import datetime, timedelta, timezone
 from itertools import count
+from brownie import chain
 
 from yearn.entities import Block, Snapshot, db_session
 from yearn.utils import closest_block_after_timestamp, get_block_timestamp
@@ -19,13 +20,9 @@ def main():
     yearn = Yearn(load_strategies=False)
     start = datetime(2020, 2, 12, tzinfo=timezone.utc)  # first iearn deployment
     interval = timedelta(hours=1)
-    buffer = timedelta(minutes=5)
-    synced = False
+    
     for snapshot in generate_snapshot_range(start, interval):
-        while snapshot + buffer > datetime.now().astimezone(timezone.utc):
-            if not synced:
-                synced = True
-                logger.info("synced")
+        while chain[-1].timestamp < snapshot.timestamp():
             time.sleep(60)
 
         with db_session:

@@ -27,6 +27,7 @@ class IronbankMarket:
 class Registry:
     def __init__(self):
         ironbank = Contract("0xAB1c342C7bf5Ec5F02ADEA1c2270670bCa144CbB")
+        # TODO keep the list updated
         markets = [Contract(market) for market in ironbank.getAllMarkets()]
         cdata = multicall_matrix(markets, ["symbol", "underlying", "decimals"])
         underlying = [Contract(cdata[x]["underlying"]) for x in markets]
@@ -63,6 +64,7 @@ class Registry:
             ],
             block=block,
         )
+
         prices = Parallel(8, "threading")(
             delayed(magic.get_price)(market.underlying, block=block) for market in markets
         )
@@ -103,6 +105,7 @@ class Registry:
             ["getCash", "totalBorrows", "totalReserves", "totalSupply"],
             block=block,
         )
+
         prices = Parallel(8, "threading")(delayed(magic.get_price)(market.vault, block=block) for market in markets)
         results = [data[market.vault] for market in markets]
         return {
@@ -114,4 +117,7 @@ class Registry:
     def active_vaults_at(self, block=None):
         if block is None:
             return self.vaults
-        return [market for market in self.vaults if contract_creation_block(str(market.vault)) < block]
+        
+        ironbank = Contract("0xAB1c342C7bf5Ec5F02ADEA1c2270670bCa144CbB")
+        active_markets_at_block = ironbank.getAllMarkets(block_identifier=block)
+        return [market for market in self.vaults if market.vault in active_markets_at_block]

@@ -17,7 +17,7 @@ from yearn.multicall2 import fetch_multicall
 from yearn.prices import magic
 from yearn.utils import safe_views
 from yearn.v2.strategies import Strategy
-from yearn.prices.curve import is_curve_lp_token
+from yearn.prices.curve import curve
 from yearn.apy.common import ApySamples
 
 VAULT_VIEWS_SCALED = [
@@ -181,7 +181,7 @@ class Vault:
         return info
 
     def apy(self, samples: ApySamples):
-        if is_curve_lp_token(self.token.address):
+        if curve.get_pool(self.token.address):
             return apy.curve.simple(self, samples)
         elif Version(self.api_version) >= Version("0.3.2"):
             return apy.v2.average(self, samples)

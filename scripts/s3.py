@@ -8,8 +8,12 @@ import json
 import os
 
 from datetime import datetime
-from typing import Union
+from typing import Any, Union
+
 from time import time
+
+from brownie.network.contract import Contract
+from brownie import web3
 
 from yearn.special import Backscratcher, YveCRVJar
 
@@ -17,7 +21,7 @@ import requests
 import boto3
 
 from brownie.exceptions import BrownieEnvironmentWarning
-from yearn.apy import get_samples, ApySamples
+from yearn.apy import ApyFees, ApyPoints, Apy, get_samples, ApySamples, ApyError
 from yearn.v1.registry import Registry as RegistryV1
 from yearn.v2.registry import Registry as RegistryV2
 
@@ -26,13 +30,27 @@ from yearn.v2.vaults import Vault as VaultV2
 
 from yearn.utils import contract_creation_block
 
+from yearn.prices.magic import PriceError
+
 warnings.simplefilter("ignore", BrownieEnvironmentWarning)
 
 logging.basicConfig(level=logging.DEBUG)
 logger = logging.getLogger("yearn.apy")
 
-def wrap_vault(vault: Union[VaultV1, VaultV2], samples: ApySamples, aliases: dict, icon_url: str) -> dict:
-    apy = vault.apy(samples)
+
+def wrap_vault(
+    vault: Union[VaultV1, VaultV2], samples: ApySamples, aliases: dict, icon_url: str, assets_metadata: dict
+) -> dict:
+    apy_error = Apy("error", 0, 0, ApyFees(0, 0), ApyPoints(0, 0, 0))
+    try:
+        apy = vault.apy(samples)
+    except ValueError as error:
+        logger.error(error)
+        apy = apy_error
+    except PriceError as error:
+        logger.error(error)
+        apy = apy_error
+
     if isinstance(vault, VaultV1):
         strategies = [
             {
@@ -44,11 +62,16 @@ def wrap_vault(vault: Union[VaultV1, VaultV2], samples: ApySamples, aliases: dic
         strategies = [{"address": str(strategy.strategy), "name": strategy.name} for strategy in vault.strategies]
 
     inception = contract_creation_block(str(vault.vault))
-    
+
     token_alias = aliases[str(vault.token)]["symbol"] if str(vault.token) in aliases else vault.token.symbol()
     vault_alias = token_alias
 
     tvl = vault.tvl()
+
+    migration = None
+
+    if str(vault.vault) in assets_metadata:
+        migration = {"available": assets_metadata[str(vault.vault)][1], "address": assets_metadata[str(vault.vault)][2]}
 
     object = {
         "inception": inception,
@@ -63,7 +86,7 @@ def wrap_vault(vault: Union[VaultV1, VaultV2], samples: ApySamples, aliases: dic
             "address": str(vault.token),
             "decimals": vault.token.decimals() if hasattr(vault.token, "decimals") else None,
             "display_name": token_alias,
-            "icon": icon_url % str(vault.token)
+            "icon": icon_url % str(vault.token),
         },
         "tvl": dataclasses.asdict(tvl),
         "apy": dataclasses.asdict(apy),
@@ -74,12 +97,23 @@ def wrap_vault(vault: Union[VaultV1, VaultV2], samples: ApySamples, aliases: dic
         "type": "v2" if isinstance(vault, VaultV2) else "v1",
         "emergency_shutdown": vault.vault.emergencyShutdown() if hasattr(vault.vault, "emergencyShutdown") else False,
         "updated": int(time()),
+        "migration": migration,
     }
 
     if any([isinstance(vault, t) for t in [Backscratcher, YveCRVJar]]):
         object["special"] = True
-    
+
     return object
+
+
+def get_assets_metadata(vault_v2: list) -> dict:
+    registry_v2_adapter = Contract(web3.ens.resolve("lens.ychad.eth"))
+    addresses = [str(vault.vault) for vault in vault_v2]
+    assets_dynamic_data = registry_v2_adapter.assetsDynamic(addresses)
+    assets_metadata = {}
+    for datum in assets_dynamic_data:
+        assets_metadata[datum[0]] = datum[-1]
+    return assets_metadata
 
 
 def main():
@@ -98,14 +132,13 @@ def main():
     samples = get_samples()
 
     special = [YveCRVJar(), Backscratcher()]
-    v1_registry = RegistryV1()
-    v2_registry = RegistryV2()
+    registry_v1 = RegistryV1()
+    registry_v2 = RegistryV2()
 
-    for vault in itertools.chain(special, v1_registry.vaults, v2_registry.vaults):
-        try:
-            data.append(wrap_vault(vault, samples, aliases, icon_url))
-        except ValueError as error:
-            logger.error(error)
+    assets_metadata = get_assets_metadata(registry_v2.vaults)
+
+    for vault in itertools.chain(special, registry_v1.vaults, registry_v2.vaults, registry_v2.experiments):
+        data.append(wrap_vault(vault, samples, aliases, icon_url, assets_metadata))
 
     out = "generated"
     if os.path.isdir(out):
@@ -135,31 +168,26 @@ def main():
     aws_secret = os.environ.get("AWS_ACCESS_SECRET")
     aws_bucket = os.environ.get("AWS_BUCKET")
 
-    s3 = boto3.client(
-        "s3", 
-        aws_access_key_id=aws_key,
-        aws_secret_access_key=aws_secret
-    )
+    s3 = boto3.client("s3", aws_access_key_id=aws_key, aws_secret_access_key=aws_secret)
+
+    print(json.dumps(data))
 
     s3.upload_file(
         os.path.join(out, vault_api_all),
         aws_bucket,
         vault_api_all,
-        ExtraArgs={
-            'ContentType': "application/json",
-            'CacheControl': "max-age=600"
-        }
+        ExtraArgs={'ContentType': "application/json", 'CacheControl': "max-age=1800"},
     )
 
     s3.upload_file(
         os.path.join(out, vault_api_experimental),
         aws_bucket,
         vault_api_experimental,
-        ExtraArgs={
-            'ContentType': "application/json",
-            'CacheControl': "max-age=600"
-        }
+        ExtraArgs={'ContentType': "application/json", 'CacheControl': "max-age=1800"},
     )
+
+
+telegram_users_to_alert = ["@nymmrx", "@x48114", "@dudesahn"]
 
 
 def with_monitoring():
@@ -169,7 +197,7 @@ def with_monitoring():
     public_group = os.environ.get('TG_YFIREBOT_GROUP_EXTERNAL')
     updater = Updater(os.environ.get('TG_YFIREBOT'))
     now = datetime.now()
-    message = f"`[{now}]`\n⚙️ API is updating..."
+    message = f"`[{now}]`\n⚙️ API (vaults) is updating..."
     ping = updater.bot.send_message(chat_id=private_group, text=message, parse_mode="Markdown")
     ping = ping.message_id
     try:
@@ -177,9 +205,10 @@ def with_monitoring():
     except Exception as error:
         tb = traceback.format_exc()
         now = datetime.now()
-        message = f"`[{now}]`\n🔥 API update failed!\n```\n{tb}\n```"
+        tags = " ".join(telegram_users_to_alert)
+        message = f"`[{now}]`\n🔥 API (vaults) update failed!\n```\n{tb}\n```\n{tags}"
         updater.bot.send_message(chat_id=private_group, text=message, parse_mode="Markdown", reply_to_message_id=ping)
         updater.bot.send_message(chat_id=public_group, text=message, parse_mode="Markdown")
         raise error
-    message = "✅ API update successful!"
-    updater.bot.send_message(chat_id=private_group, text="✅ API update successful!", reply_to_message_id=ping)
+    message = "✅ API (vaults) update successful!"
+    updater.bot.send_message(chat_id=private_group, text=message, reply_to_message_id=ping)

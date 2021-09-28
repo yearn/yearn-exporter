@@ -1,13 +1,13 @@
-from bisect import bisect_right
+import logging
+from collections import defaultdict
+from concurrent.futures import ThreadPoolExecutor
 from dataclasses import dataclass
 from functools import lru_cache
 from pathlib import Path
-from typing import List
+from typing import List, Union
 
-import logging
-import matplotlib.pyplot as plt
 import pandas as pd
-from brownie import Contract, web3
+from brownie import Contract, multicall, web3
 from joblib.parallel import Parallel, delayed
 from web3._utils.abi import filter_by_name
 from web3._utils.events import construct_event_topic_set
@@ -16,12 +16,17 @@ from yearn.multicall2 import batch_call
 from yearn.partners.charts import make_partner_charts
 from yearn.partners.constants import OPEX_COST, get_tier
 from yearn.prices import magic
-from yearn.utils import get_block_timestamp
+from yearn.utils import contract_creation_block, get_block_timestamp
+from yearn.v2.registry import Registry
 from yearn.v2.vaults import Vault
+
+logger = logging.getLogger(__name__)
 
 
 def get_timestamps(blocks):
-    data = Parallel(50, 'threading')(delayed(get_block_timestamp)(block) for block in blocks)
+    data = Parallel(50, 'threading')(
+        delayed(get_block_timestamp)(block) for block in blocks
+    )
     return pd.to_datetime([x * 1e9 for x in data])
 
 
@@ -55,7 +60,9 @@ class Wrapper:
 
     def balances(self, blocks):
         vault = Vault.from_address(self.vault)
-        balances = batch_call([[vault.vault, 'balanceOf', self.wrapper, block] for block in blocks])
+        balances = batch_call(
+            [[vault.vault, 'balanceOf', self.wrapper, block] for block in blocks]
+        )
         return [balance / vault.scale for balance in balances]
 
     def total_supplies(self, blocks):
@@ -64,8 +71,58 @@ class Wrapper:
         return [supply / vault.scale for supply in supplies]
 
     def vault_prices(self, blocks):
-        prices = Parallel(50, 'threading')(delayed(magic.get_price)(self.vault, block=block) for block in blocks)
-        return prices
+        return Parallel(50, 'threading')(
+            delayed(magic.get_price)(self.vault, block=block) for block in blocks
+        )
+
+
+@dataclass
+class WildcardWrapper:
+    """
+    Automatically find and generate all valid (wrapper, vault) pairs.
+    """
+    name: str
+    wrapper: Union[str, List[str]]  # can unpack multiple wrappers
+
+    def unwrap(self) -> List[Wrapper]:
+        registry = Registry()
+        wrappers = [self.wrapper] if isinstance(self.wrapper, str) else self.wrapper
+        topics = construct_event_topic_set(
+            filter_by_name('Transfer', registry.vaults[0].vault.abi)[0],
+            web3.codec,
+            {'receiver': wrappers},
+        )
+        addresses = [str(vault.vault) for vault in registry.vaults]
+        from_block = min(ThreadPoolExecutor().map(contract_creation_block, addresses))
+        
+        # wrapper -> {vaults}
+        deposits = defaultdict(set)
+        for log in decode_logs(get_logs_asap(addresses, topics, from_block)):
+            deposits[log['receiver']].add(log.address)
+
+        return [
+            Wrapper(name=vault.name, vault=str(vault.vault), wrapper=wrapper)
+            for wrapper in wrappers
+            for vault in registry.vaults
+            if str(vault.vault) in deposits[wrapper]
+        ]
+
+
+@dataclass
+class YApeSwapFactoryWrapper(WildcardWrapper):
+    name: str
+    wrapper: str
+
+    def unwrap(self) -> List[Wrapper]:
+        factory = Contract(self.wrapper)
+        with multicall:
+            pairs = [factory.allPairs(i) for i in range(factory.allPairsLength())]
+            ratios = [Contract(pair).farmingRatio() for pair in pairs]
+
+        # pools with ratio.min > 0 deploy to yearn vaults
+        farming = [str(pair) for pair, ratio in zip(pairs, ratios) if ratio['min'] > 0]
+
+        return WildcardWrapper(self.name, farming).unwrap()
 
 
 @dataclass
@@ -75,50 +132,66 @@ class Partner:
     treasury: str = None
 
     def process(self):
+        logger.info(self.name)
+        # unwrap wildcard wrappers to a flat list
+        flat_wrappers = []
+        for wrapper in self.wrappers:
+            if isinstance(wrapper, Wrapper):
+                flat_wrappers.append(wrapper)
+            elif isinstance(wrapper, WildcardWrapper):
+                flat_wrappers.extend(wrapper.unwrap())
+
         # snapshot wrapper share at each harvest
         wrappers = []
-        for wrapper in self.wrappers:
-            try:
-                protocol_fees = wrapper.protocol_fees()
-                blocks, protocol_fees = zip(*protocol_fees.items())
-                wrap = pd.DataFrame(
-                    {
-                        'block': blocks,
-                        'timestamp': get_timestamps(blocks),
-                        'protocol_fee': protocol_fees,
-                        'balance': wrapper.balances(blocks),
-                        'total_supply': wrapper.total_supplies(blocks),
-                        'vault_price': wrapper.vault_prices(blocks),
-                    }
-                )
-                wrap['balance_usd'] = wrap.balance * wrap.vault_price
-                wrap['share'] = wrap.balance / wrap.total_supply
-                wrap['payout_base'] = wrap.share * wrap.protocol_fee * (1 - OPEX_COST)
-                wrap['wrapper'] = wrapper.wrapper
-                wrap['vault'] = wrapper.vault
-                wrap['vault_name'] = wrap.apply(self.vault_names,axis=1) 
-                wrap = wrap.set_index('block')
-                wrappers.append(wrap)
-            except ValueError as e: # Runs if protocol_fees.items() is empty
-                logging.warn(f"{wrapper.vault} {str(e)}")
+        for wrapper in flat_wrappers:
+            protocol_fees = wrapper.protocol_fees()
+            if not protocol_fees:
+                logger.info('no fees for %s', wrapper.name)
+                continue
+
+            blocks, protocol_fees = zip(*protocol_fees.items())
+            wrap = pd.DataFrame(
+                {
+                    'block': blocks,
+                    'timestamp': get_timestamps(blocks),
+                    'protocol_fee': protocol_fees,
+                    'balance': wrapper.balances(blocks),
+                    'total_supply': wrapper.total_supplies(blocks),
+                    'vault_price': wrapper.vault_prices(blocks),
+                }
+            )
+            wrap['balance_usd'] = wrap.balance * wrap.vault_price
+            wrap['share'] = wrap.balance / wrap.total_supply
+            wrap['payout_base'] = wrap.share * wrap.protocol_fee * (1 - OPEX_COST)
+            wrap['protocol_fee'] = wrap.protocol_fee
+            wrap['wrapper'] = wrapper.wrapper
+            wrap['vault'] = wrapper.vault
+            wrap['vault_name'] = wrap.apply(self.vault_names,axis=1)
+            wrap['current_usd_value'] = wrap.apply(self.vault_prices_now, axis=1)
+            wrap = wrap.set_index('block')
+            wrappers.append(wrap)
             # save a csv for reporting
 
         # calculate partner fee tier from cummulative wrapper balances
         partner = pd.concat(wrappers)
-        total_balances = pd.pivot_table(partner, 'balance_usd', 'block', 'vault', 'sum').ffill().sum(axis=1)
+        total_balances = (
+            pd.pivot_table(partner, 'balance_usd', 'block', 'vault', 'sum')
+            .ffill()
+            .sum(axis=1)
+        )
         tiers = total_balances.apply(get_tier).rename('tier')
-        
+
         # calculate final payout by vault after tier adjustments
         partner = partner.join(tiers)
         partner['payout'] = partner.payout_base * partner.tier
         partner['payout_usd'] = partner.payout * partner.vault_price
+        partner['protocol_fee_usd'] = partner.protocol_fee * partner.vault_price
 
         self.export_csv(partner)
         payouts = self.export_payouts(partner)
-        try:
-            self.export_chart(partner)
-        except Exception as e:
-            logging.warn(f"couldn't export chart for {self.name}: {e}")
+
+        if partner.payout.sum():
+            make_partner_charts(self, partner)
 
         return partner, payouts
 
@@ -129,8 +202,17 @@ class Partner:
 
     def export_payouts(self, partner):
         # calculate payouts grouped by month and vault token
-        payouts = pd.pivot_table(partner, ['payout','payout_usd'], 'timestamp', 'vault','sum').resample('1M').sum()
-
+        payouts = (
+            pd.pivot_table(
+                partner,
+                ['payout', 'payout_usd', 'protocol_fee', 'protocol_fee_usd'],
+                'timestamp',
+                'vault',
+                'sum',
+            )
+            .resample('1M')
+            .sum()
+        )
         # stack from wide to long format with one payment per line
         payouts = payouts.stack().reset_index()
         payouts['treasury'] = self.treasury
@@ -138,22 +220,38 @@ class Partner:
         payouts['token_name'] = payouts.apply(self.vault_names, axis=1)
 
         # reorder columns
-        payouts.columns = ['timestamp', 'token', 'amount', 'value_usd', 'treasury', 'partner', 'token_name']
-        payouts['current_value_usd'] = payouts.apply(self.vault_prices_now,axis=1) 
-        payouts = payouts[['timestamp','token','token_name','amount','value_usd','current_value_usd','treasury','partner']]
-        
+        payouts.columns = [
+            'timestamp',
+            'token',
+            'amount',
+            'amount_usd',
+            'protocol_fee',
+            'protocol_fee_usd',
+            'treasury',
+            'partner',
+            'token_name',
+        ]
+        payouts = payouts[
+            [
+                'timestamp',
+                'partner',
+                'token',
+                'token_name',
+                'treasury',
+                'amount',
+                'amount_usd',
+                'protocol_fee',
+                'protocol_fee_usd',
+            ]
+        ]
         payouts.to_csv(Path(f'research/partners/{self.name}/payouts.csv'), index=False)
         return payouts
-
-    def export_chart(self, partner):
-        make_partner_charts(self, partner)
 
     def vault_names(self, row):
         return Contract(row.vault).symbol()
 
     def vault_prices_now(self, row):
         return row.amount * magic.get_price(row.token)
-
 
 def process_partners(partners):
     total = 0

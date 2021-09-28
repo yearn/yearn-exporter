@@ -32,7 +32,10 @@ class Strategy:
     def __init__(self, strategy, vault):
         self.strategy = Contract(strategy)
         self.vault = vault
-        self.name = self.strategy.name()
+        try:
+            self.name = self.strategy.name()
+        except ValueError:
+            self.name = strategy[:10]
         self._views = safe_views(self.strategy.abi)
         self._harvests = []
         self._topics = [
