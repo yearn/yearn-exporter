@@ -179,21 +179,21 @@ def dataframe(block):
 
     return df
 
-def main(block=None):
+def main():
     #logging.basicConfig(level=logging.DEBUG)
-    if block == None:
-        block = chain[-1].number
+    block = chain[-1].number
     print(f'querying data at block {block}')
     df = dataframe(block)
     path = './reports/treasury_balances.csv'
     df.to_csv(path, index=False)
     print(f'csv exported to {path}')
+    return df
 
-def allocations(block=None):
-    if block == None:
+def allocations(df=None):
+    if df is None:
         block = chain[-1].number
-    print(f'querying data at block {block}')
-    df = dataframe(block)
+        print(f'querying data at block {block}')
+        df = dataframe(block)
     df = df.groupby(['category'])['value'].sum().reset_index()
     sumassets = df.loc[df['value'] > 0, 'value'].sum()
     df['pct_of_assets'] = df['value'] / sumassets * 100
@@ -202,12 +202,9 @@ def allocations(block=None):
     df.to_csv(path, index=False)
     print(f'csv exported to {path}')
 
-def all(block=None):
-    if block == None:
-        block = chain[-1].number
-    print(f'querying data at block {block}')
-    main(block)
-    allocations(block)
+def all():
+    df = main()
+    allocations(df=df)
 
 YEARN_WALLETS = {
     '0xb99a40fce04cb740eb79fc04976ca15af69aaaae': 'Treasury V1'
@@ -297,6 +294,10 @@ CATEGORY_MAPPINGS = {
     ,'0xed279fdd11ca84beef15af5d39bb4d4bee23f0ca': 'Cash & cash equivalents'
     ,'0x4b5bfd52124784745c1071dcb244c6688d2533d3': 'Cash & cash equivalents'
     ,'0x873fb544277fd7b977b196a826459a69e27ea4ea': 'Cash & cash equivalents'
+    ,'0xfd0877d9095789caf24c98f7cce092fa8e120775': 'Cash & cash equivalents'
+    ,'0x7158c1bee7a0fa5bd6affc77b2309991d7adcdd4': 'Cash & cash equivalents'
+    ,'0x3b96d491f067912d18563d56858ba7d6ec67a6fa': 'Cash & cash equivalents'
+    ,'0x2dfb14e32e2f8156ec15a2c21c3a6c053af52be8': 'Cash & cash equivalents'
 
     ,'0x0bc529c00C6401aEF6D220BE8C6Ea1667F6Ad93e': 'YFI'
     ,'0x0bc529c00c6401aef6d220be8c6ea1667f6ad93e': 'YFI'
@@ -311,6 +312,8 @@ CATEGORY_MAPPINGS = {
     ,'0xa258c4606ca8206d8aa700ce2143d7db854d168c': 'ETH'
     ,'0x53a901d48795c58f485cbb38df08fa96a24669d5': 'ETH'
     ,'0x986b4aff588a109c09b50a03f42e4110e29d353f': 'ETH'
+    ,'0xa3d87fffce63b53e0d54faa1cc983b7eb0b74a9c': 'ETH'
+    ,'0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2': 'ETH'
     
     ,'0x410e3e86ef427e30b9235497143881f717d93c2a': 'BTC'
     ,'0x075b1bb99792c9e1041ba13afef80c91a1e70fb3': 'BTC'
@@ -356,6 +359,14 @@ CATEGORY_MAPPINGS = {
     ,'0xc011a73ee8576fb46f5e1c5751ca3b9fe0af2a6f': 'Other short term assets'
     ,'0x111111111117dc0aa78b770fa6a738034120c302': 'Other short term assets'
     ,'0x514910771af9ca656af840dff83e8264ecf986ca': 'Other short term assets'
+    ,'0x0d4ea8536f9a13e4fba16042a46c30f092b06aa5': 'Other short term assets'
+    ,'0xd9788f3931ede4d5018184e198699dc6d66c1915': 'Other short term assets'
+    ,'0x4a3fe75762017db0ed73a71c9a06db7768db5e66': 'Other short term assets'
+    ,'0x92e187a03b6cd19cb6af293ba17f2745fd2357d5': 'Other short term assets'
+    ,'0x2ba592f78db6436527729929aaf6c908497cb200': 'Other short term assets'
+    ,'0x090185f2135308bad17527004364ebcc2d37e5f6': 'Other short term assets'
+    ,'0x5a98fcbea516cf06857215779fd812ca3bef1b32': 'Other short term assets'
+    ,'0x63125c0d5cd9071de9a1ac84c400982f41c697ae': 'Other short term assets'
     
     ,'0x1ceb5cb57c4d4e2b2433641b95dd330a33185a44': 'Other long term assets'
     ,'0xaf988afF99d3d0cb870812C325C588D8D8CB7De8': 'Other long term assets'
@@ -365,4 +376,5 @@ CATEGORY_MAPPINGS = {
     ,'0xa00c7a61bcbb3f0abcafacd149a3008a153b2dab': 'Junk that somehow has value'
     ,'0x0a24bb4842c301276c65086b5d78d5c872993c72': 'Junk that somehow has value'
     ,'0xe5868468cb6dd5d6d7056bd93f084816c6ef075f': 'Junk that somehow has value'
+    ,'0x26004d228fc8a32c5bd1a106108c8647a455b04a': 'Junk that somehow has value'
 }
