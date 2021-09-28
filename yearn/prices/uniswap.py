@@ -10,10 +10,10 @@ FACTORIES = {
     "sushiswap": "0xC0AEe478e3658e2610c5F7A4A2E1777cE9e4f2Ac",
 }
 ROUTERS = {
-    "uniswap": interface.UniswapRouter("0x7a250d5630B4cF539739dF2C5dAcb4c659F2488D"),
-    "sushiswap": interface.UniswapRouter("0xD9E1CE17F2641F24AE83637AB66A2CCA9C378B9F"),
+    "uniswap": "0x7a250d5630B4cF539739dF2C5dAcb4c659F2488D",
+    "sushiswap": "0xD9E1CE17F2641F24AE83637AB66A2CCA9C378B9F",
 }
-FACTORY_TO_ROUTER = {FACTORIES[name]: ROUTERS[name] for name in FACTORIES}
+FACTORY_TO_ROUTER = {FACTORIES[name]: name for name in FACTORIES}
 
 
 @ttl_cache(ttl=600)
@@ -27,7 +27,7 @@ def get_price(token_in, token_out=usdc, router="uniswap", block=None):
     path = [token_in, token_out] if weth in (token_in, token_out) else [token_in, weth, token_out]
     fees = 0.997 ** (len(path) - 1)
     if router in ROUTERS:
-        router = ROUTERS[router]
+        router = interface.UniswapRouter(ROUTERS[router])
     try:
         quote = router.getAmountsOut(amount_in, path, block_identifier=block)
         amount_out = quote[-1] / 10 ** tokens[1].decimals()

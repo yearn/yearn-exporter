@@ -2,13 +2,12 @@ from brownie import Contract, interface
 
 from yearn.multicall2 import fetch_multicall
 from yearn.prices import magic
-from yearn.prices.curve import get_pool
+from yearn.prices.curve import curve
 
 crv = Contract("0xD533a949740bb3306d119CC777fa900bA034cd52")
 voting_escrow = interface.CurveVotingEscrow("0x5f3b5DfEb7B28CDbD7FAba78963EE202a494e2A2")
 gauge_controller = interface.CurveGaugeController("0x2F50D538606Fa9EDD2B11E2446BEb18C9D5846bB")
 registry = interface.CurveRegistry("0x7D86446dDb609eD0F5f8684AcF30380a356b2B4c")
-underlying_coins = {}
 
 
 def calculate_boost(gauge, addr, block=None):
@@ -55,7 +54,7 @@ def calculate_boost(gauge, addr, block=None):
 
 def calculate_apy(gauge, lp_token, block=None):
     crv_price = magic.get_price(crv)
-    pool = Contract(get_pool(lp_token))
+    pool = Contract(curve.get_pool(lp_token))
     results = fetch_multicall(
         [gauge, "working_supply"],
         [gauge_controller, "gauge_relative_weight", gauge],

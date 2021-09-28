@@ -3,28 +3,22 @@
 set -e
 
 WORKDIR="$HOME/yearn-exporter"
-COMPOSE="$WORKDIR/docker-compose.yml"
 REPOSITORY="https://github.com/yearn/yearn-exporter"
 
 echo "[*] Starting deployment"
 
 echo "[*] Sourcing environment"
 
-if ! [ -f "$HOME/env" ]; then
-        echo "[!] env file not found in \$HOME. Exiting..."
+if ! [ -f "$HOME/.env" ]; then
+        echo "[!] .env file not found in \$HOME. Exiting..."
         exit 1
 fi
 
-source $HOME/env
+source $HOME/.env
 
 if ! [ -d "$WORKDIR" ]; then
         echo "[*] Workdir does not exist, cloning now..."
         git clone $REPOSITORY "$WORKDIR"
-fi
-
-if ! [ -f "$COMPOSE" ]; then
-        echo "[!] Compose file does not exist in repository. Exiting..."
-        exit 1
 fi
 
 echo "[*] Checking repo state"
@@ -48,10 +42,23 @@ else
         exit 1
 fi
 
-echo "[*] Stopping existing service"
-docker-compose -f "$COMPOSE" down --remove-orphans
+cd $WORKDIR
+echo "[*] Rebuilding and deploying..."
+make rebuild
 
-echo "[*] Building and deploying..."
-docker-compose -f "$COMPOSE" up --build -d
+LOGIN_RESPONSE=$(curl -X POST \
+        -d '{"user":"admin","password":"admin"}' \
+        -H 'Content-Type: application/json' \
+        https://yearn.vision/login \
+        -o /dev/null \
+        -sw '%{http_code}')
 
-echo "[*] Finished!" 
+if [ "$LOGIN_RESPONSE" = "200" ]; then
+        echo "[*] ! SER ! Grafana admin password is not good. Please change the admin password manually with the grafana UI."
+        echo "[*] Stopping existing service"
+        make down
+        exit 1
+fi
+
+echo "[*] Finished!"
+

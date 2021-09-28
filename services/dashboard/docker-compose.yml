@@ -21,6 +21,7 @@ services:
       - WEB3_INFURA_PROJECT_ID
       - WEB3_PROVIDER
       - ETHERSCAN_TOKEN
+      - EXPLORER
       - SLEEP_SECONDS
     volumes:
       - solidity_compilers:/root/.solcx

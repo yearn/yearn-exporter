@@ -10,9 +10,9 @@ from ypricemagic.utils.utils import Contract_with_erc20_fallback
 
 from eth_abi import encode_single
 
-moralis = 'https://deep-index.moralis.io/api/'
-moralis_token = os.environ['MORALIS_TOKEN']
-headers = {"x-api-key": moralis_token}
+moralis = 'https://deep-index.moralis.io/api/v2/'
+moralis_key = os.environ['MORALIS_KEY']
+headers = {"x-api-key": moralis_key}
 
 def walletdataframe(wallet, block):
     # NOTE: Moralis API is returning absurd values for token balances,
@@ -20,7 +20,7 @@ def walletdataframe(wallet, block):
     # the API to fetch a list of tokens in the wallet. We then use the
     # token list to query correct balances from the blockchain.
 
-    url = f'{moralis}account/erc20/balances?address={wallet}'
+    url = f'{moralis}{wallet}/erc20'
     df = pd.DataFrame(get(url, headers=headers).json())
 
     # NOTE: Remove spam tokens
@@ -179,21 +179,21 @@ def dataframe(block):
 
     return df
 
-def main():
+def main(block=None):
     #logging.basicConfig(level=logging.DEBUG)
-    block = chain[-1].number
+    if block == None:
+        block = chain[-1].number
     print(f'querying data at block {block}')
     df = dataframe(block)
     path = './reports/treasury_balances.csv'
     df.to_csv(path, index=False)
     print(f'csv exported to {path}')
-    return df
 
-def allocations(df=None):
-    if df is None:
+def allocations(block=None):
+    if block == None:
         block = chain[-1].number
-        print(f'querying data at block {block}')
-        df = dataframe(block)
+    print(f'querying data at block {block}')
+    df = dataframe(block)
     df = df.groupby(['category'])['value'].sum().reset_index()
     sumassets = df.loc[df['value'] > 0, 'value'].sum()
     df['pct_of_assets'] = df['value'] / sumassets * 100
@@ -201,11 +201,13 @@ def allocations(df=None):
     path = './reports/treasury_allocation.csv'
     df.to_csv(path, index=False)
     print(f'csv exported to {path}')
-    
 
-def all():
-    df = main()
-    allocations(df=df)
+def all(block=None):
+    if block == None:
+        block = chain[-1].number
+    print(f'querying data at block {block}')
+    main(block)
+    allocations(block)
 
 YEARN_WALLETS = {
     '0xb99a40fce04cb740eb79fc04976ca15af69aaaae': 'Treasury V1'

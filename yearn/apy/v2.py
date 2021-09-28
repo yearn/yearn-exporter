@@ -1,4 +1,5 @@
 from bisect import bisect_left
+from datetime import datetime, timedelta
 
 from semantic_version.base import Version
 
@@ -11,7 +12,6 @@ from yearn.apy.common import (
     SharePricePoint,
     calculate_roi,
 )
-
 
 def closest(haystack, needle):
     pos = bisect_left(sorted(haystack), needle)
@@ -68,9 +68,18 @@ def simple(vault, samples: ApySamples) -> Apy:
     apys = [week_ago_apy, month_ago_apy, inception_apy]
     net_apy = next((value for value in apys if value != 0), 0)
 
-    # performance fee is doubled since 1x strategists + 1x treasury
-    performance = (contract.performanceFee() * 2) if hasattr(contract, "performanceFee") else 0
+    # for performance fee, half comes from strategy (strategist share) and half from the vault (treasury share)
+    strategy_fees = []
+    for strategy in vault.strategies: # look at all of our strategies
+        debt_ratio = contract.strategies(strategy.strategy)['debtRatio'] / 10000
+        performance_fee = contract.strategies(strategy.strategy)['performanceFee']
+        proportional_fee = debt_ratio * performance_fee
+        strategy_fees.append(proportional_fee)
+    
+    strategy_performance = sum(strategy_fees)
+    vault_performance = contract.performanceFee() if hasattr(contract, "performanceFee") else 0
     management = contract.managementFee() if hasattr(contract, "managementFee") else 0
+    performance = vault_performance + strategy_performance
 
     performance /= 1e4
     management /= 1e4
@@ -128,12 +137,27 @@ def average(vault, samples: ApySamples) -> Apy:
     inception_apy = calculate_roi(now_point, inception_point)
 
     # use the first non-zero apy, ordered by precedence
-    apys = [week_ago_apy, month_ago_apy, inception_apy]
+    apys = [week_ago_apy, month_ago_apy]
+    two_months_ago = datetime.now() - timedelta(days=60)
+    if contract.activation() > two_months_ago.timestamp():
+        # if the vault was activated less than two months ago then it's ok to use
+        # the inception apy, otherwise using it isn't representative of the current apy
+        apys.append(inception_apy)
+
     net_apy = next((value for value in apys if value != 0), 0)
 
-    # performance fee is doubled since 1x strategists + 1x treasury
-    performance = (contract.performanceFee() * 2) if hasattr(contract, "performanceFee") else 0
+    # for performance fee, half comes from strategy (strategist share) and half from the vault (treasury share)
+    strategy_fees = []
+    for strategy in vault.strategies: # look at all of our strategies
+        debt_ratio = contract.strategies(strategy.strategy)['debtRatio'] / 10000
+        performance_fee = contract.strategies(strategy.strategy)['performanceFee']
+        proportional_fee = debt_ratio * performance_fee
+        strategy_fees.append(proportional_fee)
+    
+    strategy_performance = sum(strategy_fees)
+    vault_performance = contract.performanceFee() if hasattr(contract, "performanceFee") else 0
     management = contract.managementFee() if hasattr(contract, "managementFee") else 0
+    performance = vault_performance + strategy_performance
 
     performance /= 1e4
     management /= 1e4

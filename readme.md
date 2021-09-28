@@ -55,6 +55,7 @@ export GF_SECURITY_ADMIN_PASSWORD=<YOUR_ADMIN_PASSWORD> # change this if you wan
 export WEB3_INFURA_PROJECT_ID=<YOUR_PROJECT_ID> # this needs to be set
 export WEB3_PROVIDER=<YOUR_WEB3_PROVIDER> # if this is set, it overrides Infura, and instead a custom url is used as the web3 provider
 export ETHERSCAN_TOKEN=<YOUR_ETHERSCAN_TOKEN> # this needs to be set
+export EXPLORER=<EXPLORER> # optional, default to: https://api.etherscan.io/api
 export SLEEP_SECONDS=<YOUR_SLEEP_SECONDS> # if this is set, the exporters will wait the given amount of time between subsequent invocations to your web3 provider.
 make dashboards
 ```
@@ -67,6 +68,7 @@ After successful startup you can go directly to grafana at `http://localhost:300
 export WEB3_INFURA_PROJECT_ID=<YOUR_PROJECT_ID> # this needs to be set
 export WEB3_PROVIDER=<YOUR_WEB3_PROVIDER> # if this is set, it overrides Infura, and instead a custom url is used as the web3 provider
 export ETHERSCAN_TOKEN=<YOUR_ETHERSCAN_TOKEN> # this needs to be set
+export EXPLORER=<EXPLORER> # optional, default to: https://api.etherscan.io/api
 make tvl
 ```
 

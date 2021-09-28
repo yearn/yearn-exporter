@@ -2,13 +2,16 @@
 set -e
 
 NETWORK="mainnet" # default to Mainnet (Infura)
-EXPLORER="https://api.etherscan.io/api"
+EXPLORER=${EXPLORER:-https://api.etherscan.io/api}
 
-if [[ ! -z "${WEB3_PROVIDER}" ]]; then
-  if [[ ! $(brownie networks list | grep mainnet-custom) ]]; then
-    brownie networks add Ethereum mainnet-custom host=$WEB3_PROVIDER chainid=1 explorer=$EXPLORER
-  fi
+if [[ ! -z "$WEB3_PROVIDER" ]]; then
   NETWORK="mainnet-custom"
+
+  if [[ ! $(brownie networks list | grep mainnet-custom) ]]; then
+    brownie networks add Ethereum $NETWORK host=$WEB3_PROVIDER chainid=1 explorer=$EXPLORER
+  else
+    brownie networks modify $NETWORK host=$WEB3_PROVIDER chainid=1 explorer=$EXPLORER
+  fi
 fi
 
 if [[ $# -eq 0 ]]; then

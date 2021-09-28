@@ -1,4 +1,9 @@
-from yearn.partners.snapshot import Partner, Wrapper, WildcardWrapper
+from yearn.partners.snapshot import (
+    Partner,
+    Wrapper,
+    WildcardWrapper,
+    YApeSwapFactoryWrapper,
+)
 
 
 partners = [
@@ -174,5 +179,34 @@ partners = [
             ),
         ],
     ),
+    Partner(
+        name="akropolis",
+        treasury='0xC5aF91F7D10dDe118992ecf536Ed227f276EC60D',
+        wrappers=[
+            WildcardWrapper(
+                name="vaults-savings-v2",
+                wrapper="0x6511D8686EB43Eac9D4852458435c1beC4D67bc6",
+            ),
+        ],
+    ),
+    Partner(
+        name="Mover",
+        treasury='0xf6A0307cb6aA05D7C19d080A0DA9B14eAB1050b7',
+        wrappers=[
+            Wrapper(
+                name="savings_yUSDCv2",
+                vault='0x5f18C75AbDAe578b483E5F43f12a39cF75b973a9',
+                wrapper="0x541d78076352a884C8358a2ac3f36408b99a18dB",
+            ),
+        ],
+    ),
+    Partner(
+        name='yapeswap',
+        treasury='0x10DE513EE154BfA97f1c2841Cab91E8C389c7c72',
+        wrappers=[
+            YApeSwapFactoryWrapper(
+                'yapeswap', '0x46aDc1C052Fafd590F56C42e379d7d16622835a2'
+            ),
+        ],
+    ),
 ]
-

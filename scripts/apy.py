@@ -70,3 +70,51 @@ def pickleJar():
     samples = get_samples()
     special = YveCRVJar()
     print(json.dumps(dataclasses.asdict(special.apy(samples)), indent=2))
+
+def mim():
+    samples = get_samples()
+    address = "0x2DfB14E32e2F8156ec15a2c21c3A6c053af52Be8"
+    vault = VaultV2.from_address(address)
+    print(json.dumps(dataclasses.asdict(vault.apy(samples)), indent=2))
+
+def eurt():
+    samples = get_samples()
+    address = "0x0d4EA8536F9A13e4FBa16042a46c30f092b06aA5"
+    vault = VaultV2.from_address(address)
+    print(json.dumps(dataclasses.asdict(vault.apy(samples)), indent=2))
+
+def yvboost():
+    samples = get_samples()
+    address = "0x9d409a0A012CFbA9B15F6D4B36Ac57A46966Ab9a"
+    vault = VaultV2.from_address(address)
+    print(json.dumps(dataclasses.asdict(vault.apy(samples)), indent=2))
+
+def ibEUR():
+    samples = get_samples()
+    address = "0x67e019bfbd5a67207755D04467D6A70c0B75bF60"
+    vault = VaultV2.from_address(address)
+    print(json.dumps(dataclasses.asdict(vault.apy(samples)), indent=2))
+
+def cvxCRV():
+    samples = get_samples()
+    address = "0x4560b99C904aAD03027B5178CCa81584744AC01f"
+    vault = VaultV2.from_address(address)
+    print(json.dumps(dataclasses.asdict(vault.apy(samples)), indent=2))
+
+def ibJPY():
+    samples = get_samples()
+    address = "0x59518884EeBFb03e90a18ADBAAAB770d4666471e"
+    vault = VaultV2.from_address(address)
+    print(json.dumps(dataclasses.asdict(vault.apy(samples)), indent=2))
+    
+def ibKRW():
+    samples = get_samples()
+    address = "0x528D50dC9a333f01544177a924893FA1F5b9F748"
+    vault = VaultV2.from_address(address)
+    print(json.dumps(dataclasses.asdict(vault.apy(samples)), indent=2))
+
+def yfi():
+    samples = get_samples()
+    address = "0xE14d13d8B3b85aF791b2AADD661cDBd5E6097Db1"
+    vault = VaultV2.from_address(address)
+    print(json.dumps(dataclasses.asdict(vault.apy(samples)), indent=2))
