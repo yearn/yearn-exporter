@@ -1,6 +1,9 @@
 import requests
 import os
+import gzip
 import math
+import json
+from typing import List, Dict
 
 mapping = {
     "earn": {
@@ -32,6 +35,7 @@ mapping = {
 simple_products = ["v1", "earn", "ib", "special"]
 
 def export(timestamp, data):
+    metrics_to_export = []
 
     for product in simple_products:
         metric = mapping[product]["metric"]
@@ -45,10 +49,10 @@ def export(timestamp, data):
 
                 label_values = _get_label_values(params, [vault, key], has_experiments)
                 label_names = mapping[product]["labels"]
-                csv_format = _get_csv_format(label_names, metric)
-                csv_payload = _get_csv_payload(label_values, value, timestamp)
 
-                _post(csv_format, csv_payload)
+                item = _build_item(metric, label_names, label_values, value, timestamp)
+                metrics_to_export.append(item)
+
 
     for vault, params in data["v2"].items():
         metric = mapping["v2"]["metric"]
@@ -58,10 +62,9 @@ def export(timestamp, data):
 
             label_values = _get_label_values(params, [vault, key], True)
             label_names = mapping["v2"]["labels"]
-            csv_format = _get_csv_format(label_names, metric)
-            csv_payload = _get_csv_payload(label_values, value, timestamp)
 
-            _post(csv_format, csv_payload)
+            item = _build_item(metric, label_names, label_values, value, timestamp)
+            metrics_to_export.append(item)
 
         # strategies can have nested structs
         metric = mapping["v2_strategy"]["metric"]
@@ -73,48 +76,47 @@ def export(timestamp, data):
 
                 label_values = _get_label_values(params, [vault, strategy, key], True)
                 label_names = mapping["v2_strategy"]["labels"]
-                csv_format = _get_csv_format(label_names, metric)
-                csv_payload = _get_csv_payload(label_values, value or 0, timestamp)
 
-                _post(csv_format, csv_payload)
+                item = _build_item(metric, label_names, label_values, value or 0, timestamp)
+                metrics_to_export.append(item)
+
+    # post all metrics for this timestamp at once
+    _post(metrics_to_export)
 
 
-def _post(csv_format, csv_payload):
+def _build_item(metric, label_names, label_values, value, timestamp):
+    ts_millis = math.floor(timestamp) * 1000
+    meta = dict(zip(map(_sanitize, label_names), label_values))
+    meta["__name__"] = metric
+    return {"metric": meta, "values": [_sanitize(value)], "timestamps": [ts_millis]}
+
+
+def _to_jsonl_gz(metrics_to_export: List[Dict]):
+    lines = []
+    for item in metrics_to_export:
+        lines.append(json.dumps(item))
+
+    jsonlines = "\n".join(lines)
+    return gzip.compress(bytes(jsonlines, "utf-8"))
+
+
+def _post(metrics_to_export: List[Dict]):
+    data = _to_jsonl_gz(metrics_to_export)
     base_url = os.environ.get('VM_URL', 'http://victoria-metrics:8428')
-    url = f'{base_url}/api/v1/import/csv?format={csv_format}'
-    requests.post(
-        url = url,
-        data = csv_payload
-    )
+    url = f'{base_url}/api/v1/import'
+    headers = {
+        'Connection': 'close',
+        'Content-Encoding': 'gzip'
+    }
+    with requests.Session() as session:
+        session.post(
+            url = url,
+            data = data,
+            headers = headers
+        )
 
 
-def _get_csv_format(label_names, metric):
-    csv_format = []
-    i = 0
-    for name in label_names:
-        i += 1
-        csv_format.append(f'{i}:label:{name}')
-
-    i += 1
-    csv_format.append(f'{i}:metric:{metric}')
-    i += 1
-    csv_format.append(f'{i}:time:unix_s')
-
-    return ",".join(map(str, csv_format))
-
-
-def _get_csv_payload(label_values, value, timestamp):
-    csv_payload = []
-    for label in label_values:
-        csv_payload.append(_sanitize_value(label))
-
-    csv_payload.append(_sanitize_value(value))
-    csv_payload.append(math.floor(timestamp))
-
-    return ",".join(map(str, csv_payload))
-
-
-def _sanitize_value(value):
+def _sanitize(value):
     v = value
     if type(value) == bool:
         v = 1 if value == True else 0
@@ -152,4 +154,4 @@ def _get_bool_label(a_dict, key):
 
 
 def _get_string_label(a_dict, key):
-    return a_dict[key] if key in a_dict else "n/a"
+    return str(a_dict[key]) if key in a_dict else "n/a"

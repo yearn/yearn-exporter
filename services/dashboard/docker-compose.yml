@@ -52,6 +52,8 @@ services:
     image: victoriametrics/victoria-metrics
     volumes:
       - victoria_metrics_data:/victoria-metrics-data
+    command:
+      - '-retentionPeriod=10y'
     ports:
       - 8428:8428
     networks:
