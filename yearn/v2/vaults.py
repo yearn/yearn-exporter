@@ -19,6 +19,7 @@ from yearn.utils import safe_views
 from yearn.v2.strategies import Strategy
 from yearn.prices.curve import curve
 from yearn.apy.common import ApySamples
+from yearn.config import Config
 
 VAULT_VIEWS_SCALED = [
     "totalAssets",
@@ -127,6 +128,8 @@ class Vault:
         Parallel(8, "threading")(delayed(strategy.load_harvests)() for strategy in self.strategies)
 
     def watch_events(self):
+        if not Config().has_events():
+            return
         start = time.time()
         self.log_filter = create_filter(str(self.vault), topics=self._topics)
         for block in chain.new_blocks(height_buffer=12):
