@@ -167,7 +167,6 @@ class Partner:
             wrap['wrapper'] = wrapper.wrapper
             wrap['vault'] = wrapper.vault
             wrap['vault_name'] = wrap.apply(self.vault_names,axis=1)
-            wrap['current_usd_value'] = wrap.apply(self.vault_prices_now, axis=1)
             wrap = wrap.set_index('block')
             wrappers.append(wrap)
             # save a csv for reporting
@@ -218,6 +217,7 @@ class Partner:
         payouts['treasury'] = self.treasury
         payouts['partner'] = self.name
         payouts['token_name'] = payouts.apply(self.vault_names, axis=1)
+        payouts['amount_usd_now'] = payouts.apply(self.vault_prices_now, axis=1)
 
         # reorder columns
         payouts.columns = [
@@ -230,6 +230,7 @@ class Partner:
             'treasury',
             'partner',
             'token_name',
+            'amount_usd_now',
         ]
         payouts = payouts[
             [
@@ -240,6 +241,7 @@ class Partner:
                 'treasury',
                 'amount',
                 'amount_usd',
+                'amount_usd_now',
                 'protocol_fee',
                 'protocol_fee_usd',
             ]
@@ -251,7 +253,7 @@ class Partner:
         return Contract(row.vault).symbol()
 
     def vault_prices_now(self, row):
-        return row.amount * magic.get_price(row.token)
+        return row.payout * magic.get_price(row.vault)
 
 def process_partners(partners):
     total = 0
