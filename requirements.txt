@@ -1,5 +1,5 @@
 eth-brownie>=1.14.6
-web3==5.18.0
+web3>=5.18.0
 click>=7.1.2
 tabulate>=0.8.7
 joblib>=1.0.1
@@ -13,3 +13,4 @@ aiofiles>=0.6.0
 prometheus-client>=0.10.1
 semantic-version>=2.8.5
 boto3==1.17.88
+ypricemagic>=0.2.4
