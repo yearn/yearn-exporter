@@ -54,16 +54,28 @@ def calculate_boost(gauge, addr, block=None):
 
 def calculate_apy(gauge, lp_token, block=None):
     crv_price = magic.get_price(crv)
-    pool = Contract(curve.get_pool(lp_token))
-    results = fetch_multicall(
+    pool_address = curve.get_pool(lp_token)
+    # TODO check if that's correct
+    calls = [
         [gauge, "working_supply"],
         [gauge_controller, "gauge_relative_weight", gauge],
         [gauge, "inflation_rate"],
-        [pool, "get_virtual_price"],
+    ]
+    if pool_address:
+        pool = Contract(pool_address)
+        calls.append([pool, "get_virtual_price"])
+
+    results = fetch_multicall(
+        *calls,
         block=block,
     )
     results = [x / 1e18 for x in results]
-    working_supply, relative_weight, inflation_rate, virtual_price = results
+    if pool_address:
+        working_supply, relative_weight, inflation_rate, virtual_price = results
+    else:
+        working_supply, relative_weight, inflation_rate = results
+        virtual_price = 0
+
     token_price = magic.get_price(lp_token, block=block)
     try:
         rate = (inflation_rate * relative_weight * 86400 * 365 / working_supply * 0.4) / token_price
