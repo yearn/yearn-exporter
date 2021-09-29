@@ -6,6 +6,8 @@ from joblib import Parallel, delayed
 from yearn.utils import contract_creation_block
 from yearn.multicall2 import fetch_multicall, multicall_matrix
 from yearn.prices import magic
+import logging
+logger = logging.getLogger(__name__)
 
 IEARN = {
     # v1 - deprecated
@@ -50,11 +52,16 @@ class Registry:
         prices = Parallel(8, "threading")(delayed(magic.get_price)(vault.token, block=block) for vault in vaults)
         for vault, price in zip(vaults, prices):
             res = results[vault.vault]
+            price_per_share = res["getPricePerFullShare"]
+            if not price_per_share and block <= 9562259 # <= 2020-02-27
+                logger.warn("Vault %s, does not have getPricePerFullShare for block %s", vault.vault, block)
+                price_per_share = 0
+
             output[vault.name] = {
                 "total supply": res["totalSupply"] / vault.scale,
                 "available balance": res["balance"] / vault.scale,
                 "pooled balance": res["pool"] / vault.scale,
-                "price per share": res["getPricePerFullShare"] / 1e18,
+                "price per share": price_per_share / 1e18,
                 "token price": price,
                 "tvl": res["pool"] / vault.scale * price,
                 "address": vault.vault,
