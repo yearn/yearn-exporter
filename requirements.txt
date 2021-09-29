@@ -11,4 +11,5 @@ psycopg2-binary>=2.8.5
 tokenlists>=0.1.0b0
 aiofiles>=0.6.0
 semantic-version>=2.8.5
-boto3==1.17.88ypricemagic>=0.2.4
+boto3==1.17.88
+ypricemagic>=0.2.4
