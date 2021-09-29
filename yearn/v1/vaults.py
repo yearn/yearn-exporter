@@ -46,8 +46,11 @@ class VaultV1:
     def get_strategy(self, block=None):
         if self.name in ["aLINK", "LINK"]:
             return self.strategy
-        strategy = self.controller.strategies(self.token, block_identifier=block)
-        return Contract(strategy)
+        try:
+            strategy = self.controller.strategies(self.token, block_identifier=block)
+            return Contract(strategy)
+        except ValueError:
+            return self.strategy
 
     def describe(self, block=None):
         info = {}
