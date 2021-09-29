@@ -81,11 +81,14 @@ class VaultV1:
                 [strategy, "gauge"],  # gauge is static per strategy, can cache
                 block=block,
             )
-            vote_proxy = interface.CurveYCRVVoter(vote_proxy)
-            gauge = Contract(gauge)
-            info.update(curve.calculate_boost(gauge, vote_proxy, block=block))
-            info.update(curve.calculate_apy(gauge, self.token, block=block))
-            attrs["earned"] = [gauge, "claimable_tokens", vote_proxy]  # / scale
+            # guard historical queries where there are no vote_proxy and gauge
+            # for block <= 10635293 (2020-08-11)
+            if vote_proxy and gauge:
+                vote_proxy = interface.CurveYCRVVoter(vote_proxy)
+                gauge = Contract(gauge)
+                info.update(curve.calculate_boost(gauge, vote_proxy, block=block))
+                info.update(curve.calculate_apy(gauge, self.token, block=block))
+                attrs["earned"] = [gauge, "claimable_tokens", vote_proxy]  # / scale
 
         if hasattr(strategy, "earned"):
             attrs["lifetime earned"] = [strategy, "earned"]  # /scale
