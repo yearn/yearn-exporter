@@ -53,7 +53,7 @@ class Registry:
         for vault, price in zip(vaults, prices):
             res = results[vault.vault]
             price_per_share = res["getPricePerFullShare"]
-            if not price_per_share and block <= 9562259 # <= 2020-02-27
+            if not price_per_share and block <= 9562259: # <= 2020-02-27
                 logger.warn("Vault %s, does not have getPricePerFullShare for block %s", vault.vault, block)
                 price_per_share = 0
 
