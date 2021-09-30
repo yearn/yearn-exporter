@@ -117,13 +117,12 @@ def _post(metrics_to_export: List[Dict]):
 
 
 def _sanitize(value):
-    v = value
-    if type(value) == bool:
-        v = 1 if value == True else 0
-    elif type(value) == str:
-        v = v.replace('"', '') # e.g. '"yvrenBTC" 0.3.5 0x340832'
-
-    return v
+    if isinstance(value, bool):
+        return int(value)
+    elif isinstance(value, str):
+        return value.replace('"', '')  # e.g. '"yvrenBTC" 0.3.5 0x340832'
+    
+    return value
 
 
 def flatten_dict(d):
