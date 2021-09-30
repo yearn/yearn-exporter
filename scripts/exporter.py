@@ -43,12 +43,13 @@ def historical_export(start=datetime.now(), end=datetime(2020, 2, 12)):
     yearn = Yearn()
     Config().with_events = False
 
-    start = start.replace(hour=0, minute=0, second=0, microsecond=0)
-    daily = _generate_snapshot_range(start, end, timedelta(days=1))
+    start_daily = start.replace(hour=0, minute=0, second=0, microsecond=0)
+    daily = _generate_snapshot_range(start_daily, end, timedelta(days=1))
     for day in daily:
         _interval_export(yearn, day)
 
-    hourly = _generate_snapshot_range(start, end, timedelta(hours=1))
+    start_hourly = start.replace(minute=0, second=0, microsecond=0)
+    hourly = _generate_snapshot_range(start_hourly, end, timedelta(hours=1))
     for hour in hourly:
         _interval_export(yearn, hour, skip_midnight=True)
 
