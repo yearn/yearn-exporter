@@ -8,6 +8,8 @@ import yearn.ironbank
 import yearn.special
 import yearn.v2.registry
 import yearn.v1.registry
+from yearn.outputs import victoria
+
 
 logger = logging.getLogger(__name__)
 
@@ -45,3 +47,11 @@ class Yearn:
             for key in self.registries
         )
         return dict(zip(self.registries, desc))
+
+
+    def export(self, block, ts):
+        start = time.time()
+        data = describe(block)
+        victoria.export(ts, data)
+        tvl = sum(vault['tvl'] for product in data.values() for vault in product.values())
+        logger.info('exported block=%d tvl=%.0f took=%.3fs', block, tvl, time.time() - start)

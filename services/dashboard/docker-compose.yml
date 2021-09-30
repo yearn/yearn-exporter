@@ -15,8 +15,24 @@ services:
   yearn-exporter:
     build: .
     command: exporter
-    ports:
-      - 8800:8800
+    environment:
+      - WEB3_INFURA_PROJECT_ID
+      - WEB3_PROVIDER
+      - ETHERSCAN_TOKEN
+      - EXPLORER
+      - SLEEP_SECONDS
+    volumes:
+      - solidity_compilers:/root/.solcx
+      - vyper_compilers:/root/.vvm
+      - brownie:/root/.brownie
+      - cache:/app/yearn-exporter/cache
+    networks:
+      - yearn-exporter
+    restart: always
+
+  historical-exporter:
+    build: .
+    command: historical_exporter
     environment:
       - WEB3_INFURA_PROJECT_ID
       - WEB3_PROVIDER
