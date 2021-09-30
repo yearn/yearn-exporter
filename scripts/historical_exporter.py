@@ -1,6 +1,5 @@
 import logging
 import os
-import time
 from datetime import datetime, timedelta, timezone
 
 from yearn.yearn import Yearn
@@ -54,8 +53,8 @@ def _has_data(ts):
             url = url,
             headers = headers
         )
-        result = response.json
-        return result['status'] == 'success' and len(result['data']['results']) > 0
+        result = response.json()
+        return result['status'] == 'success' and len(result['data']['result']) > 0
 
 
 def _generate_snapshot_range(start, end, interval):
