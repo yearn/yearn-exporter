@@ -1,3 +1,4 @@
+from functools import cached_property
 import logging
 from dataclasses import dataclass
 from typing import Optional
@@ -58,6 +59,10 @@ class VaultV1:
             return self.controller
         return contract(self.vault.controller(block_identifier=block))
 
+    @cached_property
+    def is_curve_vault(self):
+        return curve_oracle.get_pool(str(self.token)) is not None
+
     def describe(self, block=None):
         info = {}
         strategy = self.strategy
@@ -81,7 +86,7 @@ class VaultV1:
             attrs["max"] = [self.vault, "max"]
 
         # new curve voter proxy vaults
-        if hasattr(strategy, "proxy"):
+        if self.is_curve_vault and hasattr(strategy, "proxy"):
             vote_proxy, gauge = fetch_multicall(
                 [strategy, "voter"],  # voter is static, can pin
                 [strategy, "gauge"],  # gauge is static per strategy, can cache
