@@ -156,7 +156,7 @@ class CurveRegistry(metaclass=Singleton):
         # fallback for historical queries
         except ValueError:
             balances = fetch_multicall(
-                *[[pool, 'balances', i] for i in range(num_coins)]
+                *[[contract(pool), 'balances', i] for i in range(num_coins)]
             )
 
         if not any(balances):
