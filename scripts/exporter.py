@@ -8,7 +8,6 @@ from yearn.outputs import victoria
 from yearn.yearn import Yearn
 from yearn.utils import closest_block_after_timestamp
 from itertools import count
-from yearn.config import Config
 
 import requests
 
@@ -43,7 +42,6 @@ def tvl():
 # end: 2020-02-12 first iearn deployment
 def historical_export(start=datetime.now(), end=datetime(2020, 2, 12)):
     yearn = Yearn()
-    Config().with_events = False
 
     start_daily = start.replace(hour=0, minute=0, second=0, microsecond=0)
     daily = _generate_snapshot_range(start_daily, end, timedelta(days=1))
