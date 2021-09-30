@@ -186,14 +186,14 @@ class CurveRegistry(metaclass=Singleton):
         Get price of a Curve LP token from individual tokens.
         Universal but can behave poorly for low liquidity tokens which mostly trade on Curve.
         """
-        pool = contract(self.get_pool(token))
+        pool = self.get_pool(token)
 
         # TODO - This logic was added to handle the low liquidity of btc coins
         # A different way should be found to handle low liquidity tokens rather than 
         # assuming the price is the same as wbtc
         underlying_coins = curve.registry.get_underlying_coins(pool)
         if WBTC in underlying_coins and WETH not in underlying_coins:
-            virtual_price = pool.get_virtual_price(block_identifier=block) / 1e18
+            virtual_price = contract(pool).get_virtual_price(block_identifier=block) / 1e18
             return [virtual_price, WBTC]
 
         tvl = self.get_tvl(pool, block=block)
