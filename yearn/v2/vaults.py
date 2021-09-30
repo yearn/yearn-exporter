@@ -19,7 +19,6 @@ from yearn.utils import safe_views
 from yearn.v2.strategies import Strategy
 from yearn.prices.curve import curve
 from yearn.apy.common import ApySamples
-from yearn.config import Config
 
 VAULT_VIEWS_SCALED = [
     "totalAssets",
