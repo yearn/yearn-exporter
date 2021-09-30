@@ -1,7 +1,7 @@
 import logging
 import os
 import time
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 
 from brownie import chain
 from yearn.outputs import victoria
@@ -40,7 +40,7 @@ def tvl():
 
 
 # end: 2020-02-12 first iearn deployment
-def historical_export(start=datetime.now(), end=datetime(2020, 2, 12)):
+def historical_export(start=datetime.now(tz=timezone.utc), end=datetime(2020, 2, 12, tzinfo=timezone.utc)):
     yearn = Yearn()
 
     start_daily = start.replace(hour=0, minute=0, second=0, microsecond=0)
