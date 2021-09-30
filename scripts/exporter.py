@@ -10,6 +10,8 @@ from yearn.utils import closest_block_after_timestamp
 from itertools import count
 from yearn.config import Config
 
+import requests
+
 logger = logging.getLogger('yearn.exporter')
 sleep_interval = int(os.environ.get('SLEEP_SECONDS', '0'))
 
@@ -51,18 +53,35 @@ def historical_export(start=datetime.now(), end=datetime(2020, 2, 12)):
     start_hourly = start.replace(minute=0, second=0, microsecond=0)
     hourly = _generate_snapshot_range(start_hourly, end, timedelta(hours=1))
     for hour in hourly:
-        _interval_export(yearn, hour, skip_midnight=True)
+        _interval_export(yearn, hour)
 
 
-def _interval_export(yearn, snapshot, skip_midnight=False):
-    if skip_midnight and snapshot.hour == 0 and snapshot.minute == 0:
+def _interval_export(yearn, snapshot):
+    ts = snapshot.timestamp()
+    if _has_data(ts):
+        logger.info("data already present for snapshot %s, ts %d", snapshot, ts)
         return
 
-    ts = snapshot.timestamp()
     block = closest_block_after_timestamp(ts)
     assert block is not None, "no block after timestamp found"
     export(yearn, block, ts)
     logger.info("exported historical snapshot %s", snapshot)
+
+
+def _has_data(ts):
+    base_url = os.environ.get('VM_URL', 'http://victoria-metrics:8428')
+    # query for iearn metric which was always present
+    url = f'{base_url}/api/v1/query?query=iearn&time={ts}'
+    headers = {
+        'Connection': 'close',
+    }
+    with requests.Session() as session:
+        response = session.get(
+            url = url,
+            headers = headers
+        )
+        result = response.json
+        return result['status'] == 'success' and len(result['data']['results']) > 0
 
 
 def _generate_snapshot_range(start, end, interval):
