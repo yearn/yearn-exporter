@@ -128,8 +128,6 @@ class Vault:
         Parallel(8, "threading")(delayed(strategy.load_harvests)() for strategy in self.strategies)
 
     def watch_events(self):
-        if not Config().has_events():
-            return
         start = time.time()
         self.log_filter = create_filter(str(self.vault), topics=self._topics)
         for block in chain.new_blocks(height_buffer=12):

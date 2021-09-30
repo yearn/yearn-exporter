@@ -1,8 +1,9 @@
-from yearn.utils import Singleton
+from dataclasses import dataclass
 
-class Config(metaclass=Singleton):
-    def __init__(self):
-        self.with_events = True
 
-    def has_events(self):
-        return self.with_events
+@dataclass
+class Config:
+    watch_events: bool = True
+
+
+config = Config()

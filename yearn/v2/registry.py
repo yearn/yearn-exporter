@@ -12,7 +12,6 @@ from yearn.multicall2 import fetch_multicall
 from yearn.prices import magic
 from yearn.utils import contract_creation_block, Singleton
 from yearn.v2.vaults import Vault
-from yearn.config import Config
 
 logger = logging.getLogger(__name__)
 
@@ -62,8 +61,6 @@ class Registry(metaclass=Singleton):
         self._done.wait()
 
     def watch_events(self):
-        if not Config().has_events():
-            return
         start = time.time()
         self.log_filter = create_filter([str(addr) for addr in self.registries])
         for block in chain.new_blocks(height_buffer=12):

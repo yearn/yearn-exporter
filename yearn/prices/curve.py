@@ -24,7 +24,6 @@ from yearn.events import create_filter, decode_logs
 from yearn.multicall2 import fetch_multicall
 from yearn.prices import magic
 from yearn.utils import Singleton, contract
-from yearn.config import Config
 
 logger = logging.getLogger(__name__)
 
@@ -36,12 +35,9 @@ class CurveRegistry(metaclass=Singleton):
         self.pools = set()
         self.identifiers = defaultdict(list)
         self.addres_provider = contract('0x0000000022D53366457F9d5E68Ec105046FC4383')
-
         self.watch_events()
 
     def watch_events(self):
-        if not Config().has_events():
-            return
         # TODO keep fresh in background
 
         # fetch all registries and factories from address provider

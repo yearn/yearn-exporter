@@ -9,7 +9,6 @@ from eth_utils import encode_hex, event_abi_to_log_topic
 from yearn.utils import safe_views
 from yearn.multicall2 import fetch_multicall
 from yearn.events import create_filter, decode_logs
-from yearn.config import Config
 
 
 STRATEGY_VIEWS_SCALED = [
@@ -62,8 +61,6 @@ class Strategy:
         raise ValueError("Strategy is only comparable with [Strategy, str]")
 
     def watch_events(self):
-        if not Config().has_events():
-            return
         start = time.time()
         self.log_filter = create_filter(str(self.strategy), topics=self._topics)
         for block in chain.new_blocks(height_buffer=12):
