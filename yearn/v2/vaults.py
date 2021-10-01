@@ -169,7 +169,7 @@ class Vault:
             info = {"strategies": {}}
 
         for strategy in self.strategies:
-            info["strategies"][strategy.name] = strategy.describe(block=block)
+            info["strategies"][self.dupe_name_handler(info,strategy.name)] = strategy.describe(block=block)
 
         info["token price"] = magic.get_price(self.token, block=block)
         if "totalAssets" in info:
@@ -196,3 +196,12 @@ class Vault:
             price = None
         tvl = total_assets * price / 10 ** self.vault.decimals(block_identifier=block) if price else None
         return Tvl(total_assets, price, tvl)
+
+    def dupe_name_handler(self, info, name):
+        i = 2
+        while i:
+            if name not in info["strategies"].keys():
+                return name
+            name = name + ' (' + str(i) + ')'
+            i += 1
+            
