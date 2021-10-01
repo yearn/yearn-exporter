@@ -2,11 +2,11 @@ version: '3.7'
 
 volumes:
     grafana_data: {}
-    prometheus_data: {}
     solidity_compilers: {}
     vyper_compilers: {}
     brownie: {}
     cache: {}
+    victoria_metrics_data: {}
 
 networks:
   yearn-exporter:
@@ -15,8 +15,6 @@ services:
   yearn-exporter:
     build: .
     command: exporter
-    ports:
-      - 8800:8800
     environment:
       - WEB3_INFURA_PROJECT_ID
       - WEB3_PROVIDER
@@ -32,19 +30,48 @@ services:
       - yearn-exporter
     restart: always
 
-  prometheus:
-    image: prom/prometheus:v2.23.0
+  historical-exporter:
+    build: .
+    command: historical_exporter
+    environment:
+      - WEB3_INFURA_PROJECT_ID
+      - WEB3_PROVIDER
+      - ETHERSCAN_TOKEN
+      - EXPLORER
+      - SLEEP_SECONDS
+    volumes:
+      - solidity_compilers:/root/.solcx
+      - vyper_compilers:/root/.vvm
+      - brownie:/root/.brownie
+      - cache:/app/yearn-exporter/cache
+    networks:
+      - yearn-exporter
+    restart: always
+
+  vmagent:
+    image: victoriametrics/vmagent
     volumes:
       - ./prometheus/:/etc/prometheus/
-      - prometheus_data:/prometheus
     command:
-      - '--config.file=/etc/prometheus/prometheus.yml'
-      - '--storage.tsdb.path=/prometheus'
-      - '--storage.tsdb.retention.time=1y'
-      - '--web.console.libraries=/usr/share/prometheus/console_libraries'
-      - '--web.console.templates=/usr/share/prometheus/consoles'
+      - '-promscrape.config=/etc/prometheus/prometheus.yml'
+      - '-remoteWrite.url=http://victoria-metrics:8428/api/v1/write'
+    links:
+      - victoria-metrics:victoria-metrics
+    depends_on:
+      - yearn-exporter
+      - victoria-metrics
+    networks:
+      - yearn-exporter
+    restart: always
+
+  victoria-metrics:
+    image: victoriametrics/victoria-metrics
+    volumes:
+      - victoria_metrics_data:/victoria-metrics-data
+    command:
+      - '-retentionPeriod=10y'
     ports:
-      - 9090:9090
+      - 8428:8428
     networks:
       - yearn-exporter
     restart: always
@@ -52,7 +79,7 @@ services:
   grafana:
     image: grafana/grafana
     depends_on:
-      - prometheus
+      - victoria-metrics
     ports:
       - 3000:3000
     environment:

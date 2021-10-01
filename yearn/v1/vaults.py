@@ -1,9 +1,10 @@
+from functools import cached_property
 import logging
 from dataclasses import dataclass
 from typing import Optional
 from yearn.common import Tvl
 
-from brownie import Contract, ZERO_ADDRESS, interface, web3
+from brownie import ZERO_ADDRESS, interface
 from brownie.network.contract import InterfaceContainer
 
 from yearn import constants, curve, apy
@@ -11,6 +12,7 @@ from yearn.multicall2 import fetch_multicall
 from yearn.prices import magic
 from yearn.prices.curve import curve as curve_oracle
 from yearn.apy.common import ApySamples
+from yearn.utils import contract
 
 logger = logging.getLogger(__name__)
 
@@ -28,10 +30,10 @@ class VaultV1:
     decimals: Optional[int] = None
 
     def __post_init__(self):
-        self.vault = Contract(self.vault)
-        self.controller = Contract(self.controller)
-        self.strategy = Contract(self.strategy)
-        self.token = Contract(self.token)
+        self.vault = contract(self.vault)
+        self.controller = contract(self.controller)
+        self.strategy = contract(self.strategy)
+        self.token = contract(self.token)
         if str(self.vault) not in constants.VAULT_ALIASES:
             logger.warning("no vault alias for %s, reading from vault.sybmol()", self.vault)
         self.name = constants.VAULT_ALIASES.get(str(self.vault), self.vault.symbol())
@@ -44,10 +46,22 @@ class VaultV1:
         return magic.get_price(self.token, block=block)
 
     def get_strategy(self, block=None):
-        if self.name in ["aLINK", "LINK"]:
+        if self.name in ["aLINK", "LINK"] or block is None:
             return self.strategy
-        strategy = self.controller.strategies(self.token, block_identifier=block)
-        return Contract(strategy)
+        
+        controller = self.get_controller(block)
+        strategy = controller.strategies(self.token, block_identifier=block)
+        if strategy != ZERO_ADDRESS:
+            return contract(strategy)
+
+    def get_controller(self, block=None):
+        if block is None:
+            return self.controller
+        return contract(self.vault.controller(block_identifier=block))
+
+    @cached_property
+    def is_curve_vault(self):
+        return curve_oracle.get_pool(str(self.token)) is not None
 
     def describe(self, block=None):
         info = {}
@@ -72,17 +86,20 @@ class VaultV1:
             attrs["max"] = [self.vault, "max"]
 
         # new curve voter proxy vaults
-        if hasattr(strategy, "proxy"):
+        if self.is_curve_vault and hasattr(strategy, "proxy"):
             vote_proxy, gauge = fetch_multicall(
                 [strategy, "voter"],  # voter is static, can pin
                 [strategy, "gauge"],  # gauge is static per strategy, can cache
                 block=block,
             )
-            vote_proxy = interface.CurveYCRVVoter(vote_proxy)
-            gauge = Contract(gauge)
-            info.update(curve.calculate_boost(gauge, vote_proxy, block=block))
-            info.update(curve.calculate_apy(gauge, self.token, block=block))
-            attrs["earned"] = [gauge, "claimable_tokens", vote_proxy]  # / scale
+            # guard historical queries where there are no vote_proxy and gauge
+            # for block <= 10635293 (2020-08-11)
+            if vote_proxy and gauge:
+                vote_proxy = interface.CurveYCRVVoter(vote_proxy)
+                gauge = contract(gauge)
+                info.update(curve.calculate_boost(gauge, vote_proxy, block=block))
+                info.update(curve.calculate_apy(gauge, self.token, block=block))
+                attrs["earned"] = [gauge, "claimable_tokens", vote_proxy]  # / scale
 
         if hasattr(strategy, "earned"):
             attrs["lifetime earned"] = [strategy, "earned"]  # /scale

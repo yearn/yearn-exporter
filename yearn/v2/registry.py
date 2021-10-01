@@ -121,7 +121,7 @@ class Registry(metaclass=Singleton):
         Parallel(8, "threading")(delayed(vault.load_harvests)() for vault in vaults)
 
     def describe(self, block=None):
-        vaults = self.vaults + self.experiments
+        vaults = self.active_vaults_at(block)
         results = Parallel(8, "threading")(delayed(vault.describe)(block=block) for vault in vaults)
         return {vault.name: result for vault, result in zip(vaults, results)}
 

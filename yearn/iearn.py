@@ -50,11 +50,14 @@ class Registry:
         prices = Parallel(8, "threading")(delayed(magic.get_price)(vault.token, block=block) for vault in vaults)
         for vault, price in zip(vaults, prices):
             res = results[vault.vault]
+            if res['getPricePerFullShare'] is None:
+                continue
+
             output[vault.name] = {
                 "total supply": res["totalSupply"] / vault.scale,
                 "available balance": res["balance"] / vault.scale,
                 "pooled balance": res["pool"] / vault.scale,
-                "price per share": res["getPricePerFullShare"] / 1e18,
+                "price per share": res['getPricePerFullShare'] / 1e18,
                 "token price": price,
                 "tvl": res["pool"] / vault.scale * price,
                 "address": vault.vault,

@@ -119,5 +119,8 @@ class Registry:
             return self.vaults
         
         ironbank = Contract("0xAB1c342C7bf5Ec5F02ADEA1c2270670bCa144CbB")
-        active_markets_at_block = ironbank.getAllMarkets(block_identifier=block)
-        return [market for market in self.vaults if market.vault in active_markets_at_block]
+        try:
+            active_markets_at_block = ironbank.getAllMarkets(block_identifier=block)
+            return [market for market in self.vaults if market.vault in active_markets_at_block]
+        except ValueError:
+            return []
