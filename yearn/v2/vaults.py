@@ -169,7 +169,7 @@ class Vault:
             info = {"strategies": {}}
 
         for strategy in self.strategies:
-            info["strategies"][strategy.name] = strategy.describe(block=block)
+            info["strategies"][strategy.unique_name] = strategy.describe(block=block)
 
         info["token price"] = magic.get_price(self.token, block=block)
         if "totalAssets" in info:

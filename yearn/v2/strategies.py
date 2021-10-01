@@ -48,6 +48,13 @@ class Strategy:
         self._done = threading.Event()
         self._thread = threading.Thread(target=self.watch_events, daemon=True)
 
+    @property
+    def unique_name(self):
+        if [strategy.name for strategy in self.vault.strategies].count(self.name) > 1:
+            return f'{self.name} {str(self.strategy)[:8]}'
+        else:
+            return self.name
+
     def __repr__(self) -> str:
         return f"<Strategy {self.strategy} name={self.name}>"
 
