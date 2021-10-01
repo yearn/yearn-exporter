@@ -9,6 +9,8 @@ from typing import List, Union
 import pandas as pd
 from brownie import Contract, multicall, web3
 from joblib.parallel import Parallel, delayed
+from rich import print
+from rich.progress import track
 from web3._utils.abi import filter_by_name
 from web3._utils.events import construct_event_topic_set
 from yearn.events import decode_logs, get_logs_asap
@@ -24,7 +26,7 @@ logger = logging.getLogger(__name__)
 
 
 def get_timestamps(blocks):
-    data = Parallel(50, 'threading')(
+    data = Parallel(10, 'threading')(
         delayed(get_block_timestamp)(block) for block in blocks
     )
     return pd.to_datetime([x * 1e9 for x in data])
@@ -71,10 +73,27 @@ class Wrapper:
         return [supply / vault.scale for supply in supplies]
 
     def vault_prices(self, blocks):
-        prices = Parallel(50, 'threading')(
+        prices = Parallel(10, 'threading')(
             delayed(magic.get_price)(self.vault, block=block) for block in blocks
         )
         return prices
+
+
+class BentoboxWrapper(Wrapper):
+    """
+    Use BentoBox deposits by wrapper.
+    """
+
+    def balances(self, blocks):
+        bentobox = Contract('0xF5BCE5077908a1b7370B9ae04AdC565EBd643966')
+        vault = Vault.from_address(self.vault)
+        balances = batch_call(
+            [
+                [bentobox, 'balanceOf', self.vault, self.wrapper, block]
+                for block in blocks
+            ]
+        )
+        return [(balance or 0) / vault.scale for balance in balances]
 
 
 @dataclass
@@ -82,6 +101,7 @@ class WildcardWrapper:
     """
     Automatically find and generate all valid (wrapper, vault) pairs.
     """
+
     name: str
     wrapper: Union[str, List[str]]  # can unpack multiple wrappers
 
@@ -95,7 +115,7 @@ class WildcardWrapper:
         )
         addresses = [str(vault.vault) for vault in registry.vaults]
         from_block = min(ThreadPoolExecutor().map(contract_creation_block, addresses))
-        
+
         # wrapper -> {vaults}
         deposits = defaultdict(set)
         for log in decode_logs(get_logs_asap(addresses, topics, from_block)):
@@ -133,7 +153,6 @@ class Partner:
     treasury: str = None
 
     def process(self):
-        logger.info(self.name)
         # unwrap wildcard wrappers to a flat list
         flat_wrappers = []
         for wrapper in self.wrappers:
@@ -144,7 +163,7 @@ class Partner:
 
         # snapshot wrapper share at each harvest
         wrappers = []
-        for wrapper in flat_wrappers:
+        for wrapper in track(flat_wrappers, self.name):
             protocol_fees = wrapper.protocol_fees()
             if not protocol_fees:
                 logger.info('no fees for %s', wrapper.name)
