@@ -12,6 +12,7 @@ from yearn.multicall2 import fetch_multicall
 from yearn.prices import magic
 from yearn.utils import contract_creation_block, Singleton
 from yearn.v2.vaults import Vault
+from yearn.config import config
 
 logger = logging.getLogger(__name__)
 
@@ -69,6 +70,8 @@ class Registry(metaclass=Singleton):
             if not self._done.is_set():
                 self._done.set()
                 logger.info("loaded v2 registry in %.3fs", time.time() - start)
+            if not config.watch_events_forever:
+                break
             time.sleep(300)
 
     def process_events(self, events):

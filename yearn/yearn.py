@@ -9,6 +9,7 @@ import yearn.special
 import yearn.v2.registry
 import yearn.v1.registry
 from yearn.outputs import victoria
+from yearn.config import config
 
 
 logger = logging.getLogger(__name__)
@@ -19,7 +20,7 @@ class Yearn:
     Can describe all products.
     """
 
-    def __init__(self, load_strategies=True, load_harvests=False) -> None:
+    def __init__(self, load_strategies=True, load_harvests=False, watch_events=True) -> None:
         start = time()
         self.registries = {
             "earn": yearn.iearn.Registry(),
@@ -28,6 +29,7 @@ class Yearn:
             "ib": yearn.ironbank.Registry(),
             "special": yearn.special.Registry(),
         }
+        config.watch_events_forever = watch_events
         if load_strategies:
             self.registries["v2"].load_strategies()
         if load_harvests:

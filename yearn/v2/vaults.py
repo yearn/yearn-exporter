@@ -19,6 +19,7 @@ from yearn.utils import safe_views
 from yearn.v2.strategies import Strategy
 from yearn.prices.curve import curve
 from yearn.apy.common import ApySamples
+from yearn.config import config
 
 VAULT_VIEWS_SCALED = [
     "totalAssets",
@@ -136,6 +137,8 @@ class Vault:
             if not self._done.is_set():
                 self._done.set()
                 logger.info("loaded %d strategies %s in %.3fs", len(self._strategies), self.name, time.time() - start)
+            if not config.watch_events_forever:
+                break
             time.sleep(300)
 
     def process_events(self, events):

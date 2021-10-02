@@ -84,9 +84,20 @@ def export(timestamp, data):
     _post(metrics_to_export)
 
 
+def export_duration(duration_seconds, pool_size, direction, timestamp_seconds):
+    item = _build_item(
+      "export_duration",
+      [ "pool_size", "direction" ],
+      [ pool_size, direction ],
+      duration_seconds,
+      timestamp_seconds
+    )
+    _post([item])
+
+
 def _build_item(metric, label_names, label_values, value, timestamp):
     ts_millis = math.floor(timestamp) * 1000
-    meta = dict(zip(map(_sanitize, label_names), label_values))
+    meta = dict(zip(map(_sanitize, label_names), map(str, label_values)))
     meta["__name__"] = metric
     return {"metric": meta, "values": [_sanitize(value)], "timestamps": [ts_millis]}
 

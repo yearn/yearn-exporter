@@ -9,6 +9,7 @@ from eth_utils import encode_hex, event_abi_to_log_topic
 from yearn.utils import safe_views
 from yearn.multicall2 import fetch_multicall
 from yearn.events import create_filter, decode_logs
+from yearn.config import config
 
 
 STRATEGY_VIEWS_SCALED = [
@@ -77,6 +78,8 @@ class Strategy:
             if not self._done.is_set():
                 self._done.set()
                 logger.info("loaded %d harvests %s in %.3fs", len(self._harvests), self.name, time.time() - start)
+            if not config.watch_events_forever:
+                break
             time.sleep(300)
 
     def process_events(self, events):

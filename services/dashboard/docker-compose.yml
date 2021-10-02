@@ -39,6 +39,8 @@ services:
       - ETHERSCAN_TOKEN
       - EXPLORER
       - SLEEP_SECONDS
+      - POOL_SIZE
+      - CHUNK_SIZE
     volumes:
       - solidity_compilers:/root/.solcx
       - vyper_compilers:/root/.vvm
