@@ -12,10 +12,12 @@ from more_itertools import chunked
 from joblib import Parallel, delayed
 import multiprocessing
 import requests
+import psutil
 
 logger = logging.getLogger('yearn.historical_exporter')
 
-default_pool_size = max(1, math.floor(multiprocessing.cpu_count() / 3))
+available_memory = psutil.virtual_memory().available / 1e9   # in GB
+default_pool_size = max(1, math.floor(available_memory / 8)) # allocate 8GB per worker
 POOL_SIZE = int(os.environ.get("POOL_SIZE", default_pool_size))
 CHUNK_SIZE = int(os.environ.get("CHUNK_SIZE", 50))
 
