@@ -28,7 +28,7 @@ services:
       - cache:/app/yearn-exporter/cache
     networks:
       - yearn-exporter
-    restart: always
+    restart: on-failure
 
   historical-exporter:
     build: .
@@ -49,7 +49,7 @@ services:
       - cache:/app/yearn-exporter/cache
     networks:
       - yearn-exporter
-    restart: always
+    restart: on-failure
 
   vmagent:
     image: victoriametrics/vmagent
