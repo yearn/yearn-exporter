@@ -8,7 +8,7 @@ from yearn.yearn import Yearn
 from yearn.outputs import victoria
 from yearn.utils import closest_block_after_timestamp
 from itertools import count
-from more_itertools import chunked
+from toolz import partition_all
 from joblib import Parallel, delayed
 import multiprocessing
 import requests
@@ -42,7 +42,7 @@ def main():
 
         logger.info("starting new pool with %d workers", POOL_SIZE)
         Parallel(n_jobs=POOL_SIZE, backend="multiprocessing", verbose=100)(
-            delayed(_export_chunk)(chunk) for chunk in chunked(intervals, CHUNK_SIZE)
+            delayed(_export_chunk)(chunk) for chunk in partition_all(CHUNK_SIZE, intervals)
         )
 
 

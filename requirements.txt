@@ -13,4 +13,3 @@ aiofiles>=0.6.0
 semantic-version>=2.8.5
 boto3==1.17.88
 ypricemagic>=0.2.4
-more-itertools>=8.10.0
