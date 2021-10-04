@@ -28,7 +28,7 @@ services:
       - cache:/app/yearn-exporter/cache
     networks:
       - yearn-exporter
-    restart: always
+    restart: on-failure
 
   historical-exporter:
     build: .
@@ -39,6 +39,9 @@ services:
       - ETHERSCAN_TOKEN
       - EXPLORER
       - SLEEP_SECONDS
+      - POOL_SIZE
+      - CHUNK_SIZE
+      - RESOLUTION
     volumes:
       - solidity_compilers:/root/.solcx
       - vyper_compilers:/root/.vvm
@@ -46,7 +49,7 @@ services:
       - cache:/app/yearn-exporter/cache
     networks:
       - yearn-exporter
-    restart: always
+    restart: on-failure
 
   vmagent:
     image: victoriametrics/vmagent

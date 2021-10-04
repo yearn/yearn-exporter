@@ -48,7 +48,7 @@ logger = logging.getLogger(__name__)
 
 
 class Vault:
-    def __init__(self, vault, api_version=None, token=None, registry=None):
+    def __init__(self, vault, api_version=None, token=None, registry=None, watch_events_forever=True):
         self._strategies = {}
         self._revoked = {}
         self._reports = []
@@ -70,6 +70,7 @@ class Vault:
                 if event["type"] == "event" and event["name"] in STRATEGY_EVENTS
             ]
         ]
+        self._watch_events_forever = watch_events_forever
         self._done = threading.Event()
         self._thread = threading.Thread(target=self.watch_events, daemon=True)
 
@@ -136,24 +137,26 @@ class Vault:
             if not self._done.is_set():
                 self._done.set()
                 logger.info("loaded %d strategies %s in %.3fs", len(self._strategies), self.name, time.time() - start)
+            if not self._watch_events_forever:
+                break
             time.sleep(300)
 
     def process_events(self, events):
         for event in events:
             if event.name == "StrategyAdded":
                 logger.debug("%s strategy added %s", self.name, event["strategy"])
-                self._strategies[event["strategy"]] = Strategy(event["strategy"], self)
+                self._strategies[event["strategy"]] = Strategy(event["strategy"], self, self._watch_events_forever)
             elif event.name == "StrategyRevoked":
                 logger.debug("%s strategy revoked %s", self.name, event["strategy"])
                 self._revoked[event["strategy"]] = self._strategies.pop(
-                    event["strategy"], Strategy(event["strategy"], self)
+                    event["strategy"], Strategy(event["strategy"], self, self._watch_events_forever)
                 )
             elif event.name == "StrategyMigrated":
                 logger.debug("%s strategy migrated %s -> %s", self.name, event["oldVersion"], event["newVersion"])
                 self._revoked[event["oldVersion"]] = self._strategies.pop(
-                    event["oldVersion"], Strategy(event["oldVersion"], self)
+                    event["oldVersion"], Strategy(event["oldVersion"], self, self._watch_events_forever)
                 )
-                self._strategies[event["newVersion"]] = Strategy(event["newVersion"], self)
+                self._strategies[event["newVersion"]] = Strategy(event["newVersion"], self, self._watch_events_forever)
             elif event.name == "StrategyReported":
                 self._reports.append(event)
 

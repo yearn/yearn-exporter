@@ -17,12 +17,13 @@ logger = logging.getLogger(__name__)
 
 
 class Registry(metaclass=Singleton):
-    def __init__(self):
+    def __init__(self, watch_events_forever=True):
         self.releases = {}  # api_version => template
         self._vaults = {}  # address -> Vault
         self._experiments = {}  # address => Vault
         self.governance = None
         self.tags = {}
+        self._watch_events_forever = watch_events_forever
         # track older registries to pull experiments
         self.registries = self.load_from_ens()
         # load registry state in the background
@@ -69,6 +70,8 @@ class Registry(metaclass=Singleton):
             if not self._done.is_set():
                 self._done.set()
                 logger.info("loaded v2 registry in %.3fs", time.time() - start)
+            if not self._watch_events_forever:
+                break
             time.sleep(300)
 
     def process_events(self, events):
@@ -109,6 +112,7 @@ class Registry(metaclass=Singleton):
             token=event["token"],
             api_version=event["api_version"],
             registry=self,
+            watch_events_forever=self._watch_events_forever,
         )
 
     def load_strategies(self):
