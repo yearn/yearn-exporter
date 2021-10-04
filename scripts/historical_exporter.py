@@ -124,11 +124,12 @@ def _has_data(ts):
 def _generate_snapshot_range(start, end, interval):
     for i in count():
         snapshot = start - i * interval
-        ts = snapshot.timestamp()
-        if _has_data(ts):
-            logger.info("data already present for snapshot %s, ts %d", snapshot, ts)
-            continue
         if snapshot < end:
             return
         else:
-            yield snapshot
+            ts = snapshot.timestamp()
+            if _has_data(ts):
+                logger.info("data already present for snapshot %s, ts %d", snapshot, ts)
+                continue
+            else:
+                yield snapshot
