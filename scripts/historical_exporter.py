@@ -47,7 +47,7 @@ def main():
 
 
 def _export_chunk(chunk):
-    yearn = Yearn(watch_events=False)
+    yearn = Yearn(watch_events_forever=False)
     for interval in chunk:
         _interval_export(yearn, interval)
 
