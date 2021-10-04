@@ -97,10 +97,6 @@ def _export_chunk(chunk):
 def _interval_export(yearn, snapshot):
     start_time = time.time()
     ts = snapshot.timestamp()
-    if _has_data(ts):
-        logger.info("data already present for snapshot %s, ts %d", snapshot, ts)
-        return
-
     block = closest_block_after_timestamp(ts)
     assert block is not None, "no block after timestamp found"
     yearn.export(block, ts)
@@ -128,6 +124,10 @@ def _has_data(ts):
 def _generate_snapshot_range(start, end, interval):
     for i in count():
         snapshot = start - i * interval
+        ts = snapshot.timestamp()
+        if _has_data(ts):
+            logger.info("data already present for snapshot %s, ts %d", snapshot, ts)
+            continue
         if snapshot < end:
             return
         else:
