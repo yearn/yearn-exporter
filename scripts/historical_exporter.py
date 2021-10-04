@@ -28,14 +28,52 @@ def main():
 
     interval_map = [
         {
-          'start': start.replace(hour=0, minute=0, second=0, microsecond=0),
-          'interval': timedelta(days=1),
+            'resolution': '1d',
+            'start': start.replace(hour=0, minute=0, second=0, microsecond=0),
+            'interval': timedelta(days=1),
         },
         {
-          'start': start.replace(minute=0, second=0, microsecond=0),
-          'interval': timedelta(hours=1),
+            'resolution': '1h',
+            'start': start.replace(minute=0, second=0, microsecond=0),
+            'interval': timedelta(hours=1),
+        },
+        {
+            'resolution': '30m',
+            'start': start.replace(minute=0, second=0, microsecond=0),
+            'interval': timedelta(minutes=30),
+        },
+        {
+            'resolution': '15m',
+            'start': start.replace(minute=0, second=0, microsecond=0),
+            'interval': timedelta(minutes=15),
+        },
+        {
+            'resolution': '5m',
+            'start': start.replace(minute=0, second=0, microsecond=0),
+            'interval': timedelta(minutes=5),
+        },
+        {
+            'resolution': '1m',
+            'start': start.replace(second=0, microsecond=0),
+            'interval': timedelta(minutes=1),
+        },
+        {
+            'resolution': '30s',
+            'start': start.replace(second=0, microsecond=0),
+            'interval': timedelta(seconds=30),
+        },
+        {
+            'resolution': '15s',
+            'start': start.replace(second=0, microsecond=0),
+            'interval': timedelta(seconds=15),
         },
     ]
+
+    resolutions = [item['resolution'] for item in interval_map]
+    # default resolution is hourly
+    resolution = os.environ.get("RESOLUTION", "1h")
+    if resolution not in resolutions:
+        resolution = "1h"
 
     for entry in interval_map:
         intervals = _generate_snapshot_range(entry["start"], end, entry["interval"])
@@ -44,6 +82,10 @@ def main():
         Parallel(n_jobs=POOL_SIZE, backend="multiprocessing", verbose=100)(
             delayed(_export_chunk)(chunk) for chunk in partition_all(CHUNK_SIZE, intervals)
         )
+
+        # if we reached the final resolution we're done
+        if entry['resolution'] == resolution:
+            break
 
 
 def _export_chunk(chunk):
