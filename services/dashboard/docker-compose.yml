@@ -31,7 +31,7 @@ services:
     restart: on-failure
 
   historical-exporter:
-    build: .
+    image: ghcr.io/yearn/yearn-exporter
     command: historical_exporter
     environment:
       - WEB3_INFURA_PROJECT_ID
