@@ -1,10 +1,10 @@
 from yearn.partners.snapshot import (
+    BentoboxWrapper,
     Partner,
-    Wrapper,
     WildcardWrapper,
+    Wrapper,
     YApeSwapFactoryWrapper,
 )
-
 
 partners = [
     Partner(
@@ -206,6 +206,48 @@ partners = [
         wrappers=[
             YApeSwapFactoryWrapper(
                 'yapeswap', '0x46aDc1C052Fafd590F56C42e379d7d16622835a2'
+            ),
+        ],
+    ),
+    Partner(
+        name='abracadabra',
+        treasury='0x5A7C5505f3CFB9a0D9A8493EC41bf27EE48c406D',
+        # brownie run abracadabra_wrappers
+        wrappers=[
+            BentoboxWrapper(
+                name='yvCurve-IronBank',
+                vault='0x27b7b1ad7288079A66d12350c828D3C00A6F07d7',
+                wrapper='0xEBfDe87310dc22404d918058FAa4D56DC4E93f0A',
+            ),
+            BentoboxWrapper(
+                name='yvCurve-stETH',
+                vault='0xdCD90C7f6324cfa40d7169ef80b12031770B4325',
+                wrapper='0x0BCa8ebcB26502b013493Bf8fE53aA2B1ED401C1',
+            ),
+            BentoboxWrapper(
+                name='yvUSDC',
+                vault='0x5f18C75AbDAe578b483E5F43f12a39cF75b973a9',
+                wrapper='0x6cbAFEE1FaB76cA5B5e144c43B3B50d42b7C8c8f',
+            ),
+            BentoboxWrapper(
+                name='yvUSDT',
+                vault='0x7Da96a3891Add058AdA2E826306D812C638D87a7',
+                wrapper='0x551a7CfF4de931F32893c928bBc3D25bF1Fc5147',
+            ),
+            BentoboxWrapper(
+                name='yvWETH',
+                vault='0xa258C4606Ca8206D8aA700cE2143D7db854D168c',
+                wrapper='0x920D9BD936Da4eAFb5E25c6bDC9f6CB528953F9f',
+            ),
+            BentoboxWrapper(
+                name='yvYFI',
+                vault='0xE14d13d8B3b85aF791b2AADD661cDBd5E6097Db1',
+                wrapper='0xFFbF4892822e0d552CFF317F65e1eE7b5D3d9aE6',
+            ),
+            BentoboxWrapper(
+                name='yvWETH',
+                vault='0xa9fE4601811213c340e850ea305481afF02f5b28',
+                wrapper='0x6Ff9061bB8f97d948942cEF376d98b51fA38B91f',
             ),
         ],
     ),
