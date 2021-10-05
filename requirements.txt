@@ -13,3 +13,6 @@ aiofiles>=0.6.0
 semantic-version>=2.8.5
 boto3==1.17.88
 ypricemagic>=0.2.4
+pandas>=1.2.3
+rich>=10.11.0
+matplotlib>=3.4.3
