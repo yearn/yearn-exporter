@@ -1,4 +1,4 @@
-FROM python:3.9.6-slim as builder
+FROM python:3.9.7-slim as builder
 
 RUN apt-get update && \
     apt-get install -y gcc
@@ -8,7 +8,7 @@ RUN mkdir -p /install
 RUN pip3 install --prefix=/install -r requirements.txt
 
 
-FROM python:3.9.6-slim
+FROM python:3.9.7-slim
 COPY --from=builder /install /usr/local
 
 RUN mkdir -p /app/yearn-exporter
