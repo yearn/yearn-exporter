@@ -251,4 +251,25 @@ partners = [
             ),
         ],
     ),
+    Partner(
+            name='chfry',
+            treasury='0x3400985be0b41Ce9778823E9618074115f830799',
+            wrappers=[
+                Wrapper(
+                    name='USDT yVault',
+                    vault='0x7da96a3891add058ada2e826306d812c638d87a7',
+                    wrapper='0x87e51ebF96eEB023eCc28536Ad0DBca83dEE0203',
+                ),
+                Wrapper(
+                    name='DAI yVault',
+                    vault='0xda816459f1ab5631232fe5e97a05bbbb94970c95',
+                    wrapper='0xd5F38f4F1e0c157dd1AE8Fd66EE2761A14eF7324',
+                ),
+                Wrapper(
+                    name='USDC yVault',
+                    vault='0x5f18c75abdae578b483e5f43f12a39cf75b973a9',
+                    wrapper='0x782bc9B1F11cDBa13aCb030cDab04f04FB667846',
+                ),
+            ],
+        ),
 ]
