@@ -272,4 +272,60 @@ partners = [
                 ),
             ],
         ),
+    Partner(
+            name='element',
+            treasury='0xF6094C3A380AD6161Fb8240F3043392A0E427CAC',
+            wrappers=[
+                Wrapper(
+                    name='yCrvLUSD Vault',
+                    vault='0x5fA5B62c8AF877CB37031e0a3B2f34A78e3C56A6',
+                    wrapper='0x53b1aEAa018da00b4F458Cc13d40eB3e8d1B85d6'
+                ),
+                Wrapper(
+                    name='yCrv3Crypto Vault',
+                    vault='0x3D980E50508CFd41a13837A60149927a11c03731',
+                    wrapper='0x97278Ce17D4860f8f49afC6E4c1C5AcBf2584cE5'
+                ),
+                Wrapper(
+                    name='yCrvSTETH Vault',
+                    vault='0xdCD90C7f6324cfa40d7169ef80b12031770B4325',
+                    wrapper='0xB3295e739380BD68de96802F7c4Dba4e54477206'
+                ),
+                Wrapper(
+                    name='yDAI Vault',
+                    vault='0xdA816459F1AB5631232FE5e97a05BBBb94970c95',
+                    wrapper='0x21BbC083362022aB8D7e42C18c47D484cc95C193'
+                ),
+                Wrapper(
+                    name='yUSDC Vault',
+                    vault='0x5f18C75AbDAe578b483E5F43f12a39cF75b973a9',
+                    wrapper='0xdEa04Ffc66ECD7bf35782C70255852B34102C3b0'
+                ),
+                Wrapper(
+                    name='yCrvTriCrypto Vault',
+                    vault='0xE537B5cc158EB71037D4125BDD7538421981E6AA',
+                    wrapper='0x4F424B26c7c659F198797Bd87282BF602F543521'
+                ),
+                Wrapper(
+                    name='yWBTC Vault',
+                    vault='0xA696a63cc78DfFa1a63E9E50587C197387FF6C7E',
+                    wrapper='0x8D9487b81e0fEdcd2D8Cab91885756742375CDC5'
+                ),
+                Wrapper(
+                    name='yCrvALUSD Vault',
+                    vault='0xA74d4B67b3368E83797a35382AFB776bAAE4F5C8',
+                    wrapper='0x3b5Dbd685C7ad66f8D3A82E2134320eD74DA4Af2'
+                ),
+                Wrapper(
+                    name='yCrvMIM Vault',
+                    vault='0x2DfB14E32e2F8156ec15a2c21c3A6c053af52Be8',
+                    wrapper='0x270f63b67FF1Ca770D60684366B009A566170AdD'
+                ),
+                Wrapper(
+                    name='yCrvEURs Vault',
+                    vault='0x25212Df29073FfFA7A67399AcEfC2dd75a831A1A',
+                    wrapper='0xb601610553071209443Fbae6E71b8dE4Ba78643b'
+                ),
+            ]
+    ),
 ]
