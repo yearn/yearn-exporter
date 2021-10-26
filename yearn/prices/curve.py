@@ -29,6 +29,15 @@ logger = logging.getLogger(__name__)
 
 WBTC = "0x2260FAC5E5542a773Aa44fBCfeDf7C193bc2C599"
 WETH = "0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2"
+BASIC_TOKENS = {
+    "0x6B175474E89094C44Da98b954EedeAC495271d0F",  # dai
+    "0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2",  # weth
+    "0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE",  # eth
+    "0x2260FAC5E5542a773Aa44fBCfeDf7C193bc2C599",  # wbtc
+    "0xD71eCFF9342A5Ced620049e616c5035F1dB98620",  # seur
+    "0x514910771AF9Ca656af840dff83E8264EcF986CA",  # link
+}
+
 
 class CurveRegistry(metaclass=Singleton):
     def __init__(self):
@@ -182,26 +191,35 @@ class CurveRegistry(metaclass=Singleton):
 
     @ttl_cache(maxsize=None, ttl=600)
     def get_price(self, token, block=None):
-        """
-        Get price of a Curve LP token from individual tokens.
-        Universal but can behave poorly for low liquidity tokens which mostly trade on Curve.
-        """
         pool = self.get_pool(token)
 
-        # TODO - This logic was added to handle the low liquidity of btc coins
-        # A different way should be found to handle low liquidity tokens rather than 
-        # assuming the price is the same as wbtc
-        underlying_coins = curve.registry.get_underlying_coins(pool)
-        if WBTC in underlying_coins and WETH not in underlying_coins:
-            virtual_price = contract(pool).get_virtual_price(block_identifier=block) / 1e18
-            return [virtual_price, WBTC]
+        # crypto pools can have different tokens, use slow method
+        if hasattr(contract(pool), 'price_oracle'):
+            tvl = self.get_tvl(pool, block=block)
+            if tvl is None:
+                return None
+            supply = contract(token).totalSupply(block_identifier=block) / 1e18
+            return tvl / supply
 
-        tvl = self.get_tvl(pool, block=block)
-        if tvl is None:
+        # approximate by using the most common base token we find
+        coins = self.get_underlying_coins(pool)
+        try:
+            coin = (set(coins) & BASIC_TOKENS).pop()
+        except KeyError:
+            coin = coins[0]
             return None
 
-        supply = contract(token).totalSupply(block_identifier=block) / 1e18
-        return tvl / supply
+        virtual_price = contract(pool).get_virtual_price(block_identifier=block) / 1e18
+        return virtual_price * magic.get_price(coin, block)
+
+    def get_underlying_coins(self, pool):
+        factory = self.get_factory(pool)
+        if factory:
+            coins = contract(factory).get_underlying_coins(pool)
+        else:
+            coins = self.registry.get_underlying_coins(pool)
+
+        return [coin for coin in coins if coin != ZERO_ADDRESS]
 
 
 curve = CurveRegistry()

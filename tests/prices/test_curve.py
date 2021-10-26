@@ -231,9 +231,6 @@ def test_curve_meta_gauge(pool):
 
 @pytest.mark.parametrize('name', pooldata)
 def test_curve_balances_from_registry(name):
-    if name in ['linkusd']:
-        pytest.xfail('no active market')
-
     pool = pooldata[name]['swap_address']
     tvl = curve.curve.get_tvl(pool)
     print(tvl)
@@ -242,9 +239,6 @@ def test_curve_balances_from_registry(name):
 
 @pytest.mark.parametrize('name', pooldata)
 def test_curve_lp_price_oracle(name):
-    if name in ['linkusd']:
-        pytest.xfail('no active market')
-
     token = pooldata[name]['lp_token_address']
     price = curve.curve.get_price(token)
     print(price)
