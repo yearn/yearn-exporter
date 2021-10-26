@@ -149,6 +149,21 @@ class CurveRegistry(metaclass=Singleton):
 
         return [coin for coin in coins if coin != ZERO_ADDRESS]
 
+    def get_underlying_coins(self, pool):
+        factory = self.get_factory(pool)
+        if factory:
+            factory = contract(factory)
+            # old factory doesn't revert for non-meta pools
+            if not hasattr(factory, 'is_meta') or factory.is_meta(pool):
+                coins = factory.get_underlying_coins(pool)
+            else:
+                coins = factory.get_coins(pool)
+        else:
+            coins = self.registry.get_underlying_coins(pool)
+
+        return [coin for coin in coins if coin != ZERO_ADDRESS]
+
+
     def get_balances(self, pool, block=None):
         """
         Get {token: balance} of liquidity in the pool.
@@ -211,15 +226,6 @@ class CurveRegistry(metaclass=Singleton):
 
         virtual_price = contract(pool).get_virtual_price(block_identifier=block) / 1e18
         return virtual_price * magic.get_price(coin, block)
-
-    def get_underlying_coins(self, pool):
-        factory = self.get_factory(pool)
-        if factory:
-            coins = contract(factory).get_underlying_coins(pool)
-        else:
-            coins = self.registry.get_underlying_coins(pool)
-
-        return [coin for coin in coins if coin != ZERO_ADDRESS]
 
 
 curve = CurveRegistry()
