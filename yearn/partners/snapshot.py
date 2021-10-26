@@ -7,6 +7,7 @@ from pathlib import Path
 from typing import List, Union
 
 import pandas as pd
+from tabulate import tabulate
 from brownie import Contract, multicall, web3
 from joblib.parallel import Parallel, delayed
 from rich import print
@@ -276,3 +277,10 @@ def process_partners(partners):
     path = Path('research/partners/payouts.csv')
     pd.concat(payouts).sort_values('timestamp').to_csv(path, index=False)
     print(f'saved to {path}')
+
+    # show summary by month and partner
+    df = pd.concat(payouts).sort_values('timestamp')
+    print(df.groupby('timestamp').sum().amount_usd)
+
+    df = df.groupby(['timestamp', 'partner']).sum().amount_usd.unstack()
+    print(df.iloc[-9:].T)  # last 9 months
