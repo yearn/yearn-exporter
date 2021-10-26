@@ -77,7 +77,7 @@ def get_price(token, block=None):
         logger.debug("peel %s %s", price, underlying)
         return price * get_price(underlying, block=block)
 
-    # a few more attempts to fetch a price a token
+    # a few more attempts to fetch a price
     if not price:
         price = uniswap.get_price(token, router="sushiswap", block=block)
         logger.debug("sushiswap -> %s", price)
@@ -92,6 +92,6 @@ def get_price(token, block=None):
         logger.debug("uniswap v1 -> %s", price)
     if not price:
         logger.error("failed to get price for %s", token)
-        raise PriceError(f'could not fetch price for {token}')
+        raise PriceError(f'could not fetch price for {token} at {block}')
 
     return price

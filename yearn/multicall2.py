@@ -92,6 +92,6 @@ def batch_call(calls):
 
     response = requests.post(web3.provider.endpoint_uri, json=jsonrpc_batch).json()
     return [
-        fn.decode_output(res['result'])
+        fn.decode_output(res['result']) if res['result'] != '0x' else None
         for res in sorted(response, key=itemgetter('id'))
     ]
