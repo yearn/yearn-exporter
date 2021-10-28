@@ -24,7 +24,7 @@ ROUTERS = {
         "spookyswap": "0xF491e7B69E4244ad4002BC14e878a34207E38c29"
     }
 }
-FACTORY_TO_ROUTER = {FACTORIES[chain.id][name]                     : name for name in FACTORIES[chain.id]}
+FACTORY_TO_ROUTER = {FACTORIES[chain.id][name]: name for name in FACTORIES[chain.id]}
 DEFAULT_ROUTER = {
     1: "uniswap",
     250: "spookyswap"
@@ -39,8 +39,7 @@ def get_price(token_in, token_out=usdc, router="default", block=None):
     """
     tokens = [Contract(str(token)) for token in [token_in, token_out]]
     amount_in = 10 ** tokens[0].decimals()
-    path = [token_in, token_out] if weth in (token_in, token_out) else [
-        token_in, weth, token_out]
+    path = [token_in, token_out] if weth in (token_in, token_out) else [token_in, weth, token_out]
     fees = 0.997 ** (len(path) - 1)
     if router == "default":
         router = DEFAULT_ROUTER[chain.id]
