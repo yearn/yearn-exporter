@@ -26,14 +26,22 @@ class Registry(metaclass=Singleton):
         self.governance = None
         self.tags = {}
         self._watch_events_forever = watch_events_forever
-        # track older registries to pull experiments
-        self.registries = self.load_from_ens()
+        self.registries = self.load_registry()
         # load registry state in the background
         self._done = threading.Event()
         self._thread = threading.Thread(target=self.watch_events, daemon=True)
         self._thread.start()
 
+    def load_registry(self):
+        if chain.id == 1:
+            return self.load_from_ens()
+        elif chain.id == 250:
+            return [Contract('0x727fe1759430df13655ddb0731dE0D0FDE929b04')]
+        else:
+            raise ValueError(f'chain {chain.id} not supported')
+
     def load_from_ens(self):
+        # track older registries to pull experiments
         resolver = Contract('0x4976fb03C32e5B8cfe2b6cCB31c09Ba78EBaBa41')
         topics = construct_event_topic_set(
             filter_by_name('AddressChanged', resolver.abi)[0],
@@ -56,7 +64,7 @@ class Registry(metaclass=Singleton):
 
     def __repr__(self) -> str:
         self._done.wait()
-        return f"<Registry releases={len(self.releases)} vaults={len(self.vaults)} experiments={len(self.experiments)}>"
+        return f"<Registry chain={chain.id} releases={len(self.releases)} vaults={len(self.vaults)} experiments={len(self.experiments)}>"
 
     def load_vaults(self):
         if not self._thread._started.is_set():
