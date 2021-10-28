@@ -3,10 +3,14 @@ from itertools import count, product
 from operator import itemgetter
 
 import requests
-from brownie import Contract, web3
+from brownie import Contract, chain, web3
 from eth_abi.exceptions import InsufficientDataBytes
 
-multicall2 = Contract('0x5BA1e12693Dc8F9c48aAD8770482f4739bEeD696')
+MULTICALL2 = {
+    1: '0x5BA1e12693Dc8F9c48aAD8770482f4739bEeD696',
+    250: '0xD98e3dBE5950Ca8Ce5a4b59630a5652110403E5c',
+}
+multicall2 = Contract(MULTICALL2[chain.id])
 
 
 def fetch_multicall(*calls, block=None):
