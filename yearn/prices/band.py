@@ -28,5 +28,5 @@ band = Band()
 def get_price(asset, block=None):
     try:
         return band.get_price(asset, block)
-    except (KeyError, ValueError):
+    except ValueError:
         return None
