@@ -11,7 +11,7 @@ SCALE = 10 ** 18
 class Band(metaclass=Singleton):
     @cached_property
     def oracle(self):
-        if chain.id == '250':
+        if chain.id == 250:
             return Contract('0x56E2898E0ceFF0D1222827759B56B28Ad812f92F')
         else:
             raise ValueError(f'chain {chain.id} not supported')
