@@ -17,8 +17,8 @@ class Band(metaclass=Singleton):
             raise ValueError(f'chain {chain.id} not supported')
 
     def get_price(self, asset, block=None):
-        symbolAsset = Contract(asset).symbol()
-        return self.oracle.getReferenceData(symbolAsset, 'USDC', block_identifier=block)[0] / SCALE
+        asset_symbol = Contract(asset).symbol()
+        return self.oracle.getReferenceData(asset_symbol, 'USDC', block_identifier=block)[0] / SCALE
 
 
 band = Band()
