@@ -2,19 +2,24 @@ import logging
 
 from cachetools.func import ttl_cache
 
-from yearn.prices import (
-    aave,
-    balancer,
-    chainlink,
-    compound,
-    constants,
-    curve,
-    fixed_forex,
-    synthetix,
-    uniswap,
-    uniswap_v3,
-    yearn,
-)
+from brownie import chain
+
+from yearn.prices import constants, uniswap
+
+if chain.id == 1:
+    from yearn.prices import (
+        aave,
+        balancer,
+        chainlink,
+        compound,
+        curve,
+        fixed_forex,
+        synthetix,
+        uniswap_v3,
+        yearn,
+    )
+elif chain.id == 250:
+    from yearn.prices import band
 
 logger = logging.getLogger(__name__)
 
@@ -27,15 +32,41 @@ class PriceError(Exception):
 def get_price(token, block=None):
     token = str(token)
     logger.debug("unwrapping %s", token)
-    price = None
 
-    if token in constants.STABLECOINS:
+    if token in constants.stablecoins:
         logger.debug("stablecoin -> %s", 1)
         return 1
 
     if token in constants.ONE_TO_ONE_MAPPING:
         token = constants.ONE_TO_ONE_MAPPING[token]
         logger.debug("one to one -> %s", )
+
+    if chain.id == 1:
+        return get_price_eth(token, block)
+    elif chain.id == 250:
+        return get_price_ftm(token, block)
+
+
+def get_price_ftm(token, block=None):
+    price = None
+
+    if not price:
+        price = band.get_price(token, block=block)
+        logger.debug("band -> %s", price)
+
+    if not price:
+        price = uniswap.get_price(token, router="default", block=block)
+        logger.debug("uniswap v2 -> %s", price)
+
+    if not price:
+        logger.error("failed to get price for %s", token)
+        raise PriceError(f'could not fetch price for {token} at {block}')
+
+    return price
+
+
+def get_price_eth(token, block=None):
+    price = None
 
     if token == "0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE":
         token = constants.weth
