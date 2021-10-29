@@ -31,7 +31,7 @@ DEFAULT_ROUTER = {
 }
 
 
-@ ttl_cache(ttl=600)
+@ttl_cache(ttl=600)
 def get_price(token_in, token_out=usdc, router="default", block=None):
     """
     Calculate a price based on Uniswap Router quote for selling one `token_in`.
