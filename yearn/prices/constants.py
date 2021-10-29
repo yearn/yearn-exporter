@@ -1,25 +1,25 @@
 from brownie import chain
 
 
-WETH = {
+__WETH = {
     1: "0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2",
     250: "0x21be370D5312f44cB42ce377BC9b8a0cEF1A4C83",
 }
 
 
-USDC = {
+__USDC = {
     1: "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48",
     250: "0x04068DA6C83AFCFA0e13ba15A6696662335D5B75",
 }
 
 
-DAI = {
+__DAI = {
     1: "0x6B175474E89094C44Da98b954EedeAC495271d0F",
     250: "0x8D11eC38a3EB5E956B052f67Da8Bdc9bef8Abf3E",
 }
 
 
-STABLECOINS = {
+__STABLECOINS = {
     1: {
         "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48": "usdc",
         "0x0000000000085d4780B73119b644AE5ecd22b376": "tusd",
@@ -44,7 +44,7 @@ STABLECOINS = {
 }
 
 
-weth = WETH[chain.id]
-usdc = USDC[chain.id]
-dai = DAI[chain.id]
-stablecoins = STABLECOINS[chain.id]
+weth = __WETH[chain.id]
+usdc = __USDC[chain.id]
+dai = __DAI[chain.id]
+stablecoins = __STABLECOINS[chain.id]
