@@ -1,23 +1,38 @@
-from brownie import Contract, interface
+from brownie import Contract, interface, chain
 from brownie.exceptions import ContractNotFound
 from cachetools.func import ttl_cache
 from yearn.cache import memory
 from yearn.multicall2 import fetch_multicall
 from yearn.prices.constants import weth, usdc
 
+
 FACTORIES = {
-    "uniswap": "0x5C69bEe701ef814a2B6a3EDD4B1652CB9cc5aA6f",
-    "sushiswap": "0xC0AEe478e3658e2610c5F7A4A2E1777cE9e4f2Ac",
+    1: {
+        "uniswap": "0x5C69bEe701ef814a2B6a3EDD4B1652CB9cc5aA6f",
+        "sushiswap": "0xC0AEe478e3658e2610c5F7A4A2E1777cE9e4f2Ac",
+    },
+    250: {
+        "spookyswap": "0x152eE697f2E276fA89E96742e9bB9aB1F2E61bE3"
+    }
 }
 ROUTERS = {
-    "uniswap": "0x7a250d5630B4cF539739dF2C5dAcb4c659F2488D",
-    "sushiswap": "0xD9E1CE17F2641F24AE83637AB66A2CCA9C378B9F",
+    1: {
+        "uniswap": "0x7a250d5630B4cF539739dF2C5dAcb4c659F2488D",
+        "sushiswap": "0xD9E1CE17F2641F24AE83637AB66A2CCA9C378B9F",
+    },
+    250: {
+        "spookyswap": "0xF491e7B69E4244ad4002BC14e878a34207E38c29"
+    }
 }
-FACTORY_TO_ROUTER = {FACTORIES[name]: name for name in FACTORIES}
+FACTORY_TO_ROUTER = {FACTORIES[chain.id][name]: name for name in FACTORIES[chain.id]}
+DEFAULT_ROUTER = {
+    1: "uniswap",
+    250: "spookyswap"
+}
 
 
 @ttl_cache(ttl=600)
-def get_price(token_in, token_out=usdc, router="uniswap", block=None):
+def get_price(token_in, token_out=usdc, router="default", block=None):
     """
     Calculate a price based on Uniswap Router quote for selling one `token_in`.
     Always uses intermediate WETH pair.
@@ -26,8 +41,10 @@ def get_price(token_in, token_out=usdc, router="uniswap", block=None):
     amount_in = 10 ** tokens[0].decimals()
     path = [token_in, token_out] if weth in (token_in, token_out) else [token_in, weth, token_out]
     fees = 0.997 ** (len(path) - 1)
-    if router in ROUTERS:
-        router = interface.UniswapRouter(ROUTERS[router])
+    if router == "default":
+        router = DEFAULT_ROUTER[chain.id]
+    if router in ROUTERS[chain.id]:
+        router = interface.UniswapRouter(ROUTERS[chain.id][router])
     try:
         quote = router.getAmountsOut(amount_in, path, block_identifier=block)
         amount_out = quote[-1] / 10 ** tokens[1].decimals()
@@ -38,6 +55,9 @@ def get_price(token_in, token_out=usdc, router="uniswap", block=None):
 
 @ttl_cache(ttl=600)
 def get_price_v1(asset, block=None):
+    if chain.id != 1:
+        return None
+
     factory = Contract("0xc0a47dFe034B400B47bDaD5FecDa2621de6c4d95")
     try:
         asset = Contract(asset)
