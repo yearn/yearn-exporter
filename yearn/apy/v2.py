@@ -30,13 +30,13 @@ def closest(haystack, needle):
 def simple(vault, samples: ApySamples) -> Apy:
     harvests = sorted([harvest for strategy in vault.strategies for harvest in strategy.harvests])
 
-    if len(harvests) < 4:
-        raise ApyError("v2:harvests", "harvests are < 4")
+    if len(harvests) < 2:
+        raise ApyError("v2:harvests", "harvests are < 2")
 
     now = closest(harvests, samples.now)
     week_ago = closest(harvests, samples.week_ago)
     month_ago = closest(harvests, samples.month_ago)
-    inception_block = harvests[2]
+    inception_block = harvests[:2][-1]
 
     contract = vault.vault
     price_per_share = contract.pricePerShare
@@ -105,10 +105,10 @@ def simple(vault, samples: ApySamples) -> Apy:
 def average(vault, samples: ApySamples) -> Apy:
     harvests = sorted([harvest for strategy in vault.strategies for harvest in strategy.harvests])
 
-    if len(harvests) < 4:
-        raise ApyError("v2:harvests", "harvests are < 4")
+    if len(harvests) < 2:
+        raise ApyError("v2:harvests", "harvests are < 2")
 
-    inception_block = harvests[2]
+    inception_block = harvests[:2][-1]
 
     contract = vault.vault
     price_per_share = contract.pricePerShare
