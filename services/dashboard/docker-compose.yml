@@ -7,7 +7,7 @@ volumes:
     brownie: {}
     cache: {}
     victoria_metrics_data: {}
-    postgresql_data: {}
+    postgres_data: {}
 
 networks:
   yearn-exporter:
@@ -150,6 +150,24 @@ services:
       - yearn-exporter
     restart: on-failure
 
+  transactions-exporter:
+    build: .
+    command: transactions_exporter
+    environment:
+      - POSTGRES_PASSWORD=yearn-exporter
+      - POSTGRES_USER=postgres
+      - POSTGRES_DB=postgres
+    volumes:
+      - solidity_compilers:/root/.solcx
+      - vyper_compilers:/root/.vvm
+      - brownie:/root/.brownie
+      - cache:/app/yearn-exporter/cache
+    networks:
+      - yearn-exporter
+    restart: on-failure
+    depends_on:
+      - postgres
+
   vmagent:
     image: victoriametrics/vmagent
     volumes:
@@ -182,6 +200,7 @@ services:
     image: grafana/grafana
     depends_on:
       - victoria-metrics
+      - postgres
     ports:
       - 3000:3000
     environment:
@@ -223,14 +242,16 @@ services:
       - '/:/host:ro,rslave'
     restart: always
 
-  postgresql:
+  postgres:
     image: postgres
     ports:
       - 5432:5432
     environment:
       - POSTGRES_PASSWORD=yearn-exporter
+      - POSTGRES_USER=postgres
+      - POSTGRES_DB=postgres
     networks:
       - yearn-exporter
     volumes:
-      - postgresql_data
+      - postgres_data:/var/lib/postgresql/data
     restart: always
