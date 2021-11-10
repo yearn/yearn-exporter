@@ -105,7 +105,7 @@ def simple(vault, samples: ApySamples) -> Apy:
             token_price = 0
             if gauge_reward_token == RKP3R_REWARDS:
                 rKP3R_contract = Contract.from_explorer(gauge_reward_token)
-                discount = rKP3R_contract.discount()
+                discount = rKP3R_contract.discount(block=block)
                 token_price = get_price(KP3R, block=block) * discount / 100
             else:
                 token_price = get_price(gauge_reward_token, block=block)
