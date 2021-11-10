@@ -1,22 +1,22 @@
-from functools import cached_property
+import logging
+import os
 import threading
 import time
-import logging
 from collections import Counter
 from dataclasses import dataclass
-from eth_utils import encode_hex, event_abi_to_log_topic
+from functools import cached_property
 from typing import Optional
-from yearn.common import Tvl
 
-from brownie import ZERO_ADDRESS, interface, chain
+from brownie import ZERO_ADDRESS, chain, interface
 from brownie.network.contract import InterfaceContainer
-
-from yearn import constants, curve, apy
+from eth_utils import encode_hex, event_abi_to_log_topic
+from yearn import apy, constants, curve
+from yearn.apy.common import ApySamples
+from yearn.common import Tvl
+from yearn.events import create_filter, decode_logs
 from yearn.multicall2 import fetch_multicall
 from yearn.prices import magic
 from yearn.prices.curve import curve as curve_oracle
-from yearn.apy.common import ApySamples
-from yearn.events import create_filter, decode_logs
 from yearn.utils import contract
 
 logger = logging.getLogger(__name__)
