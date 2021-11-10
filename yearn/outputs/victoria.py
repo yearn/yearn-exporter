@@ -5,6 +5,7 @@ import math
 import json
 from typing import List, Dict
 from brownie import Contract
+from yearn.treasury.buckets import get_token_bucket
 
 mapping = {
     "earn": {
@@ -157,8 +158,8 @@ def export_treasury(timestamp, data):
                 symbol = 'ETH' if token == 'ETH' else Contract(token).symbol()
                 for key, value in bals.items():
                     if value != 0:
-                        label_names = ['param','wallet','token_address','token']
-                        label_values = [key,wallet,token,symbol]
+                        label_names = ['param','wallet','token_address','token','bucket']
+                        label_values = [key,wallet,token,symbol,get_token_bucket(token)]
                         item = _build_item(f"treasury_{section}",label_names,label_values,value,timestamp)
                         metrics_to_export.append(item)
     
