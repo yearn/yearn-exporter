@@ -118,3 +118,9 @@ def yfi():
     address = "0xE14d13d8B3b85aF791b2AADD661cDBd5E6097Db1"
     vault = VaultV2.from_address(address)
     print(json.dumps(dataclasses.asdict(vault.apy(samples)), indent=2))
+
+def ibeur():
+    samples = get_samples()
+    address = "0x67e019bfbd5a67207755D04467D6A70c0B75bF60"
+    vault = VaultV2.from_address(address)
+    print(json.dumps(dataclasses.asdict(vault.apy(samples)), indent=2))

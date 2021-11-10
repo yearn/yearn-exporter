@@ -1,7 +1,7 @@
 import logging
 from time import time
 
-from brownie import Contract, ZERO_ADDRESS
+from brownie import Contract, interface, ZERO_ADDRESS
 from semantic_version import Version
 from yearn.utils import get_block_timestamp
 
@@ -104,7 +104,7 @@ def simple(vault, samples: ApySamples) -> Apy:
             total_supply = gauge.totalSupply()
             token_price = 0
             if gauge_reward_token == RKP3R_REWARDS:
-                rKP3R_contract = Contract.from_explorer(gauge_reward_token)
+                rKP3R_contract = interface.rKP3R(gauge_reward_token)
                 discount = rKP3R_contract.discount(block_identifier=block)
                 token_price = get_price(KP3R, block=block) * discount / 100
             else:
