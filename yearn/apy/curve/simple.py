@@ -1,7 +1,7 @@
 import logging
 from time import time
 
-from brownie import Contract, ZERO_ADDRESS
+from brownie import Contract, interface, ZERO_ADDRESS
 from semantic_version import Version
 from yearn.utils import get_block_timestamp
 
@@ -30,6 +30,7 @@ CVX = Contract("0x4e3FBD56CD56c3e72c1403e103b45Db9da5B9D2B")
 YVECRV_VOTER = "0xF147b8125d2ef93FB6965Db97D6746952a133934"
 CONVEX_VOTER = "0x989AEb4d175e16225E39E87d0D97A3360524AD80"
 RKP3R_REWARDS = "0xEdB67Ee1B171c4eC66E6c10EC43EDBbA20FaE8e9"
+KP3R = "0x1cEB5cB57C4D4E2b2433641b95Dd330A33185A44"
 
 COMPOUNDING = 52
 MAX_BOOST = 2.5
@@ -92,16 +93,22 @@ def simple(vault, samples: ApySamples) -> Apy:
             reward_apr = rewards(reward_address, pool_price, base_asset_price, block=block)
     elif hasattr(gauge, "reward_data"): # this is how new gauges, starting with MIM, show rewards
         # get our token
-        gauge_reward_token = gauge.reward_tokens(0) # TODO: consider adding for loop with [gauge.reward_tokens(i) for i in range(gauge.reward_count())] for multiple rewards tokens
-        if gauge_reward_token in [RKP3R_REWARDS, ZERO_ADDRESS]:
-            print("\nrKP3R gauge or no reward token")
+        # TODO: consider adding for loop with [gauge.reward_tokens(i) for i in range(gauge.reward_count())] for multiple rewards tokens
+        gauge_reward_token = gauge.reward_tokens(0)
+        if gauge_reward_token in [ZERO_ADDRESS]:
+            print("no reward token")
         else:
             reward_data = gauge.reward_data(gauge_reward_token)
             rate = reward_data['rate']
             period_finish = reward_data['period_finish']
-            token_contract = Contract(gauge_reward_token)
             total_supply = gauge.totalSupply()
-            token_price = get_price(gauge_reward_token, block=block)
+            token_price = 0
+            if gauge_reward_token == RKP3R_REWARDS:
+                rKP3R_contract = interface.rKP3R(gauge_reward_token)
+                discount = rKP3R_contract.discount(block_identifier=block)
+                token_price = get_price(KP3R, block=block) * discount / 100
+            else:
+                token_price = get_price(gauge_reward_token, block=block)
             current_time = time() if block is None else get_block_timestamp(block)
             if period_finish < current_time:
                 reward_apr = 0
