@@ -9,22 +9,22 @@ mapping = {
     "earn": {
         "metric": "iearn",
         "labels": ["vault", "param", "address", "version"],
-        "agg_stats": ["total users"]
+        "agg_stats": ["total wallets"]
     },
     "ib": {
         "metric": "ironbank",
         "labels": ["vault", "param", "address", "version"],
-        "agg_stats": ["total users"]
+        "agg_stats": ["total wallets"]
     },
     "v1": {
         "metric": "yearn",
         "labels": ["vault", "param", "address", "version"],
-        "agg_stats": ["total users"]
+        "agg_stats": ["total wallets"]
     },
     "v2": {
         "metric": "yearn_vault",
         "labels": ["vault", "param", "address", "version", "experimental"],
-        "agg_stats": ["total users"]
+        "agg_stats": ["total wallets"]
     },
     "v2_strategy": {
         "metric": "yearn_strategy",
@@ -33,7 +33,7 @@ mapping = {
     "special": {
         "metric": "yearn_vault",
         "labels": ["vault", "param", "address", "version", "experimental"],
-        "agg_stats": ["total users"]
+        "agg_stats": ["total wallets"]
     }
 }
 
@@ -42,16 +42,19 @@ simple_products = ["v1", "earn", "ib", "special"]
 def export(timestamp, data):
     metrics_to_export = []
     for key, value in data['agg_stats'].items():
-        if key != 'user balances usd':
-            label_names = ['param']
-            label_values = [key]
-            item = _build_item("aggregate", label_names, label_values, value, timestamp)
-            print(item)
-            metrics_to_export.append(item)
+        if key == 'wallet balances usd':
+            for wallet, usd_bal in value.items():
+                label_names = ["param","wallet"]
+                label_values = ["balance usd",wallet]
+                item = _build_item("aggregate", label_names, label_values, usd_bal, timestamp)
+                metrics_to_export.append(item)
+            continue
+        label_names = ['param']
+        label_values = [key]
+        item = _build_item("aggregate", label_names, label_values, value, timestamp)
+        metrics_to_export.append(item)
 
-    # for testing
-    _post(metrics_to_export)
-    metrics_to_export = []
+    # above this line works
 
     for product in simple_products:
         metric = mapping[product]["metric"]
@@ -60,8 +63,14 @@ def export(timestamp, data):
                 label_names = ['param']
                 label_values = [k]
                 item = _build_item(metric, label_names, label_values, v, timestamp)
-                print(item)
                 metrics_to_export.append(item)
+                continue
+            elif key == "wallet balances usd":
+                for wallet, usd_bal in value.items():
+                    label_names = ["param","wallet"]
+                    label_values = ["balance usd",wallet]
+                    item = _build_item(metric, label_names, label_values, usd_bal, timestamp)
+                    metrics_to_export.append(item)
             else:
                 vault, params = k, v
                 for key, value in params.items():
@@ -70,14 +79,13 @@ def export(timestamp, data):
                     
                     has_experiments = product == "special"
 
-                    if key == "user balances":
-                        for user, bals in value.items():
-                            for denom, bal in bals.items():
-                                label_values = [user] + _get_label_values(params, [vault, denom], has_experiments)
-                                label_names = ["user"] + mapping[product]["labels"]
-                                item = _build_item(metric, label_names, label_values, bal, timestamp)
-                                print(item)
-                                metrics_to_export.append(item)
+                if k == "wallet balances":
+                    for wallet, bals in v.items():
+                        for denom, bal in bals.items():
+                            label_values = [wallet] + _get_label_values(params, [vault, denom], has_experiments)
+                            label_names = ["wallet"] + mapping[product]["labels"]
+                            item = _build_item(metric, label_names, label_values, bal, timestamp)
+                            metrics_to_export.append(item)
                     else:
                         label_values = _get_label_values(params, [vault, key], has_experiments)
                         label_names = mapping[product]["labels"]
@@ -86,30 +94,34 @@ def export(timestamp, data):
                         metrics_to_export.append(item)
 
     # for testing
-    _post(metrics_to_export)
-    metrics_to_export = []
+    #_post(metrics_to_export)
+    #metrics_to_export = []
 
     for k, v in data["v2"].items():
         metric = mapping["v2"]["metric"]
         if k in mapping["v2"]["agg_stats"]:
             label_names = ['param']
-            label_values = [k]
-            item = _build_item(metric, label_names, label_values, v, timestamp)
-            print(item)
+            label_values = [key]
+            item = _build_item(metric, label_names, label_values, value, timestamp)
             metrics_to_export.append(item)
+        elif key == "wallet balances usd":
+            for wallet, usd_bal in value.items():
+                label_names = ["param","wallet"]
+                label_values = ["balance usd",wallet]
+                item = _build_item(metric, label_names, label_values, usd_bal, timestamp)
+                metrics_to_export.append(item)
         else: 
             vault, params = k, v
             for key, value in params.items():
                 if key in ["address", "version", "experimental", "strategies"] or value is None or type(value) == dict:
                     continue
 
-                if key == "user balances":
-                    for user, bals in value.items():
+                elif k == "wallet balances":
+                    for wallet, bals in v.items():
                         for denom, bal in bals.items():
-                            label_values = [user] + _get_label_values(params, [vault, denom], has_experiments)
-                            label_names = ["user"] + mapping[product]["labels"]
+                            label_values = [wallet] + _get_label_values(params, [vault, denom], has_experiments)
+                            label_names = ["wallet"] + mapping[product]["labels"]
                             item = _build_item(metric, label_names, label_values, bal, timestamp)
-                            print(item)
                             metrics_to_export.append(item)
                 else:
                     label_values = _get_label_values(params, [vault, key], True)

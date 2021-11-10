@@ -104,12 +104,12 @@ class VaultV1:
             if event.name == "Transfer":
                 self._transfers.append(event)
 
-    def users(self, block=None):
+    def wallets(self, block=None):
         self.load_transfers()
         transfers = [event for event in self._transfers if event.block_number <= block]
         return set(receiver for sender, receiver, value in transfers if receiver != ZERO_ADDRESS)
 
-    def user_balances(self, block=None):
+    def wallet_balances(self, block=None):
         self.load_transfers()
         balances = Counter()
         for event in [transfer for transfer in self._transfers if transfer.block_number <= block]:
@@ -186,13 +186,13 @@ class VaultV1:
 
         info["tvl"] = info["vault balance"] * info["token price"]
 
-        balances = self.user_balances(block=block)
-        info["total users"] = len(set(user for user, bal in balances.items()))
-        info["user balances"] = {
-                            user: {
+        balances = self.wallet_balances(block=block)
+        info["total wallets"] = len(set(wallet for wallet, bal in balances.items()))
+        info["wallet balances"] = {
+                            wallet: {
                                 "token balance": bal / self.scale,
                                 "usd balance": bal / self.scale * info["token price"]
-                                } for user, bal in balances.items()
+                                } for wallet, bal in balances.items()
                             }
 
         return info
