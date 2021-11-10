@@ -11,7 +11,7 @@ from yearn.prices import magic
 from yearn.v1.registry import Registry as RegistryV1
 from yearn.v2.registry import Registry as RegistryV2
 
-CACHE_PATH = './reports/transactions.csv'
+CACHE_PATH = './cache/transactions.pickle'
 CHUNK_SIZE_BLOCKS = 25000
 
 registryV1 = RegistryV1()
@@ -19,7 +19,7 @@ registryV2 = RegistryV2()
 
 def _read_cache():
     try:
-        return pd.read_csv(CACHE_PATH)
+        return pd.read_pickle(CACHE_PATH)
     except FileNotFoundError:
         return None
 
@@ -44,7 +44,7 @@ def _process_event(event, vault, vault_symbol, vault_decimals) -> dict:
         'timestamp': chain[event.block_number].timestamp,
         'hash': event.transaction_hash.hex(),
         'log_index': event.log_index,
-        'vault': vault,
+        'vault': vault.address,
         'symbol': vault_symbol,
         'type': _event_type(event, vault.address),
         'from': event['from'],
@@ -95,6 +95,6 @@ def main():
         if cache is not None:
             df = cache.append(df)
         df = df.sort_values(by='block')
-        df.to_csv(CACHE_PATH, index=False)
+        df.to_pickle(CACHE_PATH)
         print(f'all vault transfers exported to {CACHE_PATH}')
 
