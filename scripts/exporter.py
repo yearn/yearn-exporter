@@ -10,7 +10,7 @@ logger = logging.getLogger('yearn.exporter')
 sleep_interval = int(os.environ.get('SLEEP_SECONDS', '0'))
 
 def main():
-    yearn = Yearn()
+    yearn = Yearn(load_transfers=True)
     for block in chain.new_blocks(height_buffer=1):
         start_time = time.time()
         yearn.export(block.number, block.timestamp)
