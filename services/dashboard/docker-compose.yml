@@ -89,6 +89,48 @@ services:
       - yearn-exporter
     restart: on-failure
 
+  treasury-exporter:
+    build: .
+    command: treasury_exporter
+    environment:
+      - WEB3_INFURA_PROJECT_ID
+      - WEB3_PROVIDER
+      - ETHERSCAN_TOKEN
+      - EXPLORER
+      - SLEEP_SECONDS
+      - POOL_SIZE
+      - CHUNK_SIZE
+      - RESOLUTION
+    volumes:
+      - solidity_compilers:/root/.solcx
+      - vyper_compilers:/root/.vvm
+      - brownie:/root/.brownie
+      - cache:/app/yearn-exporter/cache
+    networks:
+      - yearn-exporter
+    restart: on-failure
+
+  historical-treasury-exporter:
+    build: .
+    command: historical_treasury_exporter
+    environment:
+      - WEB3_INFURA_PROJECT_ID
+      - WEB3_PROVIDER
+      - ETHERSCAN_TOKEN
+      - EXPLORER
+      - SLEEP_SECONDS
+      - POOL_SIZE
+      - CHUNK_SIZE
+      - RESOLUTION
+    volumes:
+      - solidity_compilers:/root/.solcx
+      - vyper_compilers:/root/.vvm
+      - brownie:/root/.brownie
+      - cache:/app/yearn-exporter/cache
+    networks:
+      - yearn-exporter
+    restart: on-failure
+
   vmagent:
     image: victoriametrics/vmagent
     volumes:
