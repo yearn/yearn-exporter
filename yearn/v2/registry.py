@@ -1,17 +1,18 @@
 import logging
+import os
 import threading
 import time
+from collections import Counter
 from typing import List
 
 from brownie import Contract, chain, web3
-from collections import Counter
 from joblib import Parallel, delayed
 from web3._utils.abi import filter_by_name
 from web3._utils.events import construct_event_topic_set
 from yearn.events import create_filter, decode_logs, get_logs_asap
 from yearn.multicall2 import fetch_multicall
 from yearn.prices import magic
-from yearn.utils import contract_creation_block, Singleton
+from yearn.utils import Singleton, contract_creation_block
 from yearn.v2.vaults import Vault
 
 logger = logging.getLogger(__name__)
@@ -133,15 +134,16 @@ class Registry(metaclass=Singleton):
         vaults = self.active_vaults_at(block)
         results = Parallel(8, "threading")(delayed(vault.describe)(block=block) for vault in vaults)
         results_dict = {vault.name: result for vault, result in zip(vaults, results)}
-        wallet_balances = Counter()
-        for vault in results:
-            for wallet, data in vault['wallet balances'].items():
-                wallet_balances[wallet] += data["usd balance"]
-        agg_stats = {
-            "total wallets": len(wallet_balances),
-            "wallet balances usd": wallet_balances,
-        }
-        results_dict.update(agg_stats)
+        if not os.environ.get("SKIP_WALLET_STATS", False):
+            wallet_balances = Counter()
+            for vault in results:
+                for wallet, data in vault['wallet balances'].items():
+                    wallet_balances[wallet] += data["usd balance"]
+            agg_stats = {
+                "total wallets": len(wallet_balances),
+                "wallet balances usd": wallet_balances,
+            }
+            results_dict.update(agg_stats)
         return results_dict
 
     def total_value_at(self, block=None):

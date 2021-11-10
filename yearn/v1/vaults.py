@@ -186,15 +186,15 @@ class VaultV1:
 
         info["tvl"] = info["vault balance"] * info["token price"]
 
-        balances = self.wallet_balances(block=block)
-        info["total wallets"] = len(set(wallet for wallet, bal in balances.items()))
-        info["wallet balances"] = {
-                            wallet: {
-                                "token balance": bal / self.scale,
-                                "usd balance": bal / self.scale * info["token price"]
-                                } for wallet, bal in balances.items()
-                            }
-
+        if not os.environ.get("SKIP_WALLET_STATS", False):
+            balances = self.wallet_balances(block=block)
+            info["total wallets"] = len(set(wallet for wallet, bal in balances.items()))
+            info["wallet balances"] = {
+                                wallet: {
+                                    "token balance": bal / self.scale,
+                                    "usd balance": bal / self.scale * info["token price"]
+                                    } for wallet, bal in balances.items()
+                                }
         return info
 
     def apy(self, samples: ApySamples):
