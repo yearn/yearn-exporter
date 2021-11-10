@@ -47,3 +47,6 @@ clean-volumes: dashboards-clean-volumes
 
 rebuild: down build up
 scratch: clean-volumes build up
+
+logs:
+	$(dashboards_command) logs -f -t
