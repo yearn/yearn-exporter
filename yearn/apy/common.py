@@ -56,11 +56,11 @@ class ApyError(ValueError):
 
 
 def calculate_roi(after: SharePricePoint, before: SharePricePoint) -> float:
-    delta = (after.price - before.price) / (before.price or 1)
+    pps_delta = (after.price - before.price) / (before.price or 1)
     block_delta = after.block - before.block
-    derivative = delta / block_delta
-    annualized = derivative * BLOCK_PER_DAY * 365
-    return annualized
+    days = block_delta / BLOCK_PER_DAY
+    annualized_roi = (1 + pps_delta) ** (365 / days) - 1
+    return annualized_roi
 
 
 def get_samples(now_time: Optional[datetime] = None) -> ApySamples:
