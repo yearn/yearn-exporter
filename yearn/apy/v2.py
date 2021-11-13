@@ -120,12 +120,12 @@ def average(vault, samples: ApySamples) -> Apy:
     if samples.week_ago > inception_block:
         week_ago_price = price_per_share(block_identifier=samples.week_ago)
     else:
-        week_ago_price = now_price
+        week_ago_price = inception_price
 
     if samples.month_ago > inception_block:
         month_ago_price = price_per_share(block_identifier=samples.month_ago)
     else:
-        month_ago_price = week_ago_price
+        month_ago_price = inception_price
 
     now_point = SharePricePoint(samples.now, now_price)
     week_ago_point = SharePricePoint(samples.week_ago, week_ago_price)
@@ -135,6 +135,8 @@ def average(vault, samples: ApySamples) -> Apy:
     week_ago_apy = calculate_roi(now_point, week_ago_point)
     month_ago_apy = calculate_roi(now_point, month_ago_point)
     inception_apy = calculate_roi(now_point, inception_point)
+    
+    # we should look at a vault's harvests, age, etc to determine whether to show new APY or not
 
     # use the first non-zero apy, ordered by precedence
     apys = [week_ago_apy, month_ago_apy]
