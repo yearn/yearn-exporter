@@ -53,13 +53,17 @@ def simple(vault, samples: ApySamples) -> Apy:
     inception_apy = calculate_roi(now_point, inception_point)
 
     # use the first non-zero apy, ordered by precedence
-    apys = [week_ago_apy, month_ago_apy, inception_apy] 
+    apys = [week_ago_apy, month_ago_apy, inception_apy]
     net_apy = next((value for value in apys if value != 0), 0)
 
     strategy = vault.strategy
     withdrawal = strategy.withdrawalFee() if hasattr(strategy, "withdrawalFee") else 0
-    strategist_performance = strategy.performanceFee() if hasattr(strategy, "performanceFee") else 0
-    strategist_reward = strategy.strategistReward() if hasattr(strategy, "strategistReward") else 0
+    strategist_performance = (
+        strategy.performanceFee() if hasattr(strategy, "performanceFee") else 0
+    )
+    strategist_reward = (
+        strategy.strategistReward() if hasattr(strategy, "strategistReward") else 0
+    )
     treasury = strategy.treasuryFee() if hasattr(strategy, "treasuryFee") else 0
 
     performance = (strategist_reward + strategist_performance + treasury) / 1e4
@@ -69,11 +73,15 @@ def simple(vault, samples: ApySamples) -> Apy:
 
     # calculate our APR after fees
     # if net_apy is negative no fees are charged
-    apr_after_fees = compounding * ((net_apy + 1) ** (1 / compounding)) - compounding if net_apy > 0 else net_apy
+    apr_after_fees = (
+        compounding * ((net_apy + 1) ** (1 / compounding)) - compounding
+        if net_apy > 0
+        else net_apy
+    )
 
     # calculate our pre-fee APR
     gross_apr = apr_after_fees / (1 - performance)
-    
+
     points = ApyPoints(week_ago_apy, month_ago_apy, inception_apy)
     fees = ApyFees(performance=performance, withdrawal=withdrawal)
     return Apy("v1:simple", gross_apr, net_apy, fees, points=points)

@@ -13,6 +13,7 @@ from yearn.apy.common import (
     calculate_roi,
 )
 
+
 def closest(haystack, needle):
     pos = bisect_left(sorted(haystack), needle)
     if pos == 0:
@@ -28,13 +29,15 @@ def closest(haystack, needle):
 
 
 def simple(vault, samples: ApySamples) -> Apy:
-    harvests = sorted([harvest for strategy in vault.strategies for harvest in strategy.harvests])
+    harvests = sorted(
+        [harvest for strategy in vault.strategies for harvest in strategy.harvests]
+    )
 
     contract = vault.vault
     price_per_share = contract.pricePerShare
     now_price = price_per_share(block_identifier=samples.now)
     inception_price = 10 ** contract.decimals()
-    
+
     if len(harvests) < 2 or now_price == inception_price:
         raise ApyError("v2:harvests", "harvests are < 2")
 
@@ -67,14 +70,16 @@ def simple(vault, samples: ApySamples) -> Apy:
 
     # for performance fee, half comes from strategy (strategist share) and half from the vault (treasury share)
     strategy_fees = []
-    for strategy in vault.strategies: # look at all of our strategies
+    for strategy in vault.strategies:  # look at all of our strategies
         debt_ratio = contract.strategies(strategy.strategy)['debtRatio'] / 10000
         performance_fee = contract.strategies(strategy.strategy)['performanceFee']
         proportional_fee = debt_ratio * performance_fee
         strategy_fees.append(proportional_fee)
-    
+
     strategy_performance = sum(strategy_fees)
-    vault_performance = contract.performanceFee() if hasattr(contract, "performanceFee") else 0
+    vault_performance = (
+        contract.performanceFee() if hasattr(contract, "performanceFee") else 0
+    )
     management = contract.managementFee() if hasattr(contract, "managementFee") else 0
     performance = vault_performance + strategy_performance
 
@@ -100,13 +105,15 @@ def simple(vault, samples: ApySamples) -> Apy:
 
 
 def average(vault, samples: ApySamples) -> Apy:
-    harvests = sorted([harvest for strategy in vault.strategies for harvest in strategy.harvests])
+    harvests = sorted(
+        [harvest for strategy in vault.strategies for harvest in strategy.harvests]
+    )
 
     contract = vault.vault
     price_per_share = contract.pricePerShare
     now_price = price_per_share(block_identifier=samples.now)
     inception_price = 10 ** contract.decimals()
-    
+
     if len(harvests) < 2 or now_price == inception_price:
         raise ApyError("v2:harvests", "harvests are < 2")
 
@@ -132,7 +139,7 @@ def average(vault, samples: ApySamples) -> Apy:
     week_ago_apy = calculate_roi(now_point, week_ago_point)
     month_ago_apy = calculate_roi(now_point, month_ago_point)
     inception_apy = calculate_roi(now_point, inception_point)
-    
+
     # we should look at a vault's harvests, age, etc to determine whether to show new APY or not
 
     # use the first non-zero apy, ordered by precedence
@@ -147,14 +154,16 @@ def average(vault, samples: ApySamples) -> Apy:
 
     # for performance fee, half comes from strategy (strategist share) and half from the vault (treasury share)
     strategy_fees = []
-    for strategy in vault.strategies: # look at all of our strategies
+    for strategy in vault.strategies:  # look at all of our strategies
         debt_ratio = contract.strategies(strategy.strategy)['debtRatio'] / 10000
         performance_fee = contract.strategies(strategy.strategy)['performanceFee']
         proportional_fee = debt_ratio * performance_fee
         strategy_fees.append(proportional_fee)
-    
+
     strategy_performance = sum(strategy_fees)
-    vault_performance = contract.performanceFee() if hasattr(contract, "performanceFee") else 0
+    vault_performance = (
+        contract.performanceFee() if hasattr(contract, "performanceFee") else 0
+    )
     management = contract.managementFee() if hasattr(contract, "managementFee") else 0
     performance = vault_performance + strategy_performance
 
@@ -166,7 +175,11 @@ def average(vault, samples: ApySamples) -> Apy:
 
     # calculate our APR after fees
     # if net_apy is negative no fees are charged
-    apr_after_fees = compounding * ((net_apy + 1) ** (1 / compounding)) - compounding if net_apy > 0 else net_apy
+    apr_after_fees = (
+        compounding * ((net_apy + 1) ** (1 / compounding)) - compounding
+        if net_apy > 0
+        else net_apy
+    )
 
     # calculate our pre-fee APR
     gross_apr = apr_after_fees / (1 - performance) + management

@@ -8,7 +8,9 @@ from yearn.utils import get_block_timestamp
 from yearn.prices.magic import get_price
 
 
-def rewards(address: str, pool_price: int, base_asset_price: int, block: Optional[int]=None) -> float:
+def rewards(
+    address: str, pool_price: int, base_asset_price: int, block: Optional[int] = None
+) -> float:
     staking_rewards = Contract(address)
     if hasattr(staking_rewards, "periodFinish"):
         return staking(address, pool_price, base_asset_price, block=block)
@@ -16,7 +18,9 @@ def rewards(address: str, pool_price: int, base_asset_price: int, block: Optiona
         return multi(address, pool_price, base_asset_price, block=block)
 
 
-def staking(address: str, pool_price: int, base_asset_price: int, block: Optional[int]=None) -> float:
+def staking(
+    address: str, pool_price: int, base_asset_price: int, block: Optional[int] = None
+) -> float:
     staking_rewards = Contract(address)
     end = staking_rewards.periodFinish(block_identifier=block)
 
@@ -24,14 +28,34 @@ def staking(address: str, pool_price: int, base_asset_price: int, block: Optiona
     if end < current_time:
         return 0
 
-    snx_address = staking_rewards.snx(block_identifier=block) if hasattr(staking_rewards, "snx") else None
-    reward_token = staking_rewards.rewardToken(block_identifier=block) if hasattr(staking_rewards, "rewardToken") else None
-    rewards_token = staking_rewards.rewardsToken(block_identifier=block) if hasattr(staking_rewards, "rewardsToken") else None
+    snx_address = (
+        staking_rewards.snx(block_identifier=block)
+        if hasattr(staking_rewards, "snx")
+        else None
+    )
+    reward_token = (
+        staking_rewards.rewardToken(block_identifier=block)
+        if hasattr(staking_rewards, "rewardToken")
+        else None
+    )
+    rewards_token = (
+        staking_rewards.rewardsToken(block_identifier=block)
+        if hasattr(staking_rewards, "rewardsToken")
+        else None
+    )
 
     token = reward_token or rewards_token or snx_address
 
-    total_supply = staking_rewards.totalSupply(block_identifier=block) if hasattr(staking_rewards, "totalSupply") else 0
-    rate = staking_rewards.rewardRate(block_identifier=block) if hasattr(staking_rewards, "rewardRate") else 0
+    total_supply = (
+        staking_rewards.totalSupply(block_identifier=block)
+        if hasattr(staking_rewards, "totalSupply")
+        else 0
+    )
+    rate = (
+        staking_rewards.rewardRate(block_identifier=block)
+        if hasattr(staking_rewards, "rewardRate")
+        else 0
+    )
 
     if token and rate:
         # Single reward token
@@ -54,7 +78,12 @@ def staking(address: str, pool_price: int, base_asset_price: int, block: Optiona
                 token = None
             rate = data.rewardRate / 1e18 if data else 0
             token_price = get_price(token, block=block) or 0
-            apr += SECONDS_PER_YEAR * rate * token_price / ((pool_price / 1e18) * (total_supply / 1e18) * token_price)
+            apr += (
+                SECONDS_PER_YEAR
+                * rate
+                * token_price
+                / ((pool_price / 1e18) * (total_supply / 1e18) * token_price)
+            )
             queue += 1
             try:
                 token = staking_rewards.rewardTokens(queue, block_identifier=block)
@@ -63,10 +92,16 @@ def staking(address: str, pool_price: int, base_asset_price: int, block: Optiona
         return apr
 
 
-def multi(address: str, pool_price: int, base_asset_price: int, block: Optional[int]=None) -> float:
+def multi(
+    address: str, pool_price: int, base_asset_price: int, block: Optional[int] = None
+) -> float:
     multi_rewards = Contract(address)
 
-    total_supply = multi_rewards.totalSupply(block_identifier=block) if hasattr(multi_rewards, "totalSupply") else 0
+    total_supply = (
+        multi_rewards.totalSupply(block_identifier=block)
+        if hasattr(multi_rewards, "totalSupply")
+        else 0
+    )
 
     queue = 0
     apr = 0
@@ -82,7 +117,12 @@ def multi(address: str, pool_price: int, base_asset_price: int, block: Optional[
         if data.periodFinish >= time():
             rate = data.rewardRate / 1e18 if data else 0
             token_price = get_price(token, block=block) or 0
-            apr += SECONDS_PER_YEAR * rate * token_price / ((pool_price / 1e18) * (total_supply / 1e18) * token_price)
+            apr += (
+                SECONDS_PER_YEAR
+                * rate
+                * token_price
+                / ((pool_price / 1e18) * (total_supply / 1e18) * token_price)
+            )
         queue += 1
         try:
             token = multi_rewards.rewardTokens(queue, block_identifier=block)
