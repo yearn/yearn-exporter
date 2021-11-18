@@ -6,10 +6,6 @@ from brownie import web3
 
 from yearn.utils import closest_block_after_timestamp
 
-SECONDS_PER_BLOCK = 13.25
-SECONDS_PER_YEAR = 31_536_000.0
-BLOCK_PER_DAY = (60 * 60 * 24) / SECONDS_PER_BLOCK
-
 
 @dataclass
 class SharePricePoint:
@@ -56,9 +52,10 @@ class ApyError(ValueError):
 
 
 def calculate_roi(after: SharePricePoint, before: SharePricePoint) -> float:
+    blocks_per_day = closest_block_after_timestamp((now_time - timedelta(days=1)).timestamp()) # use the past 24 hours for dynamic blocks per day
     pps_delta = (after.price - before.price) / (before.price or 1)
     block_delta = after.block - before.block
-    days = block_delta / BLOCK_PER_DAY
+    days = block_delta / blocks_per_day
     annualized_roi = (1 + pps_delta) ** (365 / days) - 1
     return annualized_roi
 
