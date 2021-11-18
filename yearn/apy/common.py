@@ -53,7 +53,9 @@ class ApyError(ValueError):
 
 
 def calculate_roi(after: SharePricePoint, before: SharePricePoint) -> float:
-    blocks_per_day = closest_block_after_timestamp((now_time - timedelta(days=1)).timestamp()) # use the past 24 hours for dynamic blocks per day
+    now = web3.eth.block_number
+    now_time = datetime.today()
+    blocks_per_day = now - closest_block_after_timestamp((now_time - timedelta(days=1)).timestamp()) # use the past 24 hours for dynamic blocks per day
     pps_delta = (after.price - before.price) / (before.price or 1)
     block_delta = after.block - before.block
     days = block_delta / blocks_per_day
