@@ -16,3 +16,4 @@ secrets/*
 !secrets/.gitkeep
 .python-version
 generated
+.DS_Store

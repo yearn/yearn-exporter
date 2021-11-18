@@ -53,13 +53,16 @@ class ApyError(ValueError):
 
 
 def calculate_roi(after: SharePricePoint, before: SharePricePoint) -> float:
+    # calculate our average blocks per day in the past week
     now = web3.eth.block_number
     now_time = datetime.today()
-    blocks_per_day = now - closest_block_after_timestamp((now_time - timedelta(days=1)).timestamp()) # use the past 24 hours for dynamic blocks per day
+    blocks_per_day = int((now - closest_block_after_timestamp((now_time - timedelta(days=7)).timestamp())) / 7)
+    
+    # calculate our annualized return for a vault
     pps_delta = (after.price - before.price) / (before.price or 1)
     block_delta = after.block - before.block
     days = block_delta / blocks_per_day
-    annualized_roi = (1 + pps_delta) ** (365 / days) - 1
+    annualized_roi = (1 + pps_delta) ** (365.2425 / days) - 1
     return annualized_roi
 
 
