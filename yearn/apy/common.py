@@ -6,6 +6,7 @@ from brownie import web3
 
 from yearn.utils import closest_block_after_timestamp
 
+SECONDS_PER_YEAR = 31_556_952.0
 
 @dataclass
 class SharePricePoint:
