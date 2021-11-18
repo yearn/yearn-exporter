@@ -30,30 +30,27 @@ def closest(haystack, needle):
 def simple(vault, samples: ApySamples) -> Apy:
     harvests = sorted([harvest for strategy in vault.strategies for harvest in strategy.harvests])
 
-    if len(harvests) < 2:
-        raise ApyError("v2:harvests", "harvests are < 2")
-
-    now = closest(harvests, samples.now)
-    week_ago = closest(harvests, samples.week_ago)
-    month_ago = closest(harvests, samples.month_ago)
-    inception_block = harvests[:2][-1]
-
     contract = vault.vault
     price_per_share = contract.pricePerShare
-
-    now_price = price_per_share(block_identifier=now)
-
+    now_price = price_per_share(block_identifier=samples.now)
     inception_price = 10 ** contract.decimals()
+    
+    if len(harvests) < 2 or now_price == inception_price:
+        raise ApyError("v2:harvests", "harvests are < 2")
+
+    inception_block = harvests[:2][-1]
+
+    now_price = price_per_share(block_identifier=samples.now)
 
     if samples.week_ago > inception_block:
         week_ago_price = price_per_share(block_identifier=week_ago)
     else:
-        week_ago_price = now_price
+        week_ago_price = inception_price
 
     if samples.month_ago > inception_block:
         month_ago_price = price_per_share(block_identifier=month_ago)
     else:
-        month_ago_price = week_ago_price
+        month_ago_price = inception_price
 
     now_point = SharePricePoint(samples.now, now_price)
     week_ago_point = SharePricePoint(samples.week_ago, week_ago_price)
@@ -105,17 +102,17 @@ def simple(vault, samples: ApySamples) -> Apy:
 def average(vault, samples: ApySamples) -> Apy:
     harvests = sorted([harvest for strategy in vault.strategies for harvest in strategy.harvests])
 
-    if len(harvests) < 2:
+    contract = vault.vault
+    price_per_share = contract.pricePerShare
+    now_price = price_per_share(block_identifier=samples.now)
+    inception_price = 10 ** contract.decimals()
+    
+    if len(harvests) < 2 or now_price == inception_price:
         raise ApyError("v2:harvests", "harvests are < 2")
 
     inception_block = harvests[:2][-1]
 
-    contract = vault.vault
-    price_per_share = contract.pricePerShare
-
     now_price = price_per_share(block_identifier=samples.now)
-
-    inception_price = 10 ** contract.decimals()
 
     if samples.week_ago > inception_block:
         week_ago_price = price_per_share(block_identifier=samples.week_ago)
