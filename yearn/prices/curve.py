@@ -48,15 +48,6 @@ BASIC_TOKENS = {
     "0x956F47F50A910163D8BF957Cf5846D573E7f87CA",  # fei
     "0xBC6DA0FE9aD5f3b0d58160288917AA56653660E9",  # alusd
 }
-# fix for pools not in registry
-OVERRIDE_TOKENS = {
-    "0x3b6831c0077a1e44ED0a21841C3bC4dC11bCE833": {
-        "pool": "0x9838eCcC42659FA8AA7daF2aD134b53984c9427b",
-    },
-    "0x3D229E1B4faab62F621eF2F6A610961f7BD7b23B": {
-        "pool": "0x98a7F18d4E56Cfe84E3D081B40001B3d5bD3eB8B",
-    }
-}
 
 
 class CurveRegistry(metaclass=Singleton):
@@ -136,9 +127,6 @@ class CurveRegistry(metaclass=Singleton):
         """
         Get Curve pool (swap) address by LP token address. Supports factory pools.
         """
-        if token in OVERRIDE_TOKENS:
-            return OVERRIDE_TOKENS[token]['pool']
-
         if self.get_factory(token):
             return token
 
@@ -205,12 +193,9 @@ class CurveRegistry(metaclass=Singleton):
     @lru_cache(maxsize=None)
     def get_decimals(self, pool):
         factory = self.get_factory(pool)
-        
-        if factory:
-            decimals = contract(factory).get_decimals(pool)
-        else:
-            decimals = self.registry.get_decimals(pool)
-        
+        source = contract(factory) if factory else self.registry
+        decimals = source.get_decimals(pool)
+
         # pool not in registry
         if not any(decimals):
             coins = self.get_coins(pool)
@@ -276,7 +261,6 @@ class CurveRegistry(metaclass=Singleton):
             coin = (set(coins) & BASIC_TOKENS).pop()
         except KeyError:
             coin = coins[0]
-            return None
 
         virtual_price = contract(pool).get_virtual_price(block_identifier=block) / 1e18
         return virtual_price * magic.get_price(coin, block)
