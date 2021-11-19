@@ -18,7 +18,7 @@ from functools import lru_cache
 from itertools import islice
 
 from brownie import ZERO_ADDRESS
-from cachetools.func import ttl_cache
+from cachetools.func import ttl_cache, lru_cache
 
 from yearn.events import create_filter, decode_logs
 from yearn.multicall2 import fetch_multicall
@@ -47,6 +47,15 @@ BASIC_TOKENS = {
     "0x853d955aCEf822Db058eb8505911ED77F175b99e",  # frax
     "0x956F47F50A910163D8BF957Cf5846D573E7f87CA",  # fei
     "0xBC6DA0FE9aD5f3b0d58160288917AA56653660E9",  # alusd
+}
+# fix for pools not in registry
+OVERRIDE_TOKENS = {
+    "0x3b6831c0077a1e44ED0a21841C3bC4dC11bCE833": {
+        "pool": "0x9838eCcC42659FA8AA7daF2aD134b53984c9427b",
+    },
+    "0x3D229E1B4faab62F621eF2F6A610961f7BD7b23B": {
+        "pool": "0x98a7F18d4E56Cfe84E3D081B40001B3d5bD3eB8B",
+    }
 }
 
 
@@ -122,10 +131,14 @@ class CurveRegistry(metaclass=Singleton):
     def _pool_from_lp_token(self, token):
         return self.registry.get_pool_from_lp_token(token)
 
+    @lru_cache(maxsize=None)
     def get_pool(self, token):
         """
         Get Curve pool (swap) address by LP token address. Supports factory pools.
         """
+        if token in OVERRIDE_TOKENS:
+            return OVERRIDE_TOKENS[token]['pool']
+
         if self.get_factory(token):
             return token
 
@@ -134,6 +147,7 @@ class CurveRegistry(metaclass=Singleton):
         if pool != ZERO_ADDRESS:
             return pool
 
+    @lru_cache(maxsize=None)
     def get_gauge(self, pool):
         """
         Get liquidity gauge address by pool.
@@ -148,54 +162,83 @@ class CurveRegistry(metaclass=Singleton):
         if gauges[0] != ZERO_ADDRESS:
             return gauges[0]
 
+    @lru_cache(maxsize=None)
     def get_coins(self, pool):
         """
         Get coins of pool.
         """
         factory = self.get_factory(pool)
+
         if factory:
             coins = contract(factory).get_coins(pool)
         else:
             coins = self.registry.get_coins(pool)
 
-        return [coin for coin in coins if coin != ZERO_ADDRESS]
+        # pool not in registry
+        if set(coins) == {ZERO_ADDRESS}:
+            coins = fetch_multicall(
+                *[[contract(pool), 'coins', i] for i in range(8)]
+            )
 
+        return [coin for coin in coins if coin not in {None, ZERO_ADDRESS}]
+
+    @lru_cache(maxsize=None)
     def get_underlying_coins(self, pool):
         factory = self.get_factory(pool)
+        
         if factory:
             factory = contract(factory)
-            # old factory doesn't revert for non-meta pools
+            # new factory reverts for non-meta pools
             if not hasattr(factory, 'is_meta') or factory.is_meta(pool):
                 coins = factory.get_underlying_coins(pool)
             else:
                 coins = factory.get_coins(pool)
         else:
             coins = self.registry.get_underlying_coins(pool)
+        
+        # pool not in registry, not checking for underlying_coins here
+        if set(coins) == {ZERO_ADDRESS}:
+            return self.get_coins(pool)
 
         return [coin for coin in coins if coin != ZERO_ADDRESS]
 
+    @lru_cache(maxsize=None)
+    def get_decimals(self, pool):
+        factory = self.get_factory(pool)
+        
+        if factory:
+            decimals = contract(factory).get_decimals(pool)
+        else:
+            decimals = self.registry.get_decimals(pool)
+        
+        # pool not in registry
+        if not any(decimals):
+            coins = self.get_coins(pool)
+            decimals = fetch_multicall(
+                *[[contract(token), 'decimals'] for token in coins]
+            )
+        
+        return [dec for dec in decimals if dec != 0]
 
     def get_balances(self, pool, block=None):
         """
         Get {token: balance} of liquidity in the pool.
         """
         factory = self.get_factory(pool)
-        source = contract(factory) if factory else self.registry
-        coins, decimals = fetch_multicall(
-            [source, 'get_coins', pool], [source, 'get_decimals', pool]
-        )
-        num_coins = len([coin for coin in coins if coin != ZERO_ADDRESS])
+        coins = self.get_coins(pool)
+        decimals = self.get_decimals(pool)
 
         try:
+            source = contract(factory) if factory else self.registry
             balances = source.get_balances(pool, block_identifier=block)
         # fallback for historical queries
         except ValueError:
             balances = fetch_multicall(
-                *[[contract(pool), 'balances', i] for i in range(num_coins)]
+                *[[contract(pool), 'balances', i] for i, _ in enumerate(coins)]
             )
 
         if not any(balances):
-            return None
+            raise ValueError(f'could not fetch balances {pool} at {block}')
 
         return {
             coin: balance / 10 ** dec
