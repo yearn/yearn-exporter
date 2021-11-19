@@ -18,8 +18,7 @@ from functools import lru_cache
 from itertools import islice
 
 from brownie import ZERO_ADDRESS
-from brownie.network import chain
-from cachetools.func import ttl_cache
+from cachetools.func import ttl_cache, lru_cache
 
 from yearn.events import create_filter, decode_logs
 from yearn.multicall2 import fetch_multicall
