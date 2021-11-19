@@ -44,6 +44,9 @@ def simple(vault, samples: ApySamples) -> Apy:
 
     gauge_address = curve.get_gauge(pool_address)
 
+    if gauge_address is None:
+        raise ApyError("crv", "no gauge")
+
     gauge = Contract(gauge_address)
 
     try:
@@ -56,6 +59,8 @@ def simple(vault, samples: ApySamples) -> Apy:
     block = samples.now
     gauge_weight = controller.gauge_relative_weight.call(gauge_address, block_identifier=block) 
     gauge_working_supply = gauge.working_supply(block_identifier=block)
+    if gauge_working_supply == 0:
+        raise ApyError("crv", "gauge working supply is zero")
 
     gauge_inflation_rate = gauge.inflation_rate(block_identifier=block)
     pool = Contract(pool_address)
