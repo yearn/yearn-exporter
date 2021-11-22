@@ -115,7 +115,13 @@ def ibKRW():
 
 def yfi():
     samples = get_samples()
-    address = "0xE14d13d8B3b85aF791b2AADD661cDBd5E6097Db1"
+    address = "0xdb25cA703181E7484a155DD612b06f57E12Be5F0"
+    vault = VaultV2.from_address(address)
+    print(json.dumps(dataclasses.asdict(vault.apy(samples)), indent=2))
+
+def sushi():
+    samples = get_samples()
+    address = "0x6d765CbE5bC922694afE112C140b8878b9FB0390"
     vault = VaultV2.from_address(address)
     print(json.dumps(dataclasses.asdict(vault.apy(samples)), indent=2))
 
@@ -124,3 +130,23 @@ def ibeur():
     address = "0x67e019bfbd5a67207755D04467D6A70c0B75bF60"
     vault = VaultV2.from_address(address)
     print(json.dumps(dataclasses.asdict(vault.apy(samples)), indent=2))
+
+def ibgbp():
+    samples = get_samples()
+    address = "0x595a68a8c9D5C230001848B69b1947ee2A607164"
+    vault = VaultV2.from_address(address)
+    print(json.dumps(dataclasses.asdict(vault.apy(samples)), indent=2))
+
+def ibkrw():
+    samples = get_samples()
+    address = "0x528D50dC9a333f01544177a924893FA1F5b9F748"
+    vault = VaultV2.from_address(address)
+    print(json.dumps(dataclasses.asdict(vault.apy(samples)), indent=2))
+
+def dai():
+    samples = get_samples()
+    address = "0xdA816459F1AB5631232FE5e97a05BBBb94970c95"
+    vault = VaultV2.from_address(address)
+    print(json.dumps(dataclasses.asdict(vault.apy(samples)), indent=2))
+    
+

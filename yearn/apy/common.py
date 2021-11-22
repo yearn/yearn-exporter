@@ -5,11 +5,10 @@ from typing import Dict, Optional
 from brownie import web3
 
 from yearn.utils import closest_block_after_timestamp
+from semantic_version.base import Version
 
-SECONDS_PER_BLOCK = 13.25
-SECONDS_PER_YEAR = 31_536_000.0
-BLOCK_PER_DAY = (60 * 60 * 24) / SECONDS_PER_BLOCK
 
+SECONDS_PER_YEAR = 31_556_952.0
 
 @dataclass
 class SharePricePoint:
@@ -56,11 +55,17 @@ class ApyError(ValueError):
 
 
 def calculate_roi(after: SharePricePoint, before: SharePricePoint) -> float:
-    delta = (after.price - before.price) / (before.price or 1)
+    # calculate our average blocks per day in the past week
+    now = web3.eth.block_number
+    now_time = datetime.today()
+    blocks_per_day = int((now - closest_block_after_timestamp((now_time - timedelta(days=7)).timestamp())) / 7)
+    
+    # calculate our annualized return for a vault
+    pps_delta = (after.price - before.price) / (before.price or 1)
     block_delta = after.block - before.block
-    derivative = delta / block_delta
-    annualized = derivative * BLOCK_PER_DAY * 365
-    return annualized
+    days = block_delta / blocks_per_day
+    annualized_roi = (1 + pps_delta) ** (365.2425 / days) - 1
+    return annualized_roi
 
 
 def get_samples(now_time: Optional[datetime] = None) -> ApySamples:

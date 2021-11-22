@@ -30,30 +30,33 @@ def closest(haystack, needle):
 def simple(vault, samples: ApySamples) -> Apy:
     harvests = sorted([harvest for strategy in vault.strategies for harvest in strategy.harvests])
 
+    contract = vault.vault
+    price_per_share = contract.pricePerShare
+    now_price = price_per_share(block_identifier=samples.now)
+    inception_price = 10 ** contract.decimals()
+    
     if len(harvests) < 2:
         raise ApyError("v2:harvests", "harvests are < 2")
 
-    now = closest(harvests, samples.now)
-    week_ago = closest(harvests, samples.week_ago)
-    month_ago = closest(harvests, samples.month_ago)
+    if now_price == inception_price:
+        raise ApyError("v2:inception", "no change from inception price")
+
     inception_block = harvests[:2][-1]
 
-    contract = vault.vault
-    price_per_share = contract.pricePerShare
+    now_price = price_per_share(block_identifier=samples.now)
 
-    now_price = price_per_share(block_identifier=now)
-
-    inception_price = 10 ** contract.decimals()
+    week_ago = closest(harvests, samples.week_ago)
+    month_ago = closest(harvests, samples.month_ago)
 
     if samples.week_ago > inception_block:
         week_ago_price = price_per_share(block_identifier=week_ago)
     else:
-        week_ago_price = now_price
+        week_ago_price = inception_price
 
     if samples.month_ago > inception_block:
         month_ago_price = price_per_share(block_identifier=month_ago)
     else:
-        month_ago_price = week_ago_price
+        month_ago_price = inception_price
 
     now_point = SharePricePoint(samples.now, now_price)
     week_ago_point = SharePricePoint(samples.week_ago, week_ago_price)
@@ -105,27 +108,30 @@ def simple(vault, samples: ApySamples) -> Apy:
 def average(vault, samples: ApySamples) -> Apy:
     harvests = sorted([harvest for strategy in vault.strategies for harvest in strategy.harvests])
 
+    contract = vault.vault
+    price_per_share = contract.pricePerShare
+    now_price = price_per_share(block_identifier=samples.now)
+    inception_price = 10 ** contract.decimals()
+    
     if len(harvests) < 2:
         raise ApyError("v2:harvests", "harvests are < 2")
 
+    if now_price == inception_price:
+        raise ApyError("v2:inception", "no change from inception price")
+
     inception_block = harvests[:2][-1]
 
-    contract = vault.vault
-    price_per_share = contract.pricePerShare
-
     now_price = price_per_share(block_identifier=samples.now)
-
-    inception_price = 10 ** contract.decimals()
 
     if samples.week_ago > inception_block:
         week_ago_price = price_per_share(block_identifier=samples.week_ago)
     else:
-        week_ago_price = now_price
+        week_ago_price = inception_price
 
     if samples.month_ago > inception_block:
         month_ago_price = price_per_share(block_identifier=samples.month_ago)
     else:
-        month_ago_price = week_ago_price
+        month_ago_price = inception_price
 
     now_point = SharePricePoint(samples.now, now_price)
     week_ago_point = SharePricePoint(samples.week_ago, week_ago_price)
@@ -135,6 +141,8 @@ def average(vault, samples: ApySamples) -> Apy:
     week_ago_apy = calculate_roi(now_point, week_ago_point)
     month_ago_apy = calculate_roi(now_point, month_ago_point)
     inception_apy = calculate_roi(now_point, inception_point)
+    
+    # we should look at a vault's harvests, age, etc to determine whether to show new APY or not
 
     # use the first non-zero apy, ordered by precedence
     apys = [week_ago_apy, month_ago_apy]
