@@ -149,4 +149,10 @@ def dai():
     vault = VaultV2.from_address(address)
     print(json.dumps(dataclasses.asdict(vault.apy(samples)), indent=2))
     
+def old_dai():
+    samples = get_samples()
+    address = "0x19D3364A399d251E894aC732651be8B0E4e85001"
+    vault = VaultV2.from_address(address)
+    print(json.dumps(dataclasses.asdict(vault.apy(samples)), indent=2))
+    
 

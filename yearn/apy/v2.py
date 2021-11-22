@@ -29,25 +29,31 @@ def closest(haystack, needle):
 
 def simple(vault, samples: ApySamples) -> Apy:
     harvests = sorted([harvest for strategy in vault.strategies for harvest in strategy.harvests])
-
+    
+    # set our time values for simple calcs, closest to a harvest around that time period
+    now = closest(harvests, samples.now)
+    week_ago = closest(harvests, samples.week_ago)
+    month_ago = closest(harvests, samples.month_ago)
+    
+    # set our parameters
     contract = vault.vault
     price_per_share = contract.pricePerShare
-    now_price = price_per_share(block_identifier=samples.now)
-    inception_price = 10 ** contract.decimals()
     
+    # calculate our current price
+    now_price = price_per_share(block_identifier=now)
+
+    # get our inception data
+    inception_price = 10 ** contract.decimals()
+    inception_block = harvests[:2][-1]
+    
+    # we don't want to display APYs when vaults are ramping up
     if len(harvests) < 2:
         raise ApyError("v2:harvests", "harvests are < 2")
 
     if now_price == inception_price:
         raise ApyError("v2:inception", "no change from inception price")
-
-    inception_block = harvests[:2][-1]
-
-    now_price = price_per_share(block_identifier=samples.now)
-
-    week_ago = closest(harvests, samples.week_ago)
-    month_ago = closest(harvests, samples.month_ago)
-
+    
+    # check our historical data
     if samples.week_ago > inception_block:
         week_ago_price = price_per_share(block_identifier=week_ago)
     else:
@@ -107,22 +113,26 @@ def simple(vault, samples: ApySamples) -> Apy:
 
 def average(vault, samples: ApySamples) -> Apy:
     harvests = sorted([harvest for strategy in vault.strategies for harvest in strategy.harvests])
-
+    
+    # set our parameters
     contract = vault.vault
     price_per_share = contract.pricePerShare
-    now_price = price_per_share(block_identifier=samples.now)
-    inception_price = 10 ** contract.decimals()
     
+    # calculate our current price
+    now_price = price_per_share(block_identifier=samples.now)
+
+    # get our inception data
+    inception_price = 10 ** contract.decimals()
+    inception_block = harvests[:2][-1]
+    
+    # we don't want to display APYs when vaults are ramping up
     if len(harvests) < 2:
         raise ApyError("v2:harvests", "harvests are < 2")
 
     if now_price == inception_price:
         raise ApyError("v2:inception", "no change from inception price")
-
-    inception_block = harvests[:2][-1]
-
-    now_price = price_per_share(block_identifier=samples.now)
-
+    
+    # check our historical data
     if samples.week_ago > inception_block:
         week_ago_price = price_per_share(block_identifier=samples.week_ago)
     else:
