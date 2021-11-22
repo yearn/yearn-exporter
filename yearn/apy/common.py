@@ -5,8 +5,12 @@ from typing import Dict, Optional
 from brownie import web3
 
 from yearn.utils import closest_block_after_timestamp
+from semantic_version.base import Version
 
-SECONDS_PER_YEAR = 31_556_952.0
+if Version(vault.api_version) >= Version("0.3.3"):
+    SECONDS_PER_YEAR = 31_556_952.0
+else:
+    SECONDS_PER_YEAR = 31_557_600.0
 
 @dataclass
 class SharePricePoint:
