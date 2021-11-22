@@ -9,7 +9,6 @@ from semantic_version.base import Version
 
 
 SECONDS_PER_YEAR = 31_556_952.0
-LEGACY_SECONDS_PER_YEAR = 31_557_600.0
 
 @dataclass
 class SharePricePoint:
