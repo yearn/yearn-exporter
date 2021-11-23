@@ -18,7 +18,8 @@ from functools import lru_cache
 from itertools import islice
 
 from brownie import ZERO_ADDRESS
-from cachetools.func import ttl_cache, lru_cache
+from brownie.network import chain
+from cachetools.func import ttl_cache
 
 from yearn.events import create_filter, decode_logs
 from yearn.multicall2 import fetch_multicall
@@ -52,6 +53,8 @@ BASIC_TOKENS = {
 
 class CurveRegistry(metaclass=Singleton):
     def __init__(self):
+        if not self.enabled_for_current_chain:
+            return None
         self.pools = set()
         self.identifiers = defaultdict(list)
         self.addres_provider = contract('0x0000000022D53366457F9d5E68Ec105046FC4383')
@@ -264,6 +267,10 @@ class CurveRegistry(metaclass=Singleton):
 
         virtual_price = contract(pool).get_virtual_price(block_identifier=block) / 1e18
         return virtual_price * magic.get_price(coin, block)
+
+    @property
+    def enabled_for_current_chain(self):
+        return chain.id == 1
 
 
 curve = CurveRegistry()

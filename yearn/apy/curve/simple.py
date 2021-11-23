@@ -1,7 +1,11 @@
 import logging
 from time import time
 
+<<<<<<< HEAD
 from brownie import Contract, interface, ZERO_ADDRESS
+=======
+from brownie import Contract, interface, ZERO_ADDRESS, chain
+>>>>>>> f56bc02 (feat: add ftm apy (#164))
 from semantic_version import Version
 from yearn.utils import get_block_timestamp
 
@@ -22,15 +26,54 @@ from yearn.apy.common import (
 
 logger = logging.getLogger(__name__)
 
-CRV_CONTROLLER = Contract("0x2F50D538606Fa9EDD2B11E2446BEb18C9D5846bB")
 
-CRV = Contract("0xD533a949740bb3306d119CC777fa900bA034cd52")
-CVX = Contract("0x4e3FBD56CD56c3e72c1403e103b45Db9da5B9D2B")
+@property
+def CRV_CONTROLLER():
+    if chain == 1:
+        return Contract("0x2F50D538606Fa9EDD2B11E2446BEb18C9D5846bB")
 
+@property
+def CRV():
+    if chain == 1:
+        return Contract("0xD533a949740bb3306d119CC777fa900bA034cd52")
+
+
+@property
+def CVX():
+    if chain == 1:
+        return Contract("0x4e3FBD56CD56c3e72c1403e103b45Db9da5B9D2B")
+
+
+@property
+def YVECRV_VOTER():
+    if chain == 1:
+        return "0xF147b8125d2ef93FB6965Db97D6746952a133934"
+
+
+@property
+def CONVEX_VOTER():
+    if chain == 1:
+        return "0x989AEb4d175e16225E39E87d0D97A3360524AD80"
+
+
+@property
+def RKP3R_REWARDS():
+    if chain == 1:
+        return "0xEdB67Ee1B171c4eC66E6c10EC43EDBbA20FaE8e9"
+
+
+@property
+def KP3R():
+    if chain == 1:
+        return "0x1cEB5cB57C4D4E2b2433641b95Dd330A33185A44"
+
+<<<<<<< HEAD
 YVECRV_VOTER = "0xF147b8125d2ef93FB6965Db97D6746952a133934"
 CONVEX_VOTER = "0x989AEb4d175e16225E39E87d0D97A3360524AD80"
 RKP3R_REWARDS = "0xEdB67Ee1B171c4eC66E6c10EC43EDBbA20FaE8e9"
 KP3R = "0x1cEB5cB57C4D4E2b2433641b95Dd330A33185A44"
+=======
+>>>>>>> f56bc02 (feat: add ftm apy (#164))
 
 COMPOUNDING = 52
 MAX_BOOST = 2.5
