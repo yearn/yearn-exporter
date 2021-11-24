@@ -25,8 +25,8 @@ CHUNK_SIZE = int(os.environ.get("CHUNK_SIZE", 50))
 
 def main():
     start = datetime.now(tz=timezone.utc)
-    # end: 2020-02-12 first iearn deployment
-    end = datetime(2020, 2, 12, tzinfo=timezone.utc)
+    # end: 2020-02-12 first treasury tx
+    end = datetime(2020, 7, 21, tzinfo=timezone.utc)
 
     interval_map = [
         {
