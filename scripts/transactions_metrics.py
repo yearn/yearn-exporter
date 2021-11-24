@@ -82,25 +82,8 @@ def _generate_snapshot_range(start, end, interval):
         if snapshot < end:
             return
         ts = snapshot.timestamp()
-        if _has_data(ts):
-            continue
-        else:
-            yield snapshot
+        yield snapshot
 
-def _has_data(ts):
-    base_url = os.environ.get('VM_URL', 'http://victoria-metrics:8428')
-    # query for iearn metric which was always present
-    url = f'{base_url}/api/v1/query?query=stats&time={ts}'
-    headers = {
-        'Connection': 'close',
-    }
-    with requests.Session() as session:
-        response = session.get(
-            url = url,
-            headers = headers
-        )
-        result = response.json()
-        return result['status'] == 'success' and len(result['data']['result']) > 0
 
 
 def _export_block(df,block):
