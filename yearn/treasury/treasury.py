@@ -6,7 +6,7 @@ from brownie import Contract, chain, web3
 from brownie.network.event import EventLookupError
 from eth_abi import encode_single
 from joblib import Parallel, delayed
-from yearn.events import create_filter, decode_logs
+from yearn.events import decode_logs
 from yearn.multicall2 import fetch_multicall
 from yearn.outputs import victoria
 from yearn.partners.partners import partners
@@ -267,8 +267,9 @@ class Treasury:
         logger.info(
             'pulling treasury transfer events, please wait patiently this takes a while...'
         )
-        self.log_filter_in = create_filter(None, topics=self._topics_in)
-        self.log_filter_out = create_filter(None, topics=self._topics_out)
+        # Treasury didn't exist prior to block 10502337
+        self.log_filter_in = web3.eth.filter({"fromBlock": 10502337, "topics": self._topics_in})
+        self.log_filter_out = web3.eth.filter({"fromBlock": 10502337, "topics": self._topics_out})
         for block in chain.new_blocks(height_buffer=12):
             logs = self.log_filter_in.get_new_entries()
             self.process_transfers(logs)
