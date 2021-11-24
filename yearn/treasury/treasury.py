@@ -19,13 +19,26 @@ from ..constants import TREASURY_WALLETS
 logger = logging.getLogger(__name__)
 
 def _get_price(token, block=None):
-    SKIP_PRICE = ["0xa9517B2E61a57350D6555665292dBC632C76adFe","0xb07de4b2989E180F8907B8C7e617637C26cE2776"] # shitcoins
+    SKIP_PRICE = [ # shitcoins
+        "0xa9517B2E61a57350D6555665292dBC632C76adFe",
+        "0xb07de4b2989E180F8907B8C7e617637C26cE2776",
+        "0x1368452Bfb5Cd127971C8DE22C58fBE89D35A6BF",
+        "0x5cB5e2d7Ab9Fd32021dF8F1D3E5269bD437Ec3Bf",
+        "0x11068577AE36897fFaB0024F010247B9129459E6",
+        "0x9694EED198C1b7aB81ADdaf36255Ea58acf13Fab",
+        "0x830Cbe766EE470B67F77ea62a56246863F75f376",
+        "0x8F49cB69ee13974D6396FC26B0c0D78044FCb3A7",
+        "0x53d345839E7dF5a6c8Cf590C5c703AE255E44816",
+        "0xcdBb37f84bf94492b44e26d1F990285401e5423e",
+        "0xE256CF1C7caEff4383DabafEe6Dd53910F97213D",
+        "0x528Ff33Bf5bf96B5392c10bc4748d9E9Fb5386B2",
+        ]
     try:
         return get_price(token, block, silent=True)
     except AttributeError:
         if token not in SKIP_PRICE:
             logger.warn(f"AttributeError while getting price for {Contract(token).symbol()} {token}")
-        return 0
+            raise
     except PriceError:
         if token not in SKIP_PRICE:
             logger.warn(f"PriceError while getting price for {Contract(token).symbol()} {token}")
