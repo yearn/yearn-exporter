@@ -265,14 +265,5 @@ class CurveRegistry(metaclass=Singleton):
         virtual_price = contract(pool).get_virtual_price(block_identifier=block) / 1e18
         return virtual_price * magic.get_price(coin, block)
 
-    def get_underlying_coins(self, pool):
-        factory = self.get_factory(pool)
-        if factory:
-            coins = contract(factory).get_underlying_coins(pool)
-        else:
-            coins = self.registry.get_underlying_coins(pool)
-
-        return [coin for coin in coins if coin != ZERO_ADDRESS]
-
 
 curve = CurveRegistry()
