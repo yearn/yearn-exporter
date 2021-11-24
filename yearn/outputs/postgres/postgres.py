@@ -1,6 +1,7 @@
 import os
+
 import pyodbc
-from brownie import Contract, chain
+from brownie import ZERO_ADDRESS, Contract, chain
 from sqlalchemy import create_engine
 from yearn.multicall2 import fetch_multicall
 from yearn.outputs.postgres.tables import (addresses_table_query,
@@ -17,6 +18,8 @@ POSTRGES_CONN_STRING = "Driver={PostgreSQL Unicode};Server=postgres;Port:5432;"\
                         f"Database={DATABASE};Uid={UID};Pwd={PWD};"
 
 SQLA_CONN_STRING = f"postgresql://{UID}:{PWD}@postgres/{DATABASE}?port=5432"
+
+chainid = chain.id
 
 class PostgresInstance:
     def __init__(self):
@@ -51,12 +54,14 @@ class PostgresInstance:
         '''
         This will only work for tables with a `block` column
         '''
-        return self.cursor.execute(f'SELECT max(block) from {table_name}').fetchone()[0]
+        response = self.cursor.execute(f'SELECT max(block) from {table_name} where chainid = {chainid}').fetchone()[0]
+        self.conn.commit()
+        return response
 
     # Other functions
 
     def token_exists(self, token_address: str):
-        response = self.cursor.execute(f"select exists(select symbol from tokens where token_address = '{token_address}' and chainid = {chain.id})").fetchone()[0]
+        response = self.cursor.execute(f"select exists(select symbol from tokens where token_address = '{token_address}' and chainid = {chainid})").fetchone()[0]
         return True if response == '1' else False
 
     def cache_token(self,token_address: str):
@@ -68,7 +73,7 @@ class PostgresInstance:
                     token = Contract(token_address)
                     symbol, name, decimals = fetch_multicall([token,'symbol'],[token,'name'],[token,'decimals'])
                     self.cursor.execute(f"INSERT INTO TOKENS (CHAINID, TOKEN_ADDRESS, SYMBOL, NAME, DECIMALS)\
-                                            VALUES ({chain.id},'{token_address}','{symbol}','{name}',{decimals})")
+                                            VALUES ({chainid},'{token_address}','{symbol}','{name}',{decimals})")
                     self.conn.commit()
                     print(f'{symbol} added to postgres')
                 return
@@ -76,7 +81,7 @@ class PostgresInstance:
                 i += 1
 
     def address_exists(self, address: str):
-        response = self.cursor.execute(f"select exists(select address from addresses where address = '{address}' and chainid = {chain.id})").fetchone()[0]
+        response = self.cursor.execute(f"select exists(select address from addresses where address = '{address}' and chainid = {chainid})").fetchone()[0]
         return True if response == '1' else False
 
     def cache_address(self,address: str):
@@ -85,10 +90,41 @@ class PostgresInstance:
             try:
                 if not self.address_exists(address):
                     self.cursor.execute(f"INSERT INTO ADDRESSES (CHAINID, ADDRESS, IS_CONTRACT)\
-                                            VALUES ({chain.id},'{address}',{is_contract(address)})")
+                                            VALUES ({chainid},'{address}',{is_contract(address)})")
                     self.conn.commit()
                 return
             except:
-                i += 1                
+                i += 1      
+
+    def fetch_balances(self,vault_address,block):
+        if block and block > self.last_recorded_block('user_txs'):
+            # NOTE: we use `postgres.` instead of `self.` so we can make use of parallelism
+            raise('this block has not yet been cached into postgres')
+        if block:
+            balances = self.cursor.execute(f"""
+                select a.wallet, coalesce(amount_in,0) - coalesce(amount_out,0) balance
+                from (
+                    select "to" wallet, sum(amount) amount_in
+                    from user_txs where chainid = {chainid} and vault = '{vault_address}' and block <= {block} 
+                    group by "to" ) a
+                left join (
+                    select "from" wallet, sum(amount) amount_out
+                    from user_txs where chainid = {chainid} and vault = '{vault_address}' and block <= {block}
+                    group by "from") b on a.wallet = b.wallet
+                    """).fetchall()
+        else:
+            balances = self.cursor.execute(f"""
+                select a.wallet, coalesce(amount_in,0) - coalesce(amount_out,0) balance
+                from (
+                    select "to" wallet, sum(amount) amount_in
+                    from user_txs where chainid = {chainid} and vault = '{vault_address}'
+                    group by "to" ) a
+                left join (
+                    select "from" wallet, sum(amount) amount_out
+                    from user_txs where chainid = {chainid} and vault = '{vault_address}'
+                    group by "from") b on a.wallet = b.wallet
+                    """).fetchall()
+        self.conn.commit()
+        return {wallet: balance for wallet,balance in balances if wallet != ZERO_ADDRESS}
 
 postgres = PostgresInstance()
