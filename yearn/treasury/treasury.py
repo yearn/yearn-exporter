@@ -19,18 +19,20 @@ from ..constants import TREASURY_WALLETS
 logger = logging.getLogger(__name__)
 
 def _get_price(token, block=None):
-    SKIP_PRICE = ["0xa9517B2E61a57350D6555665292dBC632C76adFe","0xb07de4b2989E180F8907B8C7e617637C26cE2776"]
+    SKIP_PRICE = ["0xa9517B2E61a57350D6555665292dBC632C76adFe","0xb07de4b2989E180F8907B8C7e617637C26cE2776"] # shitcoins
     try:
-        return get_price(token, block)
+        return get_price(token, block, silent=True)
     except AttributeError:
         if token not in SKIP_PRICE:
-            print(f"AttributeError while getting price for {Contract(token).symbol()} {token}")
+            logger.warn(f"AttributeError while getting price for {Contract(token).symbol()} {token}")
         return 0
     except PriceError:
+        if token not in SKIP_PRICE:
+            logger.warn(f"PriceError while getting price for {Contract(token).symbol()} {token}")
         return 0
     except ValueError:
         if token not in SKIP_PRICE:
-            print(f"ValueError while getting price for {Contract(token).symbol()} {token}")
+            logger.warn(f"ValueError while getting price for {Contract(token).symbol()} {token}")
         return 0
 
 def get_token_from_event(event):
