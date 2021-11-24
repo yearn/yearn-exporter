@@ -2,9 +2,9 @@ import os
 from datetime import datetime, timedelta
 from decimal import Decimal
 from itertools import count
+from brownie.network.contract import Contract
 
 import pandas as pd
-import requests
 from brownie import ZERO_ADDRESS, chain
 from joblib import Parallel, delayed
 from tqdm import tqdm
@@ -102,30 +102,51 @@ def _users(df,vault = None):
     return df['to'].unique()
     
 
+def _user_balances(df: pd.DataFrame, block: int) -> pd.DataFrame:
+    def _get_price(vault):
+        try: 
+            return Decimal(get_price(vault,block))
+        except TypeError:
+            return Decimal(get_price(Contract(vault).token(),block))
+    sum_in = df[df['to'] != ZERO_ADDRESS][['to','vault','value']].rename(columns={'to':'user','value':'in'}).groupby(['user','vault']).sum().reset_index().set_index(['user','vault'])
+    sum_out = df[df['from'] != ZERO_ADDRESS][['from','vault','value']].rename(columns={'from':'user','value':'out'}).groupby(['user','vault']).sum().reset_index().set_index(['user','vault'])
+    df = sum_in[sum_in['in'] > 0].join(sum_out).fillna(0).reset_index()
+    df['balance'] = df['in'] - df['out']
+    df['price'] = df['vault'].apply(_get_price)
+    df['usd_bal'] = df['balance'] * df['price']
+    return df
 
 def _count_users_by_num_vaults_used(df: pd.DataFrame):
-    data = {}
-    for user in _users(df):
-        ct = len(df[df['to'] == user]['vault'].unique())
-        try:
-            data[f'num wallets used {ct} vaults'] += 1
-        except:
-            data[f'num wallets used {ct} vaults'] = 1
-    return data
-
-def _process_vault(df,vault):
-    print(f'vault: {vault}')
-    users = _users(df,vault)
-    data = {
-        'lifetime_users': len(users),
-    }
-    return data
+    df = df[['to','vault']].groupby(['to','vault']).size().reset_index()
+    df = df[df[0] > 0].groupby(['to']).size().reset_index()
+    return {f'num wallets used {num} vaults': val for num, val in df.groupby([0]).size().items()}
 
 def _export_block(df,block):
+    print(f'exporting block {block}')
     df = df[df['block'] <= block]
+    user_balances = _user_balances(df,block)
     data = {'stats': _count_users_by_num_vaults_used(df)}
     data['stats']['total_users'] = len(_users(df))
-    data['vaults'] = {vault: _process_vault(df,vault) for vault in _vaults(df)}
+    data['vaults'] = {
+        vault: {
+            'lifetime_users': len(_users(df,vault=vault)),
+            'user_balances': {
+                row.user: {
+                    'token_bal': row.balance,
+                    'usd_bal': row.usd_bal
+                    } for row in user_balances[user_balances['vault'] == vault].itertuples() if row.balance > 0
+                },
+            'churned_users': sum(1 for row in user_balances[user_balances['vault'] == vault].itertuples() if row.usd_bal <= 10),
+            } for vault in tqdm(_vaults(df))
+        }
+    sum_bals = user_balances[['user','usd_bal']].groupby('user').sum().reset_index()
+    data['stats']['$1k+'] = sum(1 for row in sum_bals.itertuples() if row.usd_bal >   1000)
+    data['stats']['$10k+'] = sum(1 for row in sum_bals.itertuples() if row.usd_bal >  10000)
+    data['stats']['$100k+'] = sum(1 for row in sum_bals.itertuples() if row.usd_bal > 100000)
+    data['stats']['$1m+'] = sum(1 for row in sum_bals.itertuples() if row.usd_bal >   1000000)
+    data['stats']['$10m+'] = sum(1 for row in sum_bals.itertuples() if row.usd_bal >  10000000)
+    data['stats']['$100m+'] = sum(1 for row in sum_bals.itertuples() if row.usd_bal > 100000000)
+    print(sum_bals)
     return data
 
 
@@ -151,3 +172,11 @@ def main(block = None):
         print(vaults_df.drop(columns=['user_balances']))
         vaults_df.drop(columns=['user_balances']).to_csv('./reports/vault_stats.csv', index=False)
 
+        # user balances
+        users_df = pd.melt(
+            vaults_df[['block','vault']].join(vaults_df['user_balances'].apply(pd.Series)),
+            id_vars=['block','vault']).dropna().rename(columns={'variable':'address'}
+            )
+        users_df = users_df.drop(columns=['value']).join(users_df['value'].apply(pd.Series))
+        print(users_df)
+        users_df.to_csv('./reports/user_stats.csv', index=False)
