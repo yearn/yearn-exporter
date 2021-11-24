@@ -33,6 +33,10 @@ def get_price(token, block=None):
         logger.debug("stablecoin -> %s", 1)
         return 1
 
+    if token in constants.ONE_TO_ONE_MAPPING:
+        token = constants.ONE_TO_ONE_MAPPING[token]
+        logger.debug("one to one -> %s", )
+
     if token == "0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE":
         token = constants.weth
 
