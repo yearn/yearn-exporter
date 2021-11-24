@@ -95,10 +95,6 @@ def export(timestamp, data):
                 item = _build_item(metric, label_names, label_values, v, timestamp)
                 metrics_to_export.append(item)
 
-    # for testing
-    #_post(metrics_to_export)
-    #metrics_to_export = []
-
     for key, value in data["v2"].items():
         metric = mapping["v2"]["metric"]
         if key in mapping["v2"]["agg_stats"]:
