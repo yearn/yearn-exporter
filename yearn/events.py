@@ -35,7 +35,7 @@ def create_filter(address, topics=None):
         start_block = min(map(contract_creation_block, address))
     else:
         start_block = contract_creation_block(address)
-        
+
     return web3.eth.filter({"address": address, "fromBlock": start_block, "topics": topics})
 
 

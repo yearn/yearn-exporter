@@ -36,26 +36,27 @@ def _get_price(token, block=None):
         "0xE256CF1C7caEff4383DabafEe6Dd53910F97213D",
         "0x528Ff33Bf5bf96B5392c10bc4748d9E9Fb5386B2",
     ]
+    if token in SKIP_PRICE:
+        return 0
+    
     try:
-        return get_price(token, block, silent=True)
+        price = get_price(token, block)
     except AttributeError:
-        if token not in SKIP_PRICE:
-            logger.warn(
-                f"AttributeError while getting price for {Contract(token).symbol()} {token}"
-            )
-            raise
+        logger.warn(
+            f"AttributeError while getting price for {Contract(token).symbol()} {token}"
+        )
+        raise
     except PriceError:
-        if token not in SKIP_PRICE:
-            logger.warn(
-                f"PriceError while getting price for {Contract(token).symbol()} {token}"
-            )
-        return 0
+        logger.warn(
+            f"PriceError while getting price for {Contract(token).symbol()} {token}"
+        )
+        price = 0
     except ValueError:
-        if token not in SKIP_PRICE:
-            logger.warn(
-                f"ValueError while getting price for {Contract(token).symbol()} {token}"
-            )
-        return 0
+        logger.warn(
+            f"ValueError while getting price for {Contract(token).symbol()} {token}"
+        )
+        price = 0
+    return price
 
 
 def get_token_from_event(event):
@@ -212,7 +213,7 @@ class Treasury:
         }
         if not block or block >= 11315910:
             debt['Unit.xyz'] = self.unit_debt(block=block)
-        # self.accounts_payable()
+        # TODO: self.accounts_payable()
         return debt
 
     def accounts_payable(self, block=None) -> dict:
