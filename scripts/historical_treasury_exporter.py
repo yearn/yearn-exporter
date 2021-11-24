@@ -4,7 +4,6 @@ import os
 import time
 from datetime import datetime, timedelta, timezone
 from itertools import count
-from pprint import pprint
 
 import psutil
 import requests
@@ -134,12 +133,3 @@ def _generate_snapshot_range(start, end, interval):
                 continue
             else:
                 yield snapshot
-
-
-def main_old(block=None):
-    treasury = Treasury()
-    treasury.load_transfers()
-    if not block:
-        block = chain[-1]
-    data = treasury.assets(block=block.number)
-    victoria.export_treasury(block.timestamp, data)
