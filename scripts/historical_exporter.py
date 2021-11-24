@@ -1,18 +1,17 @@
 import logging
-import os
-from datetime import datetime, timedelta, timezone
-import time
 import math
+import os
+import time
+from datetime import datetime, timedelta, timezone
+from itertools import count
 
-from yearn.yearn import Yearn
+import psutil
+import requests
+from joblib import Parallel, delayed
+from toolz import partition_all
 from yearn.outputs import victoria
 from yearn.utils import closest_block_after_timestamp
-from itertools import count
-from toolz import partition_all
-from joblib import Parallel, delayed
-import multiprocessing
-import requests
-import psutil
+from yearn.yearn import Yearn
 
 logger = logging.getLogger('yearn.historical_exporter')
 
