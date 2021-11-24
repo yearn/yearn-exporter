@@ -3,6 +3,7 @@ import threading
 import time
 
 from brownie import Contract, chain, web3
+from brownie.network.event import EventLookupError
 from eth_abi import encode_single
 from joblib import Parallel, delayed
 from yearn.events import create_filter, decode_logs
@@ -31,6 +32,14 @@ def _get_price(token, block=None):
         if token not in SKIP_PRICE:
             print(f"ValueError while getting price for {Contract(token).symbol()} {token}")
         return 0
+
+def get_token_from_event(event):
+    try:
+        return event['Transfer'][0].address
+    except EventLookupError:
+        logger.critical(f'One of your cached contracts has an incorrect definition: {event.address}. Please fix this manually')
+        raise(f'One of your cached contracts has an incorrect definition: {event.address}. Please fix this manually')
+       
 
 class Treasury:
     '''
@@ -63,9 +72,9 @@ class Treasury:
     def token_list(self, address, block=None) -> list:
         self.load_transfers()
         if block:
-            return list({transfer['Transfer'][0].address for transfer in self._transfers if transfer['Transfer'].values()[1] == address and transfer['Transfer'][0].block_number <= block})
+            return list({get_token_from_event(transfer) for transfer in self._transfers if transfer['Transfer'].values()[1] == address and transfer['Transfer'][0].block_number <= block})
         else:
-            return list({transfer['Transfer'][0].address for transfer in self._transfers if transfer['Transfer'].values()[1] == address})
+            return list({get_token_from_event(transfer) for transfer in self._transfers if transfer['Transfer'].values()[1] == address})
 
     def held_assets(self,block=None) -> dict:   
         balances = {}
