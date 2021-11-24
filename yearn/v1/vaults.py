@@ -1,10 +1,14 @@
 from functools import cached_property
+import threading
+import time
 import logging
+from collections import Counter
 from dataclasses import dataclass
+from eth_utils import encode_hex, event_abi_to_log_topic
 from typing import Optional
 from yearn.common import Tvl
 
-from brownie import ZERO_ADDRESS, interface
+from brownie import ZERO_ADDRESS, interface, chain
 from brownie.network.contract import InterfaceContainer
 
 from yearn import constants, curve, apy
@@ -12,6 +16,7 @@ from yearn.multicall2 import fetch_multicall
 from yearn.prices import magic
 from yearn.prices.curve import curve as curve_oracle
 from yearn.apy.common import ApySamples
+from yearn.events import create_filter, decode_logs
 from yearn.utils import contract
 
 logger = logging.getLogger(__name__)
@@ -25,6 +30,7 @@ class VaultV1:
     strategy: str
     is_wrapped: bool
     is_delegated: bool
+    _watch_events_forever: Optional[bool] = True
     # the rest is populated in post init
     name: Optional[str] = None
     decimals: Optional[int] = None
@@ -39,6 +45,17 @@ class VaultV1:
         self.name = constants.VAULT_ALIASES.get(str(self.vault), self.vault.symbol())
         self.decimals = self.vault.decimals()  # vaults inherit decimals from token
         self.scale = 10 ** self.decimals
+
+        self._transfers = []
+        self._topics = [
+                [
+                    encode_hex(event_abi_to_log_topic(event))
+                    for event in self.vault.abi
+                    if event["type"] == "event" and event["name"] == 'Transfer'
+                ]
+            ]
+        self._done = threading.Event()
+        self._thread = threading.Thread(target=self.watch_events, daemon=True)
 
     def get_price(self, block=None):
         if self.name == "aLINK":
@@ -62,6 +79,46 @@ class VaultV1:
     @cached_property
     def is_curve_vault(self):
         return curve_oracle.get_pool(str(self.token)) is not None
+
+    def load_transfers(self):
+        if not self._thread._started.is_set():
+            self._thread.start()
+        self._done.wait()
+
+    def watch_events(self):
+        start = time.time()
+        self.log_filter = create_filter(str(self.vault), topics=self._topics)
+        for block in chain.new_blocks(height_buffer=12):
+            logs = self.log_filter.get_new_entries()
+            events = decode_logs(logs)
+            self.process_events(events)
+            if not self._done.is_set():
+                self._done.set()
+                logger.info("loaded %d transfers %s in %.3fs", len(self._transfers), self.vault.symbol(), time.time() - start)
+            if not self._watch_events_forever:
+                break
+            time.sleep(300)
+
+    def process_events(self, events):
+        for event in events:
+            if event.name == "Transfer":
+                self._transfers.append(event)
+
+    def users(self, block=None):
+        self.load_transfers()
+        transfers = [event for event in self._transfers if event.block_number <= block]
+        return set(receiver for sender, receiver, value in transfers if receiver != ZERO_ADDRESS)
+
+    def user_balances(self, block=None):
+        self.load_transfers()
+        balances = Counter()
+        for event in [transfer for transfer in self._transfers if transfer.block_number <= block]:
+            sender, receiver, amount = event.values()
+            if sender != ZERO_ADDRESS:
+                balances[sender] -= amount
+            if receiver != ZERO_ADDRESS:
+                balances[receiver] += amount
+        return balances
 
     def describe(self, block=None):
         info = {}
@@ -128,6 +185,15 @@ class VaultV1:
             info["token price"] = self.get_price(block=block)
 
         info["tvl"] = info["vault balance"] * info["token price"]
+
+        balances = self.user_balances(block=block)
+        info["total users"] = len(set(user for user, bal in balances.items()))
+        info["user balances"] = {
+                            user: {
+                                "token balance": bal / self.scale,
+                                "usd balance": bal / self.scale * info["token price"]
+                                } for user, bal in balances.items()
+                            }
 
         return info
 
