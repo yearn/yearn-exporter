@@ -13,7 +13,7 @@ from toolz import partition_all
 from yearn.outputs import victoria
 from yearn.utils import closest_block_after_timestamp
 
-from ..yearn.treasury.treasury import Treasury
+from yearn.treasury.treasury import Treasury
 
 logger = logging.getLogger('yearn.historical_treasury_exporter')
 
