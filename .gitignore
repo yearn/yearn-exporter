@@ -11,6 +11,7 @@ cache
 node_modules/
 static/*
 !static/.gitkeep
+env/
 .env
 secrets/*
 !secrets/.gitkeep
