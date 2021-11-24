@@ -12,7 +12,7 @@ from yearn.prices import magic
 from yearn.v1.registry import Registry as RegistryV1
 from yearn.v2.registry import Registry as RegistryV2
 
-CACHE_PATH = './cache/transactions.pickle'
+CACHE_PATH = './cache/transactions_pickle.zip'
 CHUNK_SIZE_BLOCKS = 25000
 
 registryV1 = RegistryV1()
