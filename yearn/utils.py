@@ -83,3 +83,7 @@ class Singleton(type):
 
 # Contract instance singleton, saves about 20ms of init time
 contract = lru_cache(maxsize=None)(Contract)
+
+def is_contract(address: str) -> bool:
+    '''checks to see if the input address is a contract'''
+    return web3.eth.get_code(address) != '0x'
