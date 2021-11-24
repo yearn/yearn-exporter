@@ -1,25 +1,24 @@
 import logging
+import os
 import re
 import threading
 import time
+from collections import Counter
 from typing import List
-from yearn.common import Tvl
-
-from semantic_version.base import Version
 
 from brownie import ZERO_ADDRESS, Contract, chain
-from collections import Counter
 from eth_utils import encode_hex, event_abi_to_log_topic
 from joblib import Parallel, delayed
-
+from semantic_version.base import Version
 from yearn import apy
+from yearn.apy.common import ApySamples
+from yearn.common import Tvl
 from yearn.events import create_filter, decode_logs
 from yearn.multicall2 import fetch_multicall
 from yearn.prices import magic
+from yearn.prices.curve import curve
 from yearn.utils import safe_views
 from yearn.v2.strategies import Strategy
-from yearn.prices.curve import curve
-from yearn.apy.common import ApySamples
 
 VAULT_VIEWS_SCALED = [
     "totalAssets",
@@ -230,14 +229,15 @@ class Vault:
         info["address"] = self.vault
         info["version"] = "v2"
         
-        balances = self.wallet_balances(block=block)
-        info["total wallets"] = len(set(wallet for wallet, bal in balances.items()))
-        info["wallet balances"] = {
-                            wallet: {
-                                "token balance": bal / self.scale,
-                                "usd balance": bal / self.scale * info["token price"]
-                                } for wallet, bal in balances.items()
-                            }
+        if not os.environ.get("SKIP_WALLET_STATS", False):
+            balances = self.wallet_balances(block=block)
+            info["total wallets"] = len(set(wallet for wallet, bal in balances.items()))
+            info["wallet balances"] = {
+                                wallet: {
+                                    "token balance": bal / self.scale,
+                                    "usd balance": bal / self.scale * info["token price"]
+                                    } for wallet, bal in balances.items()
+                                }
         return info
 
     def apy(self, samples: ApySamples):
