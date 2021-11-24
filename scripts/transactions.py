@@ -58,20 +58,17 @@ def _process_event(event, vault, vault_symbol, vault_decimals) -> dict:
 def _get_price(event, vault):
     while True:
         try:
-            return magic.get_price(vault.address, event.block_number)
-        except TypeError: # magic.get_price fails because all liquidity was removed for testing and `share_price` returns None
             try:
+                return magic.get_price(vault.address, event.block_number)
+            except TypeError: # magic.get_price fails because all liquidity was removed for testing and `share_price` returns None
                 return magic.get_price(vault.token(), event.block_number)
-            except:
-                print(f'vault: {vault.address}')
-                raise
         except ConnectionError as e:
             # Try again
             print(f'ConnectionError: {str(e)}')
             time.sleep(1)
         except ValueError as e:
             print(f'ValueError: {str(e)}')
-            if str(e) == "Failed to retrieve data from API: {'status': '0', 'message': 'NOTOK', 'result': 'Max rate limit reached'}":
+            if str(e) in ["Failed to retrieve data from API: {'status': '0', 'message': 'NOTOK', 'result': 'Max rate limit reached'}","Failed to retrieve data from API: {'status': '0', 'message': 'NOTOK', 'result': 'Max rate limit reached, please use API Key for higher rate limit'}"]:
                 # Try again
                 print(str(e))
                 print('trying again...')
