@@ -13,6 +13,7 @@ from yearn.partners.partners import partners
 from yearn.partners.snapshot import WildcardWrapper, Wrapper
 from yearn.prices.constants import weth
 from yearn.prices.magic import PriceError, get_price
+from ypricemagic.utils.utils import Contract_with_erc20_fallback
 
 from ..constants import TREASURY_WALLETS
 
@@ -63,7 +64,7 @@ def get_token_from_event(event):
         logger.critical(
             f'One of your cached contracts has an incorrect definition: {event.address}. Please fix this manually'
         )
-        raise (
+        raise Exception(
             f'One of your cached contracts has an incorrect definition: {event.address}. Please fix this manually'
         )
 
@@ -123,7 +124,7 @@ class Treasury:
             # get token balances
             tokens = self.token_list(address, block=block)
             token_balances = fetch_multicall(
-                *[[Contract(token), "balanceOf", address] for token in tokens],
+                *[[Contract_with_erc20_fallback(token), "balanceOf", address] for token in tokens],
                 block=block,
             )
             decimals = fetch_multicall(
@@ -237,9 +238,9 @@ class Treasury:
         ilk = encode_single('bytes32', b'YFI-A')
         art = vat.urns(ilk, urn, block_identifier=block).dict()["art"]
         rate = vat.ilks(ilk, block_identifier=block).dict()["rate"]
-        debt = art * rate / 1e27
+        debt = art * rate / 1e45
         dai = '0x6B175474E89094C44Da98b954EedeAC495271d0F'
-        debt = {dai: {'balance': debt / 10 ** 18, 'usd value': debt / 10 ** 18}}
+        debt = {dai: {'balance': debt, 'usd value': debt}}
         return debt
 
     def unit_debt(self, block=None) -> dict:
@@ -250,8 +251,8 @@ class Treasury:
         unitVault = Contract("0xb1cff81b9305166ff1efc49a129ad2afcd7bcf19")
         yfi = "0x0bc529c00C6401aEF6D220BE8C6Ea1667F6Ad93e"
         usdp = '0x1456688345527bE1f37E9e627DA0837D6f08C925'
-        debt = unitVault.getTotalDebt(yfi, ychad, block_identifier=block)
-        debt = {usdp: {'balance': debt / 10 ** 18, 'usd value': debt / 10 ** 18}}
+        debt = unitVault.getTotalDebt(yfi, ychad, block_identifier=block) / 10 ** 18
+        debt = {usdp: {'balance': debt, 'usd value': debt}}
         return debt
 
     # helper functions
@@ -280,18 +281,24 @@ class Treasury:
                 )
             if not self._watch_events_forever:
                 break
-            time.sleep(300)
+            time.sleep(30)
 
     def process_transfers(self, logs):
         for log in logs:
             try:
                 event = decode_logs(
                     [log]
-                )  # NOTE: We have to decode logs here because silly SHIBAS token prevents us from batch decoding logs
+                )  # NOTE: We have to decode logs here because NFTs prevent us from batch decoding logs
                 self._transfers.append(event)
             except:
-                if log.address == '0xeF81c2C98cb9718003A89908e6bd1a5fA8A098A3':
-                    print('skipping spaceshiba token, logs are formed weird')
+                if log.address in [
+                    # These are NFTs # TODO 
+                    '0x57f1887a8BF19b14fC0dF6Fd9B2acc9Af147eA85', # ENS domains
+                    '0x01234567bac6fF94d7E4f0EE23119CF848F93245', # EthBlocks
+                    '0xD7aBCFd05a9ba3ACbc164624402fB2E95eC41be6', # EthJuanchos
+                    '0xeF81c2C98cb9718003A89908e6bd1a5fA8A098A3', # SpaceShiba
+                    ]:
+                    pass
                 else:
                     print('unable to decode logs, figure out why')
                     print(log)

@@ -136,7 +136,7 @@ def _get_price(event, vault):
                 time.sleep(5)
             else:
                 print(f'vault: {vault.address}')
-                raise (str(e))
+                raise Exception(str(e))
 
 
 def _event_type(sender, receiver, vault_address) -> str:
