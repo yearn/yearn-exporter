@@ -28,24 +28,35 @@ registryV2 = RegistryV2()
 
 logger = logging.getLogger(__name__)
 
+
 def main():
     for block in chain.new_blocks(height_buffer=1):
         process_and_cache_user_txs(postgres.last_recorded_block('user_txs'))
+
 
 def active_vaults_at(end_block) -> set:
     v1 = {vault.vault for vault in registryV1.active_vaults_at(end_block)}
     v2 = {vault.vault for vault in registryV2.active_vaults_at(end_block)}
     return v1.union(v2)
 
+
 def process_and_cache_user_txs(last_saved_block=None):
-    max_block_to_cache = chain.height - 50 # We look 50 blocks back to avoid uncles and reorgs
+    max_block_to_cache = (
+        chain.height - 50
+    )  # We look 50 blocks back to avoid uncles and reorgs
     start_block = last_saved_block + 1 if last_saved_block else None
-    end_block = 10650000 if start_block is None else start_block + 500 if start_block + 500 < max_block_to_cache else max_block_to_cache
+    end_block = (
+        10650000
+        if start_block is None
+        else start_block + 500
+        if start_block + 500 < max_block_to_cache
+        else max_block_to_cache
+    )
     df = pd.DataFrame()
     for vault in tqdm(active_vaults_at(end_block)):
         df = df.append(get_token_transfers(vault, start_block, end_block))
-    df = df.rename(columns={'token':'vault'})
-    df.to_sql('user_txs',postgres.sqla_engine, if_exists='append',index=False)
+    df = df.rename(columns={'token': 'vault'})
+    df.to_sql('user_txs', postgres.sqla_engine, if_exists='append', index=False)
     print(f'user txs batch {start_block}-{end_block} exported to postrges')
 
 
@@ -57,8 +68,14 @@ def get_token_transfers(token, start_block, end_block) -> pd.DataFrame:
     )
     postgres.cache_token(token.address)
     decimals = Contract(token.address).decimals()
-    events = decode_logs(get_logs_asap(token.address, topics, from_block = start_block, to_block = end_block))
-    return pd.DataFrame(Parallel(1,'threading')(delayed(_process_transfer_event)(event, token, decimals) for event in events))
+    events = decode_logs(
+        get_logs_asap(token.address, topics, from_block=start_block, to_block=end_block)
+    )
+    return pd.DataFrame(
+        Parallel(1, 'threading')(
+            delayed(_process_transfer_event)(event, token, decimals) for event in events
+        )
+    )
 
 
 def _process_transfer_event(event, vault, decimals) -> dict:
@@ -66,7 +83,10 @@ def _process_transfer_event(event, vault, decimals) -> dict:
     postgres.cache_address(sender)
     postgres.cache_address(receiver)
     price = _get_price(event, vault)
-    if vault.address == '0x7F83935EcFe4729c4Ea592Ab2bC1A32588409797' and event.block_number == 12869164:
+    if (
+        vault.address == '0x7F83935EcFe4729c4Ea592Ab2bC1A32588409797'
+        and event.block_number == 12869164
+    ):
         # NOTE magic.get_price() returns erroneous price due to erroneous ppfs
         price = 99999
     if price > 100000:
@@ -75,7 +95,7 @@ def _process_transfer_event(event, vault, decimals) -> dict:
         logger.warn(f'block: {event.block_number}')
     txhash = event.transaction_hash.hex()
     return {
-        'chainid':chain.id,
+        'chainid': chain.id,
         'block': event.block_number,
         'timestamp': chain[event.block_number].timestamp,
         'hash': txhash,
@@ -88,15 +108,18 @@ def _process_transfer_event(event, vault, decimals) -> dict:
         'price': price,
         'value_usd': Decimal(amount) / Decimal(10 ** decimals) * Decimal(price),
         'gas_used': web3.eth.getTransactionReceipt(txhash).gasUsed,
-        'gas_price': web3.eth.getTransaction(txhash).gasPrice #* 1.0 # force pandas to insert this as decimal not bigint
+        'gas_price': web3.eth.getTransaction(
+            txhash
+        ).gasPrice,  # * 1.0 # force pandas to insert this as decimal not bigint
     }
+
 
 def _get_price(event, vault):
     while True:
         try:
             try:
                 return magic.get_price(vault.address, event.block_number)
-            except TypeError: # magic.get_price fails because all liquidity was removed for testing and `share_price` returns None
+            except TypeError:  # magic.get_price fails because all liquidity was removed for testing and `share_price` returns None
                 return magic.get_price(vault.token(), event.block_number)
         except ConnectionError as e:
             # Try again
@@ -104,13 +127,16 @@ def _get_price(event, vault):
             time.sleep(1)
         except ValueError as e:
             print(f'ValueError: {str(e)}')
-            if str(e) in ["Failed to retrieve data from API: {'status': '0', 'message': 'NOTOK', 'result': 'Max rate limit reached'}","Failed to retrieve data from API: {'status': '0', 'message': 'NOTOK', 'result': 'Max rate limit reached, please use API Key for higher rate limit'}"]:
+            if str(e) in [
+                "Failed to retrieve data from API: {'status': '0', 'message': 'NOTOK', 'result': 'Max rate limit reached'}",
+                "Failed to retrieve data from API: {'status': '0', 'message': 'NOTOK', 'result': 'Max rate limit reached, please use API Key for higher rate limit'}",
+            ]:
                 # Try again
                 print('trying again...')
                 time.sleep(5)
             else:
                 print(f'vault: {vault.address}')
-                raise(str(e))
+                raise (str(e))
 
 
 def _event_type(sender, receiver, vault_address) -> str:

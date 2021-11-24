@@ -18,13 +18,14 @@ from yearn.yearn import Yearn
 
 logger = logging.getLogger('yearn.wallet_exporter')
 
-available_memory = psutil.virtual_memory().available / 1e9   # in GB
-default_pool_size = max(1, math.floor(available_memory / 8)) # allocate 8GB per worker
+available_memory = psutil.virtual_memory().available / 1e9  # in GB
+default_pool_size = max(1, math.floor(available_memory / 8))  # allocate 8GB per worker
 POOL_SIZE = int(os.environ.get("POOL_SIZE", default_pool_size))
 CHUNK_SIZE = int(os.environ.get("CHUNK_SIZE", 50))
 
 postgres_cached_thru_block = postgres.last_recorded_block('user_txs')
 postgres_cached_thru_ts = chain[postgres_cached_thru_block].timestamp
+
 
 def main():
     start = datetime.now(tz=timezone.utc)
@@ -85,7 +86,8 @@ def main():
 
         logger.info("starting new pool with %d workers", POOL_SIZE)
         Parallel(n_jobs=POOL_SIZE, backend="multiprocessing", verbose=100)(
-            delayed(_export_chunk)(chunk) for chunk in partition_all(CHUNK_SIZE, intervals)
+            delayed(_export_chunk)(chunk)
+            for chunk in partition_all(CHUNK_SIZE, intervals)
         )
 
         # if we reached the final resolution we're done
@@ -118,15 +120,14 @@ def _has_data(ts):
         'Connection': 'close',
     }
     with requests.Session() as session:
-        response = session.get(
-            url = url,
-            headers = headers
-        )
+        response = session.get(url=url, headers=headers)
         result = response.json()
         return result['status'] == 'success' and len(result['data']['result']) > 0
 
+
 def _postgres_ready(ts):
     return postgres_cached_thru_ts >= ts
+
 
 def _generate_snapshot_range(start, end, interval):
     for i in count():
@@ -136,10 +137,12 @@ def _generate_snapshot_range(start, end, interval):
         else:
             ts = snapshot.timestamp()
             if not _postgres_ready(ts):
-                logger.info("txs are still being cached for snapshot %s, ts %d", snapshot, ts)
+                logger.info(
+                    "txs are still being cached for snapshot %s, ts %d", snapshot, ts
+                )
                 continue
             elif _has_data(ts):
-                #logger.info("data already present for snapshot %s, ts %d", snapshot, ts)
+                # logger.info("data already present for snapshot %s, ts %d", snapshot, ts)
                 continue
             else:
                 yield snapshot
