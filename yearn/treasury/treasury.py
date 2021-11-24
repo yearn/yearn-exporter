@@ -12,12 +12,13 @@ from yearn.outputs import victoria
 from yearn.partners.partners import partners
 from yearn.partners.snapshot import WildcardWrapper, Wrapper
 from yearn.prices.constants import weth
-from yearn.prices.magic import PriceError, get_price
+from yearn.prices.magic import PriceError, get_price, logger as logger_price_magic
 from ypricemagic.utils.utils import Contract_with_erc20_fallback
 
 from ..constants import TREASURY_WALLETS
 
 logger = logging.getLogger(__name__)
+logger_price_magic.setLevel(logging.CRITICAL)
 
 
 def _get_price(token, block=None):
