@@ -31,6 +31,24 @@ services:
       - yearn-exporter
     restart: on-failure
 
+  transactions-exporter:
+    build: .
+    command: transactions
+    environment:
+      - WEB3_INFURA_PROJECT_ID
+      - WEB3_PROVIDER
+      - ETHERSCAN_TOKEN
+      - EXPLORER
+      - SLEEP_SECONDS
+    volumes:
+      - solidity_compilers:/root/.solcx
+      - vyper_compilers:/root/.vvm
+      - brownie:/root/.brownie
+      - cache:/app/yearn-exporter/cache
+    networks:
+      - yearn-exporter
+    restart: on-failure
+
   historical-exporter:
     build: .
     command: historical_exporter
