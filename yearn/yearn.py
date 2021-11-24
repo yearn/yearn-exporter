@@ -73,5 +73,5 @@ class Yearn:
         start = time()
         data = self.describe(block)
         victoria.export(ts, data)
-        tvl = sum(vault['tvl'] for product in data.values() for vault in product.values())
+        tvl = sum(vault['tvl'] for product in data.values() for vault in product.values() if type(vault) == dict)
         logger.info('exported block=%d tvl=%.0f took=%.3fs', block, tvl, time() - start)
