@@ -1,23 +1,36 @@
 import logging
 import threading
 import time
-from collections import Counter
 
-from brownie import Contract, chain, multicall, web3
-from yearn.events import create_filter, decode_logs
-from yearn.outputs import victoria
-from ypricemagic.constants import weth, dai
-#from yearn.prices.magic import get_price
+from brownie import Contract, chain, web3
 from eth_abi import encode_single
-from ypricemagic.magic import PriceError, get_price
-from ypricemagic.utils.utils import Contract_with_erc20_fallback
-from yearn.multicall2 import multicall2
+from joblib import Parallel, delayed
+from yearn.events import create_filter, decode_logs
+from yearn.multicall2 import fetch_multicall
+from yearn.outputs import victoria
+from yearn.partners.partners import partners
+from yearn.partners.snapshot import WildcardWrapper, Wrapper
+from yearn.prices.constants import weth
+from yearn.prices.magic import PriceError, get_price
 
 from ..constants import TREASURY_WALLETS
 
 logger = logging.getLogger(__name__)
 
-
+def _get_price(token, block=None):
+    SKIP_PRICE = ["0xa9517B2E61a57350D6555665292dBC632C76adFe","0xb07de4b2989E180F8907B8C7e617637C26cE2776"]
+    try:
+        return get_price(token, block)
+    except AttributeError:
+        if token not in SKIP_PRICE:
+            print(f"AttributeError while getting price for {Contract(token).symbol()} {token}")
+        return 0
+    except PriceError:
+        return 0
+    except ValueError:
+        if token not in SKIP_PRICE:
+            print(f"ValueError while getting price for {Contract(token).symbol()} {token}")
+        return 0
 
 class Treasury:
     '''
@@ -47,58 +60,38 @@ class Treasury:
         assets.update(self.collateral(block=block))
         return assets
 
-    def held_assets(self,block=None) -> dict:
+    def token_list(self, address, block=None) -> list:
         self.load_transfers()
         if block:
-            transfers = [transfer for transfer in self._transfers if transfer['Transfer'][0].block_number <= block]
+            return list({transfer['Transfer'][0].address for transfer in self._transfers if transfer['Transfer'].values()[1] == address and transfer['Transfer'][0].block_number <= block})
         else:
-            transfers = [transfer for transfer in self._transfers]
-        
+            return list({transfer['Transfer'][0].address for transfer in self._transfers if transfer['Transfer'].values()[1] == address})
+
+    def held_assets(self,block=None) -> dict:   
         balances = {}
         for address in self.addresses:
+            # get token balances
+            tokens = self.token_list(address,block=block)
+            token_balances = fetch_multicall(*[[Contract(token),"balanceOf",address] for token in tokens], block=block)
+            decimals = fetch_multicall(*[[Contract(token),"decimals"] for token in tokens], block=block)
+            token_balances = [balance / 10 ** decimal if decimal else 0 for balance, decimal in zip(token_balances,decimals)]
+            token_prices = Parallel(8,'threading')(delayed(_get_price)(token,block) for token in tokens)
+            token_balances = [{'balance': balance, 'usd value': balance * price} for balance, price in zip(token_balances, token_prices)]
+            balances[address] = dict(zip(tokens,token_balances))
+
+            # then, add eth
             if block:
                 balance = web3.eth.get_balance(address, block_identifier = block) / 10 ** 18
             else:
                 balance = web3.eth.get_balance(address) / 10 ** 18
-
-            balances[address] = {
-                'ETH': {
-                    'balance': balance,
-                    'usd value': balance * get_price(weth, block)
-                    }
-                }
-
-            token_balances = Counter()
-            for transfer in transfers:
-                token = transfer['Transfer'][0].address
-                sender, receiver, amount = transfer['Transfer'].values()
-                if receiver == address:
-                    token_balances[token] += amount
-                if sender == address:
-                    token_balances[token] -= amount
-            
-            for token, bal in token_balances.items():
-                try:
-                    decimals = Contract_with_erc20_fallback(token).decimals()
-                    balance = bal / 10 ** decimals
-                    try:
-                        price = get_price(token, block)
-                    except PriceError:
-                        price = 0
-                    balances[address][token] = {
-                        'balance': balance,
-                        'usd value': balance * price
-                    }
-                except: # TODO: why is this reverting? 
-                    print(f'{token} reverted, investigate why this is reverting')
-                
+            balances[address]['ETH'] = {'balance': balance, 'usd value': balance * get_price(weth, block)}
         return balances
 
     def collateral(self, block=None) -> dict:
         collateral = {
             'MakerDAO': self.maker_collateral(block=block),
         }
-        if block >= 11315910:
+        if block is None or block >= 11315910:
             collateral['Unit.xyz'] = self.unit_collateral(block=block)
         return collateral
 
@@ -113,22 +106,22 @@ class Treasury:
         urn = cdp_manager.urns(cdp)
         ilk = encode_single('bytes32', b'YFI-A')
         ink = vat.urns(ilk, urn, block_identifier = block).dict()["ink"]
-        yfi = "0x0bc529c00c6401aef6d220be8c6ea1667f6ad93e"
+        yfi = "0x0bc529c00C6401aEF6D220BE8C6Ea1667F6Ad93e"
         collateral = {
             yfi: {
                 'balance': ink / 10 ** 18,
-                'usd value': ink / 10 ** 18 * get_price(yfi, block)
+                'usd value': ink / 10 ** 18 * get_price(yfi, block) if ink > 0 else 0
             }
         }
         return collateral
 
     def unit_collateral(self, block=None) -> dict:
-        if block < 11315910:
+        if block and block < 11315910:
             return
         #ychad = Contract('ychad.eth')
         ychad = Contract('0xfeb4acf3df3cdea7399794d0869ef76a6efaff52')
         unitVault = Contract("0xb1cff81b9305166ff1efc49a129ad2afcd7bcf19")
-        yfi = "0x0bc529c00c6401aef6d220be8c6ea1667f6ad93e"
+        yfi = "0x0bc529c00C6401aEF6D220BE8C6Ea1667F6Ad93e"
         bal = unitVault.collaterals(yfi,ychad, block_identifier = block) 
         collateral = {
             yfi: {
@@ -147,12 +140,23 @@ class Treasury:
         debt = {
             'MakerDAO': self.maker_debt(block=block),
         }
-        if block >= 11315910:
+        if not block or block >= 11315910:
             debt['Unit.xyz'] = self.unit_debt(block=block)
+        #self.accounts_payable()
         return debt
 
     def accounts_payable(self, block=None) -> dict:
-        pass
+        for i, partner in enumerate(partners):
+            if i == 1:
+                flat_wrappers = []
+                for wrapper in partner.wrappers:
+                    if isinstance(wrapper, Wrapper):
+                        flat_wrappers.append(wrapper)
+                    elif isinstance(wrapper, WildcardWrapper):
+                        flat_wrappers.extend(wrapper.unwrap())
+                for wrapper in flat_wrappers:
+                    print(wrapper.protocol_fees(block=block))
+
         
     def maker_debt(self, block=None) -> dict:
         proxy_registry = Contract('0x4678f0a6958e4D2Bc4F1BAF7Bc52E8F3564f3fE4')
@@ -177,12 +181,12 @@ class Treasury:
         return debt
 
     def unit_debt(self, block=None) -> dict:
-        if block < 11315910:
+        if block and block < 11315910:
             return
         #ychad = Contract('ychad.eth')
         ychad = Contract('0xfeb4acf3df3cdea7399794d0869ef76a6efaff52')
         unitVault = Contract("0xb1cff81b9305166ff1efc49a129ad2afcd7bcf19")
-        yfi = "0x0bc529c00c6401aef6d220be8c6ea1667f6ad93e"
+        yfi = "0x0bc529c00C6401aEF6D220BE8C6Ea1667F6Ad93e"
         usdp = '0x1456688345527bE1f37E9e627DA0837D6f08C925'
         debt = unitVault.getTotalDebt(yfi,ychad, block_identifier = block) 
         debt = {
