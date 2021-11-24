@@ -4,6 +4,7 @@ import gzip
 import math
 import json
 from typing import List, Dict
+from brownie import Contract
 
 mapping = {
     "earn": {
@@ -144,6 +145,23 @@ def export(timestamp, data):
                     item = _build_item(metric, label_names, label_values, v or 0, timestamp)
                     metrics_to_export.append(item)
 
+    # post all metrics for this timestamp at once
+    _post(metrics_to_export)
+
+
+def export_treasury(timestamp, data):
+    metrics_to_export = []
+    for section, section_data in data.items():
+        for wallet, wallet_data in section_data.items():
+            for token, bals in wallet_data.items():
+                symbol = 'ETH' if token == 'ETH' else Contract(token).symbol()
+                for key, value in bals.items():
+                    if value != 0:
+                        label_names = ['param','wallet','token_address','token']
+                        label_values = [key,wallet,token,symbol]
+                        item = _build_item(f"treasury_{section}",label_names,label_values,value,timestamp)
+                        metrics_to_export.append(item)
+    
     # post all metrics for this timestamp at once
     _post(metrics_to_export)
 
