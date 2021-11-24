@@ -89,9 +89,7 @@ def main():
 
 
 def _export_chunk(chunk):
-     # NOTE: Historical exporter will load transfers, but `load_transfers = False`
-     # lets the exporter save a lot of time when processing lower blocks
-    yearn = Yearn(load_transfers=False, watch_events_forever=False)
+    yearn = Yearn(watch_events_forever=False)
     for interval in chunk:
         _interval_export(yearn, interval)
 

@@ -13,16 +13,13 @@ logger = logging.getLogger(__name__)
 
 
 class Registry:
-    def __init__(self, load_transfers=False, watch_events_forever=True):
+    def __init__(self):
         self.registry = interface.YRegistry(web3.ens.resolve("registry.ychad.eth"))
         addresses_provider = Contract("0x9be19Ee7Bc4099D62737a7255f5c227fBcd6dB93")
         addresses_generator_v1_vaults = Contract(addresses_provider.addressById("ADDRESSES_GENERATOR_V1_VAULTS"))
 
         # NOTE: we assume no more v1 vaults are deployed
-        self.vaults = [VaultV1(vault_address, *(self.registry.getVaultInfo(vault_address) + tuple([watch_events_forever]))) for vault_address in addresses_generator_v1_vaults.assetsAddresses()]
-
-        if load_transfers:
-            self.load_transfers()
+        self.vaults = [VaultV1(vault_address, *self.registry.getVaultInfo(vault_address)) for vault_address in addresses_generator_v1_vaults.assetsAddresses()]
             
     def __repr__(self) -> str:
         return f"<Registry V1 vaults={len(self.vaults)}>"
@@ -32,21 +29,7 @@ class Registry:
         share_prices = fetch_multicall(*[[vault.vault, "getPricePerFullShare"] for vault in vaults], block=block)
         vaults = [vault for vault, share_price in zip(vaults, share_prices) if share_price]
         data = Parallel(8, "threading")(delayed(vault.describe)(block=block) for vault in vaults)
-        results_dict = {vault.name: desc for vault, desc in zip(vaults, data)}
-        if not os.environ.get("SKIP_WALLET_STATS", False):
-            wallet_balances = Counter()
-            for vault in data:
-                for wallet, bals in vault['wallet balances'].items():
-                    wallet_balances[wallet] += bals["usd balance"]
-            agg_stats = {
-                "total wallets": len(wallet_balances),
-                "wallet balances usd": wallet_balances,
-            }
-            results_dict.update(agg_stats)
-        return results_dict
-
-    def load_transfers(self):
-        Parallel(8, "threading")(delayed(vault.load_transfers)() for vault in self.vaults)
+        return {vault.name: desc for vault, desc in zip(vaults, data)}
 
     def total_value_at(self, block=None):
         vaults = self.active_vaults_at(block)
