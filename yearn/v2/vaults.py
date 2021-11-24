@@ -230,13 +230,13 @@ class Vault:
         info["address"] = self.vault
         info["version"] = "v2"
         
-        balances = self.user_balances(block=block)
-        info["total users"] = len(set(user for user, bal in balances.items()))
-        info["user balances"] = {
-                            user: {
+        balances = self.wallet_balances(block=block)
+        info["total wallets"] = len(set(wallet for wallet, bal in balances.items()))
+        info["wallet balances"] = {
+                            wallet: {
                                 "token balance": bal / self.scale,
                                 "usd balance": bal / self.scale * info["token price"]
-                                } for user, bal in balances.items()
+                                } for wallet, bal in balances.items()
                             }
         return info
 

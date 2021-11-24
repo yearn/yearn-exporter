@@ -44,19 +44,18 @@ class Yearn:
             for key in self.registries
         )
         results_dict = dict(zip(self.registries, desc))
-        user_balances = Counter()
+        wallet_balances = Counter()
         for registry in desc:
             for vault, data in registry.items():
                 try:
-                    for user, bals in data['user balances'].items():
-                        user_balances[user] += bals["usd balance"]
+                    for wallet, bals in data['wallet balances'].items():
+                        wallet_balances[wallet] += bals["usd balance"]
                 except: # process vaults, not aggregated stats
-                    pass # TODO: add total users and user balances for earn, ib, special
-        print(len(user_balances))
+                    pass # TODO: add total wallets and wallet balances for earn, ib, special
         agg_stats = {
             "agg_stats": {
-                "total users": len(user_balances),
-                "user balances usd": user_balances
+                "total wallets": len(wallet_balances),
+                "wallet balances usd": wallet_balances
             }
         }
         results_dict.update(agg_stats)
