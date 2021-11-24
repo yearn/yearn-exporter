@@ -24,7 +24,7 @@ class PriceError(Exception):
 
 
 @ttl_cache(10000)
-def get_price(token, block=None):
+def get_price(token, block=None, silent=False):
     token = str(token)
     logger.debug("unwrapping %s", token)
     price = None
@@ -91,7 +91,8 @@ def get_price(token, block=None):
         price = uniswap.get_price_v1(token, block=block)
         logger.debug("uniswap v1 -> %s", price)
     if not price:
-        logger.error("failed to get price for %s", token)
+        if not silent:
+            logger.error("failed to get price for %s", token)
         raise PriceError(f'could not fetch price for {token} at {block}')
 
     return price
