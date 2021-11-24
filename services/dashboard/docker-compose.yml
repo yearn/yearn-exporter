@@ -106,6 +106,28 @@ services:
       - yearn-exporter
     restart: on-failure
 
+  wallet-exporter:
+    build: .
+    command: wallet_exporter
+    environment:
+      - WEB3_INFURA_PROJECT_ID
+      - WEB3_PROVIDER
+      - ETHERSCAN_TOKEN
+      - EXPLORER
+      - SLEEP_SECONDS
+      - POOL_SIZE
+      - CHUNK_SIZE
+      - RESOLUTION
+      - SKIP_WALLET_STATS
+    volumes:
+      - solidity_compilers:/root/.solcx
+      - vyper_compilers:/root/.vvm
+      - brownie:/root/.brownie
+      - cache:/app/yearn-exporter/cache
+    networks:
+      - yearn-exporter
+    restart: always
+
   treasury-exporter:
     build: .
     command: treasury_exporter
