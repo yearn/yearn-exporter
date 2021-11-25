@@ -122,4 +122,5 @@ TREASURY_WALLETS = {
     "0x93A62dA5a14C80f265DAbC077fCEE437B1a0Efde", # Yearn Treasury
     "0xb99a40fcE04cb740EB79fC04976CA15aF69AaaaE", # Yearn Treasury V1  
     "0xFEB4acf3df3cDEA7399794D0869ef76A6EfAff52", # Yearn MultiSig
+    "0x7d2ab9ca511ebd6f03971fb417d3492aa82513f0", # yMechs Multisig
 }
