@@ -1,6 +1,8 @@
 import logging
+import os
 import threading
 import time
+from collections import Counter
 from typing import List
 
 from brownie import Contract, chain, web3
@@ -10,7 +12,7 @@ from web3._utils.events import construct_event_topic_set
 from yearn.events import create_filter, decode_logs, get_logs_asap
 from yearn.multicall2 import fetch_multicall
 from yearn.prices import magic
-from yearn.utils import contract_creation_block, Singleton
+from yearn.utils import Singleton, contract_creation_block
 from yearn.v2.vaults import Vault
 
 logger = logging.getLogger(__name__)
@@ -129,6 +131,25 @@ class Registry(metaclass=Singleton):
         results = Parallel(8, "threading")(delayed(vault.describe)(block=block) for vault in vaults)
         return {vault.name: result for vault, result in zip(vaults, results)}
 
+    def describe_wallets(self, block=None):
+        vaults = self.active_vaults_at(block=block)
+        data = Parallel(8,'threading')(delayed(vault.describe_wallets)(block=block) for vault in vaults)
+        data = {vault.name: desc for vault,desc in zip(vaults,data)}
+
+        wallet_balances = Counter()
+        for vault, desc in data.items():
+            for wallet, bals in desc['wallet balances'].items():
+                wallet_balances[wallet] += bals["usd balance"]
+        agg_stats = {
+            "total wallets": len(wallet_balances),
+            "active wallets": sum(1 if balance > 50 else 0 for wallet, balance in wallet_balances.items()),
+            "wallets > $5k": sum(1 if balance > 5000 else 0 for wallet, balance in wallet_balances.items()),
+            "wallets > $50k": sum(1 if balance > 50000 else 0 for wallet, balance in wallet_balances.items()),
+            "wallet balances usd": wallet_balances,
+        }
+        data.update(agg_stats)
+        return data
+
     def total_value_at(self, block=None):
         vaults = self.active_vaults_at(block)
         prices = Parallel(8, "threading")(delayed(magic.get_price)(str(vault.token), block=block) for vault in vaults)
@@ -142,3 +163,6 @@ class Registry(metaclass=Singleton):
         # fixes edge case: a vault is not necessarily initialized on creation
         activations = fetch_multicall(*[[vault.vault, 'activation'] for vault in vaults], block=block)
         return [vault for vault, activation in zip(vaults, activations) if activation]
+
+    def wallets(self, block=None):
+        return set(vault.wallets(block) for vault in self.active_vaults_at(block))

@@ -7,6 +7,7 @@ volumes:
     brownie: {}
     cache: {}
     victoria_metrics_data: {}
+    postgres_data: {}
 
 networks:
   yearn-exporter:
@@ -15,6 +16,60 @@ services:
   yearn-exporter:
     build: .
     command: exporter
+    environment:
+      - WEB3_INFURA_PROJECT_ID
+      - WEB3_PROVIDER
+      - ETHERSCAN_TOKEN
+      - EXPLORER
+      - SLEEP_SECONDS
+    volumes:
+      - solidity_compilers:/root/.solcx
+      - vyper_compilers:/root/.vvm
+      - brownie:/root/.brownie
+      - cache:/app/yearn-exporter/cache
+    networks:
+      - yearn-exporter
+    restart: on-failure
+
+  transactions-exporter:
+    build: .
+    command: transactions
+    environment:
+      - WEB3_INFURA_PROJECT_ID
+      - WEB3_PROVIDER
+      - ETHERSCAN_TOKEN
+      - EXPLORER
+      - SLEEP_SECONDS
+    volumes:
+      - solidity_compilers:/root/.solcx
+      - vyper_compilers:/root/.vvm
+      - brownie:/root/.brownie
+      - cache:/app/yearn-exporter/cache
+    networks:
+      - yearn-exporter
+    restart: on-failure
+
+  transactions-exporter:
+    build: .
+    command: transactions
+    environment:
+      - WEB3_INFURA_PROJECT_ID
+      - WEB3_PROVIDER
+      - ETHERSCAN_TOKEN
+      - EXPLORER
+      - SLEEP_SECONDS
+    volumes:
+      - solidity_compilers:/root/.solcx
+      - vyper_compilers:/root/.vvm
+      - brownie:/root/.brownie
+      - cache:/app/yearn-exporter/cache
+    networks:
+      - yearn-exporter
+    restart: on-failure
+
+  transactions-exporter:
+    build: .
+    command: transactions
     environment:
       - WEB3_INFURA_PROJECT_ID
       - WEB3_PROVIDER
@@ -51,6 +106,88 @@ services:
       - yearn-exporter
     restart: on-failure
 
+  wallet-exporter:
+    build: .
+    command: wallet_exporter
+    environment:
+      - WEB3_INFURA_PROJECT_ID
+      - WEB3_PROVIDER
+      - ETHERSCAN_TOKEN
+      - EXPLORER
+      - SLEEP_SECONDS
+      - POOL_SIZE
+      - CHUNK_SIZE
+      - RESOLUTION
+      - SKIP_WALLET_STATS
+    volumes:
+      - solidity_compilers:/root/.solcx
+      - vyper_compilers:/root/.vvm
+      - brownie:/root/.brownie
+      - cache:/app/yearn-exporter/cache
+    networks:
+      - yearn-exporter
+    restart: always
+
+  treasury-exporter:
+    build: .
+    command: treasury_exporter
+    environment:
+      - WEB3_INFURA_PROJECT_ID
+      - WEB3_PROVIDER
+      - ETHERSCAN_TOKEN
+      - EXPLORER
+      - SLEEP_SECONDS
+      - POOL_SIZE
+      - CHUNK_SIZE
+      - RESOLUTION
+    volumes:
+      - solidity_compilers:/root/.solcx
+      - vyper_compilers:/root/.vvm
+      - brownie:/root/.brownie
+      - cache:/app/yearn-exporter/cache
+    networks:
+      - yearn-exporter
+    restart: on-failure
+
+  historical-treasury-exporter:
+    build: .
+    command: historical_treasury_exporter
+    environment:
+      - WEB3_INFURA_PROJECT_ID
+      - WEB3_PROVIDER
+      - ETHERSCAN_TOKEN
+      - EXPLORER
+      - SLEEP_SECONDS
+      - POOL_SIZE
+      - CHUNK_SIZE
+      - RESOLUTION
+    volumes:
+      - solidity_compilers:/root/.solcx
+      - vyper_compilers:/root/.vvm
+      - brownie:/root/.brownie
+      - cache:/app/yearn-exporter/cache
+    networks:
+      - yearn-exporter
+    restart: on-failure
+
+  transactions-exporter:
+    build: .
+    command: transactions_exporter
+    environment:
+      - POSTGRES_PASSWORD=yearn-exporter
+      - POSTGRES_USER=postgres
+      - POSTGRES_DB=postgres
+    volumes:
+      - solidity_compilers:/root/.solcx
+      - vyper_compilers:/root/.vvm
+      - brownie:/root/.brownie
+      - cache:/app/yearn-exporter/cache
+    networks:
+      - yearn-exporter
+    restart: on-failure
+    depends_on:
+      - postgres
+
   vmagent:
     image: victoriametrics/vmagent
     volumes:
@@ -83,6 +220,7 @@ services:
     image: grafana/grafana
     depends_on:
       - victoria-metrics
+      - postgres
     ports:
       - 3000:3000
     environment:
@@ -122,4 +260,18 @@ services:
       - yearn-exporter
     volumes:
       - '/:/host:ro,rslave'
+    restart: always
+
+  postgres:
+    image: postgres
+    ports:
+      - 5432:5432
+    environment:
+      - POSTGRES_PASSWORD=yearn-exporter
+      - POSTGRES_USER=postgres
+      - POSTGRES_DB=postgres
+    networks:
+      - yearn-exporter
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
     restart: always

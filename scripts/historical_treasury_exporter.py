@@ -7,23 +7,26 @@ from itertools import count
 
 import psutil
 import requests
+from brownie import Contract, chain
 from joblib import Parallel, delayed
 from toolz import partition_all
 from yearn.outputs import victoria
 from yearn.utils import closest_block_after_timestamp
-from yearn.yearn import Yearn
 
-logger = logging.getLogger('yearn.historical_exporter')
+from yearn.treasury.treasury import Treasury
 
-available_memory = psutil.virtual_memory().available / 1e9   # in GB
-default_pool_size = max(1, math.floor(available_memory / 8)) # allocate 8GB per worker
+logger = logging.getLogger('yearn.historical_treasury_exporter')
+
+available_memory = psutil.virtual_memory().available / 1e9  # in GB
+default_pool_size = max(1, math.floor(available_memory / 8))  # allocate 8GB per worker
 POOL_SIZE = int(os.environ.get("POOL_SIZE", default_pool_size))
 CHUNK_SIZE = int(os.environ.get("CHUNK_SIZE", 50))
 
+
 def main():
     start = datetime.now(tz=timezone.utc)
-    # end: 2020-02-12 first iearn deployment
-    end = datetime(2020, 2, 12, tzinfo=timezone.utc)
+    # end: 2020-02-12 first treasury tx
+    end = datetime(2020, 7, 21, tzinfo=timezone.utc)
 
     interval_map = [
         {
@@ -79,7 +82,8 @@ def main():
 
         logger.info("starting new pool with %d workers", POOL_SIZE)
         Parallel(n_jobs=POOL_SIZE, backend="multiprocessing", verbose=100)(
-            delayed(_export_chunk)(chunk) for chunk in partition_all(CHUNK_SIZE, intervals)
+            delayed(_export_chunk)(chunk)
+            for chunk in partition_all(CHUNK_SIZE, intervals)
         )
 
         # if we reached the final resolution we're done
@@ -88,34 +92,31 @@ def main():
 
 
 def _export_chunk(chunk):
-    yearn = Yearn(watch_events_forever=False)
+    treasury = Treasury()
     for interval in chunk:
-        _interval_export(yearn, interval)
+        _interval_export(treasury, interval)
 
 
-def _interval_export(yearn, snapshot):
+def _interval_export(treasury, snapshot):
     start_time = time.time()
     ts = snapshot.timestamp()
     block = closest_block_after_timestamp(ts)
     assert block is not None, "no block after timestamp found"
-    yearn.export(block, ts)
+    treasury.export(block, ts)
     duration = time.time() - start_time
-    victoria.export_duration(duration, POOL_SIZE, "historical", ts)
-    logger.info("exported historical snapshot %s", snapshot)
+    victoria.export_duration(duration, POOL_SIZE, "historical_treasury", ts)
+    logger.info("exported treasury snapshot %s", snapshot)
 
 
 def _has_data(ts):
     base_url = os.environ.get('VM_URL', 'http://victoria-metrics:8428')
     # query for iearn metric which was always present
-    url = f'{base_url}/api/v1/query?query=iearn&time={ts}'
+    url = f'{base_url}/api/v1/query?query=treasury_assets&time={ts}'
     headers = {
         'Connection': 'close',
     }
     with requests.Session() as session:
-        response = session.get(
-            url = url,
-            headers = headers
-        )
+        response = session.get(url=url, headers=headers)
         result = response.json()
         return result['status'] == 'success' and len(result['data']['result']) > 0
 

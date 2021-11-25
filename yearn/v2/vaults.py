@@ -1,24 +1,25 @@
 import logging
+import os
 import re
 import threading
 import time
+from collections import Counter
 from typing import List
-from yearn.common import Tvl
 
-from semantic_version.base import Version
-
-from brownie import Contract, chain
+from brownie import ZERO_ADDRESS, Contract, chain
 from eth_utils import encode_hex, event_abi_to_log_topic
 from joblib import Parallel, delayed
-
+from semantic_version.base import Version
 from yearn import apy
+from yearn.apy.common import ApySamples
+from yearn.common import Tvl
 from yearn.events import create_filter, decode_logs
 from yearn.multicall2 import fetch_multicall
 from yearn.prices import magic
+from yearn.outputs.postgres.postgres import PostgresInstance
+from yearn.prices.curve import curve
 from yearn.utils import safe_views
 from yearn.v2.strategies import Strategy
-from yearn.prices.curve import curve
-from yearn.apy.common import ApySamples
 
 VAULT_VIEWS_SCALED = [
     "totalAssets",
@@ -160,6 +161,12 @@ class Vault:
             elif event.name == "StrategyReported":
                 self._reports.append(event)
 
+    def wallets(self, block=None):
+        return self.wallet_balances(block=block).keys()
+
+    def wallet_balances(self, block=None):
+        return PostgresInstance().fetch_balances(self.vault.address, block=block)
+
     def describe(self, block=None):
         try:
             results = fetch_multicall(*[[self.vault, view] for view in self._views], block=block)
@@ -181,6 +188,21 @@ class Vault:
         info["experimental"] = self.is_experiment
         info["address"] = self.vault
         info["version"] = "v2"
+        
+        return info
+
+    def describe_wallets(self,block=None):
+        balances = self.wallet_balances(block=block)
+        info = {
+            'total wallets': len(set(wallet for wallet, bal in balances.items())),
+            'active wallets': sum(1 if balance > 50 else 0 for wallet, balance in balances.items()),
+            'wallet balances': {
+                            wallet: {
+                                "token balance": float(bal), #/ self.scale,
+                                "usd balance": float(bal) * magic.get_price(self.token,block=block)
+                                } for wallet, bal in balances.items()
+                            }
+        }
         return info
 
     def apy(self, samples: ApySamples):

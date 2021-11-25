@@ -1,17 +1,23 @@
-from functools import cached_property
 import logging
+import os
+import threading
+import time
+from collections import Counter
 from dataclasses import dataclass
+from functools import cached_property
 from typing import Optional
-from yearn.common import Tvl
 
-from brownie import ZERO_ADDRESS, interface
+from brownie import ZERO_ADDRESS, chain, interface
 from brownie.network.contract import InterfaceContainer
-
-from yearn import constants, curve, apy
+from eth_utils import encode_hex, event_abi_to_log_topic
+from yearn import apy, constants, curve
+from yearn.apy.common import ApySamples
+from yearn.common import Tvl
+from yearn.events import create_filter, decode_logs
 from yearn.multicall2 import fetch_multicall
 from yearn.prices import magic
+from yearn.outputs.postgres.postgres import PostgresInstance
 from yearn.prices.curve import curve as curve_oracle
-from yearn.apy.common import ApySamples
 from yearn.utils import contract
 
 logger = logging.getLogger(__name__)
@@ -62,6 +68,12 @@ class VaultV1:
     @cached_property
     def is_curve_vault(self):
         return curve_oracle.get_pool(str(self.token)) is not None
+
+    def wallets(self, block=None):
+        return self.wallet_balances(block=block).keys()
+
+    def wallet_balances(self, block=None):
+        return PostgresInstance().fetch_balances(self.vault.address, block=block)
 
     def describe(self, block=None):
         info = {}
@@ -128,7 +140,21 @@ class VaultV1:
             info["token price"] = self.get_price(block=block)
 
         info["tvl"] = info["vault balance"] * info["token price"]
+            
+        return info
 
+    def describe_wallets(self,block=None):
+        balances = self.wallet_balances(block=block)
+        info = {
+            'total wallets': len(set(wallet for wallet, bal in balances.items())),
+            'active wallets': sum(1 if balance > 50 else 0 for wallet, balance in balances.items()),
+            'wallet balances': {
+                            wallet: {
+                                "token balance": float(bal), #/ self.scale,
+                                "usd balance": float(bal) * self.get_price(block=block)
+                                } for wallet, bal in balances.items()
+                            }
+        }
         return info
 
     def apy(self, samples: ApySamples):
