@@ -300,6 +300,7 @@ class Treasury:
                     '0x01234567bac6fF94d7E4f0EE23119CF848F93245', # EthBlocks
                     '0xD7aBCFd05a9ba3ACbc164624402fB2E95eC41be6', # EthJuanchos
                     '0xeF81c2C98cb9718003A89908e6bd1a5fA8A098A3', # SpaceShiba
+                    '0xD1E5b0FF1287aA9f9A268759062E4Ab08b9Dacbe', # .crypto Domain
                     ]:
                     pass
                 else:
