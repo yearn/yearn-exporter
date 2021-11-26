@@ -1,26 +1,21 @@
 from brownie import chain
+from yearn.networks import Network
 
-
-__WETH = {
-    1: "0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2",
-    250: "0x21be370D5312f44cB42ce377BC9b8a0cEF1A4C83",
+tokens_by_network = {
+    Network.Mainnet: {
+        'weth': '0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2',
+        'usdc': '0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48',
+        'dai': '0x6B175474E89094C44Da98b954EedeAC495271d0F',
+    },
+    Network.Fantom: {
+        'weth': '0x21be370D5312f44cB42ce377BC9b8a0cEF1A4C83',
+        'usdc': '0x04068DA6C83AFCFA0e13ba15A6696662335D5B75',
+        'dai': '0x8D11eC38a3EB5E956B052f67Da8Bdc9bef8Abf3E',
+    },
 }
 
-
-__USDC = {
-    1: "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48",
-    250: "0x04068DA6C83AFCFA0e13ba15A6696662335D5B75",
-}
-
-
-__DAI = {
-    1: "0x6B175474E89094C44Da98b954EedeAC495271d0F",
-    250: "0x8D11eC38a3EB5E956B052f67Da8Bdc9bef8Abf3E",
-}
-
-
-__STABLECOINS = {
-    1: {
+stablecoins_by_network = {
+    Network.Mainnet: {
         "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48": "usdc",
         "0x0000000000085d4780B73119b644AE5ecd22b376": "tusd",
         "0x6B175474E89094C44Da98b954EedeAC495271d0F": "dai",
@@ -37,20 +32,13 @@ __STABLECOINS = {
         "0x056Fd409E1d7A124BD7017459dFEa2F387b6d5Cd": "gusd",
         "0x0E2EC54fC0B509F445631Bf4b91AB8168230C752": "linkusd",
     },
-    250: {
+    Network.Fantom: {
         "0x04068DA6C83AFCFA0e13ba15A6696662335D5B75": "usdc",
         "0x8D11eC38a3EB5E956B052f67Da8Bdc9bef8Abf3E": "dai",
-    }
+    },
 }
 
-
-ONE_TO_ONE_MAPPING = {
-    '0x7D2D3688Df45Ce7C552E19c27e007673da9204B8': '0x80fb784b7ed66730e8b1dbd9820afd29931aab03', # aLEND v1 -> LEND
-    '0xA64BD6C70Cb9051F6A9ba1F163Fdc07E0DfB5F84': '0x514910771af9ca656af840dff83e8264ecf986ca', # aLINK v1 -> LINK
-    '0x27D22A7648e955E510a40bDb058333E9190d12D4': '0x0cec1a9154ff802e7934fc916ed7ca50bde6844e', # PPOOL -> POOL
-    '0x4da27a545c0c5B758a6BA100e3a049001de870f5': '0x7fc66500c84a76ad7e9c93437bfc5ac33e2ddae9', # stkAAVE -> AAVE
-}
-weth = __WETH[chain.id]
-usdc = __USDC[chain.id]
-dai = __DAI[chain.id]
-stablecoins = __STABLECOINS[chain.id]
+weth = tokens_by_network[chain.id]['weth']
+usdc = tokens_by_network[chain.id]['usdc']
+dai = tokens_by_network[chain.id]['dai']
+stablecoins = stablecoins_by_network[chain.id]

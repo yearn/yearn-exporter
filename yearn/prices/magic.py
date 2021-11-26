@@ -3,6 +3,7 @@ import logging
 from cachetools.func import ttl_cache
 
 from brownie import chain
+from yearn.networks import Network
 
 from yearn.prices import constants, uniswap
 
@@ -10,9 +11,9 @@ if chain.id == 1:
     from yearn.prices.aave import aave
     from yearn.prices.chainlink import chainlink
     from yearn.prices.curve import curve
+    from yearn.prices.compound import compound
     from yearn.prices import (
         balancer,
-        compound,
         fixed_forex,
         synthetix,
         uniswap_v3,
@@ -37,14 +38,11 @@ def get_price(token, block=None):
         logger.debug("stablecoin -> %s", 1)
         return 1
 
-    if token in constants.ONE_TO_ONE_MAPPING:
-        token = constants.ONE_TO_ONE_MAPPING[token]
-        logger.debug("one to one -> %s", )
-
-    if chain.id == 1:
-        return get_price_eth(token, block)
-    elif chain.id == 250:
-        return get_price_ftm(token, block)
+    match chain.id:
+        case Network.Mainnet:
+            return get_price_eth(token, block)
+        case Network.Fantom:
+            return get_price_ftm(token, block)
 
 
 def get_price_ftm(token, block=None):
@@ -68,11 +66,16 @@ def get_price_ftm(token, block=None):
 def get_price_eth(token, block=None):
     price = None
 
-    if token == "0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE":
-        token = constants.weth
+    match token:
+        case "0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE":
+            token = constants.weth
+        case "0x4da27a545c0c5B758a6BA100e3a049001de870f5":
+            token = "0x7fc66500c84a76ad7e9c93437bfc5ac33e2ddae9"  # stkAAVE -> AAVE
+        case "0x27D22A7648e955E510a40bDb058333E9190d12D4":
+            token = "0x0cec1a9154ff802e7934fc916ed7ca50bde6844e"  # PPOOL -> POOL
 
-    if token in aave.aave:
-        token = aave.aave.atoken_underlying(token)
+    if token in aave:
+        token = aave.atoken_underlying(token)
         logger.debug("aave -> %s", token)
 
     # we can exit early with known tokens
@@ -84,7 +87,7 @@ def get_price_eth(token, block=None):
         price = yearn.get_price(token, block=block)
         logger.debug("yearn -> %s", price)
 
-    elif curve.get_pool(token):
+    elif token in curve:
         price = curve.get_price(token, block=block)
         logger.debug("curve lp -> %s", price)
 
