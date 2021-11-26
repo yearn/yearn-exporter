@@ -13,9 +13,9 @@ if chain.id == 1:
     from yearn.prices.curve import curve
     from yearn.prices.compound import compound
     from yearn.prices.fixed_forex import fixed_forex
+    from yearn.prices.synthetix import synthetix
     from yearn.prices import (
         balancer,
-        synthetix,
         uniswap_v3,
         yearn,
     )
@@ -99,7 +99,7 @@ def get_price_eth(token, block=None):
         price = fixed_forex.get_price(token, block=block)
         logger.debug("fixed forex -> %s", price)
 
-    elif synthetix.is_synth(token):
+    elif token in synthetix:
         price = synthetix.get_price(token, block=block)
         logger.debug("synthetix -> %s", price)
 
