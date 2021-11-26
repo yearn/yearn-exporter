@@ -13,7 +13,7 @@ from yearn.partners.partners import partners
 from yearn.partners.snapshot import WildcardWrapper, Wrapper
 from yearn.prices.constants import weth
 from yearn.prices.magic import PriceError, get_price, logger as logger_price_magic
-from ypricemagic.utils.utils import Contract_with_erc20_fallback
+from yearn.utils import contract
 
 from ..constants import TREASURY_WALLETS
 
@@ -126,7 +126,7 @@ class Treasury:
             # get token balances
             tokens = self.token_list(address, block=block)
             token_balances = fetch_multicall(
-                *[[Contract_with_erc20_fallback(token), "balanceOf", address] for token in tokens],
+                *[[contract(token), "balanceOf", address] for token in tokens],
                 block=block,
             )
             decimals = fetch_multicall(

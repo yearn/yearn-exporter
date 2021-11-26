@@ -16,7 +16,6 @@ from yearn.outputs.postgres.postgres import postgres
 from yearn.prices import magic
 from yearn.v1.registry import Registry as RegistryV1
 from yearn.v2.registry import Registry as RegistryV2
-from ypricemagic.interfaces.ERC20 import ERC20ABI
 from yearn.treasury.treasury import Treasury
 
 treasury = Treasury()

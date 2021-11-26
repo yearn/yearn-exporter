@@ -125,6 +125,9 @@ class CurveRegistry(metaclass=Singleton):
     def _pool_from_lp_token(self, token):
         return self.registry.get_pool_from_lp_token(token)
 
+    def __contains__(self, token):
+        return self.get_pool(token) is not None
+
     @lru_cache(maxsize=None)
     def get_pool(self, token):
         """

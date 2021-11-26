@@ -5,8 +5,8 @@ import pandas as pd
 from brownie import Contract, chain, convert, web3
 from pandas.core.frame import DataFrame
 from requests import get
-from ypricemagic import magic
-from ypricemagic.utils.utils import Contract_with_erc20_fallback
+from yearn.prices import magic
+from yearn.utils import contract
 
 from eth_abi import encode_single
 
@@ -34,7 +34,7 @@ def walletdataframe(wallet, block):
 
     def getbalance(token_address):
         logging.debug(f'token: {token_address}')
-        return Contract_with_erc20_fallback(token_address).balanceOf(wallet, block_identifier=block)
+        return contract(token_address).balanceOf(wallet, block_identifier=block)
 
     def getprice(token_address):
         if token_address == '0x27d22a7648e955e510a40bdb058333e9190d12d4': # PPOOL
