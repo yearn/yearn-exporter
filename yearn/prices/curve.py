@@ -50,12 +50,25 @@ BASIC_TOKENS = {
     "0x956F47F50A910163D8BF957Cf5846D573E7f87CA",  # fei
     "0xBC6DA0FE9aD5f3b0d58160288917AA56653660E9",  # alusd
 }
+curve_contracts = {
+    Network.Mainnet: {
+        'crv': '0xD533a949740bb3306d119CC777fa900bA034cd52',
+        'voting_escrow': '0x5f3b5DfEb7B28CDbD7FAba78963EE202a494e2A2',
+        'gauge_controller': '0x2F50D538606Fa9EDD2B11E2446BEb18C9D5846bB',
+    }
+}
 
 
 class CurveRegistry(metaclass=Singleton):
     def __init__(self):
-        if chain.id != Network.Mainnet:
+        if chain.id not in curve_contracts:
             raise UnsupportedNetwork("curve is not supported on this network")
+
+        addrs = curve_contracts[chain.id]
+        self.crv = contract(addrs['crv'])
+        self.voting_escrow = contract(addrs['crvoting_escrowv'])
+        self.gauge_controller = contract(addrs['gauge_controller'])
+
         self.pools = set()
         self.identifiers = defaultdict(list)
         self.addres_provider = contract('0x0000000022D53366457F9d5E68Ec105046FC4383')
