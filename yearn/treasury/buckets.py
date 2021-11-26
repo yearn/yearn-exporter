@@ -2,7 +2,7 @@ from brownie import Contract
 from yearn.cache import memory
 from yearn.constants import BTC_LIKE, ETH_LIKE as _ETH_LIKE
 from yearn.prices.balancer import is_balancer_pool
-from yearn.prices.compound import is_compound_market
+from yearn.prices.compound import compound
 from yearn.prices.constants import stablecoins, weth
 from yearn.prices.fixed_forex import is_fixed_forex
 from yearn.prices.aave import aave
@@ -75,7 +75,7 @@ def _unwrap_token(token) -> str:
         return _pool_bucket(pool_tokens)
     if token in aave:
         return Contract(aave.atoken_underlying(token))
-    if is_compound_market(token):
+    if token in compound:
         try:
             return Contract(token).underlying()
         except AttributeError:

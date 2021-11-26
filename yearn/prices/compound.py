@@ -30,7 +30,7 @@ class Compound(metaclass=Singleton):
         log_counts = ', '.join(f'{len(self.markets[name])} {name}' for name in self.markets)
         logger.info(f'loaded {log_counts} markets')
 
-    def is_compound_market(self, token):
+    def __contains__(self, token):
         return any(token in market for market in self.markets.values())
 
     def get_price(self, token, block=None):

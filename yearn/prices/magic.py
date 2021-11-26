@@ -7,12 +7,12 @@ from brownie import chain
 from yearn.prices import constants, uniswap
 
 if chain.id == 1:
+    from yearn.prices.aave import aave
+    from yearn.prices.chainlink import chainlink
+    from yearn.prices.curve import curve
     from yearn.prices import (
-        aave,
         balancer,
-        chainlink,
         compound,
-        curve,
         fixed_forex,
         synthetix,
         uniswap_v3,
@@ -76,7 +76,7 @@ def get_price_eth(token, block=None):
         logger.debug("aave -> %s", token)
 
     # we can exit early with known tokens
-    if token in chainlink.chainlink:
+    if token in chainlink:
         price = chainlink.get_price(token, block=block)
         logger.debug("chainlink -> %s", price)
 
@@ -84,11 +84,11 @@ def get_price_eth(token, block=None):
         price = yearn.get_price(token, block=block)
         logger.debug("yearn -> %s", price)
 
-    elif curve.curve.get_pool(token):
-        price = curve.curve.get_price(token, block=block)
+    elif curve.get_pool(token):
+        price = curve.get_price(token, block=block)
         logger.debug("curve lp -> %s", price)
 
-    elif compound.is_compound_market(token):
+    elif token in compound:
         price = compound.get_price(token, block=block)
         logger.debug("compound -> %s", price)
 
