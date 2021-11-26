@@ -44,11 +44,6 @@ __STABLECOINS = {
 }
 
 
-weth = WETH[chain.id]
-usdc = USDC[chain.id]
-dai = DAI[chain.id]
-stablecoins = STABLECOINS[chain.id]
-
 ONE_TO_ONE_MAPPING = {
     '0x7D2D3688Df45Ce7C552E19c27e007673da9204B8': '0x80fb784b7ed66730e8b1dbd9820afd29931aab03', # aLEND v1 -> LEND
     '0xA64BD6C70Cb9051F6A9ba1F163Fdc07E0DfB5F84': '0x514910771af9ca656af840dff83e8264ecf986ca', # aLINK v1 -> LINK

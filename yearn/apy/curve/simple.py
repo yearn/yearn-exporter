@@ -1,11 +1,7 @@
 import logging
 from time import time
 
-<<<<<<< HEAD
-from brownie import Contract, interface, ZERO_ADDRESS
-=======
 from brownie import Contract, interface, ZERO_ADDRESS, chain
->>>>>>> f56bc02 (feat: add ftm apy (#164))
 from semantic_version import Version
 from yearn.utils import get_block_timestamp
 
@@ -67,13 +63,10 @@ def KP3R():
     if chain == 1:
         return "0x1cEB5cB57C4D4E2b2433641b95Dd330A33185A44"
 
-<<<<<<< HEAD
 YVECRV_VOTER = "0xF147b8125d2ef93FB6965Db97D6746952a133934"
 CONVEX_VOTER = "0x989AEb4d175e16225E39E87d0D97A3360524AD80"
 RKP3R_REWARDS = "0xEdB67Ee1B171c4eC66E6c10EC43EDBbA20FaE8e9"
 KP3R = "0x1cEB5cB57C4D4E2b2433641b95Dd330A33185A44"
-=======
->>>>>>> f56bc02 (feat: add ftm apy (#164))
 
 COMPOUNDING = 52
 MAX_BOOST = 2.5

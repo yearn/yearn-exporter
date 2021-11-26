@@ -17,13 +17,14 @@ from collections import defaultdict
 from functools import lru_cache
 from itertools import islice
 
-from brownie import ZERO_ADDRESS
+from brownie import ZERO_ADDRESS, chain
 from cachetools.func import ttl_cache, lru_cache
 
 from yearn.events import create_filter, decode_logs
 from yearn.multicall2 import fetch_multicall
 from yearn.prices import magic
 from yearn.utils import Singleton, contract
+from functools import cached_property
 
 logger = logging.getLogger(__name__)
 
@@ -267,7 +268,7 @@ class CurveRegistry(metaclass=Singleton):
         virtual_price = contract(pool).get_virtual_price(block_identifier=block) / 1e18
         return virtual_price * magic.get_price(coin, block)
 
-    @property
+    @cached_property
     def enabled_for_current_chain(self):
         return chain.id == 1
 
