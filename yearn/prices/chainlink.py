@@ -57,16 +57,13 @@ class Chainlink(metaclass=Singleton):
     def __contains__(self, asset):
         return asset in self.feeds
 
+    @ttl_cache(maxsize=None, ttl=600)
     def get_price(self, asset, block=None):
         return self.get_feed(asset).latestAnswer(block_identifier=block) / 1e8
 
 
-chainlink = Chainlink()
-
-
-@ttl_cache(maxsize=None, ttl=600)
-def get_price(asset, block=None):
-    try:
-        return chainlink.get_price(asset, block)
-    except (KeyError, ValueError):
-        return None
+chainlink = None
+try:
+    chainlink = Chainlink()
+except UnsupportedNetwork:
+    pass

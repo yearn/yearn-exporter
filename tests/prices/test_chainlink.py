@@ -1,6 +1,6 @@
 import pytest
 from brownie import ZERO_ADDRESS
-from yearn.prices import chainlink
+from yearn.prices.chainlink import chainlink
 
 FEEDS = [
     "0x0000000000000000000000000000000000000024",
