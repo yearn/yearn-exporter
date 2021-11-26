@@ -1,72 +1,28 @@
 import logging
 from time import time
 
-from brownie import Contract, interface, ZERO_ADDRESS, chain
+from brownie import ZERO_ADDRESS, Contract, chain, interface
 from semantic_version import Version
-from yearn.utils import get_block_timestamp
-
+from yearn.apy.common import (SECONDS_PER_YEAR, Apy, ApyError, ApyFees,
+                              ApySamples, SharePricePoint, calculate_roi)
 from yearn.apy.curve.rewards import rewards
-
+from yearn.networks import Network
 from yearn.prices.curve import curve
 from yearn.prices.magic import get_price
-
-from yearn.apy.common import (
-    SECONDS_PER_YEAR,
-    Apy,
-    ApyFees,
-    ApyError,
-    ApySamples,
-    SharePricePoint,
-    calculate_roi,
-)
+from yearn.utils import get_block_timestamp
 
 logger = logging.getLogger(__name__)
 
-
-@property
-def CRV_CONTROLLER():
-    if chain == 1:
-        return Contract("0x2F50D538606Fa9EDD2B11E2446BEb18C9D5846bB")
-
-@property
-def CRV():
-    if chain == 1:
-        return Contract("0xD533a949740bb3306d119CC777fa900bA034cd52")
-
-
-@property
-def CVX():
-    if chain == 1:
-        return Contract("0x4e3FBD56CD56c3e72c1403e103b45Db9da5B9D2B")
-
-
-@property
-def YVECRV_VOTER():
-    if chain == 1:
-        return "0xF147b8125d2ef93FB6965Db97D6746952a133934"
-
-
-@property
-def CONVEX_VOTER():
-    if chain == 1:
-        return "0x989AEb4d175e16225E39E87d0D97A3360524AD80"
-
-
-@property
-def RKP3R_REWARDS():
-    if chain == 1:
-        return "0xEdB67Ee1B171c4eC66E6c10EC43EDBbA20FaE8e9"
-
-
-@property
-def KP3R():
-    if chain == 1:
-        return "0x1cEB5cB57C4D4E2b2433641b95Dd330A33185A44"
-
-YVECRV_VOTER = "0xF147b8125d2ef93FB6965Db97D6746952a133934"
-CONVEX_VOTER = "0x989AEb4d175e16225E39E87d0D97A3360524AD80"
-RKP3R_REWARDS = "0xEdB67Ee1B171c4eC66E6c10EC43EDBbA20FaE8e9"
-KP3R = "0x1cEB5cB57C4D4E2b2433641b95Dd330A33185A44"
+addresses = {
+    Network.Mainnet: {
+        'cvx': '0x4e3FBD56CD56c3e72c1403e103b45Db9da5B9D2B',
+        'yearn_voter_proxy': '0xF147b8125d2ef93FB6965Db97D6746952a133934',
+        'convex_voter_proxy': '0x989AEb4d175e16225E39E87d0D97A3360524AD80',
+        'convex_booster': '0xF403C135812408BFbE8713b5A23a04b3D48AAE31',
+        'rkp3r_rewrds': '0xEdB67Ee1B171c4eC66E6c10EC43EDBbA20FaE8e9',
+        'kp3r': '0x1cEB5cB57C4D4E2b2433641b95Dd330A33185A44',
+    }
+}
 
 COMPOUNDING = 52
 MAX_BOOST = 2.5
@@ -90,7 +46,7 @@ def simple(vault, samples: ApySamples) -> Apy:
         controller = Contract(controller)
     except:
         # newer gauges do not have a 'controller' method
-        controller = CRV_CONTROLLER
+        controller = curve.gauge_controller
 
     block = samples.now
     gauge_weight = controller.gauge_relative_weight.call(gauge_address, block_identifier=block) 
@@ -104,10 +60,11 @@ def simple(vault, samples: ApySamples) -> Apy:
 
     base_asset_price = get_price(lp_token, block=block) or 1
 
-    crv_price = get_price(CRV, block=block)
+    crv_price = get_price(curve.crv, block=block)
 
-    y_working_balance = gauge.working_balances(YVECRV_VOTER, block_identifier=block)
-    y_gauge_balance = gauge.balanceOf(YVECRV_VOTER, block_identifier=block)
+    yearn_voter = addresses[chain.id]['yearn_voter_proxy']
+    y_working_balance = gauge.working_balances(yearn_voter, block_identifier=block)
+    y_gauge_balance = gauge.balanceOf(yearn_voter, block_identifier=block)
 
     base_apr = (
         gauge_inflation_rate
@@ -144,10 +101,10 @@ def simple(vault, samples: ApySamples) -> Apy:
             period_finish = reward_data['period_finish']
             total_supply = gauge.totalSupply()
             token_price = 0
-            if gauge_reward_token == RKP3R_REWARDS:
+            if gauge_reward_token == addresses[chain.id]['rkp3r_rewards']:
                 rKP3R_contract = interface.rKP3R(gauge_reward_token)
                 discount = rKP3R_contract.discount(block_identifier=block)
-                token_price = get_price(KP3R, block=block) * discount / 100
+                token_price = get_price(addresses[chain.id]['kp3r'], block=block) * discount / 100
             else:
                 token_price = get_price(gauge_reward_token, block=block)
             current_time = time() if block is None else get_block_timestamp(block)
@@ -201,15 +158,16 @@ def simple(vault, samples: ApySamples) -> Apy:
     if isinstance(vault, VaultV2) and len(vault.strategies) == 2:
         crv_strategy = vault.strategies[0].strategy
         cvx_strategy = vault.strategies[1].strategy
-        cvx_working_balance = gauge.working_balances(CONVEX_VOTER, block_identifier=block)
-        cvx_gauge_balance = gauge.balanceOf(CONVEX_VOTER, block_identifier=block)
+        convex_voter = addresses[chain.id]['convex_voter_proxy']
+        cvx_working_balance = gauge.working_balances(convex_voter, block_identifier=block)
+        cvx_gauge_balance = gauge.balanceOf(convex_voter, block_identifier=block)
 
         if cvx_gauge_balance > 0:
             cvx_boost = cvx_working_balance / (PER_MAX_BOOST * cvx_gauge_balance) or 1
         else:
             cvx_boost = MAX_BOOST
         
-        cvx_booster = Contract("0xF403C135812408BFbE8713b5A23a04b3D48AAE31")
+        cvx_booster = contract(addresses[chain.id]['convex_booster'])
         cvx_lock_incentive = cvx_booster.lockIncentive(block_identifier=block)
         cvx_staker_incentive = cvx_booster.stakerIncentive(block_identifier=block)
         cvx_earmark_incentive = cvx_booster.earmarkIncentive(block_identifier=block)
@@ -219,12 +177,13 @@ def simple(vault, samples: ApySamples) -> Apy:
         total_cliff = 1e3
         max_supply = 1e2 * 1e6 * 1e18 # ?
         reduction_per_cliff = 1e23
-        supply = CVX.totalSupply(block_identifier=block)
+        cvx = contract(addresses[chain.id]['cvx'])
+        supply = cvx.totalSupply(block_identifier=block)
         cliff = supply / reduction_per_cliff
         if supply <= max_supply:
             reduction = total_cliff - cliff
             cvx_minted_as_crv = reduction / total_cliff
-            cvx_price = get_price(CVX, block=block)
+            cvx_price = get_price(cvx, block=block)
             converted_cvx = cvx_price / crv_price
             cvx_printed_as_crv = cvx_minted_as_crv * converted_cvx
         else:
