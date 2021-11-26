@@ -12,9 +12,9 @@ if chain.id == 1:
     from yearn.prices.chainlink import chainlink
     from yearn.prices.curve import curve
     from yearn.prices.compound import compound
+    from yearn.prices.fixed_forex import fixed_forex
     from yearn.prices import (
         balancer,
-        fixed_forex,
         synthetix,
         uniswap_v3,
         yearn,
@@ -95,7 +95,7 @@ def get_price_eth(token, block=None):
         price = compound.get_price(token, block=block)
         logger.debug("compound -> %s", price)
 
-    elif fixed_forex.is_fixed_forex(token):
+    elif token in fixed_forex:
         price = fixed_forex.get_price(token, block=block)
         logger.debug("fixed forex -> %s", price)
 
