@@ -19,7 +19,7 @@ if chain.id == 1:
         yearn,
     )
 elif chain.id == 250:
-    from yearn.prices import band
+    from yearn.prices.band import band
 
 logger = logging.getLogger(__name__)
 

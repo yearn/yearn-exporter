@@ -1,32 +1,35 @@
 from functools import cached_property
-from brownie import Contract, chain
+from brownie import chain
 
 from cachetools.func import ttl_cache
 from yearn.utils import Singleton
+from yearn.networks import Network
+from yearn.exceptions import UnsupportedNetwork
+from yearn.utils import contract
 
 
-SCALE = 10 ** 18
-
+addresses = {
+    # https://docs.fantom.foundation/tutorials/band-protocol-standard-dataset
+    Network.Fantom: '0x56E2898E0ceFF0D1222827759B56B28Ad812f92F'
+}
 
 class Band(metaclass=Singleton):
-    @cached_property
-    def oracle(self):
-        if chain.id == 250:
-            return Contract('0x56E2898E0ceFF0D1222827759B56B28Ad812f92F')
-        else:
-            raise ValueError(f'chain {chain.id} not supported')
+    def __init__(self):
+        if chain.id not in addresses:
+            raise UnsupportedNetwork('band is not supported on this network')
+        self.oracle = contract(addresses[chain.id])
 
+    @ttl_cache(maxsize=None, ttl=600)
     def get_price(self, asset, block=None):
-        asset_symbol = Contract(asset).symbol()
-        return self.oracle.getReferenceData(asset_symbol, 'USDC', block_identifier=block)[0] / SCALE
+        asset_symbol = contract(asset).symbol()
+        try:
+            return self.oracle.getReferenceData(asset_symbol, 'USDC', block_identifier=block)[0] / 1e18
+        except ValueError:
+            return None
 
 
-band = Band()
-
-
-@ttl_cache(maxsize=None, ttl=600)
-def get_price(asset, block=None):
-    try:
-        return band.get_price(asset, block)
-    except ValueError:
-        return None
+band = None
+try:
+    band = Band()
+except UnsupportedNetwork:
+    pass
