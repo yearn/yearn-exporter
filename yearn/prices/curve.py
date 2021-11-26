@@ -18,13 +18,14 @@ from functools import lru_cache
 from itertools import islice
 
 from brownie import ZERO_ADDRESS, chain
-from cachetools.func import ttl_cache, lru_cache
+from cachetools.func import lru_cache, ttl_cache
 
 from yearn.events import create_filter, decode_logs
+from yearn.exceptions import UnsupportedNetwork
 from yearn.multicall2 import fetch_multicall
+from yearn.networks import Network
 from yearn.prices import magic
 from yearn.utils import Singleton, contract
-from functools import cached_property
 
 logger = logging.getLogger(__name__)
 
@@ -53,8 +54,8 @@ BASIC_TOKENS = {
 
 class CurveRegistry(metaclass=Singleton):
     def __init__(self):
-        if not self.enabled_for_current_chain:
-            return None
+        if chain.id != Network.Mainnet:
+            raise UnsupportedNetwork("curve is not supported on this network")
         self.pools = set()
         self.identifiers = defaultdict(list)
         self.addres_provider = contract('0x0000000022D53366457F9d5E68Ec105046FC4383')
@@ -271,9 +272,9 @@ class CurveRegistry(metaclass=Singleton):
         virtual_price = contract(pool).get_virtual_price(block_identifier=block) / 1e18
         return virtual_price * magic.get_price(coin, block)
 
-    @cached_property
-    def enabled_for_current_chain(self):
-        return chain.id == 1
 
-
-curve = CurveRegistry()
+curve = None
+try:
+    curve = CurveRegistry()
+except UnsupportedNetwork:
+    pass
