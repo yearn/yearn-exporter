@@ -1,0 +1,2 @@
+class UnsupportedNetwork(Exception):
+    pass

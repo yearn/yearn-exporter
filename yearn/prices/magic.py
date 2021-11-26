@@ -71,7 +71,9 @@ def get_price_eth(token, block=None):
     if token == "0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE":
         token = constants.weth
 
-    token = aave.atoken_underlying(token) or token
+    if token in aave.aave:
+        token = aave.aave.atoken_underlying(token)
+        logger.debug("aave -> %s", token)
 
     # we can exit early with known tokens
     if token in chainlink.chainlink:
