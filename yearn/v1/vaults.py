@@ -10,14 +10,14 @@ from typing import Optional
 from brownie import ZERO_ADDRESS, chain, interface
 from brownie.network.contract import InterfaceContainer
 from eth_utils import encode_hex, event_abi_to_log_topic
-from yearn import apy, constants, curve
+from yearn import apy, constants
 from yearn.apy.common import ApySamples
 from yearn.common import Tvl
 from yearn.events import create_filter, decode_logs
 from yearn.multicall2 import fetch_multicall
 from yearn.prices import magic
 from yearn.outputs.postgres.postgres import PostgresInstance
-from yearn.prices.curve import curve as curve_oracle
+from yearn.prices import curve
 from yearn.utils import contract
 
 logger = logging.getLogger(__name__)
@@ -67,7 +67,7 @@ class VaultV1:
 
     @cached_property
     def is_curve_vault(self):
-        return curve_oracle.get_pool(str(self.token)) is not None
+        return curve.get_pool(str(self.token)) is not None
 
     def wallets(self, block=None):
         return self.wallet_balances(block=block).keys()
@@ -158,7 +158,7 @@ class VaultV1:
         return info
 
     def apy(self, samples: ApySamples):
-        if curve_oracle.get_pool(self.token.address):
+        if curve.get_pool(self.token.address):
             return apy.curve.simple(self, samples)
         else:
             return apy.v1.simple(self, samples)

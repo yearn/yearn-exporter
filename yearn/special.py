@@ -9,8 +9,8 @@ import requests
 from brownie.network.contract import Contract
 from joblib import Parallel, delayed
 
-from yearn.curve import crv, voting_escrow
 from yearn.prices import magic
+from yearn.prices.curve import curve
 from yearn.utils import contract_creation_block
 from yearn.apy import ApySamples
 
@@ -53,8 +53,8 @@ class Backscratcher:
         self.proxy = Contract("0xF147b8125d2ef93FB6965Db97D6746952a133934")
 
     def describe(self, block=None):
-        crv_locked = voting_escrow.balanceOf["address"](self.proxy, block_identifier=block) / 1e18
-        crv_price = magic.get_price(crv, block=block)
+        crv_locked = curve.voting_escrow.balanceOf["address"](self.proxy, block_identifier=block) / 1e18
+        crv_price = magic.get_price(curve.crv, block=block)
         return {
             'totalSupply': crv_locked,
             'token price': crv_price,
@@ -62,8 +62,8 @@ class Backscratcher:
         }
 
     def total_value_at(self, block=None):
-        crv_locked = voting_escrow.balanceOf["address"](self.proxy, block_identifier=block) / 1e18
-        crv_price = magic.get_price(crv, block=block)
+        crv_locked = curve.voting_escrow.balanceOf["address"](self.proxy, block_identifier=block) / 1e18
+        crv_price = magic.get_price(curve.crv, block=block)
         return crv_locked * crv_price
 
     @property
