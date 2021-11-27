@@ -11,7 +11,7 @@ addresses = {
 }
 
 class UniswapV1(metaclass=Singleton):
-    def __init__(self, factory, router):
+    def __init__(self):
         if chain.id not in addresses:
             raise UnsupportedNetwork('uniswap v1 is not supported on this network')
         

@@ -5,7 +5,7 @@ from cachetools.func import ttl_cache
 from brownie import chain
 from yearn.networks import Network
 
-from yearn.prices import constants, uniswap
+from yearn.prices import constants
 
 from yearn.prices.aave import aave
 from yearn.prices.chainlink import chainlink
@@ -14,9 +14,11 @@ from yearn.prices.compound import compound
 from yearn.prices.fixed_forex import fixed_forex
 from yearn.prices.synthetix import synthetix
 from yearn.prices.yearn import yearn_lens
+from yearn.prices.uniswap.v1 import uniswap_v1
+from yearn.prices.uniswap.v2 import uniswap_v2
+from yearn.prices.uniswap.v3 import uniswap_v3
 from yearn.prices import (
     balancer,
-    uniswap_v3,
 )
 from yearn.prices.band import band
 from yearn.exceptions import PriceError
@@ -49,7 +51,7 @@ def get_price_ftm(token, block=None):
         logger.debug("band -> %s", price)
 
     if not price:
-        price = uniswap.get_price(token, router="default", block=block)
+        price = uniswap_v2.get_price(token, block=block)
         logger.debug("uniswap v2 -> %s", price)
 
     if not price:
@@ -99,8 +101,8 @@ def get_price_eth(token, block=None):
         price = synthetix.get_price(token, block=block)
         logger.debug("synthetix -> %s", price)
 
-    elif uniswap.is_uniswap_pool(token):
-        price = uniswap.lp_price(token, block=block)
+    elif uniswap_v2.is_uniswap_pool(token):
+        price = uniswap_v2.lp_price(token, block=block)
         logger.debug("uniswap pool -> %s", price)
 
     elif balancer.is_balancer_pool(token):
@@ -115,16 +117,13 @@ def get_price_eth(token, block=None):
 
     # a few more attempts to fetch a price
     if not price:
-        price = uniswap.get_price(token, router="sushiswap", block=block)
-        logger.debug("sushiswap -> %s", price)
+        price = uniswap_v2.get_price(token, block=block)
+        logger.debug("uniswap v2 -> %s", price)
     if not price:
         price = uniswap_v3.get_price(token, block=block)
         logger.debug("uniswap v3 -> %s", price)
     if not price:
-        price = uniswap.get_price(token, router="uniswap", block=block)
-        logger.debug("uniswap v2 -> %s", price)
-    if not price:
-        price = uniswap.get_price_v1(token, block=block)
+        price = uniswap_v1(token, block=block)
         logger.debug("uniswap v1 -> %s", price)
     if not price:
         logger.error("failed to get price for %s", token)

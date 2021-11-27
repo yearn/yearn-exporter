@@ -1,5 +1,3 @@
-from dataclasses import dataclass
-
 from brownie import Contract, chain
 from cachetools.func import lru_cache, ttl_cache
 from yearn.exceptions import UnsupportedNetwork
