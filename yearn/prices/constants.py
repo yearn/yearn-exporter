@@ -12,6 +12,11 @@ tokens_by_network = {
         'usdc': '0x04068DA6C83AFCFA0e13ba15A6696662335D5B75',
         'dai': '0x8D11eC38a3EB5E956B052f67Da8Bdc9bef8Abf3E',
     },
+    Network.Arbitrum: {
+        'weth': '0x82aF49447D8a07e3bd95BD0d56f35241523fBab1',
+        'usdc': '0xFF970A61A04b1cA14834A43f5dE4533eBDDB5CC8',
+        'dai': '0xDA10009cBd5D07dd0CeCc66161FC93D7c9000da1',
+    },
 }
 
 stablecoins_by_network = {
@@ -35,6 +40,10 @@ stablecoins_by_network = {
     Network.Fantom: {
         "0x04068DA6C83AFCFA0e13ba15A6696662335D5B75": "usdc",
         "0x8D11eC38a3EB5E956B052f67Da8Bdc9bef8Abf3E": "dai",
+    },
+    Network.Arbitrum: {
+        '0xFF970A61A04b1cA14834A43f5dE4533eBDDB5CC8': 'usdc',
+        '0xDA10009cBd5D07dd0CeCc66161FC93D7c9000da1': 'dai',
     },
 }
 
