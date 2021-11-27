@@ -4,7 +4,7 @@ from yearn.constants import BTC_LIKE, ETH_LIKE as _ETH_LIKE
 from yearn.prices.balancer import is_balancer_pool
 from yearn.prices.compound import compound
 from yearn.prices.constants import stablecoins, weth
-from yearn.prices.fixed_forex import is_fixed_forex
+from yearn.prices.fixed_forex import fixed_forex
 from yearn.prices.aave import aave
 from yearn.prices.curve import curve
 from yearn.prices.yearn import is_yearn_vault
@@ -39,7 +39,7 @@ def get_token_bucket(token) -> str:
     token = str(token)
     token = str(_unwrap_token(token))
     if (
-        token in stablecoins or token in INTL_STABLECOINS or is_fixed_forex(token)
+        token in stablecoins or token in INTL_STABLECOINS or token in fixed_forex
     ):  # or token == '0x9ba60bA98413A60dB4C651D4afE5C937bbD8044B': # yla
         return 'Cash & cash equivalents'
     if token in ETH_LIKE:
