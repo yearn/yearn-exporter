@@ -4,6 +4,7 @@ from brownie import chain, web3, Contract
 from functools import lru_cache
 
 from yearn.cache import memory
+from yearn.networks import Network
 
 logger = logging.getLogger(__name__)
 
@@ -24,10 +25,10 @@ def get_block_timestamp(height):
     """
     An optimized variant of `chain[height].timestamp`
     """
-    if chain.id == 1:
+    if chain.id == Network.Mainnet:
         header = web3.manager.request_blocking(f"erigon_getHeaderByNumber", [height])
         return int(header.timestamp, 16)
-    elif chain.id == 250:
+    elif chain.id == Network.Fantom:
         return chain[height].timestamp
 
 

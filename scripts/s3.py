@@ -31,6 +31,7 @@ from yearn.v2.vaults import Vault as VaultV2
 from yearn.utils import contract_creation_block
 
 from yearn.exceptions import PriceError
+from yearn.networks import Network
 
 warnings.simplefilter("ignore", BrownieEnvironmentWarning)
 
@@ -116,9 +117,9 @@ def get_assets_metadata(vault_v2: list) -> dict:
     return assets_metadata
 
 def registry_adapter():
-    if chain.id == 1:
+    if chain.id == Network.Mainnet:
         registry_adapter_address = web3.ens.resolve("lens.ychad.eth")
-    elif chain.id == 250:
+    elif chain.id == Network.Fantom:
         registry_adapter_address = "0xF628Fb7436fFC382e2af8E63DD7ccbaa142E3cd1"
     return Contract(registry_adapter_address)
 
@@ -130,11 +131,7 @@ def main():
     aliases_repo = requests.get(aliases_repo_url).json()
     commit = aliases_repo["object"]["sha"]
 
-<<<<<<< HEAD
     icon_url = f"https://rawcdn.githack.com/yearn/yearn-assets/{commit}/icons/multichain-tokens/1/%s/logo-128.png"
-=======
-    icon_url = f"https://rawcdn.githack.com/yearn/yearn-assets/{commit}/icons/multichain-tokens/{chain.id}/%s/logo-128.png"
->>>>>>> f56bc02 (feat: add ftm apy (#164))
 
     aliases_url = "https://raw.githubusercontent.com/yearn/yearn-assets/master/icons/aliases.json"
     aliases = requests.get(aliases_url).json()
@@ -144,11 +141,11 @@ def main():
 
     registry_v2 = RegistryV2()
 
-    if chain.id == 1:
+    if chain.id == Network.Mainnet:
         special = [YveCRVJar(), Backscratcher()]
         registry_v1 = RegistryV1()
         vaults = itertools.chain(special, registry_v1.vaults, registry_v2.vaults, registry_v2.experiments)
-    elif chain.id == 250:
+    elif chain.id == Network.Fantom:
         vaults = registry_v2.vaults
 
     assets_metadata = get_assets_metadata(registry_v2.vaults)
