@@ -21,7 +21,7 @@ from yearn.prices import (
     balancer,
 )
 from yearn.prices.band import band
-from yearn.exceptions import PriceError
+from yearn.exceptions import PriceError, UnsupportedNetwork
 
 logger = logging.getLogger(__name__)
 
@@ -41,6 +41,29 @@ def get_price(token, block=None):
             return get_price_eth(token, block)
         case Network.Fantom:
             return get_price_ftm(token, block)
+        case Network.Arbitrum:
+            return get_price_arbi(token, block)
+        case _:
+            raise UnsupportedNetwork('magic price oracle is not supported on this network')
+
+
+def get_price_arbi(token, block=None):
+    price = None
+
+    if token in compound:
+        price = compound.get_price(token, block=block)
+        logger.debug("compound -> %s", price)
+    
+    if isinstance(price, list):
+        price, underlying = price
+        logger.debug("peel %s %s", price, underlying)
+        return price * get_price(underlying, block=block)
+
+    if not price:
+        logger.error("failed to get price for %s", token)
+        raise PriceError(f'could not fetch price for {token} at {block}')
+
+    return price
 
 
 def get_price_ftm(token, block=None):
@@ -53,7 +76,7 @@ def get_price_ftm(token, block=None):
     if isinstance(price, list):
         price, underlying = price
         logger.debug("peel %s %s", price, underlying)
-        return price * get_price_ftm(underlying, block=block)
+        return price * get_price(underlying, block=block)
 
     if not price:
         price = band.get_price(token, block=block)
