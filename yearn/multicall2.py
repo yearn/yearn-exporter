@@ -6,9 +6,12 @@ import requests
 from brownie import Contract, chain, web3
 from eth_abi.exceptions import InsufficientDataBytes
 
+from yearn.networks import Network
+
 MULTICALL2 = {
-    1: '0x5BA1e12693Dc8F9c48aAD8770482f4739bEeD696',
-    250: '0xD98e3dBE5950Ca8Ce5a4b59630a5652110403E5c',
+    Network.Mainnet: '0x5BA1e12693Dc8F9c48aAD8770482f4739bEeD696',
+    Network.Fantom: '0xD98e3dBE5950Ca8Ce5a4b59630a5652110403E5c',
+    Network.Arbitrum: '0x5B5CFE992AdAC0C9D48E05854B2d91C73a003858',
 }
 multicall2 = Contract(MULTICALL2[chain.id])
 
