@@ -1,8 +1,8 @@
 import logging
-import os
 from collections import Counter
 from time import time
 
+from brownie import chain
 from joblib import Parallel, delayed
 
 import yearn.iearn
@@ -10,6 +10,7 @@ import yearn.ironbank
 import yearn.special
 import yearn.v1.registry
 import yearn.v2.registry
+from yearn.networks import Network
 from yearn.outputs import victoria
 
 
@@ -23,13 +24,23 @@ class Yearn:
 
     def __init__(self, load_strategies=True, load_harvests=False, watch_events_forever=True) -> None:
         start = time()
-        self.registries = {
-            "earn": yearn.iearn.Registry(),
-            "v1": yearn.v1.registry.Registry(),
-            "v2": yearn.v2.registry.Registry(watch_events_forever=watch_events_forever),
-            "ib": yearn.ironbank.Registry(),
-            "special": yearn.special.Registry(),
-        }
+        match chain.id:
+            case Network.Mainnet:
+                self.registries = {
+                    "earn": yearn.iearn.Registry(),
+                    "v1": yearn.v1.registry.Registry(),
+                    "v2": yearn.v2.registry.Registry(watch_events_forever=watch_events_forever),
+                    "ib": yearn.ironbank.Registry(),
+                    "special": yearn.special.Registry(),
+                }
+            case Network.Fantom:
+                self.registries = {
+                    "v2": yearn.v2.registry.Registry(),
+                }
+            case Network.Arbitrum:
+                self.registries = {
+                    "v2": yearn.v2.registry.Registry(),
+                }
         if load_strategies:
             self.registries["v2"].load_strategies()
         if load_harvests:

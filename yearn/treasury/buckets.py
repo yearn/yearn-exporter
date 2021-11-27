@@ -7,7 +7,7 @@ from yearn.prices.constants import stablecoins, weth
 from yearn.prices.fixed_forex import fixed_forex
 from yearn.prices.aave import aave
 from yearn.prices.curve import curve
-from yearn.prices.yearn import is_yearn_vault
+from yearn.prices.yearn import yearn_lens
 
 YFI_LIKE = {
     '0x0bc529c00C6401aEF6D220BE8C6Ea1667F6Ad93e',  # YFI
@@ -61,7 +61,7 @@ def _unwrap_token(token) -> str:
     if str(token) in ["ETH", "0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE"]:
         return token
 
-    if is_yearn_vault(token):
+    if yearn_lens.is_yearn_vault(token):
         return _unwrap_token(Contract(token).token())
     if token in curve:
         pool_tokens = set(
