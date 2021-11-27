@@ -46,6 +46,15 @@ def get_price(token, block=None):
 def get_price_ftm(token, block=None):
     price = None
 
+    if token in compound:
+        price = compound.get_price(token, block=block)
+        logger.debug("compound -> %s", price)
+
+    if isinstance(price, list):
+        price, underlying = price
+        logger.debug("peel %s %s", price, underlying)
+        return price * get_price_ftm(underlying, block=block)
+
     if not price:
         price = band.get_price(token, block=block)
         logger.debug("band -> %s", price)

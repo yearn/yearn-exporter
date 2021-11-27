@@ -2,6 +2,7 @@ from functools import cached_property
 from sys import base_prefix
 from typing import Optional
 from brownie import chain, Contract
+from brownie.network.contract import ContractContainer
 from yearn.exceptions import UnsupportedNetwork
 from yearn.utils import Singleton, contract
 from yearn.multicall2 import fetch_multicall
@@ -10,7 +11,7 @@ import logging
 from cachetools.func import ttl_cache
 from dataclasses import dataclass
 from yearn.prices.constants import usdc, weth
-from yearn.prices import magic
+from typing import Callable, Union
 
 logger = logging.getLogger(__name__)
 
@@ -25,7 +26,7 @@ def get_fantom_ironbank():
 @dataclass
 class CompoundConfig:
     name: str
-    address: str
+    address: Union[str, Callable[[], ContractContainer]]
     oracle_base: str = usdc
 
 
@@ -126,7 +127,7 @@ class CompoundMarket:
 class Compound:
     def __init__(self, name, unitroller, oracle_base):
         self.name = name
-        self.unitroller = contract(unitroller)
+        self.unitroller = contract(unitroller) if isinstance(unitroller, str) else unitroller()
         self.oracle = contract(self.unitroller.oracle())
         self.oracle_base = oracle_base
         self.markets  # load markets on init
@@ -146,8 +147,10 @@ class Compound:
         market = next(x for x in self.markets if x == token)
         exchange_rate = market.get_exchange_rate(block)
         underlying_price = market.get_underlying_price(block)
-        base_price = magic.get_price(self.oracle_base, block)
-        return underlying_price * exchange_rate * base_price
+        if self.oracle_base == usdc:
+            return underlying_price * exchange_rate
+        else:
+            return [underlying_price * exchange_rate, self.oracle_base]
 
 
 class CompoundMultiplexer(metaclass=Singleton):

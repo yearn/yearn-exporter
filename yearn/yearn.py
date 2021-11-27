@@ -13,8 +13,9 @@ import yearn.v2.registry
 from yearn.networks import Network
 from yearn.outputs import victoria
 
-
 logger = logging.getLogger(__name__)
+logging.getLogger('yearn.v2.registry').setLevel(logging.DEBUG)
+logging.getLogger('yearn.prices.magic').setLevel(logging.DEBUG)
 
 
 class Yearn:
@@ -36,10 +37,12 @@ class Yearn:
             case Network.Fantom:
                 self.registries = {
                     "v2": yearn.v2.registry.Registry(),
+                    "ib": yearn.ironbank.Registry(),
                 }
             case Network.Arbitrum:
                 self.registries = {
                     "v2": yearn.v2.registry.Registry(),
+                    "ib": yearn.ironbank.Registry(),
                 }
         if load_strategies:
             self.registries["v2"].load_strategies()
