@@ -30,7 +30,7 @@ from yearn.v2.vaults import Vault as VaultV2
 
 from yearn.utils import contract_creation_block
 
-from yearn.prices.magic import PriceError
+from yearn.exceptions import PriceError
 
 warnings.simplefilter("ignore", BrownieEnvironmentWarning)
 

@@ -12,7 +12,8 @@ from yearn.outputs import victoria
 from yearn.partners.partners import partners
 from yearn.partners.snapshot import WildcardWrapper, Wrapper
 from yearn.prices.constants import weth
-from yearn.prices.magic import PriceError, get_price, logger as logger_price_magic
+from yearn.prices.magic import get_price, logger as logger_price_magic
+from yearn.exceptions import PriceError
 from yearn.utils import contract
 
 from ..constants import TREASURY_WALLETS

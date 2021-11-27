@@ -13,6 +13,7 @@ from yearn.prices import magic
 from yearn.prices.curve import curve
 from yearn.utils import contract_creation_block
 from yearn.apy import ApySamples
+from yearn.exceptions import PriceError
 
 class YveCRVJar:
     def __init__(self):
@@ -102,7 +103,7 @@ class Backscratcher:
         total_assets = self.vault.totalSupply(block_identifier=block)
         try:
             price = magic.get_price(self.token, block=block)
-        except magic.PriceError:
+        except PriceError:
             price = None
         tvl = total_assets * price / 10 ** self.vault.decimals(block_identifier=block) if price else None
         return Tvl(total_assets, price, tvl) 

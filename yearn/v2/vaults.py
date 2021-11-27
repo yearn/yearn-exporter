@@ -20,6 +20,7 @@ from yearn.outputs.postgres.postgres import PostgresInstance
 from yearn.prices.curve import curve
 from yearn.utils import safe_views
 from yearn.v2.strategies import Strategy
+from yearn.exceptions import PriceError
 
 VAULT_VIEWS_SCALED = [
     "totalAssets",
@@ -217,7 +218,7 @@ class Vault:
         total_assets = self.vault.totalAssets(block_identifier=block)
         try:
             price = magic.get_price(self.token, block=None)
-        except magic.PriceError:
+        except PriceError:
             price = None
         tvl = total_assets * price / 10 ** self.vault.decimals(block_identifier=block) if price else None
         return Tvl(total_assets, price, tvl)

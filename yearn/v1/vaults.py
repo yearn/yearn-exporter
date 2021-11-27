@@ -17,8 +17,9 @@ from yearn.events import create_filter, decode_logs
 from yearn.multicall2 import fetch_multicall
 from yearn.prices import magic
 from yearn.outputs.postgres.postgres import PostgresInstance
-from yearn.prices import curve
+from yearn.prices.curve import curve
 from yearn.utils import contract
+from yearn.exceptions import PriceError
 
 logger = logging.getLogger(__name__)
 
@@ -167,7 +168,7 @@ class VaultV1:
         total_assets = self.vault.balance(block_identifier=block)
         try:
             price = magic.get_price(self.token, block=block)
-        except magic.PriceError:
+        except PriceError:
             price = None
         tvl = total_assets * price / 10 ** self.vault.decimals(block_identifier=block) if price else None
         return Tvl(total_assets, price, tvl) 

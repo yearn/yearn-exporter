@@ -19,12 +19,10 @@ from yearn.prices import (
     uniswap_v3,
 )
 from yearn.prices.band import band
+from yearn.exceptions import PriceError
 
 logger = logging.getLogger(__name__)
 
-
-class PriceError(Exception):
-    pass
 
 
 @ttl_cache(10000)
