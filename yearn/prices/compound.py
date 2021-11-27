@@ -62,20 +62,6 @@ addresses = {
 
 
 @dataclass
-class CompoundOracle:
-    oracle: str
-    base: str
-
-    def get_price(self, token, block=None):
-        price = self.oracle.getUnderlyingPrice(
-            token, block_identifier=block
-        ) / 10 ** (36 - self.under_decimals)
-        if self.base != usdc:
-            price *= magic.get_price(self.base, block=block)
-        return price
-
-
-@dataclass
 class CompoundMarket:
     token: str
     oracle: str
