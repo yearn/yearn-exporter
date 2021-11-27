@@ -7,20 +7,18 @@ from yearn.networks import Network
 
 from yearn.prices import constants, uniswap
 
-if chain.id == 1:
-    from yearn.prices.aave import aave
-    from yearn.prices.chainlink import chainlink
-    from yearn.prices.curve import curve
-    from yearn.prices.compound import compound
-    from yearn.prices.fixed_forex import fixed_forex
-    from yearn.prices.synthetix import synthetix
-    from yearn.prices import (
-        balancer,
-        uniswap_v3,
-        yearn,
-    )
-elif chain.id == 250:
-    from yearn.prices.band import band
+from yearn.prices.aave import aave
+from yearn.prices.chainlink import chainlink
+from yearn.prices.curve import curve
+from yearn.prices.compound import compound
+from yearn.prices.fixed_forex import fixed_forex
+from yearn.prices.synthetix import synthetix
+from yearn.prices.yearn import yearn_lens
+from yearn.prices import (
+    balancer,
+    uniswap_v3,
+)
+from yearn.prices.band import band
 
 logger = logging.getLogger(__name__)
 
@@ -83,8 +81,8 @@ def get_price_eth(token, block=None):
         price = chainlink.get_price(token, block=block)
         logger.debug("chainlink -> %s", price)
 
-    elif yearn.is_yearn_vault(token):
-        price = yearn.get_price(token, block=block)
+    elif yearn_lens.is_yearn_vault(token):
+        price = yearn_lens.get_price(token, block=block)
         logger.debug("yearn -> %s", price)
 
     elif token in curve:
