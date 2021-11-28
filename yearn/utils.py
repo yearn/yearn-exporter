@@ -9,6 +9,12 @@ from yearn.networks import Network
 
 logger = logging.getLogger(__name__)
 
+BINARY_SEARCH_START_BLOCK = {
+    Network.Mainnet: 0,
+    Network.Fantom: 4_564_024,  # fantom returns "missing trie node" before that
+    Network.Arbitrum: 0,
+}
+
 
 def safe_views(abi):
     return [
@@ -69,8 +75,8 @@ def contract_creation_block(address) -> int:
     """
     logger.info("contract creation block %s", address)
 
-    height = chain.height
-    lo, hi = 0, height
+    lo = BINARY_SEARCH_START_BLOCK[chain.id]
+    hi = end = chain.height
 
     while hi - lo > 1:
         mid = lo + (hi - lo) // 2
@@ -79,7 +85,7 @@ def contract_creation_block(address) -> int:
         else:
             lo = mid
 
-    return hi if hi != height else None
+    return hi if hi != end else None
 
 
 class Singleton(type):
