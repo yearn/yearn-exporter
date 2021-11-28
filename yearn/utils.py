@@ -1,9 +1,10 @@
 import logging
-
-from brownie import chain, web3, Contract
 from functools import lru_cache
 
+from brownie import Contract, chain, web3
+
 from yearn.cache import memory
+from yearn.exceptions import ArchiveNodeRequired
 from yearn.networks import Network
 
 logger = logging.getLogger(__name__)
@@ -51,6 +52,15 @@ def closest_block_after_timestamp(timestamp):
     return hi
 
 
+def get_code(address, block=None):
+    try:
+        return web3.eth.get_code(address, block_identifier=block)
+    except ValueError as exc:
+        if 'missing trie node' in exc.args[0]['message']:
+            raise ArchiveNodeRequired('querying historical state requires an archive node')
+        raise exc
+
+
 @memory.cache()
 def contract_creation_block(address) -> int:
     """
@@ -64,7 +74,7 @@ def contract_creation_block(address) -> int:
 
     while hi - lo > 1:
         mid = lo + (hi - lo) // 2
-        if web3.eth.get_code(address, block_identifier=mid):
+        if get_code(address, block=mid):
             hi = mid
         else:
             lo = mid

@@ -4,3 +4,7 @@ class UnsupportedNetwork(Exception):
 
 class PriceError(Exception):
     pass
+
+
+class ArchiveNodeRequired(Exception):
+    pass
