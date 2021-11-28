@@ -64,7 +64,7 @@ addresses = {
 @dataclass
 class CompoundMarket:
     token: str
-    oracle: str
+    unitroller: ContractContainer
 
     @cached_property
     def name(self):
@@ -104,7 +104,9 @@ class CompoundMarket:
         return exchange_rate * 10 ** (self.cdecimals - self.under_decimals)
 
     def get_underlying_price(self, block=None):
-        price = self.oracle.getUnderlyingPrice(
+        # query the oracle in case it was changed
+        oracle = contract(self.unitroller.oracle(block_identifier=block))
+        price = oracle.getUnderlyingPrice(
             self.token, block_identifier=block
         ) / 10 ** (36 - self.under_decimals)
         return price
@@ -114,18 +116,17 @@ class Compound:
     def __init__(self, name, unitroller, oracle_base):
         self.name = name
         self.unitroller = contract(unitroller) if isinstance(unitroller, str) else unitroller()
-        self.oracle = contract(self.unitroller.oracle())
         self.oracle_base = oracle_base
         self.markets  # load markets on init
 
     def __repr__(self):
-        return f'<Compound name={self.name} unitroller={self.unitroller} oracle={self.oracle}>'
+        return f'<Compound name={self.name} unitroller={self.unitroller}>'
 
     @property
     @ttl_cache(ttl=3600)
     def markets(self):
         all_markets = self.unitroller.getAllMarkets()
-        markets = [CompoundMarket(token, self.oracle) for token in all_markets]
+        markets = [CompoundMarket(token, self.unitroller) for token in all_markets]
         logger.info(f'loaded {len(markets)} {self.name} markets')
         return markets
 
