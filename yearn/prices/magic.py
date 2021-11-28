@@ -1,27 +1,21 @@
 import logging
 
-from cachetools.func import ttl_cache
-
 from brownie import chain
+from cachetools.func import ttl_cache
+from yearn.exceptions import PriceError, UnsupportedNetwork
 from yearn.networks import Network
-
-from yearn.prices import constants
-
 from yearn.prices.aave import aave
+from yearn.prices.band import band
 from yearn.prices.chainlink import chainlink
-from yearn.prices.curve import curve
 from yearn.prices.compound import compound
 from yearn.prices.fixed_forex import fixed_forex
 from yearn.prices.synthetix import synthetix
-from yearn.prices.yearn import yearn_lens
 from yearn.prices.uniswap.v1 import uniswap_v1
 from yearn.prices.uniswap.v2 import uniswap_v2
 from yearn.prices.uniswap.v3 import uniswap_v3
-from yearn.prices import (
-    balancer,
-)
-from yearn.prices.band import band
-from yearn.exceptions import PriceError, UnsupportedNetwork
+from yearn.prices.yearn import yearn_lens
+
+from yearn.prices import balancer, constants, curve
 
 logger = logging.getLogger(__name__)
 
@@ -117,8 +111,8 @@ def get_price_eth(token, block=None):
         price = yearn_lens.get_price(token, block=block)
         logger.debug("yearn -> %s", price)
 
-    elif token in curve:
-        price = curve.get_price(token, block=block)
+    elif token in curve.curve:
+        price = curve.curve.get_price(token, block=block)
         logger.debug("curve lp -> %s", price)
 
     elif token in compound:
