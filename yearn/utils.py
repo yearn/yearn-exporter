@@ -81,7 +81,13 @@ def contract_creation_block(address) -> int:
 
     while hi - lo > 1:
         mid = lo + (hi - lo) // 2
-        if get_code(address, block=mid):
+        try:
+            code = get_code(address, block=mid)
+        except ArchiveNodeRequired as exc:
+            logger.error(exc)
+            # with no access to historical state, we'll have to scan logs from start
+            return 0
+        if code:
             hi = mid
         else:
             lo = mid
