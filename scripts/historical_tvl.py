@@ -6,9 +6,15 @@ from brownie import chain
 
 from yearn.db.models import Block, Snapshot, Session, engine, select
 from yearn.utils import closest_block_after_timestamp, get_block_timestamp
+from yearn.networks import Network
 from yearn.yearn import Yearn
 
 logger = logging.getLogger("yearn.historical_tvl")
+
+START_DATE = {
+    Network.Mainnet: datetime(2020, 2, 12, tzinfo=timezone.utc),  # first iearn deployment
+    Network.Fantom: datetime(2021, 4, 30, tzinfo=timezone.utc),  # ftm vault deployment 2021-09-02
+}
 
 
 def generate_snapshot_range(start, interval):
@@ -18,7 +24,7 @@ def generate_snapshot_range(start, interval):
 
 def main():
     yearn = Yearn(load_strategies=False)
-    start = datetime(2020, 2, 12, tzinfo=timezone.utc)  # first iearn deployment
+    start = START_DATE[chain.id]
     interval = timedelta(hours=24)
 
     for snapshot in generate_snapshot_range(start, interval):
