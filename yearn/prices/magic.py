@@ -149,7 +149,7 @@ def get_price_eth(token, block=None):
         price = uniswap_v3.get_price(token, block=block)
         logger.debug("uniswap v3 -> %s", price)
     if not price:
-        price = uniswap_v1(token, block=block)
+        price = uniswap_v1.get_price(token, block=block)
         logger.debug("uniswap v1 -> %s", price)
     if not price:
         logger.error("failed to get price for %s", token)

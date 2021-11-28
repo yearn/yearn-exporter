@@ -59,7 +59,10 @@ class Chainlink(metaclass=Singleton):
 
     @ttl_cache(maxsize=None, ttl=600)
     def get_price(self, asset, block=None):
-        return self.get_feed(asset).latestAnswer(block_identifier=block) / 1e8
+        try:
+            return self.get_feed(asset).latestAnswer(block_identifier=block) / 1e8
+        except ValueError:
+            return None
 
 
 chainlink = None
