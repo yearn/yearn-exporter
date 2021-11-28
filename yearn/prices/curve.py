@@ -29,8 +29,7 @@ from yearn.utils import Singleton, contract
 
 logger = logging.getLogger(__name__)
 
-WBTC = "0x2260FAC5E5542a773Aa44fBCfeDf7C193bc2C599"
-WETH = "0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2"
+ADDRESS_PROVIDER = '0x0000000022D53366457F9d5E68Ec105046FC4383'
 BASIC_TOKENS = {
     "0x6B175474E89094C44Da98b954EedeAC495271d0F",  # dai
     "0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2",  # weth
@@ -52,10 +51,17 @@ BASIC_TOKENS = {
 }
 curve_contracts = {
     Network.Mainnet: {
+        'address_provider': ADDRESS_PROVIDER,
         'crv': '0xD533a949740bb3306d119CC777fa900bA034cd52',
         'voting_escrow': '0x5f3b5DfEb7B28CDbD7FAba78963EE202a494e2A2',
         'gauge_controller': '0x2F50D538606Fa9EDD2B11E2446BEb18C9D5846bB',
-    }
+    },
+    Network.Fantom: {
+        'address_provider': ADDRESS_PROVIDER,
+    },
+    Network.Arbitrum: {
+        'address_provider': ADDRESS_PROVIDER,
+    },
 }
 
 
@@ -65,13 +71,14 @@ class CurveRegistry(metaclass=Singleton):
             raise UnsupportedNetwork("curve is not supported on this network")
 
         addrs = curve_contracts[chain.id]
-        self.crv = contract(addrs['crv'])
-        self.voting_escrow = contract(addrs['voting_escrow'])
-        self.gauge_controller = contract(addrs['gauge_controller'])
+        if chain.id == Network.Mainnet:
+            self.crv = contract(addrs['crv'])
+            self.voting_escrow = contract(addrs['voting_escrow'])
+            self.gauge_controller = contract(addrs['gauge_controller'])
 
         self.pools = set()
         self.identifiers = defaultdict(list)
-        self.addres_provider = contract('0x0000000022D53366457F9d5E68Ec105046FC4383')
+        self.addres_provider = contract(addrs['address_provider'])
         self.watch_events()
 
     def watch_events(self):
