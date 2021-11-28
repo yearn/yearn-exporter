@@ -7,6 +7,7 @@ from brownie import Contract, chain, web3
 from eth_abi.exceptions import InsufficientDataBytes
 
 from yearn.networks import Network
+from yearn.utils import contract_creation_block
 
 MULTICALL2 = {
     Network.Mainnet: '0x5BA1e12693Dc8F9c48aAD8770482f4739bEeD696',
@@ -32,7 +33,7 @@ def fetch_multicall(*calls, block=None):
         fn_list.append(fn)
         multicall_input.append((contract, fn.encode_input(*fn_inputs)))
 
-    if isinstance(block, int) and block < 12336033:
+    if isinstance(block, int) and block < contract_creation_block(MULTICALL2[chain.id]):
         # use state override to resurrect the contract prior to deployment
         data = multicall2.tryAggregate.encode_input(False, multicall_input)
         call = web3.eth.call(
