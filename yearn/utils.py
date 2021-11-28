@@ -9,7 +9,7 @@ from yearn.networks import Network
 
 logger = logging.getLogger(__name__)
 
-BINARY_SEARCH_START_BLOCK = {
+BINARY_SEARCH_BARRIER = {
     Network.Mainnet: 0,
     Network.Fantom: 4_564_024,  # fantom returns "missing trie node" before that
     Network.Arbitrum: 0,
@@ -62,7 +62,7 @@ def get_code(address, block=None):
     try:
         return web3.eth.get_code(address, block_identifier=block)
     except ValueError as exc:
-        if 'missing trie node' in exc.args[0]['message']:
+        if isinstance(exc.args[0], dict) and 'missing trie node' in exc.args[0]['message']:
             raise ArchiveNodeRequired('querying historical state requires an archive node')
         raise exc
 
@@ -75,7 +75,8 @@ def contract_creation_block(address) -> int:
     """
     logger.info("contract creation block %s", address)
 
-    lo = BINARY_SEARCH_START_BLOCK[chain.id]
+    barrier = BINARY_SEARCH_BARRIER[chain.id]
+    lo = barrier
     hi = end = chain.height
 
     while hi - lo > 1:
@@ -84,6 +85,11 @@ def contract_creation_block(address) -> int:
             hi = mid
         else:
             lo = mid
+
+    # only happens on fantom
+    if hi == barrier + 1:
+        logger.warning('could not determine creation block for a contract deployed prior to barrier')
+        return 0
 
     return hi if hi != end else None
 
