@@ -35,7 +35,7 @@ def get_block_timestamp(height):
     if chain.id == Network.Mainnet:
         header = web3.manager.request_blocking(f"erigon_getHeaderByNumber", [height])
         return int(header.timestamp, 16)
-    elif chain.id == Network.Fantom:
+    else:
         return chain[height].timestamp
 
 
