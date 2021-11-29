@@ -1,23 +1,37 @@
 import os
-from typing import Optional
-from sqlmodel import Field, SQLModel, create_engine, Column, DateTime, Session, select
 from datetime import datetime
+from typing import List, Optional
+
+from sqlmodel import (
+    Column,
+    DateTime,
+    Field,
+    Relationship,
+    Session,
+    SQLModel,
+    create_engine,
+    select,
+)
 
 
 class Block(SQLModel, table=True):
+    id: int = Field(primary_key=True)
     chain_id: int
-    block: int = Field(primary_key=True)
+    height: int
     timestamp: datetime = Field(sa_column=Column(DateTime(timezone=True)))
     snapshot: Optional[datetime] = Field(sa_column=Column(DateTime(timezone=True)))
+
+    snapshots: List["Snapshot"] = Relationship(back_populates="block")
 
 
 class Snapshot(SQLModel, table=True):
     id: int = Field(primary_key=True)
-    chain_id: int
-    block: int = Field(foreign_key="block.block")
     product: str
     name: str
     assets: float
+
+    block_id: int = Field(foreign_key="block.id")
+    block: Block = Relationship(back_populates="snapshots")
 
 
 user = os.environ.get('PGUSER', 'postgres')

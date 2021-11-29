@@ -26,7 +26,7 @@ def generate_snapshot_range(start, interval):
 def main():
     yearn = Yearn(load_strategies=False)
     start = START_DATE[chain.id]
-    interval = timedelta(hours=1)
+    interval = timedelta(hours=24)
 
     for snapshot in generate_snapshot_range(start, interval):
         while chain[-1].timestamp < snapshot.timestamp():
@@ -50,7 +50,7 @@ def main():
 
             new_block = Block(
                 chain_id=chain.id,
-                block=block,
+                height=block,
                 timestamp=chain[block].timestamp,
                 snapshot=snapshot,
             )
@@ -59,8 +59,7 @@ def main():
             for product in assets:
                 for name in assets[product]:
                     snap = Snapshot(
-                        chain_id=chain.id,
-                        block=new_block.block,
+                        block=new_block,
                         product=product,
                         name=name,
                         assets=assets[product][name],
