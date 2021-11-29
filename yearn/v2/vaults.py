@@ -16,7 +16,7 @@ from yearn.common import Tvl
 from yearn.events import create_filter, decode_logs
 from yearn.multicall2 import fetch_multicall
 from yearn.prices import magic
-from yearn.outputs.postgres.postgres import PostgresInstance
+# from yearn.outputs.postgres.postgres import PostgresInstance
 from yearn.prices.curve import curve
 from yearn.utils import safe_views
 from yearn.v2.strategies import Strategy
@@ -146,8 +146,13 @@ class Vault:
     def process_events(self, events):
         for event in events:
             if event.name == "StrategyAdded":
-                logger.debug("%s strategy added %s", self.name, event["strategy"])
-                self._strategies[event["strategy"]] = Strategy(event["strategy"], self, self._watch_events_forever)
+                strategy_address = event["strategy"]
+                logger.debug("%s strategy added %s", self.name, strategy_address)
+                try: 
+                    self._strategies[strategy_address] = Strategy(strategy_address, self, self._watch_events_forever)
+                except ValueError:
+                    print(f"Error loading strategy {strategy_address}")
+                    pass
             elif event.name == "StrategyRevoked":
                 logger.debug("%s strategy revoked %s", self.name, event["strategy"])
                 self._revoked[event["strategy"]] = self._strategies.pop(

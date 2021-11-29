@@ -9,7 +9,7 @@ from yearn.apy.curve.rewards import rewards
 from yearn.networks import Network
 from yearn.prices.curve import curve
 from yearn.prices.magic import get_price
-from yearn.utils import get_block_timestamp
+from yearn.utils import get_block_timestamp, contract
 
 logger = logging.getLogger(__name__)
 
@@ -19,7 +19,7 @@ addresses = {
         'yearn_voter_proxy': '0xF147b8125d2ef93FB6965Db97D6746952a133934',
         'convex_voter_proxy': '0x989AEb4d175e16225E39E87d0D97A3360524AD80',
         'convex_booster': '0xF403C135812408BFbE8713b5A23a04b3D48AAE31',
-        'rkp3r_rewrds': '0xEdB67Ee1B171c4eC66E6c10EC43EDBbA20FaE8e9',
+        'rkp3r_rewards': '0xEdB67Ee1B171c4eC66E6c10EC43EDBbA20FaE8e9',
         'kp3r': '0x1cEB5cB57C4D4E2b2433641b95Dd330A33185A44',
     }
 }
@@ -136,15 +136,15 @@ def simple(vault, samples: ApySamples) -> Apy:
     from yearn.v2.vaults import Vault as VaultV2
 
     if isinstance(vault, VaultV2):
-        contract = vault.vault
+        vault_contract = vault.vault
         if len(vault.strategies) > 0 and hasattr(vault.strategies[0].strategy, "keepCRV"):
             crv_keep_crv = vault.strategies[0].strategy.keepCRV(block_identifier=block) / 1e4
         elif len(vault.strategies) > 0 and hasattr(vault.strategies[0].strategy, "keepCrvPercent"):
             crv_keep_crv = vault.strategies[0].strategy.keepCrvPercent(block_identifier=block) / 1e4
         else:
             crv_keep_crv = 0
-        performance = (contract.performanceFee(block_identifier=block) * 2) / 1e4 if hasattr(contract, "performanceFee") else 0
-        management = contract.managementFee(block_identifier=block) / 1e4 if hasattr(contract, "managementFee") else 0
+        performance = (vault_contract.performanceFee(block_identifier=block) * 2) / 1e4 if hasattr(vault_contract, "performanceFee") else 0
+        management = vault_contract.managementFee(block_identifier=block) / 1e4 if hasattr(vault_contract, "managementFee") else 0
     else:
         strategy = vault.strategy
         strategist_performance = strategy.performanceFee(block_identifier=block) if hasattr(strategy, "performanceFee") else 0

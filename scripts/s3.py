@@ -9,7 +9,6 @@ import os
 
 from datetime import datetime
 from typing import Any, Union
-
 from time import time
 
 from brownie.network.contract import Contract
@@ -162,10 +161,6 @@ def main():
 
     os.makedirs(os.path.join(out, vaults_api_path), exist_ok=True)
 
-    # for vault in data:
-    #     with open(os.path.join(namespace_vaults, vault["address"]), "w+") as f:
-    #         json.dump(vault, f)
-
     endorsed = [vault for vault in data if vault["endorsed"]]
     experimental = [vault for vault in data if not vault["endorsed"]]
 
@@ -184,6 +179,7 @@ def main():
     s3 = boto3.client("s3", aws_access_key_id=aws_key, aws_secret_access_key=aws_secret)
 
     print(json.dumps(data))
+    return
 
     s3.upload_file(
         os.path.join(out, vault_api_all),
@@ -200,7 +196,7 @@ def main():
     )
 
 
-telegram_users_to_alert = ["@nymmrx", "@x48114", "@dudesahn"]
+telegram_users_to_alert = ["@jstashh", "@x48114", "@dudesahn"]
 
 
 def with_monitoring():
@@ -210,7 +206,7 @@ def with_monitoring():
     public_group = os.environ.get('TG_YFIREBOT_GROUP_EXTERNAL')
     updater = Updater(os.environ.get('TG_YFIREBOT'))
     now = datetime.now()
-    message = f"`[{now}]`\n⚙️ API (vaults) is updating..."
+    message = f"`[{now}]`\n⚙️ API (vaults) for {Network(chain.id).name} is updating..."
     ping = updater.bot.send_message(chat_id=private_group, text=message, parse_mode="Markdown")
     ping = ping.message_id
     try:
@@ -219,9 +215,9 @@ def with_monitoring():
         tb = traceback.format_exc()
         now = datetime.now()
         tags = " ".join(telegram_users_to_alert)
-        message = f"`[{now}]`\n🔥 API (vaults) update failed!\n```\n{tb}\n```\n{tags}"
+        message = f"`[{now}]`\n🔥 API (vaults) update for {Network(chain.id).name} failed!\n```\n{tb}\n```\n{tags}"
         updater.bot.send_message(chat_id=private_group, text=message, parse_mode="Markdown", reply_to_message_id=ping)
         updater.bot.send_message(chat_id=public_group, text=message, parse_mode="Markdown")
         raise error
-    message = "✅ API (vaults) update successful!"
+    message = f"✅ API (vaults) update for {Network(chain.id).name} successful!"
     updater.bot.send_message(chat_id=private_group, text=message, reply_to_message_id=ping)
