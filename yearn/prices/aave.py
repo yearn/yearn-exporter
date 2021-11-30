@@ -35,9 +35,12 @@ class Aave(metaclass=Singleton):
         atoken_to_token = {}
         for version, provider in address_providers[chain.id].items():
             lending_pool = contract(contract(provider).getLendingPool())
-            match version:
-                case 'v1': tokens = lending_pool.getReserves()
-                case 'v2': tokens = lending_pool.getReservesList()
+            if version == 'v1':
+                tokens = lending_pool.getReserves()
+            elif version == 'v2':
+                tokens = lending_pool.getReservesList()
+            else:
+                raise ValueError(f'unsupported aave version {version}')
 
             reserves = fetch_multicall(
                 *[[lending_pool, 'getReserveData', token] for token in tokens]

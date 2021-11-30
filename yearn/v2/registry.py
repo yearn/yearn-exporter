@@ -35,11 +35,14 @@ class Registry(metaclass=Singleton):
         self._thread.start()
 
     def load_registry(self):
-        match chain.id:
-            case Network.Mainnet: return self.load_from_ens()
-            case Network.Fantom: return [contract('0x727fe1759430df13655ddb0731dE0D0FDE929b04')]
-            case Network.Arbitrum: return [contract('0xC8f17f8E15900b6D6079680b15Da3cE5263f62AA')]
-            case _: raise UnsupportedNetwork('yearn v2 is not available on this network')
+        if chain.id == Network.Mainnet:
+            return self.load_from_ens()
+        elif chain.id == Network.Fantom:
+            return [contract('0x727fe1759430df13655ddb0731dE0D0FDE929b04')]
+        elif chain.id == Network.Arbitrum:
+            return [contract('0xC8f17f8E15900b6D6079680b15Da3cE5263f62AA')]
+        else:
+            raise UnsupportedNetwork('yearn v2 is not available on this network')
 
     def load_from_ens(self):
         # track older registries to pull experiments

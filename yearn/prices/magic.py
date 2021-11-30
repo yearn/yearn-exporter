@@ -30,15 +30,14 @@ def get_price(token, block=None):
         logger.debug("stablecoin -> %s", 1)
         return 1
 
-    match chain.id:
-        case Network.Mainnet:
-            return get_price_eth(token, block)
-        case Network.Fantom:
-            return get_price_ftm(token, block)
-        case Network.Arbitrum:
-            return get_price_arbi(token, block)
-        case _:
-            raise UnsupportedNetwork('magic price oracle is not supported on this network')
+    if chain.id == Network.Mainnet:
+        return get_price_eth(token, block)
+    elif chain.id == Network.Fantom:
+        return get_price_ftm(token, block)
+    elif chain.id == Network.Arbitrum:
+        return get_price_arbi(token, block)
+    else:
+        raise UnsupportedNetwork('magic price oracle is not supported on this network')
 
 
 def get_price_arbi(token, block=None):
@@ -90,13 +89,12 @@ def get_price_ftm(token, block=None):
 def get_price_eth(token, block=None):
     price = None
 
-    match token:
-        case "0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE":
-            token = constants.weth
-        case "0x4da27a545c0c5B758a6BA100e3a049001de870f5":
-            token = "0x7fc66500c84a76ad7e9c93437bfc5ac33e2ddae9"  # stkAAVE -> AAVE
-        case "0x27D22A7648e955E510a40bDb058333E9190d12D4":
-            token = "0x0cec1a9154ff802e7934fc916ed7ca50bde6844e"  # PPOOL -> POOL
+    if token == "0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE":
+        token = constants.weth
+    elif token == "0x4da27a545c0c5B758a6BA100e3a049001de870f5":
+        token = "0x7fc66500c84a76ad7e9c93437bfc5ac33e2ddae9"  # stkAAVE -> AAVE
+    elif token == "0x27D22A7648e955E510a40bDb058333E9190d12D4":
+        token = "0x0cec1a9154ff802e7934fc916ed7ca50bde6844e"  # PPOOL -> POOL
 
     if token in aave:
         token = aave.atoken_underlying(token)
