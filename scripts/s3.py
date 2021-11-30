@@ -179,7 +179,6 @@ def main():
     s3 = boto3.client("s3", aws_access_key_id=aws_key, aws_secret_access_key=aws_secret)
 
     print(json.dumps(data))
-    return
 
     s3.upload_file(
         os.path.join(out, vault_api_all),

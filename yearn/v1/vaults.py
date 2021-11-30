@@ -16,7 +16,7 @@ from yearn.common import Tvl
 from yearn.events import create_filter, decode_logs
 from yearn.multicall2 import fetch_multicall
 from yearn.prices import magic
-# from yearn.outputs.postgres.postgres import PostgresInstance
+from yearn.outputs.postgres.postgres import PostgresInstance
 from yearn.prices.curve import curve
 from yearn.utils import contract
 from yearn.exceptions import PriceError
