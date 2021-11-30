@@ -5,7 +5,7 @@ NETWORK="mainnet" # default to Mainnet (Infura)
 EXPLORER=${EXPLORER:-https://api.etherscan.io/api}
 
 if [[ ! -z "$WEB3_PROVIDER" ]]; then
-  if [[ ! $(brownie networks list | grep mainnet-custom) ]]; then
+  if [[ $(brownie networks list | grep mainnet-custom) ]]; then
     brownie networks delete mainnet-custom
   fi
   brownie networks modify mainnet host=$WEB3_PROVIDER chainid=1 explorer=$EXPLORER
