@@ -1,5 +1,6 @@
 import logging
 from functools import lru_cache
+import threading
 
 from brownie import Contract, chain, web3
 
@@ -114,7 +115,10 @@ class Singleton(type):
 
 
 # Contract instance singleton, saves about 20ms of init time
+lock = threading.Lock()
+lock.acquire()
 contract = lru_cache(maxsize=None)(Contract)
+lock.release()
 
 def is_contract(address: str) -> bool:
     '''checks to see if the input address is a contract'''
