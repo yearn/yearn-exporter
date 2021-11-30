@@ -76,10 +76,10 @@ class CompoundMarket:
 
     @cached_property
     def underlying(self):
-        match self.token:
-            case '0x4Ddc2D193948926D02f9B1fE9e1daa0718270ED5' | '0xD06527D5e56A3495252A528C4987003b712860eE':
-                return contract('0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2')  # ceth | creth -> weth
-            case _: return contract(self.ctoken.underlying())
+        if self.token == '0x4Ddc2D193948926D02f9B1fE9e1daa0718270ED5' or self.token == '0xD06527D5e56A3495252A528C4987003b712860eE':
+            return contract('0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2')  # ceth | creth -> weth
+        else: 
+            return contract(self.ctoken.underlying())
 
     @cached_property
     def cdecimals(self):
