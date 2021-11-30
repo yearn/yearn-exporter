@@ -1,4 +1,4 @@
-FROM python:3.8-buster
+FROM python:3.9-buster
 
 RUN mkdir -p /app/yearn-exporter
 WORKDIR /app/yearn-exporter
