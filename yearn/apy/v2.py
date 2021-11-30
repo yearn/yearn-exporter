@@ -29,6 +29,10 @@ def closest(haystack, needle):
 
 def simple(vault, samples: ApySamples) -> Apy:
     harvests = sorted([harvest for strategy in vault.strategies for harvest in strategy.harvests])
+
+    # we don't want to display APYs when vaults are ramping up
+    if len(harvests) < 2:
+        raise ApyError("v2:harvests", "harvests are < 2")
     
     # set our time values for simple calcs, closest to a harvest around that time period
     now = closest(harvests, samples.now)
@@ -45,10 +49,6 @@ def simple(vault, samples: ApySamples) -> Apy:
     # get our inception data
     inception_price = 10 ** contract.decimals()
     inception_block = harvests[:2][-1]
-    
-    # we don't want to display APYs when vaults are ramping up
-    if len(harvests) < 2:
-        raise ApyError("v2:harvests", "harvests are < 2")
 
     if now_price == inception_price:
         raise ApyError("v2:inception", "no change from inception price")
