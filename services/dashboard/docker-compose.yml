@@ -15,6 +15,7 @@ networks:
 services:
   yearn-exporter:
     build: .
+    image: yearn-exporter
     command: exporter
     environment:
       - WEB3_INFURA_PROJECT_ID
@@ -32,7 +33,7 @@ services:
     restart: on-failure
 
   transactions-exporter:
-    build: .
+    image: yearn-exporter
     command: transactions
     environment:
       - WEB3_INFURA_PROJECT_ID
@@ -50,7 +51,7 @@ services:
     restart: on-failure
 
   transactions-exporter:
-    build: .
+    image: yearn-exporter
     command: transactions
     environment:
       - WEB3_INFURA_PROJECT_ID
@@ -68,7 +69,7 @@ services:
     restart: on-failure
 
   transactions-exporter:
-    build: .
+    image: yearn-exporter
     command: transactions
     environment:
       - WEB3_INFURA_PROJECT_ID
@@ -86,7 +87,7 @@ services:
     restart: on-failure
 
   historical-exporter:
-    build: .
+    image: yearn-exporter
     command: historical_exporter
     environment:
       - WEB3_INFURA_PROJECT_ID
@@ -107,7 +108,7 @@ services:
     restart: on-failure
 
   wallet-exporter:
-    build: .
+    image: yearn-exporter
     command: wallet_exporter
     environment:
       - WEB3_INFURA_PROJECT_ID
@@ -129,7 +130,7 @@ services:
     restart: always
 
   treasury-exporter:
-    build: .
+    image: yearn-exporter
     command: treasury_exporter
     environment:
       - WEB3_INFURA_PROJECT_ID
@@ -150,7 +151,7 @@ services:
     restart: on-failure
 
   historical-treasury-exporter:
-    build: .
+    image: yearn-exporter
     command: historical_treasury_exporter
     environment:
       - WEB3_INFURA_PROJECT_ID
@@ -171,7 +172,7 @@ services:
     restart: on-failure
 
   transactions-exporter:
-    build: .
+    image: yearn-exporter
     command: transactions_exporter
     environment:
       - POSTGRES_PASSWORD=yearn-exporter
