@@ -7,6 +7,7 @@ from joblib import Parallel, delayed
 
 import yearn.iearn
 import yearn.ironbank
+from yearn.outputs.describers.registry import RegistryWalletDescriber
 import yearn.special
 import yearn.v1.registry
 import yearn.v2.registry
@@ -62,7 +63,8 @@ class Yearn:
 
     def describe_wallets(self, block=None):
         registries = ['v1','v2'] # TODO: add other registries [earn, ib, special]
-        data = Parallel(4,'threading')(delayed(self.registries[key].describe_wallets)(block=block) for key in registries)
+        describer = RegistryWalletDescriber()
+        data = Parallel(4,'threading')(delayed(describer.describe_wallets)(self.registries[key], block=block) for key in registries)
         data = {registry:desc for registry,desc in zip(registries,data)}
 
         wallet_balances = Counter()

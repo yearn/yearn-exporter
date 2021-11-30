@@ -1,9 +1,7 @@
 import logging
-import os
 import re
 import threading
 import time
-from collections import Counter
 from typing import List
 
 from brownie import ZERO_ADDRESS, Contract, chain
@@ -16,7 +14,6 @@ from yearn.common import Tvl
 from yearn.events import create_filter, decode_logs
 from yearn.multicall2 import fetch_multicall
 from yearn.prices import magic
-from yearn.outputs.postgres.postgres import PostgresInstance
 from yearn.prices.curve import curve
 from yearn.utils import safe_views
 from yearn.v2.strategies import Strategy
@@ -167,12 +164,6 @@ class Vault:
             elif event.name == "StrategyReported":
                 self._reports.append(event)
 
-    def wallets(self, block=None):
-        return self.wallet_balances(block=block).keys()
-
-    def wallet_balances(self, block=None):
-        return PostgresInstance().fetch_balances(self.vault.address, block=block)
-
     def describe(self, block=None):
         try:
             results = fetch_multicall(*[[self.vault, view] for view in self._views], block=block)
@@ -195,20 +186,6 @@ class Vault:
         info["address"] = self.vault
         info["version"] = "v2"
         
-        return info
-
-    def describe_wallets(self,block=None):
-        balances = self.wallet_balances(block=block)
-        info = {
-            'total wallets': len(set(wallet for wallet, bal in balances.items())),
-            'active wallets': sum(1 if balance > 50 else 0 for wallet, balance in balances.items()),
-            'wallet balances': {
-                            wallet: {
-                                "token balance": float(bal), #/ self.scale,
-                                "usd balance": float(bal) * magic.get_price(self.token,block=block)
-                                } for wallet, bal in balances.items()
-                            }
-        }
         return info
 
     def apy(self, samples: ApySamples):

@@ -3,7 +3,6 @@ import os
 from collections import Counter
 
 from brownie import Contract, interface, web3
-from brownie.network.contract import InterfaceContainer
 from joblib import Parallel, delayed
 from yearn.multicall2 import fetch_multicall
 from yearn.utils import contract_creation_block
@@ -30,25 +29,6 @@ class Registry:
         vaults = [vault for vault, share_price in zip(vaults, share_prices) if share_price]
         data = Parallel(8, "threading")(delayed(vault.describe)(block=block) for vault in vaults)
         return {vault.name: desc for vault, desc in zip(vaults, data)}
-
-    def describe_wallets(self,block=None):
-        vaults = self.active_vaults_at(block=block)
-        data = Parallel(8,'threading')(delayed(vault.describe_wallets)(block=block) for vault in vaults)
-        data = {vault.name: desc for vault,desc in zip(vaults,data)}
-
-        wallet_balances = Counter()
-        for vault, desc in data.items():
-            for wallet, bals in desc['wallet balances'].items():
-                wallet_balances[wallet] += bals["usd balance"]
-        agg_stats = {
-            "total wallets": len(wallet_balances),
-            "active wallets": sum(1 if balance > 50 else 0 for wallet, balance in wallet_balances.items()),
-            "wallets > $5k": sum(1 if balance > 5000 else 0 for wallet, balance in wallet_balances.items()),
-            "wallets > $50k": sum(1 if balance > 50000 else 0 for wallet, balance in wallet_balances.items()),
-            "wallet balances usd": wallet_balances,
-        }
-        data.update(agg_stats)
-        return data
 
     def total_value_at(self, block=None):
         vaults = self.active_vaults_at(block)
