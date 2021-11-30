@@ -15,7 +15,6 @@ from yearn.apy.common import (
 
 def closest(haystack, needle):
     pos = bisect_left(sorted(haystack), needle)
-    print(haystack, needle, pos)
     if pos == 0:
         return haystack[0]
     if pos == len(haystack):
