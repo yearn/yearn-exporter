@@ -6,7 +6,7 @@ from typing import List
 from brownie import Contract, chain
 from eth_utils import encode_hex, event_abi_to_log_topic
 
-from yearn.utils import safe_views
+from yearn.utils import safe_views, contract
 from yearn.multicall2 import fetch_multicall
 from yearn.events import create_filter, decode_logs
 
@@ -30,7 +30,7 @@ logger = logging.getLogger(__name__)
 
 class Strategy:
     def __init__(self, strategy, vault, watch_events_forever):
-        self.strategy = Contract(strategy)
+        self.strategy = contract(strategy)
         self.vault = vault
         try:
             self.name = self.strategy.name()

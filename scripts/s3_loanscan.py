@@ -3,6 +3,7 @@ from yearn.v2.registry import Registry as RegistryV2
 from yearn.v2.vaults import Vault as VaultV2
 from yearn.prices import curve
 from yearn.apy import get_samples, ApySamples
+from yearn.utils import contract
 from brownie import web3
 from brownie.network.contract import Contract
 from brownie.exceptions import BrownieEnvironmentWarning
@@ -26,7 +27,7 @@ logger = logging.getLogger("yearn.apy")
 
 
 def get_assets_metadata(vault_v2: list) -> dict:
-    registry_v2_adapter = Contract(web3.ens.resolve("lens.ychad.eth"))
+    registry_v2_adapter = contract(web3.ens.resolve("lens.ychad.eth"))
     addresses = [str(vault.vault) for vault in vault_v2]
     assets_dynamic_data = registry_v2_adapter.assetsDynamic(addresses)
     assets_metadata = {}
@@ -41,7 +42,7 @@ def get_formatted_lend_rates(vault: VaultV2, samples: ApySamples) -> list:
     lend_rate_apr = ((apy.net_apy + 1) ** (1 / 365) - 1) * 365
     if apy.type == 'crv':
         return [
-            {"apr": lend_rate_apr, "apy": lend_rate_apy, "tokenSymbol": Contract(curve_pool_token_address).symbol()}
+            {"apr": lend_rate_apr, "apy": lend_rate_apy, "tokenSymbol": contract(curve_pool_token_address).symbol()}
             for curve_pool_token_address in curve.get_underlying_coins(vault.token)
         ]
     else:

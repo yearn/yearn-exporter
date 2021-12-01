@@ -11,7 +11,7 @@ from joblib import Parallel, delayed
 
 from yearn.prices import magic
 from yearn.prices.curve import curve
-from yearn.utils import contract_creation_block
+from yearn.utils import contract_creation_block, contract
 from yearn.apy import ApySamples
 from yearn.exceptions import PriceError
 
@@ -19,8 +19,8 @@ class YveCRVJar:
     def __init__(self):
         self.id = "yvecrv-eth"
         self.name = "pickling SushiSwap LP Token"
-        self.vault = Contract("0xbD17B1ce622d73bD438b9E658acA5996dc394b0d")
-        self.token = Contract("0x5Eff6d166D66BacBC1BF52E2C54dD391AE6b1f48")
+        self.vault = contract("0xbD17B1ce622d73bD438b9E658acA5996dc394b0d")
+        self.token = contract("0x5Eff6d166D66BacBC1BF52E2C54dD391AE6b1f48")
 
     @property
     def strategies(self):
@@ -49,9 +49,9 @@ class YveCRVJar:
 class Backscratcher:
     def __init__(self):
         self.name = "yveCRV"
-        self.vault = Contract("0xc5bDdf9843308380375a611c18B50Fb9341f502A")
-        self.token = Contract("0xD533a949740bb3306d119CC777fa900bA034cd52")
-        self.proxy = Contract("0xF147b8125d2ef93FB6965Db97D6746952a133934")
+        self.vault = contract("0xc5bDdf9843308380375a611c18B50Fb9341f502A")
+        self.token = contract("0xD533a949740bb3306d119CC777fa900bA034cd52")
+        self.proxy = contract("0xF147b8125d2ef93FB6965Db97D6746952a133934")
 
     def describe(self, block=None):
         crv_locked = curve.voting_escrow.balanceOf["address"](self.proxy, block_identifier=block) / 1e18
@@ -72,9 +72,9 @@ class Backscratcher:
         return []
 
     def apy(self, _: ApySamples) -> Apy:
-        curve_3_pool = Contract("0xbEbc44782C7dB0a1A60Cb6fe97d0b483032FF1C7")
-        curve_reward_distribution = Contract("0xA464e6DCda8AC41e03616F95f4BC98a13b8922Dc")
-        curve_voting_escrow = Contract("0x5f3b5DfEb7B28CDbD7FAba78963EE202a494e2A2")
+        curve_3_pool = contract("0xbEbc44782C7dB0a1A60Cb6fe97d0b483032FF1C7")
+        curve_reward_distribution = contract("0xA464e6DCda8AC41e03616F95f4BC98a13b8922Dc")
+        curve_voting_escrow = contract("0x5f3b5DfEb7B28CDbD7FAba78963EE202a494e2A2")
         voter = "0xF147b8125d2ef93FB6965Db97D6746952a133934"
         crv_price = magic.get_price("0xD533a949740bb3306d119CC777fa900bA034cd52")
         yvecrv_price = magic.get_price("0xc5bDdf9843308380375a611c18B50Fb9341f502A")
@@ -114,8 +114,8 @@ class Backscratcher:
 class Ygov:
     def __init__(self):
         self.name = "yGov"
-        self.vault = Contract("0xBa37B002AbaFDd8E89a1995dA52740bbC013D992")
-        self.token = Contract("0x0bc529c00C6401aEF6D220BE8C6Ea1667F6Ad93e")
+        self.vault = contract("0xBa37B002AbaFDd8E89a1995dA52740bbC013D992")
+        self.token = contract("0x0bc529c00C6401aEF6D220BE8C6Ea1667F6Ad93e")
 
     def describe(self, block=None):
         yfi_locked = self.token.balanceOf(self.vault, block_identifier=block) / 1e18

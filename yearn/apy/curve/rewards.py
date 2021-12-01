@@ -3,13 +3,13 @@ from typing import Optional
 from brownie import Contract, ZERO_ADDRESS
 
 from yearn.apy.common import SECONDS_PER_YEAR
-from yearn.utils import get_block_timestamp
+from yearn.utils import get_block_timestamp, contract
 
 from yearn.prices.magic import get_price
 
 
 def rewards(address: str, pool_price: int, base_asset_price: int, block: Optional[int]=None) -> float:
-    staking_rewards = Contract(address)
+    staking_rewards = contract(address)
     if hasattr(staking_rewards, "periodFinish"):
         return staking(address, pool_price, base_asset_price, block=block)
     else:
@@ -17,7 +17,7 @@ def rewards(address: str, pool_price: int, base_asset_price: int, block: Optiona
 
 
 def staking(address: str, pool_price: int, base_asset_price: int, block: Optional[int]=None) -> float:
-    staking_rewards = Contract(address)
+    staking_rewards = contract(address)
     end = staking_rewards.periodFinish(block_identifier=block)
 
     current_time = time() if block is None else get_block_timestamp(block)
@@ -64,7 +64,7 @@ def staking(address: str, pool_price: int, base_asset_price: int, block: Optiona
 
 
 def multi(address: str, pool_price: int, base_asset_price: int, block: Optional[int]=None) -> float:
-    multi_rewards = Contract(address)
+    multi_rewards = contract(address)
 
     total_supply = multi_rewards.totalSupply(block_identifier=block) if hasattr(multi_rewards, "totalSupply") else 0
 

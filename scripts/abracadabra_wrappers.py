@@ -2,6 +2,7 @@ from brownie import *
 from rich import print
 from yearn.partners.snapshot import BentoboxWrapper
 from yearn.v2.registry import Registry
+from yearn.utils import contract
 
 # https://docs.abracadabra.money/our-ecosystem/our-cauldrons-contract
 CAULDRONS = [
@@ -28,7 +29,7 @@ def main():
     vaults = [str(vault.vault) for vault in v2.vaults]
     wrappers = []
     for cauldron in CAULDRONS:
-        collateral = Contract(cauldron).collateral()
+        collateral = contract(cauldron).collateral()
         if collateral not in vaults:
             continue
         wrappers.append(

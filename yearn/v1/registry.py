@@ -6,7 +6,7 @@ from brownie import Contract, interface, web3
 from brownie.network.contract import InterfaceContainer
 from joblib import Parallel, delayed
 from yearn.multicall2 import fetch_multicall
-from yearn.utils import contract_creation_block
+from yearn.utils import contract_creation_block, contract
 from yearn.v1.vaults import VaultV1
 
 logger = logging.getLogger(__name__)
@@ -15,8 +15,8 @@ logger = logging.getLogger(__name__)
 class Registry:
     def __init__(self):
         self.registry = interface.YRegistry(web3.ens.resolve("registry.ychad.eth"))
-        addresses_provider = Contract("0x9be19Ee7Bc4099D62737a7255f5c227fBcd6dB93")
-        addresses_generator_v1_vaults = Contract(addresses_provider.addressById("ADDRESSES_GENERATOR_V1_VAULTS"))
+        addresses_provider = contract("0x9be19Ee7Bc4099D62737a7255f5c227fBcd6dB93")
+        addresses_generator_v1_vaults = contract(addresses_provider.addressById("ADDRESSES_GENERATOR_V1_VAULTS"))
 
         # NOTE: we assume no more v1 vaults are deployed
         self.vaults = [VaultV1(vault_address, *self.registry.getVaultInfo(vault_address)) for vault_address in addresses_generator_v1_vaults.assetsAddresses()]

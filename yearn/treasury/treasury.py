@@ -168,11 +168,11 @@ class Treasury:
         return collateral
 
     def maker_collateral(self, block=None) -> dict:
-        proxy_registry = Contract('0x4678f0a6958e4D2Bc4F1BAF7Bc52E8F3564f3fE4')
-        cdp_manager = Contract('0x5ef30b9986345249bc32d8928B7ee64DE9435E39')
-        # ychad = Contract('ychad.eth')
-        ychad = Contract('0xfeb4acf3df3cdea7399794d0869ef76a6efaff52')
-        vat = Contract('0x35D1b3F3D7966A1DFe207aa4514C12a259A0492B')
+        proxy_registry = contract('0x4678f0a6958e4D2Bc4F1BAF7Bc52E8F3564f3fE4')
+        cdp_manager = contract('0x5ef30b9986345249bc32d8928B7ee64DE9435E39')
+        # ychad = contract('ychad.eth')
+        ychad = contract('0xfeb4acf3df3cdea7399794d0869ef76a6efaff52')
+        vat = contract('0x35D1b3F3D7966A1DFe207aa4514C12a259A0492B')
         proxy = proxy_registry.proxies(ychad)
         cdp = cdp_manager.first(proxy)
         urn = cdp_manager.urns(cdp)
@@ -190,9 +190,9 @@ class Treasury:
     def unit_collateral(self, block=None) -> dict:
         if block and block < 11315910:
             return
-        # ychad = Contract('ychad.eth')
-        ychad = Contract('0xfeb4acf3df3cdea7399794d0869ef76a6efaff52')
-        unitVault = Contract("0xb1cff81b9305166ff1efc49a129ad2afcd7bcf19")
+        # ychad = contract('ychad.eth')
+        ychad = contract('0xfeb4acf3df3cdea7399794d0869ef76a6efaff52')
+        unitVault = contract("0xb1cff81b9305166ff1efc49a129ad2afcd7bcf19")
         yfi = "0x0bc529c00C6401aEF6D220BE8C6Ea1667F6Ad93e"
         bal = unitVault.collaterals(yfi, ychad, block_identifier=block)
         collateral = {
@@ -230,11 +230,11 @@ class Treasury:
                     print(wrapper.protocol_fees(block=block))
 
     def maker_debt(self, block=None) -> dict:
-        proxy_registry = Contract('0x4678f0a6958e4D2Bc4F1BAF7Bc52E8F3564f3fE4')
-        cdp_manager = Contract('0x5ef30b9986345249bc32d8928B7ee64DE9435E39')
-        # ychad = Contract('ychad.eth')
-        ychad = Contract('0xfeb4acf3df3cdea7399794d0869ef76a6efaff52')
-        vat = Contract('0x35D1b3F3D7966A1DFe207aa4514C12a259A0492B')
+        proxy_registry = contract('0x4678f0a6958e4D2Bc4F1BAF7Bc52E8F3564f3fE4')
+        cdp_manager = contract('0x5ef30b9986345249bc32d8928B7ee64DE9435E39')
+        # ychad = contract('ychad.eth')
+        ychad = contract('0xfeb4acf3df3cdea7399794d0869ef76a6efaff52')
+        vat = contract('0x35D1b3F3D7966A1DFe207aa4514C12a259A0492B')
         proxy = proxy_registry.proxies(ychad)
         cdp = cdp_manager.first(proxy)
         urn = cdp_manager.urns(cdp)
@@ -249,9 +249,9 @@ class Treasury:
     def unit_debt(self, block=None) -> dict:
         if block and block < 11315910:
             return
-        # ychad = Contract('ychad.eth')
-        ychad = Contract('0xfeb4acf3df3cdea7399794d0869ef76a6efaff52')
-        unitVault = Contract("0xb1cff81b9305166ff1efc49a129ad2afcd7bcf19")
+        # ychad = contract('ychad.eth')
+        ychad = contract('0xfeb4acf3df3cdea7399794d0869ef76a6efaff52')
+        unitVault = contract("0xb1cff81b9305166ff1efc49a129ad2afcd7bcf19")
         yfi = "0x0bc529c00C6401aEF6D220BE8C6Ea1667F6Ad93e"
         usdp = '0x1456688345527bE1f37E9e627DA0837D6f08C925'
         debt = unitVault.getTotalDebt(yfi, ychad, block_identifier=block) / 10 ** 18
