@@ -46,7 +46,7 @@ class Registry(metaclass=Singleton):
 
     def load_from_ens(self):
         # track older registries to pull experiments
-        resolver = Contract('0x4976fb03C32e5B8cfe2b6cCB31c09Ba78EBaBa41')
+        resolver = contract('0x4976fb03C32e5B8cfe2b6cCB31c09Ba78EBaBa41')
         topics = construct_event_topic_set(
             filter_by_name('AddressChanged', resolver.abi)[0],
             web3.codec,
@@ -95,7 +95,7 @@ class Registry(metaclass=Singleton):
                 self.governance = event["governance"]
 
             if event.name == "NewRelease":
-                self.releases[event["api_version"]] = Contract(event["template"])
+                self.releases[event["api_version"]] = contract(event["template"])
 
             if event.name == "NewVault":
                 # experiment was endorsed

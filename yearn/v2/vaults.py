@@ -18,7 +18,7 @@ from yearn.multicall2 import fetch_multicall
 from yearn.prices import magic
 from yearn.outputs.postgres.postgres import PostgresInstance
 from yearn.prices.curve import curve
-from yearn.utils import safe_views
+from yearn.utils import safe_views, contract
 from yearn.v2.strategies import Strategy
 from yearn.exceptions import PriceError
 
@@ -58,7 +58,7 @@ class Vault:
         self.api_version = api_version
         if token is None:
             token = vault.token()
-        self.token = Contract(token)
+        self.token = contract(token)
         self.registry = registry
         self.scale = 10 ** self.vault.decimals()
         # multicall-safe views with 0 inputs and numeric output.
@@ -93,7 +93,7 @@ class Vault:
 
     @classmethod
     def from_address(cls, address):
-        vault = Contract(address)
+        vault = contract(address)
         instance = cls(vault=vault, token=vault.token(), api_version=vault.apiVersion())
         instance.name = vault.name()
         return instance

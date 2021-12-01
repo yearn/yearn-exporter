@@ -67,7 +67,7 @@ class UniswapV2:
     @ttl_cache(ttl=600)
     def lp_price(self, address, block=None):
         """Get Uniswap/Sushiswap LP token price."""
-        pair = Contract(address)
+        pair = contract(address)
         token0, token1, supply, reserves = fetch_multicall(
             [pair, "token0"],
             [pair, "token1"],
@@ -103,14 +103,14 @@ class UniswapV2Multiplexer(metaclass=Singleton):
     @lru_cache(maxsize=None)
     def is_uniswap_pool(self, address):
         try:
-            return Contract(address).factory() in [x.factory for x in self.uniswaps]
+            return contract(address).factory() in [x.factory for x in self.uniswaps]
         except (ValueError, OverflowError, AttributeError):
             pass
         return False
 
     @ttl_cache(ttl=600)
     def lp_price(self, token, block=None):
-        pair = Contract(token)
+        pair = contract(token)
         factory = pair.factory()
         try:
             exchange = next(x for x in self.uniswaps if x.factory == factory)

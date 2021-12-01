@@ -39,11 +39,11 @@ def simple(vault, samples: ApySamples) -> Apy:
     if gauge_address is None:
         raise ApyError("crv", "no gauge")
 
-    gauge = Contract(gauge_address)
+    gauge = contract(gauge_address)
 
     try:
         controller = gauge.controller()
-        controller = Contract(controller)
+        controller = contract(controller)
     except:
         # newer gauges do not have a 'controller' method
         controller = curve.gauge_controller
@@ -55,7 +55,7 @@ def simple(vault, samples: ApySamples) -> Apy:
         raise ApyError("crv", "gauge working supply is zero")
 
     gauge_inflation_rate = gauge.inflation_rate(block_identifier=block)
-    pool = Contract(pool_address)
+    pool = contract(pool_address)
     pool_price = pool.get_virtual_price(block_identifier=block)
 
     base_asset_price = get_price(lp_token, block=block) or 1

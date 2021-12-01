@@ -18,8 +18,8 @@ logger = logging.getLogger(__name__)
 
 def get_fantom_ironbank():
     # HACK ironbank on fantom uses a non-standard proxy pattern
-    unitroller = Contract('0x4250A6D3BD57455d7C6821eECb6206F507576cD2')
-    implementation = Contract(unitroller.comptrollerImplementation())
+    unitroller = contract('0x4250A6D3BD57455d7C6821eECb6206F507576cD2')
+    implementation = contract(unitroller.comptrollerImplementation())
     return Contract.from_abi(unitroller._name, str(unitroller), abi=implementation.abi)
 
 

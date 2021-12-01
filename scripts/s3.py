@@ -27,7 +27,7 @@ from yearn.v2.registry import Registry as RegistryV2
 from yearn.v1.vaults import VaultV1
 from yearn.v2.vaults import Vault as VaultV2
 
-from yearn.utils import contract_creation_block
+from yearn.utils import contract_creation_block, contract
 
 from yearn.exceptions import PriceError
 from yearn.networks import Network
@@ -120,7 +120,7 @@ def registry_adapter():
         registry_adapter_address = web3.ens.resolve("lens.ychad.eth")
     elif chain.id == Network.Fantom:
         registry_adapter_address = "0xF628Fb7436fFC382e2af8E63DD7ccbaa142E3cd1"
-    return Contract(registry_adapter_address)
+    return contract(registry_adapter_address)
 
 
 def main():

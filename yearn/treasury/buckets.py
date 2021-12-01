@@ -8,6 +8,7 @@ from yearn.prices.fixed_forex import fixed_forex
 from yearn.prices.aave import aave
 from yearn.prices.curve import curve
 from yearn.prices.yearn import yearn_lens
+from yearn.utils import contract
 
 YFI_LIKE = {
     '0x0bc529c00C6401aEF6D220BE8C6Ea1667F6Ad93e',  # YFI
@@ -70,14 +71,14 @@ def _unwrap_token(token) -> str:
         return _pool_bucket(pool_tokens)
     if is_balancer_pool(token):  # should only be YLA # TODO figure this out
         pool_tokens = set(
-            str(_unwrap_token(coin)) for coin in Contract(token).getCurrentTokens()
+            str(_unwrap_token(coin)) for coin in contract(token).getCurrentTokens()
         )
         return _pool_bucket(pool_tokens)
     if token in aave:
-        return Contract(aave.atoken_underlying(token))
+        return contract(aave.atoken_underlying(token))
     if token in compound:
         try:
-            return Contract(token).underlying()
+            return contract(token).underlying()
         except AttributeError:
             return weth
     return token

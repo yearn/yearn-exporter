@@ -19,7 +19,7 @@ from yearn.multicall2 import batch_call
 from yearn.partners.charts import make_partner_charts
 from yearn.partners.constants import OPEX_COST, get_tier
 from yearn.prices import magic
-from yearn.utils import contract_creation_block, get_block_timestamp
+from yearn.utils import contract_creation_block, get_block_timestamp, contract
 from yearn.v2.registry import Registry
 from yearn.v2.vaults import Vault
 
@@ -86,7 +86,7 @@ class BentoboxWrapper(Wrapper):
     """
 
     def balances(self, blocks):
-        bentobox = Contract('0xF5BCE5077908a1b7370B9ae04AdC565EBd643966')
+        bentobox = contract('0xF5BCE5077908a1b7370B9ae04AdC565EBd643966')
         vault = Vault.from_address(self.vault)
         balances = batch_call(
             [
@@ -136,7 +136,7 @@ class YApeSwapFactoryWrapper(WildcardWrapper):
     wrapper: str
 
     def unwrap(self) -> List[Wrapper]:
-        factory = Contract(self.wrapper)
+        factory = contract(self.wrapper)
         with multicall:
             pairs = [factory.allPairs(i) for i in range(factory.allPairsLength())]
             ratios = [Contract(pair).farmingRatio() for pair in pairs]
