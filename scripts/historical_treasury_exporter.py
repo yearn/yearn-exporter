@@ -28,7 +28,7 @@ def export_chunk(chunk, export_snapshot_func):
                 'treasury': treasury,
                 'snapshot': snapshot,
                 'ts': ts,
-                'exporter_name': 'historical_treasury"
+                'exporter_name': 'historical_treasury'
             }
         )
 
