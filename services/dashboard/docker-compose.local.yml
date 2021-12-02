@@ -1,0 +1,15 @@
+version: '3.7'
+
+services:
+  wallet-exporter:
+    entrypoint: ["echo", "wallet_exporter disabled."]
+    restart: "no"
+  treasury-exporter:
+    entrypoint: ["echo", "treasury_exporter disabled."]
+    restart: "no"
+  historical-treasury-exporter:
+    entrypoint: ["echo", "historical_treasury_exporter disabled."]
+    restart: "no"
+  transactions-exporter:
+    entrypoint: ["echo", "transactions_exporter disabled."]
+    restart: "no"

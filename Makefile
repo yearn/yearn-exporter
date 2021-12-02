@@ -3,7 +3,7 @@ ifdef FLAGS
 	flags += $(FLAGS)
 endif
 
-dashboards_command := docker-compose --file services/dashboard/docker-compose.yml --project-directory .
+dashboards_command := docker-compose --file services/dashboard/docker-compose.yml --file services/dashboard/docker-compose.local.yml --project-directory .
 tvl_command := docker-compose --file services/tvl/docker-compose.yml --project-directory .
 
 dashboards-up:
