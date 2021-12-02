@@ -114,11 +114,14 @@ class Singleton(type):
             return self.__instance
 
 
-# Contract instance singleton, saves about 20ms of init time
-lock = threading.Lock()
-lock.acquire()
-contract = lru_cache(maxsize=None)(Contract)
-lock.release()
+# cached Contract instance, saves about 20ms of init time
+_contract_lock = threading.Lock()
+_contract = lru_cache(maxsize=None)(Contract)
+
+def contract(address):
+    with _contract_lock:
+        return _contract(address)
+
 
 def is_contract(address: str) -> bool:
     '''checks to see if the input address is a contract'''
