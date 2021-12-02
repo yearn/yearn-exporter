@@ -77,10 +77,13 @@ def main():
     for entry in interval_map:
         intervals = _generate_snapshot_range(entry["start"], end, entry["interval"])
 
-        logger.info("starting new pool with %d workers", POOL_SIZE)
-        Parallel(n_jobs=POOL_SIZE, backend="multiprocessing", verbose=100)(
-            delayed(_export_chunk)(chunk) for chunk in partition_all(CHUNK_SIZE, intervals)
-        )
+        chunks = partition_all(CHUNK_SIZE, intervals)
+        batches = partition_all(POOL_SIZE, chunks)
+        for b in batches:
+            logger.info("starting new pool with %d workers", POOL_SIZE)
+            Parallel(n_jobs=POOL_SIZE, backend="multiprocessing", verbose=100)(
+                delayed(_export_chunk)(chunk) for chunk in b
+            )
 
         # if we reached the final resolution we're done
         if entry['resolution'] == resolution:
