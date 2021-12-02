@@ -2,7 +2,7 @@ from collections import Counter
 from typing import Union
 
 from joblib.parallel import Parallel, delayed
-from yearn.outputs.describers.vaults import VaultWalletDescriber
+from yearn.outputs.describers.vault import VaultWalletDescriber
 from yearn.v1.registry import Registry as RegistryV1
 from yearn.v2.registry import Registry as RegistryV2
 from collections import Counter
