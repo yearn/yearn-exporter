@@ -16,8 +16,6 @@ from yearn.outputs import victoria
 from yearn.exceptions import UnsupportedNetwork
 
 logger = logging.getLogger(__name__)
-logging.getLogger('yearn.v2.registry').setLevel(logging.DEBUG)
-logging.getLogger('yearn.prices.magic').setLevel(logging.DEBUG)
 
 
 class Yearn:
