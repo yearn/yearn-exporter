@@ -18,7 +18,6 @@ services:
     image: yearn-exporter
     command: exporter
     environment:
-      - WEB3_INFURA_PROJECT_ID
       - WEB3_PROVIDER
       - ETHERSCAN_TOKEN
       - EXPLORER
@@ -36,7 +35,6 @@ services:
     image: yearn-exporter
     command: historical_exporter
     environment:
-      - WEB3_INFURA_PROJECT_ID
       - WEB3_PROVIDER
       - ETHERSCAN_TOKEN
       - EXPLORER
@@ -57,7 +55,6 @@ services:
     image: yearn-exporter
     command: wallet_exporter
     environment:
-      - WEB3_INFURA_PROJECT_ID
       - WEB3_PROVIDER
       - ETHERSCAN_TOKEN
       - EXPLORER
@@ -79,7 +76,6 @@ services:
     image: yearn-exporter
     command: treasury_exporter
     environment:
-      - WEB3_INFURA_PROJECT_ID
       - WEB3_PROVIDER
       - ETHERSCAN_TOKEN
       - EXPLORER
@@ -100,7 +96,6 @@ services:
     image: yearn-exporter
     command: historical_treasury_exporter
     environment:
-      - WEB3_INFURA_PROJECT_ID
       - WEB3_PROVIDER
       - ETHERSCAN_TOKEN
       - EXPLORER
