@@ -6,7 +6,6 @@ from datetime import datetime, timedelta, timezone
 from itertools import count
 import functools
 
-import psutil
 import requests
 from joblib import Parallel, delayed
 from toolz import partition_all
@@ -14,9 +13,7 @@ from yearn.outputs import victoria
 from yearn.yearn import Yearn
 from datetime import timedelta
 
-available_memory = psutil.virtual_memory().available / 1e9   # in GB
-default_pool_size = max(1, math.floor(available_memory / 8)) # allocate 8GB per worker
-POOL_SIZE = int(os.environ.get("POOL_SIZE", default_pool_size))
+POOL_SIZE = int(os.environ.get("POOL_SIZE", 1))
 CHUNK_SIZE = int(os.environ.get("CHUNK_SIZE", 50))
 
 logger = logging.getLogger('yearn.historical_helper')
