@@ -4,9 +4,10 @@ import gzip
 import math
 import json
 from typing import List, Dict
-from brownie import Contract
+from brownie import Contract, chain
 from yearn.treasury.buckets import get_token_bucket
 from yearn.utils import contract
+from yearn.networks import Network
 
 mapping = {
     "earn": {
@@ -172,6 +173,8 @@ def export_duration(duration_seconds, pool_size, direction, timestamp_seconds):
 
 def _build_item(metric, label_names, label_values, value, timestamp):
     ts_millis = math.floor(timestamp) * 1000
+    label_names.append("network")
+    label_values.append(Network.label(chain.id))
     meta = dict(zip(map(_sanitize, label_names), map(str, label_values)))
     meta["__name__"] = metric
     return {"metric": meta, "values": [_sanitize(value)], "timestamps": [ts_millis]}
