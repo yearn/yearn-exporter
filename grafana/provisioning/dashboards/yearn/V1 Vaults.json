@@ -67,7 +67,7 @@
       "targets": [
         {
           "exemplar": true,
-          "expr": "sum(yearn{param=\"tvl\"})",
+          "expr": "sum(yearn{network=\"ETH\", param=\"tvl\"})",
           "instant": false,
           "interval": "",
           "legendFormat": "v1 AUM",
@@ -137,7 +137,7 @@
       "targets": [
         {
           "exemplar": true,
-          "expr": "sum(delta(yearn{param=\"tvl\"}[1d]))",
+          "expr": "sum(delta(yearn{network=\"ETH\", param=\"tvl\"}[1d]))",
           "instant": false,
           "interval": "",
           "legendFormat": "v1 AUM",
@@ -207,7 +207,7 @@
       "targets": [
         {
           "exemplar": true,
-          "expr": "sum(delta(yearn{param=\"tvl\"}[1w]))",
+          "expr": "sum(delta(yearn{network=\"ETH\", param=\"tvl\"}[1w]))",
           "instant": false,
           "interval": "",
           "legendFormat": "v1 AUM",
@@ -277,7 +277,7 @@
       "targets": [
         {
           "exemplar": true,
-          "expr": "sum(delta(yearn{param=\"tvl\"}[4w]))",
+          "expr": "sum(delta(yearn{network=\"ETH\", param=\"tvl\"}[4w]))",
           "instant": false,
           "interval": "",
           "legendFormat": "v1 AUM",
@@ -362,7 +362,7 @@
           "targets": [
             {
               "exemplar": true,
-              "expr": "sum(yearn{param=\"tvl\"})",
+              "expr": "sum(yearn{network=\"ETH\", param=\"tvl\"})",
               "interval": "",
               "legendFormat": "v1 AUM",
               "queryType": "randomWalk",
@@ -370,7 +370,7 @@
             },
             {
               "exemplar": true,
-              "expr": "sum(delta(yearn{param=\"tvl\"}[1d]))",
+              "expr": "sum(delta(yearn{network=\"ETH\", param=\"tvl\"}[1d]))",
               "hide": false,
               "interval": "",
               "legendFormat": "v1 net inflow/outflow",
@@ -486,7 +486,7 @@
           "targets": [
             {
               "exemplar": true,
-              "expr": "delta(yearn{param=\"tvl\"}[1d]) != 0",
+              "expr": "delta(yearn{network=\"ETH\", param=\"tvl\"}[1d]) != 0",
               "interval": "",
               "legendFormat": "{{vault}}",
               "queryType": "randomWalk",
@@ -494,7 +494,7 @@
             },
             {
               "exemplar": true,
-              "expr": "sum(delta(yearn{param=\"tvl\"}[1d]))",
+              "expr": "sum(delta(yearn{network=\"ETH\", param=\"tvl\"}[1d]))",
               "hide": false,
               "interval": "",
               "legendFormat": "net inflow/outflow",
@@ -632,7 +632,7 @@
           "targets": [
             {
               "exemplar": true,
-              "expr": "delta(yearn{param=\"share price\"}[5m])",
+              "expr": "delta(yearn{network=\"ETH\", param=\"share price\"}[5m])",
               "interval": "",
               "legendFormat": "{{vault}}",
               "panelId": 6,
@@ -743,7 +743,7 @@
           "targets": [
             {
               "exemplar": true,
-              "expr": "yearn{param=\"share price\"}",
+              "expr": "yearn{network=\"ETH\", param=\"share price\"}",
               "interval": "",
               "legendFormat": "{{vault}}",
               "panelId": 6,
@@ -856,7 +856,7 @@
           "targets": [
             {
               "exemplar": true,
-              "expr": "delta(yearn{param=\"share price\"}[1d]) * 365",
+              "expr": "delta(yearn{network=\"ETH\", param=\"share price\"}[1d]) * 365",
               "interval": "",
               "legendFormat": "{{vault}}",
               "panelId": 6,
@@ -972,7 +972,7 @@
           "targets": [
             {
               "exemplar": true,
-              "expr": "yearn{param=\"strategy balance\"}",
+              "expr": "yearn{network=\"ETH\", param=\"strategy balance\"}",
               "interval": "",
               "legendFormat": "{{vault}}",
               "queryType": "randomWalk",
@@ -1073,7 +1073,7 @@
           "targets": [
             {
               "exemplar": true,
-              "expr": "yearn{param=\"tvl\"} ",
+              "expr": "yearn{network=\"ETH\", param=\"tvl\"} ",
               "interval": "",
               "legendFormat": "{{vault}}",
               "queryType": "randomWalk",
@@ -1185,7 +1185,7 @@
           "targets": [
             {
               "exemplar": true,
-              "expr": "count(yearn{param=\"tvl\"} > 10000000)",
+              "expr": "count(yearn{network=\"ETH\", param=\"tvl\"} > 10000000)",
               "hide": false,
               "instant": true,
               "interval": "",
@@ -1194,7 +1194,7 @@
             },
             {
               "exemplar": true,
-              "expr": "count(yearn{param=\"tvl\"} > 1000000)",
+              "expr": "count(yearn{network=\"ETH\", param=\"tvl\"} > 1000000)",
               "hide": false,
               "instant": true,
               "interval": "",
@@ -1203,7 +1203,7 @@
             },
             {
               "exemplar": true,
-              "expr": "count(yearn{param=\"tvl\"} > 100000)",
+              "expr": "count(yearn{network=\"ETH\", param=\"tvl\"} > 100000)",
               "hide": false,
               "instant": true,
               "interval": "",
@@ -1212,7 +1212,7 @@
             },
             {
               "exemplar": true,
-              "expr": "count(yearn{param=\"tvl\"} > 10000)",
+              "expr": "count(yearn{network=\"ETH\", param=\"tvl\"} > 10000)",
               "hide": false,
               "instant": true,
               "interval": "",
@@ -1221,7 +1221,7 @@
             },
             {
               "exemplar": true,
-              "expr": "count(yearn{param=\"tvl\"} > 100)",
+              "expr": "count(yearn{network=\"ETH\", param=\"tvl\"} > 100)",
               "hide": false,
               "instant": true,
               "interval": "",
@@ -1230,7 +1230,7 @@
             },
             {
               "exemplar": true,
-              "expr": "count(yearn{param=\"tvl\"} > 0)",
+              "expr": "count(yearn{network=\"ETH\", param=\"tvl\"} > 0)",
               "hide": false,
               "instant": true,
               "interval": "",

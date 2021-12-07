@@ -66,7 +66,7 @@
       "pluginVersion": "8.0.3",
       "targets": [
         {
-          "expr": "sum(yearn_vault{param=\"tvl\"})",
+          "expr": "sum(yearn_vault{network=\"ETH\", param=\"tvl\"})",
           "instant": false,
           "interval": "",
           "legendFormat": "v2 AUM",
@@ -136,7 +136,7 @@
       "targets": [
         {
           "exemplar": true,
-          "expr": "sum(delta(yearn_vault{param=\"tvl\", experimental=\"false\"}[1d]))",
+          "expr": "sum(delta(yearn_vault{network=\"ETH\", param=\"tvl\", experimental=\"false\"}[1d]))",
           "instant": false,
           "interval": "",
           "legendFormat": "v2 AUM",
@@ -206,7 +206,7 @@
       "targets": [
         {
           "exemplar": true,
-          "expr": "sum(delta(yearn_vault{param=\"tvl\", experimental=\"false\"}[1w]))",
+          "expr": "sum(delta(yearn_vault{network=\"ETH\", param=\"tvl\", experimental=\"false\"}[1w]))",
           "instant": false,
           "interval": "",
           "legendFormat": "v2 AUM",
@@ -276,7 +276,7 @@
       "targets": [
         {
           "exemplar": true,
-          "expr": "sum(delta(yearn_vault{param=\"tvl\", experimental=\"false\"}[4w]))",
+          "expr": "sum(delta(yearn_vault{network=\"ETH\", param=\"tvl\", experimental=\"false\"}[4w]))",
           "instant": false,
           "interval": "",
           "legendFormat": "v2 AUM",
@@ -361,7 +361,7 @@
           "targets": [
             {
               "exemplar": true,
-              "expr": "sum(yearn_vault{param=\"tvl\", experimental=\"false\"})",
+              "expr": "sum(yearn_vault{network=\"ETH\", param=\"tvl\", experimental=\"false\"})",
               "interval": "",
               "legendFormat": "v2 AUM",
               "queryType": "randomWalk",
@@ -369,7 +369,7 @@
             },
             {
               "exemplar": true,
-              "expr": "sum(delta(yearn_vault{param=\"tvl\",experimental=\"false\"}[1d]))",
+              "expr": "sum(delta(yearn_vault{network=\"ETH\", param=\"tvl\",experimental=\"false\"}[1d]))",
               "hide": false,
               "interval": "",
               "legendFormat": "v2 net inflow/outflow",
@@ -504,7 +504,7 @@
           "targets": [
             {
               "exemplar": true,
-              "expr": "delta(yearn_vault{param=\"tvl\",experimental=\"false\"}[1d]) != 0",
+              "expr": "delta(yearn_vault{network=\"ETH\", param=\"tvl\",experimental=\"false\"}[1d]) != 0",
               "interval": "",
               "legendFormat": "{{vault}}",
               "queryType": "randomWalk",
@@ -512,7 +512,7 @@
             },
             {
               "exemplar": true,
-              "expr": "sum(delta(yearn_vault{param=\"tvl\",experimental=\"false\"}[1d]))",
+              "expr": "sum(delta(yearn_vault{network=\"ETH\", param=\"tvl\",experimental=\"false\"}[1d]))",
               "hide": false,
               "interval": "",
               "legendFormat": "net inflow/outflow",
@@ -648,7 +648,7 @@
           "targets": [
             {
               "exemplar": true,
-              "expr": "delta(yearn_vault{param=\"pricePerShare\", experimental=\"false\"}[5m])",
+              "expr": "delta(yearn_vault{network=\"ETH\", param=\"pricePerShare\", experimental=\"false\"}[5m])",
               "interval": "",
               "legendFormat": "{{vault}}",
               "panelId": 6,
@@ -754,7 +754,7 @@
           "targets": [
             {
               "exemplar": true,
-              "expr": "yearn_vault{param=\"pricePerShare\", experimental=\"false\"}",
+              "expr": "yearn_vault{network=\"ETH\", param=\"pricePerShare\", experimental=\"false\"}",
               "interval": "",
               "legendFormat": "{{vault}}",
               "panelId": 6,
@@ -867,7 +867,7 @@
           "targets": [
             {
               "exemplar": true,
-              "expr": "delta(yearn_vault{param=\"pricePerShare\", experimental=\"false\"}[1d]) * 365",
+              "expr": "delta(yearn_vault{network=\"ETH\", param=\"pricePerShare\", experimental=\"false\"}[1d]) * 365",
               "interval": "",
               "legendFormat": "{{vault}}",
               "panelId": 6,
@@ -983,7 +983,7 @@
           "targets": [
             {
               "exemplar": true,
-              "expr": "yearn_vault{param=\"totalAssets\", experimental=\"false\"}",
+              "expr": "yearn_vault{network=\"ETH\", param=\"totalAssets\", experimental=\"false\"}",
               "interval": "",
               "legendFormat": "{{vault}}",
               "queryType": "randomWalk",
@@ -1084,7 +1084,7 @@
           "targets": [
             {
               "exemplar": true,
-              "expr": "yearn_vault{param=\"tvl\", experimental=\"false\"} ",
+              "expr": "yearn_vault{network=\"ETH\", param=\"tvl\", experimental=\"false\"} ",
               "interval": "",
               "legendFormat": "{{vault}}",
               "queryType": "randomWalk",
@@ -1200,7 +1200,7 @@
           "targets": [
             {
               "exemplar": true,
-              "expr": "time() - yearn_vault{param=\"lastReport\", experimental=\"false\", vault!~\"yvUSDC 0.2.2|yvDAI 0.2.2|yvWBTC 0.3.1|yvHEGIC 0.3.0\"}",
+              "expr": "time() - yearn_vault{network=\"ETH\", param=\"lastReport\", experimental=\"false\", vault!~\"yvUSDC 0.2.2|yvDAI 0.2.2|yvWBTC 0.3.1|yvHEGIC 0.3.0\"}",
               "interval": "",
               "legendFormat": "{{vault}}",
               "queryType": "randomWalk",
@@ -1299,7 +1299,7 @@
           "targets": [
             {
               "exemplar": true,
-              "expr": "time() - yearn_vault{param=\"lastReport\", experimental=\"false\", vault!~\"yvUSDC 0.2.2|yvDAI 0.2.2|yvWBTC 0.3.1|yvHEGIC 0.3.0\"}",
+              "expr": "time() - yearn_vault{network=\"ETH\", param=\"lastReport\", experimental=\"false\", vault!~\"yvUSDC 0.2.2|yvDAI 0.2.2|yvWBTC 0.3.1|yvHEGIC 0.3.0\"}",
               "interval": "",
               "legendFormat": "{{vault}}",
               "queryType": "randomWalk",
@@ -1416,7 +1416,7 @@
           "targets": [
             {
               "exemplar": true,
-              "expr": "(avg by (vault) (yearn_vault{param=\"totalDebt\", experimental=\"false\", vault!~\"yvUSDC 0.2.2|yvDAI 0.2.2|yvWBTC 0.3.1|yvHEGIC 0.3.0\"}) / avg by (vault) (yearn_vault{param=\"totalAssets\", experimental=\"false\", vault!~\"yvUSDC 0.2.2|yvDAI 0.2.2|yvWBTC 0.3.1|yvHEGIC 0.3.0\"}) )",
+              "expr": "(avg by (vault) (yearn_vault{network=\"ETH\", param=\"totalDebt\", experimental=\"false\", vault!~\"yvUSDC 0.2.2|yvDAI 0.2.2|yvWBTC 0.3.1|yvHEGIC 0.3.0\"}) / avg by (vault) (yearn_vault{network=\"ETH\", param=\"totalAssets\", experimental=\"false\", vault!~\"yvUSDC 0.2.2|yvDAI 0.2.2|yvWBTC 0.3.1|yvHEGIC 0.3.0\"}) )",
               "interval": "",
               "legendFormat": "{{vault}}",
               "queryType": "randomWalk",
@@ -1562,7 +1562,7 @@
           "targets": [
             {
               "exemplar": true,
-              "expr": "sum(yearn_strategy{param=\"isActive\", experimental=\"false\"})",
+              "expr": "sum(yearn_strategy{network=\"ETH\", param=\"isActive\", experimental=\"false\"})",
               "hide": false,
               "interval": "",
               "legendFormat": "isActive",
@@ -1570,7 +1570,7 @@
             },
             {
               "exemplar": true,
-              "expr": "count(yearn_strategy{param=\"totalDebt\", experimental=\"false\"} > 0)",
+              "expr": "count(yearn_strategy{network=\"ETH\", param=\"totalDebt\", experimental=\"false\"} > 0)",
               "hide": false,
               "instant": false,
               "interval": "",
@@ -1579,7 +1579,7 @@
             },
             {
               "exemplar": true,
-              "expr": "sum(yearn_strategy{param=\"isActive\", experimental=\"false\"}) - count(yearn_strategy{param=\"totalDebt\", experimental=\"false\"} > 0)",
+              "expr": "sum(yearn_strategy{network=\"ETH\", param=\"isActive\", experimental=\"false\"}) - count(yearn_strategy{network=\"ETH\", param=\"totalDebt\", experimental=\"false\"} > 0)",
               "hide": false,
               "interval": "",
               "legendFormat": "Unallocated Strategies",
@@ -1702,7 +1702,7 @@
           "targets": [
             {
               "exemplar": true,
-              "expr": "time() - sort_desc((yearn_vault{param=\"activation\", experimental=\"false\", vault!~\"yvUSDC 0.2.2|yvDAI 0.2.2|yvWBTC 0.3.1|yvHEGIC 0.3.0\"}))",
+              "expr": "time() - sort_desc((yearn_vault{network=\"ETH\", param=\"activation\", experimental=\"false\", vault!~\"yvUSDC 0.2.2|yvDAI 0.2.2|yvWBTC 0.3.1|yvHEGIC 0.3.0\"}))",
               "interval": "",
               "legendFormat": "{{vault}}",
               "queryType": "randomWalk",

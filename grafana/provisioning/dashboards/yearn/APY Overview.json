@@ -103,7 +103,7 @@
       "targets": [
         {
           "exemplar": true,
-          "expr": "sort_desc(((delta(yearn_vault{param=\"pricePerShare\", experimental=\"false\"}[1w]) + 1) ^ (1/7)) ^ 365 - 1) ",
+          "expr": "sort_desc(((delta(yearn_vault{network=\"ETH\", param=\"pricePerShare\", experimental=\"false\"}[1w]) + 1) ^ (1/7)) ^ 365 - 1) ",
           "instant": true,
           "interval": "",
           "legendFormat": "{{vault}}",
@@ -173,7 +173,7 @@
       "targets": [
         {
           "exemplar": true,
-          "expr": "((delta(yearn_vault{param=\"pricePerShare\", experimental=\"false\"}[1w]) + 1) ^ (1/7)) ^ 365 - 1",
+          "expr": "((delta(yearn_vault{network=\"ETH\", param=\"pricePerShare\", experimental=\"false\"}[1w]) + 1) ^ (1/7)) ^ 365 - 1",
           "interval": "",
           "legendFormat": "{{vault}}",
           "refId": "A"
@@ -282,7 +282,7 @@
           "targets": [
             {
               "exemplar": true,
-              "expr": "sort_desc(((delta(iearn{param=\"price per share\", vault=~\".*v3\"}[1w]) + 1) ^ (1/7)) ^ 365 - 1) ",
+              "expr": "sort_desc(((delta(iearn{network=\"ETH\", param=\"price per share\", vault=~\".*v3\"}[1w]) + 1) ^ (1/7)) ^ 365 - 1) ",
               "instant": true,
               "interval": "",
               "legendFormat": "{{vault}}",
@@ -342,7 +342,7 @@
           "targets": [
             {
               "exemplar": true,
-              "expr": "sort_desc(((delta(iearn{param=\"price per share\", vault=~\".*v2\"}[1w]) + 1) ^ (1/7)) ^ 365 - 1) ",
+              "expr": "sort_desc(((delta(iearn{network=\"ETH\", param=\"price per share\", vault=~\".*v2\"}[1w]) + 1) ^ (1/7)) ^ 365 - 1) ",
               "instant": true,
               "interval": "",
               "legendFormat": "{{vault}}",
@@ -412,7 +412,7 @@
           "targets": [
             {
               "exemplar": true,
-              "expr": "((delta(iearn{param=\"price per share\"}[1w]) + 1) ^ (1/7)) ^ 365 - 1",
+              "expr": "((delta(iearn{network=\"ETH\", param=\"price per share\"}[1w]) + 1) ^ (1/7)) ^ 365 - 1",
               "interval": "",
               "legendFormat": "{{vault}}",
               "refId": "A"
@@ -532,7 +532,7 @@
           "targets": [
             {
               "exemplar": true,
-              "expr": "sort_desc(((delta(yearn_vault{param=\"pricePerShare\",experimental=\"true\"}[1w]) + 1) ^ (1/7)) ^ 365 - 1)",
+              "expr": "sort_desc(((delta(yearn_vault{network=\"ETH\", param=\"pricePerShare\",experimental=\"true\"}[1w]) + 1) ^ (1/7)) ^ 365 - 1)",
               "instant": true,
               "interval": "",
               "legendFormat": "{{vault}}",
@@ -602,7 +602,7 @@
           "targets": [
             {
               "exemplar": true,
-              "expr": "((delta(yearn_vault{param=\"pricePerShare\",experimental=\"true\"}[1w]) + 1) ^ (1/7)) ^ 365 - 1",
+              "expr": "((delta(yearn_vault{network=\"ETH\", param=\"pricePerShare\",experimental=\"true\"}[1w]) + 1) ^ (1/7)) ^ 365 - 1",
               "interval": "",
               "legendFormat": "{{vault}}",
               "refId": "A"
@@ -715,7 +715,7 @@
           "targets": [
             {
               "exemplar": true,
-              "expr": "sort_desc(((delta(yearn{param=\"share price\"}[1w]) + 1) ^ (1/7)) ^ 365 - 1) ",
+              "expr": "sort_desc(((delta(yearn{network=\"ETH\", param=\"share price\"}[1w]) + 1) ^ (1/7)) ^ 365 - 1) ",
               "instant": true,
               "interval": "",
               "legendFormat": "{{vault}}",
@@ -785,7 +785,7 @@
           "targets": [
             {
               "exemplar": true,
-              "expr": "((delta(yearn{param=\"share price\"}[1w]) + 1) ^ (1/7)) ^ 365 - 1",
+              "expr": "((delta(yearn{network=\"ETH\", param=\"share price\"}[1w]) + 1) ^ (1/7)) ^ 365 - 1",
               "interval": "",
               "legendFormat": "{{vault}}",
               "refId": "A"

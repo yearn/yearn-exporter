@@ -84,7 +84,7 @@
       "targets": [
         {
           "exemplar": true,
-          "expr": "sum(yearn_strategy{vault=\"$vaults\", param=\"isActive\"})",
+          "expr": "sum(yearn_strategy{network=\"ETH\", vault=\"$vaults\", param=\"isActive\"})",
           "instant": true,
           "interval": "",
           "legendFormat": "{{strategy}}",
@@ -148,7 +148,7 @@
       "targets": [
         {
           "exemplar": true,
-          "expr": "yearn_strategy{vault=\"$vaults\", param=\"isActive\"} > 0",
+          "expr": "yearn_strategy{network=\"ETH\", vault=\"$vaults\", param=\"isActive\"} > 0",
           "instant": true,
           "interval": "",
           "legendFormat": "{{strategy}}",
@@ -212,7 +212,7 @@
       "targets": [
         {
           "exemplar": true,
-          "expr": "count(yearn_strategy{vault=\"$vaults\", param=\"isActive\"} < 0.1)",
+          "expr": "count(yearn_strategy{network=\"ETH\", vault=\"$vaults\", param=\"isActive\"} < 0.1)",
           "instant": true,
           "interval": "",
           "legendFormat": "{{strategy}}",
@@ -277,7 +277,7 @@
       "targets": [
         {
           "exemplar": true,
-          "expr": "yearn_strategy{vault=\"$vaults\", param=\"isActive\"} < 0.1",
+          "expr": "yearn_strategy{network=\"ETH\", vault=\"$vaults\", param=\"isActive\"} < 0.1",
           "instant": true,
           "interval": "",
           "legendFormat": "{{strategy}}",
@@ -353,7 +353,7 @@
       "targets": [
         {
           "exemplar": true,
-          "expr": "yearn_vault{param=\"totalAssets\", vault=~\"$vaults\"}",
+          "expr": "yearn_vault{network=\"ETH\", param=\"totalAssets\", vault=~\"$vaults\"}",
           "instant": false,
           "interval": "",
           "legendFormat": "{{param}}",
@@ -416,7 +416,7 @@
       "targets": [
         {
           "exemplar": true,
-          "expr": "yearn_vault{param=\"tvl\", vault=~\"$vaults\"}",
+          "expr": "yearn_vault{network=\"ETH\", param=\"tvl\", vault=~\"$vaults\"}",
           "instant": false,
           "interval": "",
           "legendFormat": "{{param}}",
@@ -479,7 +479,7 @@
       "targets": [
         {
           "exemplar": true,
-          "expr": "sum(yearn_strategy{param=\"totalDebt\", vault=~\"$vaults\"})",
+          "expr": "sum(yearn_strategy{network=\"ETH\", param=\"totalDebt\", vault=~\"$vaults\"})",
           "instant": false,
           "interval": "",
           "legendFormat": "{{param}}",
@@ -542,7 +542,7 @@
       "targets": [
         {
           "exemplar": true,
-          "expr": "sum(yearn_strategy{param=\"totalGain\", vault=~\"$vaults\"})",
+          "expr": "sum(yearn_strategy{network=\"ETH\", param=\"totalGain\", vault=~\"$vaults\"})",
           "instant": false,
           "interval": "",
           "legendFormat": "{{param}}",
@@ -605,7 +605,7 @@
       "targets": [
         {
           "exemplar": true,
-          "expr": "yearn_strategy{param=\"totalLoss\", vault=~\"$vaults\"}",
+          "expr": "yearn_strategy{network=\"ETH\", param=\"totalLoss\", vault=~\"$vaults\"}",
           "instant": false,
           "interval": "",
           "legendFormat": "{{param}}",
@@ -683,7 +683,7 @@
       "targets": [
         {
           "exemplar": true,
-          "expr": "yearn_vault{param=\"totalAssets\", vault=\"$vaults\"} / on(vault,version) yearn_vault{param=\"depositLimit\", vault=\"$vaults\"}",
+          "expr": "yearn_vault{network=\"ETH\", param=\"totalAssets\", vault=\"$vaults\"} / on(vault,version) yearn_vault{network=\"ETH\", param=\"depositLimit\", vault=\"$vaults\"}",
           "instant": true,
           "interval": "",
           "legendFormat": "% to Limit",
@@ -746,7 +746,7 @@
       "targets": [
         {
           "exemplar": true,
-          "expr": "yearn_vault{param=\"pricePerShare\", vault=~\"$vaults\"}",
+          "expr": "yearn_vault{network=\"ETH\", param=\"pricePerShare\", vault=~\"$vaults\"}",
           "instant": false,
           "interval": "",
           "legendFormat": "{{param}}",
@@ -823,7 +823,7 @@
       "targets": [
         {
           "exemplar": true,
-          "expr": "sum(yearn_strategy{param=\"totalDebt\", vault=~\"$vaults\"}) / on(vault, version) sum(yearn_vault{param=\"totalAssets\", vault=~\"$vaults\"})",
+          "expr": "sum(yearn_strategy{network=\"ETH\", param=\"totalDebt\", vault=~\"$vaults\"}) / on(vault, version) sum(yearn_vault{network=\"ETH\", param=\"totalAssets\", vault=~\"$vaults\"})",
           "instant": true,
           "interval": "",
           "legendFormat": "% to Limit",
@@ -917,7 +917,7 @@
           "targets": [
             {
               "exemplar": true,
-              "expr": "yearn_vault{param=\"totalAssets\", vault=~\"$vaults\"}",
+              "expr": "yearn_vault{network=\"ETH\", param=\"totalAssets\", vault=~\"$vaults\"}",
               "hide": false,
               "instant": false,
               "interval": "",
@@ -927,7 +927,7 @@
             },
             {
               "exemplar": true,
-              "expr": "yearn_vault{param=\"depositLimit\", vault=~\"$vaults\"}",
+              "expr": "yearn_vault{network=\"ETH\", param=\"depositLimit\", vault=~\"$vaults\"}",
               "hide": false,
               "interval": "",
               "legendFormat": "Deposit Limit",
@@ -935,7 +935,7 @@
             },
             {
               "exemplar": true,
-              "expr": "yearn_vault{param=\"totalAssets\", vault=\"$vaults\"} / on(vault,version) yearn_vault{param=\"depositLimit\", vault=\"$vaults\"}",
+              "expr": "yearn_vault{network=\"ETH\", param=\"totalAssets\", vault=\"$vaults\"} / on(vault,version) yearn_vault{network=\"ETH\", param=\"depositLimit\", vault=\"$vaults\"}",
               "hide": false,
               "interval": "",
               "legendFormat": "% to Deposit Limit",
@@ -1084,7 +1084,7 @@
           "targets": [
             {
               "exemplar": true,
-              "expr": "yearn_vault{param=\"totalAssets\", vault=~\"$vaults\"}",
+              "expr": "yearn_vault{network=\"ETH\", param=\"totalAssets\", vault=~\"$vaults\"}",
               "instant": false,
               "interval": "",
               "legendFormat": "{{param}}",
@@ -1093,7 +1093,7 @@
             },
             {
               "exemplar": true,
-              "expr": "yearn_strategy{param=\"totalDebt\", vault=~\"$vaults\"} > 0",
+              "expr": "yearn_strategy{network=\"ETH\", param=\"totalDebt\", vault=~\"$vaults\"} > 0",
               "hide": false,
               "interval": "",
               "legendFormat": "{{strategy}}",
@@ -1101,7 +1101,7 @@
             },
             {
               "exemplar": true,
-              "expr": "sum(yearn_strategy{param=\"totalDebt\", vault=~\"$vaults\"})",
+              "expr": "sum(yearn_strategy{network=\"ETH\", param=\"totalDebt\", vault=~\"$vaults\"})",
               "hide": false,
               "interval": "",
               "legendFormat": "TotalDebt",
@@ -1203,7 +1203,7 @@
           "targets": [
             {
               "exemplar": true,
-              "expr": "sort(yearn_strategy{param=\"totalDebt\", vault=~\"$vaults\"} > 0 )",
+              "expr": "sort(yearn_strategy{network=\"ETH\", param=\"totalDebt\", vault=~\"$vaults\"} > 0 )",
               "instant": false,
               "interval": "",
               "legendFormat": "{{strategy}}",
@@ -1311,7 +1311,7 @@
           "targets": [
             {
               "exemplar": true,
-              "expr": "sort_desc(yearn_strategy{param=\"totalDebt\", vault=~\"$vaults\"} > 0)",
+              "expr": "sort_desc(yearn_strategy{network=\"ETH\", param=\"totalDebt\", vault=~\"$vaults\"} > 0)",
               "hide": false,
               "instant": true,
               "interval": "",
@@ -1389,7 +1389,7 @@
           "targets": [
             {
               "exemplar": true,
-              "expr": "yearn_vault{param=\"tvl\", vault=~\"$vaults\"} - yearn_vault{param=\"tvl\", vault=~\"$vaults\"} offset 1d",
+              "expr": "yearn_vault{network=\"ETH\", param=\"tvl\", vault=~\"$vaults\"} - yearn_vault{network=\"ETH\", param=\"tvl\", vault=~\"$vaults\"} offset 1d",
               "instant": false,
               "interval": "",
               "legendFormat": "{{vault}}",
@@ -1451,7 +1451,7 @@
           "targets": [
             {
               "exemplar": true,
-              "expr": "(yearn_vault{param=\"tvl\", vault=~\"$vaults\"} / yearn_vault{param=\"tvl\", vault=~\"$vaults\"} offset 1d ) - 1",
+              "expr": "(yearn_vault{network=\"ETH\", param=\"tvl\", vault=~\"$vaults\"} / yearn_vault{network=\"ETH\", param=\"tvl\", vault=~\"$vaults\"} offset 1d ) - 1",
               "instant": false,
               "interval": "",
               "legendFormat": "{{vault}}",
@@ -1512,7 +1512,7 @@
           "targets": [
             {
               "exemplar": true,
-              "expr": "sum(yearn_strategy{param=\"totalDebt\", vault=~\"$vaults\"}) - sum(yearn_strategy{param=\"totalDebt\", vault=~\"$vaults\"} offset 1d)",
+              "expr": "sum(yearn_strategy{network=\"ETH\", param=\"totalDebt\", vault=~\"$vaults\"}) - sum(yearn_strategy{network=\"ETH\", param=\"totalDebt\", vault=~\"$vaults\"} offset 1d)",
               "instant": false,
               "interval": "",
               "legendFormat": "{{strategy}}",
@@ -1574,7 +1574,7 @@
           "targets": [
             {
               "exemplar": true,
-              "expr": "(sum(yearn_strategy{param=\"totalDebt\", vault=~\"$vaults\"}) / sum(yearn_strategy{param=\"totalDebt\", vault=~\"$vaults\"} offset 1d)) - 1",
+              "expr": "(sum(yearn_strategy{network=\"ETH\", param=\"totalDebt\", vault=~\"$vaults\"}) / sum(yearn_strategy{network=\"ETH\", param=\"totalDebt\", vault=~\"$vaults\"} offset 1d)) - 1",
               "instant": false,
               "interval": "",
               "legendFormat": "{{vault}}",
@@ -1635,7 +1635,7 @@
           "targets": [
             {
               "exemplar": true,
-              "expr": "sum(yearn_strategy{param=\"totalLoss\", vault=~\"$vaults\"}) - sum(yearn_strategy{param=\"totalLoss\", vault=~\"$vaults\"} offset 1d)",
+              "expr": "sum(yearn_strategy{network=\"ETH\", param=\"totalLoss\", vault=~\"$vaults\"}) - sum(yearn_strategy{network=\"ETH\", param=\"totalLoss\", vault=~\"$vaults\"} offset 1d)",
               "instant": false,
               "interval": "",
               "legendFormat": "{{strategy}}",
@@ -1698,7 +1698,7 @@
           "targets": [
             {
               "exemplar": true,
-              "expr": "(sum(yearn_strategy{param=\"totalLoss\", vault=~\"$vaults\"}) / sum(yearn_strategy{param=\"totalLoss\", vault=~\"$vaults\"} offset 1d)) - 1",
+              "expr": "(sum(yearn_strategy{network=\"ETH\", param=\"totalLoss\", vault=~\"$vaults\"}) / sum(yearn_strategy{network=\"ETH\", param=\"totalLoss\", vault=~\"$vaults\"} offset 1d)) - 1",
               "instant": false,
               "interval": "",
               "legendFormat": "{{vault}}",
@@ -1759,7 +1759,7 @@
           "targets": [
             {
               "exemplar": true,
-              "expr": "yearn_vault{param=\"tvl\", vault=~\"$vaults\"} - yearn_vault{param=\"tvl\", vault=~\"$vaults\"} offset 7d",
+              "expr": "yearn_vault{network=\"ETH\", param=\"tvl\", vault=~\"$vaults\"} - yearn_vault{network=\"ETH\", param=\"tvl\", vault=~\"$vaults\"} offset 7d",
               "instant": false,
               "interval": "",
               "legendFormat": "{{vault}}",
@@ -1821,7 +1821,7 @@
           "targets": [
             {
               "exemplar": true,
-              "expr": "(yearn_vault{param=\"tvl\", vault=~\"$vaults\"} / yearn_vault{param=\"tvl\", vault=~\"$vaults\"} offset 7d ) - 1",
+              "expr": "(yearn_vault{network=\"ETH\", param=\"tvl\", vault=~\"$vaults\"} / yearn_vault{network=\"ETH\", param=\"tvl\", vault=~\"$vaults\"} offset 7d ) - 1",
               "instant": false,
               "interval": "",
               "legendFormat": "{{vault}}",
@@ -1882,7 +1882,7 @@
           "targets": [
             {
               "exemplar": true,
-              "expr": "sum(yearn_strategy{param=\"totalDebt\", vault=~\"$vaults\"}) - sum(yearn_strategy{param=\"totalDebt\", vault=~\"$vaults\"} offset 7d)",
+              "expr": "sum(yearn_strategy{network=\"ETH\", param=\"totalDebt\", vault=~\"$vaults\"}) - sum(yearn_strategy{network=\"ETH\", param=\"totalDebt\", vault=~\"$vaults\"} offset 7d)",
               "instant": false,
               "interval": "",
               "legendFormat": "{{strategy}}",
@@ -1944,7 +1944,7 @@
           "targets": [
             {
               "exemplar": true,
-              "expr": "(sum(yearn_strategy{param=\"totalDebt\", vault=~\"$vaults\"}) / sum(yearn_strategy{param=\"totalDebt\", vault=~\"$vaults\"} offset 7d)) - 1",
+              "expr": "(sum(yearn_strategy{network=\"ETH\", param=\"totalDebt\", vault=~\"$vaults\"}) / sum(yearn_strategy{network=\"ETH\", param=\"totalDebt\", vault=~\"$vaults\"} offset 7d)) - 1",
               "instant": false,
               "interval": "",
               "legendFormat": "{{vault}}",
@@ -2005,7 +2005,7 @@
           "targets": [
             {
               "exemplar": true,
-              "expr": "sum(yearn_strategy{param=\"totalLoss\", vault=~\"$vaults\"}) - sum(yearn_strategy{param=\"totalLoss\", vault=~\"$vaults\"} offset 7d)",
+              "expr": "sum(yearn_strategy{network=\"ETH\", param=\"totalLoss\", vault=~\"$vaults\"}) - sum(yearn_strategy{network=\"ETH\", param=\"totalLoss\", vault=~\"$vaults\"} offset 7d)",
               "instant": false,
               "interval": "",
               "legendFormat": "{{strategy}}",
@@ -2068,7 +2068,7 @@
           "targets": [
             {
               "exemplar": true,
-              "expr": "(sum(yearn_strategy{param=\"totalLoss\", vault=~\"$vaults\"}) / sum(yearn_strategy{param=\"totalLoss\", vault=~\"$vaults\"} offset 7d)) - 1",
+              "expr": "(sum(yearn_strategy{network=\"ETH\", param=\"totalLoss\", vault=~\"$vaults\"}) / sum(yearn_strategy{network=\"ETH\", param=\"totalLoss\", vault=~\"$vaults\"} offset 7d)) - 1",
               "instant": false,
               "interval": "",
               "legendFormat": "{{vault}}",
@@ -2134,7 +2134,7 @@
           "targets": [
             {
               "exemplar": true,
-              "expr": "yearn_strategy{param=\"totalGain\", vault=~\"$vaults\"}",
+              "expr": "yearn_strategy{network=\"ETH\", param=\"totalGain\", vault=~\"$vaults\"}",
               "instant": false,
               "interval": "",
               "legendFormat": "{{strategy}}",
@@ -2143,7 +2143,7 @@
             },
             {
               "exemplar": true,
-              "expr": "sum(yearn_strategy{param=\"totalGain\", vault=~\"$vaults\"})",
+              "expr": "sum(yearn_strategy{network=\"ETH\", param=\"totalGain\", vault=~\"$vaults\"})",
               "hide": false,
               "interval": "",
               "legendFormat": "totalGain",
@@ -2242,7 +2242,7 @@
           "targets": [
             {
               "exemplar": true,
-              "expr": "delta(yearn_strategy{param=\"totalGain\", vault=~\"$vaults\"}[5m])",
+              "expr": "delta(yearn_strategy{network=\"ETH\", param=\"totalGain\", vault=~\"$vaults\"}[5m])",
               "instant": false,
               "interval": "",
               "legendFormat": "{{strategy}}",
@@ -2350,7 +2350,7 @@
           "targets": [
             {
               "exemplar": true,
-              "expr": "yearn_strategy{param=\"totalLoss\", vault=~\"$vaults\"}",
+              "expr": "yearn_strategy{network=\"ETH\", param=\"totalLoss\", vault=~\"$vaults\"}",
               "instant": false,
               "interval": "",
               "legendFormat": "{{strategy}}",
@@ -2359,7 +2359,7 @@
             },
             {
               "exemplar": true,
-              "expr": "sum(yearn_strategy{param=\"totalLoss\", vault=~\"$vaults\"})",
+              "expr": "sum(yearn_strategy{network=\"ETH\", param=\"totalLoss\", vault=~\"$vaults\"})",
               "hide": false,
               "interval": "",
               "legendFormat": "totalLoss",
@@ -2459,7 +2459,7 @@
           "targets": [
             {
               "exemplar": true,
-              "expr": "delta(yearn_strategy{param=\"totalLoss\", vault=~\"$vaults\"}[5m])",
+              "expr": "delta(yearn_strategy{network=\"ETH\", param=\"totalLoss\", vault=~\"$vaults\"}[5m])",
               "instant": false,
               "interval": "",
               "legendFormat": "{{strategy}}",
@@ -2576,7 +2576,7 @@
           "targets": [
             {
               "exemplar": true,
-              "expr": "sum by (strategy) (yearn_strategy{param=~\"totalGain\", vault=~\"$vaults\"}) - sum by (strategy) (yearn_strategy{param=\"totalLoss\", vault=~\"$vaults\"})",
+              "expr": "sum by (strategy) (yearn_strategy{network=\"ETH\", param=~\"totalGain\", vault=~\"$vaults\"}) - sum by (strategy) (yearn_strategy{network=\"ETH\", param=\"totalLoss\", vault=~\"$vaults\"})",
               "instant": false,
               "interval": "",
               "legendFormat": "{{strategy}}",
@@ -2677,7 +2677,7 @@
           "targets": [
             {
               "exemplar": true,
-              "expr": "sum by (strategy) (delta(yearn_strategy{param=~\"totalGain\", vault=~\"$vaults\"}[5m])) - sum by (strategy) (delta(yearn_strategy{param=\"totalLoss\", vault=~\"$vaults\"}[5m]))",
+              "expr": "sum by (strategy) (delta(yearn_strategy{network=\"ETH\", param=~\"totalGain\", vault=~\"$vaults\"}[5m])) - sum by (strategy) (delta(yearn_strategy{network=\"ETH\", param=\"totalLoss\", vault=~\"$vaults\"}[5m]))",
               "instant": false,
               "interval": "",
               "legendFormat": "{{strategy}}",
@@ -2791,7 +2791,7 @@
           "targets": [
             {
               "exemplar": true,
-              "expr": "time() - (yearn_strategy{param=\"lastReport\", vault=~\"$vaults\"})",
+              "expr": "time() - (yearn_strategy{network=\"ETH\", param=\"lastReport\", vault=~\"$vaults\"})",
               "hide": false,
               "interval": "",
               "legendFormat": "{{strategy}}",
@@ -2855,7 +2855,7 @@
           "targets": [
             {
               "exemplar": true,
-              "expr": "yearn_vault{param=\"pricePerShare\", vault=~\"$vaults\"}",
+              "expr": "yearn_vault{network=\"ETH\", param=\"pricePerShare\", vault=~\"$vaults\"}",
               "instant": false,
               "interval": "",
               "legendFormat": "{{vault}}",
@@ -2919,7 +2919,7 @@
           "targets": [
             {
               "exemplar": true,
-              "expr": "yearn_vault{param=\"pricePerShare\", vault=~\"$vaults\"} - yearn_vault{param=\"pricePerShare\", vault=~\"$vaults\"} offset 1d",
+              "expr": "yearn_vault{network=\"ETH\", param=\"pricePerShare\", vault=~\"$vaults\"} - yearn_vault{network=\"ETH\", param=\"pricePerShare\", vault=~\"$vaults\"} offset 1d",
               "instant": false,
               "interval": "",
               "legendFormat": "{{vault}}",
@@ -2984,7 +2984,7 @@
           "targets": [
             {
               "exemplar": true,
-              "expr": "(yearn_vault{param=\"pricePerShare\", vault=~\"$vaults\"} / yearn_vault{param=\"pricePerShare\", vault=~\"$vaults\"} offset 1d ) - 1",
+              "expr": "(yearn_vault{network=\"ETH\", param=\"pricePerShare\", vault=~\"$vaults\"} / yearn_vault{network=\"ETH\", param=\"pricePerShare\", vault=~\"$vaults\"} offset 1d ) - 1",
               "instant": false,
               "interval": "",
               "legendFormat": "{{vault}}",
@@ -3044,7 +3044,7 @@
           "targets": [
             {
               "exemplar": true,
-              "expr": "yearn_strategy{param=\"minReportDelay\", vault=~\"$vaults\"}",
+              "expr": "yearn_strategy{network=\"ETH\", param=\"minReportDelay\", vault=~\"$vaults\"}",
               "instant": false,
               "interval": "",
               "legendFormat": "{{strategy}}",
@@ -3107,7 +3107,7 @@
           "targets": [
             {
               "exemplar": true,
-              "expr": "yearn_strategy{param=\"maxReportDelay\", vault=~\"$vaults\"}",
+              "expr": "yearn_strategy{network=\"ETH\", param=\"maxReportDelay\", vault=~\"$vaults\"}",
               "instant": false,
               "interval": "",
               "legendFormat": "{{strategy}}",
@@ -3184,7 +3184,7 @@
           "targets": [
             {
               "exemplar": true,
-              "expr": "time() - yearn_strategy{param=\"activation\", vault=~\"$vaults\"}",
+              "expr": "time() - yearn_strategy{network=\"ETH\", param=\"activation\", vault=~\"$vaults\"}",
               "hide": false,
               "interval": "",
               "legendFormat": "{{strategy}}",
@@ -3243,7 +3243,7 @@
           "targets": [
             {
               "exemplar": true,
-              "expr": "yearn_vault{param=\"availableDepositLimit\", vault=~\"$vaults\"}",
+              "expr": "yearn_vault{network=\"ETH\", param=\"availableDepositLimit\", vault=~\"$vaults\"}",
               "instant": false,
               "interval": "",
               "legendFormat": "{{param}}",
@@ -3308,7 +3308,7 @@
           "targets": [
             {
               "exemplar": true,
-              "expr": "yearn_strategy{param=\"buffer\", vault=~\"$vaults\"}/1000",
+              "expr": "yearn_strategy{network=\"ETH\", param=\"buffer\", vault=~\"$vaults\"}/1000",
               "instant": false,
               "interval": "",
               "legendFormat": "{{param}}",
@@ -3372,7 +3372,7 @@
           "targets": [
             {
               "exemplar": true,
-              "expr": "yearn_vault{param=\"debtRatio\", vault=~\"$vaults\"}/100",
+              "expr": "yearn_vault{network=\"ETH\", param=\"debtRatio\", vault=~\"$vaults\"}/100",
               "instant": false,
               "interval": "",
               "legendFormat": "{{param}}",
@@ -3436,7 +3436,7 @@
           "targets": [
             {
               "exemplar": true,
-              "expr": "sum(yearn_strategy{param=\"debtRatio\", vault=~\"$vaults\"}/100)",
+              "expr": "sum(yearn_strategy{network=\"ETH\", param=\"debtRatio\", vault=~\"$vaults\"}/100)",
               "instant": true,
               "interval": "",
               "legendFormat": "{{strategy}}",
@@ -3500,7 +3500,7 @@
           "targets": [
             {
               "exemplar": true,
-              "expr": "yearn_strategy{param=\"debtRatio\", vault=~\"$vaults\"}/100 > 0",
+              "expr": "yearn_strategy{network=\"ETH\", param=\"debtRatio\", vault=~\"$vaults\"}/100 > 0",
               "instant": false,
               "interval": "",
               "legendFormat": "{{strategy}}",
@@ -3562,7 +3562,7 @@
           "targets": [
             {
               "exemplar": true,
-              "expr": "yearn_strategy{param=\"debtThreshold\", vault=~\"$vaults\"}/1000000000000000",
+              "expr": "yearn_strategy{network=\"ETH\", param=\"debtThreshold\", vault=~\"$vaults\"}/1000000000000000",
               "interval": "",
               "legendFormat": "{{strategy}}",
               "queryType": "randomWalk",
@@ -3623,7 +3623,7 @@
           "targets": [
             {
               "exemplar": true,
-              "expr": "yearn_strategy{param=\"minDebtPerHarvest\", vault=~\"$vaults\"}",
+              "expr": "yearn_strategy{network=\"ETH\", param=\"minDebtPerHarvest\", vault=~\"$vaults\"}",
               "instant": false,
               "interval": "",
               "legendFormat": "{{strategy}}",
@@ -3698,7 +3698,7 @@
           "targets": [
             {
               "exemplar": true,
-              "expr": "yearn_strategy{param=\"maxDebtPerHarvest\", vault=~\"$vaults\"}",
+              "expr": "yearn_strategy{network=\"ETH\", param=\"maxDebtPerHarvest\", vault=~\"$vaults\"}",
               "instant": true,
               "interval": "",
               "legendFormat": "{{strategy}}",
@@ -3776,7 +3776,7 @@
           "targets": [
             {
               "exemplar": true,
-              "expr": "yearn_strategy{param=\"cdpId\", vault=~\"$vaults\"}",
+              "expr": "yearn_strategy{network=\"ETH\", param=\"cdpId\", vault=~\"$vaults\"}",
               "instant": false,
               "interval": "",
               "legendFormat": "{{param}}",
@@ -3839,7 +3839,7 @@
           "targets": [
             {
               "exemplar": true,
-              "expr": "yearn_strategy{param=\"balanceOfmVault\", vault=~\"$vaults\"}/1000000000000000000",
+              "expr": "yearn_strategy{network=\"ETH\", param=\"balanceOfmVault\", vault=~\"$vaults\"}/1000000000000000000",
               "instant": false,
               "interval": "",
               "legendFormat": "{{param}}",
@@ -3904,7 +3904,7 @@
           "targets": [
             {
               "exemplar": true,
-              "expr": "yearn_strategy{param=\"c\", vault=~\"$vaults\"}/100",
+              "expr": "yearn_strategy{network=\"ETH\", param=\"c\", vault=~\"$vaults\"}/100",
               "instant": false,
               "interval": "",
               "legendFormat": "{{param}}",
@@ -3979,7 +3979,7 @@
           "targets": [
             {
               "exemplar": true,
-              "expr": "yearn_strategy{param=\"shouldDraw\", vault=~\"$vaults\"}",
+              "expr": "yearn_strategy{network=\"ETH\", param=\"shouldDraw\", vault=~\"$vaults\"}",
               "instant": false,
               "interval": "",
               "legendFormat": "{{param}}",
@@ -4054,7 +4054,7 @@
           "targets": [
             {
               "exemplar": true,
-              "expr": "yearn_strategy{param=\"shouldRepay\", vault=~\"$vaults\"}",
+              "expr": "yearn_strategy{network=\"ETH\", param=\"shouldRepay\", vault=~\"$vaults\"}",
               "instant": false,
               "interval": "",
               "legendFormat": "{{param}}",
@@ -4118,7 +4118,7 @@
           "targets": [
             {
               "exemplar": true,
-              "expr": "yearn_strategy{param=\"getTotalDebtAmount\", vault=~\"$vaults\"}/1000000000000000000",
+              "expr": "yearn_strategy{network=\"ETH\", param=\"getTotalDebtAmount\", vault=~\"$vaults\"}/1000000000000000000",
               "instant": false,
               "interval": "",
               "legendFormat": "{{param}}",
@@ -4220,7 +4220,7 @@
           "targets": [
             {
               "exemplar": true,
-              "expr": "yearn_strategy{param=\"getUnderlyingDai\", vault=~\"$vaults\"}/1000000000000000000",
+              "expr": "yearn_strategy{network=\"ETH\", param=\"getUnderlyingDai\", vault=~\"$vaults\"}/1000000000000000000",
               "instant": false,
               "interval": "",
               "legendFormat": "{{param}}",
@@ -4284,7 +4284,7 @@
           "targets": [
             {
               "exemplar": true,
-              "expr": "yearn_strategy{param=\"getTotalDebtAmount\", vault=~\"$vaults\"}/1000000000000000000",
+              "expr": "yearn_strategy{network=\"ETH\", param=\"getTotalDebtAmount\", vault=~\"$vaults\"}/1000000000000000000",
               "instant": false,
               "interval": "",
               "legendFormat": "{{param}}",
@@ -4349,7 +4349,7 @@
           "targets": [
             {
               "exemplar": true,
-              "expr": "yearn_strategy{param=\"c_safe\", vault=~\"$vaults\"}/100",
+              "expr": "yearn_strategy{network=\"ETH\", param=\"c_safe\", vault=~\"$vaults\"}/100",
               "instant": false,
               "interval": "",
               "legendFormat": "{{param}}",
@@ -4413,7 +4413,7 @@
           "targets": [
             {
               "exemplar": true,
-              "expr": "yearn_strategy{param=\"drawAmount\", vault=~\"$vaults\"}/1000000000000000000",
+              "expr": "yearn_strategy{network=\"ETH\", param=\"drawAmount\", vault=~\"$vaults\"}/1000000000000000000",
               "instant": false,
               "interval": "",
               "legendFormat": "{{param}}",
@@ -4476,7 +4476,7 @@
           "targets": [
             {
               "exemplar": true,
-              "expr": "yearn_strategy{param=\"repayAmount\", vault=~\"$vaults\"}/1000000000000000000",
+              "expr": "yearn_strategy{network=\"ETH\", param=\"repayAmount\", vault=~\"$vaults\"}/1000000000000000000",
               "instant": true,
               "interval": "",
               "legendFormat": "{{param}}",
@@ -4537,7 +4537,7 @@
           "targets": [
             {
               "exemplar": true,
-              "expr": "yearn_strategy{param=\"balanceOfmVault\", vault=~\"$vaults\"}/1000000000000000",
+              "expr": "yearn_strategy{network=\"ETH\", param=\"balanceOfmVault\", vault=~\"$vaults\"}/1000000000000000",
               "interval": "",
               "legendFormat": "{{param}}",
               "queryType": "randomWalk",
@@ -4634,7 +4634,7 @@
           "targets": [
             {
               "exemplar": true,
-              "expr": "yearn_strategy{param=\"repayAmount\", vault=~\"$vaults\"}/10000000000000000",
+              "expr": "yearn_strategy{network=\"ETH\", param=\"repayAmount\", vault=~\"$vaults\"}/10000000000000000",
               "interval": "",
               "legendFormat": "{{param}}",
               "queryType": "randomWalk",
@@ -4763,7 +4763,7 @@
           "targets": [
             {
               "exemplar": true,
-              "expr": "yearn_strategy{param=\"doHealthCheck\", vault=~\"$vaults\"}",
+              "expr": "yearn_strategy{network=\"ETH\", param=\"doHealthCheck\", vault=~\"$vaults\"}",
               "interval": "",
               "legendFormat": "{{strategy}}",
               "queryType": "randomWalk",
@@ -4863,7 +4863,7 @@
           "targets": [
             {
               "exemplar": true,
-              "expr": "delta(yearn_strategy{param=\"doHealthCheck\", vault=~\"$vaults\"}[1h])",
+              "expr": "delta(yearn_strategy{network=\"ETH\", param=\"doHealthCheck\", vault=~\"$vaults\"}[1h])",
               "instant": false,
               "interval": "",
               "legendFormat": "{{strategy}}",
@@ -4937,7 +4937,7 @@
           "value": "yvWETH 0.4.2"
         },
         "datasource": "DS_PROMETHEUS",
-        "definition": "yearn_strategy{experimental=\"false\"}",
+        "definition": "yearn_strategy{network=\"ETH\", experimental=\"false\"}",
         "description": null,
         "error": null,
         "hide": 0,
@@ -4947,7 +4947,7 @@
         "name": "vaults",
         "options": [],
         "query": {
-          "query": "yearn_strategy{experimental=\"false\"}",
+          "query": "yearn_strategy{network=\"ETH\", experimental=\"false\"}",
           "refId": "StandardVariableQuery"
         },
         "refresh": 1,

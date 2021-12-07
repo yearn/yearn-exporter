@@ -79,7 +79,7 @@
       "pluginVersion": "8.0.3",
       "targets": [
         {
-          "expr": "sum(yearn{param=\"tvl\"}) + avg(yearn{param=\"vecrv balance\"}) * avg(yearn{param=\"crv price\"}) + sum(yearn_vault{param=\"tvl\"}) + sum(iearn{param=\"tvl\"}) + sum(ironbank{param=\"tvl\"}) - sum(yearn{param=\"tvl\",vault=~\"curve.fi/(y|busd)\"})",
+          "expr": "sum(yearn{network=\"ETH\", param=\"tvl\"}) + avg(yearn{network=\"ETH\", param=\"vecrv balance\"}) * avg(yearn{network=\"ETH\", param=\"crv price\"}) + sum(yearn_vault{network=\"ETH\", param=\"tvl\"}) + sum(iearn{network=\"ETH\", param=\"tvl\"}) + sum(ironbank{network=\"ETH\", param=\"tvl\"}) - sum(yearn{network=\"ETH\", param=\"tvl\",vault=~\"curve.fi/(y|busd)\"})",
           "instant": true,
           "interval": "",
           "legendFormat": "{{vault}}",
@@ -142,7 +142,7 @@
       "pluginVersion": "8.0.3",
       "targets": [
         {
-          "expr": "sum(yearn{param=\"tvl\"})",
+          "expr": "sum(yearn{network=\"ETH\", param=\"tvl\"})",
           "instant": false,
           "interval": "",
           "legendFormat": "{{vault}}",
@@ -223,7 +223,7 @@
       "pluginVersion": "8.0.3",
       "targets": [
         {
-          "expr": "sum(yearn_vault{param=\"tvl\"})",
+          "expr": "sum(yearn_vault{network=\"ETH\", param=\"tvl\"})",
           "instant": false,
           "interval": "",
           "legendFormat": "{{vault}}",
@@ -304,7 +304,7 @@
       "pluginVersion": "8.0.3",
       "targets": [
         {
-          "expr": "sum(iearn{param=\"tvl\"})",
+          "expr": "sum(iearn{network=\"ETH\", param=\"tvl\"})",
           "instant": false,
           "interval": "",
           "legendFormat": "{{vault}}",
@@ -385,7 +385,7 @@
       "pluginVersion": "8.0.3",
       "targets": [
         {
-          "expr": "sum(ironbank{param=\"tvl\"})",
+          "expr": "sum(ironbank{network=\"ETH\", param=\"tvl\"})",
           "instant": false,
           "interval": "",
           "legendFormat": "{{vault}}",
@@ -466,7 +466,7 @@
       "pluginVersion": "8.0.3",
       "targets": [
         {
-          "expr": "sum(yearn_vault{param=\"tvl\",experimental=\"true\"})",
+          "expr": "sum(yearn_vault{network=\"ETH\", param=\"tvl\",experimental=\"true\"})",
           "instant": false,
           "interval": "",
           "legendFormat": "{{vault}}",
@@ -559,7 +559,7 @@
           "targets": [
             {
               "exemplar": true,
-              "expr": "sum(yearn{param=\"tvl\"}) - sum(yearn{param=\"tvl\"} offset 1d)",
+              "expr": "sum(yearn{network=\"ETH\", param=\"tvl\"}) - sum(yearn{network=\"ETH\", param=\"tvl\"} offset 1d)",
               "instant": false,
               "interval": "",
               "legendFormat": "{{vault}}",
@@ -620,7 +620,7 @@
           "targets": [
             {
               "exemplar": true,
-              "expr": "sum(yearn{param=\"tvl\"}) / sum(yearn{param=\"tvl\"} offset 1d) - 1",
+              "expr": "sum(yearn{network=\"ETH\", param=\"tvl\"}) / sum(yearn{network=\"ETH\", param=\"tvl\"} offset 1d) - 1",
               "instant": false,
               "interval": "",
               "legendFormat": "{{vault}}",
@@ -682,7 +682,7 @@
           "targets": [
             {
               "exemplar": true,
-              "expr": "sum(yearn_vault{param=\"tvl\", experimental=\"false\"}) - sum(yearn_vault{param=\"tvl\", experimental=\"false\"} offset 1d)",
+              "expr": "sum(yearn_vault{network=\"ETH\", param=\"tvl\", experimental=\"false\"}) - sum(yearn_vault{network=\"ETH\", param=\"tvl\", experimental=\"false\"} offset 1d)",
               "instant": false,
               "interval": "",
               "legendFormat": "{{vault}}",
@@ -743,7 +743,7 @@
           "targets": [
             {
               "exemplar": true,
-              "expr": "sum(yearn_vault{param=\"tvl\", experimental=\"false\"}) / sum(yearn_vault{param=\"tvl\",experimental=\"false\"} offset 1d) - 1",
+              "expr": "sum(yearn_vault{network=\"ETH\", param=\"tvl\", experimental=\"false\"}) / sum(yearn_vault{network=\"ETH\", param=\"tvl\",experimental=\"false\"} offset 1d) - 1",
               "instant": false,
               "interval": "",
               "legendFormat": "{{vault}}",
@@ -805,7 +805,7 @@
           "targets": [
             {
               "exemplar": true,
-              "expr": "sum(iearn{param=\"tvl\"}) - sum(iearn{param=\"tvl\"} offset 1d)",
+              "expr": "sum(iearn{network=\"ETH\", param=\"tvl\"}) - sum(iearn{network=\"ETH\", param=\"tvl\"} offset 1d)",
               "instant": false,
               "interval": "",
               "legendFormat": "{{vault}}",
@@ -866,7 +866,7 @@
           "targets": [
             {
               "exemplar": true,
-              "expr": "sum(iearn{param=\"tvl\"}) / sum(iearn{param=\"tvl\"} offset 1d) - 1",
+              "expr": "sum(iearn{network=\"ETH\", param=\"tvl\"}) / sum(iearn{network=\"ETH\", param=\"tvl\"} offset 1d) - 1",
               "instant": false,
               "interval": "",
               "legendFormat": "{{vault}}",
@@ -928,7 +928,7 @@
           "targets": [
             {
               "exemplar": true,
-              "expr": "sum(ironbank{param=\"tvl\"}) - sum(ironbank{param=\"tvl\"} offset 1d)",
+              "expr": "sum(ironbank{network=\"ETH\", param=\"tvl\"}) - sum(ironbank{network=\"ETH\", param=\"tvl\"} offset 1d)",
               "instant": false,
               "interval": "",
               "legendFormat": "{{vault}}",
@@ -989,7 +989,7 @@
           "targets": [
             {
               "exemplar": true,
-              "expr": "sum(ironbank{param=\"tvl\"}) / sum(ironbank{param=\"tvl\"} offset 1d) - 1",
+              "expr": "sum(ironbank{network=\"ETH\", param=\"tvl\"}) / sum(ironbank{network=\"ETH\", param=\"tvl\"} offset 1d) - 1",
               "instant": false,
               "interval": "",
               "legendFormat": "{{vault}}",
@@ -1051,7 +1051,7 @@
           "targets": [
             {
               "exemplar": true,
-              "expr": "sum(yearn_vault{param=\"tvl\",experimental=\"true\"}) - sum(yearn_vault{param=\"tvl\",experimental=\"true\"} offset 1d)",
+              "expr": "sum(yearn_vault{network=\"ETH\", param=\"tvl\",experimental=\"true\"}) - sum(yearn_vault{network=\"ETH\", param=\"tvl\",experimental=\"true\"} offset 1d)",
               "instant": false,
               "interval": "",
               "legendFormat": "{{vault}}",
@@ -1112,7 +1112,7 @@
           "targets": [
             {
               "exemplar": true,
-              "expr": "sum(yearn_vault{param=\"tvl\", experimental=\"true\"}) / sum(yearn_vault{param=\"tvl\", experimental=\"true\"} offset 1d) - 1",
+              "expr": "sum(yearn_vault{network=\"ETH\", param=\"tvl\", experimental=\"true\"}) / sum(yearn_vault{network=\"ETH\", param=\"tvl\", experimental=\"true\"} offset 1d) - 1",
               "instant": false,
               "interval": "",
               "legendFormat": "{{vault}}",
@@ -1189,7 +1189,7 @@
           "targets": [
             {
               "exemplar": true,
-              "expr": "sum(yearn{param=\"tvl\"}) - sum(yearn{param=\"tvl\"} offset 1w)",
+              "expr": "sum(yearn{network=\"ETH\", param=\"tvl\"}) - sum(yearn{network=\"ETH\", param=\"tvl\"} offset 1w)",
               "instant": false,
               "interval": "",
               "legendFormat": "{{vault}}",
@@ -1251,7 +1251,7 @@
           "targets": [
             {
               "exemplar": true,
-              "expr": "sum(yearn{param=\"tvl\"}) / sum(yearn{param=\"tvl\"} offset 1w) - 1",
+              "expr": "sum(yearn{network=\"ETH\", param=\"tvl\"}) / sum(yearn{network=\"ETH\", param=\"tvl\"} offset 1w) - 1",
               "instant": false,
               "interval": "",
               "legendFormat": "{{vault}}",
@@ -1313,7 +1313,7 @@
           "targets": [
             {
               "exemplar": true,
-              "expr": "sum(yearn_vault{param=\"tvl\", experimental=\"false\"}) - sum(yearn_vault{param=\"tvl\", experimental=\"false\"} offset 1w)",
+              "expr": "sum(yearn_vault{network=\"ETH\", param=\"tvl\", experimental=\"false\"}) - sum(yearn_vault{network=\"ETH\", param=\"tvl\", experimental=\"false\"} offset 1w)",
               "instant": false,
               "interval": "",
               "legendFormat": "{{vault}}",
@@ -1375,7 +1375,7 @@
           "targets": [
             {
               "exemplar": true,
-              "expr": "sum(yearn_vault{param=\"tvl\", experimental=\"false\"}) / sum(yearn_vault{param=\"tvl\",experimental=\"false\"} offset 1w) - 1",
+              "expr": "sum(yearn_vault{network=\"ETH\", param=\"tvl\", experimental=\"false\"}) / sum(yearn_vault{network=\"ETH\", param=\"tvl\",experimental=\"false\"} offset 1w) - 1",
               "instant": false,
               "interval": "",
               "legendFormat": "{{vault}}",
@@ -1437,7 +1437,7 @@
           "targets": [
             {
               "exemplar": true,
-              "expr": "sum(iearn{param=\"tvl\"}) - sum(iearn{param=\"tvl\"} offset 1w)",
+              "expr": "sum(iearn{network=\"ETH\", param=\"tvl\"}) - sum(iearn{network=\"ETH\", param=\"tvl\"} offset 1w)",
               "instant": false,
               "interval": "",
               "legendFormat": "{{vault}}",
@@ -1499,7 +1499,7 @@
           "targets": [
             {
               "exemplar": true,
-              "expr": "sum(iearn{param=\"tvl\"}) / sum(iearn{param=\"tvl\"} offset 1w) - 1",
+              "expr": "sum(iearn{network=\"ETH\", param=\"tvl\"}) / sum(iearn{network=\"ETH\", param=\"tvl\"} offset 1w) - 1",
               "instant": false,
               "interval": "",
               "legendFormat": "{{vault}}",
@@ -1561,7 +1561,7 @@
           "targets": [
             {
               "exemplar": true,
-              "expr": "sum(ironbank{param=\"tvl\"}) - sum(ironbank{param=\"tvl\"} offset 1w)",
+              "expr": "sum(ironbank{network=\"ETH\", param=\"tvl\"}) - sum(ironbank{network=\"ETH\", param=\"tvl\"} offset 1w)",
               "instant": false,
               "interval": "",
               "legendFormat": "{{vault}}",
@@ -1623,7 +1623,7 @@
           "targets": [
             {
               "exemplar": true,
-              "expr": "sum(ironbank{param=\"tvl\"}) / sum(ironbank{param=\"tvl\"} offset 1w) - 1",
+              "expr": "sum(ironbank{network=\"ETH\", param=\"tvl\"}) / sum(ironbank{network=\"ETH\", param=\"tvl\"} offset 1w) - 1",
               "instant": false,
               "interval": "",
               "legendFormat": "{{vault}}",
@@ -1685,7 +1685,7 @@
           "targets": [
             {
               "exemplar": true,
-              "expr": "sum(yearn_vault{param=\"tvl\",experimental=\"true\"}) - sum(yearn_vault{param=\"tvl\",experimental=\"true\"} offset 1w)",
+              "expr": "sum(yearn_vault{network=\"ETH\", param=\"tvl\",experimental=\"true\"}) - sum(yearn_vault{network=\"ETH\", param=\"tvl\",experimental=\"true\"} offset 1w)",
               "instant": false,
               "interval": "",
               "legendFormat": "{{vault}}",
@@ -1747,7 +1747,7 @@
           "targets": [
             {
               "exemplar": true,
-              "expr": "sum(yearn_vault{param=\"tvl\", experimental=\"true\"}) / sum(yearn_vault{param=\"tvl\", experimental=\"true\"} offset 1w) - 1",
+              "expr": "sum(yearn_vault{network=\"ETH\", param=\"tvl\", experimental=\"true\"}) / sum(yearn_vault{network=\"ETH\", param=\"tvl\", experimental=\"true\"} offset 1w) - 1",
               "instant": false,
               "interval": "",
               "legendFormat": "{{vault}}",
@@ -1836,7 +1836,7 @@
           "targets": [
             {
               "exemplar": true,
-              "expr": "sum(yearn{param=\"tvl\"}) - sum(yearn{param=\"tvl\"} offset 4w)",
+              "expr": "sum(yearn{network=\"ETH\", param=\"tvl\"}) - sum(yearn{network=\"ETH\", param=\"tvl\"} offset 4w)",
               "instant": false,
               "interval": "",
               "legendFormat": "{{vault}}",
@@ -1910,7 +1910,7 @@
           "targets": [
             {
               "exemplar": true,
-              "expr": "sum(yearn{param=\"tvl\"}) / sum(yearn{param=\"tvl\"} offset 4w) - 1",
+              "expr": "sum(yearn{network=\"ETH\", param=\"tvl\"}) / sum(yearn{network=\"ETH\", param=\"tvl\"} offset 4w) - 1",
               "instant": false,
               "interval": "",
               "legendFormat": "{{vault}}",
@@ -1984,7 +1984,7 @@
           "targets": [
             {
               "exemplar": true,
-              "expr": "sum(yearn_vault{param=\"tvl\", experimental=\"false\"}) - sum(yearn_vault{param=\"tvl\", experimental=\"false\"} offset 4w)",
+              "expr": "sum(yearn_vault{network=\"ETH\", param=\"tvl\", experimental=\"false\"}) - sum(yearn_vault{network=\"ETH\", param=\"tvl\", experimental=\"false\"} offset 4w)",
               "instant": false,
               "interval": "",
               "legendFormat": "{{vault}}",
@@ -2058,7 +2058,7 @@
           "targets": [
             {
               "exemplar": true,
-              "expr": "sum(yearn_vault{param=\"tvl\", experimental=\"false\"}) / sum(yearn_vault{param=\"tvl\",experimental=\"false\"} offset 4w) - 1",
+              "expr": "sum(yearn_vault{network=\"ETH\", param=\"tvl\", experimental=\"false\"}) / sum(yearn_vault{network=\"ETH\", param=\"tvl\",experimental=\"false\"} offset 4w) - 1",
               "instant": false,
               "interval": "",
               "legendFormat": "{{vault}}",
@@ -2132,7 +2132,7 @@
           "targets": [
             {
               "exemplar": true,
-              "expr": "sum(iearn{param=\"tvl\"}) - sum(iearn{param=\"tvl\"} offset 4w)",
+              "expr": "sum(iearn{network=\"ETH\", param=\"tvl\"}) - sum(iearn{network=\"ETH\", param=\"tvl\"} offset 4w)",
               "instant": false,
               "interval": "",
               "legendFormat": "{{vault}}",
@@ -2206,7 +2206,7 @@
           "targets": [
             {
               "exemplar": true,
-              "expr": "sum(iearn{param=\"tvl\"}) / sum(iearn{param=\"tvl\"} offset 4w) - 1",
+              "expr": "sum(iearn{network=\"ETH\", param=\"tvl\"}) / sum(iearn{network=\"ETH\", param=\"tvl\"} offset 4w) - 1",
               "instant": false,
               "interval": "",
               "legendFormat": "{{vault}}",
@@ -2280,7 +2280,7 @@
           "targets": [
             {
               "exemplar": true,
-              "expr": "sum(ironbank{param=\"tvl\"}) - sum(ironbank{param=\"tvl\"} offset 4w)",
+              "expr": "sum(ironbank{network=\"ETH\", param=\"tvl\"}) - sum(ironbank{network=\"ETH\", param=\"tvl\"} offset 4w)",
               "instant": false,
               "interval": "",
               "legendFormat": "{{vault}}",
@@ -2354,7 +2354,7 @@
           "targets": [
             {
               "exemplar": true,
-              "expr": "sum(ironbank{param=\"tvl\"}) / sum(ironbank{param=\"tvl\"} offset 4w) - 1",
+              "expr": "sum(ironbank{network=\"ETH\", param=\"tvl\"}) / sum(ironbank{network=\"ETH\", param=\"tvl\"} offset 4w) - 1",
               "instant": false,
               "interval": "",
               "legendFormat": "{{vault}}",
@@ -2428,7 +2428,7 @@
           "targets": [
             {
               "exemplar": true,
-              "expr": "sum(yearn_vault{param=\"tvl\",experimental=\"true\"}) - sum(yearn_vault{param=\"tvl\",experimental=\"true\"} offset 4w)",
+              "expr": "sum(yearn_vault{network=\"ETH\", param=\"tvl\",experimental=\"true\"}) - sum(yearn_vault{network=\"ETH\", param=\"tvl\",experimental=\"true\"} offset 4w)",
               "instant": false,
               "interval": "",
               "legendFormat": "{{vault}}",
@@ -2502,7 +2502,7 @@
           "targets": [
             {
               "exemplar": true,
-              "expr": "sum(yearn_vault{param=\"tvl\", experimental=\"true\"}) / sum(yearn_vault{param=\"tvl\", experimental=\"true\"} offset 4w) - 1",
+              "expr": "sum(yearn_vault{network=\"ETH\", param=\"tvl\", experimental=\"true\"}) / sum(yearn_vault{network=\"ETH\", param=\"tvl\", experimental=\"true\"} offset 4w) - 1",
               "instant": false,
               "interval": "",
               "legendFormat": "{{vault}}",
@@ -2581,7 +2581,7 @@
           "targets": [
             {
               "exemplar": true,
-              "expr": "yearn_vault{param=\"tvl\", experimental=\"false\"}",
+              "expr": "yearn_vault{network=\"ETH\", param=\"tvl\", experimental=\"false\"}",
               "interval": "",
               "legendFormat": "{{vault}}",
               "refId": "A"
@@ -2690,7 +2690,7 @@
           "targets": [
             {
               "exemplar": true,
-              "expr": "sum(yearn_vault{param=\"tvl\", experimental=\"false\"})",
+              "expr": "sum(yearn_vault{network=\"ETH\", param=\"tvl\", experimental=\"false\"})",
               "interval": "",
               "legendFormat": "v2 Total Value Locked -",
               "refId": "A"
@@ -2812,7 +2812,7 @@
           "steppedLine": true,
           "targets": [
             {
-              "expr": "ironbank{param=\"tvl\"}",
+              "expr": "ironbank{network=\"ETH\", param=\"tvl\"}",
               "interval": "",
               "legendFormat": "{{vault}}",
               "refId": "A"
@@ -2921,7 +2921,7 @@
           "steppedLine": true,
           "targets": [
             {
-              "expr": "sum(ironbank{param=\"tvl\"})",
+              "expr": "sum(ironbank{network=\"ETH\", param=\"tvl\"})",
               "interval": "",
               "legendFormat": "Ironbank Total Value Locked -",
               "refId": "A"
@@ -3042,7 +3042,7 @@
           "steppedLine": true,
           "targets": [
             {
-              "expr": "iearn{param=\"tvl\"}",
+              "expr": "iearn{network=\"ETH\", param=\"tvl\"}",
               "interval": "",
               "legendFormat": "{{vault}}",
               "refId": "A"
@@ -3151,7 +3151,7 @@
           "steppedLine": true,
           "targets": [
             {
-              "expr": "sum(iearn{param=\"tvl\"})",
+              "expr": "sum(iearn{network=\"ETH\", param=\"tvl\"})",
               "interval": "",
               "legendFormat": "Earn Total Value Locked -",
               "refId": "A"
@@ -3273,7 +3273,7 @@
           "targets": [
             {
               "exemplar": true,
-              "expr": "yearn{param=\"tvl\"}",
+              "expr": "yearn{network=\"ETH\", param=\"tvl\"}",
               "interval": "",
               "legendFormat": "{{vault}}",
               "refId": "A"
@@ -3382,7 +3382,7 @@
           "steppedLine": true,
           "targets": [
             {
-              "expr": "sum(yearn{param=\"tvl\"})",
+              "expr": "sum(yearn{network=\"ETH\", param=\"tvl\"})",
               "instant": false,
               "interval": "",
               "legendFormat": "v1 Total Value Locked -",
@@ -3504,7 +3504,7 @@
           "steppedLine": true,
           "targets": [
             {
-              "expr": "yearn_vault{param=\"tvl\",experimental=\"true\"}",
+              "expr": "yearn_vault{network=\"ETH\", param=\"tvl\",experimental=\"true\"}",
               "interval": "",
               "legendFormat": "{{vault}}",
               "refId": "A"
@@ -3613,7 +3613,7 @@
           "steppedLine": true,
           "targets": [
             {
-              "expr": "sum(yearn_vault{param=\"tvl\",experimental=\"true\"})",
+              "expr": "sum(yearn_vault{network=\"ETH\", param=\"tvl\",experimental=\"true\"})",
               "instant": false,
               "interval": "",
               "legendFormat": "Experimental Total Value Locked -",

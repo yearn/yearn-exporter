@@ -88,7 +88,7 @@
       "targets": [
         {
           "exemplar": true,
-          "expr": "sum(yearn{param=\"tvl\"}) + sum(ironbank{param=\"tvl\"}) + sum(yearn_vault{param=\"tvl\"}) + sum(iearn{param=\"tvl\"})",
+          "expr": "sum(yearn{network=\"ETH\", param=\"tvl\"}) + sum(ironbank{network=\"ETH\", param=\"tvl\"}) + sum(yearn_vault{network=\"ETH\", param=\"tvl\"}) + sum(iearn{network=\"ETH\", param=\"tvl\"})",
           "interval": "",
           "legendFormat": "",
           "queryType": "randomWalk",
@@ -150,7 +150,7 @@
       "targets": [
         {
           "exemplar": true,
-          "expr": "sum(delta(yearn{param=\"tvl\"}[1d])) + sum(delta(ironbank{param=\"tvl\"}[1d])) + sum(delta(yearn_vault{param=\"tvl\"}[1d])) + sum(delta(iearn{param=\"tvl\"}[1d]))",
+          "expr": "sum(delta(yearn{network=\"ETH\", param=\"tvl\"}[1d])) + sum(delta(ironbank{network=\"ETH\", param=\"tvl\"}[1d])) + sum(delta(yearn_vault{network=\"ETH\", param=\"tvl\"}[1d])) + sum(delta(iearn{network=\"ETH\", param=\"tvl\"}[1d]))",
           "interval": "",
           "legendFormat": "",
           "queryType": "randomWalk",
@@ -212,7 +212,7 @@
       "targets": [
         {
           "exemplar": true,
-          "expr": "sum(delta(yearn{param=\"tvl\"}[1w])) + sum(delta(ironbank{param=\"tvl\"}[1w])) + sum(delta(yearn_vault{param=\"tvl\"}[1w])) + sum(delta(iearn{param=\"tvl\"}[1w]))",
+          "expr": "sum(delta(yearn{network=\"ETH\", param=\"tvl\"}[1w])) + sum(delta(ironbank{network=\"ETH\", param=\"tvl\"}[1w])) + sum(delta(yearn_vault{network=\"ETH\", param=\"tvl\"}[1w])) + sum(delta(iearn{network=\"ETH\", param=\"tvl\"}[1w]))",
           "interval": "",
           "legendFormat": "",
           "queryType": "randomWalk",
@@ -274,7 +274,7 @@
       "targets": [
         {
           "exemplar": true,
-          "expr": "avg(yearn{param=\"vecrv balance\"})",
+          "expr": "avg(yearn{network=\"ETH\", param=\"vecrv balance\"})",
           "interval": "",
           "legendFormat": "",
           "queryType": "randomWalk",
@@ -334,7 +334,7 @@
       "targets": [
         {
           "exemplar": true,
-          "expr": "avg(yearn{param=\"vecrv balance\"}) / avg(yearn{param=\"vecrv total\"})",
+          "expr": "avg(yearn{network=\"ETH\", param=\"vecrv balance\"}) / avg(yearn{network=\"ETH\", param=\"vecrv total\"})",
           "interval": "",
           "legendFormat": "",
           "queryType": "randomWalk",
@@ -392,7 +392,7 @@
       "targets": [
         {
           "exemplar": true,
-          "expr": "sum(iearn{param=\"tvl\"})",
+          "expr": "sum(iearn{network=\"ETH\", param=\"tvl\"})",
           "interval": "",
           "legendFormat": "earn",
           "queryType": "randomWalk",
@@ -400,7 +400,7 @@
         },
         {
           "exemplar": true,
-          "expr": "sum(ironbank{param=\"tvl\"})",
+          "expr": "sum(ironbank{network=\"ETH\", param=\"tvl\"})",
           "hide": false,
           "interval": "",
           "legendFormat": "ironbank",
@@ -408,7 +408,7 @@
         },
         {
           "exemplar": true,
-          "expr": "sum(yearn{param=\"tvl\"})",
+          "expr": "sum(yearn{network=\"ETH\", param=\"tvl\"})",
           "hide": false,
           "interval": "",
           "legendFormat": "v1",
@@ -416,7 +416,7 @@
         },
         {
           "exemplar": true,
-          "expr": "sum(yearn_vault{param=\"tvl\"})",
+          "expr": "sum(yearn_vault{network=\"ETH\", param=\"tvl\"})",
           "hide": false,
           "interval": "",
           "legendFormat": "v2",
@@ -514,7 +514,7 @@
       "targets": [
         {
           "exemplar": true,
-          "expr": "sum(delta(iearn{param=\"tvl\"}[1d]))",
+          "expr": "sum(delta(iearn{network=\"ETH\", param=\"tvl\"}[1d]))",
           "interval": "",
           "legendFormat": "earn",
           "queryType": "randomWalk",
@@ -522,7 +522,7 @@
         },
         {
           "exemplar": true,
-          "expr": "sum(delta(ironbank{param=\"tvl\"}[1d]))",
+          "expr": "sum(delta(ironbank{network=\"ETH\", param=\"tvl\"}[1d]))",
           "hide": false,
           "interval": "",
           "legendFormat": "ironbank",
@@ -530,7 +530,7 @@
         },
         {
           "exemplar": true,
-          "expr": "sum(delta(yearn{param=\"tvl\"}[1d]))",
+          "expr": "sum(delta(yearn{network=\"ETH\", param=\"tvl\"}[1d]))",
           "hide": false,
           "interval": "",
           "legendFormat": "v1",
@@ -538,7 +538,7 @@
         },
         {
           "exemplar": true,
-          "expr": "sum(delta(yearn_vault{param=\"tvl\"}[1d]))",
+          "expr": "sum(delta(yearn_vault{network=\"ETH\", param=\"tvl\"}[1d]))",
           "hide": false,
           "interval": "",
           "legendFormat": "v2",
@@ -646,7 +646,7 @@
       "targets": [
         {
           "exemplar": true,
-          "expr": "yearn_vault{param=\"tvl\",experimental=\"false\"} != 0",
+          "expr": "yearn_vault{network=\"ETH\", param=\"tvl\",experimental=\"false\"} != 0",
           "interval": "",
           "legendFormat": "{{vault}}",
           "queryType": "randomWalk",
@@ -750,7 +750,7 @@
       "targets": [
         {
           "exemplar": true,
-          "expr": "delta(yearn_vault{param=\"tvl\",experimental=\"false\"}[1d]) != 0",
+          "expr": "delta(yearn_vault{network=\"ETH\", param=\"tvl\",experimental=\"false\"}[1d]) != 0",
           "interval": "",
           "legendFormat": "{{vault}}",
           "queryType": "randomWalk",
@@ -758,7 +758,7 @@
         },
         {
           "exemplar": true,
-          "expr": "sum(delta(yearn_vault{param=\"tvl\",experimental=\"false\"}[1d]))",
+          "expr": "sum(delta(yearn_vault{network=\"ETH\", param=\"tvl\",experimental=\"false\"}[1d]))",
           "hide": false,
           "interval": "",
           "legendFormat": "net inflow/outflow",
@@ -856,7 +856,7 @@
       "targets": [
         {
           "exemplar": true,
-          "expr": "yearn{param=\"tvl\"} != 0",
+          "expr": "yearn{network=\"ETH\", param=\"tvl\"} != 0",
           "interval": "",
           "legendFormat": "{{vault}}",
           "queryType": "randomWalk",
@@ -960,7 +960,7 @@
       "targets": [
         {
           "exemplar": true,
-          "expr": "delta(yearn{param=\"tvl\"}[1d]) != 0",
+          "expr": "delta(yearn{network=\"ETH\", param=\"tvl\"}[1d]) != 0",
           "interval": "",
           "legendFormat": "{{vault}}",
           "queryType": "randomWalk",
@@ -968,7 +968,7 @@
         },
         {
           "exemplar": true,
-          "expr": "sum(delta(yearn{param=\"tvl\"}[1d]))",
+          "expr": "sum(delta(yearn{network=\"ETH\", param=\"tvl\"}[1d]))",
           "hide": false,
           "interval": "",
           "legendFormat": "net inflow/outflow",
@@ -1066,7 +1066,7 @@
       "targets": [
         {
           "exemplar": true,
-          "expr": "ironbank{param=\"tvl\"} != 0",
+          "expr": "ironbank{network=\"ETH\", param=\"tvl\"} != 0",
           "interval": "",
           "legendFormat": "{{vault}}",
           "queryType": "randomWalk",
@@ -1170,7 +1170,7 @@
       "targets": [
         {
           "exemplar": true,
-          "expr": "delta(ironbank{param=\"tvl\"}[1d]) != 0",
+          "expr": "delta(ironbank{network=\"ETH\", param=\"tvl\"}[1d]) != 0",
           "interval": "",
           "legendFormat": "{{vault}}",
           "queryType": "randomWalk",
@@ -1178,7 +1178,7 @@
         },
         {
           "exemplar": true,
-          "expr": "sum(delta(ironbank{param=\"tvl\"}[1d]))",
+          "expr": "sum(delta(ironbank{network=\"ETH\", param=\"tvl\"}[1d]))",
           "hide": false,
           "interval": "",
           "legendFormat": "net inflow/outflow",
@@ -1276,7 +1276,7 @@
       "targets": [
         {
           "exemplar": true,
-          "expr": "iearn{param=\"tvl\"} != 0",
+          "expr": "iearn{network=\"ETH\", param=\"tvl\"} != 0",
           "interval": "",
           "legendFormat": "{{vault}}",
           "queryType": "randomWalk",
@@ -1380,7 +1380,7 @@
       "targets": [
         {
           "exemplar": true,
-          "expr": "delta(iearn{param=\"tvl\"}[1d]) != 0",
+          "expr": "delta(iearn{network=\"ETH\", param=\"tvl\"}[1d]) != 0",
           "interval": "",
           "legendFormat": "{{vault}}",
           "queryType": "randomWalk",
@@ -1388,7 +1388,7 @@
         },
         {
           "exemplar": true,
-          "expr": "sum(delta(iearn{param=\"tvl\"}[1d]))",
+          "expr": "sum(delta(iearn{network=\"ETH\", param=\"tvl\"}[1d]))",
           "hide": false,
           "interval": "",
           "legendFormat": "net inflow/outflow",
@@ -1487,7 +1487,7 @@
       "targets": [
         {
           "exemplar": true,
-          "expr": "yearn_vault{param=\"tvl\", experimental=\"true\"} != 0",
+          "expr": "yearn_vault{network=\"ETH\", param=\"tvl\", experimental=\"true\"} != 0",
           "interval": "",
           "legendFormat": "{{vault}}",
           "queryType": "randomWalk",
@@ -1591,7 +1591,7 @@
       "targets": [
         {
           "exemplar": true,
-          "expr": "delta(yearn_vault{param=\"tvl\", experimental=\"true\"}[1d]) != 0",
+          "expr": "delta(yearn_vault{network=\"ETH\", param=\"tvl\", experimental=\"true\"}[1d]) != 0",
           "interval": "",
           "legendFormat": "{{vault}}",
           "queryType": "randomWalk",
@@ -1599,7 +1599,7 @@
         },
         {
           "exemplar": true,
-          "expr": "sum(delta(yearn_vault{param=\"tvl\", experimental=\"true\"}[1d]))",
+          "expr": "sum(delta(yearn_vault{network=\"ETH\", param=\"tvl\", experimental=\"true\"}[1d]))",
           "hide": false,
           "interval": "",
           "legendFormat": "net inflow/outflow",
@@ -1697,7 +1697,7 @@
       "targets": [
         {
           "exemplar": true,
-          "expr": "time() - yearn_vault{param=\"lastReport\", experimental=\"false\", vault!~\"yvUSDC 0.2.2|yvDAI 0.2.2|yvWBTC 0.3.1|yvHEGIC 0.3.0\"}",
+          "expr": "time() - yearn_vault{network=\"ETH\", param=\"lastReport\", experimental=\"false\", vault!~\"yvUSDC 0.2.2|yvDAI 0.2.2|yvWBTC 0.3.1|yvHEGIC 0.3.0\"}",
           "interval": "",
           "legendFormat": "{{vault}}",
           "queryType": "randomWalk",
@@ -1800,7 +1800,7 @@
       "targets": [
         {
           "exemplar": true,
-          "expr": "yearn_vault{param=\"pricePerShare\",experimental=\"false\"}",
+          "expr": "yearn_vault{network=\"ETH\", param=\"pricePerShare\",experimental=\"false\"}",
           "interval": "",
           "legendFormat": "{{vault}}",
           "queryType": "randomWalk",
@@ -1808,7 +1808,7 @@
         },
         {
           "exemplar": true,
-          "expr": "yearn{param=\"share price\"}",
+          "expr": "yearn{network=\"ETH\", param=\"share price\"}",
           "hide": false,
           "interval": "",
           "legendFormat": "{{vault}}",
@@ -1816,7 +1816,7 @@
         },
         {
           "exemplar": true,
-          "expr": "yearn_vault{param=\"pricePerShare\",experimental=\"true\"}",
+          "expr": "yearn_vault{network=\"ETH\", param=\"pricePerShare\",experimental=\"true\"}",
           "hide": false,
           "interval": "",
           "legendFormat": "{{vault}} - exp",
@@ -1928,7 +1928,7 @@
       "targets": [
         {
           "exemplar": true,
-          "expr": "yearn{vault=\"curve.fi/3pool\",param=\"vecrv balance\"}",
+          "expr": "yearn{network=\"ETH\", vault=\"curve.fi/3pool\",param=\"vecrv balance\"}",
           "interval": "",
           "legendFormat": "{{param}}",
           "queryType": "randomWalk",
@@ -1936,7 +1936,7 @@
         },
         {
           "exemplar": true,
-          "expr": "avg(yearn{vault=\"curve.fi/3pool\",param=\"vecrv balance\"}) / avg(yearn{vault=\"curve.fi/3pool\",param=\"vecrv total\"})",
+          "expr": "avg(yearn{network=\"ETH\", vault=\"curve.fi/3pool\",param=\"vecrv balance\"}) / avg(yearn{network=\"ETH\", vault=\"curve.fi/3pool\",param=\"vecrv total\"})",
           "hide": false,
           "interval": "",
           "legendFormat": "vecrv share",
@@ -2043,7 +2043,7 @@
       "targets": [
         {
           "exemplar": true,
-          "expr": "delta(yearn_vault{param=\"pricePerShare\",experimental=\"false\"}[1d]) * 365",
+          "expr": "delta(yearn_vault{network=\"ETH\", param=\"pricePerShare\",experimental=\"false\"}[1d]) * 365",
           "interval": "",
           "legendFormat": "{{vault}}",
           "queryType": "randomWalk",
@@ -2051,7 +2051,7 @@
         },
         {
           "exemplar": true,
-          "expr": "delta(yearn{param=\"share price\"}[1d]) * 365",
+          "expr": "delta(yearn{network=\"ETH\", param=\"share price\"}[1d]) * 365",
           "hide": false,
           "interval": "",
           "legendFormat": "{{vault}}",
@@ -2059,7 +2059,7 @@
         },
         {
           "exemplar": true,
-          "expr": "delta(yearn_vault{param=\"pricePerShare\",experimental=\"true\"}[1d]) * 365",
+          "expr": "delta(yearn_vault{network=\"ETH\", param=\"pricePerShare\",experimental=\"true\"}[1d]) * 365",
           "hide": false,
           "interval": "",
           "legendFormat": "{{vault}} - exp",

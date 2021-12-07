@@ -74,7 +74,7 @@
       "targets": [
         {
           "exemplar": true,
-          "expr": "sum(iearn{param=\"tvl\"})",
+          "expr": "sum(iearn{network=\"ETH\", param=\"tvl\"})",
           "format": "time_series",
           "instant": true,
           "interval": "",
@@ -145,7 +145,7 @@
       "targets": [
         {
           "exemplar": true,
-          "expr": "sum(delta(iearn{param=\"tvl\"}[1d]))",
+          "expr": "sum(delta(iearn{network=\"ETH\", param=\"tvl\"}[1d]))",
           "format": "time_series",
           "instant": false,
           "interval": "",
@@ -216,7 +216,7 @@
       "targets": [
         {
           "exemplar": true,
-          "expr": "sum(delta(iearn{param=\"tvl\"}[1w]))",
+          "expr": "sum(delta(iearn{network=\"ETH\", param=\"tvl\"}[1w]))",
           "format": "time_series",
           "instant": false,
           "interval": "",
@@ -287,7 +287,7 @@
       "targets": [
         {
           "exemplar": true,
-          "expr": "sum(delta(iearn{param=\"tvl\"}[4w]))",
+          "expr": "sum(delta(iearn{network=\"ETH\", param=\"tvl\"}[4w]))",
           "format": "time_series",
           "instant": false,
           "interval": "",
@@ -385,7 +385,7 @@
           "targets": [
             {
               "exemplar": true,
-              "expr": "sum(iearn{param=\"tvl\"})",
+              "expr": "sum(iearn{network=\"ETH\", param=\"tvl\"})",
               "format": "time_series",
               "instant": false,
               "interval": "",
@@ -396,7 +396,7 @@
             },
             {
               "exemplar": true,
-              "expr": "sum(delta(iearn{param=\"tvl\"}[1d]))",
+              "expr": "sum(delta(iearn{network=\"ETH\", param=\"tvl\"}[1d]))",
               "hide": false,
               "interval": "",
               "legendFormat": "net inflow/outflow - daily",
@@ -534,7 +534,7 @@
           "steppedLine": false,
           "targets": [
             {
-              "expr": "iearn{param=\"tvl\", vault=~\".*v2\"}",
+              "expr": "iearn{network=\"ETH\", param=\"tvl\", vault=~\".*v2\"}",
               "format": "time_series",
               "instant": false,
               "interval": "",
@@ -544,7 +544,7 @@
               "refId": "A"
             },
             {
-              "expr": "sum(iearn{param=\"tvl\", vault=~\".*v2\"})",
+              "expr": "sum(iearn{network=\"ETH\", param=\"tvl\", vault=~\".*v2\"})",
               "hide": false,
               "interval": "",
               "legendFormat": "iEarn v2 AUM",
@@ -667,7 +667,7 @@
           "targets": [
             {
               "exemplar": true,
-              "expr": "delta(iearn{param=\"tvl\", vault=~\".*v2\"}[1d]) !=0",
+              "expr": "delta(iearn{network=\"ETH\", param=\"tvl\", vault=~\".*v2\"}[1d]) !=0",
               "format": "time_series",
               "instant": false,
               "interval": "",
@@ -678,7 +678,7 @@
             },
             {
               "exemplar": true,
-              "expr": "sum(delta(iearn{param=\"tvl\", vault=~\".*v2\"}[1d]))",
+              "expr": "sum(delta(iearn{network=\"ETH\", param=\"tvl\", vault=~\".*v2\"}[1d]))",
               "hide": false,
               "interval": "",
               "legendFormat": "net inflow/outflow v2",
@@ -801,7 +801,7 @@
           "steppedLine": true,
           "targets": [
             {
-              "expr": "iearn{param=\"tvl\", vault=~\".*v3\"}",
+              "expr": "iearn{network=\"ETH\", param=\"tvl\", vault=~\".*v3\"}",
               "format": "time_series",
               "instant": false,
               "interval": "",
@@ -812,7 +812,7 @@
             },
             {
               "exemplar": true,
-              "expr": "sum(iearn{param=\"tvl\", vault=~\".*v3\"})",
+              "expr": "sum(iearn{network=\"ETH\", param=\"tvl\", vault=~\".*v3\"})",
               "hide": false,
               "interval": "",
               "legendFormat": "iEarn v3 AUM",
@@ -935,7 +935,7 @@
           "targets": [
             {
               "exemplar": true,
-              "expr": "delta(iearn{param=\"tvl\", vault=~\".*v3\"}[1d]) !=0",
+              "expr": "delta(iearn{network=\"ETH\", param=\"tvl\", vault=~\".*v3\"}[1d]) !=0",
               "format": "time_series",
               "instant": false,
               "interval": "",
@@ -946,7 +946,7 @@
             },
             {
               "exemplar": true,
-              "expr": "sum(delta(iearn{param=\"tvl\", vault=~\".*v3\"}[1d]))",
+              "expr": "sum(delta(iearn{network=\"ETH\", param=\"tvl\", vault=~\".*v3\"}[1d]))",
               "hide": false,
               "interval": "",
               "legendFormat": "net inflow/outflow v3",
@@ -1068,7 +1068,7 @@
           "pluginVersion": "8.0.3",
           "targets": [
             {
-              "expr": "sort(iearn{param=\"price per share\", vault=~\".*v2\"})",
+              "expr": "sort(iearn{network=\"ETH\", param=\"price per share\", vault=~\".*v2\"})",
               "format": "time_series",
               "instant": false,
               "interval": "",
@@ -1139,7 +1139,7 @@
           "pluginVersion": "8.0.3",
           "targets": [
             {
-              "expr": "iearn{param=\"price per share\", vault=~\".*v3\"}",
+              "expr": "iearn{network=\"ETH\", param=\"price per share\", vault=~\".*v3\"}",
               "format": "time_series",
               "instant": false,
               "interval": "",
@@ -1233,7 +1233,7 @@
           "steppedLine": false,
           "targets": [
             {
-              "expr": "delta(iearn{param=\"price per share\"}[2m])",
+              "expr": "delta(iearn{network=\"ETH\", param=\"price per share\"}[2m])",
               "format": "time_series",
               "instant": false,
               "interval": "",
@@ -1349,7 +1349,7 @@
           "steppedLine": true,
           "targets": [
             {
-              "expr": "iearn{param=\"price per share\"}",
+              "expr": "iearn{network=\"ETH\", param=\"price per share\"}",
               "format": "time_series",
               "instant": false,
               "interval": "",
@@ -1466,7 +1466,7 @@
           "targets": [
             {
               "exemplar": true,
-              "expr": "delta(iearn{param=\"price per share\"}[1d]) * 365",
+              "expr": "delta(iearn{network=\"ETH\", param=\"price per share\"}[1d]) * 365",
               "hide": false,
               "interval": "",
               "legendFormat": "{{vault}}",
@@ -1589,7 +1589,7 @@
           "targets": [
             {
               "exemplar": true,
-              "expr": "iearn{param=\"price per share\", vault=~\".*v2\"} - iearn{param=\"price per share\", vault=~\".*v2\"} offset 1d",
+              "expr": "iearn{network=\"ETH\", param=\"price per share\", vault=~\".*v2\"} - iearn{network=\"ETH\", param=\"price per share\", vault=~\".*v2\"} offset 1d",
               "format": "time_series",
               "instant": false,
               "interval": "",
@@ -1661,7 +1661,7 @@
           "targets": [
             {
               "exemplar": true,
-              "expr": "(iearn{param=\"price per share\", vault=~\".*v2\"} / iearn{param=\"price per share\", vault=~\".*v2\"} offset 1d ) - 1",
+              "expr": "(iearn{network=\"ETH\", param=\"price per share\", vault=~\".*v2\"} / iearn{network=\"ETH\", param=\"price per share\", vault=~\".*v2\"} offset 1d ) - 1",
               "format": "time_series",
               "instant": false,
               "interval": "",
@@ -1733,7 +1733,7 @@
           "targets": [
             {
               "exemplar": true,
-              "expr": "iearn{param=\"price per share\", vault=~\".*v3\"} - iearn{param=\"price per share\", vault=~\".*v3\"} offset 1d",
+              "expr": "iearn{network=\"ETH\", param=\"price per share\", vault=~\".*v3\"} - iearn{network=\"ETH\", param=\"price per share\", vault=~\".*v3\"} offset 1d",
               "format": "time_series",
               "instant": false,
               "interval": "",
@@ -1805,7 +1805,7 @@
           "targets": [
             {
               "exemplar": true,
-              "expr": "(iearn{param=\"price per share\", vault=~\".*v3\"} / iearn{param=\"price per share\", vault=~\".*v3\"} offset 1d ) - 1",
+              "expr": "(iearn{network=\"ETH\", param=\"price per share\", vault=~\".*v3\"} / iearn{network=\"ETH\", param=\"price per share\", vault=~\".*v3\"} offset 1d ) - 1",
               "format": "time_series",
               "instant": false,
               "interval": "",
@@ -1897,7 +1897,7 @@
           "steppedLine": true,
           "targets": [
             {
-              "expr": "iearn{param=\"pooled balance\"}",
+              "expr": "iearn{network=\"ETH\", param=\"pooled balance\"}",
               "format": "time_series",
               "instant": false,
               "interval": "",
@@ -2030,7 +2030,7 @@
           "steppedLine": true,
           "targets": [
             {
-              "expr": "iearn{param=\"total supply\"}",
+              "expr": "iearn{network=\"ETH\", param=\"total supply\"}",
               "format": "time_series",
               "instant": false,
               "interval": "",
@@ -2146,7 +2146,7 @@
           "targets": [
             {
               "exemplar": true,
-              "expr": "sum by (vault) (iearn{param=\"pooled balance\"}) - sum by (vault) (iearn{param=\"total supply\"})",
+              "expr": "sum by (vault) (iearn{network=\"ETH\", param=\"pooled balance\"}) - sum by (vault) (iearn{network=\"ETH\", param=\"total supply\"})",
               "format": "time_series",
               "instant": false,
               "interval": "",

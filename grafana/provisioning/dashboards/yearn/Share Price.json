@@ -106,7 +106,7 @@
       "targets": [
         {
           "exemplar": true,
-          "expr": "delta(yearn{param=\"share price\"}[1m])",
+          "expr": "delta(yearn{network=\"ETH\", param=\"share price\"}[1m])",
           "interval": "",
           "legendFormat": "{{vault}}",
           "queryType": "randomWalk",
@@ -229,7 +229,7 @@
       "targets": [
         {
           "exemplar": true,
-          "expr": "yearn{param=\"share price\"}",
+          "expr": "yearn{network=\"ETH\", param=\"share price\"}",
           "interval": "",
           "legendFormat": "{{vault}}",
           "refId": "A"
@@ -372,7 +372,7 @@
       "targets": [
         {
           "exemplar": true,
-          "expr": "delta(yearn_vault{param=\"pricePerShare\"}[1m])",
+          "expr": "delta(yearn_vault{network=\"ETH\", param=\"pricePerShare\"}[1m])",
           "interval": "",
           "legendFormat": "{{vault}}",
           "queryType": "randomWalk",
@@ -490,7 +490,7 @@
       "targets": [
         {
           "exemplar": true,
-          "expr": "yearn_vault{param=\"pricePerShare\", experimental=\"false\", version=\"v2\"}",
+          "expr": "yearn_vault{network=\"ETH\", param=\"pricePerShare\", experimental=\"false\", version=\"v2\"}",
           "interval": "",
           "legendFormat": "{{vault}}",
           "refId": "A"
@@ -593,7 +593,7 @@
       "targets": [
         {
           "exemplar": true,
-          "expr": "delta(yearn_vault{experimental=\"true\",param=\"pricePerShare\",version=\"v2\"}[2m])",
+          "expr": "delta(yearn_vault{network=\"ETH\", experimental=\"true\",param=\"pricePerShare\",version=\"v2\"}[2m])",
           "interval": "",
           "legendFormat": "{{vault}}",
           "queryType": "randomWalk",
@@ -707,7 +707,7 @@
       "targets": [
         {
           "exemplar": true,
-          "expr": "yearn_vault{experimental=\"true\",param=\"pricePerShare\",version=\"v2\"}",
+          "expr": "yearn_vault{network=\"ETH\", experimental=\"true\",param=\"pricePerShare\",version=\"v2\"}",
           "interval": "",
           "legendFormat": "{{vault}}",
           "refId": "A"
@@ -849,7 +849,7 @@
       "steppedLine": false,
       "targets": [
         {
-          "expr": "delta(iearn{param=\"price per share\"}[1m])",
+          "expr": "delta(iearn{network=\"ETH\", param=\"price per share\"}[1m])",
           "interval": "",
           "intervalFactor": 1,
           "legendFormat": "{{vault}}",
@@ -973,7 +973,7 @@
       "targets": [
         {
           "exemplar": true,
-          "expr": "iearn{param=\"price per share\"}",
+          "expr": "iearn{network=\"ETH\", param=\"price per share\"}",
           "interval": "",
           "legendFormat": "{{vault}}",
           "refId": "A"

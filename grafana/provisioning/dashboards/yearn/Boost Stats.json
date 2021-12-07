@@ -77,7 +77,7 @@
       "targets": [
         {
           "exemplar": true,
-          "expr": "avg(yearn{vault=\"curve.fi/3pool\",param=\"vecrv balance\"}) / avg(yearn{vault=\"curve.fi/3pool\",param=\"vecrv total\"})",
+          "expr": "avg(yearn{network=\"ETH\", vault=\"curve.fi/3pool\",param=\"vecrv balance\"}) / avg(yearn{network=\"ETH\", vault=\"curve.fi/3pool\",param=\"vecrv total\"})",
           "instant": false,
           "interval": "",
           "legendFormat": "veCRV % share",
@@ -143,7 +143,7 @@
       "targets": [
         {
           "exemplar": true,
-          "expr": "yearn{param=\"boost\"}",
+          "expr": "yearn{network=\"ETH\", param=\"boost\"}",
           "interval": "",
           "intervalFactor": 1,
           "legendFormat": "{{vault}}",
@@ -278,14 +278,14 @@
       "targets": [
         {
           "exemplar": true,
-          "expr": "yearn{param=\"vecrv total\", vault=\"curve.fi/3pool\"}",
+          "expr": "yearn{network=\"ETH\", param=\"vecrv total\", vault=\"curve.fi/3pool\"}",
           "interval": "",
           "legendFormat": "veCRV Locked Total",
           "refId": "B"
         },
         {
           "exemplar": true,
-          "expr": "yearn{param=\"vecrv balance\", vault=\"curve.fi/3pool\"}",
+          "expr": "yearn{network=\"ETH\", param=\"vecrv balance\", vault=\"curve.fi/3pool\"}",
           "instant": false,
           "interval": "",
           "legendFormat": "Total veCRV Locked w/ Yearn",
@@ -294,7 +294,7 @@
         },
         {
           "exemplar": true,
-          "expr": "avg(yearn{param=\"vecrv balance\", vault=\"curve.fi/3pool\"}) / avg(yearn{param=\"vecrv total\", vault=\"curve.fi/3pool\"}) ",
+          "expr": "avg(yearn{network=\"ETH\", param=\"vecrv balance\", vault=\"curve.fi/3pool\"}) / avg(yearn{network=\"ETH\", param=\"vecrv total\", vault=\"curve.fi/3pool\"}) ",
           "hide": false,
           "interval": "",
           "legendFormat": "Yearn % total veCRV",
@@ -401,7 +401,7 @@
       "targets": [
         {
           "exemplar": true,
-          "expr": "sort(yearn{param=\"min vecrv\"})",
+          "expr": "sort(yearn{network=\"ETH\", param=\"min vecrv\"})",
           "interval": "",
           "intervalFactor": 1,
           "legendFormat": "{{vault}}",
@@ -409,7 +409,7 @@
           "refId": "A"
         },
         {
-          "expr": "avg(yearn{param=\"vecrv balance\"})",
+          "expr": "avg(yearn{network=\"ETH\", param=\"vecrv balance\"})",
           "interval": "",
           "intervalFactor": 1,
           "legendFormat": "veCRV Balance",

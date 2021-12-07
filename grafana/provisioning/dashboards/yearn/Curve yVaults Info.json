@@ -81,7 +81,7 @@
       "steppedLine": true,
       "targets": [
         {
-          "expr": "yearn{param=\"relative weight\"}",
+          "expr": "yearn{network=\"ETH\", param=\"relative weight\"}",
           "interval": "",
           "legendFormat": "{{vault}}",
           "queryType": "randomWalk",
@@ -198,7 +198,7 @@
       "targets": [
         {
           "exemplar": true,
-          "expr": "sort_desc(yearn{param=\"relative weight\"})",
+          "expr": "sort_desc(yearn{network=\"ETH\", param=\"relative weight\"})",
           "format": "time_series",
           "instant": true,
           "interval": "",
@@ -321,7 +321,7 @@
       "targets": [
         {
           "exemplar": true,
-          "expr": "sort_desc(yearn{param=\"earned\"})",
+          "expr": "sort_desc(yearn{network=\"ETH\", param=\"earned\"})",
           "format": "time_series",
           "instant": true,
           "interval": "",
@@ -427,7 +427,7 @@
       "targets": [
         {
           "exemplar": true,
-          "expr": "sort_desc(yearn{param=\"earned\"})",
+          "expr": "sort_desc(yearn{network=\"ETH\", param=\"earned\"})",
           "format": "time_series",
           "instant": false,
           "interval": "",
@@ -548,7 +548,7 @@
       "targets": [
         {
           "exemplar": true,
-          "expr": "sort_desc(yearn{param=\"lifetime earned\"})",
+          "expr": "sort_desc(yearn{network=\"ETH\", param=\"lifetime earned\"})",
           "format": "time_series",
           "instant": true,
           "interval": "",

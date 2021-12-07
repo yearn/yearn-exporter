@@ -78,7 +78,7 @@
       "pluginVersion": "8.0.3",
       "targets": [
         {
-          "expr": "sum(ironbank{param=\"tvl\"})",
+          "expr": "sum(ironbank{network=\"ETH\", param=\"tvl\"})",
           "instant": true,
           "interval": "",
           "legendFormat": "{{vault}}",
@@ -154,7 +154,7 @@
       "targets": [
         {
           "exemplar": true,
-          "expr": "sum(delta(ironbank{param=\"tvl\"}[1d]))",
+          "expr": "sum(delta(ironbank{network=\"ETH\", param=\"tvl\"}[1d]))",
           "instant": false,
           "interval": "",
           "legendFormat": "{{vault}}",
@@ -230,7 +230,7 @@
       "targets": [
         {
           "exemplar": true,
-          "expr": "sum(delta(ironbank{param=\"tvl\"}[1w]))",
+          "expr": "sum(delta(ironbank{network=\"ETH\", param=\"tvl\"}[1w]))",
           "instant": false,
           "interval": "",
           "legendFormat": "{{vault}}",
@@ -306,7 +306,7 @@
       "targets": [
         {
           "exemplar": true,
-          "expr": "sum(delta(ironbank{param=\"tvl\"}[4w]))",
+          "expr": "sum(delta(ironbank{network=\"ETH\", param=\"tvl\"}[4w]))",
           "instant": false,
           "interval": "",
           "legendFormat": "{{vault}}",
@@ -399,7 +399,7 @@
           "targets": [
             {
               "exemplar": true,
-              "expr": "sum(ironbank{param=\"tvl\"})",
+              "expr": "sum(ironbank{network=\"ETH\", param=\"tvl\"})",
               "instant": false,
               "interval": "",
               "legendFormat": "TVL",
@@ -407,7 +407,7 @@
             },
             {
               "exemplar": true,
-              "expr": "sum(delta(ironbank{param=\"tvl\"}[1d]))",
+              "expr": "sum(delta(ironbank{network=\"ETH\", param=\"tvl\"}[1d]))",
               "hide": false,
               "interval": "",
               "legendFormat": "net inflow/outflow - daily",
@@ -549,7 +549,7 @@
           "targets": [
             {
               "exemplar": true,
-              "expr": "ironbank{param=\"tvl\"}",
+              "expr": "ironbank{network=\"ETH\", param=\"tvl\"}",
               "instant": false,
               "interval": "",
               "legendFormat": "{{vault}}",
@@ -557,7 +557,7 @@
             },
             {
               "exemplar": true,
-              "expr": "sum(delta(ironbank{param=\"tvl\"}[1d]))",
+              "expr": "sum(delta(ironbank{network=\"ETH\", param=\"tvl\"}[1d]))",
               "hide": false,
               "interval": "",
               "legendFormat": "net inflow/outflow - daily",
@@ -675,7 +675,7 @@
           "targets": [
             {
               "exemplar": false,
-              "expr": "sort_desc(ironbank{param=\"supply apy\"} > 0)",
+              "expr": "sort_desc(ironbank{network=\"ETH\", param=\"supply apy\"} > 0)",
               "format": "time_series",
               "instant": true,
               "interval": "",
@@ -741,7 +741,7 @@
           "targets": [
             {
               "exemplar": false,
-              "expr": "sort_desc(ironbank{param=\"borrow apy\"} > 0)",
+              "expr": "sort_desc(ironbank{network=\"ETH\", param=\"borrow apy\"} > 0)",
               "format": "time_series",
               "instant": true,
               "interval": "",
@@ -821,7 +821,7 @@
           "steppedLine": true,
           "targets": [
             {
-              "expr": "ironbank{param=\"supply apy\"}",
+              "expr": "ironbank{network=\"ETH\", param=\"supply apy\"}",
               "interval": "",
               "legendFormat": "{{vault}}",
               "refId": "A"
@@ -935,7 +935,7 @@
           "steppedLine": true,
           "targets": [
             {
-              "expr": "ironbank{param=\"borrow apy\"}",
+              "expr": "ironbank{network=\"ETH\", param=\"borrow apy\"}",
               "interval": "",
               "legendFormat": "{{vault}}",
               "refId": "A"
@@ -1065,7 +1065,7 @@
           "targets": [
             {
               "exemplar": true,
-              "expr": "delta(ironbank{param=\"supply apy\"}[5m])",
+              "expr": "delta(ironbank{network=\"ETH\", param=\"supply apy\"}[5m])",
               "interval": "",
               "legendFormat": "{{vault}}",
               "refId": "A"
@@ -1180,7 +1180,7 @@
           "targets": [
             {
               "exemplar": true,
-              "expr": "delta(ironbank{param=\"borrow apy\"}[5m])",
+              "expr": "delta(ironbank{network=\"ETH\", param=\"borrow apy\"}[5m])",
               "interval": "",
               "legendFormat": "{{vault}}",
               "refId": "A"
@@ -1293,7 +1293,7 @@
           "targets": [
             {
               "exemplar": false,
-              "expr": "sort_desc(ironbank{param=\"utilization\"} > 0)",
+              "expr": "sort_desc(ironbank{network=\"ETH\", param=\"utilization\"} > 0)",
               "format": "time_series",
               "instant": true,
               "interval": "",
@@ -1367,7 +1367,7 @@
           "steppedLine": true,
           "targets": [
             {
-              "expr": "ironbank{param=\"utilization\"}",
+              "expr": "ironbank{network=\"ETH\", param=\"utilization\"}",
               "interval": "",
               "legendFormat": "{{vault}}",
               "refId": "I"
@@ -1487,7 +1487,7 @@
           "steppedLine": true,
           "targets": [
             {
-              "expr": "ironbank{param=\"total supplied\"}",
+              "expr": "ironbank{network=\"ETH\", param=\"total supplied\"}",
               "interval": "",
               "legendFormat": "{{vault}}",
               "refId": "I"
@@ -1592,7 +1592,7 @@
           "steppedLine": true,
           "targets": [
             {
-              "expr": "ironbank{param=\"total borrows\"}",
+              "expr": "ironbank{network=\"ETH\", param=\"total borrows\"}",
               "interval": "",
               "legendFormat": "{{vault}}",
               "refId": "I"
@@ -1712,7 +1712,7 @@
           "steppedLine": true,
           "targets": [
             {
-              "expr": "ironbank{param=\"total cash\"}",
+              "expr": "ironbank{network=\"ETH\", param=\"total cash\"}",
               "interval": "",
               "legendFormat": "{{vault}}",
               "refId": "I"
@@ -1829,7 +1829,7 @@
           "steppedLine": true,
           "targets": [
             {
-              "expr": "ironbank{param=\"total reserves\"}",
+              "expr": "ironbank{network=\"ETH\", param=\"total reserves\"}",
               "interval": "",
               "legendFormat": "{{vault}}",
               "refId": "I"
@@ -1935,7 +1935,7 @@
           "targets": [
             {
               "exemplar": true,
-              "expr": "ironbank{param=\"token price\"}",
+              "expr": "ironbank{network=\"ETH\", param=\"token price\"}",
               "interval": "",
               "legendFormat": "{{vault}}",
               "refId": "I"
