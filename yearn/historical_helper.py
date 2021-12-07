@@ -62,9 +62,6 @@ def time_tracking(export_snapshot_func):
         arg_hash = args[0]
         ts = arg_hash.get('ts', datetime.now(tz=timezone.utc).timestamp())
         exporter_name = arg_hash.get('exporter_name', 'mighty_exporter')
-        logger.info("ts: %s", ts)
-        logger.info("exporter_name: %s", exporter_name)
-        logger.info("arg_hash.keys(): %s", list(arg_hash.keys()))
         # create args list for all hash keys for easier handling in export_snapshot_func
         le_args = [arg_hash[k] for k in arg_hash.keys()]
 
