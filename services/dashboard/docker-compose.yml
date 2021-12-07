@@ -13,7 +13,7 @@ networks:
   yearn-exporter:
 
 services:
-  yearn-exporter:
+  eth-exporter:
     build: .
     image: yearn-exporter
     command: exporter
@@ -31,7 +31,7 @@ services:
       - yearn-exporter
     restart: on-failure
 
-  historical-exporter:
+  historical-eth-exporter:
     image: yearn-exporter
     command: historical_exporter
     environment:
@@ -39,6 +39,43 @@ services:
       - ETHERSCAN_TOKEN
       - EXPLORER
       - SLEEP_SECONDS
+      - POOL_SIZE
+      - CHUNK_SIZE
+      - RESOLUTION
+    volumes:
+      - solidity_compilers:/root/.solcx
+      - vyper_compilers:/root/.vvm
+      - brownie:/root/.brownie
+      - cache:/app/yearn-exporter/cache
+    networks:
+      - yearn-exporter
+    restart: on-failure
+
+  ftm-exporter:
+    image: yearn-exporter
+    command: exporter
+    environment:
+      - WEB3_PROVIDER=$FTM_WEB3_PROVIDER
+      - EXPLORER=$FTM_EXPLORER
+      - SLEEP_SECONDS
+      - NETWORK=ftm-main
+    volumes:
+      - solidity_compilers:/root/.solcx
+      - vyper_compilers:/root/.vvm
+      - brownie:/root/.brownie
+      - cache:/app/yearn-exporter/cache
+    networks:
+      - yearn-exporter
+    restart: on-failure
+
+  historical-ftm-exporter:
+    image: yearn-exporter
+    command: historical_exporter
+    environment:
+      - WEB3_PROVIDER=$FTM_WEB3_PROVIDER
+      - EXPLORER=$FTM_EXPLORER
+      - SLEEP_SECONDS
+      - NETWORK=ftm-main
       - POOL_SIZE
       - CHUNK_SIZE
       - RESOLUTION
@@ -140,7 +177,7 @@ services:
     links:
       - victoria-metrics:victoria-metrics
     depends_on:
-      - yearn-exporter
+      - eth-exporter
       - victoria-metrics
     networks:
       - yearn-exporter

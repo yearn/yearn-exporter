@@ -1,14 +1,26 @@
 #! /bin/bash
 set -e
 
-NETWORK="mainnet" # default to Mainnet (Infura)
-EXPLORER=${EXPLORER:-https://api.etherscan.io/api}
+NETWORK=${NETWORK:-mainnet} # default to Ethereum mainnet
 
-if [[ ! -z "$WEB3_PROVIDER" ]]; then
-  if [[ $(brownie networks list | grep mainnet-custom) ]]; then
-    brownie networks delete mainnet-custom
+if [[ $NETWORK == "mainnet" ]]; then
+  CHAIN_ID=1
+  EXPLORER=${EXPLORER:-https://api.etherscan.io/api}
+
+  if [[ ! -z "$WEB3_PROVIDER" ]]; then
+    if [[ $(brownie networks list | grep mainnet-custom) ]]; then
+      brownie networks delete mainnet-custom
+    fi
+    brownie networks modify mainnet host=$WEB3_PROVIDER chainid=$CHAIN_ID explorer=$EXPLORER
   fi
-  brownie networks modify mainnet host=$WEB3_PROVIDER chainid=1 explorer=$EXPLORER
+
+elif [[ $NETWORK == "ftm-main" ]]; then
+  CHAIN_ID=250
+  EXPLORER=${EXPLORER:-https://api.ftmscan.com/api}
+
+  if [[ ! -z "$WEB3_PROVIDER" ]]; then
+    brownie networks modify ftm-main host=$WEB3_PROVIDER chainid=$CHAIN_ID explorer=$EXPLORER
+  fi
 fi
 
 if [[ $# -eq 0 ]]; then

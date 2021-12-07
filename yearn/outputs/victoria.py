@@ -41,10 +41,14 @@ mapping = {
     }
 }
 
-simple_products = ["v1", "earn", "ib", "special"]
 
 def export(timestamp, data):
     metrics_to_export = []
+
+    if Network(chain.id) == Network.Fantom:
+        simple_products = ["ib"]
+    else:
+        simple_products = ["v1", "earn", "ib", "special"]
 
     for product in simple_products:
         metric = mapping[product]["metric"]
@@ -91,6 +95,7 @@ def export(timestamp, data):
 
     # post all metrics for this timestamp at once
     _post(metrics_to_export)
+
 
 def export_wallets(timestamp, data):
     metrics_to_export = []
