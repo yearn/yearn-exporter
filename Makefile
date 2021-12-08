@@ -49,4 +49,4 @@ rebuild: down build up
 scratch: clean-volumes build up
 
 logs:
-	$(dashboards_command) logs -f -t yearn-exporter historical-exporter treasury-exporter historical-treasury-exporter transactions-exporter wallet-exporter
+	$(dashboards_command) logs -f -t eth-exporter historical-eth-exporter ftm-exporter historical-ftm-exporter treasury-exporter historical-treasury-exporter transactions-exporter wallet-exporter
