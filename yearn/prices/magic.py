@@ -66,6 +66,10 @@ def get_price_ftm(token, block=None):
         price = compound.get_price(token, block=block)
         logger.debug("compound -> %s", price)
 
+    elif token in curve.curve:
+        price = curve.curve.get_price(token, block=block)
+        logger.debug("curve lp -> %s", price)
+
     if isinstance(price, list):
         price, underlying = price
         logger.debug("peel %s %s", price, underlying)
