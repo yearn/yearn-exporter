@@ -100,7 +100,7 @@
             "mode": "percentage",
             "steps": [
               {
-                "color": "dark-blue",
+                "color": "blue",
                 "value": null
               }
             ]
@@ -117,7 +117,7 @@
       },
       "id": 17,
       "options": {
-        "colorMode": "background",
+        "colorMode": "value",
         "graphMode": "area",
         "justifyMode": "center",
         "orientation": "auto",
@@ -157,7 +157,7 @@
                 "config": {
                   "id": "lowerOrEqual",
                   "options": {
-                    "value": 100000
+                    "value": 1000000000
                   }
                 },
                 "fieldName": "tvl"
@@ -497,7 +497,7 @@
       },
       "id": 41,
       "options": {
-        "colorMode": "background",
+        "colorMode": "value",
         "graphMode": "area",
         "justifyMode": "auto",
         "orientation": "auto",
@@ -547,6 +547,7 @@
           }
         }
       ],
+      "transparent": true,
       "type": "stat"
     },
     {
@@ -568,7 +569,7 @@
                 "value": null
               },
               {
-                "color": "purple",
+                "color": "green",
                 "value": 0.1
               }
             ]
@@ -650,7 +651,7 @@
       },
       "id": 44,
       "options": {
-        "colorMode": "background",
+        "colorMode": "value",
         "graphMode": "area",
         "justifyMode": "center",
         "orientation": "auto",
@@ -723,7 +724,7 @@
                 "value": null
               },
               {
-                "color": "purple",
+                "color": "green",
                 "value": 0.1
               }
             ]
@@ -785,7 +786,7 @@
       "fill": 0,
       "fillGradient": 0,
       "gridPos": {
-        "h": 8,
+        "h": 7,
         "w": 12,
         "x": 0,
         "y": 6
@@ -915,7 +916,7 @@
       "fill": 0,
       "fillGradient": 0,
       "gridPos": {
-        "h": 8,
+        "h": 7,
         "w": 12,
         "x": 12,
         "y": 6
@@ -1055,10 +1056,10 @@
       "fill": 0,
       "fillGradient": 0,
       "gridPos": {
-        "h": 8,
+        "h": 7,
         "w": 12,
         "x": 0,
-        "y": 14
+        "y": 13
       },
       "hiddenSeries": false,
       "id": 27,
@@ -1153,10 +1154,10 @@
       "fill": 0,
       "fillGradient": 0,
       "gridPos": {
-        "h": 8,
+        "h": 7,
         "w": 12,
         "x": 12,
-        "y": 14
+        "y": 13
       },
       "hiddenSeries": false,
       "id": 32,
@@ -1253,10 +1254,10 @@
       "fill": 1,
       "fillGradient": 10,
       "gridPos": {
-        "h": 8,
+        "h": 7,
         "w": 12,
         "x": 0,
-        "y": 22
+        "y": 20
       },
       "hiddenSeries": false,
       "id": 23,
@@ -1361,10 +1362,10 @@
       "fill": 0,
       "fillGradient": 0,
       "gridPos": {
-        "h": 8,
+        "h": 7,
         "w": 12,
         "x": 12,
-        "y": 22
+        "y": 20
       },
       "hiddenSeries": false,
       "id": 24,
@@ -1428,7 +1429,6 @@
         "sort": 2,
         "value_type": "individual"
       },
-      "transparent": true,
       "type": "graph",
       "xaxis": {
         "mode": "time",
@@ -1470,7 +1470,7 @@
         "h": 8,
         "w": 24,
         "x": 0,
-        "y": 30
+        "y": 27
       },
       "hiddenSeries": false,
       "id": 25,
@@ -1547,7 +1547,6 @@
         "sort": 2,
         "value_type": "individual"
       },
-      "transparent": true,
       "type": "graph",
       "xaxis": {
         "mode": "time",
@@ -1578,7 +1577,7 @@
         "h": 1,
         "w": 24,
         "x": 0,
-        "y": 38
+        "y": 35
       },
       "id": 31,
       "panels": [
@@ -1597,7 +1596,7 @@
             "h": 8,
             "w": 12,
             "x": 0,
-            "y": 39
+            "y": 36
           },
           "hiddenSeries": false,
           "id": 2,
@@ -1691,7 +1690,7 @@
             "h": 8,
             "w": 12,
             "x": 12,
-            "y": 39
+            "y": 36
           },
           "hiddenSeries": false,
           "id": 3,
@@ -1803,7 +1802,7 @@
             "h": 8,
             "w": 12,
             "x": 0,
-            "y": 47
+            "y": 44
           },
           "hiddenSeries": false,
           "id": 6,
@@ -1897,7 +1896,7 @@
             "h": 8,
             "w": 12,
             "x": 12,
-            "y": 47
+            "y": 44
           },
           "hiddenSeries": false,
           "id": 7,
@@ -2009,7 +2008,7 @@
             "h": 8,
             "w": 12,
             "x": 0,
-            "y": 55
+            "y": 52
           },
           "hiddenSeries": false,
           "id": 10,
@@ -2103,7 +2102,7 @@
             "h": 8,
             "w": 12,
             "x": 12,
-            "y": 55
+            "y": 52
           },
           "hiddenSeries": false,
           "id": 11,
@@ -2215,7 +2214,7 @@
             "h": 8,
             "w": 12,
             "x": 0,
-            "y": 63
+            "y": 60
           },
           "hiddenSeries": false,
           "id": 12,
@@ -2309,7 +2308,7 @@
             "h": 8,
             "w": 12,
             "x": 12,
-            "y": 63
+            "y": 60
           },
           "hiddenSeries": false,
           "id": 13,
@@ -2422,7 +2421,7 @@
             "h": 8,
             "w": 12,
             "x": 0,
-            "y": 71
+            "y": 68
           },
           "hiddenSeries": false,
           "id": 28,
@@ -2516,7 +2515,7 @@
             "h": 8,
             "w": 12,
             "x": 12,
-            "y": 71
+            "y": 68
           },
           "hiddenSeries": false,
           "id": 29,
@@ -2624,7 +2623,7 @@
         "h": 1,
         "w": 24,
         "x": 0,
-        "y": 39
+        "y": 36
       },
       "id": 34,
       "panels": [
@@ -2643,7 +2642,7 @@
             "h": 8,
             "w": 12,
             "x": 0,
-            "y": 40
+            "y": 77
           },
           "hiddenSeries": false,
           "id": 35,
@@ -2737,7 +2736,7 @@
             "h": 8,
             "w": 12,
             "x": 12,
-            "y": 40
+            "y": 77
           },
           "hiddenSeries": false,
           "id": 36,
@@ -2849,7 +2848,7 @@
             "h": 8,
             "w": 12,
             "x": 0,
-            "y": 48
+            "y": 85
           },
           "hiddenSeries": false,
           "id": 37,
@@ -2943,7 +2942,7 @@
             "h": 8,
             "w": 12,
             "x": 12,
-            "y": 48
+            "y": 85
           },
           "hiddenSeries": false,
           "id": 38,
@@ -3056,7 +3055,7 @@
             "h": 8,
             "w": 12,
             "x": 0,
-            "y": 56
+            "y": 93
           },
           "hiddenSeries": false,
           "id": 39,
@@ -3150,7 +3149,7 @@
             "h": 8,
             "w": 12,
             "x": 12,
-            "y": 56
+            "y": 93
           },
           "hiddenSeries": false,
           "id": 40,
@@ -3270,6 +3269,6 @@
   "timezone": "utc",
   "title": "Overview",
   "uid": "1S43pFrMk22",
-  "version": 34,
+  "version": 36,
   "weekStart": ""
 }
