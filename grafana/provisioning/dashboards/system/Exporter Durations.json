@@ -1,4 +1,41 @@
 {
+  "__inputs": [
+    {
+      "name": "DS_PROMETHEUS",
+      "label": "Prometheus",
+      "description": "",
+      "type": "datasource",
+      "pluginId": "prometheus",
+      "pluginName": "Prometheus"
+    }
+  ],
+  "__elements": [],
+  "__requires": [
+    {
+      "type": "grafana",
+      "id": "grafana",
+      "name": "Grafana",
+      "version": "8.3.1"
+    },
+    {
+      "type": "panel",
+      "id": "graph",
+      "name": "Graph (old)",
+      "version": ""
+    },
+    {
+      "type": "datasource",
+      "id": "prometheus",
+      "name": "Prometheus",
+      "version": "1.0.0"
+    },
+    {
+      "type": "panel",
+      "id": "stat",
+      "name": "Stat",
+      "version": ""
+    }
+  ],
   "annotations": {
     "list": [
       {
@@ -19,12 +56,18 @@
     ]
   },
   "editable": true,
-  "gnetId": null,
+  "fiscalYearStartMonth": 0,
   "graphTooltip": 0,
+  "id": null,
   "links": [],
+  "liveNow": false,
   "panels": [
     {
-      "datasource": "DS_PROMETHEUS",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "DS_PROMETHEUS"
+      },
+      "description": "",
       "fieldConfig": {
         "defaults": {
           "color": {
@@ -37,10 +80,6 @@
               {
                 "color": "green",
                 "value": null
-              },
-              {
-                "color": "red",
-                "value": 80
               }
             ]
           },
@@ -49,8 +88,8 @@
         "overrides": []
       },
       "gridPos": {
-        "h": 22,
-        "w": 6,
+        "h": 6,
+        "w": 24,
         "x": 0,
         "y": 0
       },
@@ -58,8 +97,8 @@
       "options": {
         "colorMode": "value",
         "graphMode": "area",
-        "justifyMode": "auto",
-        "orientation": "auto",
+        "justifyMode": "center",
+        "orientation": "vertical",
         "reduceOptions": {
           "calcs": [
             "lastNotNull"
@@ -68,19 +107,20 @@
           "values": false
         },
         "text": {},
-        "textMode": "auto"
+        "textMode": "value_and_name"
       },
-      "pluginVersion": "8.1.5",
+      "pluginVersion": "8.3.1",
       "targets": [
         {
           "exemplar": true,
           "expr": "avg_over_time(export_duration)",
+          "instant": false,
           "interval": "",
-          "legendFormat": "",
+          "legendFormat": "{{network}} - {{direction}} - {{pool_size}}",
           "refId": "A"
         }
       ],
-      "title": "Panel Title",
+      "title": "Last: Export Duration",
       "type": "stat"
     },
     {
@@ -88,109 +128,132 @@
       "bars": false,
       "dashLength": 10,
       "dashes": false,
-      "datasource": "DS_PROMETHEUS",
-      "fill": 1,
+      "datasource": {
+        "type": "prometheus",
+        "uid": "DS_PROMETHEUS"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "s"
+        },
+        "overrides": []
+      },
+      "fill": 2,
       "fillGradient": 0,
       "gridPos": {
-        "h": 22,
-        "w": 17,
-        "x": 6,
-        "y": 0
+        "h": 18,
+        "w": 24,
+        "x": 0,
+        "y": 6
       },
       "hiddenSeries": false,
       "id": 2,
       "legend": {
-        "avg": false,
-        "current": false,
+        "alignAsTable": true,
+        "avg": true,
+        "current": true,
+        "hideEmpty": true,
+        "hideZero": true,
         "max": false,
         "min": false,
+        "rightSide": true,
         "show": true,
+        "sort": "current",
+        "sortDesc": true,
         "total": false,
-        "values": false
+        "values": true
       },
       "lines": true,
       "linewidth": 1,
-      "nullPointMode": "null",
+      "nullPointMode": "null as zero",
       "options": {
-        "alertThreshold": true
+        "alertThreshold": false
       },
       "percentage": false,
-      "pluginVersion": "8.1.5",
+      "pluginVersion": "8.3.1",
       "pointradius": 2,
       "points": false,
       "renderer": "flot",
-      "seriesOverrides": [],
+      "seriesOverrides": [
+        {
+          "$$hashKey": "object:238",
+          "alias": "/.*forwards([^\"]*).*/",
+          "yaxis": 2
+        }
+      ],
       "spaceLength": 10,
       "stack": false,
       "steppedLine": false,
       "targets": [
         {
           "exemplar": true,
-          "expr": "export_duration",
+          "expr": "export_duration{direction=\"forwards\"}",
           "interval": "",
           "intervalFactor": 1,
-          "legendFormat": "",
+          "legendFormat": "{{network}} - {{direction}} - {{pool_size}}",
           "refId": "A"
+        },
+        {
+          "exemplar": true,
+          "expr": "export_duration{direction=\"historical\"}",
+          "hide": false,
+          "interval": "",
+          "legendFormat": "{{network}} - {{direction}} - {{pool_size}}",
+          "refId": "B"
         }
       ],
       "thresholds": [],
-      "timeFrom": null,
       "timeRegions": [],
-      "timeShift": null,
-      "title": "Panel Title",
+      "title": "Exporter Duration",
       "tooltip": {
         "shared": true,
-        "sort": 0,
+        "sort": 2,
         "value_type": "individual"
       },
       "type": "graph",
       "xaxis": {
-        "buckets": null,
         "mode": "time",
-        "name": null,
         "show": true,
         "values": []
       },
       "yaxes": [
         {
           "$$hashKey": "object:101",
-          "format": "short",
-          "label": null,
+          "format": "s",
+          "label": "Historical Exporter",
           "logBase": 1,
-          "max": null,
-          "min": null,
           "show": true
         },
         {
           "$$hashKey": "object:102",
-          "format": "short",
-          "label": null,
+          "format": "s",
+          "label": "Forward Exporter",
           "logBase": 1,
-          "max": null,
-          "min": null,
           "show": true
         }
       ],
       "yaxis": {
-        "align": false,
-        "alignLevel": null
+        "align": false
       }
     }
   ],
-  "refresh": "",
-  "schemaVersion": 30,
+  "refresh": "5s",
+  "schemaVersion": 33,
   "style": "dark",
-  "tags": [],
+  "tags": [
+    "Exporter"
+  ],
   "templating": {
     "list": []
   },
   "time": {
-    "from": "now-2y",
+    "from": "now-7d",
     "to": "now"
   },
   "timepicker": {},
   "timezone": "",
-  "title": "exporter_durations",
-  "uid": "Xt16eZvnk",
-  "version": 5
+  "title": "Exporter Durations",
+  "uid": "vuJoJODnz",
+  "version": 15,
+  "weekStart": ""
 }
