@@ -8,7 +8,7 @@ from joblib import Parallel, delayed
 from toolz import groupby
 from web3.middleware.filter import block_ranges
 
-from yearn.middleware import BATCH_SIZE
+from yearn.middleware.middleware import BATCH_SIZE
 from yearn.utils import contract_creation_block
 
 logger = logging.getLogger(__name__)

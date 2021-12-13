@@ -8,6 +8,7 @@ from requests import Session
 from requests.adapters import HTTPAdapter
 from web3 import HTTPProvider
 from web3.middleware import filter
+from yearn.middleware import yearn_filter
 
 from yearn.cache import memory
 from yearn.networks import Network
@@ -63,5 +64,5 @@ def setup_middleware():
 
         # patch and inject local filter middleware
         filter.MAX_BLOCK_REQUEST = BATCH_SIZE[chain.id]
-        w3.middleware_onion.add(filter.local_filter_middleware)
+        w3.middleware_onion.add(yearn_filter.local_filter_middleware)
         w3.middleware_onion.add(cache_middleware)
