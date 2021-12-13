@@ -53,7 +53,7 @@ def simple(vault, samples: ApySamples) -> Apy:
     inception_apy = calculate_roi(now_point, inception_point)
 
     # use the first non-zero apy, ordered by precedence
-    apys = [week_ago_apy, month_ago_apy, inception_apy] 
+    apys = [month_ago_apy, week_ago_apy, inception_apy] 
     net_apy = next((value for value in apys if value != 0), 0)
 
     strategy = vault.strategy
