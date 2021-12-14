@@ -5,6 +5,7 @@ endif
 
 dashboards_command := docker-compose --file services/dashboard/docker-compose.yml --file services/dashboard/docker-compose.local.yml --project-directory .
 tvl_command := docker-compose --file services/tvl/docker-compose.yml --project-directory .
+test_command := docker-compose --file services/dashboard/docker-compose.test.yml --project-directory .
 
 dashboards-up:
 	$(dashboards_command) up $(flags)
@@ -50,3 +51,6 @@ scratch: clean-volumes build up
 
 logs:
 	$(dashboards_command) logs -f -t eth-exporter historical-eth-exporter ftm-exporter historical-ftm-exporter treasury-exporter historical-treasury-exporter transactions-exporter wallet-exporter
+
+test:
+	$(test_command) up

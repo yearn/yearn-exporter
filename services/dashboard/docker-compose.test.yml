@@ -1,0 +1,28 @@
+version: '3.7'
+
+volumes:
+    solidity_compilers: {}
+    vyper_compilers: {}
+    brownie: {}
+    cache: {}
+
+networks:
+  yearn-exporter:
+
+services:
+  test:
+    image: yearn-exporter
+    entrypoint: pytest tests
+    environment:
+      - WEB3_PROVIDER
+      - ETHERSCAN_TOKEN
+      - EXPLORER
+      - SLEEP_SECONDS
+    volumes:
+      - solidity_compilers:/root/.solcx
+      - vyper_compilers:/root/.vvm
+      - brownie:/root/.brownie
+      - cache:/app/yearn-exporter/cache
+    networks:
+      - yearn-exporter
+    restart: on-failure
