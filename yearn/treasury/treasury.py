@@ -44,17 +44,17 @@ def _get_price(token, block=None):
         price = get_price(token, block)
     except AttributeError:
         logger.warn(
-            f"AttributeError while getting price for {Contract(token).symbol()} {token}"
+            f"AttributeError while getting price for {contract(token).symbol()} {token}"
         )
         raise
     except PriceError:
         logger.warn(
-            f"PriceError while getting price for {Contract(token).symbol()} {token}"
+            f"PriceError while getting price for {contract(token).symbol()} {token}"
         )
         price = 0
     except ValueError:
         logger.warn(
-            f"ValueError while getting price for {Contract(token).symbol()} {token}"
+            f"ValueError while getting price for {contract(token).symbol()} {token}"
         )
         price = 0
     return price
@@ -62,7 +62,13 @@ def _get_price(token, block=None):
 
 def get_token_from_event(event):
     try:
-        return event['Transfer'][0].address
+        address = event['Transfer'][0].address
+        # try to download the contract from etherscan
+        contract(address)
+        return address
+    except ValueError:
+        # some tokens have unverified sources with etherscan, skip them!
+        return None
     except EventLookupError:
         logger.critical(
             f'One of your cached contracts has an incorrect definition: {event.address}. Please fix this manually'
@@ -103,23 +109,20 @@ class Treasury:
 
     def token_list(self, address, block=None) -> list:
         self.load_transfers()
-        if block:
-            return list(
-                {
-                    get_token_from_event(transfer)
-                    for transfer in self._transfers
-                    if transfer['Transfer'].values()[1] == address
-                    and transfer['Transfer'][0].block_number <= block
-                }
-            )
-        else:
-            return list(
-                {
-                    get_token_from_event(transfer)
-                    for transfer in self._transfers
-                    if transfer['Transfer'].values()[1] == address
-                }
-            )
+        tokens = set()
+        for transfer in self._transfers:
+            token = get_token_from_event(transfer)
+            if token is None:
+                continue
+            if transfer['Transfer'].values()[1] == address:
+                if block:
+                    if transfer['Transfer'][0].block_number <= block:
+                        tokens.add(token)
+                else:
+                    tokens.add(token)
+
+        return list(tokens)
+
 
     def held_assets(self, block=None) -> dict:
         balances = {}
@@ -131,7 +134,8 @@ class Treasury:
                 block=block,
             )
             decimals = fetch_multicall(
-                *[[Contract(token), "decimals"] for token in tokens], block=block
+                *[[contract(token), "decimals"] for token in tokens],
+                block=block
             )
             token_balances = [
                 balance / 10 ** decimal if decimal else 0
@@ -302,6 +306,7 @@ class Treasury:
                     '0xD7aBCFd05a9ba3ACbc164624402fB2E95eC41be6', # EthJuanchos
                     '0xeF81c2C98cb9718003A89908e6bd1a5fA8A098A3', # SpaceShiba
                     '0xD1E5b0FF1287aA9f9A268759062E4Ab08b9Dacbe', # .crypto Domain
+                    '0x437a6B880d4b3Be9ed93BD66D6B7f872fc0f5b5E', # Soda
                     ]:
                     pass
                 else:

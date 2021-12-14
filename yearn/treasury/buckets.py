@@ -63,10 +63,11 @@ def _unwrap_token(token) -> str:
         return token
 
     if yearn_lens.is_yearn_vault(token):
-        return _unwrap_token(Contract(token).token())
+        return _unwrap_token(contract(token).token())
     if token in curve:
+        pool = curve.get_pool(token)
         pool_tokens = set(
-            str(_unwrap_token(coin)) for coin in curve.get_underlying_coins(token)
+            str(_unwrap_token(coin)) for coin in curve.get_underlying_coins(pool)
         )
         return _pool_bucket(pool_tokens)
     if is_balancer_pool(token):  # should only be YLA # TODO figure this out
@@ -75,7 +76,7 @@ def _unwrap_token(token) -> str:
         )
         return _pool_bucket(pool_tokens)
     if token in aave:
-        return contract(aave.atoken_underlying(token))
+        return aave.atoken_underlying(token)
     if token in compound:
         try:
             return contract(token).underlying()
