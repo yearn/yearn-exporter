@@ -1,7 +1,7 @@
 import logging
 from functools import cached_property
 
-from brownie import chain
+from brownie import chain, ZERO_ADDRESS
 from cachetools.func import lru_cache, ttl_cache
 
 from yearn.events import decode_logs, get_logs_asap
@@ -59,6 +59,8 @@ class Chainlink(metaclass=Singleton):
 
     @ttl_cache(maxsize=None, ttl=600)
     def get_price(self, asset, block=None):
+        if asset == ZERO_ADDRESS:
+            return None
         try:
             return self.get_feed(asset).latestAnswer(block_identifier=block) / 1e8
         except ValueError:
