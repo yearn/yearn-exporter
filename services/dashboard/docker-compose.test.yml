@@ -25,4 +25,3 @@ services:
       - cache:/app/yearn-exporter/cache
     networks:
       - yearn-exporter
-    restart: on-failure
