@@ -25,6 +25,9 @@ def test_compound_cap():
                 continue  # creth is broken
             
             price = comp.get_price(token.token)
+            if isinstance(price, list):
+                price = price[0]
+
             supply = token.ctoken.totalSupply() / 10 ** token.cdecimals
             print(f'  {token.name} {supply:,.0f} x {price:,.2f} = {supply * price:,.0f}')
             total += supply * price
