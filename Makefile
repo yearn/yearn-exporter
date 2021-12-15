@@ -6,6 +6,7 @@ endif
 dashboards_command := docker-compose --file services/dashboard/docker-compose.yml --file services/dashboard/docker-compose.local.yml --project-directory .
 tvl_command := docker-compose --file services/tvl/docker-compose.yml --project-directory .
 test_command := docker-compose --file services/dashboard/docker-compose.test.yml --project-directory .
+all_command := docker-compose --file services/dashboard/docker-compose.yml --project-directory .
 
 dashboards-up:
 	$(dashboards_command) up $(flags)
@@ -54,3 +55,6 @@ logs:
 
 test:
 	$(test_command) up
+
+all:
+	$(all_command) down && $(all_command) build --no-cache && $(all_command) up $(flags)
