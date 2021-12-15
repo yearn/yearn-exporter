@@ -14,7 +14,7 @@ dashboards-down:
 	$(dashboards_command) down
 
 dashboards-build:
-	$(dashboards_command) build --no-cache
+	$(dashboards_command) build $(BUILD_FLAGS)
 
 dashboards-clean-volumes:
 	$(dashboards_command) down -v
@@ -29,7 +29,7 @@ tvl-down:
 	$(tvl_command) down
 
 tvl-build:
-	$(tvl_command) build --no-cache
+	$(tvl_command) build $(BUILD_FLAGS)
 
 tvl-clean-volumes:
 	$(tvl_command) down -v
