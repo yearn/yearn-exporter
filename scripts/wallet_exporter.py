@@ -5,7 +5,7 @@ from itertools import count
 from brownie import chain
 from yearn.outputs.postgres.postgres import postgres
 from yearn.utils import closest_block_after_timestamp
-from yearn.historical_helper import export_historical, time_tracking
+from yearn.historical_helper import export_historical, time_tracking, has_data
 from yearn.yearn import Yearn
 
 logger = logging.getLogger('yearn.wallet_exporter')
@@ -30,6 +30,7 @@ def main():
 def export_chunk(chunk, export_snapshot_func):
     yearn = Yearn(load_strategies=False, watch_events_forever=False)
     for snapshot in chunk:
+        ts = snapshot.timestamp()
         export_snapshot_func(
             {
                 'yearn': yearn,
@@ -64,7 +65,7 @@ def _generate_snapshot_range(start, end, interval, data_query):
                     "txs are still being cached for snapshot %s, ts %d", snapshot, ts
                 )
                 continue
-            elif _has_data(ts, data_query):
+            elif has_data(ts, data_query):
                 # logger.info("data already present for snapshot %s, ts %d", snapshot, ts)
                 continue
             else:

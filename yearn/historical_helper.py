@@ -116,7 +116,7 @@ def _get_interval_map(start):
     ]
 
 
-def _has_data(ts, data_query):
+def has_data(ts, data_query):
     base_url = os.environ.get('VM_URL', 'http://victoria-metrics:8428')
     # query for a metric which should be present
     url = f'{base_url}/api/v1/query?query={data_query}&time={ts}'
@@ -139,7 +139,7 @@ def _generate_snapshot_range(start, end, interval, data_query):
             return
         else:
             ts = snapshot.timestamp()
-            if _has_data(ts, data_query):
+            if has_data(ts, data_query):
                 logger.info("data already present for snapshot %s, ts %d", snapshot, ts)
                 continue
             else:
