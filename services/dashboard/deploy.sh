@@ -44,7 +44,7 @@ fi
 
 cd $WORKDIR
 echo "[*] Rebuilding and deploying..."
-make rebuild
+make all
 
 LOGIN_RESPONSE=$(curl -X POST \
         -d '{"user":"admin","password":"admin"}' \

@@ -17,18 +17,19 @@ from collections import defaultdict
 from functools import lru_cache
 from itertools import islice
 
-from brownie import ZERO_ADDRESS
-from cachetools.func import ttl_cache, lru_cache
+from brownie import ZERO_ADDRESS, chain
+from cachetools.func import lru_cache, ttl_cache
 
 from yearn.events import create_filter, decode_logs
+from yearn.exceptions import UnsupportedNetwork
 from yearn.multicall2 import fetch_multicall
+from yearn.networks import Network
 from yearn.prices import magic
 from yearn.utils import Singleton, contract
 
 logger = logging.getLogger(__name__)
 
-WBTC = "0x2260FAC5E5542a773Aa44fBCfeDf7C193bc2C599"
-WETH = "0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2"
+ADDRESS_PROVIDER = '0x0000000022D53366457F9d5E68Ec105046FC4383'
 BASIC_TOKENS = {
     "0x6B175474E89094C44Da98b954EedeAC495271d0F",  # dai
     "0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2",  # weth
@@ -48,13 +49,36 @@ BASIC_TOKENS = {
     "0x956F47F50A910163D8BF957Cf5846D573E7f87CA",  # fei
     "0xBC6DA0FE9aD5f3b0d58160288917AA56653660E9",  # alusd
 }
+curve_contracts = {
+    Network.Mainnet: {
+        'address_provider': ADDRESS_PROVIDER,
+        'crv': '0xD533a949740bb3306d119CC777fa900bA034cd52',
+        'voting_escrow': '0x5f3b5DfEb7B28CDbD7FAba78963EE202a494e2A2',
+        'gauge_controller': '0x2F50D538606Fa9EDD2B11E2446BEb18C9D5846bB',
+    },
+    Network.Fantom: {
+        'address_provider': ADDRESS_PROVIDER,
+    },
+    Network.Arbitrum: {
+        'address_provider': ADDRESS_PROVIDER,
+    },
+}
 
 
 class CurveRegistry(metaclass=Singleton):
     def __init__(self):
+        if chain.id not in curve_contracts:
+            raise UnsupportedNetwork("curve is not supported on this network")
+
+        addrs = curve_contracts[chain.id]
+        if chain.id == Network.Mainnet:
+            self.crv = contract(addrs['crv'])
+            self.voting_escrow = contract(addrs['voting_escrow'])
+            self.gauge_controller = contract(addrs['gauge_controller'])
+
         self.pools = set()
         self.identifiers = defaultdict(list)
-        self.addres_provider = contract('0x0000000022D53366457F9d5E68Ec105046FC4383')
+        self.addres_provider = contract(addrs['address_provider'])
         self.watch_events()
 
     def watch_events(self):
@@ -121,6 +145,9 @@ class CurveRegistry(metaclass=Singleton):
     @lru_cache(maxsize=None)
     def _pool_from_lp_token(self, token):
         return self.registry.get_pool_from_lp_token(token)
+
+    def __contains__(self, token):
+        return self.get_pool(token) is not None
 
     @lru_cache(maxsize=None)
     def get_pool(self, token):
@@ -265,5 +292,78 @@ class CurveRegistry(metaclass=Singleton):
         virtual_price = contract(pool).get_virtual_price(block_identifier=block) / 1e18
         return virtual_price * magic.get_price(coin, block)
 
+    def calculate_boost(self, gauge, addr, block=None):
+        results = fetch_multicall(
+            [gauge, "balanceOf", addr],
+            [gauge, "totalSupply"],
+            [gauge, "working_balances", addr],
+            [gauge, "working_supply"],
+            [self.voting_escrow, "balanceOf", addr],
+            [self.voting_escrow, "totalSupply"],
+            block=block,
+        )
+        results = [x / 1e18 for x in results]
+        gauge_balance, gauge_total, working_balance, working_supply, vecrv_balance, vecrv_total = results
+        try:
+            boost = working_balance / gauge_balance * 2.5
+        except ZeroDivisionError:
+            boost = 1
 
-curve = CurveRegistry()
+        min_vecrv = vecrv_total * gauge_balance / gauge_total
+        lim = gauge_balance * 0.4 + gauge_total * min_vecrv / vecrv_total * 0.6
+        lim = min(gauge_balance, lim)
+
+        _working_supply = working_supply + lim - working_balance
+        noboost_lim = gauge_balance * 0.4
+        noboost_supply = working_supply + noboost_lim - working_balance
+        try:
+            max_boost_possible = (lim / _working_supply) / (noboost_lim / noboost_supply)
+        except ZeroDivisionError:
+            max_boost_possible = 1
+
+        return {
+            "gauge balance": gauge_balance,
+            "gauge total": gauge_total,
+            "vecrv balance": vecrv_balance,
+            "vecrv total": vecrv_total,
+            "working balance": working_balance,
+            "working total": working_supply,
+            "boost": boost,
+            "max boost": max_boost_possible,
+            "min vecrv": min_vecrv,
+        }
+
+    def calculate_apy(self, gauge, lp_token, block=None):
+        crv_price = magic.get_price(self.crv)
+        pool = contract(self.get_pool(lp_token))
+        results = fetch_multicall(
+            [gauge, "working_supply"],
+            [self.gauge_controller, "gauge_relative_weight", gauge],
+            [gauge, "inflation_rate"],
+            [pool, "get_virtual_price"],
+            block=block,
+        )
+        results = [x / 1e18 for x in results]
+        working_supply, relative_weight, inflation_rate, virtual_price = results
+        token_price = magic.get_price(lp_token, block=block)
+        try:
+            rate = (inflation_rate * relative_weight * 86400 * 365 / working_supply * 0.4) / token_price
+        except ZeroDivisionError:
+            rate = 0
+
+        return {
+            "crv price": crv_price,
+            "relative weight": relative_weight,
+            "inflation rate": inflation_rate,
+            "virtual price": virtual_price,
+            "crv reward rate": rate,
+            "crv apy": rate * crv_price,
+            "token price": token_price,
+        }
+
+
+curve = None
+try:
+    curve = CurveRegistry()
+except UnsupportedNetwork:
+    pass

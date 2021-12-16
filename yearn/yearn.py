@@ -1,17 +1,19 @@
 import logging
-import os
 from collections import Counter
 from time import time
 
+from brownie import chain
 from joblib import Parallel, delayed
 
 import yearn.iearn
 import yearn.ironbank
+from yearn.outputs.describers.registry import RegistryWalletDescriber
 import yearn.special
 import yearn.v1.registry
 import yearn.v2.registry
+from yearn.networks import Network
 from yearn.outputs import victoria
-
+from yearn.exceptions import UnsupportedNetwork
 
 logger = logging.getLogger(__name__)
 
@@ -23,13 +25,27 @@ class Yearn:
 
     def __init__(self, load_strategies=True, load_harvests=False, watch_events_forever=True) -> None:
         start = time()
-        self.registries = {
-            "earn": yearn.iearn.Registry(),
-            "v1": yearn.v1.registry.Registry(),
-            "v2": yearn.v2.registry.Registry(watch_events_forever=watch_events_forever),
-            "ib": yearn.ironbank.Registry(),
-            "special": yearn.special.Registry(),
-        }
+        if chain.id == Network.Mainnet:
+            self.registries = {
+                "earn": yearn.iearn.Registry(),
+                "v1": yearn.v1.registry.Registry(),
+                "v2": yearn.v2.registry.Registry(watch_events_forever=watch_events_forever),
+                "ib": yearn.ironbank.Registry(),
+                "special": yearn.special.Registry(),
+            }
+        elif chain.id ==  Network.Fantom:
+            self.registries = {
+                "v2": yearn.v2.registry.Registry(),
+                "ib": yearn.ironbank.Registry(),
+            }
+        elif chain.id == Network.Arbitrum:
+            self.registries = {
+                "v2": yearn.v2.registry.Registry(),
+                "ib": yearn.ironbank.Registry(),
+            }
+        else:
+            raise UnsupportedNetwork('yearn is not supported on this network')
+
         if load_strategies:
             self.registries["v2"].load_strategies()
         if load_harvests:
@@ -45,7 +61,8 @@ class Yearn:
 
     def describe_wallets(self, block=None):
         registries = ['v1','v2'] # TODO: add other registries [earn, ib, special]
-        data = Parallel(4,'threading')(delayed(self.registries[key].describe_wallets)(block=block) for key in registries)
+        describer = RegistryWalletDescriber()
+        data = Parallel(4,'threading')(delayed(describer.describe_wallets)(self.registries[key], block=block) for key in registries)
         data = {registry:desc for registry,desc in zip(registries,data)}
 
         wallet_balances = Counter()

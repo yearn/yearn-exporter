@@ -1,21 +1,24 @@
 import pytest
-from yearn.prices import synthetix
+from yearn.prices.synthetix import synthetix
 from yearn.utils import contract
 
-SYNTHS = synthetix.get_synths()
+SYNTHS = []
+if synthetix:
+    SYNTHS = synthetix.synths
 
 
+@pytest.mark.require_network('mainnet')
 def test_get_synths():
-    synths = synthetix.get_synths()
-    print(synths)
-    assert synths
+    assert len(synthetix.synths) >= 10
 
 
+@pytest.mark.require_network('mainnet')
 def test_synthetix_detection():
     sLINK = '0xbBC455cb4F1B9e4bFC4B73970d360c8f032EfEE6'
-    assert synthetix.is_synth(sLINK)
+    assert sLINK in synthetix
 
 
+@pytest.mark.require_network('mainnet')
 @pytest.mark.parametrize('target', SYNTHS)
 def test_synthetix_price(target):
     token = contract(target).proxy()

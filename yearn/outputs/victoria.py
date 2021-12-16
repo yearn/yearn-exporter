@@ -4,8 +4,10 @@ import gzip
 import math
 import json
 from typing import List, Dict
-from brownie import Contract
+from brownie import Contract, chain
 from yearn.treasury.buckets import get_token_bucket
+from yearn.utils import contract
+from yearn.networks import Network
 
 mapping = {
     "earn": {
@@ -39,10 +41,14 @@ mapping = {
     }
 }
 
-simple_products = ["v1", "earn", "ib", "special"]
 
 def export(timestamp, data):
     metrics_to_export = []
+
+    if Network(chain.id) == Network.Fantom:
+        simple_products = ["ib"]
+    else:
+        simple_products = ["v1", "earn", "ib", "special"]
 
     for product in simple_products:
         metric = mapping[product]["metric"]
@@ -89,6 +95,7 @@ def export(timestamp, data):
 
     # post all metrics for this timestamp at once
     _post(metrics_to_export)
+
 
 def export_wallets(timestamp, data):
     metrics_to_export = []
@@ -146,7 +153,7 @@ def export_treasury(timestamp, data):
     for section, section_data in data.items():
         for wallet, wallet_data in section_data.items():
             for token, bals in wallet_data.items():
-                symbol = 'ETH' if token == 'ETH' else Contract(token).symbol()
+                symbol = 'ETH' if token == 'ETH' else contract(token).symbol()
                 for key, value in bals.items():
                     if value != 0:
                         label_names = ['param','wallet','token_address','token','bucket']
@@ -171,6 +178,8 @@ def export_duration(duration_seconds, pool_size, direction, timestamp_seconds):
 
 def _build_item(metric, label_names, label_values, value, timestamp):
     ts_millis = math.floor(timestamp) * 1000
+    label_names.append("network")
+    label_values.append(Network.label(chain.id))
     meta = dict(zip(map(_sanitize, label_names), map(str, label_values)))
     meta["__name__"] = metric
     return {"metric": meta, "values": [_sanitize(value)], "timestamps": [ts_millis]}

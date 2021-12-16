@@ -12,8 +12,9 @@ from yearn.outputs import victoria
 from yearn.partners.partners import partners
 from yearn.partners.snapshot import WildcardWrapper, Wrapper
 from yearn.prices.constants import weth
-from yearn.prices.magic import PriceError, get_price, logger as logger_price_magic
-from ypricemagic.utils.utils import Contract_with_erc20_fallback
+from yearn.prices.magic import get_price, logger as logger_price_magic
+from yearn.exceptions import PriceError
+from yearn.utils import contract
 
 from ..constants import TREASURY_WALLETS
 
@@ -43,17 +44,17 @@ def _get_price(token, block=None):
         price = get_price(token, block)
     except AttributeError:
         logger.warn(
-            f"AttributeError while getting price for {Contract(token).symbol()} {token}"
+            f"AttributeError while getting price for {contract(token).symbol()} {token}"
         )
         raise
     except PriceError:
         logger.warn(
-            f"PriceError while getting price for {Contract(token).symbol()} {token}"
+            f"PriceError while getting price for {contract(token).symbol()} {token}"
         )
         price = 0
     except ValueError:
         logger.warn(
-            f"ValueError while getting price for {Contract(token).symbol()} {token}"
+            f"ValueError while getting price for {contract(token).symbol()} {token}"
         )
         price = 0
     return price
@@ -61,7 +62,13 @@ def _get_price(token, block=None):
 
 def get_token_from_event(event):
     try:
-        return event['Transfer'][0].address
+        address = event['Transfer'][0].address
+        # try to download the contract from etherscan
+        contract(address)
+        return address
+    except ValueError:
+        # some tokens have unverified sources with etherscan, skip them!
+        return None
     except EventLookupError:
         logger.critical(
             f'One of your cached contracts has an incorrect definition: {event.address}. Please fix this manually'
@@ -102,23 +109,20 @@ class Treasury:
 
     def token_list(self, address, block=None) -> list:
         self.load_transfers()
-        if block:
-            return list(
-                {
-                    get_token_from_event(transfer)
-                    for transfer in self._transfers
-                    if transfer['Transfer'].values()[1] == address
-                    and transfer['Transfer'][0].block_number <= block
-                }
-            )
-        else:
-            return list(
-                {
-                    get_token_from_event(transfer)
-                    for transfer in self._transfers
-                    if transfer['Transfer'].values()[1] == address
-                }
-            )
+        tokens = set()
+        for transfer in self._transfers:
+            token = get_token_from_event(transfer)
+            if token is None:
+                continue
+            if transfer['Transfer'].values()[1] == address:
+                if block:
+                    if transfer['Transfer'][0].block_number <= block:
+                        tokens.add(token)
+                else:
+                    tokens.add(token)
+
+        return list(tokens)
+
 
     def held_assets(self, block=None) -> dict:
         balances = {}
@@ -126,11 +130,12 @@ class Treasury:
             # get token balances
             tokens = self.token_list(address, block=block)
             token_balances = fetch_multicall(
-                *[[Contract_with_erc20_fallback(token), "balanceOf", address] for token in tokens],
+                *[[contract(token), "balanceOf", address] for token in tokens],
                 block=block,
             )
             decimals = fetch_multicall(
-                *[[Contract(token), "decimals"] for token in tokens], block=block
+                *[[contract(token), "decimals"] for token in tokens],
+                block=block
             )
             token_balances = [
                 balance / 10 ** decimal if decimal else 0
@@ -167,11 +172,11 @@ class Treasury:
         return collateral
 
     def maker_collateral(self, block=None) -> dict:
-        proxy_registry = Contract('0x4678f0a6958e4D2Bc4F1BAF7Bc52E8F3564f3fE4')
-        cdp_manager = Contract('0x5ef30b9986345249bc32d8928B7ee64DE9435E39')
-        # ychad = Contract('ychad.eth')
-        ychad = Contract('0xfeb4acf3df3cdea7399794d0869ef76a6efaff52')
-        vat = Contract('0x35D1b3F3D7966A1DFe207aa4514C12a259A0492B')
+        proxy_registry = contract('0x4678f0a6958e4D2Bc4F1BAF7Bc52E8F3564f3fE4')
+        cdp_manager = contract('0x5ef30b9986345249bc32d8928B7ee64DE9435E39')
+        # ychad = contract('ychad.eth')
+        ychad = contract('0xfeb4acf3df3cdea7399794d0869ef76a6efaff52')
+        vat = contract('0x35D1b3F3D7966A1DFe207aa4514C12a259A0492B')
         proxy = proxy_registry.proxies(ychad)
         cdp = cdp_manager.first(proxy)
         urn = cdp_manager.urns(cdp)
@@ -189,9 +194,9 @@ class Treasury:
     def unit_collateral(self, block=None) -> dict:
         if block and block < 11315910:
             return
-        # ychad = Contract('ychad.eth')
-        ychad = Contract('0xfeb4acf3df3cdea7399794d0869ef76a6efaff52')
-        unitVault = Contract("0xb1cff81b9305166ff1efc49a129ad2afcd7bcf19")
+        # ychad = contract('ychad.eth')
+        ychad = contract('0xfeb4acf3df3cdea7399794d0869ef76a6efaff52')
+        unitVault = contract("0xb1cff81b9305166ff1efc49a129ad2afcd7bcf19")
         yfi = "0x0bc529c00C6401aEF6D220BE8C6Ea1667F6Ad93e"
         bal = unitVault.collaterals(yfi, ychad, block_identifier=block)
         collateral = {
@@ -229,11 +234,11 @@ class Treasury:
                     print(wrapper.protocol_fees(block=block))
 
     def maker_debt(self, block=None) -> dict:
-        proxy_registry = Contract('0x4678f0a6958e4D2Bc4F1BAF7Bc52E8F3564f3fE4')
-        cdp_manager = Contract('0x5ef30b9986345249bc32d8928B7ee64DE9435E39')
-        # ychad = Contract('ychad.eth')
-        ychad = Contract('0xfeb4acf3df3cdea7399794d0869ef76a6efaff52')
-        vat = Contract('0x35D1b3F3D7966A1DFe207aa4514C12a259A0492B')
+        proxy_registry = contract('0x4678f0a6958e4D2Bc4F1BAF7Bc52E8F3564f3fE4')
+        cdp_manager = contract('0x5ef30b9986345249bc32d8928B7ee64DE9435E39')
+        # ychad = contract('ychad.eth')
+        ychad = contract('0xfeb4acf3df3cdea7399794d0869ef76a6efaff52')
+        vat = contract('0x35D1b3F3D7966A1DFe207aa4514C12a259A0492B')
         proxy = proxy_registry.proxies(ychad)
         cdp = cdp_manager.first(proxy)
         urn = cdp_manager.urns(cdp)
@@ -248,9 +253,9 @@ class Treasury:
     def unit_debt(self, block=None) -> dict:
         if block and block < 11315910:
             return
-        # ychad = Contract('ychad.eth')
-        ychad = Contract('0xfeb4acf3df3cdea7399794d0869ef76a6efaff52')
-        unitVault = Contract("0xb1cff81b9305166ff1efc49a129ad2afcd7bcf19")
+        # ychad = contract('ychad.eth')
+        ychad = contract('0xfeb4acf3df3cdea7399794d0869ef76a6efaff52')
+        unitVault = contract("0xb1cff81b9305166ff1efc49a129ad2afcd7bcf19")
         yfi = "0x0bc529c00C6401aEF6D220BE8C6Ea1667F6Ad93e"
         usdp = '0x1456688345527bE1f37E9e627DA0837D6f08C925'
         debt = unitVault.getTotalDebt(yfi, ychad, block_identifier=block) / 10 ** 18
@@ -301,6 +306,7 @@ class Treasury:
                     '0xD7aBCFd05a9ba3ACbc164624402fB2E95eC41be6', # EthJuanchos
                     '0xeF81c2C98cb9718003A89908e6bd1a5fA8A098A3', # SpaceShiba
                     '0xD1E5b0FF1287aA9f9A268759062E4Ab08b9Dacbe', # .crypto Domain
+                    '0x437a6B880d4b3Be9ed93BD66D6B7f872fc0f5b5E', # Soda
                     ]:
                     pass
                 else:

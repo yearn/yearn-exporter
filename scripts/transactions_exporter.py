@@ -14,9 +14,9 @@ from web3._utils.events import construct_event_topic_set
 from yearn.events import create_filter, decode_logs, get_logs_asap
 from yearn.outputs.postgres.postgres import postgres
 from yearn.prices import magic
+from yearn.utils import contract
 from yearn.v1.registry import Registry as RegistryV1
 from yearn.v2.registry import Registry as RegistryV2
-from ypricemagic.interfaces.ERC20 import ERC20ABI
 from yearn.treasury.treasury import Treasury
 
 treasury = Treasury()
@@ -67,7 +67,7 @@ def get_token_transfers(token, start_block, end_block) -> pd.DataFrame:
         web3.codec,
     )
     postgres.cache_token(token.address)
-    decimals = Contract(token.address).decimals()
+    decimals = contract(token.address).decimals()
     events = decode_logs(
         get_logs_asap(token.address, topics, from_block=start_block, to_block=end_block)
     )

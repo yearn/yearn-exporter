@@ -12,8 +12,10 @@ from web3._utils.events import construct_event_topic_set
 from yearn.events import create_filter, decode_logs, get_logs_asap
 from yearn.multicall2 import fetch_multicall
 from yearn.prices import magic
-from yearn.utils import Singleton, contract_creation_block
+from yearn.utils import Singleton, contract_creation_block, contract
 from yearn.v2.vaults import Vault
+from yearn.networks import Network
+from yearn.exceptions import UnsupportedNetwork
 
 logger = logging.getLogger(__name__)
 
@@ -26,15 +28,25 @@ class Registry(metaclass=Singleton):
         self.governance = None
         self.tags = {}
         self._watch_events_forever = watch_events_forever
-        # track older registries to pull experiments
-        self.registries = self.load_from_ens()
+        self.registries = self.load_registry()
         # load registry state in the background
         self._done = threading.Event()
         self._thread = threading.Thread(target=self.watch_events, daemon=True)
         self._thread.start()
 
+    def load_registry(self):
+        if chain.id == Network.Mainnet:
+            return self.load_from_ens()
+        elif chain.id == Network.Fantom:
+            return [contract('0x727fe1759430df13655ddb0731dE0D0FDE929b04')]
+        elif chain.id == Network.Arbitrum:
+            return [contract('0xC8f17f8E15900b6D6079680b15Da3cE5263f62AA')]
+        else:
+            raise UnsupportedNetwork('yearn v2 is not available on this network')
+
     def load_from_ens(self):
-        resolver = Contract('0x4976fb03C32e5B8cfe2b6cCB31c09Ba78EBaBa41')
+        # track older registries to pull experiments
+        resolver = contract('0x4976fb03C32e5B8cfe2b6cCB31c09Ba78EBaBa41')
         topics = construct_event_topic_set(
             filter_by_name('AddressChanged', resolver.abi)[0],
             web3.codec,
@@ -56,7 +68,7 @@ class Registry(metaclass=Singleton):
 
     def __repr__(self) -> str:
         self._done.wait()
-        return f"<Registry releases={len(self.releases)} vaults={len(self.vaults)} experiments={len(self.experiments)}>"
+        return f"<Registry chain={chain.id} releases={len(self.releases)} vaults={len(self.vaults)} experiments={len(self.experiments)}>"
 
     def load_vaults(self):
         if not self._thread._started.is_set():
@@ -83,7 +95,7 @@ class Registry(metaclass=Singleton):
                 self.governance = event["governance"]
 
             if event.name == "NewRelease":
-                self.releases[event["api_version"]] = Contract(event["template"])
+                self.releases[event["api_version"]] = contract(event["template"])
 
             if event.name == "NewVault":
                 # experiment was endorsed
@@ -130,25 +142,6 @@ class Registry(metaclass=Singleton):
         vaults = self.active_vaults_at(block)
         results = Parallel(8, "threading")(delayed(vault.describe)(block=block) for vault in vaults)
         return {vault.name: result for vault, result in zip(vaults, results)}
-
-    def describe_wallets(self, block=None):
-        vaults = self.active_vaults_at(block=block)
-        data = Parallel(8,'threading')(delayed(vault.describe_wallets)(block=block) for vault in vaults)
-        data = {vault.name: desc for vault,desc in zip(vaults,data)}
-
-        wallet_balances = Counter()
-        for vault, desc in data.items():
-            for wallet, bals in desc['wallet balances'].items():
-                wallet_balances[wallet] += bals["usd balance"]
-        agg_stats = {
-            "total wallets": len(wallet_balances),
-            "active wallets": sum(1 if balance > 50 else 0 for wallet, balance in wallet_balances.items()),
-            "wallets > $5k": sum(1 if balance > 5000 else 0 for wallet, balance in wallet_balances.items()),
-            "wallets > $50k": sum(1 if balance > 50000 else 0 for wallet, balance in wallet_balances.items()),
-            "wallet balances usd": wallet_balances,
-        }
-        data.update(agg_stats)
-        return data
 
     def total_value_at(self, block=None):
         vaults = self.active_vaults_at(block)

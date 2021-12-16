@@ -1,9 +1,7 @@
 import logging
-import os
 import re
 import threading
 import time
-from collections import Counter
 from typing import List
 
 from brownie import ZERO_ADDRESS, Contract, chain
@@ -16,10 +14,10 @@ from yearn.common import Tvl
 from yearn.events import create_filter, decode_logs
 from yearn.multicall2 import fetch_multicall
 from yearn.prices import magic
-from yearn.outputs.postgres.postgres import PostgresInstance
 from yearn.prices.curve import curve
-from yearn.utils import safe_views
+from yearn.utils import safe_views, contract
 from yearn.v2.strategies import Strategy
+from yearn.exceptions import PriceError
 
 VAULT_VIEWS_SCALED = [
     "totalAssets",
@@ -57,7 +55,7 @@ class Vault:
         self.api_version = api_version
         if token is None:
             token = vault.token()
-        self.token = Contract(token)
+        self.token = contract(token)
         self.registry = registry
         self.scale = 10 ** self.vault.decimals()
         # multicall-safe views with 0 inputs and numeric output.
@@ -92,7 +90,7 @@ class Vault:
 
     @classmethod
     def from_address(cls, address):
-        vault = Contract(address)
+        vault = contract(address)
         instance = cls(vault=vault, token=vault.token(), api_version=vault.apiVersion())
         instance.name = vault.name()
         return instance
@@ -145,8 +143,13 @@ class Vault:
     def process_events(self, events):
         for event in events:
             if event.name == "StrategyAdded":
-                logger.debug("%s strategy added %s", self.name, event["strategy"])
-                self._strategies[event["strategy"]] = Strategy(event["strategy"], self, self._watch_events_forever)
+                strategy_address = event["strategy"]
+                logger.debug("%s strategy added %s", self.name, strategy_address)
+                try: 
+                    self._strategies[strategy_address] = Strategy(strategy_address, self, self._watch_events_forever)
+                except ValueError:
+                    print(f"Error loading strategy {strategy_address}")
+                    pass
             elif event.name == "StrategyRevoked":
                 logger.debug("%s strategy revoked %s", self.name, event["strategy"])
                 self._revoked[event["strategy"]] = self._strategies.pop(
@@ -160,12 +163,6 @@ class Vault:
                 self._strategies[event["newVersion"]] = Strategy(event["newVersion"], self, self._watch_events_forever)
             elif event.name == "StrategyReported":
                 self._reports.append(event)
-
-    def wallets(self, block=None):
-        return self.wallet_balances(block=block).keys()
-
-    def wallet_balances(self, block=None):
-        return PostgresInstance().fetch_balances(self.vault.address, block=block)
 
     def describe(self, block=None):
         try:
@@ -191,22 +188,8 @@ class Vault:
         
         return info
 
-    def describe_wallets(self,block=None):
-        balances = self.wallet_balances(block=block)
-        info = {
-            'total wallets': len(set(wallet for wallet, bal in balances.items())),
-            'active wallets': sum(1 if balance > 50 else 0 for wallet, balance in balances.items()),
-            'wallet balances': {
-                            wallet: {
-                                "token balance": float(bal), #/ self.scale,
-                                "usd balance": float(bal) * magic.get_price(self.token,block=block)
-                                } for wallet, bal in balances.items()
-                            }
-        }
-        return info
-
     def apy(self, samples: ApySamples):
-        if curve.get_pool(self.token.address):
+        if curve and curve.get_pool(self.token.address):
             return apy.curve.simple(self, samples)
         elif Version(self.api_version) >= Version("0.3.2"):
             return apy.v2.average(self, samples)
@@ -217,7 +200,7 @@ class Vault:
         total_assets = self.vault.totalAssets(block_identifier=block)
         try:
             price = magic.get_price(self.token, block=None)
-        except magic.PriceError:
+        except PriceError:
             price = None
         tvl = total_assets * price / 10 ** self.vault.decimals(block_identifier=block) if price else None
         return Tvl(total_assets, price, tvl)

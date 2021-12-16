@@ -1,13 +1,14 @@
 from brownie import Contract
 from yearn.cache import memory
 from yearn.constants import BTC_LIKE, ETH_LIKE as _ETH_LIKE
-from ypricemagic.balancer import is_balancer_pool
-from yearn.prices.compound import is_compound_market
-from yearn.prices.constants import STABLECOINS, weth
-from yearn.prices.fixed_forex import is_fixed_forex
-from ypricemagic.aave import is_atoken_v1, is_atoken_v2
-from ypricemagic.curve import get_underlying_coins, is_curve_lp_token
-from ypricemagic.yearn import is_yearn_vault
+from yearn.prices.balancer import is_balancer_pool
+from yearn.prices.compound import compound
+from yearn.prices.constants import stablecoins, weth
+from yearn.prices.fixed_forex import fixed_forex
+from yearn.prices.aave import aave
+from yearn.prices.curve import curve
+from yearn.prices.yearn import yearn_lens
+from yearn.utils import contract
 
 YFI_LIKE = {
     '0x0bc529c00C6401aEF6D220BE8C6Ea1667F6Ad93e',  # YFI
@@ -39,7 +40,7 @@ def get_token_bucket(token) -> str:
     token = str(token)
     token = str(_unwrap_token(token))
     if (
-        token in STABLECOINS or token in INTL_STABLECOINS or is_fixed_forex(token)
+        token in stablecoins or token in INTL_STABLECOINS or token in fixed_forex
     ):  # or token == '0x9ba60bA98413A60dB4C651D4afE5C937bbD8044B': # yla
         return 'Cash & cash equivalents'
     if token in ETH_LIKE:
@@ -61,25 +62,24 @@ def _unwrap_token(token) -> str:
     if str(token) in ["ETH", "0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE"]:
         return token
 
-    if is_yearn_vault(token):
-        return _unwrap_token(Contract(token).token())
-    if is_curve_lp_token(token):
+    if yearn_lens.is_yearn_vault(token):
+        return _unwrap_token(contract(token).token())
+    if token in curve:
+        pool = curve.get_pool(token)
         pool_tokens = set(
-            str(_unwrap_token(coin)) for coin in get_underlying_coins(token)
+            str(_unwrap_token(coin)) for coin in curve.get_underlying_coins(pool)
         )
         return _pool_bucket(pool_tokens)
     if is_balancer_pool(token):  # should only be YLA # TODO figure this out
         pool_tokens = set(
-            str(_unwrap_token(coin)) for coin in Contract(token).getCurrentTokens()
+            str(_unwrap_token(coin)) for coin in contract(token).getCurrentTokens()
         )
         return _pool_bucket(pool_tokens)
-    if is_atoken_v1(token):
-        return Contract(token).underlyingAssetAddress()
-    if is_atoken_v2(token):
-        return Contract(token).UNDERLYING_ASSET_ADDRESS()
-    if is_compound_market(token):
+    if token in aave:
+        return aave.atoken_underlying(token)
+    if token in compound:
         try:
-            return Contract(token).underlying()
+            return contract(token).underlying()
         except AttributeError:
             return weth
     return token
@@ -90,7 +90,7 @@ def _pool_bucket(pool_tokens: set) -> str:
         return list(BTC_LIKE)[0]
     if pool_tokens < ETH_LIKE:
         return list(ETH_LIKE)[0]
-    if pool_tokens < STABLECOINS.keys():
-        return list(STABLECOINS.keys())[0]
+    if pool_tokens < stablecoins.keys():
+        return list(stablecoins.keys())[0]
     if pool_tokens < INTL_STABLECOINS:
         return list(INTL_STABLECOINS)[0]

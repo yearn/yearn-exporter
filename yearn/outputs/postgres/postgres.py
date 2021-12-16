@@ -8,7 +8,7 @@ from yearn.outputs.postgres.tables import (addresses_table_query,
                                            tokens_table_query,
                                            treasury_table_query,
                                            users_table_query)
-from yearn.utils import is_contract
+from yearn.utils import is_contract, contract
 
 DATABASE = os.environ.get('POSTGRES_DB',os.environ.get('POSTGRES_USER','postgres'))
 UID = os.environ.get('POSTGRES_USER','postgres')
@@ -70,7 +70,7 @@ class PostgresInstance:
             try:
                 self.cache_address(token_address)
                 if not self.token_exists(token_address):
-                    token = Contract(token_address)
+                    token = contract(token_address)
                     symbol, name, decimals = fetch_multicall([token,'symbol'],[token,'name'],[token,'decimals'])
                     self.cursor.execute(f"INSERT INTO TOKENS (CHAINID, TOKEN_ADDRESS, SYMBOL, NAME, DECIMALS)\
                                             VALUES ({chainid},'{token_address}','{symbol}','{name}',{decimals})")

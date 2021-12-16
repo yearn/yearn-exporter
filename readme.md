@@ -52,7 +52,6 @@ brownie run print_strategies
 ```bash
 export GF_SECURITY_ADMIN_USER=<YOUR_ADMIN_USER> # change this if you want to have a different admin user name, default is admin
 export GF_SECURITY_ADMIN_PASSWORD=<YOUR_ADMIN_PASSWORD> # change this if you want to have a different admin password, default is admin
-export WEB3_INFURA_PROJECT_ID=<YOUR_PROJECT_ID> # this needs to be set
 export WEB3_PROVIDER=<YOUR_WEB3_PROVIDER> # if this is set, it overrides Infura, and instead a custom url is used as the web3 provider
 export ETHERSCAN_TOKEN=<YOUR_ETHERSCAN_TOKEN> # this needs to be set
 export EXPLORER=<EXPLORER> # optional, default to: https://api.etherscan.io/api
@@ -65,7 +64,6 @@ After successful startup you can go directly to grafana at `http://localhost:300
 ### Historical TVL
 
 ```bash
-export WEB3_INFURA_PROJECT_ID=<YOUR_PROJECT_ID> # this needs to be set
 export WEB3_PROVIDER=<YOUR_WEB3_PROVIDER> # if this is set, it overrides Infura, and instead a custom url is used as the web3 provider
 export ETHERSCAN_TOKEN=<YOUR_ETHERSCAN_TOKEN> # this needs to be set
 export EXPLORER=<EXPLORER> # optional, default to: https://api.etherscan.io/api

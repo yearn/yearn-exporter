@@ -1,11 +1,20 @@
 import logging
-
-from brownie import chain, web3, Contract
 from functools import lru_cache
+import threading
+
+from brownie import Contract, chain, web3
 
 from yearn.cache import memory
+from yearn.exceptions import ArchiveNodeRequired
+from yearn.networks import Network
 
 logger = logging.getLogger(__name__)
+
+BINARY_SEARCH_BARRIER = {
+    Network.Mainnet: 0,
+    Network.Fantom: 4_564_024,  # fantom returns "missing trie node" before that
+    Network.Arbitrum: 0,
+}
 
 
 def safe_views(abi):
@@ -24,8 +33,11 @@ def get_block_timestamp(height):
     """
     An optimized variant of `chain[height].timestamp`
     """
-    header = web3.manager.request_blocking(f"erigon_getHeaderByNumber", [height])
-    return int(header.timestamp, 16)
+    if chain.id == Network.Mainnet:
+        header = web3.manager.request_blocking(f"erigon_getHeaderByNumber", [height])
+        return int(header.timestamp, 16)
+    else:
+        return chain[height].timestamp
 
 
 @memory.cache()
@@ -47,6 +59,15 @@ def closest_block_after_timestamp(timestamp):
     return hi
 
 
+def get_code(address, block=None):
+    try:
+        return web3.eth.get_code(address, block_identifier=block)
+    except ValueError as exc:
+        if isinstance(exc.args[0], dict) and 'missing trie node' in exc.args[0]['message']:
+            raise ArchiveNodeRequired('querying historical state requires an archive node')
+        raise exc
+
+
 @memory.cache()
 def contract_creation_block(address) -> int:
     """
@@ -55,17 +76,29 @@ def contract_creation_block(address) -> int:
     """
     logger.info("contract creation block %s", address)
 
-    height = chain.height
-    lo, hi = 0, height
+    barrier = BINARY_SEARCH_BARRIER[chain.id]
+    lo = barrier
+    hi = end = chain.height
 
     while hi - lo > 1:
         mid = lo + (hi - lo) // 2
-        if web3.eth.get_code(address, block_identifier=mid):
+        try:
+            code = get_code(address, block=mid)
+        except ArchiveNodeRequired as exc:
+            logger.error(exc)
+            # with no access to historical state, we'll have to scan logs from start
+            return 0
+        if code:
             hi = mid
         else:
             lo = mid
 
-    return hi if hi != height else None
+    # only happens on fantom
+    if hi == barrier + 1:
+        logger.warning('could not determine creation block for a contract deployed prior to barrier')
+        return 0
+
+    return hi if hi != end else None
 
 
 class Singleton(type):
@@ -81,8 +114,14 @@ class Singleton(type):
             return self.__instance
 
 
-# Contract instance singleton, saves about 20ms of init time
-contract = lru_cache(maxsize=None)(Contract)
+# cached Contract instance, saves about 20ms of init time
+_contract_lock = threading.Lock()
+_contract = lru_cache(maxsize=None)(Contract)
+
+def contract(address):
+    with _contract_lock:
+        return _contract(address)
+
 
 def is_contract(address: str) -> bool:
     '''checks to see if the input address is a contract'''

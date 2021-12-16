@@ -5,8 +5,8 @@ import pandas as pd
 from brownie import Contract, chain, convert, web3
 from pandas.core.frame import DataFrame
 from requests import get
-from ypricemagic import magic
-from ypricemagic.utils.utils import Contract_with_erc20_fallback
+from yearn.prices import magic
+from yearn.utils import contract
 
 from eth_abi import encode_single
 
@@ -34,7 +34,7 @@ def walletdataframe(wallet, block):
 
     def getbalance(token_address):
         logging.debug(f'token: {token_address}')
-        return Contract_with_erc20_fallback(token_address).balanceOf(wallet, block_identifier=block)
+        return contract(token_address).balanceOf(wallet, block_identifier=block)
 
     def getprice(token_address):
         if token_address == '0x27d22a7648e955e510a40bdb058333e9190d12d4': # PPOOL
@@ -83,7 +83,7 @@ def dataframe(block):
             df = walletdf
 
     def appendmore(token_address,amount,wallet,category=False,wallet_label=False):
-        token = Contract(token_address)
+        token = contract(token_address)
         price = magic.get_price(token_address, block)
         if category and not wallet_label:
             return df.append(pd.DataFrame({
@@ -136,10 +136,10 @@ def dataframe(block):
     # NOTE: CDP Collat & Debt
     # NOTE: Maker
     print('fetching MakerDAO data')
-    proxy_registry = Contract('0x4678f0a6958e4D2Bc4F1BAF7Bc52E8F3564f3fE4')
-    cdp_manager = Contract('0x5ef30b9986345249bc32d8928B7ee64DE9435E39')
-    ychad = Contract('0xfeb4acf3df3cdea7399794d0869ef76a6efaff52')
-    vat = Contract('0x35D1b3F3D7966A1DFe207aa4514C12a259A0492B')
+    proxy_registry = contract('0x4678f0a6958e4D2Bc4F1BAF7Bc52E8F3564f3fE4')
+    cdp_manager = contract('0x5ef30b9986345249bc32d8928B7ee64DE9435E39')
+    ychad = contract('0xfeb4acf3df3cdea7399794d0869ef76a6efaff52')
+    vat = contract('0x35D1b3F3D7966A1DFe207aa4514C12a259A0492B')
     proxy = proxy_registry.proxies(ychad)
     cdp = cdp_manager.first(proxy)
     urn = cdp_manager.urns(cdp)
@@ -156,7 +156,7 @@ def dataframe(block):
     
     # NOTE: Unit.xyz
     print('fetching Unit.xyz data')
-    unitVault = Contract("0xb1cff81b9305166ff1efc49a129ad2afcd7bcf19")
+    unitVault = contract("0xb1cff81b9305166ff1efc49a129ad2afcd7bcf19")
     debt = unitVault.getTotalDebt('0x0bc529c00C6401aEF6D220BE8C6Ea1667F6Ad93e',ychad, block_identifier = block)
     if debt > 0:
         df = appendmore('0x1456688345527bE1f37E9e627DA0837D6f08C925', -1 * debt / 10 ** 18,'0xfeb4acf3df3cdea7399794d0869ef76a6efaff52',category='Debt')
@@ -171,8 +171,8 @@ def dataframe(block):
     # NOTE: This doesn't factor in bonded KP3R or LP tokens, get bonded KP3R and LP tokens
     print('fetching KP3R escrow data')
     yearnKp3rWallet = "0x5f0845101857d2a91627478e302357860b1598a1"
-    escrow = Contract("0xf14cb1feb6c40f26d9ca0ea39a9a613428cdc9ca")
-    kp3rLPtoken = Contract("0xaf988aff99d3d0cb870812c325c588d8d8cb7de8")
+    escrow = contract("0xf14cb1feb6c40f26d9ca0ea39a9a613428cdc9ca")
+    kp3rLPtoken = contract("0xaf988aff99d3d0cb870812c325c588d8d8cb7de8")
     bal = escrow.userLiquidityTotalAmount(yearnKp3rWallet,kp3rLPtoken, block_identifier = block)
     if bal > 0:
         df = appendmore(kp3rLPtoken.address, bal / 10 ** 18,escrow.address,wallet_label='KP3R Escrow')

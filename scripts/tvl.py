@@ -24,11 +24,9 @@ def main():
 
     products = groupby(lambda x: x["product"], data)
     tvl_by_product = {a: sum(x["tvl"] for x in b) for a, b in products.items()}
-    duplicate = sum(x["tvl"] for x in data if x["name"] in ["curve.fi/busd", "curve.fi/y"])
     table = [
         *tvl_by_product.items(),
-        [style("duplicate", fg="red"), -duplicate],
         [style("total", fg="yellow"), sum(tvl_by_product.values())],
-        [style("final", fg="green", bold=True), sum(tvl_by_product.values()) - duplicate],
+        [style("final", fg="green", bold=True), sum(tvl_by_product.values())],
     ]
     print(tabulate(table, headers=["product", "tvl"], floatfmt=",.0f"))

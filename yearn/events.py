@@ -8,7 +8,7 @@ from joblib import Parallel, delayed
 from toolz import groupby
 from web3.middleware.filter import block_ranges
 
-from yearn.middleware import BATCH_SIZE
+from yearn.middleware.middleware import BATCH_SIZE
 from yearn.utils import contract_creation_block
 
 logger = logging.getLogger(__name__)
@@ -47,7 +47,7 @@ def get_logs_asap(address, topics, from_block=None, to_block=None, verbose=0):
     if to_block is None:
         to_block = chain.height
 
-    ranges = list(block_ranges(from_block, to_block, BATCH_SIZE))
+    ranges = list(block_ranges(from_block, to_block, BATCH_SIZE[chain.id]))
     if verbose > 0:
         logger.info('fetching %d batches', len(ranges))
 

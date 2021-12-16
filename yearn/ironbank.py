@@ -1,13 +1,28 @@
 from collections import defaultdict
 from dataclasses import dataclass
+from functools import cached_property
 
-from brownie import Contract
+from brownie import Contract, chain
 from brownie.network.contract import InterfaceContainer
+from cachetools.func import ttl_cache
 from joblib import Parallel, delayed
+from yearn.exceptions import UnsupportedNetwork
 
-from yearn.utils import contract_creation_block
 from yearn.multicall2 import multicall_matrix
 from yearn.prices import magic
+from yearn.networks import Network
+from yearn.prices.compound import get_fantom_ironbank
+from yearn.prices.compound import compound
+from yearn.utils import contract
+import logging
+
+logger = logging.getLogger(__name__)
+
+addresses = {
+    Network.Mainnet: '0xAB1c342C7bf5Ec5F02ADEA1c2270670bCa144CbB',
+    Network.Fantom: get_fantom_ironbank,
+    Network.Arbitrum: '0xbadaC56c9aca307079e8B8FC699987AAc89813ee',
+}
 
 
 @dataclass
@@ -26,13 +41,21 @@ class IronbankMarket:
 
 class Registry:
     def __init__(self):
-        ironbank = Contract("0xAB1c342C7bf5Ec5F02ADEA1c2270670bCa144CbB")
-        # TODO keep the list updated
-        markets = [Contract(market) for market in ironbank.getAllMarkets()]
+        if chain.id not in addresses:
+            raise UnsupportedNetwork('iron bank is not supported on this network')
+        self.vaults  # load the markets on init
+
+    def __repr__(self):
+        return f"<IronBank markets={len(self.vaults)}>"
+
+    @property
+    @ttl_cache(ttl=3600)
+    def vaults(self):
+        markets = [Contract(market) for market in self.ironbank.getAllMarkets()]
         cdata = multicall_matrix(markets, ["symbol", "underlying", "decimals"])
         underlying = [Contract(cdata[x]["underlying"]) for x in markets]
         data = multicall_matrix(underlying, ["symbol", "decimals"])
-        self.vaults = [
+        vaults = [
             IronbankMarket(
                 cdata[market]["symbol"],
                 market,
@@ -43,9 +66,13 @@ class Registry:
             )
             for market, token in zip(markets, underlying)
         ]
+        logger.info('loaded %d ironbank markets', len(vaults))
+        return vaults
 
-    def __repr__(self):
-        return f"<IronBank markets={len(self.vaults)}>"
+    @cached_property
+    def ironbank(self):
+        addr = addresses[chain.id]
+        return contract(addr) if isinstance(addr, str) else addr()
 
     def describe(self, block=None):
         markets = self.active_vaults_at(block)
@@ -66,7 +93,8 @@ class Registry:
         )
 
         prices = Parallel(8, "threading")(
-            delayed(magic.get_price)(market.underlying, block=block) for market in markets
+            delayed(magic.get_price)(market.underlying, block=block)
+            for market in markets
         )
         output = defaultdict(dict)
         for m, price in zip(markets, prices):
@@ -106,7 +134,9 @@ class Registry:
             block=block,
         )
 
-        prices = Parallel(8, "threading")(delayed(magic.get_price)(market.vault, block=block) for market in markets)
+        prices = Parallel(8, "threading")(
+            delayed(magic.get_price)(market.vault, block=block) for market in markets
+        )
         results = [data[market.vault] for market in markets]
         return {
             # market.name: (res["getCash"] + res["totalBorrows"] - res["totalReserves"]) / 10 ** market.decimals * price
@@ -117,10 +147,9 @@ class Registry:
     def active_vaults_at(self, block=None):
         if block is None:
             return self.vaults
-        
-        ironbank = Contract("0xAB1c342C7bf5Ec5F02ADEA1c2270670bCa144CbB")
+
         try:
-            active_markets_at_block = ironbank.getAllMarkets(block_identifier=block)
+            active_markets_at_block = self.ironbank.getAllMarkets(block_identifier=block)
             return [market for market in self.vaults if market.vault in active_markets_at_block]
         except ValueError:
             return []

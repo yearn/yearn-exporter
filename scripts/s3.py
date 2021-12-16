@@ -9,11 +9,10 @@ import os
 
 from datetime import datetime
 from typing import Any, Union
-
 from time import time
 
 from brownie.network.contract import Contract
-from brownie import web3
+from brownie import web3, chain
 
 from yearn.special import Backscratcher, YveCRVJar
 
@@ -28,9 +27,10 @@ from yearn.v2.registry import Registry as RegistryV2
 from yearn.v1.vaults import VaultV1
 from yearn.v2.vaults import Vault as VaultV2
 
-from yearn.utils import contract_creation_block
+from yearn.utils import contract_creation_block, contract
 
-from yearn.prices.magic import PriceError
+from yearn.exceptions import PriceError
+from yearn.networks import Network
 
 warnings.simplefilter("ignore", BrownieEnvironmentWarning)
 
@@ -100,20 +100,27 @@ def wrap_vault(
         "migration": migration,
     }
 
-    if any([isinstance(vault, t) for t in [Backscratcher, YveCRVJar]]):
+    if chain.id == 1 and any([isinstance(vault, t) for t in [Backscratcher, YveCRVJar]]):
         object["special"] = True
 
     return object
 
 
 def get_assets_metadata(vault_v2: list) -> dict:
-    registry_v2_adapter = Contract(web3.ens.resolve("lens.ychad.eth"))
+    registry_v2_adapter = registry_adapter()
     addresses = [str(vault.vault) for vault in vault_v2]
     assets_dynamic_data = registry_v2_adapter.assetsDynamic(addresses)
     assets_metadata = {}
     for datum in assets_dynamic_data:
         assets_metadata[datum[0]] = datum[-1]
     return assets_metadata
+
+def registry_adapter():
+    if chain.id == Network.Mainnet:
+        registry_adapter_address = web3.ens.resolve("lens.ychad.eth")
+    elif chain.id == Network.Fantom:
+        registry_adapter_address = "0xF628Fb7436fFC382e2af8E63DD7ccbaa142E3cd1"
+    return contract(registry_adapter_address)
 
 
 def main():
@@ -131,13 +138,18 @@ def main():
 
     samples = get_samples()
 
-    special = [YveCRVJar(), Backscratcher()]
-    registry_v1 = RegistryV1()
     registry_v2 = RegistryV2()
+
+    if chain.id == Network.Mainnet:
+        special = [YveCRVJar(), Backscratcher()]
+        registry_v1 = RegistryV1()
+        vaults = itertools.chain(special, registry_v1.vaults, registry_v2.vaults, registry_v2.experiments)
+    elif chain.id == Network.Fantom:
+        vaults = registry_v2.vaults
 
     assets_metadata = get_assets_metadata(registry_v2.vaults)
 
-    for vault in itertools.chain(special, registry_v1.vaults, registry_v2.vaults, registry_v2.experiments):
+    for vault in vaults:
         data.append(wrap_vault(vault, samples, aliases, icon_url, assets_metadata))
 
     out = "generated"
@@ -145,13 +157,9 @@ def main():
         shutil.rmtree(out)
     os.makedirs(out, exist_ok=True)
 
-    vaults_api_path = os.path.join("v1", "chains", "1", "vaults")
+    vaults_api_path = os.path.join("v1", "chains", f"{chain.id}", "vaults")
 
     os.makedirs(os.path.join(out, vaults_api_path), exist_ok=True)
-
-    # for vault in data:
-    #     with open(os.path.join(namespace_vaults, vault["address"]), "w+") as f:
-    #         json.dump(vault, f)
 
     endorsed = [vault for vault in data if vault["endorsed"]]
     experimental = [vault for vault in data if not vault["endorsed"]]
@@ -187,7 +195,7 @@ def main():
     )
 
 
-telegram_users_to_alert = ["@nymmrx", "@x48114", "@dudesahn"]
+telegram_users_to_alert = ["@jstashh", "@x48114", "@dudesahn"]
 
 
 def with_monitoring():
@@ -197,7 +205,7 @@ def with_monitoring():
     public_group = os.environ.get('TG_YFIREBOT_GROUP_EXTERNAL')
     updater = Updater(os.environ.get('TG_YFIREBOT'))
     now = datetime.now()
-    message = f"`[{now}]`\n⚙️ API (vaults) is updating..."
+    message = f"`[{now}]`\n⚙️ API (vaults) for {Network(chain.id).name} is updating..."
     ping = updater.bot.send_message(chat_id=private_group, text=message, parse_mode="Markdown")
     ping = ping.message_id
     try:
@@ -206,9 +214,9 @@ def with_monitoring():
         tb = traceback.format_exc()
         now = datetime.now()
         tags = " ".join(telegram_users_to_alert)
-        message = f"`[{now}]`\n🔥 API (vaults) update failed!\n```\n{tb}\n```\n{tags}"
+        message = f"`[{now}]`\n🔥 API (vaults) update for {Network(chain.id).name} failed!\n```\n{tb}\n```\n{tags}"
         updater.bot.send_message(chat_id=private_group, text=message, parse_mode="Markdown", reply_to_message_id=ping)
         updater.bot.send_message(chat_id=public_group, text=message, parse_mode="Markdown")
         raise error
-    message = "✅ API (vaults) update successful!"
+    message = f"✅ API (vaults) update for {Network(chain.id).name} successful!"
     updater.bot.send_message(chat_id=private_group, text=message, reply_to_message_id=ping)

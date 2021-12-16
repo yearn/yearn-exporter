@@ -1,11 +1,13 @@
 import logging
 from functools import cached_property
 
-from brownie import Contract
+from brownie import chain, ZERO_ADDRESS
 from cachetools.func import lru_cache, ttl_cache
 
 from yearn.events import decode_logs, get_logs_asap
-from yearn.utils import Singleton
+from yearn.utils import Singleton, contract
+from yearn.networks import Network
+from yearn.exceptions import UnsupportedNetwork
 
 logger = logging.getLogger(__name__)
 
@@ -23,23 +25,21 @@ ADDITIONAL_FEEDS = {
     "0xD71eCFF9342A5Ced620049e616c5035F1dB98620": "0xb49f677943BC038e9857d61E7d053CaA2C1734C1",  # seur -> eur
     "0x81d66D255D47662b6B16f3C5bbfBb15283B05BC2": "0x438F81D95761d7036cd2617295827D9d01Cf593f",  # ibzar -> zar
 }
-
-SCALE = 10 ** 8
+registries = {
+    # https://docs.chain.link/docs/feed-registry/#contract-addresses
+    Network.Mainnet: '0x47Fb2585D2C56Fe188D0E6ec628a38b74fCeeeDf',
+}
 
 
 class Chainlink(metaclass=Singleton):
     def __init__(self):
-        self.feeds = {}
+        if chain.id not in registries:
+            raise UnsupportedNetwork('chainlink is not supported on this network')
 
-    @cached_property
-    def registry(self):
-        # https://docs.chain.link/docs/feed-registry/#contract-addresses
-        return Contract('0x47Fb2585D2C56Fe188D0E6ec628a38b74fCeeeDf')
+        self.registry = contract(registries[chain.id])
+        self.load_feeds()
 
-    @ttl_cache(ttl=3600)
     def load_feeds(self):
-        if self.feeds:
-            return
         logs = decode_logs(
             get_logs_asap(str(self.registry), [self.registry.topics['FeedConfirmed']])
         )
@@ -51,25 +51,24 @@ class Chainlink(metaclass=Singleton):
         self.feeds.update(ADDITIONAL_FEEDS)
         logger.info(f'loaded {len(self.feeds)} feeds')
 
-    @lru_cache(maxsize=None)
     def get_feed(self, asset):
-        self.load_feeds()
-        return Contract(self.feeds[asset])
+        return contract(self.feeds[asset])
 
     def __contains__(self, asset):
-        self.load_feeds()
         return asset in self.feeds
 
+    @ttl_cache(maxsize=None, ttl=600)
     def get_price(self, asset, block=None):
-        return self.get_feed(asset).latestAnswer(block_identifier=block) / SCALE
+        if asset == ZERO_ADDRESS:
+            return None
+        try:
+            return self.get_feed(asset).latestAnswer(block_identifier=block) / 1e8
+        except ValueError:
+            return None
 
 
-chainlink = Chainlink()
-
-
-@ttl_cache(maxsize=None, ttl=600)
-def get_price(asset, block=None):
-    try:
-        return chainlink.get_price(asset, block)
-    except (KeyError, ValueError):
-        return None
+chainlink = None
+try:
+    chainlink = Chainlink()
+except UnsupportedNetwork:
+    pass

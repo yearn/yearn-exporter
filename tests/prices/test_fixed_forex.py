@@ -1,5 +1,5 @@
 import pytest
-from yearn.prices import fixed_forex
+from yearn.prices.fixed_forex import fixed_forex
 
 MARKETS = [
     "0xFAFdF0C4c1CB09d430Bf88c75D88BB46DAe09967",
@@ -14,7 +14,7 @@ REGISTRY_DEPLOY_BLOCK = 13145626
 
 @pytest.mark.parametrize('token', MARKETS)
 def test_is_fixed_forex(token):
-    assert fixed_forex.is_fixed_forex(token)
+    assert token in fixed_forex
 
 
 @pytest.mark.parametrize('token', MARKETS)

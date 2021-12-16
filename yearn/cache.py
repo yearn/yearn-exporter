@@ -1,3 +1,4 @@
+from brownie import chain
 from joblib import Memory
 
-memory = Memory("cache", verbose=0)
+memory = Memory(f'cache/{chain.id}', verbose=0)

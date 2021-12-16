@@ -7,7 +7,7 @@ import requests
 from brownie import chain, multicall, web3
 from tabulate import tabulate
 from yearn.prices import curve
-from yearn.prices.magic import PriceError
+from yearn.exceptions import PriceError
 from yearn.utils import contract, contract_creation_block
 
 pooldata = json.load(open('tests/fixtures/pooldata.json'))

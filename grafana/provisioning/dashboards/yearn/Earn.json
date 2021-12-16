@@ -1,4 +1,47 @@
 {
+  "__inputs": [
+    {
+      "name": "DS_PROMETHEUS",
+      "label": "Prometheus",
+      "description": "",
+      "type": "datasource",
+      "pluginId": "prometheus",
+      "pluginName": "Prometheus"
+    }
+  ],
+  "__elements": [],
+  "__requires": [
+    {
+      "type": "grafana",
+      "id": "grafana",
+      "name": "Grafana",
+      "version": "8.3.1"
+    },
+    {
+      "type": "panel",
+      "id": "graph",
+      "name": "Graph (old)",
+      "version": ""
+    },
+    {
+      "type": "datasource",
+      "id": "prometheus",
+      "name": "Prometheus",
+      "version": "1.0.0"
+    },
+    {
+      "type": "panel",
+      "id": "stat",
+      "name": "Stat",
+      "version": ""
+    },
+    {
+      "type": "panel",
+      "id": "timeseries",
+      "name": "Time series",
+      "version": ""
+    }
+  ],
   "annotations": {
     "list": [
       {
@@ -8,19 +51,30 @@
         "hide": true,
         "iconColor": "rgba(0, 211, 255, 1)",
         "name": "Annotations & Alerts",
+        "target": {
+          "limit": 100,
+          "matchAny": false,
+          "tags": [],
+          "type": "dashboard"
+        },
         "type": "dashboard"
       }
     ]
   },
   "description": "This dashboard provides a general overview on all of Earn's products.",
   "editable": true,
-  "gnetId": null,
+  "fiscalYearStartMonth": 0,
   "graphTooltip": 0,
-  "id": 32,
+  "id": null,
+  "iteration": 1639199550178,
   "links": [],
+  "liveNow": false,
   "panels": [
     {
-      "datasource": "DS_PROMETHEUS",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "DS_PROMETHEUS"
+      },
       "description": "Total Valued Locked in Yearn's yEarn products. This sum includes y.curve.fi (v2) & busd.curve.fi (v3).",
       "fieldConfig": {
         "defaults": {
@@ -49,8 +103,8 @@
         "overrides": []
       },
       "gridPos": {
-        "h": 5,
-        "w": 24,
+        "h": 4,
+        "w": 6,
         "x": 0,
         "y": 0
       },
@@ -70,11 +124,15 @@
         "text": {},
         "textMode": "auto"
       },
-      "pluginVersion": "8.0.3",
+      "pluginVersion": "8.3.1",
       "targets": [
         {
-          "exemplar": true,
-          "expr": "sum(iearn{param=\"tvl\"})",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "DS_PROMETHEUS"
+          },
+          "exemplar": false,
+          "expr": "sum(iearn{network=\"ETH\", param=\"tvl\"})",
           "format": "time_series",
           "instant": true,
           "interval": "",
@@ -84,14 +142,15 @@
           "refId": "A"
         }
       ],
-      "timeFrom": null,
-      "timeShift": null,
-      "title": "TVL Earn v2 & v3",
+      "title": "yEarn TVL",
       "transparent": true,
       "type": "stat"
     },
     {
-      "datasource": "DS_PROMETHEUS",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "DS_PROMETHEUS"
+      },
       "description": "Daily change in TVL in Yearn's yEarn products. This sum includes y.curve.fi (v2) & busd.curve.fi (v3).",
       "fieldConfig": {
         "defaults": {
@@ -110,7 +169,7 @@
             "mode": "absolute",
             "steps": [
               {
-                "color": "purple",
+                "color": "super-light-blue",
                 "value": null
               }
             ]
@@ -122,8 +181,8 @@
       "gridPos": {
         "h": 4,
         "w": 6,
-        "x": 0,
-        "y": 5
+        "x": 6,
+        "y": 0
       },
       "id": 33,
       "options": {
@@ -141,11 +200,11 @@
         "text": {},
         "textMode": "auto"
       },
-      "pluginVersion": "8.0.3",
+      "pluginVersion": "8.3.1",
       "targets": [
         {
           "exemplar": true,
-          "expr": "sum(delta(iearn{param=\"tvl\"}[1d]))",
+          "expr": "sum(delta(iearn{network=\"ETH\", param=\"tvl\"}[1d]))",
           "format": "time_series",
           "instant": false,
           "interval": "",
@@ -155,14 +214,15 @@
           "refId": "A"
         }
       ],
-      "timeFrom": null,
-      "timeShift": null,
       "title": "Daily Delta",
       "transparent": true,
       "type": "stat"
     },
     {
-      "datasource": "DS_PROMETHEUS",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "DS_PROMETHEUS"
+      },
       "description": "Weekly change in TVL in Yearn's yEarn products. This sum includes y.curve.fi (v2) & busd.curve.fi (v3).",
       "fieldConfig": {
         "defaults": {
@@ -181,7 +241,7 @@
             "mode": "absolute",
             "steps": [
               {
-                "color": "purple",
+                "color": "super-light-blue",
                 "value": null
               }
             ]
@@ -193,8 +253,8 @@
       "gridPos": {
         "h": 4,
         "w": 6,
-        "x": 9,
-        "y": 5
+        "x": 12,
+        "y": 0
       },
       "id": 34,
       "options": {
@@ -212,11 +272,11 @@
         "text": {},
         "textMode": "auto"
       },
-      "pluginVersion": "8.0.3",
+      "pluginVersion": "8.3.1",
       "targets": [
         {
           "exemplar": true,
-          "expr": "sum(delta(iearn{param=\"tvl\"}[1w]))",
+          "expr": "sum(delta(iearn{network=\"ETH\", param=\"tvl\"}[1w]))",
           "format": "time_series",
           "instant": false,
           "interval": "",
@@ -226,14 +286,15 @@
           "refId": "A"
         }
       ],
-      "timeFrom": null,
-      "timeShift": null,
       "title": "Weekly Delta",
       "transparent": true,
       "type": "stat"
     },
     {
-      "datasource": "DS_PROMETHEUS",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "DS_PROMETHEUS"
+      },
       "description": "Monthly change in TVL in Yearn's yEarn products. This sum includes y.curve.fi (v2) & busd.curve.fi (v3).",
       "fieldConfig": {
         "defaults": {
@@ -252,7 +313,7 @@
             "mode": "absolute",
             "steps": [
               {
-                "color": "purple",
+                "color": "super-light-blue",
                 "value": null
               }
             ]
@@ -265,7 +326,7 @@
         "h": 4,
         "w": 6,
         "x": 18,
-        "y": 5
+        "y": 0
       },
       "id": 35,
       "options": {
@@ -283,11 +344,11 @@
         "text": {},
         "textMode": "auto"
       },
-      "pluginVersion": "8.0.3",
+      "pluginVersion": "8.3.1",
       "targets": [
         {
           "exemplar": true,
-          "expr": "sum(delta(iearn{param=\"tvl\"}[4w]))",
+          "expr": "sum(delta(iearn{network=\"ETH\", param=\"tvl\"}[4w]))",
           "format": "time_series",
           "instant": false,
           "interval": "",
@@ -297,20 +358,17 @@
           "refId": "A"
         }
       ],
-      "timeFrom": null,
-      "timeShift": null,
       "title": "Monthly Delta",
       "transparent": true,
       "type": "stat"
     },
     {
       "collapsed": true,
-      "datasource": null,
       "gridPos": {
         "h": 1,
         "w": 24,
         "x": 0,
-        "y": 9
+        "y": 4
       },
       "id": 44,
       "panels": [
@@ -319,7 +377,10 @@
           "bars": false,
           "dashLength": 10,
           "dashes": false,
-          "datasource": "DS_PROMETHEUS",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "DS_PROMETHEUS"
+          },
           "decimals": 4,
           "description": "Earn TVL and Daily inflow/outflow. ",
           "fieldConfig": {
@@ -341,7 +402,7 @@
             "h": 10,
             "w": 24,
             "x": 0,
-            "y": 10
+            "y": 5
           },
           "hiddenSeries": false,
           "id": 19,
@@ -365,7 +426,7 @@
             "alertThreshold": false
           },
           "percentage": false,
-          "pluginVersion": "8.0.3",
+          "pluginVersion": "8.3.1",
           "pointradius": 2,
           "points": false,
           "renderer": "flot",
@@ -385,7 +446,7 @@
           "targets": [
             {
               "exemplar": true,
-              "expr": "sum(iearn{param=\"tvl\"})",
+              "expr": "sum(iearn{network=\"ETH\", param=\"tvl\"})",
               "format": "time_series",
               "instant": false,
               "interval": "",
@@ -396,7 +457,7 @@
             },
             {
               "exemplar": true,
-              "expr": "sum(delta(iearn{param=\"tvl\"}[1d]))",
+              "expr": "sum(delta(iearn{network=\"ETH\", param=\"tvl\"}[1d]))",
               "hide": false,
               "interval": "",
               "legendFormat": "net inflow/outflow - daily",
@@ -404,9 +465,7 @@
             }
           ],
           "thresholds": [],
-          "timeFrom": null,
           "timeRegions": [],
-          "timeShift": null,
           "title": "Earn - TVL",
           "tooltip": {
             "shared": true,
@@ -416,9 +475,7 @@
           "transparent": true,
           "type": "graph",
           "xaxis": {
-            "buckets": null,
             "mode": "time",
-            "name": null,
             "show": true,
             "values": []
           },
@@ -429,23 +486,17 @@
               "format": "short",
               "label": "",
               "logBase": 1,
-              "max": null,
-              "min": null,
               "show": true
             },
             {
               "$$hashKey": "object:404",
               "format": "short",
-              "label": null,
               "logBase": 1,
-              "max": null,
-              "min": null,
               "show": false
             }
           ],
           "yaxis": {
-            "align": false,
-            "alignLevel": null
+            "align": false
           }
         }
       ],
@@ -454,12 +505,11 @@
     },
     {
       "collapsed": true,
-      "datasource": null,
       "gridPos": {
         "h": 1,
         "w": 24,
         "x": 0,
-        "y": 10
+        "y": 5
       },
       "id": 26,
       "panels": [
@@ -468,7 +518,10 @@
           "bars": false,
           "dashLength": 10,
           "dashes": false,
-          "datasource": "DS_PROMETHEUS",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "DS_PROMETHEUS"
+          },
           "decimals": 2,
           "description": "TVL locked in Earn v2. You can shift + right-click on v2 AUM to exclude it from the graph (making it look nicer)",
           "fieldConfig": {
@@ -488,9 +541,9 @@
           "fillGradient": 0,
           "gridPos": {
             "h": 8,
-            "w": 12,
+            "w": 24,
             "x": 0,
-            "y": 11
+            "y": 6
           },
           "hiddenSeries": false,
           "id": 10,
@@ -508,22 +561,21 @@
             "values": true
           },
           "lines": true,
-          "linewidth": 2,
+          "linewidth": 1,
           "nullPointMode": "connected",
           "options": {
             "alertThreshold": false
           },
           "percentage": false,
-          "pluginVersion": "8.0.3",
+          "pluginVersion": "8.3.1",
           "pointradius": 2,
           "points": false,
           "renderer": "flot",
           "seriesOverrides": [
             {
               "$$hashKey": "object:1450",
-              "alias": "iEarn v2 AUM",
+              "alias": "TVL",
               "color": "rgb(204, 204, 220)",
-              "legend": false,
               "linewidth": 1,
               "yaxis": 2,
               "zindex": 3
@@ -534,7 +586,12 @@
           "steppedLine": false,
           "targets": [
             {
-              "expr": "iearn{param=\"tvl\", vault=~\".*v2\"}",
+              "datasource": {
+                "type": "prometheus",
+                "uid": "DS_PROMETHEUS"
+              },
+              "exemplar": true,
+              "expr": "iearn{network=\"ETH\", param=\"tvl\", vault=~\"$earn\"}",
               "format": "time_series",
               "instant": false,
               "interval": "",
@@ -544,18 +601,21 @@
               "refId": "A"
             },
             {
-              "expr": "sum(iearn{param=\"tvl\", vault=~\".*v2\"})",
+              "datasource": {
+                "type": "prometheus",
+                "uid": "DS_PROMETHEUS"
+              },
+              "exemplar": true,
+              "expr": "sum(iearn{network=\"ETH\", param=\"tvl\", vault=~\"$earn\"})",
               "hide": false,
               "interval": "",
-              "legendFormat": "iEarn v2 AUM",
+              "legendFormat": "TVL",
               "refId": "B"
             }
           ],
           "thresholds": [],
-          "timeFrom": null,
           "timeRegions": [],
-          "timeShift": null,
-          "title": "y.curve.fi (v2) Earn - TVL",
+          "title": "tvl",
           "tooltip": {
             "shared": true,
             "sort": 2,
@@ -564,9 +624,7 @@
           "transparent": true,
           "type": "graph",
           "xaxis": {
-            "buckets": null,
             "mode": "time",
-            "name": null,
             "show": true,
             "values": []
           },
@@ -576,8 +634,6 @@
               "format": "short",
               "label": "AUM",
               "logBase": 1,
-              "max": null,
-              "min": null,
               "show": true
             },
             {
@@ -586,14 +642,11 @@
               "format": "short",
               "label": "Total AUM",
               "logBase": 1,
-              "max": null,
-              "min": null,
               "show": true
             }
           ],
           "yaxis": {
-            "align": false,
-            "alignLevel": null
+            "align": false
           }
         },
         {
@@ -601,9 +654,12 @@
           "bars": false,
           "dashLength": 10,
           "dashes": false,
-          "datasource": "DS_PROMETHEUS",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "DS_PROMETHEUS"
+          },
           "decimals": 2,
-          "description": "Daily Change in TVL locked in Earn v2. You can shift + right-click on v2 AUM to exclude it from the graph (making it look nicer)",
+          "description": "Daily Change in TVL locked in $earn. You can shift + right-click on net inflow/outflow to exclude it from the graph (making it look nicer)",
           "fieldConfig": {
             "defaults": {
               "links": [
@@ -621,9 +677,9 @@
           "fillGradient": 0,
           "gridPos": {
             "h": 8,
-            "w": 12,
-            "x": 12,
-            "y": 11
+            "w": 24,
+            "x": 0,
+            "y": 14
           },
           "hiddenSeries": false,
           "id": 21,
@@ -641,20 +697,20 @@
             "values": true
           },
           "lines": true,
-          "linewidth": 2,
+          "linewidth": 1,
           "nullPointMode": "connected",
           "options": {
             "alertThreshold": false
           },
           "percentage": false,
-          "pluginVersion": "8.0.3",
+          "pluginVersion": "8.3.1",
           "pointradius": 2,
           "points": false,
           "renderer": "flot",
           "seriesOverrides": [
             {
               "$$hashKey": "object:1450",
-              "alias": "net inflow/outflow v2",
+              "alias": "net inflow/outflow",
               "color": "rgb(204, 204, 220)",
               "linewidth": 1,
               "yaxis": 2,
@@ -666,8 +722,12 @@
           "steppedLine": false,
           "targets": [
             {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "DS_PROMETHEUS"
+              },
               "exemplar": true,
-              "expr": "delta(iearn{param=\"tvl\", vault=~\".*v2\"}[1d]) !=0",
+              "expr": "delta(iearn{network=\"ETH\", param=\"tvl\", vault=~\"$earn\"}[1d]) !=0",
               "format": "time_series",
               "instant": false,
               "interval": "",
@@ -677,19 +737,21 @@
               "refId": "A"
             },
             {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "DS_PROMETHEUS"
+              },
               "exemplar": true,
-              "expr": "sum(delta(iearn{param=\"tvl\", vault=~\".*v2\"}[1d]))",
+              "expr": "sum(delta(iearn{network=\"ETH\", param=\"tvl\", vault=~\"$earn\"}[1d]))",
               "hide": false,
               "interval": "",
-              "legendFormat": "net inflow/outflow v2",
+              "legendFormat": "net inflow/outflow",
               "refId": "B"
             }
           ],
           "thresholds": [],
-          "timeFrom": null,
           "timeRegions": [],
-          "timeShift": null,
-          "title": "y.curve.fi (v2) Earn - TVL Daily",
+          "title": "tvl daily change",
           "tooltip": {
             "shared": true,
             "sort": 2,
@@ -698,9 +760,7 @@
           "transparent": true,
           "type": "graph",
           "xaxis": {
-            "buckets": null,
             "mode": "time",
-            "name": null,
             "show": true,
             "values": []
           },
@@ -710,8 +770,6 @@
               "format": "short",
               "label": "Daily Change AUM",
               "logBase": 1,
-              "max": null,
-              "min": null,
               "show": true
             },
             {
@@ -720,282 +778,11 @@
               "format": "short",
               "label": "Net Inflow/Outflow",
               "logBase": 1,
-              "max": null,
-              "min": null,
               "show": true
             }
           ],
           "yaxis": {
-            "align": false,
-            "alignLevel": null
-          }
-        },
-        {
-          "aliasColors": {},
-          "bars": false,
-          "dashLength": 10,
-          "dashes": false,
-          "datasource": "DS_PROMETHEUS",
-          "decimals": 2,
-          "description": "TVL locked in Earn v3. You can shift + right-click on v3 AUM to exclude it from the graph (making it look nicer)",
-          "fieldConfig": {
-            "defaults": {
-              "links": [
-                {
-                  "targetBlank": true,
-                  "title": "Earn ",
-                  "url": "https://v1.yearn.finance/earn"
-                }
-              ],
-              "unit": "short"
-            },
-            "overrides": []
-          },
-          "fill": 0,
-          "fillGradient": 0,
-          "gridPos": {
-            "h": 8,
-            "w": 12,
-            "x": 0,
-            "y": 19
-          },
-          "hiddenSeries": false,
-          "id": 11,
-          "legend": {
-            "alignAsTable": true,
-            "avg": false,
-            "current": true,
-            "max": false,
-            "min": false,
-            "rightSide": true,
-            "show": true,
-            "sort": "current",
-            "sortDesc": true,
-            "total": false,
-            "values": true
-          },
-          "lines": true,
-          "linewidth": 2,
-          "nullPointMode": "connected",
-          "options": {
-            "alertThreshold": false
-          },
-          "percentage": false,
-          "pluginVersion": "8.0.3",
-          "pointradius": 2,
-          "points": false,
-          "renderer": "flot",
-          "seriesOverrides": [
-            {
-              "$$hashKey": "object:1692",
-              "alias": "iEarn v3 AUM",
-              "color": "rgb(204, 204, 220)",
-              "legend": false,
-              "linewidth": 1,
-              "yaxis": 2,
-              "zindex": 3
-            }
-          ],
-          "spaceLength": 10,
-          "stack": false,
-          "steppedLine": true,
-          "targets": [
-            {
-              "expr": "iearn{param=\"tvl\", vault=~\".*v3\"}",
-              "format": "time_series",
-              "instant": false,
-              "interval": "",
-              "intervalFactor": 1,
-              "legendFormat": "{{vault}}",
-              "queryType": "randomWalk",
-              "refId": "A"
-            },
-            {
-              "exemplar": true,
-              "expr": "sum(iearn{param=\"tvl\", vault=~\".*v3\"})",
-              "hide": false,
-              "interval": "",
-              "legendFormat": "iEarn v3 AUM",
-              "refId": "B"
-            }
-          ],
-          "thresholds": [],
-          "timeFrom": null,
-          "timeRegions": [],
-          "timeShift": null,
-          "title": "busd.curve.fi (v3) Earn - TVL",
-          "tooltip": {
-            "shared": true,
-            "sort": 2,
-            "value_type": "individual"
-          },
-          "transparent": true,
-          "type": "graph",
-          "xaxis": {
-            "buckets": null,
-            "mode": "time",
-            "name": null,
-            "show": true,
-            "values": []
-          },
-          "yaxes": [
-            {
-              "$$hashKey": "object:403",
-              "format": "short",
-              "label": "AUM",
-              "logBase": 1,
-              "max": null,
-              "min": null,
-              "show": true
-            },
-            {
-              "$$hashKey": "object:404",
-              "decimals": 2,
-              "format": "short",
-              "label": "Total AUM",
-              "logBase": 1,
-              "max": null,
-              "min": null,
-              "show": true
-            }
-          ],
-          "yaxis": {
-            "align": false,
-            "alignLevel": null
-          }
-        },
-        {
-          "aliasColors": {},
-          "bars": false,
-          "dashLength": 10,
-          "dashes": false,
-          "datasource": "DS_PROMETHEUS",
-          "decimals": 2,
-          "description": "Daily Change in TVL locked in Earn v3. You can shift + right-click on v2 AUM to exclude it from the graph (making it look nicer)",
-          "fieldConfig": {
-            "defaults": {
-              "links": [
-                {
-                  "targetBlank": true,
-                  "title": "Earn ",
-                  "url": "https://v1.yearn.finance/earn"
-                }
-              ],
-              "unit": "short"
-            },
-            "overrides": []
-          },
-          "fill": 0,
-          "fillGradient": 0,
-          "gridPos": {
-            "h": 8,
-            "w": 12,
-            "x": 12,
-            "y": 19
-          },
-          "hiddenSeries": false,
-          "id": 22,
-          "legend": {
-            "alignAsTable": true,
-            "avg": false,
-            "current": true,
-            "max": false,
-            "min": false,
-            "rightSide": true,
-            "show": true,
-            "sort": "current",
-            "sortDesc": true,
-            "total": false,
-            "values": true
-          },
-          "lines": true,
-          "linewidth": 2,
-          "nullPointMode": "connected",
-          "options": {
-            "alertThreshold": false
-          },
-          "percentage": false,
-          "pluginVersion": "8.0.3",
-          "pointradius": 2,
-          "points": false,
-          "renderer": "flot",
-          "seriesOverrides": [
-            {
-              "$$hashKey": "object:1450",
-              "alias": "net inflow/outflow v3",
-              "color": "rgb(204, 204, 220)",
-              "linewidth": 1,
-              "yaxis": 2,
-              "zindex": 3
-            }
-          ],
-          "spaceLength": 10,
-          "stack": false,
-          "steppedLine": false,
-          "targets": [
-            {
-              "exemplar": true,
-              "expr": "delta(iearn{param=\"tvl\", vault=~\".*v3\"}[1d]) !=0",
-              "format": "time_series",
-              "instant": false,
-              "interval": "",
-              "intervalFactor": 1,
-              "legendFormat": "{{vault}}",
-              "queryType": "randomWalk",
-              "refId": "A"
-            },
-            {
-              "exemplar": true,
-              "expr": "sum(delta(iearn{param=\"tvl\", vault=~\".*v3\"}[1d]))",
-              "hide": false,
-              "interval": "",
-              "legendFormat": "net inflow/outflow v3",
-              "refId": "B"
-            }
-          ],
-          "thresholds": [],
-          "timeFrom": null,
-          "timeRegions": [],
-          "timeShift": null,
-          "title": "busd.curve.fi (v3) Earn - TVL Daily",
-          "tooltip": {
-            "shared": true,
-            "sort": 2,
-            "value_type": "individual"
-          },
-          "transparent": true,
-          "type": "graph",
-          "xaxis": {
-            "buckets": null,
-            "mode": "time",
-            "name": null,
-            "show": true,
-            "values": []
-          },
-          "yaxes": [
-            {
-              "$$hashKey": "object:403",
-              "format": "short",
-              "label": "Daily Change AUM",
-              "logBase": 1,
-              "max": null,
-              "min": null,
-              "show": true
-            },
-            {
-              "$$hashKey": "object:404",
-              "decimals": 2,
-              "format": "short",
-              "label": "Net Inflow/Outflow",
-              "logBase": 1,
-              "max": null,
-              "min": null,
-              "show": true
-            }
-          ],
-          "yaxis": {
-            "align": false,
-            "alignLevel": null
+            "align": false
           }
         }
       ],
@@ -1004,17 +791,19 @@
     },
     {
       "collapsed": true,
-      "datasource": null,
       "gridPos": {
         "h": 1,
         "w": 24,
         "x": 0,
-        "y": 11
+        "y": 6
       },
       "id": 30,
       "panels": [
         {
-          "datasource": "DS_PROMETHEUS",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "DS_PROMETHEUS"
+          },
           "description": "",
           "fieldConfig": {
             "defaults": {
@@ -1047,7 +836,7 @@
             "h": 7,
             "w": 24,
             "x": 0,
-            "y": 12
+            "y": 7
           },
           "id": 17,
           "options": {
@@ -1065,10 +854,15 @@
             "text": {},
             "textMode": "auto"
           },
-          "pluginVersion": "8.0.3",
+          "pluginVersion": "8.3.1",
           "targets": [
             {
-              "expr": "sort(iearn{param=\"price per share\", vault=~\".*v2\"})",
+              "datasource": {
+                "type": "prometheus",
+                "uid": "DS_PROMETHEUS"
+              },
+              "exemplar": true,
+              "expr": "sort(iearn{network=\"ETH\", param=\"price per share\", vault=~\"$earn\"})",
               "format": "time_series",
               "instant": false,
               "interval": "",
@@ -1078,80 +872,7 @@
               "refId": "A"
             }
           ],
-          "timeFrom": null,
-          "timeShift": null,
-          "title": "y.curve.fi (v2) Earn - Share Price",
-          "transparent": true,
-          "type": "stat"
-        },
-        {
-          "datasource": "DS_PROMETHEUS",
-          "description": "",
-          "fieldConfig": {
-            "defaults": {
-              "color": {
-                "mode": "thresholds"
-              },
-              "decimals": 4,
-              "links": [
-                {
-                  "targetBlank": true,
-                  "title": "Earn ",
-                  "url": "https://v1.yearn.finance/earn"
-                }
-              ],
-              "mappings": [],
-              "thresholds": {
-                "mode": "absolute",
-                "steps": [
-                  {
-                    "color": "green",
-                    "value": null
-                  }
-                ]
-              },
-              "unit": "short"
-            },
-            "overrides": []
-          },
-          "gridPos": {
-            "h": 6,
-            "w": 18,
-            "x": 3,
-            "y": 19
-          },
-          "id": 18,
-          "options": {
-            "colorMode": "value",
-            "graphMode": "none",
-            "justifyMode": "auto",
-            "orientation": "auto",
-            "reduceOptions": {
-              "calcs": [
-                "lastNotNull"
-              ],
-              "fields": "",
-              "values": false
-            },
-            "text": {},
-            "textMode": "auto"
-          },
-          "pluginVersion": "8.0.3",
-          "targets": [
-            {
-              "expr": "iearn{param=\"price per share\", vault=~\".*v3\"}",
-              "format": "time_series",
-              "instant": false,
-              "interval": "",
-              "intervalFactor": 1,
-              "legendFormat": "{{vault}}",
-              "queryType": "randomWalk",
-              "refId": "A"
-            }
-          ],
-          "timeFrom": null,
-          "timeShift": null,
-          "title": "busd.curve.fi (v3) Earn - Share Price",
+          "title": "Share Price",
           "transparent": true,
           "type": "stat"
         }
@@ -1161,25 +882,55 @@
     },
     {
       "collapsed": true,
-      "datasource": null,
       "gridPos": {
         "h": 1,
         "w": 24,
         "x": 0,
-        "y": 12
+        "y": 7
       },
       "id": 28,
       "panels": [
         {
-          "aliasColors": {},
-          "bars": false,
-          "dashLength": 10,
-          "dashes": false,
-          "datasource": "DS_PROMETHEUS",
-          "decimals": 6,
-          "description": "Rate of increase of Earn's Share Price. If this goes up, that Earn product is compounding their yield gained from lending! This view helps normalize and show lending yield gained compared to other Earn products. The larger the spikes the more yield gain at that time from lending which was reinvested into the Earn product. The table shows the max value harvested for the timeframe selected.",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "DS_PROMETHEUS"
+          },
+          "description": "The current price of $earn lp token should increase steadily as the lending yield is compounded in the Earn pool.",
           "fieldConfig": {
             "defaults": {
+              "color": {
+                "mode": "palette-classic"
+              },
+              "custom": {
+                "axisGridShow": true,
+                "axisLabel": "Share Price",
+                "axisPlacement": "auto",
+                "barAlignment": 0,
+                "drawStyle": "line",
+                "fillOpacity": 32,
+                "gradientMode": "none",
+                "hideFrom": {
+                  "legend": false,
+                  "tooltip": false,
+                  "viz": false
+                },
+                "lineInterpolation": "stepAfter",
+                "lineWidth": 1,
+                "pointSize": 5,
+                "scaleDistribution": {
+                  "type": "linear"
+                },
+                "showPoints": "never",
+                "spanNulls": false,
+                "stacking": {
+                  "group": "A",
+                  "mode": "none"
+                },
+                "thresholdsStyle": {
+                  "mode": "off"
+                }
+              },
+              "decimals": 6,
               "links": [
                 {
                   "targetBlank": true,
@@ -1187,53 +938,75 @@
                   "url": "https://v1.yearn.finance/earn"
                 }
               ],
+              "mappings": [],
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {
+                    "color": "green",
+                    "value": null
+                  }
+                ]
+              },
               "unit": "short"
             },
-            "overrides": []
+            "overrides": [
+              {
+                "__systemRef": "hideSeriesFrom",
+                "matcher": {
+                  "id": "byNames",
+                  "options": {
+                    "mode": "exclude",
+                    "names": [
+                      "yBUSDv3"
+                    ],
+                    "prefix": "All except:",
+                    "readOnly": true
+                  }
+                },
+                "properties": [
+                  {
+                    "id": "custom.hideFrom",
+                    "value": {
+                      "legend": false,
+                      "tooltip": false,
+                      "viz": true
+                    }
+                  }
+                ]
+              }
+            ]
           },
-          "fill": 10,
-          "fillGradient": 10,
           "gridPos": {
             "h": 7,
             "w": 12,
             "x": 0,
-            "y": 13
+            "y": 8
           },
-          "hiddenSeries": false,
-          "id": 16,
-          "legend": {
-            "alignAsTable": true,
-            "avg": false,
-            "current": false,
-            "hideEmpty": false,
-            "hideZero": false,
-            "max": true,
-            "min": false,
-            "rightSide": true,
-            "show": true,
-            "sort": "max",
-            "sortDesc": true,
-            "total": false,
-            "values": true
-          },
-          "lines": true,
-          "linewidth": 2,
-          "nullPointMode": "null as zero",
+          "id": 14,
           "options": {
-            "alertThreshold": false
+            "legend": {
+              "calcs": [
+                "last"
+              ],
+              "displayMode": "table",
+              "placement": "right",
+              "sortBy": "Last",
+              "sortDesc": true
+            },
+            "tooltip": {
+              "mode": "single"
+            }
           },
-          "percentage": false,
-          "pluginVersion": "8.0.3",
-          "pointradius": 2,
-          "points": false,
-          "renderer": "flot",
-          "seriesOverrides": [],
-          "spaceLength": 10,
-          "stack": false,
-          "steppedLine": false,
+          "pluginVersion": "8.3.1",
           "targets": [
             {
-              "expr": "delta(iearn{param=\"price per share\"}[2m])",
+              "datasource": {
+                "type": "prometheus",
+                "uid": "DS_PROMETHEUS"
+              },
+              "exemplar": true,
+              "expr": "iearn{network=\"ETH\", param=\"price per share\", vault=~\"$earn\"}",
               "format": "time_series",
               "instant": false,
               "interval": "",
@@ -1243,61 +1016,51 @@
               "refId": "A"
             }
           ],
-          "thresholds": [],
-          "timeFrom": null,
-          "timeRegions": [],
-          "timeShift": null,
-          "title": "Share Price - Rate of Increase",
-          "tooltip": {
-            "shared": true,
-            "sort": 2,
-            "value_type": "individual"
-          },
+          "title": "Share Price",
           "transparent": true,
-          "type": "graph",
-          "xaxis": {
-            "buckets": null,
-            "mode": "time",
-            "name": null,
-            "show": true,
-            "values": []
-          },
-          "yaxes": [
-            {
-              "$$hashKey": "object:403",
-              "decimals": 6,
-              "format": "short",
-              "label": null,
-              "logBase": 1,
-              "max": null,
-              "min": null,
-              "show": true
-            },
-            {
-              "$$hashKey": "object:404",
-              "format": "short",
-              "label": null,
-              "logBase": 1,
-              "max": null,
-              "min": null,
-              "show": false
-            }
-          ],
-          "yaxis": {
-            "align": false,
-            "alignLevel": null
-          }
+          "type": "timeseries"
         },
         {
-          "aliasColors": {},
-          "bars": false,
-          "dashLength": 10,
-          "dashes": false,
-          "datasource": "DS_PROMETHEUS",
-          "decimals": 2,
-          "description": "The current price of Earn's lp token should increase steadily as the lending yield is compounded in the Earn pool.",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "DS_PROMETHEUS"
+          },
+          "description": "Rate of increase of Share Price. If this goes up, that Earn product is compounding their yield gained from lending! This view helps normalize and show lending yield gained compared to other Earn products. The larger the spikes the more yield gain at that time from lending which was reinvested into the Earn product. The table shows the max value harvested for the timeframe selected. This number has been increased by a factor of 10 million to visualize the changes better. ",
           "fieldConfig": {
             "defaults": {
+              "color": {
+                "mode": "palette-classic"
+              },
+              "custom": {
+                "axisGridShow": true,
+                "axisLabel": "Share Price",
+                "axisPlacement": "auto",
+                "barAlignment": 0,
+                "drawStyle": "line",
+                "fillOpacity": 32,
+                "gradientMode": "none",
+                "hideFrom": {
+                  "legend": false,
+                  "tooltip": false,
+                  "viz": false
+                },
+                "lineInterpolation": "linear",
+                "lineWidth": 1,
+                "pointSize": 5,
+                "scaleDistribution": {
+                  "type": "linear"
+                },
+                "showPoints": "never",
+                "spanNulls": false,
+                "stacking": {
+                  "group": "A",
+                  "mode": "none"
+                },
+                "thresholdsStyle": {
+                  "mode": "off"
+                }
+              },
+              "decimals": 6,
               "links": [
                 {
                   "targetBlank": true,
@@ -1305,51 +1068,51 @@
                   "url": "https://v1.yearn.finance/earn"
                 }
               ],
+              "mappings": [],
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {
+                    "color": "green",
+                    "value": null
+                  }
+                ]
+              },
               "unit": "short"
             },
             "overrides": []
           },
-          "fill": 1,
-          "fillGradient": 0,
           "gridPos": {
             "h": 7,
             "w": 12,
             "x": 12,
-            "y": 13
+            "y": 8
           },
-          "hiddenSeries": false,
-          "id": 14,
-          "legend": {
-            "alignAsTable": true,
-            "avg": false,
-            "current": true,
-            "max": false,
-            "min": false,
-            "rightSide": true,
-            "show": true,
-            "sort": "current",
-            "sortDesc": true,
-            "total": false,
-            "values": true
-          },
-          "lines": true,
-          "linewidth": 2,
-          "nullPointMode": "connected",
+          "id": 45,
           "options": {
-            "alertThreshold": false
+            "legend": {
+              "calcs": [
+                "max",
+                "mean"
+              ],
+              "displayMode": "table",
+              "placement": "right",
+              "sortBy": "Max",
+              "sortDesc": true
+            },
+            "tooltip": {
+              "mode": "multi"
+            }
           },
-          "percentage": false,
-          "pluginVersion": "8.0.3",
-          "pointradius": 2,
-          "points": false,
-          "renderer": "flot",
-          "seriesOverrides": [],
-          "spaceLength": 10,
-          "stack": false,
-          "steppedLine": true,
+          "pluginVersion": "8.3.1",
           "targets": [
             {
-              "expr": "iearn{param=\"price per share\"}",
+              "datasource": {
+                "type": "prometheus",
+                "uid": "DS_PROMETHEUS"
+              },
+              "exemplar": true,
+              "expr": "delta(iearn{network=\"ETH\", param=\"price per share\", vault=~\"$earn\"}[2m])*10000000",
               "format": "time_series",
               "instant": false,
               "interval": "",
@@ -1359,475 +1122,286 @@
               "refId": "A"
             }
           ],
-          "thresholds": [],
-          "timeFrom": null,
-          "timeRegions": [],
-          "timeShift": null,
-          "title": "Share Price",
-          "tooltip": {
-            "shared": true,
-            "sort": 2,
-            "value_type": "individual"
-          },
+          "title": "Share Price - Rate of Increase",
           "transparent": true,
-          "type": "graph",
-          "xaxis": {
-            "buckets": null,
-            "mode": "time",
-            "name": null,
-            "show": true,
-            "values": []
-          },
-          "yaxes": [
-            {
-              "$$hashKey": "object:403",
-              "format": "short",
-              "label": null,
-              "logBase": 1,
-              "max": null,
-              "min": null,
-              "show": true
-            },
-            {
-              "$$hashKey": "object:404",
-              "format": "short",
-              "label": null,
-              "logBase": 1,
-              "max": null,
-              "min": null,
-              "show": true
-            }
-          ],
-          "yaxis": {
-            "align": false,
-            "alignLevel": null
-          }
+          "type": "timeseries"
         },
         {
-          "aliasColors": {},
-          "bars": false,
-          "dashLength": 10,
-          "dashes": false,
-          "datasource": "DS_PROMETHEUS",
-          "decimals": 4,
+          "datasource": {
+            "type": "prometheus",
+            "uid": "DS_PROMETHEUS"
+          },
           "description": "The rate of change of the yEarn's share price over 1 day annualized for better visualization.",
           "fieldConfig": {
             "defaults": {
+              "color": {
+                "mode": "palette-classic"
+              },
+              "custom": {
+                "axisGridShow": true,
+                "axisLabel": "",
+                "axisPlacement": "auto",
+                "barAlignment": 0,
+                "drawStyle": "line",
+                "fillOpacity": 16,
+                "gradientMode": "none",
+                "hideFrom": {
+                  "legend": false,
+                  "tooltip": false,
+                  "viz": false
+                },
+                "lineInterpolation": "stepAfter",
+                "lineWidth": 1,
+                "pointSize": 5,
+                "scaleDistribution": {
+                  "type": "linear"
+                },
+                "showPoints": "never",
+                "spanNulls": false,
+                "stacking": {
+                  "group": "A",
+                  "mode": "none"
+                },
+                "thresholdsStyle": {
+                  "mode": "off"
+                }
+              },
+              "decimals": 3,
               "links": [
                 {
                   "targetBlank": true,
                   "title": "Earn ",
                   "url": "https://v1.yearn.finance/earn"
                 }
-              ]
+              ],
+              "mappings": [],
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {
+                    "color": "green",
+                    "value": null
+                  }
+                ]
+              },
+              "unit": "none"
             },
             "overrides": []
           },
-          "fill": 0,
-          "fillGradient": 0,
           "gridPos": {
-            "h": 8,
+            "h": 7,
             "w": 24,
             "x": 0,
-            "y": 20
+            "y": 15
           },
-          "hiddenSeries": false,
           "id": 20,
-          "legend": {
-            "alignAsTable": true,
-            "avg": false,
-            "current": true,
-            "hideEmpty": false,
-            "hideZero": false,
-            "max": false,
-            "min": false,
-            "rightSide": true,
-            "show": true,
-            "sort": "current",
-            "sortDesc": true,
-            "total": false,
-            "values": true
-          },
-          "lines": true,
-          "linewidth": 1,
-          "nullPointMode": "connected",
           "options": {
-            "alertThreshold": false
+            "legend": {
+              "calcs": [
+                "max",
+                "mean"
+              ],
+              "displayMode": "table",
+              "placement": "right",
+              "sortBy": "Max",
+              "sortDesc": true
+            },
+            "tooltip": {
+              "mode": "single"
+            }
           },
-          "percentage": false,
-          "pluginVersion": "8.0.3",
-          "pointradius": 2,
-          "points": false,
-          "renderer": "flot",
-          "seriesOverrides": [],
-          "spaceLength": 10,
-          "stack": false,
-          "steppedLine": true,
+          "pluginVersion": "8.3.1",
           "targets": [
             {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "DS_PROMETHEUS"
+              },
               "exemplar": true,
-              "expr": "delta(iearn{param=\"price per share\"}[1d]) * 365",
+              "expr": "delta(iearn{network=\"ETH\", param=\"price per share\", vault=~\"$earn\"}[1d]) * 365",
               "hide": false,
               "interval": "",
               "legendFormat": "{{vault}}",
               "refId": "B"
             }
           ],
-          "thresholds": [],
-          "timeFrom": null,
-          "timeRegions": [],
-          "timeShift": null,
-          "title": "Price Per Share - 1d Annualized",
-          "tooltip": {
-            "shared": true,
-            "sort": 2,
-            "value_type": "individual"
-          },
+          "title": "Share Price - 1d Annualized",
           "transparent": true,
-          "type": "graph",
-          "xaxis": {
-            "buckets": null,
-            "mode": "time",
-            "name": null,
-            "show": true,
-            "values": []
-          },
-          "yaxes": [
-            {
-              "$$hashKey": "object:403",
-              "decimals": 4,
-              "format": "none",
-              "label": null,
-              "logBase": 1,
-              "max": null,
-              "min": null,
-              "show": true
-            },
-            {
-              "$$hashKey": "object:404",
-              "format": "short",
-              "label": null,
-              "logBase": 1,
-              "max": null,
-              "min": null,
-              "show": false
-            }
-          ],
-          "yaxis": {
-            "align": false,
-            "alignLevel": null
-          }
+          "type": "timeseries"
         }
       ],
       "title": "Share Price - Graphs",
       "type": "row"
     },
     {
-      "collapsed": true,
-      "datasource": null,
+      "collapsed": false,
       "gridPos": {
         "h": 1,
         "w": 24,
         "x": 0,
-        "y": 13
+        "y": 8
       },
       "id": 39,
-      "panels": [
-        {
-          "datasource": "DS_PROMETHEUS",
-          "description": "",
-          "fieldConfig": {
-            "defaults": {
-              "color": {
-                "mode": "thresholds"
-              },
-              "decimals": 6,
-              "links": [
-                {
-                  "targetBlank": true,
-                  "title": "Earn ",
-                  "url": "https://v1.yearn.finance/earn"
-                }
-              ],
-              "mappings": [],
-              "thresholds": {
-                "mode": "absolute",
-                "steps": [
-                  {
-                    "color": "purple",
-                    "value": null
-                  }
-                ]
-              },
-              "unit": "none"
-            },
-            "overrides": []
-          },
-          "gridPos": {
-            "h": 3,
-            "w": 12,
-            "x": 0,
-            "y": 14
-          },
-          "id": 36,
-          "options": {
-            "colorMode": "value",
-            "graphMode": "none",
-            "justifyMode": "auto",
-            "orientation": "auto",
-            "reduceOptions": {
-              "calcs": [
-                "lastNotNull"
-              ],
-              "fields": "",
-              "values": false
-            },
-            "text": {},
-            "textMode": "auto"
-          },
-          "pluginVersion": "8.0.3",
-          "targets": [
-            {
-              "exemplar": true,
-              "expr": "iearn{param=\"price per share\", vault=~\".*v2\"} - iearn{param=\"price per share\", vault=~\".*v2\"} offset 1d",
-              "format": "time_series",
-              "instant": false,
-              "interval": "",
-              "intervalFactor": 1,
-              "legendFormat": "{{vault}}",
-              "queryType": "randomWalk",
-              "refId": "A"
-            }
-          ],
-          "timeFrom": null,
-          "timeShift": null,
-          "title": "y.curve.fi (v2) Earn - Share Price - 1D Change",
-          "transparent": true,
-          "type": "stat"
-        },
-        {
-          "datasource": "DS_PROMETHEUS",
-          "description": "",
-          "fieldConfig": {
-            "defaults": {
-              "color": {
-                "mode": "thresholds"
-              },
-              "decimals": 6,
-              "links": [
-                {
-                  "targetBlank": true,
-                  "title": "Earn ",
-                  "url": "https://v1.yearn.finance/earn"
-                }
-              ],
-              "mappings": [],
-              "thresholds": {
-                "mode": "absolute",
-                "steps": [
-                  {
-                    "color": "purple",
-                    "value": null
-                  }
-                ]
-              },
-              "unit": "percentunit"
-            },
-            "overrides": []
-          },
-          "gridPos": {
-            "h": 3,
-            "w": 12,
-            "x": 12,
-            "y": 14
-          },
-          "id": 40,
-          "options": {
-            "colorMode": "value",
-            "graphMode": "none",
-            "justifyMode": "auto",
-            "orientation": "auto",
-            "reduceOptions": {
-              "calcs": [
-                "lastNotNull"
-              ],
-              "fields": "",
-              "values": false
-            },
-            "text": {},
-            "textMode": "auto"
-          },
-          "pluginVersion": "8.0.3",
-          "targets": [
-            {
-              "exemplar": true,
-              "expr": "(iearn{param=\"price per share\", vault=~\".*v2\"} / iearn{param=\"price per share\", vault=~\".*v2\"} offset 1d ) - 1",
-              "format": "time_series",
-              "instant": false,
-              "interval": "",
-              "intervalFactor": 1,
-              "legendFormat": "{{vault}}",
-              "queryType": "randomWalk",
-              "refId": "A"
-            }
-          ],
-          "timeFrom": null,
-          "timeShift": null,
-          "title": "y.curve.fi (v2) Earn - Share Price - 1D % change",
-          "transparent": true,
-          "type": "stat"
-        },
-        {
-          "datasource": "DS_PROMETHEUS",
-          "description": "",
-          "fieldConfig": {
-            "defaults": {
-              "color": {
-                "mode": "thresholds"
-              },
-              "decimals": 6,
-              "links": [
-                {
-                  "targetBlank": true,
-                  "title": "Earn ",
-                  "url": "https://v1.yearn.finance/earn"
-                }
-              ],
-              "mappings": [],
-              "thresholds": {
-                "mode": "absolute",
-                "steps": [
-                  {
-                    "color": "green",
-                    "value": null
-                  }
-                ]
-              },
-              "unit": "none"
-            },
-            "overrides": []
-          },
-          "gridPos": {
-            "h": 4,
-            "w": 12,
-            "x": 0,
-            "y": 17
-          },
-          "id": 41,
-          "options": {
-            "colorMode": "value",
-            "graphMode": "none",
-            "justifyMode": "auto",
-            "orientation": "auto",
-            "reduceOptions": {
-              "calcs": [
-                "lastNotNull"
-              ],
-              "fields": "",
-              "values": false
-            },
-            "text": {},
-            "textMode": "auto"
-          },
-          "pluginVersion": "8.0.3",
-          "targets": [
-            {
-              "exemplar": true,
-              "expr": "iearn{param=\"price per share\", vault=~\".*v3\"} - iearn{param=\"price per share\", vault=~\".*v3\"} offset 1d",
-              "format": "time_series",
-              "instant": false,
-              "interval": "",
-              "intervalFactor": 1,
-              "legendFormat": "{{vault}}",
-              "queryType": "randomWalk",
-              "refId": "A"
-            }
-          ],
-          "timeFrom": null,
-          "timeShift": null,
-          "title": "busd.curve.fi (v3) Earn - Share Price - 1D Change",
-          "transparent": true,
-          "type": "stat"
-        },
-        {
-          "datasource": "DS_PROMETHEUS",
-          "description": "",
-          "fieldConfig": {
-            "defaults": {
-              "color": {
-                "mode": "thresholds"
-              },
-              "decimals": 6,
-              "links": [
-                {
-                  "targetBlank": true,
-                  "title": "Earn ",
-                  "url": "https://v1.yearn.finance/earn"
-                }
-              ],
-              "mappings": [],
-              "thresholds": {
-                "mode": "absolute",
-                "steps": [
-                  {
-                    "color": "green",
-                    "value": null
-                  }
-                ]
-              },
-              "unit": "percentunit"
-            },
-            "overrides": []
-          },
-          "gridPos": {
-            "h": 4,
-            "w": 12,
-            "x": 12,
-            "y": 17
-          },
-          "id": 42,
-          "options": {
-            "colorMode": "value",
-            "graphMode": "none",
-            "justifyMode": "auto",
-            "orientation": "auto",
-            "reduceOptions": {
-              "calcs": [
-                "lastNotNull"
-              ],
-              "fields": "",
-              "values": false
-            },
-            "text": {},
-            "textMode": "auto"
-          },
-          "pluginVersion": "8.0.3",
-          "targets": [
-            {
-              "exemplar": true,
-              "expr": "(iearn{param=\"price per share\", vault=~\".*v3\"} / iearn{param=\"price per share\", vault=~\".*v3\"} offset 1d ) - 1",
-              "format": "time_series",
-              "instant": false,
-              "interval": "",
-              "intervalFactor": 1,
-              "legendFormat": "{{vault}}",
-              "queryType": "randomWalk",
-              "refId": "A"
-            }
-          ],
-          "timeFrom": null,
-          "timeShift": null,
-          "title": "busd.curve.fi (v3) Earn - Share Price - 1D % change",
-          "transparent": true,
-          "type": "stat"
-        }
-      ],
+      "panels": [],
       "title": "Share Price - Delta",
       "type": "row"
     },
     {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "DS_PROMETHEUS"
+      },
+      "description": "This is the change in share price over the time range you have selected. If you put what day you deposited as the start till now, then you will see how much share price has increased since then. ",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "decimals": 6,
+          "links": [
+            {
+              "targetBlank": true,
+              "title": "Earn ",
+              "url": "https://v1.yearn.finance/earn"
+            }
+          ],
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "purple",
+                "value": null
+              }
+            ]
+          },
+          "unit": "none"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 5,
+        "w": 12,
+        "x": 0,
+        "y": 9
+      },
+      "id": 36,
+      "options": {
+        "colorMode": "value",
+        "graphMode": "none",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "text": {},
+        "textMode": "auto"
+      },
+      "pluginVersion": "8.3.1",
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "DS_PROMETHEUS"
+          },
+          "exemplar": true,
+          "expr": "iearn{network=\"ETH\", param=\"price per share\", vault=~\"$earn\"} - iearn{network=\"ETH\", param=\"price per share\", vault=~\"$earn\"} offset $__range",
+          "format": "time_series",
+          "instant": false,
+          "interval": "",
+          "intervalFactor": 1,
+          "legendFormat": "{{vault}}",
+          "queryType": "randomWalk",
+          "refId": "A"
+        }
+      ],
+      "title": "Share Price Change",
+      "transparent": true,
+      "type": "stat"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "DS_PROMETHEUS"
+      },
+      "description": "This is the % change in share price over the time range you have selected. If you put what day you deposited as the start till now, then you will see how much yield you have gained.",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "decimals": 6,
+          "links": [
+            {
+              "targetBlank": true,
+              "title": "Earn ",
+              "url": "https://v1.yearn.finance/earn"
+            }
+          ],
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "purple",
+                "value": null
+              }
+            ]
+          },
+          "unit": "percentunit"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 5,
+        "w": 12,
+        "x": 12,
+        "y": 9
+      },
+      "id": 40,
+      "options": {
+        "colorMode": "value",
+        "graphMode": "none",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "text": {},
+        "textMode": "auto"
+      },
+      "pluginVersion": "8.3.1",
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "DS_PROMETHEUS"
+          },
+          "exemplar": true,
+          "expr": "(iearn{network=\"ETH\", param=\"price per share\", vault=~\"$earn\"} / iearn{network=\"ETH\", param=\"price per share\", vault=~\"$earn\"} offset $__range ) - 1",
+          "format": "time_series",
+          "instant": false,
+          "interval": "",
+          "intervalFactor": 1,
+          "legendFormat": "{{vault}}",
+          "queryType": "randomWalk",
+          "refId": "A"
+        }
+      ],
+      "title": "Share Price % change",
+      "transparent": true,
+      "type": "stat"
+    },
+    {
       "collapsed": true,
-      "datasource": null,
       "gridPos": {
         "h": 1,
         "w": 24,
@@ -1841,9 +1415,12 @@
           "bars": false,
           "dashLength": 10,
           "dashes": false,
-          "datasource": "DS_PROMETHEUS",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "DS_PROMETHEUS"
+          },
           "decimals": 2,
-          "description": "Amount in the Earn pool for each product. Amounts are shown in terms of the deposit token and not in the dollar amount. This shows lent-out and unlent-out coins for the pools.",
+          "description": "Amount of funds in the pool. Amounts are shown in terms of the deposit token and not in the dollar amount. This shows lent-out and unlent-out coins for the pools.",
           "fieldConfig": {
             "defaults": {
               "links": [
@@ -1887,7 +1464,7 @@
             "alertThreshold": false
           },
           "percentage": false,
-          "pluginVersion": "8.0.3",
+          "pluginVersion": "8.3.1",
           "pointradius": 2,
           "points": false,
           "renderer": "flot",
@@ -1897,7 +1474,12 @@
           "steppedLine": true,
           "targets": [
             {
-              "expr": "iearn{param=\"pooled balance\"}",
+              "datasource": {
+                "type": "prometheus",
+                "uid": "DS_PROMETHEUS"
+              },
+              "exemplar": true,
+              "expr": "iearn{network=\"ETH\", param=\"pooled balance\", vault=~\"$earn\"}",
               "format": "time_series",
               "instant": false,
               "interval": "",
@@ -1908,9 +1490,7 @@
             }
           ],
           "thresholds": [],
-          "timeFrom": null,
           "timeRegions": [],
-          "timeShift": null,
           "title": "Total Balance",
           "tooltip": {
             "shared": true,
@@ -1920,9 +1500,7 @@
           "transparent": true,
           "type": "graph",
           "xaxis": {
-            "buckets": null,
             "mode": "time",
-            "name": null,
             "show": true,
             "values": []
           },
@@ -1930,25 +1508,18 @@
             {
               "$$hashKey": "object:403",
               "format": "short",
-              "label": null,
               "logBase": 1,
-              "max": null,
-              "min": null,
               "show": true
             },
             {
               "$$hashKey": "object:404",
               "format": "short",
-              "label": null,
               "logBase": 1,
-              "max": null,
-              "min": null,
               "show": true
             }
           ],
           "yaxis": {
-            "align": false,
-            "alignLevel": null
+            "align": false
           }
         },
         {
@@ -1956,9 +1527,12 @@
           "bars": false,
           "dashLength": 10,
           "dashes": false,
-          "datasource": "DS_PROMETHEUS",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "DS_PROMETHEUS"
+          },
           "decimals": 2,
-          "description": "Amount in the Earn pool for each product. Amounts are shown in terms of the deposit token and not in dollar amount. ",
+          "description": "Amount of deposit token currently being lent out on either dydx, aave, or compound lending markets. Amounts are shown in terms of the deposit token and not in dollar amount. ",
           "fieldConfig": {
             "defaults": {
               "links": [
@@ -2015,7 +1589,7 @@
             "alertThreshold": false
           },
           "percentage": false,
-          "pluginVersion": "8.0.3",
+          "pluginVersion": "8.3.1",
           "pointradius": 2,
           "points": false,
           "renderer": "flot",
@@ -2030,7 +1604,12 @@
           "steppedLine": true,
           "targets": [
             {
-              "expr": "iearn{param=\"total supply\"}",
+              "datasource": {
+                "type": "prometheus",
+                "uid": "DS_PROMETHEUS"
+              },
+              "exemplar": true,
+              "expr": "iearn{network=\"ETH\", param=\"total supply\", vault=~\"$earn\"}",
               "format": "time_series",
               "instant": false,
               "interval": "",
@@ -2041,9 +1620,7 @@
             }
           ],
           "thresholds": [],
-          "timeFrom": null,
           "timeRegions": [],
-          "timeShift": null,
           "title": "Lent Out Supply",
           "tooltip": {
             "shared": true,
@@ -2053,9 +1630,7 @@
           "transparent": true,
           "type": "graph",
           "xaxis": {
-            "buckets": null,
             "mode": "time",
-            "name": null,
             "show": true,
             "values": []
           },
@@ -2063,25 +1638,18 @@
             {
               "$$hashKey": "object:403",
               "format": "short",
-              "label": null,
               "logBase": 1,
-              "max": null,
-              "min": null,
               "show": true
             },
             {
               "$$hashKey": "object:404",
               "format": "short",
-              "label": null,
               "logBase": 1,
-              "max": null,
-              "min": null,
               "show": true
             }
           ],
           "yaxis": {
-            "align": false,
-            "alignLevel": null
+            "align": false
           }
         },
         {
@@ -2089,9 +1657,12 @@
           "bars": false,
           "dashLength": 10,
           "dashes": false,
-          "datasource": "DS_PROMETHEUS",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "DS_PROMETHEUS"
+          },
           "decimals": 2,
-          "description": "This shows the balance that has yet to be deposited into a lender protocol. ",
+          "description": "This shows the balance that has yet to be deposited into a lending protocol: dydx, aave, or compound. ",
           "fieldConfig": {
             "defaults": {
               "links": [
@@ -2135,7 +1706,7 @@
             "alertThreshold": false
           },
           "percentage": false,
-          "pluginVersion": "8.0.3",
+          "pluginVersion": "8.3.1",
           "pointradius": 2,
           "points": false,
           "renderer": "flot",
@@ -2145,8 +1716,12 @@
           "steppedLine": true,
           "targets": [
             {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "DS_PROMETHEUS"
+              },
               "exemplar": true,
-              "expr": "sum by (vault) (iearn{param=\"pooled balance\"}) - sum by (vault) (iearn{param=\"total supply\"})",
+              "expr": "sum by (vault) (iearn{network=\"ETH\", param=\"pooled balance\",vault=~\"$earn\"}) - sum by (vault) (iearn{network=\"ETH\", param=\"total supply\",vault=~\"$earn\"})",
               "format": "time_series",
               "instant": false,
               "interval": "",
@@ -2157,9 +1732,7 @@
             }
           ],
           "thresholds": [],
-          "timeFrom": null,
           "timeRegions": [],
-          "timeShift": null,
           "title": "Unlent Supply",
           "tooltip": {
             "shared": true,
@@ -2169,9 +1742,7 @@
           "transparent": true,
           "type": "graph",
           "xaxis": {
-            "buckets": null,
             "mode": "time",
-            "name": null,
             "show": true,
             "values": []
           },
@@ -2179,25 +1750,18 @@
             {
               "$$hashKey": "object:403",
               "format": "short",
-              "label": null,
               "logBase": 1,
-              "max": null,
-              "min": null,
               "show": true
             },
             {
               "$$hashKey": "object:404",
               "format": "short",
-              "label": null,
               "logBase": 1,
-              "max": null,
-              "min": null,
               "show": true
             }
           ],
           "yaxis": {
-            "align": false,
-            "alignLevel": null
+            "align": false
           }
         }
       ],
@@ -2206,21 +1770,52 @@
     }
   ],
   "refresh": false,
-  "schemaVersion": 30,
+  "schemaVersion": 33,
   "style": "dark",
   "tags": [
     "yEarn"
   ],
   "templating": {
-    "list": []
+    "list": [
+      {
+        "current": {
+          "selected": false,
+          "text": "busd.curve.fi",
+          "value": ".*v3"
+        },
+        "description": "Select which yEarn product you want to view",
+        "hide": 0,
+        "includeAll": false,
+        "label": "Which yEarn Product?",
+        "multi": false,
+        "name": "earn",
+        "options": [
+          {
+            "selected": false,
+            "text": "y.curve.fi",
+            "value": ".*v2"
+          },
+          {
+            "selected": true,
+            "text": "busd.curve.fi",
+            "value": ".*v3"
+          }
+        ],
+        "query": "y.curve.fi : .*v2,busd.curve.fi : .*v3",
+        "queryValue": "",
+        "skipUrlSync": false,
+        "type": "custom"
+      }
+    ]
   },
   "time": {
-    "from": "now-24h",
+    "from": "now-30d",
     "to": "now"
   },
   "timepicker": {},
   "timezone": "",
   "title": "Earn",
-  "uid": "ghD3028Mzz",
-  "version": 18
+  "uid": "ghD3028Mzzd",
+  "version": 24,
+  "weekStart": ""
 }

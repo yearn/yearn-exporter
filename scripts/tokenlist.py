@@ -9,7 +9,7 @@ from tokenlists import TokenInfo, TokenList
 from toolz import unique
 
 from yearn.multicall2 import multicall_matrix
-from yearn.utils import contract_creation_block, get_block_timestamp
+from yearn.utils import contract_creation_block, get_block_timestamp, contract
 from yearn.yearn import Yearn
 
 
@@ -43,7 +43,7 @@ def main():
 
     # Token from special / side projects
     special = [
-        Contract("0xD0660cD418a64a1d44E9214ad8e459324D8157f1") # WOOFY
+        contract("0xD0660cD418a64a1d44E9214ad8e459324D8157f1") # WOOFY
     ]
     metadata = multicall_matrix(special, ["name", "symbol", "decimals"])
     for token in special:
