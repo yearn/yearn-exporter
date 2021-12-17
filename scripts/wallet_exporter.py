@@ -1,12 +1,14 @@
 import logging
+import os
 from datetime import datetime, timezone
 from itertools import count
 
+import requests
 from brownie import chain
-from yearn.outputs.postgres.utils import last_recorded_block
 from yearn.entities import UserTx
+from yearn.historical_helper import export_historical, has_data, time_tracking
+from yearn.outputs.postgres.utils import last_recorded_block
 from yearn.utils import closest_block_after_timestamp
-from yearn.historical_helper import export_historical, time_tracking, has_data
 from yearn.yearn import Yearn
 
 logger = logging.getLogger('yearn.wallet_exporter')
