@@ -67,7 +67,18 @@ def _get_price(event, vault):
                 raise
         except ConnectionError as e:
             # Try again
+            print(f'ConnectionError: {str(e)}')
             time.sleep(1)
+        except ValueError as e:
+            print(f'ValueError: {str(e)}')
+            if str(e) == "Failed to retrieve data from API: {'status': '0', 'message': 'NOTOK', 'result': 'Max rate limit reached'}":
+                # Try again
+                print(str(e))
+                print('trying again...')
+                time.sleep(5)
+            else:
+                print(f'vault: {vault.address}')
+                raise
 
 def _from(event):
     try:
