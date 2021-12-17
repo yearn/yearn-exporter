@@ -214,7 +214,7 @@ def with_monitoring():
         tb = traceback.format_exc()
         now = datetime.now()
         tags = " ".join(telegram_users_to_alert)
-        message = f"`[{now}]`\n🔥 API (vaults) update for {Network(chain.id).name} failed!\n```\n{tb}\n```\n{tags}"
+        message = f"`[{now}]`\n🔥 API (vaults) update for {Network(chain.id).name} failed!\n```\n{tb}\n```\n{tags}"[:4000]
         updater.bot.send_message(chat_id=private_group, text=message, parse_mode="Markdown", reply_to_message_id=ping)
         updater.bot.send_message(chat_id=public_group, text=message, parse_mode="Markdown")
         raise error
