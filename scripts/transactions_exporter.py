@@ -98,10 +98,6 @@ def _process_transfer_event(event, token_entity) -> dict:
     ):
         # NOTE magic.get_price() returns erroneous price due to erroneous ppfs
         price = 99999
-    if price > 100000:
-        logger.warn(f'token: {token_entity.token.address}')
-        logger.warn(f'price: {price}')
-        logger.warn(f'block: {event.block_number}')
     txhash = event.transaction_hash.hex()
     return {
         'chainid': chain.id,
