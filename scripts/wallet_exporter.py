@@ -13,6 +13,7 @@ logger = logging.getLogger('yearn.wallet_exporter')
 postgres_cached_thru_block = postgres.last_recorded_block('user_txs')
 postgres_cached_thru_ts = chain[postgres_cached_thru_block].timestamp
 
+
 def main():
     start = datetime.now(tz=timezone.utc)
     # end: 2020-02-12 first iearn deployment

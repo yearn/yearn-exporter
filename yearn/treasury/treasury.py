@@ -22,6 +22,7 @@ logger = logging.getLogger(__name__)
 logger_price_magic.setLevel(logging.CRITICAL)
 
 
+
 def _get_price(token, block=None):
     SKIP_PRICE = [  # shitcoins
         "0xa9517B2E61a57350D6555665292dBC632C76adFe",
@@ -78,13 +79,18 @@ def get_token_from_event(event):
         )
 
 
+
 def get_token_from_event(event):
     try:
         return event['Transfer'][0].address
     except EventLookupError:
-        logger.critical(f'One of your cached contracts has an incorrect definition: {event.address}. Please fix this manually')
-        raise(f'One of your cached contracts has an incorrect definition: {event.address}. Please fix this manually')
-       
+        logger.critical(
+            f'One of your cached contracts has an incorrect definition: {event.address}. Please fix this manually'
+        )
+        raise (
+            f'One of your cached contracts has an incorrect definition: {event.address}. Please fix this manually'
+        )
+
 
 class Treasury:
     '''

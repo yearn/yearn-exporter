@@ -28,9 +28,11 @@ registryV2 = RegistryV2()
 
 logger = logging.getLogger(__name__)
 
+
 def main():
     for block in chain.new_blocks(height_buffer=1):
         process_and_cache_user_txs(postgres.last_recorded_block('user_txs'))
+
 
 def active_vaults_at(end_block) -> set:
     v1 = {vault.vault for vault in registryV1.active_vaults_at(end_block)}
