@@ -12,10 +12,7 @@ def cache_address(address: str) -> Address:
     try:
         return Address[chain.id,address]
     except ObjectNotFound:
-        try:
-            return Address(chainid=chain.id,address=address,is_contract=is_contract(address))
-        except TransactionIntegrityError: # This can happen if two threads try to insert at same time
-            return Address[chain.id,address]
+        return Address(chainid=chain.id,address=address,is_contract=is_contract(address))
 
 @db_session
 @memory.cache()
