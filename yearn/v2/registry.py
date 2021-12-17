@@ -147,13 +147,13 @@ class Registry(metaclass=Singleton):
         vaults = self.active_vaults_at(block)
         results = Parallel(8, "threading")(delayed(vault.describe)(block=block) for vault in vaults)
         results_dict = {vault.name: result for vault, result in zip(vaults, results)}
-        user_balances = Counter()
-        for result in results:
-            for user, data in result['user balances'].items():
-                user_balances[user] += data["usd balance"]
+        wallet_balances = Counter()
+        for vault in results:
+            for wallet, data in vault['wallet balances'].items():
+                wallet_balances[wallet] += data["usd balance"]
         agg_stats = {
-            "total users": len(set(user for result in results for user, bal in result['user balances'].items())),
-            "user balances usd": user_balances,
+            "total wallets": len(wallet_balances),
+            "wallet balances usd": wallet_balances,
         }
         results_dict.update(agg_stats)
         return results_dict
