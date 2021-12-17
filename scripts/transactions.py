@@ -59,11 +59,13 @@ def _get_price(event, vault):
     while True:
         try:
             return magic.get_price(vault.address, event.block_number)
-        except TypeError:
-            if event.block_number == 10532764 and vault.address == '0x597aD1e0c13Bfe8025993D9e79C69E1c0233522e':
-                # magic.get_price fails because all liquidity was removed for testing and `share_price` returns None
-                return 1
-        except ConnectionError:
+        except TypeError: # magic.get_price fails because all liquidity was removed for testing and `share_price` returns None
+            try:
+                return magic.get_price(vault.token(), event.block_number)
+            except:
+                print(f'vault: {vault.address}')
+                raise
+        except ConnectionError as e:
             # Try again
             time.sleep(1)
 
