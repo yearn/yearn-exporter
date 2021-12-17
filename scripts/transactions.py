@@ -1,4 +1,5 @@
 import time
+from decimal import Decimal
 
 import pandas as pd
 from brownie import ZERO_ADDRESS, chain, web3
@@ -48,9 +49,9 @@ def _process_event(event, vault, vault_symbol, vault_decimals) -> dict:
         'type': _event_type(event, vault.address),
         'from': event['from'],
         'to': event['to'],
-        'value': event['value'] / 10 ** vault_decimals,
+        'value': Decimal(event['value']) / Decimal(10 ** vault_decimals),
         'price': price,
-        'value_usd': event['value'] / 10 ** vault_decimals * price
+        'value_usd': Decimal(event['value']) / Decimal(10 ** vault_decimals) * Decimal(price)
     }
 
 def _get_price(event, vault):
