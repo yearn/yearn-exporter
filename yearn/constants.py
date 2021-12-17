@@ -132,5 +132,5 @@ TREASURY_WALLETS = {
 STRATEGIST_MULTISIG = {
     "0x16388463d60FFE0661Cf7F1f31a7D658aC790ff7",
 } if chain.id == 1 else {
-    "",
+    "0x72a34AbafAB09b15E7191822A679f28E067C4a16",
 } if chain.id == 250 else None
