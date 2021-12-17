@@ -25,11 +25,3 @@ class VaultWalletDescriber:
             }
         info['active wallets'] = sum(1 if balances['usd balance'] > 50 else 0 for wallet, balances in info['wallet balances'].items())
         return info
-
-    '''
-    def get_price(self, vault: Union[VaultV1, VaultV2], block=None):
-        if isinstance(vault, VaultV1) and vault.name == "aLINK":
-            return magic.get_price(self.vault.underlying(), block=block)
-        else: 
-            return magic.get_price(self.token, block=block)
-            '''
