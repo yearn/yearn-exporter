@@ -76,12 +76,8 @@ class Yearn:
 
         wallet_balances = Counter()
         for registry, reg_desc in data.items():
-            try:
-                for wallet, usd_bal in reg_desc['wallet balances usd'].items():
-                    wallet_balances[wallet] += usd_bal
-            except:
-                print(reg_desc)
-                raise
+            for wallet, usd_bal in reg_desc['wallet balances usd'].items():
+                wallet_balances[wallet] += usd_bal
         agg_stats = {
             "agg_stats": {
                 "total wallets": len(wallet_balances),
