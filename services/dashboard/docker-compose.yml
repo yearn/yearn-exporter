@@ -190,7 +190,7 @@ services:
     command:
       - '-retentionPeriod=10y'
     ports:
-      - 8428:8428
+      - 127.0.0.1:8428:8428
     networks:
       - yearn-exporter
     restart: always
@@ -221,7 +221,7 @@ services:
   renderer:
     image: grafana/grafana-image-renderer:latest
     ports:
-      - 8091:8091
+      - 127.0.0.1:8091:8091
     environment:
       - ENABLE_METRICS=true
       - HTTP_PORT=8091
@@ -232,7 +232,7 @@ services:
   node-exporter:
     image: quay.io/prometheus/node-exporter:latest
     ports:
-      - 9100:9100
+      - 127.0.0.1:9100:9100
     command:
       - '--path.rootfs=/host'
     networks:
@@ -244,7 +244,7 @@ services:
   postgres:
     image: postgres
     ports:
-      - 5432:5432
+      - 127.0.0.1:5432:5432
     environment:
       - POSTGRES_PASSWORD=yearn-exporter
       - POSTGRES_USER=postgres
