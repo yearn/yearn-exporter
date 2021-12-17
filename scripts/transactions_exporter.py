@@ -43,7 +43,7 @@ def process_and_cache_user_txs(last_saved_block=None):
     )
     df = pd.DataFrame()
     for vault in yearn.active_vaults_at(end_block):
-        df = df.append(get_token_transfers(vault, start_block, end_block))
+        df = df.append(get_token_transfers(vault.vault, start_block, end_block))
     if len(df):
         # NOTE: We want to insert txs in the order they took place, so wallet exporter
         #       won't have issues in the event that transactions exporter fails mid-run.
