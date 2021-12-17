@@ -80,11 +80,7 @@ def get_token_transfers(token, start_block, end_block) -> pd.DataFrame:
     events = decode_logs(
         get_logs_asap(token.address, topics, from_block=start_block, to_block=end_block)
     )
-    return pd.DataFrame(
-        Parallel(1, 'threading')(
-            delayed(_process_transfer_event)(event, token_entity) for event in events
-        )
-    )
+    return pd.DataFrame([_process_transfer_event(event, token_entity) for event in events])
 
 
 def _process_transfer_event(event, token_entity) -> dict:
