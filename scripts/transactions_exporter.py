@@ -37,8 +37,8 @@ def process_and_cache_user_txs(last_saved_block=None):
     end_block = (
         9480000
         if start_block is None
-        else start_block + 500
-        if start_block + 500 < max_block_to_cache
+        else start_block + 5000
+        if start_block + 5000 < max_block_to_cache
         else max_block_to_cache
     )
     df = pd.DataFrame()
