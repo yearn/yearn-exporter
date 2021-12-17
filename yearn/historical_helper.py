@@ -119,7 +119,7 @@ def _get_interval_map(start):
 def has_data(ts, data_query):
     base_url = os.environ.get('VM_URL', 'http://victoria-metrics:8428')
     # query for a metric which should be present
-    url = f'{base_url}/api/v1/query?query={data_query}&time={ts}'
+    url = f'{base_url}/api/v1/query?query={data_query}&time={int(ts)}'
     headers = {
         'Connection': 'close',
     }
