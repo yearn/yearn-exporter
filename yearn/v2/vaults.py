@@ -196,12 +196,12 @@ class Vault:
                 break
             time.sleep(300)
 
-    def users(self, block=None):
+    def wallets(self, block=None):
         self.load_transfers()
         transfers = [event for event in self._transfers if event.block_number <= block]
         return set(receiver for sender, receiver, value in transfers if receiver != ZERO_ADDRESS)
 
-    def user_balances(self, block=None):
+    def wallet_balances(self, block=None):
         self.load_transfers()
         balances = Counter()
         for event in [transfer for transfer in self._transfers if transfer.block_number <= block]:
