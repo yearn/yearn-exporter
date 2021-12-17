@@ -15,6 +15,7 @@ from yearn.networks import Network
 from yearn.outputs import victoria
 from yearn.outputs.describers.registry import RegistryWalletDescriber
 
+
 logger = logging.getLogger(__name__)
 
 
@@ -23,7 +24,7 @@ class Yearn:
     Can describe all products.
     """
 
-    def __init__(self, load_strategies=True, load_harvests=False, load_transfers=False, watch_events_forever=True) -> None:
+    def __init__(self, load_strategies=True, load_harvests=False, watch_events_forever=True) -> None:
         start = time()
         if chain.id == Network.Mainnet:
             self.registries = {
@@ -50,9 +51,6 @@ class Yearn:
             self.registries["v2"].load_strategies()
         if load_harvests:
             self.registries["v2"].load_harvests()
-        if load_transfers:
-            self.registries['v1'].load_transfers()
-            self.registries['v2'].load_transfers()
         logger.info('loaded yearn in %.3fs', time() - start)
 
     def describe(self, block=None):
