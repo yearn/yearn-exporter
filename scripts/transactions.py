@@ -120,7 +120,7 @@ def main():
             df = df.append(_vault_transfers(vault, start_block, end_block))
         if cache is not None:
             df = cache.append(df)
-        df = df.sort_values(by='block')
+        df = df.sort_values(by='block').astype({"vault": "category","symbol": "category","type": "category"})
         df.to_pickle(CACHE_PATH)
         print(f'all vault transfers exported to {CACHE_PATH}')
 
