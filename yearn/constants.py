@@ -1,4 +1,5 @@
 from brownie import interface, chain
+from yearn.networks import Network
 
 CONTROLLER_INTERFACES = {
     "0x2be5D998C95DE70D9A38b3d78e49751F10F9E88b": interface.ControllerV1,
@@ -118,19 +119,25 @@ YEARN_ADDRESSES_PROVIDER = "0x9be19Ee7Bc4099D62737a7255f5c227fBcd6dB93"
 CURVE_ADDRESSES_PROVIDER = "0x0000000022D53366457F9d5E68Ec105046FC4383"
 
 TREASURY_WALLETS = {
-    "0x5f0845101857d2A91627478e302357860b1598a1", # Yearn KP3R Wallet
-    "0x93A62dA5a14C80f265DAbC077fCEE437B1a0Efde", # Yearn Treasury
-    "0xb99a40fcE04cb740EB79fC04976CA15aF69AaaaE", # Yearn Treasury V1  
-    "0xFEB4acf3df3cDEA7399794D0869ef76A6EfAff52", # Yearn MultiSig
-    "0x7d2aB9CA511EBD6F03971Fb417d3492aA82513f0", # ySwap Multisig
-    "0x2C01B4AD51a67E2d8F02208F54dF9aC4c0B778B6", # yMechs Multisig
-} if chain.id == 1 else {
-    "0x89716Ad7EDC3be3B35695789C475F3e7A3Deb12a", # Yearn Multisig
-} if chain.id == 250 else None
+    Network.Mainnet: {
+        "0x5f0845101857d2A91627478e302357860b1598a1", # Yearn KP3R Wallet
+        "0x93A62dA5a14C80f265DAbC077fCEE437B1a0Efde", # Yearn Treasury
+        "0xb99a40fcE04cb740EB79fC04976CA15aF69AaaaE", # Yearn Treasury V1  
+        "0xFEB4acf3df3cDEA7399794D0869ef76A6EfAff52", # Yearn MultiSig
+        "0x7d2aB9CA511EBD6F03971Fb417d3492aA82513f0", # ySwap Multisig
+        "0x2C01B4AD51a67E2d8F02208F54dF9aC4c0B778B6", # yMechs Multisig
+    },
+    Network.Fantom: {
+        "0x89716Ad7EDC3be3B35695789C475F3e7A3Deb12a", # Yearn Multisig
+    }
+}
 
 
 STRATEGIST_MULTISIG = {
-    "0x16388463d60FFE0661Cf7F1f31a7D658aC790ff7",
-} if chain.id == 1 else {
-    "0x72a34AbafAB09b15E7191822A679f28E067C4a16",
-} if chain.id == 250 else None
+    Network.Mainnet: {
+        "0x16388463d60FFE0661Cf7F1f31a7D658aC790ff7",
+    },
+    Network.Fantom: {
+        "0x72a34AbafAB09b15E7191822A679f28E067C4a16",
+    }
+}
