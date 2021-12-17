@@ -1,10 +1,9 @@
 import logging
-
 from dataclasses import dataclass
 from functools import cached_property
 from typing import Optional
 
-from brownie import ZERO_ADDRESS, interface, chain
+from brownie import ZERO_ADDRESS, chain, interface
 from brownie.network.contract import InterfaceContainer
 from yearn import apy, constants
 from yearn.apy.common import ApySamples
