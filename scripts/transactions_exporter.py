@@ -36,7 +36,7 @@ def process_and_cache_user_txs(last_saved_block=None):
     max_block_to_cache = chain.height - 50
     start_block = last_saved_block + 1 if last_saved_block else None
     end_block = (
-        9480000
+        9480000 # NOTE block some arbitrary time after iearn's first deployment
         if start_block is None
         else start_block + BATCH_SIZE
         if start_block + BATCH_SIZE < max_block_to_cache
