@@ -15,4 +15,5 @@ boto3==1.17.88
 rich>=10.11.0
 matplotlib>=3.4.3
 pandas>=1.3.0
+pony>=0.6.7
 sqlalchemy>=1.4.26
