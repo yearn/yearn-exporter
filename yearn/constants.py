@@ -130,7 +130,7 @@ TREASURY_WALLETS = {
     Network.Fantom: {
         "0x89716Ad7EDC3be3B35695789C475F3e7A3Deb12a", # Yearn Multisig
     }
-}
+}.get(chain.id,set())
 
 
 STRATEGIST_MULTISIG = {
@@ -140,4 +140,4 @@ STRATEGIST_MULTISIG = {
     Network.Fantom: {
         "0x72a34AbafAB09b15E7191822A679f28E067C4a16",
     }
-}
+}.get(chain.id,set())

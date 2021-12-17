@@ -370,7 +370,7 @@ class Treasury:
 
 class YearnTreasury(Treasury):
     def __init__(self,watch_events_forever=False):
-        super().__init__('treasury',TREASURY_WALLETS[chain.id],watch_events_forever=watch_events_forever,start_block=10502337)
+        super().__init__('treasury',TREASURY_WALLETS,watch_events_forever=watch_events_forever,start_block=10502337)
 
     def partners_debt(self, block=None) -> dict:
         for i, partner in enumerate(partners):
@@ -390,4 +390,4 @@ class YearnTreasury(Treasury):
 
 class StrategistMultisig(Treasury):
     def __init__(self,watch_events_forever=False):
-        super().__init__('sms',STRATEGIST_MULTISIG[chain.id],watch_events_forever=watch_events_forever,start_block=11507716)
+        super().__init__('sms',STRATEGIST_MULTISIG,watch_events_forever=watch_events_forever,start_block=11507716)
