@@ -64,20 +64,10 @@ class VaultV1:
         return curve.get_pool(str(self.token)) is not None
 
     def wallets(self, block=None):
-        self.load_transfers()
-        transfers = [event for event in self._transfers if event.block_number <= block]
-        return set(receiver for sender, receiver, value in transfers if receiver != ZERO_ADDRESS)
+        return self.wallet_balances(block=block).keys()
 
     def wallet_balances(self, block=None):
-        self.load_transfers()
-        balances = Counter()
-        for event in [transfer for transfer in self._transfers if transfer.block_number <= block]:
-            sender, receiver, amount = event.values()
-            if sender != ZERO_ADDRESS:
-                balances[sender] -= amount
-            if receiver != ZERO_ADDRESS:
-                balances[receiver] += amount
-        return balances
+        return PostgresInstance().fetch_balances(self.vault.address, block=block)
 
     def describe(self, block=None):
         info = {}

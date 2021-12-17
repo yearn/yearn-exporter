@@ -58,24 +58,29 @@ class Yearn:
             delayed(self.registries[key].describe)(block=block)
             for key in self.registries
         )
-        results_dict = dict(zip(self.registries, desc))
-        if not os.environ.get("SKIP_WALLET_STATS", False):
-            wallet_balances = Counter()
-            for registry in desc:
-                for vault, data in registry.items():
-                    try:
-                        for wallet, bals in data['wallet balances'].items():
-                            wallet_balances[wallet] += bals["usd balance"]
-                    except: # process vaults, not aggregated stats
-                        pass # TODO: add total wallets and wallet balances for earn, ib, special
-            agg_stats = {
-                "agg_stats": {
-                    "total wallets": len(wallet_balances),
-                    "wallet balances usd": wallet_balances
-                }
+        return dict(zip(self.registries, desc))
+
+    def describe_wallets(self, block=None):
+        registries = ['v1','v2'] # TODO: add other registries [earn, ib, special]
+        data = Parallel(4,'threading')(delayed(self.registries[key].describe_wallets)(block=block) for key in registries)
+        data = {registry:desc for registry,desc in zip(registries,data)}
+
+        wallet_balances = Counter()
+        for registry, reg_desc in data.items():
+            for wallet, usd_bal in reg_desc['wallet balances usd'].items():
+                wallet_balances[wallet] += usd_bal
+        agg_stats = {
+            "agg_stats": {
+                "total wallets": len(wallet_balances),
+                "active wallets": sum(1 if balance > 50 else 0 for wallet, balance in wallet_balances.items()),
+                "wallets > $5k": sum(1 if balance > 5000 else 0 for wallet, balance in wallet_balances.items()),
+                "wallets > $50k": sum(1 if balance > 50000 else 0 for wallet, balance in wallet_balances.items()),
+                "wallet balances usd": wallet_balances
             }
-            results_dict.update(agg_stats)
-        return results_dict
+        }
+        data.update(agg_stats)
+        return data
+
 
     def describe_wallets(self, block=None):
         registries = ['v1','v2'] # TODO: add other registries [earn, ib, special]
