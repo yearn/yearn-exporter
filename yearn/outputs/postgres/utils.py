@@ -1,5 +1,5 @@
 from brownie import Contract, chain, ZERO_ADDRESS
-from pony.orm import ObjectNotFound, db_session, TransactionIntegrityError
+from pony.orm import ObjectNotFound, db_session, TransactionIntegrityError, raw_sql
 from yearn.cache import memory
 from yearn.entities import Address, Token, UserTx, db
 from yearn.multicall2 import fetch_multicall
@@ -45,7 +45,7 @@ def fetch_balances(vault_address: str, block=None):
         raise Exception('this block has not yet been cached into postgres')
     if block:
         balances = db.select(f"""
-            select a.wallet, coalesce(amount_in,0) - coalesce(amount_out,0) balance
+            a.wallet, coalesce(amount_in,0) - coalesce(amount_out,0) balance
             from (
                 select "to" wallet, sum(amount) amount_in
                 from user_txs where chainid = {chainid} and vault = '{vault_address}' and block <= {block} 
@@ -54,10 +54,10 @@ def fetch_balances(vault_address: str, block=None):
                 select "from" wallet, sum(amount) amount_out
                 from user_txs where chainid = {chainid} and vault = '{vault_address}' and block <= {block}
                 group by "from") b on a.wallet = b.wallet
-                """).fetchall()
+                """)
     else:
         balances = db.select(f"""
-            select a.wallet, coalesce(amount_in,0) - coalesce(amount_out,0) balance
+            a.wallet, coalesce(amount_in,0) - coalesce(amount_out,0) balance
             from (
                 select "to" wallet, sum(amount) amount_in
                 from user_txs where chainid = {chainid} and vault = '{vault_address}'
@@ -66,5 +66,5 @@ def fetch_balances(vault_address: str, block=None):
                 select "from" wallet, sum(amount) amount_out
                 from user_txs where chainid = {chainid} and vault = '{vault_address}'
                 group by "from") b on a.wallet = b.wallet
-                """).fetchall()
+                """)
     return {wallet: balance for wallet,balance in balances if wallet != ZERO_ADDRESS}
