@@ -22,7 +22,6 @@ logger = logging.getLogger(__name__)
 logger_price_magic.setLevel(logging.CRITICAL)
 
 
-
 def _get_price(token, block=None):
     SKIP_PRICE = [  # shitcoins
         "0xa9517B2E61a57350D6555665292dBC632C76adFe",
