@@ -33,6 +33,7 @@ def create_filter(address, topics=None):
     Set fromBlock as the earliest creation block.
     """
     if address is None:
+        # We use this to pull Treasury's ERC20 Transfers
         # Treasury didn't exist prior to block 10502337
         return web3.eth.filter({"fromBlock": 10502337, "topics": topics}) 
 
