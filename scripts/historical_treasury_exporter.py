@@ -1,8 +1,9 @@
 import logging
 from datetime import datetime, timezone
+
 from yearn.historical_helper import export_historical, time_tracking
+from yearn.treasury.treasury import YearnTreasury
 from yearn.utils import closest_block_after_timestamp
-from yearn.treasury.treasury import Treasury
 
 logger = logging.getLogger('yearn.historical_treasury_exporter')
 
@@ -20,7 +21,7 @@ def main():
 
 
 def export_chunk(chunk, export_snapshot_func):
-    treasury = Treasury()
+    treasury = YearnTreasury()
     for snapshot in chunk:
         ts = snapshot.timestamp()
         export_snapshot_func(
