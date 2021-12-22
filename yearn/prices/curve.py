@@ -136,7 +136,10 @@ class CurveRegistry(metaclass=Singleton):
         }
     
     def crypto_swap_registry_supports_pool(self, pool):
-        return self.crypto_swap_registry.get_pool_name(pool)
+        if self.crypto_swap_registry.get_pool_name(pool):
+            return True
+        else: 
+            return False
 
     def get_factory(self, pool):
         """

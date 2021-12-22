@@ -127,3 +127,6 @@ def dai():
 
 def old_dai():
     calculate_apy("0x19D3364A399d251E894aC732651be8B0E4e85001")
+
+def eurs_usdc():
+    calculate_apy("0x801Ab06154Bf539dea4385a39f5fa8534fB53073")
