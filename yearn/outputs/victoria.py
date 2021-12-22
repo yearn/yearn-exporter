@@ -164,6 +164,9 @@ def export_treasury(timestamp, data):
     # post all metrics for this timestamp at once
     _post(metrics_to_export)
 
+def export_apy(timestamp, data):
+    print("Exporting data", data)
+
 
 def export_duration(duration_seconds, pool_size, direction, timestamp_seconds):
     item = _build_item(

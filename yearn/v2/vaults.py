@@ -13,6 +13,7 @@ from yearn.apy.common import ApySamples
 from yearn.common import Tvl
 from yearn.events import create_filter, decode_logs
 from yearn.multicall2 import fetch_multicall
+from yearn.outputs import victoria
 from yearn.prices import magic
 from yearn.prices.curve import curve
 from yearn.utils import safe_views, contract
@@ -204,3 +205,7 @@ class Vault:
             price = None
         tvl = total_assets * price / 10 ** self.vault.decimals(block_identifier=block) if price else None
         return Tvl(total_assets, price, tvl)
+
+    def export_apy(self, samples: ApySamples):
+        apy = self.apy(samples)
+        victoria.export_apy(samples, apy)
