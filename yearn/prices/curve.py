@@ -78,14 +78,15 @@ class CurveRegistry(metaclass=Singleton):
 
         self.pools = set()
         self.identifiers = defaultdict(list)
-        self.addres_provider = contract(addrs['address_provider'])
+        self.address_provider = contract(addrs['address_provider'])
+        self.crypto_swap_registry = contract(self.address_provider.get_address(5))
         self.watch_events()
 
     def watch_events(self):
         # TODO keep fresh in background
 
         # fetch all registries and factories from address provider
-        log_filter = create_filter(str(self.addres_provider))
+        log_filter = create_filter(str(self.address_provider))
         for event in decode_logs(log_filter.get_new_entries()):
             if event.name == 'NewAddressIdentifier':
                 self.identifiers[event['id']].append(event['addr'])
@@ -97,6 +98,11 @@ class CurveRegistry(metaclass=Singleton):
         for event in decode_logs(log_filter.get_new_entries()):
             if event.name == 'PoolAdded':
                 self.pools.add(event['pool'])
+
+        log_filter = create_filter(str(self.crypto_swap_registry))
+        for event in decode_logs(log_filter.get_new_entries()):
+            if event.name == 'PoolAdded':
+                self.pools.add(event['pool'])    
 
         logger.info(f'loaded {len(self.pools)} pools')
 
@@ -128,6 +134,9 @@ class CurveRegistry(metaclass=Singleton):
             str(factory): list(islice(pool_lists, pool_count))
             for factory, pool_count in zip(metapool_factories, pool_counts)
         }
+    
+    def crypto_swap_registry_supports_pool(self, pool):
+        return self.crypto_swap_registry.get_pool_name(pool)
 
     def get_factory(self, pool):
         """
@@ -144,6 +153,11 @@ class CurveRegistry(metaclass=Singleton):
 
     @lru_cache(maxsize=None)
     def _pool_from_lp_token(self, token):
+        crypto_swap_registry_result = self.crypto_swap_registry.get_pool_from_lp_token(token)
+
+        if crypto_swap_registry_result != ZERO_ADDRESS:
+            return crypto_swap_registry_result
+
         return self.registry.get_pool_from_lp_token(token)
 
     def __contains__(self, token):
@@ -173,6 +187,11 @@ class CurveRegistry(metaclass=Singleton):
             if gauge != ZERO_ADDRESS:
                 return gauge
 
+        if self.crypto_swap_registry_supports_pool(pool):
+            gauges, types = self.crypto_swap_registry.get_gauges(pool)
+            if gauges[0] != ZERO_ADDRESS:
+                return gauges[0]        
+
         gauges, types = self.registry.get_gauges(pool)
         if gauges[0] != ZERO_ADDRESS:
             return gauges[0]
@@ -186,6 +205,8 @@ class CurveRegistry(metaclass=Singleton):
 
         if factory:
             coins = contract(factory).get_coins(pool)
+        elif self.crypto_swap_registry_supports_pool(pool):
+            coins = self.crypto_swap_registry.get_coins(pool)
         else:
             coins = self.registry.get_coins(pool)
 
@@ -220,7 +241,13 @@ class CurveRegistry(metaclass=Singleton):
     @lru_cache(maxsize=None)
     def get_decimals(self, pool):
         factory = self.get_factory(pool)
-        source = contract(factory) if factory else self.registry
+        if factory: 
+            source = contract(factory)
+        elif self.crypto_swap_registry_supports_pool(pool):
+            source = self.crypto_swap_registry
+        else: 
+            source = source = self.registry
+
         decimals = source.get_decimals(pool)
 
         # pool not in registry
@@ -241,7 +268,13 @@ class CurveRegistry(metaclass=Singleton):
         decimals = self.get_decimals(pool)
 
         try:
-            source = contract(factory) if factory else self.registry
+            if factory: 
+                source = contract(factory)
+            elif self.crypto_swap_registry_supports_pool(pool):
+                source = self.crypto_swap_registry
+            else:
+                source = self.registry
+
             balances = source.get_balances(pool, block_identifier=block)
         # fallback for historical queries
         except ValueError:

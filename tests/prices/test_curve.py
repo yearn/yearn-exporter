@@ -4,11 +4,12 @@ from functools import lru_cache
 import numpy as np
 import pytest
 import requests
-from brownie import chain, multicall, web3
+from brownie import ZERO_ADDRESS, chain, multicall, web3
 from tabulate import tabulate
 from yearn.prices import curve
 from yearn.exceptions import PriceError
 from yearn.utils import contract, contract_creation_block
+from yearn.prices.magic import get_price
 
 pooldata = json.load(open('tests/fixtures/pooldata.json'))
 
@@ -161,6 +162,11 @@ old_metapools = [
 
 metapools = new_metapools + old_metapools
 
+eur_usd_crypto_pool_tokens = [
+    "0x3b6831c0077a1e44ED0a21841C3bC4dC11bCE833",
+    "0x3D229E1B4faab62F621eF2F6A610961f7BD7b23B"
+]
+
 
 @pytest.fixture(scope='session')
 def convex_gauge_map():
@@ -288,3 +294,18 @@ def test_get_balances_fallback(name):
     if curve.curve.get_factory(pool):
         pytest.skip('not applicable to metapools')
     print(name, curve.curve.get_balances(pool, block=registry_deploy))
+
+
+@pytest.mark.parametrize('pool', range(len(eur_usd_crypto_pool_tokens)))
+def test_crypto_pool_eur_usd_assets(pool):
+    lp_token = eur_usd_crypto_pool_tokens[pool]
+    pool = curve.curve.crypto_swap_registry.get_pool_from_lp_token(lp_token)
+    coins = curve.curve.crypto_swap_registry.get_coins(pool)
+    non_zero_coins = list(filter(lambda coin: coin != ZERO_ADDRESS, coins))
+    underlying_coin_prices = map(lambda coin: get_price(coin), non_zero_coins)
+    summed_coin_prices = sum(underlying_coin_prices)
+
+    price = curve.curve.get_price(lp_token)
+    # the price of the crypto pool token should be approximately equal to the sum of the
+    # underlying coins, provided they are roughly equally balanced in the pool
+    assert price == pytest.approx(summed_coin_prices, rel=2e-1)
