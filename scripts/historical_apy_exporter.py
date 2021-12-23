@@ -39,7 +39,7 @@ def export_chunk(chunk, export_snapshot_func):
 
     for snapshot in chunk:
         samples: ApySamples = get_samples(now_time=snapshot)
-        logging.info("Exporting snapshot for chunk")
+        logger.info("Exporting snapshot for chunk")
         for vault in itertools.chain(v1_registry.vaults, v2_registry.vaults):
             export_snapshot_func(
                 {
@@ -52,5 +52,8 @@ def export_chunk(chunk, export_snapshot_func):
 
 @time_tracking
 def export_snapshot(vault: Union[VaultV1, VaultV2], samples: ApySamples, exporter_name):
-    logging.info("exporting apy for vault")
-    vault.export_apy(samples)
+    logger.info("exporting apy for vault")
+    try:
+        vault.export_apy(samples)
+    except ApyError as e:
+        logger.error("APY Error for %s at %s", vault, samples)
