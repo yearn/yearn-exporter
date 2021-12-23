@@ -1,4 +1,4 @@
-eth-brownie>=1.16.4
+git+https://github.com/mariuspod/brownie.git@01ec0185c09ae536a15b139b50ee43112482b669
 web3>=5.23.1
 click>=7.1.2
 tabulate>=0.8.7

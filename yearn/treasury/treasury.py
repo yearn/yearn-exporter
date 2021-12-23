@@ -62,13 +62,6 @@ def _get_price(token, block=None):
 
 def get_token_from_event(event):
     try:
-        if '(unknown)' in event:
-            # Depending on the contract's internal topic_map the event will be unknown if it couldn't be decoded by brownie based on the provided transfer event signature of the given log filter.
-            # ERC-20  events are matched with '0xddf252ad1be2c89b69c2b068fc378daa952ba7f163c4a11628f55a4df523b3ef' in the first topic.
-            # ERC-677 events are matched with '0xe19260aff97b920c7df27010903aeb9c8d2be5d310a2c67824cf3f15396e4c16' in the first topic.
-            # As each log is matched against exactly one topic-0 although we're passing an union of topics-0 we will still get some unknown events from brownie which can be skipped as it should be matched on the next log.
-            return None
-
         transfer = event['Transfer']
         address = transfer[0].address
         # try to download the contract from etherscan
