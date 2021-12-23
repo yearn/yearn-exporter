@@ -5,6 +5,7 @@ import time
 from brownie import Contract, chain, web3
 from brownie.network.event import EventLookupError
 from eth_abi import encode_single
+from eth_utils import encode_hex
 from joblib import Parallel, delayed
 from yearn.events import decode_logs
 from yearn.multicall2 import fetch_multicall
@@ -16,7 +17,7 @@ from yearn.prices.magic import get_price, logger as logger_price_magic
 from yearn.exceptions import PriceError
 from yearn.utils import contract
 
-from ..constants import TREASURY_WALLETS, ERC20_TRANSFER_EVENT_HASH, ERC677_TRANSFER_EVENT_HASH
+from yearn.constants import TREASURY_WALLETS, ERC20_TRANSFER_EVENT_HASH, ERC677_TRANSFER_EVENT_HASH
 
 logger = logging.getLogger(__name__)
 logger_price_magic.setLevel(logging.CRITICAL)
@@ -89,7 +90,7 @@ class Treasury:
             ERC20_TRANSFER_EVENT_HASH,
             ERC677_TRANSFER_EVENT_HASH
         ]
-        treasury_addresses = ['0x000000000000000000000000' + address[2:] for address in self.addresses]
+        treasury_addresses = [encode_hex(encode_single('address', address)) for address in self.addresses]
         self._topics = [
             [
                 transfer_sigs,
