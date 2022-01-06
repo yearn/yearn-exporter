@@ -76,17 +76,22 @@ class Registry(metaclass=Singleton):
         self._done.wait()
 
     def watch_events(self):
-        start = time.time()
-        self.log_filter = create_filter([str(addr) for addr in self.registries])
-        for block in chain.new_blocks(height_buffer=12):
-            logs = self.log_filter.get_new_entries()
-            self.process_events(decode_logs(logs))
-            if not self._done.is_set():
-                self._done.set()
-                logger.info("loaded v2 registry in %.3fs", time.time() - start)
-            if not self._watch_events_forever:
-                break
-            time.sleep(300)
+        try:
+            start = time.time()
+            self.log_filter = create_filter([str(addr) for addr in self.registries])
+            for block in chain.new_blocks(height_buffer=12):
+                logs = self.log_filter.get_new_entries()
+                self.process_events(decode_logs(logs))
+                if not self._done.is_set():
+                    self._done.set()
+                    logger.info("loaded v2 registry in %.3fs", time.time() - start)
+                if not self._watch_events_forever:
+                    break
+                time.sleep(300)
+        except:
+            self._done.set()
+            raise
+
 
     def process_events(self, events):
         for event in events:

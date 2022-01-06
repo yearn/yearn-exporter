@@ -69,18 +69,22 @@ class Strategy:
         raise ValueError("Strategy is only comparable with [Strategy, str]")
 
     def watch_events(self):
-        start = time.time()
-        self.log_filter = create_filter(str(self.strategy), topics=self._topics)
-        for block in chain.new_blocks(height_buffer=12):
-            logs = self.log_filter.get_new_entries()
-            events = decode_logs(logs)
-            self.process_events(events)
-            if not self._done.is_set():
-                self._done.set()
-                logger.info("loaded %d harvests %s in %.3fs", len(self._harvests), self.name, time.time() - start)
-            if not self._watch_events_forever:
-                break
-            time.sleep(300)
+        try:
+            start = time.time()
+            self.log_filter = create_filter(str(self.strategy), topics=self._topics)
+            for block in chain.new_blocks(height_buffer=12):
+                logs = self.log_filter.get_new_entries()
+                events = decode_logs(logs)
+                self.process_events(events)
+                if not self._done.is_set():
+                    self._done.set()
+                    logger.info("loaded %d harvests %s in %.3fs", len(self._harvests), self.name, time.time() - start)
+                if not self._watch_events_forever:
+                    break
+                time.sleep(300)
+        except:
+            self._done.set()
+            raise
 
     def process_events(self, events):
         for event in events:

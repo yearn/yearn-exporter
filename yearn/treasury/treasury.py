@@ -332,27 +332,32 @@ class Treasury:
         self._done.wait()
 
     def watch_transfers(self):
-        start = time.time()
-        logger.info(
-            'pulling treasury transfer events, please wait patiently this takes a while...'
-        )
-        transfer_filters = [
-            web3.eth.filter({"fromBlock": self._start_block, "topics": topics})
-            for topics in self._topics
-        ]
-        for block in chain.new_blocks(height_buffer=12):
-            for transfer_filter in transfer_filters:
-                logs = transfer_filter.get_new_entries()
-                self.process_transfers(logs)
+        try:
+            start = time.time()
+            logger.info(
+                'pulling treasury transfer events, please wait patiently this takes a while...'
+            )
+            transfer_filters = [
+                web3.eth.filter({"fromBlock": self._start_block, "topics": topics})
+                for topics in self._topics
+            ]
+            for block in chain.new_blocks(height_buffer=12):
+                for transfer_filter in transfer_filters:
+                    logs = transfer_filter.get_new_entries()
+                    self.process_transfers(logs)
 
-            if not self._done.is_set():
-                self._done.set()
-                logger.info(
-                    f"loaded {self.label} transfer events in %.3fs", time.time() - start
-                )
-            if not self._watch_events_forever:
-                break
-            time.sleep(5)
+                if not self._done.is_set():
+                    self._done.set()
+                    logger.info(
+                        f"loaded {self.label} transfer events in %.3fs", time.time() - start
+                    )
+                if not self._watch_events_forever:
+                    break
+                time.sleep(5)
+        except:
+            self._done.set()
+            raise
+
 
     def process_transfers(self, logs):
         for log in logs:
