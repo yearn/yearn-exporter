@@ -78,7 +78,7 @@ class Backscratcher:
         voter = "0xF147b8125d2ef93FB6965Db97D6746952a133934"
         crv_price = magic.get_price("0xD533a949740bb3306d119CC777fa900bA034cd52")
         yvecrv_price = magic.get_price("0xc5bDdf9843308380375a611c18B50Fb9341f502A")
-        
+
         total_vecrv = curve_voting_escrow.totalSupply()
         yearn_vecrv = curve_voting_escrow.balanceOf(voter)
         vault_supply = self.vault.totalSupply()
@@ -91,11 +91,11 @@ class Backscratcher:
         apy = (tokens_per_week * virtual_price * 52) / ((total_vecrv / 1e18) * crv_price)
         vault_boost = (yearn_vecrv / vault_supply) * (crv_price / yvecrv_price)
         composite = {
-            "currentBoost": vault_boost,
-            "boostedApy": apy * vault_boost,
-            "totalApy": apy * vault_boost,
-            "poolApy": apy,
-            "baseApy": apy,
+            "boost": vault_boost,
+            "boosted_apy": apy * vault_boost,
+            "total_apy": apy * vault_boost,
+            "pool_apy": apy,
+            "base_apy": apy,
         }
         return Apy("backscratcher", apy, apy, ApyFees(), composite=composite)
 
@@ -106,9 +106,9 @@ class Backscratcher:
         except PriceError:
             price = None
         tvl = total_assets * price / 10 ** self.vault.decimals(block_identifier=block) if price else None
-        return Tvl(total_assets, price, tvl) 
+        return Tvl(total_assets, price, tvl)
 
-        
+
 
 
 class Ygov:
