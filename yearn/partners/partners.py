@@ -284,11 +284,11 @@ partners = [
     ),
     Partner(
       name='shapeshiftdao',
-      treasury='0x90a48d5cf7343b08da12e067680b4c6dbfe551be',
+      treasury='0x90A48D5CF7343B08dA12E067680B4C6dbfE551Be',
       wrappers=[
           WildcardWrapper(
               name='ShapeShift DAO Router',
-              wrapper='0x6a1e73f12018d8e5f966ce794aa2921941feb17e',
+              wrapper='0x6a1e73f12018D8e5f966ce794aa2921941feB17E',
           ),
       ],
     ),
