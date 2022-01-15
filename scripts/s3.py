@@ -27,7 +27,7 @@ from yearn.v2.registry import Registry as RegistryV2
 from yearn.v1.vaults import VaultV1
 from yearn.v2.vaults import Vault as VaultV2
 
-from yearn.utils import contract_creation_block, contract
+from yearn.utils import contract_creation_block, contract, chunks
 
 from yearn.exceptions import PriceError
 from yearn.networks import Network
@@ -109,7 +109,11 @@ def wrap_vault(
 def get_assets_metadata(vault_v2: list) -> dict:
     registry_v2_adapter = registry_adapter()
     addresses = [str(vault.vault) for vault in vault_v2]
-    assets_dynamic_data = registry_v2_adapter.assetsDynamic(addresses)
+    addresses_chunks = chunks(addresses, 20)
+    assets_dynamic_data = []
+    for chunk in addresses_chunks:
+        dynamic = registry_v2_adapter.assetsDynamic(chunk)
+        assets_dynamic_data.extend(dynamic)
     assets_metadata = {}
     for datum in assets_dynamic_data:
         assets_metadata[datum[0]] = datum[-1]

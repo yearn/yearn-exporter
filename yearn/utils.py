@@ -126,3 +126,9 @@ def contract(address):
 def is_contract(address: str) -> bool:
     '''checks to see if the input address is a contract'''
     return web3.eth.get_code(address) != '0x'
+
+
+def chunks(lst, n):
+    """Yield successive n-sized chunks from lst."""
+    for i in range(0, len(lst), n):
+        yield lst[i:i + n]
