@@ -36,9 +36,9 @@ stablecoins_by_network = {
         "0x1c48f86ae57291F7686349F12601910BD8D470bb": "usdk",
         "0x056Fd409E1d7A124BD7017459dFEa2F387b6d5Cd": "gusd",
         "0x0E2EC54fC0B509F445631Bf4b91AB8168230C752": "linkusd",
-        "0x99d8a9c45b2eca8864373a26d1459e3dff1e17f3": "mim",
-        "0xa47c8bf37f92abed4a126bda807a7b7498661acd": "ust",
-        "0x196f4727526ea7fb1e17b2071b3d8eaa38486988": "rsv",
+        "0x99D8a9C45b2ecA8864373A26D1459e3Dff1e17F3": "mim",
+        "0xa47c8bf37f92aBed4A126BDA807A7b7498661acD": "ust",
+        "0x196f4727526eA7FB1e17b2071B3d8eAA38486988": "rsv",
         
     },
     Network.Fantom: {
