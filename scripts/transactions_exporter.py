@@ -24,8 +24,6 @@ logger = logging.getLogger('yearn.transactions_exporter')
 
 BATCH_SIZE = 5000
 
-BATCH_SIZE = 5000
-
 def main():
     for block in chain.new_blocks(height_buffer=1):
         process_and_cache_user_txs(last_recorded_block(UserTx))
