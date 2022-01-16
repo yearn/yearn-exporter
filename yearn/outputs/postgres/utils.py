@@ -1,6 +1,7 @@
 from brownie import Contract, chain, ZERO_ADDRESS
 from pony.orm import db_session, select
 from yearn.cache import memory
+import logging
 from yearn.entities import Address, Token, UserTx, db
 from yearn.multicall2 import fetch_multicall
 from yearn.utils import is_contract
