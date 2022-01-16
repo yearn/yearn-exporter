@@ -22,7 +22,6 @@ services:
       - ETHERSCAN_TOKEN
       - EXPLORER
       - SLEEP_SECONDS
-      - SKIP_WALLET_STATS
     volumes:
       - solidity_compilers:/root/.solcx
       - vyper_compilers:/root/.vvm
@@ -104,6 +103,9 @@ services:
       - PGDATABASE=postgres
       - PGUSER=postgres
       - PGPASSWORD=yearn-exporter
+      - POOL_SIZE
+      - CHUNK_SIZE
+      - RESOLUTION
     volumes:
       - solidity_compilers:/root/.solcx
       - vyper_compilers:/root/.vvm
