@@ -14,7 +14,7 @@ from yearn.utils import closest_block_after_timestamp
 
 from yearn.treasury.treasury import StrategistMultisig
 
-logger = logging.getLogger('yearn.historical_treasury_exporter')
+logger = logging.getLogger('yearn.historical_sms_exporter')
 
 available_memory = psutil.virtual_memory().available / 1e9  # in GB
 default_pool_size = max(1, math.floor(available_memory / 8))  # allocate 8GB per worker
