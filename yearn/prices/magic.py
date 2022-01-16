@@ -14,10 +14,11 @@ from yearn.prices.synthetix import synthetix
 from yearn.prices.uniswap.v1 import uniswap_v1
 from yearn.prices.uniswap.v2 import uniswap_v2
 from yearn.prices.uniswap.v3 import uniswap_v3
+from yearn.prices.curve import curve
 from yearn.prices.yearn import yearn_lens
 from yearn.utils import contract
 
-from yearn.prices import constants, curve
+from yearn.prices import constants
 
 logger = logging.getLogger(__name__)
 
@@ -48,8 +49,6 @@ def unwrap_token(token):
 
 def find_price(token, block):
     price = None
-    
-
     if token in constants.stablecoins:
         logger.debug("stablecoin -> %s", 1)
         return 1
@@ -71,10 +70,14 @@ def find_price(token, block):
         logger.debug('xcredit -> unwrap')
         wrapper = contract(token)
         price = get_price(wrapper.token(), block=block) * wrapper.getShareValue() / 1e18
+    # no liquid market for yveCRV-DAO -> return CRV token price
+    elif chain.id == Network.Mainnet and token == '0xc5bDdf9843308380375a611c18B50Fb9341f502A' and block and block < 11786563:
+        if curve and curve.crv:
+            return get_price(curve.crv, block=block)
 
     markets = [
         chainlink,
-        curve.curve,
+        curve,
         compound,
         fixed_forex,
         synthetix,
