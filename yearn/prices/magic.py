@@ -48,6 +48,7 @@ def unwrap_token(token):
 
 def find_price(token, block):
     price = None
+    
 
     if token in constants.stablecoins:
         logger.debug("stablecoin -> %s", 1)
