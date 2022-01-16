@@ -36,11 +36,11 @@ def last_recorded_block(Entity: db.Entity) -> int:
     Returns last block recorded for sql entity type `Entity`
     '''
     TreasuryTx = 1 # NOTE: Get rid of this when treasury txs are implemented
-    if type(Entity) == UserTx:
-        return select(max(e.block) for e in Entity if e.vault.chainid == chain.id)
-    elif type(Entity) == TreasuryTx:
-        return select(max(e.block) for e in Entity if e.token.chainid == chain.id)
-    return select(max(e.block) for e in Entity if e.chainid == chain.id)
+    if Entity == UserTx:
+        return select(max(e.block) for e in Entity if e.vault.token.chainid == chain.id).first()
+    elif Entity == TreasuryTx:
+        return select(max(e.block) for e in Entity if e.token.token.chainid == chain.id).first()
+    return select(max(e.block) for e in Entity if e.chainid == chain.id).first()
 
 @db_session
 def fetch_balances(vault_address: str, block=None):
