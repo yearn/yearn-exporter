@@ -198,11 +198,6 @@ class Treasury:
         # ychad = contract('ychad.eth')
         ychad = contract('0xfeb4acf3df3cdea7399794d0869ef76a6efaff52')
         vat = contract('0x35D1b3F3D7966A1DFe207aa4514C12a259A0492B')
-        proxy = proxy_registry.proxies(ychad)
-        cdp = cdp_manager.first(proxy)
-        urn = cdp_manager.urns(cdp)
-        ilk = encode_single('bytes32', b'YFI-A')
-        ink = vat.urns(ilk, urn, block_identifier=block).dict()["ink"]
         yfi = "0x0bc529c00C6401aEF6D220BE8C6Ea1667F6Ad93e"
         ilk = encode_single('bytes32', b'YFI-A')
         collateral = {}
@@ -224,8 +219,6 @@ class Treasury:
         # NOTE: This only works for YFI collateral, must extend before using for other collaterals
         if block and block < 11315910:
             return
-        # ychad = contract('ychad.eth')
-        ychad = contract('0xfeb4acf3df3cdea7399794d0869ef76a6efaff52')
         unitVault = contract("0xb1cff81b9305166ff1efc49a129ad2afcd7bcf19")
         yfi = "0x0bc529c00C6401aEF6D220BE8C6Ea1667F6Ad93e"
         collateral = {}
@@ -267,18 +260,10 @@ class Treasury:
     def maker_debt(self, block=None) -> dict:
         proxy_registry = contract('0x4678f0a6958e4D2Bc4F1BAF7Bc52E8F3564f3fE4')
         cdp_manager = contract('0x5ef30b9986345249bc32d8928B7ee64DE9435E39')
-        # ychad = contract('ychad.eth')
-        ychad = contract('0xfeb4acf3df3cdea7399794d0869ef76a6efaff52')
         vat = contract('0x35D1b3F3D7966A1DFe207aa4514C12a259A0492B')
-        proxy = proxy_registry.proxies(ychad)
-        cdp = cdp_manager.first(proxy)
-        urn = cdp_manager.urns(cdp)
         ilk = encode_single('bytes32', b'YFI-A')
-        art = vat.urns(ilk, urn, block_identifier=block).dict()["art"]
-        rate = vat.ilks(ilk, block_identifier=block).dict()["rate"]
-        debt = art * rate / 1e45
         dai = '0x6B175474E89094C44Da98b954EedeAC495271d0F'
-        ilk = encode_single('bytes32', b'YFI-A')
+        maker_debt = {}
         for address in self.addresses:
             proxy = proxy_registry.proxies(address)
             cdp = cdp_manager.first(proxy)
@@ -293,8 +278,6 @@ class Treasury:
         # NOTE: This only works for YFI based debt, must extend before using for other collaterals
         if block and block < 11315910:
             return
-        # ychad = contract('ychad.eth')
-        ychad = contract('0xfeb4acf3df3cdea7399794d0869ef76a6efaff52')
         unitVault = contract("0xb1cff81b9305166ff1efc49a129ad2afcd7bcf19")
         yfi = "0x0bc529c00C6401aEF6D220BE8C6Ea1667F6Ad93e"
         usdp = '0x1456688345527bE1f37E9e627DA0837D6f08C925'
@@ -305,15 +288,19 @@ class Treasury:
         return unit_debt
 
     def compound_debt(self, block=None) -> dict:
-        markets = {Contract(market) for markets in compound.get_markets(block=block).values() if markets is not None for market in markets}
+        markets = {market.ctoken for comp in compound.CompoundMultiplexer().compounds for market in comp.markets}
         gas_token_markets = [market for market in markets if not hasattr(market,'underlying')]
         other_markets = [market for market in markets if hasattr(market,'underlying')]
         markets = gas_token_markets + other_markets
-
         underlyings = [weth for market in gas_token_markets] + fetch_multicall(*[[market,'underlying'] for market in other_markets])
-        markets = zip(markets,underlyings)
-        underlyings = [underlying for contract ,underlying in markets if underlying != ZERO_ADDRESS]
-        markets = [contract for contract, underlying in markets if underlying != ZERO_ADDRESS]
+        
+        markets_zip = zip(markets,underlyings)
+        markets, underlyings = [], []
+        for contract, underlying in markets_zip:
+            if underlying != ZERO_ADDRESS:
+                markets.append(contract)
+                underlyings.append(underlying)
+        
         underlying_contracts = [Contract(underlying) for underlying in underlyings]
         underlying_decimals = fetch_multicall(*[[underlying,'decimals'] for underlying in underlying_contracts])
 
@@ -325,7 +312,7 @@ class Treasury:
         return compound_debt
 
     def aave_debt(self, block=None) -> dict:
-        # NOTE: don't need this yet but I want to add anyway for completeness
+        # TODO: don't need this yet but I want to add anyway for completeness
         pass
 
     # helper functions
