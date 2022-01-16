@@ -90,10 +90,10 @@ def _process_transfer_event(event, token_entity) -> dict:
     cache_address(receiver)
     price = _get_price(event, token_entity)
     if (
+        # NOTE magic.get_price() returns erroneous price due to erroneous ppfs
         token_entity.token.address == '0x7F83935EcFe4729c4Ea592Ab2bC1A32588409797'
         and event.block_number == 12869164
     ):
-        # NOTE magic.get_price() returns erroneous price due to erroneous ppfs
         price = 99999
     txhash = event.transaction_hash.hex()
     return {
