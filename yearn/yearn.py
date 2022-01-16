@@ -17,7 +17,6 @@ from yearn.outputs.victoria import output_base, output_wallets
 from yearn.prices import constants
 from yearn.utils import contract
 
-
 logger = logging.getLogger(__name__)
 
 
@@ -77,9 +76,8 @@ class Yearn:
         return dict(zip(self.registries, desc))
 
     def describe_wallets(self, block=None):
-        registries = ['v1','v2'] # TODO: add other registries [earn, ib, special]
-        data = Parallel(4,'threading')(delayed(self.registries[key].describe_wallets)(block=block) for key in registries)
-        data = {registry:desc for registry,desc in zip(registries,data)}
+        data = Parallel(4,'threading')(delayed(self.registries[key].describe_wallets)(block=block) for key in self.registries)
+        data = {registry:desc for registry,desc in zip(self.registries,data)}
 
         wallet_balances = Counter()
         for registry, reg_desc in data.items():
@@ -97,6 +95,20 @@ class Yearn:
         data.update(agg_stats)
         return data
 
+    
+    def active_vaults_at(self, block=None):
+        active = set()
+        registries = self.registries.items()
+        for label, registry in registries:
+            if label == 'earn':
+                active = active.union({vault.vault for vault in registry.active_vaults_at_block(block=block)})
+            else:
+                active = active.union({vault.vault for vault in registry.active_vaults_at(block=block)})
+        try:
+            active.remove(contract("0xBa37B002AbaFDd8E89a1995dA52740bbC013D992")) # [yGov] Doesn't count for this context
+        except KeyError:
+            pass
+        return active
 
 
     def describe_wallets(self, block=None):
