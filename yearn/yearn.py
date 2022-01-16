@@ -79,6 +79,22 @@ class Yearn:
         data = Parallel(4,'threading')(delayed(self.registries[key].describe_wallets)(block=block) for key in self.registries)
         data = {registry:desc for registry,desc in zip(self.registries,data)}
 
+        wallet_balances = Counter()
+        for registry, reg_desc in data.items():
+            for wallet, usd_bal in reg_desc['wallet balances usd'].items():
+                wallet_balances[wallet] += usd_bal
+        agg_stats = {
+            "agg_stats": {
+                "total wallets": len(wallet_balances),
+                "active wallets": sum(1 if balance > 50 else 0 for wallet, balance in wallet_balances.items()),
+                "wallets > $5k": sum(1 if balance > 5000 else 0 for wallet, balance in wallet_balances.items()),
+                "wallets > $50k": sum(1 if balance > 50000 else 0 for wallet, balance in wallet_balances.items()),
+                "wallet balances usd": wallet_balances
+            }
+        }
+        data.update(agg_stats)
+        return data
+
 
     def total_value_at(self, block=None):
         desc = Parallel(4, "threading")(
