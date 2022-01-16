@@ -8,6 +8,8 @@ from yearn.exceptions import PriceError
 
 logger = logging.getLogger(__name__)
 
+from yearn.outputs.postgres.utils import fetch_balances
+
 class VaultWalletDescriber:
     def wallets(self, vault_address, block=None):
         return self.wallet_balances(vault_address, block=block).keys()
