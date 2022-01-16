@@ -48,7 +48,6 @@ class Token(db.Entity):
     decimals = Required(int)
 
     user_tx = Set('UserTx', reverse="vault")
-    #treasury_tx = Set('TreasuryTx', reverse="token")
 
 
 class UserTx(db.Entity):
@@ -70,27 +69,6 @@ class UserTx(db.Entity):
 
     PrimaryKey(hash,log_index)
 
-'''
-class TreasuryTx(db.Entity):
-    _table_ = "treasury_txs"
-
-    #chainid = Required(int)
-    timestamp = Required(int)
-    block = Required(int)
-    hash = Required(str)
-    log_index = Required(int)
-    token = Required(Token, columns=["chainid","token"], reverse="treasury_tx")
-    type = Required(str)
-    from_address = Required(str, column="from")
-    to_address = Required(str, column="to")
-    amount = Required(Decimal)
-    price = Required(Decimal)
-    value_usd = Required(Decimal)
-    gas_used = Required(Decimal)
-    gas_price = Required(Decimal)
-
-    PrimaryKey(hash,log_index)
-'''
 
 db.bind(
     provider="postgres",
