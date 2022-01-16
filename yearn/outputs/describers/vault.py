@@ -1,14 +1,12 @@
 import logging
-from brownie import chain
-from yearn.networks import Network
 
+from brownie import chain
+from yearn.exceptions import PriceError
+from yearn.networks import Network
 from yearn.outputs.postgres.utils import fetch_balances
 from yearn.prices import magic
-from yearn.exceptions import PriceError
 
 logger = logging.getLogger(__name__)
-
-from yearn.outputs.postgres.utils import fetch_balances
 
 class VaultWalletDescriber:
     def wallets(self, vault_address, block=None):
