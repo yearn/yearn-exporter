@@ -12,9 +12,10 @@ logger = logging.getLogger('yearn.historical_exporter')
 def main():
     start = datetime.now(tz=timezone.utc)
     if Network(chain.id) == Network.Fantom:
-        # end: 2021-04-30 first possible date after the fantom network upgrade
+        # end: 2021-04-30 first possible date after the Fantom network upgrade
         end = datetime(2021, 4, 30, tzinfo=timezone.utc)
-        data_query = 'yearn_vault{network="FTM"}'
+        # ironbank first product deployed on Fantom
+        data_query = 'ironbank{network="FTM"}'
     else:
         # end: 2020-02-12 first iearn deployment
         end = datetime(2020, 2, 12, 0, 1, tzinfo=timezone.utc)
