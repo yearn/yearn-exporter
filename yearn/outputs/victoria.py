@@ -159,11 +159,10 @@ def export_treasury(timestamp, data, label):
             for token, bals in wallet_data.items():
                 symbol = 'ETH' if token == 'ETH' else contract(token).symbol()
                 for key, value in bals.items():
-                    if value != 0:
-                        label_names = ['param','wallet','token_address','token','bucket']
-                        label_values = [key,wallet,token,symbol,get_token_bucket(token)]
-                        item = _build_item(f"{label}_{section}",label_names,label_values,value,timestamp)
-                        metrics_to_export.append(item)
+                    label_names = ['param','wallet','token_address','token','bucket']
+                    label_values = [key,wallet,token,symbol,get_token_bucket(token)]
+                    item = _build_item(f"{label}_{section}",label_names,label_values,value,timestamp)
+                    metrics_to_export.append(item)
     
     # post all metrics for this timestamp at once
     _post(metrics_to_export)
