@@ -23,7 +23,6 @@ def decode_logs(logs) -> EventDict:
         setattr(decoded[i], "block_number", log["blockNumber"])
         setattr(decoded[i], "transaction_hash", log["transactionHash"])
         setattr(decoded[i], "log_index", log["logIndex"])
-        setattr(decoded[i], "address", log["address"])
     return decoded
 
 
