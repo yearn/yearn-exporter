@@ -21,7 +21,7 @@ warnings.simplefilter("ignore", BrownieEnvironmentWarning)
 
 yearn = Yearn(load_strategies=False)
 
-logger = logging.getLogger(__name__)
+logger = logging.getLogger('yearn.transactions_exporter')
 
 BATCH_SIZE = 5000
 
