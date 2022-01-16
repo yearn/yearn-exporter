@@ -1,4 +1,4 @@
-from brownie import interface
+from brownie import interface, chain
 
 CONTROLLER_INTERFACES = {
     "0x2be5D998C95DE70D9A38b3d78e49751F10F9E88b": interface.ControllerV1,
@@ -124,8 +124,16 @@ TREASURY_WALLETS = {
     "0xFEB4acf3df3cDEA7399794D0869ef76A6EfAff52", # Yearn MultiSig
     "0x7d2aB9CA511EBD6F03971Fb417d3492aA82513f0", # ySwap Multisig
     "0x2C01B4AD51a67E2d8F02208F54dF9aC4c0B778B6", # yMechs Multisig
-}
+} if chain.id == 1 else {
+    "0x89716Ad7EDC3be3B35695789C475F3e7A3Deb12a", # Yearn Multisig
+} if chain.id == 250 else None
 
 # EVENTS
 ERC20_TRANSFER_EVENT_HASH  = '0xddf252ad1be2c89b69c2b068fc378daa952ba7f163c4a11628f55a4df523b3ef'
 ERC677_TRANSFER_EVENT_HASH = '0xe19260aff97b920c7df27010903aeb9c8d2be5d310a2c67824cf3f15396e4c16'
+
+STRATEGIST_MULTISIG = {
+    "0x16388463d60FFE0661Cf7F1f31a7D658aC790ff7",
+} if chain.id == 1 else {
+    "",
+} if chain.id == 250 else None

@@ -7,11 +7,10 @@ import pandas as pd
 from brownie import ZERO_ADDRESS, Contract, chain, web3
 from brownie.exceptions import BrownieEnvironmentWarning
 from joblib import Parallel, delayed
-import sqlalchemy
 from tqdm import tqdm
 from web3._utils.abi import filter_by_name
 from web3._utils.events import construct_event_topic_set
-from yearn.events import create_filter, decode_logs, get_logs_asap
+from yearn.events import decode_logs, get_logs_asap
 from yearn.outputs.postgres.postgres import postgres
 from yearn.prices import magic
 from yearn.utils import contract
