@@ -288,7 +288,7 @@ class Treasury:
         return unit_debt
 
     def compound_debt(self, block=None) -> dict:
-        markets = {market.ctoken for comp in compound.CompoundMultiplexer().compounds for market in comp.markets}
+        markets = {market.ctoken for comp in compound.compound.compounds for market in comp.markets}
         gas_token_markets = [market for market in markets if not hasattr(market,'underlying')]
         other_markets = [market for market in markets if hasattr(market,'underlying')]
         markets = gas_token_markets + other_markets
