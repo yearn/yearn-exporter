@@ -1,9 +1,9 @@
 import logging
+import os
 from collections import Counter
 from time import time
 
 from brownie import chain
-from collections import Counter
 from joblib import Parallel, delayed
 
 import yearn.iearn
@@ -77,21 +77,22 @@ class Yearn:
             for key in self.registries
         )
         results_dict = dict(zip(self.registries, desc))
-        wallet_balances = Counter()
-        for registry in desc:
-            for vault, data in registry.items():
-                try:
-                    for wallet, bals in data['wallet balances'].items():
-                        wallet_balances[wallet] += bals["usd balance"]
-                except: # process vaults, not aggregated stats
-                    pass # TODO: add total wallets and wallet balances for earn, ib, special
-        agg_stats = {
-            "agg_stats": {
-                "total wallets": len(wallet_balances),
-                "wallet balances usd": wallet_balances
+        if not os.environ.get("SKIP_WALLET_STATS", False):
+            wallet_balances = Counter()
+            for registry in desc:
+                for vault, data in registry.items():
+                    try:
+                        for wallet, bals in data['wallet balances'].items():
+                            wallet_balances[wallet] += bals["usd balance"]
+                    except: # process vaults, not aggregated stats
+                        pass # TODO: add total wallets and wallet balances for earn, ib, special
+            agg_stats = {
+                "agg_stats": {
+                    "total wallets": len(wallet_balances),
+                    "wallet balances usd": wallet_balances
+                }
             }
-        }
-        results_dict.update(agg_stats)
+            results_dict.update(agg_stats)
         return results_dict
 
 
