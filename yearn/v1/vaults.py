@@ -11,6 +11,7 @@ from yearn.common import Tvl
 from yearn.multicall2 import fetch_multicall
 from yearn.prices import magic
 from yearn.prices.curve import curve
+from yearn.outputs.postgres.utils import fetch_balances
 from yearn.utils import contract
 from yearn.exceptions import PriceError
 
@@ -67,7 +68,7 @@ class VaultV1:
         return self.wallet_balances(block=block).keys()
 
     def wallet_balances(self, block=None):
-        return PostgresInstance().fetch_balances(self.vault.address, block=block)
+        return fetch_balances(self.vault.address, block=block)
 
     def describe(self, block=None):
         info = {}

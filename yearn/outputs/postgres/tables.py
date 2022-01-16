@@ -1,3 +1,4 @@
+# NOTE: We don't use this anymore but keeping for reference until I implement treasury txs in postgres
 
 treasury_table_query = f'CREATE TABLE TREASURY_TXS(\
                             CHAINID SMALLINT NOT NULL,\
