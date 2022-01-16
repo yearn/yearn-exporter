@@ -22,6 +22,8 @@ from yearn.prices.magic import get_price
 from yearn.prices.magic import logger as logger_price_magic
 from yearn.utils import contract
 
+from ..constants import STRATEGIST_MULTISIG, TREASURY_WALLETS
+
 logger = logging.getLogger(__name__)
 logger_price_magic.setLevel(logging.CRITICAL)
 
@@ -268,6 +270,7 @@ class Treasury:
         ilk = encode_single('bytes32', b'YFI-A')
         dai = '0x6B175474E89094C44Da98b954EedeAC495271d0F'
         maker_debt = {}
+        ilk = encode_single('bytes32', b'YFI-A')
         for address in self.addresses:
             proxy = proxy_registry.proxies(address)
             cdp = cdp_manager.first(proxy)

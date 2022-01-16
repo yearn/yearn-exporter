@@ -7,7 +7,6 @@ import pandas as pd
 from brownie import ZERO_ADDRESS, Contract, chain, web3
 from brownie.exceptions import BrownieEnvironmentWarning
 from pony.orm import db_session
-from joblib import Parallel, delayed
 from web3._utils.abi import filter_by_name
 from web3._utils.events import construct_event_topic_set
 from yearn.entities import UserTx  # , TreasuryTx
