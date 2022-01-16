@@ -2,7 +2,7 @@ import logging
 import threading
 import time
 
-from brownie import Contract, chain, web3
+from brownie import ZERO_ADDRESS, Contract, chain, web3
 from brownie.network.event import EventLookupError
 from eth_abi import encode_single
 from eth_utils import encode_hex
@@ -305,12 +305,15 @@ class Treasury:
         return unit_debt
 
     def compound_debt(self, block=None) -> dict:
-        markets = {Contract(market) for markets in compound.get_markets(block=block).values() for market in markets}
+        markets = {Contract(market) for markets in compound.get_markets(block=block).values() if markets is not None for market in markets}
         gas_token_markets = [market for market in markets if not hasattr(market,'underlying')]
         other_markets = [market for market in markets if hasattr(market,'underlying')]
         markets = gas_token_markets + other_markets
 
         underlyings = [weth for market in gas_token_markets] + fetch_multicall(*[[market,'underlying'] for market in other_markets])
+        markets = zip(markets,underlyings)
+        underlyings = [underlying for contract ,underlying in markets if underlying != ZERO_ADDRESS]
+        markets = [contract for contract, underlying in markets if underlying != ZERO_ADDRESS]
         underlying_contracts = [Contract(underlying) for underlying in underlyings]
         underlying_decimals = fetch_multicall(*[[underlying,'decimals'] for underlying in underlying_contracts])
 
@@ -390,7 +393,7 @@ class YearnTreasury(Treasury):
     def __init__(self,watch_events_forever=False):
         super().__init__('treasury',TREASURY_WALLETS,watch_events_forever=watch_events_forever,start_block=10502337)
 
-    def accounts_payable(self, block=None) -> dict:
+    def partners_debt(self, block=None) -> dict:
         for i, partner in enumerate(partners):
             if i == 1:
                 flat_wrappers = []
@@ -409,4 +412,3 @@ class YearnTreasury(Treasury):
 class StrategistMultisig(Treasury):
     def __init__(self,watch_events_forever=False):
         super().__init__('sms',STRATEGIST_MULTISIG,watch_events_forever=watch_events_forever,start_block=11507716)
-        
