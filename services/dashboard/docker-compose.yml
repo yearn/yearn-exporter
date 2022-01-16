@@ -162,7 +162,6 @@ services:
     image: yearn-exporter
     command: sms_exporter
     environment:
-      - WEB3_INFURA_PROJECT_ID
       - WEB3_PROVIDER
       - ETHERSCAN_TOKEN
       - EXPLORER
@@ -180,7 +179,6 @@ services:
     image: yearn-exporter
     command: historical_sms_exporter
     environment:
-      - WEB3_INFURA_PROJECT_ID
       - WEB3_PROVIDER
       - ETHERSCAN_TOKEN
       - EXPLORER
