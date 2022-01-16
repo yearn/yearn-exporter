@@ -307,7 +307,7 @@ class Treasury:
         compound_debt = {}
         for address in self.addresses:
             debts = fetch_multicall(*[[market,'borrowBalanceStored',address] for market in markets],block=block)
-            debts = [debt / 10 ** decimals for debt, decimals in zip(debts,underlying_decimals)]
+            debts = [debt / 10 ** decimals if debt else None for debt, decimals in zip(debts,underlying_decimals)]
             compound_debt[address] = {str(underlying): {'balance': debt, 'usd value': debt * get_price(underlying, block=block)} for underlying, debt in zip(underlyings,debts) if debt}
         return compound_debt
 
