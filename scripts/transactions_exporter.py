@@ -23,6 +23,7 @@ yearn = Yearn(load_strategies=False)
 
 logger = logging.getLogger(__name__)
 
+BATCH_SIZE = 5000
 
 def main():
     for block in chain.new_blocks(height_buffer=1):
@@ -37,8 +38,8 @@ def process_and_cache_user_txs(last_saved_block=None):
     end_block = (
         9480000
         if start_block is None
-        else start_block + 5000
-        if start_block + 5000 < max_block_to_cache
+        else start_block + BATCH_SIZE
+        if start_block + BATCH_SIZE < max_block_to_cache
         else max_block_to_cache
     )
     df = pd.DataFrame()
