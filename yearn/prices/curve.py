@@ -178,13 +178,6 @@ class CurveRegistry(metaclass=Singleton):
 
         if pool != ZERO_ADDRESS:
             return pool
-        
-        # Curve V2
-        token = contract(token)
-        if hasattr(token,'minter'):
-            minter = contract(token.minter())
-            if hasattr(minter,'admin_fee_receiver') or hasattr(minter,'admin_balances'): # Just a sense check
-                return minter.address
 
     @lru_cache(maxsize=None)
     def get_gauge(self, pool):
