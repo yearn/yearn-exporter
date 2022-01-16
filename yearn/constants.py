@@ -130,7 +130,7 @@ TREASURY_WALLETS = {
     Network.Fantom: {
         "0x89716Ad7EDC3be3B35695789C475F3e7A3Deb12a", # Yearn Multisig
     }
-}
+}.get(chain.id,set())
 
 # EVENTS
 ERC20_TRANSFER_EVENT_HASH  = '0xddf252ad1be2c89b69c2b068fc378daa952ba7f163c4a11628f55a4df523b3ef'
@@ -143,4 +143,4 @@ STRATEGIST_MULTISIG = {
     Network.Fantom: {
         "0x72a34AbafAB09b15E7191822A679f28E067C4a16",
     }
-}
+}.get(chain.id,set())
