@@ -3,14 +3,15 @@ from datetime import datetime, timezone
 from itertools import count
 
 from brownie import chain
-from yearn.outputs.postgres.postgres import postgres
+from yearn.outputs.postgres.utils import last_recorded_block
+from yearn.entities import UserTx
 from yearn.utils import closest_block_after_timestamp
 from yearn.historical_helper import export_historical, time_tracking, has_data
 from yearn.yearn import Yearn
 
 logger = logging.getLogger('yearn.wallet_exporter')
 
-postgres_cached_thru_block = postgres.last_recorded_block('user_txs')
+postgres_cached_thru_block = last_recorded_block(UserTx)
 postgres_cached_thru_ts = chain[postgres_cached_thru_block].timestamp
 
 
