@@ -115,24 +115,6 @@ services:
       - yearn-exporter
     restart: always
 
-  historical-sms-exporter:
-    build: .
-    command: historical_sms_exporter
-    environment:
-      - WEB3_INFURA_PROJECT_ID
-      - WEB3_PROVIDER
-      - ETHERSCAN_TOKEN
-      - EXPLORER
-      - SLEEP_SECONDS
-    volumes:
-      - solidity_compilers:/root/.solcx
-      - vyper_compilers:/root/.vvm
-      - brownie:/root/.brownie
-      - cache:/app/yearn-exporter/cache
-    networks:
-      - yearn-exporter
-    restart: on-failure
-
   treasury-exporter:
     image: yearn-exporter
     command: treasury_exporter
@@ -167,6 +149,42 @@ services:
       - CHUNK_SIZE
       - RESOLUTION
       - SKIP_WALLET_STATS
+    volumes:
+      - solidity_compilers:/root/.solcx
+      - vyper_compilers:/root/.vvm
+      - brownie:/root/.brownie
+      - cache:/app/yearn-exporter/cache
+    networks:
+      - yearn-exporter
+    restart: on-failure
+
+  sms-exporter:
+    image: yearn-exporter
+    command: sms_exporter
+    environment:
+      - WEB3_INFURA_PROJECT_ID
+      - WEB3_PROVIDER
+      - ETHERSCAN_TOKEN
+      - EXPLORER
+      - SLEEP_SECONDS
+    volumes:
+      - solidity_compilers:/root/.solcx
+      - vyper_compilers:/root/.vvm
+      - brownie:/root/.brownie
+      - cache:/app/yearn-exporter/cache
+    networks:
+      - yearn-exporter
+    restart: on-failure
+
+  historical-sms-exporter:
+    image: yearn-exporter
+    command: historical_sms_exporter
+    environment:
+      - WEB3_INFURA_PROJECT_ID
+      - WEB3_PROVIDER
+      - ETHERSCAN_TOKEN
+      - EXPLORER
+      - SLEEP_SECONDS
     volumes:
       - solidity_compilers:/root/.solcx
       - vyper_compilers:/root/.vvm
