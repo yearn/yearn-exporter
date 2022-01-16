@@ -60,16 +60,8 @@ class Yearn:
 
     def active_vaults_at(self, block=None):
         active = set()
-        registries = self.registries.items()
-        for label, registry in registries:
-            if label == 'earn':
-                active = active.union({vault.vault for vault in registry.active_vaults_at_block(block=block)})
-            else:
-                active = active.union({vault.vault for vault in registry.active_vaults_at(block=block)})
-        try:
-            active.remove(contract("0xBa37B002AbaFDd8E89a1995dA52740bbC013D992")) # [yGov] Doesn't count for this context
-        except KeyError:
-            pass
+        for label, registry in self.registries.items():
+            active = active.union([vault for vault in registry.active_vaults_at(block=block) if vault.vault != contract("0xBa37B002AbaFDd8E89a1995dA52740bbC013D992")])  # [yGov] Doesn't count for this context})
         return active
     
     
