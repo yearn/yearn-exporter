@@ -16,6 +16,7 @@ from yearn.outputs import victoria
 from yearn.exceptions import UnsupportedNetwork
 from yearn.prices import constants
 from yearn.outputs.describers.registry import RegistryWalletDescriber
+from yearn.utils import contract
 
 logger = logging.getLogger(__name__)
 
@@ -30,7 +31,7 @@ class Yearn:
         if chain.id == Network.Mainnet:
             self.registries = {
                 "earn": yearn.iearn.Registry(),
-                "v1": yearn.v1.registry.Registry(watch_events_forever=watch_events_forever),
+                "v1": yearn.v1.registry.Registry(),
                 "v2": yearn.v2.registry.Registry(watch_events_forever=watch_events_forever),
                 "ib": yearn.ironbank.Registry(exclude_ib_tvl=exclude_ib_tvl),
                 "special": yearn.special.Registry(),
@@ -56,34 +57,7 @@ class Yearn:
             self.registries["v2"].load_harvests()
         logger.info('loaded yearn in %.3fs', time() - start)
 
-    def describe(self, block=None):
-        desc = Parallel(4, "threading")(
-            delayed(self.registries[key].describe)(block=block)
-            for key in self.registries
-        )
-        return dict(zip(self.registries, desc))
 
-    def describe_wallets(self, block=None):
-        data = Parallel(4,'threading')(delayed(self.registries[key].describe_wallets)(block=block) for key in self.registries)
-        data = {registry:desc for registry,desc in zip(self.registries,data)}
-
-        wallet_balances = Counter()
-        for registry, reg_desc in data.items():
-            for wallet, usd_bal in reg_desc['wallet balances usd'].items():
-                wallet_balances[wallet] += usd_bal
-        agg_stats = {
-            "agg_stats": {
-                "total wallets": len(wallet_balances),
-                "active wallets": sum(1 if balance > 50 else 0 for wallet, balance in wallet_balances.items()),
-                "wallets > $5k": sum(1 if balance > 5000 else 0 for wallet, balance in wallet_balances.items()),
-                "wallets > $50k": sum(1 if balance > 50000 else 0 for wallet, balance in wallet_balances.items()),
-                "wallet balances usd": wallet_balances
-            }
-        }
-        data.update(agg_stats)
-        return data
-
-    
     def active_vaults_at(self, block=None):
         active = set()
         registries = self.registries.items()
@@ -93,20 +67,33 @@ class Yearn:
             else:
                 active = active.union({vault.vault for vault in registry.active_vaults_at(block=block)})
         try:
-            active.remove(Contract("0xBa37B002AbaFDd8E89a1995dA52740bbC013D992")) # [yGov] Doesn't count for this context
+            active.remove(contract("0xBa37B002AbaFDd8E89a1995dA52740bbC013D992")) # [yGov] Doesn't count for this context
         except KeyError:
             pass
         return active
+    
+    
+    def describe(self, block=None):
+        desc = Parallel(4, "threading")(
+            delayed(self.registries[key].describe)(block=block)
+            for key in self.registries
+        )
+        return dict(zip(self.registries, desc))
+
 
     def describe_wallets(self, block=None):
         describer = RegistryWalletDescriber()
-        data = Parallel(4,'threading')(delayed(describer.describe_wallets)(self.registries[key], block=block) for key in self.registries)
+        data = Parallel(4,'threading')(delayed(describer.describe_wallets)(registry, block=block) for registry in self.registries.items())
         data = {registry:desc for registry,desc in zip(self.registries,data)}
 
         wallet_balances = Counter()
         for registry, reg_desc in data.items():
-            for wallet, usd_bal in reg_desc['wallet balances usd'].items():
-                wallet_balances[wallet] += usd_bal
+            try:
+                for wallet, usd_bal in reg_desc['wallet balances usd'].items():
+                    wallet_balances[wallet] += usd_bal
+            except:
+                print(reg_desc)
+                raise
         agg_stats = {
             "agg_stats": {
                 "total wallets": len(wallet_balances),
