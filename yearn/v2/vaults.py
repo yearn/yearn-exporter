@@ -17,6 +17,7 @@ from yearn.common import Tvl
 from yearn.events import create_filter, decode_logs
 from yearn.multicall2 import fetch_multicall
 from yearn.prices import magic
+from yearn.outputs.postgres.postgres import PostgresInstance
 from yearn.prices.curve import curve
 from yearn.utils import safe_views, contract
 from yearn.v2.strategies import Strategy
@@ -168,20 +169,10 @@ class Vault:
                 self._reports.append(event)
 
     def wallets(self, block=None):
-        self.load_transfers()
-        transfers = [event for event in self._transfers if event.block_number <= block]
-        return set(receiver for sender, receiver, value in transfers if receiver != ZERO_ADDRESS)
+        return self.wallet_balances(block=block).keys()
 
     def wallet_balances(self, block=None):
-        self.load_transfers()
-        balances = Counter()
-        for event in [transfer for transfer in self._transfers if transfer.block_number <= block]:
-            sender, receiver, amount = event.values()
-            if sender != ZERO_ADDRESS:
-                balances[sender] -= amount
-            if receiver != ZERO_ADDRESS:
-                balances[receiver] += amount
-        return balances
+        return PostgresInstance().fetch_balances(self.vault.address, block=block)
 
     def describe(self, block=None):
         try:
@@ -205,6 +196,20 @@ class Vault:
         info["address"] = self.vault
         info["version"] = "v2"
         
+        return info
+
+    def describe_wallets(self,block=None):
+        balances = self.wallet_balances(block=block)
+        info = {
+            'total wallets': len(set(wallet for wallet, bal in balances.items())),
+            'active wallets': sum(1 if balance > 50 else 0 for wallet, balance in balances.items()),
+            'wallet balances': {
+                            wallet: {
+                                "token balance": float(bal), #/ self.scale,
+                                "usd balance": float(bal) * magic.get_price(self.token,block=block)
+                                } for wallet, bal in balances.items()
+                            }
+        }
         return info
 
     def apy(self, samples: ApySamples):
