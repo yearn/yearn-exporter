@@ -1,7 +1,9 @@
 import logging
+import os
 from datetime import datetime, timezone
 from itertools import count
 
+import requests
 from brownie import chain
 from yearn.entities import UserTx
 from yearn.historical_helper import export_historical, has_data, time_tracking
