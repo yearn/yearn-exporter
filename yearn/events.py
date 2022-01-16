@@ -31,16 +31,11 @@ def create_filter(address, topics=None):
     Create a log filter for one or more contracts.
     Set fromBlock as the earliest creation block.
     """
-    if address is None:
-        # We use this to pull Treasury's ERC20 Transfers
-        # Treasury didn't exist prior to block 10502337
-        return web3.eth.filter({"fromBlock": 10502337, "topics": topics}) 
-
     if isinstance(address, list):
         start_block = min(map(contract_creation_block, address))
     else:
         start_block = contract_creation_block(address)
-
+        
     return web3.eth.filter({"address": address, "fromBlock": start_block, "topics": topics})
 
 
