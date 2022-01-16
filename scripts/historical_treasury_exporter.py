@@ -10,7 +10,7 @@ logger = logging.getLogger('yearn.historical_treasury_exporter')
 def main():
     start = datetime.now(tz=timezone.utc)
     # end: 2020-07-21 first treasury tx
-    end = datetime(2020, 7, 21, tzinfo=timezone.utc)
+    end = datetime(2020, 7, 21, 10, 1, tzinfo=timezone.utc)
     export_historical(
         start,
         end,

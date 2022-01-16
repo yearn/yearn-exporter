@@ -9,8 +9,8 @@ logger = logging.getLogger('yearn.historical_sms_exporter')
 
 def main():
     start = datetime.now(tz=timezone.utc)
-    # end: 2020-12-23 first sms tx
-    end = datetime(2020, 12, 23, tzinfo=timezone.utc)
+    # end: 2021-01-28 09:09:48 first inbound sms tx
+    end = datetime(2021, 1, 28, 9, 10, tzinfo=timezone.utc)
     export_historical(
         start,
         end,
