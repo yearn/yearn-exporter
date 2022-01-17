@@ -24,6 +24,9 @@ class ApyFees:
     keep_crv: Optional[float] = None
     cvx_keep_crv: Optional[float] = None
 
+    def __getitem__(self, key):
+        return super().__getattribute__(key)
+
 
 @dataclass
 class ApyPoints:
@@ -40,6 +43,9 @@ class Apy:
     fees: ApyFees
     points: Optional[ApyPoints] = None
     composite: Optional[Dict[str, float]] = None
+
+    def __getitem__(self, key):
+        return super().__getattribute__(key)
 
 
 @dataclass
