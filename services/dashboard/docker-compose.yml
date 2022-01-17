@@ -32,7 +32,6 @@ services:
     restart: on-failure
 
   historical-eth-exporter:
-    build: .
     image: yearn-exporter
     command: historical_exporter
     environment:
@@ -53,7 +52,6 @@ services:
     restart: on-failure
 
   ftm-exporter:
-    build: .
     image: yearn-exporter
     command: exporter
     environment:
@@ -71,7 +69,6 @@ services:
     restart: on-failure
 
   historical-ftm-exporter:
-    build: .
     image: yearn-exporter
     command: historical_exporter
     environment:
@@ -92,7 +89,6 @@ services:
     restart: on-failure
 
   wallet-exporter:
-    build: .
     image: yearn-exporter
     command: wallet_exporter
     environment:
@@ -114,7 +110,6 @@ services:
     restart: always
 
   treasury-exporter:
-    build: .
     image: yearn-exporter
     command: treasury_exporter
     environment:
@@ -135,7 +130,6 @@ services:
     restart: on-failure
 
   historical-treasury-exporter:
-    build: .
     image: yearn-exporter
     command: historical_treasury_exporter
     environment:
@@ -156,7 +150,6 @@ services:
     restart: on-failure
 
   historical-apy-exporter:
-    build: .
     image: yearn-exporter
     command: historical_apy_exporter
     environment:
@@ -177,7 +170,6 @@ services:
     restart: on-failure
 
   transactions-exporter:
-    build: .
     image: yearn-exporter
     command: transactions_exporter
     environment:
