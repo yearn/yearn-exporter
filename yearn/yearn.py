@@ -13,9 +13,7 @@ import yearn.v2.registry
 from yearn.exceptions import UnsupportedNetwork
 from yearn.networks import Network
 from yearn.outputs import victoria
-from yearn.exceptions import UnsupportedNetwork
 from yearn.prices import constants
-from yearn.outputs.describers.registry import RegistryWalletDescriber
 from yearn.utils import contract
 
 logger = logging.getLogger(__name__)
@@ -78,6 +76,7 @@ class Yearn:
 
 
     def describe_wallets(self, block=None):
+        from yearn.outputs.describers.registry import RegistryWalletDescriber
         describer = RegistryWalletDescriber()
         data = Parallel(4,'threading')(delayed(describer.describe_wallets)(registry, block=block) for registry in self.registries.items())
         data = {registry:desc for registry,desc in zip(self.registries,data)}
