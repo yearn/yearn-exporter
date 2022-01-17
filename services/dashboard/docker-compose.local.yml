@@ -13,17 +13,3 @@ services:
   transactions-exporter:
     entrypoint: ["echo", "transactions_exporter disabled."]
     restart: "no"
-  historical-ftm-exporter:
-    entrypoint: ["echo", "historical-ftm-exporter disabled."]
-    restart: "no"
-  ftm-exporter:
-    entrypoint: ["echo", "ftm-exporter disabled."]
-    restart: "no"
-    
-  historical-eth-exporter:
-    entrypoint: ["echo", "historical-eth-exporter"]
-    restart: "no"
-
-  eth-exporter:
-    entrypoint: ["echo", "eth-exporter"]
-    restart: "no"
