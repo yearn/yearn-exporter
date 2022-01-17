@@ -41,6 +41,39 @@ mapping = {
     }
 }
 
+apy_mapping = {
+   "v1:simple": {
+       "version": "v1",
+       "experimental": False,
+       "fee_metrics": ['performance', 'withdrawal']
+   },
+   "v2:simple": {
+       "version": "v2",
+       "experimental": True,
+       "fee_metrics": ['performance', 'management']
+   },
+   "v2:averaged": {
+       "version": "v2",
+       "experimental": True,
+       "fee_metrics": ['performance', 'management']
+   },
+   "crv": {
+       "version": "v2",
+       "experimental": True,
+       "fee_metrics": ['performance', 'management', 'keep_crv', 'cvx_keep_crv']
+   },
+   "yvecrv-jar": {
+       "version": "special",
+       "experimental": True,
+       "fee_metrics": []
+   },
+   "backscratcher": {
+       "version": "special",
+       "experimental": True,
+       "fee_metrics": []
+   }
+}
+
 
 def export(timestamp, data):
     metrics_to_export = []
@@ -166,45 +199,23 @@ def export_treasury(timestamp, data):
 
 
 def export_apy(timestamp, apy, vault, address):
-    version = None
-    has_experiments = True
-    if apy.type == "v1:simple":
-        version = "v1"
-        has_experiments = False
-        fee_metrics = ['performance', 'withdrawal']
-    elif apy.type == "v2:simple":
-        version = "v2"
-        fee_metrics = ['performance', 'management']
-    elif apy.type == "v2:averaged":
-        version = "v2"
-        fee_metrics = ['performance', 'management']
-    elif apy.type == "crv":
-        version = "v2"
-        fee_metrics = ['performance', 'management', 'keep_crv', 'cvx_keep_crv']
-    elif apy.type == "yvecrv-jar":
-        version = "special"
-        fee_metrics = []
-    elif apy.type == "backscratcher":
-        version = "special"
-        fee_metrics = []
-
-    #TODO add more apy exporters
-
-    if version is None:
+    if apy.type not in apy_mapping:
         raise ValueError(f"Failed to find a product for APY type '{apy.type}'")
 
+    product = apy_mapping[apy.type]
+    version = product["version"]
     metric = mapping[version]["metric"]
-    apy_metrics = ['gross_apr', 'net_apy'] + fee_metrics
+    apy_metrics = ['gross_apr', 'net_apy'] + product["fee_metrics"]
     metrics_to_export = []
     for am in apy_metrics:
-        if am in fee_metrics:
+        if am in product["fee_metrics"]:
             value = apy.fees[am]
         else:
             value = apy[am]
 
         label_names = ['vault', 'type', 'param', 'address', 'version', 'experimental']
         params = {'address': address, 'version': version}
-        label_values = _get_label_values(params, [vault.name(), apy.type, am], has_experiments)
+        label_values = _get_label_values(params, [vault.name(), apy.type, am], product["experimental"])
 
         item = _build_item(metric, label_names, label_values, value, timestamp)
         metrics_to_export.append(item)
