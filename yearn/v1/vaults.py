@@ -4,7 +4,7 @@ from dataclasses import dataclass
 from functools import cached_property
 from typing import Optional
 
-from brownie import ZERO_ADDRESS, interface
+from brownie import ZERO_ADDRESS, interface, web3
 from brownie.network.contract import InterfaceContainer
 from yearn import apy, constants
 from yearn.apy.common import ApySamples
@@ -150,4 +150,5 @@ class VaultV1:
 
     def export_apy(self, samples: ApySamples):
         apy = self.apy(samples)
-        victoria.export_apy(samples, apy)
+        block = web3.eth.get_block(samples.now)
+        victoria.export_apy(block.timestamp, apy, self.vault, self.vault.address)

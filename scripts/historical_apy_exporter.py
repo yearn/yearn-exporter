@@ -2,6 +2,7 @@ import itertools
 import logging
 from datetime import datetime, timezone
 from typing import Union
+from brownie import web3
 
 from yearn.apy import ApyError, get_samples
 from yearn.apy.common import ApySamples
@@ -52,8 +53,11 @@ def export_chunk(chunk, export_snapshot_func):
 
 @time_tracking
 def export_snapshot(vault: Union[VaultV1, VaultV2], samples: ApySamples, exporter_name):
-    logger.info("exporting apy for vault")
     try:
         vault.export_apy(samples)
+        block = web3.eth.get_block(samples.now)
+        snapshot = datetime.fromtimestamp(block.timestamp)
+        logger.info("exported historical apy for vault %s, snapshot %s", vault.name, snapshot)
     except ApyError as e:
-        logger.error("APY Error for %s at %s", vault, samples)
+        logger.info("apy error occured.")
+        logger.error(e)

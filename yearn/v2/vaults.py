@@ -4,7 +4,7 @@ import threading
 import time
 from typing import List
 
-from brownie import ZERO_ADDRESS, Contract, chain
+from brownie import ZERO_ADDRESS, Contract, chain, web3
 from eth_utils import encode_hex, event_abi_to_log_topic
 from joblib import Parallel, delayed
 from semantic_version.base import Version
@@ -208,4 +208,5 @@ class Vault:
 
     def export_apy(self, samples: ApySamples):
         apy = self.apy(samples)
-        victoria.export_apy(samples, apy)
+        block = web3.eth.get_block(samples.now)
+        victoria.export_apy(block.timestamp, apy, self.vault, self.vault.address)
