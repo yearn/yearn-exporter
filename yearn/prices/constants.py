@@ -42,7 +42,8 @@ stablecoins_by_network = {
         "0xdF574c24545E5FfEcb9a659c229253D4111d87e1": "husd",
         "0x5BC25f649fc4e26069dDF4cF4010F9f706c23831": "dusd",
         "0xe2f2a5C287993345a840Db3B0845fbC70f5935a5": "musd",
-        
+        "0x739ca6D71365a08f584c8FC4e1029045Fa8ABC4B": "anydai",
+        "0xbbc4A8d076F4B1888fec42581B6fc58d242CF2D5": "anymin",
     },
     Network.Fantom: {
         "0x04068DA6C83AFCFA0e13ba15A6696662335D5B75": "usdc",
