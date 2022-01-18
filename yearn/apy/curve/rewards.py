@@ -47,7 +47,7 @@ def staking(address: str, pool_price: int, base_asset_price: int, block: Optiona
             if not token:
                 break
 
-            data = staking_rewards.rewardData(token, block_identifier=block)
+            data = _get_rewards_data(token, block_identifier=block)
 
             rate = data.rewardRate / 1e18 if data else 0
             token_price = get_price(token, block=block) or 0
@@ -73,6 +73,13 @@ def multi(address: str, pool_price: int, base_asset_price: int, block: Optional[
             token_price = get_price(token, block=block) or 0
             apr += SECONDS_PER_YEAR * rate * token_price / ((pool_price / 1e18) * (total_supply / 1e18) * token_price)
     return apr
+
+
+def _get_rewards_data(base, token, block):
+    if hasattr(base, "rewardData"):
+        return base.rewardData(token, block_identifier=block)
+    else:
+        return None
 
 
 def _get_rewards_token(base, block, queue=None, has_params=True):
