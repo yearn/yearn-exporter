@@ -158,6 +158,48 @@ services:
       - yearn-exporter
     restart: on-failure
 
+  ftm-treasury-exporter:
+    image: yearn-exporter
+    command: treasury_exporter
+    environment:
+      - WEB3_PROVIDER=$FTM_WEB3_PROVIDER
+      - EXPLORER=$FTM_EXPLORER
+      - SLEEP_SECONDS
+      - NETWORK=ftm-main
+      - POOL_SIZE
+      - CHUNK_SIZE
+      - RESOLUTION
+    volumes:
+      - solidity_compilers:/root/.solcx
+      - vyper_compilers:/root/.vvm
+      - brownie:/root/.brownie
+      - cache:/app/yearn-exporter/cache
+    networks:
+      - yearn-exporter
+    restart: on-failure
+    depends_on:
+      - postgres
+
+  historical-ftm-treasury-exporter:
+    image: yearn-exporter
+    command: historical_treasury_exporter
+    environment:
+      - WEB3_PROVIDER=$FTM_WEB3_PROVIDER
+      - EXPLORER=$FTM_EXPLORER
+      - SLEEP_SECONDS
+      - NETWORK=ftm-main
+      - POOL_SIZE
+      - CHUNK_SIZE
+      - RESOLUTION
+    volumes:
+      - solidity_compilers:/root/.solcx
+      - vyper_compilers:/root/.vvm
+      - brownie:/root/.brownie
+      - cache:/app/yearn-exporter/cache
+    networks:
+      - yearn-exporter
+    restart: on-failure
+
   sms-exporter:
     image: yearn-exporter
     command: sms_exporter
@@ -217,6 +259,48 @@ services:
       - ETHERSCAN_TOKEN
       - EXPLORER
       - SLEEP_SECONDS
+    volumes:
+      - solidity_compilers:/root/.solcx
+      - vyper_compilers:/root/.vvm
+      - brownie:/root/.brownie
+      - cache:/app/yearn-exporter/cache
+    networks:
+      - yearn-exporter
+    restart: on-failure
+
+  ftm-sms-exporter:
+    image: yearn-exporter
+    command: sms_exporter
+    environment:
+      - WEB3_PROVIDER=$FTM_WEB3_PROVIDER
+      - EXPLORER=$FTM_EXPLORER
+      - SLEEP_SECONDS
+      - NETWORK=ftm-main
+      - POOL_SIZE
+      - CHUNK_SIZE
+      - RESOLUTION
+    volumes:
+      - solidity_compilers:/root/.solcx
+      - vyper_compilers:/root/.vvm
+      - brownie:/root/.brownie
+      - cache:/app/yearn-exporter/cache
+    networks:
+      - yearn-exporter
+    restart: on-failure
+    depends_on:
+      - postgres
+
+  historical-ftm-sms-exporter:
+    image: yearn-exporter
+    command: historical_sms_exporter
+    environment:
+      - WEB3_PROVIDER=$FTM_WEB3_PROVIDER
+      - EXPLORER=$FTM_EXPLORER
+      - SLEEP_SECONDS
+      - NETWORK=ftm-main
+      - POOL_SIZE
+      - CHUNK_SIZE
+      - RESOLUTION
     volumes:
       - solidity_compilers:/root/.solcx
       - vyper_compilers:/root/.vvm
