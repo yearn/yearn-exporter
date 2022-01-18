@@ -4,7 +4,7 @@ from dataclasses import dataclass
 from functools import cached_property
 from typing import Optional
 
-from brownie import ZERO_ADDRESS, interface, web3
+from brownie import ZERO_ADDRESS, interface
 from brownie.network.contract import InterfaceContainer
 from yearn import apy, constants
 from yearn.apy.common import ApySamples
@@ -148,7 +148,6 @@ class VaultV1:
         tvl = total_assets * price / 10 ** self.vault.decimals(block_identifier=block) if price else None
         return Tvl(total_assets, price, tvl) 
 
-    def export_apy(self, samples: ApySamples):
+    def export_apy(self, samples: ApySamples, ts):
         apy = self.apy(samples)
-        block = web3.eth.get_block(samples.now)
-        victoria.export_apy(block.timestamp, apy, self.vault, self.vault.address)
+        victoria.export_apy(ts, apy, self.vault, self.vault.address)

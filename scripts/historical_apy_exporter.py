@@ -39,6 +39,7 @@ def main():
 def export_chunk(chunk, export_snapshot_func):
 
     for snapshot in chunk:
+        ts = snapshot.timestamp()
         samples: ApySamples = get_samples(now_time=snapshot)
         logger.info("Exporting snapshot for chunk")
         for vault in itertools.chain(v1_registry.vaults, v2_registry.vaults):
@@ -46,17 +47,17 @@ def export_chunk(chunk, export_snapshot_func):
                 {
                     'vault': vault,
                     'samples': samples,
+                    'snapshot': snapshot,
+                    'ts': ts,
                     'exporter_name': 'historical_apy',
                 }
             )
 
 
 @time_tracking
-def export_snapshot(vault: Union[VaultV1, VaultV2], samples: ApySamples, exporter_name):
+def export_snapshot(vault: Union[VaultV1, VaultV2], samples: ApySamples, snapshot, ts, exporter_name):
     try:
-        vault.export_apy(samples)
-        block = web3.eth.get_block(samples.now)
-        snapshot = datetime.fromtimestamp(block.timestamp)
+        vault.export_apy(samples, ts)
         logger.info("exported historical apy for vault %s, snapshot %s", vault.name, snapshot)
     except ApyError as e:
         logger.info("apy error occured.")
