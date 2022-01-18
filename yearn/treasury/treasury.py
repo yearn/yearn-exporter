@@ -47,17 +47,17 @@ def _get_price(token, block=None):
     try:
         price = get_price(token, block)
     except AttributeError:
-        logger.warn(
+        logger.error(
             f"AttributeError while getting price for {contract(token).symbol()} {token}"
         )
         raise
     except PriceError:
-        logger.warn(
+        logger.error(
             f"PriceError while getting price for {contract(token).symbol()} {token}"
         )
         price = 0
     except ValueError:
-        logger.warn(
+        logger.error(
             f"ValueError while getting price for {contract(token).symbol()} {token}"
         )
         price = 0
