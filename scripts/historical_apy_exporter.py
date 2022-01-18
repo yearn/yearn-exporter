@@ -26,7 +26,7 @@ v2_registry = RegistryV2()
 def main():
     start = datetime.now(tz=timezone.utc)
     end = END_DATE[Network.Mainnet]
-    data_query = 'apy'
+    data_query = 'yearn_vault{param="net_apy"}'
     export_historical(
         start,
         end,
