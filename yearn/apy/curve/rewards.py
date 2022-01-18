@@ -1,6 +1,7 @@
 from time import time
+from itertools import count
 from typing import Optional
-from brownie import Contract, ZERO_ADDRESS
+from brownie import Contract
 
 from yearn.apy.common import SECONDS_PER_YEAR
 from yearn.utils import get_block_timestamp, contract
@@ -25,10 +26,9 @@ def staking(address: str, pool_price: int, base_asset_price: int, block: Optiona
         return 0
 
     snx_address = staking_rewards.snx(block_identifier=block) if hasattr(staking_rewards, "snx") else None
-    reward_token = staking_rewards.rewardToken(block_identifier=block) if hasattr(staking_rewards, "rewardToken") else None
-    rewards_token = staking_rewards.rewardsToken(block_identifier=block) if hasattr(staking_rewards, "rewardsToken") else None
+    reward_token = _get_rewards_token(staking_rewards, block)
 
-    token = reward_token or rewards_token or snx_address
+    token = reward_token or snx_address
 
     total_supply = staking_rewards.totalSupply(block_identifier=block) if hasattr(staking_rewards, "totalSupply") else 0
     rate = staking_rewards.rewardRate(block_identifier=block) if hasattr(staking_rewards, "rewardRate") else 0
@@ -40,26 +40,18 @@ def staking(address: str, pool_price: int, base_asset_price: int, block: Optiona
             (pool_price / 1e18) * (total_supply / 1e18) * base_asset_price
         )
     else:
-        # Multiple reward tokens
-        queue = 0
+        # Multiple reward tokens or rate == 0
         apr = 0
-        try:
-            token = staking_rewards.rewardTokens(queue, block_identifier=block)
-        except ValueError:
-            token = None
-        while token and token != ZERO_ADDRESS:
-            try:
-                data = staking_rewards.rewardData(token, block_identifier=block)
-            except ValueError:
-                token = None
+        for queue in count():
+            token = _get_rewards_token(staking_rewards, block, queue)
+            if not token:
+                break
+
+            data = staking_rewards.rewardData(token, block_identifier=block)
+
             rate = data.rewardRate / 1e18 if data else 0
             token_price = get_price(token, block=block) or 0
             apr += SECONDS_PER_YEAR * rate * token_price / ((pool_price / 1e18) * (total_supply / 1e18) * token_price)
-            queue += 1
-            try:
-                token = staking_rewards.rewardTokens(queue, block_identifier=block)
-            except ValueError:
-                token = None
         return apr
 
 
@@ -68,24 +60,31 @@ def multi(address: str, pool_price: int, base_asset_price: int, block: Optional[
 
     total_supply = multi_rewards.totalSupply(block_identifier=block) if hasattr(multi_rewards, "totalSupply") else 0
 
-    queue = 0
     apr = 0
-    if hasattr(multi_rewards, "rewardsToken"):
-        token = multi_rewards.rewardTokens(queue, block_identifier=block)
-    else:
-        token = None
-    while token and token != ZERO_ADDRESS:
-        try:
-            data = multi_rewards.rewardData(token, block_identifier=block)
-        except ValueError:
-            token = None
+    for queue in count():
+        token = _get_rewards_token(multi_rewards, block, queue)
+        if not token:
+            break
+
+        data = multi_rewards.rewardData(token, block_identifier=block)
+
         if data.periodFinish >= time():
             rate = data.rewardRate / 1e18 if data else 0
             token_price = get_price(token, block=block) or 0
             apr += SECONDS_PER_YEAR * rate * token_price / ((pool_price / 1e18) * (total_supply / 1e18) * token_price)
-        queue += 1
-        try:
-            token = multi_rewards.rewardTokens(queue, block_identifier=block)
-        except ValueError:
-            token = None
     return apr
+
+
+def _get_rewards_token(base, block, queue=None):
+    if hasattr(base, "rewardToken"):
+        if queue is None:
+            return base.rewardToken(block_identifier=block)
+        else:
+            return base.rewardToken(queue, block_identifier=block)
+    elif hasattr(base, "rewardsToken"):
+        if queue is None:
+            return base.rewardsToken(block_identifier=block)
+        else:
+            return base.rewardsToken(queue, block_identifier=block)
+    else:
+        return None
