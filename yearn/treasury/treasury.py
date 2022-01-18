@@ -13,6 +13,7 @@ from yearn.constants import (ERC20_TRANSFER_EVENT_HASH,
 from yearn.events import decode_logs
 from yearn.exceptions import PriceError
 from yearn.multicall2 import fetch_multicall
+from yearn.networks import Network
 from yearn.outputs.victoria import output_treasury
 from yearn.partners.partners import partners
 from yearn.partners.snapshot import WildcardWrapper, Wrapper
@@ -199,6 +200,7 @@ class Treasury:
         return collateral
 
     def maker_collateral(self, block=None) -> dict:
+        if chain.id != Network.Mainnet: return
         proxy_registry = contract('0x4678f0a6958e4D2Bc4F1BAF7Bc52E8F3564f3fE4')
         cdp_manager = contract('0x5ef30b9986345249bc32d8928B7ee64DE9435E39')
         # ychad = contract('ychad.eth')
@@ -222,9 +224,10 @@ class Treasury:
         return collateral
 
     def unit_collateral(self, block=None) -> dict:
+        if chain.id != Network.Mainnet: return
+        if block and block < 11315910: return
+        
         # NOTE: This only works for YFI collateral, must extend before using for other collaterals
-        if block and block < 11315910:
-            return
         unitVault = contract("0xb1cff81b9305166ff1efc49a129ad2afcd7bcf19")
         yfi = "0x0bc529c00C6401aEF6D220BE8C6Ea1667F6Ad93e"
         collateral = {}
@@ -264,6 +267,7 @@ class Treasury:
         return debt
 
     def maker_debt(self, block=None) -> dict:
+        if chain.id != Network.Mainnet: return
         proxy_registry = contract('0x4678f0a6958e4D2Bc4F1BAF7Bc52E8F3564f3fE4')
         cdp_manager = contract('0x5ef30b9986345249bc32d8928B7ee64DE9435E39')
         vat = contract('0x35D1b3F3D7966A1DFe207aa4514C12a259A0492B')
@@ -282,9 +286,9 @@ class Treasury:
         return maker_debt
 
     def unit_debt(self, block=None) -> dict:
+        if chain.id != Network.Mainnet: return
+        if block and block < 11315910: return
         # NOTE: This only works for YFI based debt, must extend before using for other collaterals
-        if block and block < 11315910:
-            return
         unitVault = contract("0xb1cff81b9305166ff1efc49a129ad2afcd7bcf19")
         yfi = "0x0bc529c00C6401aEF6D220BE8C6Ea1667F6Ad93e"
         usdp = '0x1456688345527bE1f37E9e627DA0837D6f08C925'
