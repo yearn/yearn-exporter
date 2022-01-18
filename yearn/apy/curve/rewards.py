@@ -75,16 +75,32 @@ def multi(address: str, pool_price: int, base_asset_price: int, block: Optional[
     return apr
 
 
-def _get_rewards_token(base, block, queue=None):
-    if hasattr(base, "rewardToken"):
-        if queue is None:
-            return base.rewardToken(block_identifier=block)
+def _get_rewards_token(base, block, queue=None, has_params=True):
+    try:
+        if hasattr(base, "rewardToken"):
+            if not has_params:
+                # some tokens don't support params
+                return base.rewardToken()
+
+            if queue is None:
+                return base.rewardToken(block_identifier=block)
+            else:
+                return base.rewardToken(queue, block_identifier=block)
+        elif hasattr(base, "rewardsToken"):
+            if not has_params:
+                # some tokens don't support params
+                return base.rewardsToken()
+
+            if queue is None:
+                return base.rewardsToken(block_identifier=block)
+            else:
+                return base.rewardsToken(queue, block_identifier=block)
         else:
-            return base.rewardToken(queue, block_identifier=block)
-    elif hasattr(base, "rewardsToken"):
-        if queue is None:
-            return base.rewardsToken(block_identifier=block)
+            return None
+    except TypeError as e:
+        if has_params:
+            # do one recursive call if the first call failed due to the method not supporting params
+            return _get_rewards_token(base, None, queue=None, has_params=False)
         else:
-            return base.rewardsToken(queue, block_identifier=block)
-    else:
-        return None
+            logger.error(e)
+            return None
