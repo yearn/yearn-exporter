@@ -184,9 +184,9 @@ class Vault:
                 if event["type"] == "event" and event["name"] == 'Transfer'
             ]
         ]
-        self.log_filter = create_filter(str(self.vault), topics=topic)
+        self.transfer_filter = create_filter(str(self.vault), topics=topic)
         for block in chain.new_blocks(height_buffer=12):
-            logs = self.log_filter.get_new_entries()
+            logs = self.transfer_filter.get_new_entries()
             events = decode_logs(logs)
             self.process_events(events)
             if not self._transfers_done.is_set():
