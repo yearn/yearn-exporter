@@ -1,16 +1,18 @@
-import pandas as pd
 import os
-from .transactions import CACHE_PATH
-from brownie import chain, ZERO_ADDRESS
 from datetime import datetime, timedelta
-import requests
+from decimal import Decimal
 from itertools import count
-from yearn.utils import closest_block_after_timestamp
+
+import pandas as pd
+import requests
+from brownie import ZERO_ADDRESS, chain
 from tqdm import tqdm
+from yearn.prices.magic import get_price
+from yearn.utils import closest_block_after_timestamp
+
+from .transactions import CACHE_PATH
 
 CSV_EXPORT = True
-CSV_PATH = './reports/stats.csv'
-VAULT_CSV_PATH = './reports/vault_stats.csv'
 
 def _read_cache():
     try:
@@ -99,8 +101,6 @@ def _users(df,vault = None):
     return df['to'].unique()
     
 
-def _total_users(df: pd.DataFrame):
-    return len(_users(df))
 
 def _count_users_by_num_vaults_used(df: pd.DataFrame):
     data = {}
@@ -123,7 +123,7 @@ def _process_vault(df,vault):
 def _export_block(df,block):
     df = df[df['block'] <= block]
     data = {'stats': _count_users_by_num_vaults_used(df)}
-    data['stats']['total_users'] = _total_users(df)
+    data['stats']['total_users'] = len(_users(df))
     data['vaults'] = {vault: _process_vault(df,vault) for vault in _vaults(df)}
     return data
 
@@ -138,12 +138,14 @@ def main(block = None):
 
     if CSV_EXPORT:
         # yearn stats
-        export_df = pd.DataFrame(data).transpose()['stats'].apply(pd.Series).fillna(0).astype(int)
-        export_df =export_df[sorted(export_df.columns)]
-        export_df.to_csv(CSV_PATH, index=True)
+        yearn_df = pd.DataFrame(data).transpose()['stats'].apply(pd.Series).fillna(0).astype(int)
+        yearn_df = yearn_df[sorted(yearn_df.columns)]
+        print(yearn_df)
+        yearn_df.to_csv('./reports/stats.csv', index=True)
 
         # vault stats
-        export_df = pd.DataFrame(data).transpose()['vaults'].apply(pd.Series).unstack().reset_index().dropna().rename(columns={'level_0':'vault','level_1':'block'})
-        export_df = export_df.drop(columns=[0]).join(export_df[0].apply(pd.Series))
-        export_df.to_csv(VAULT_CSV_PATH, index=False)
+        vaults_df = pd.DataFrame(data).transpose()['vaults'].apply(pd.Series).unstack().reset_index().dropna().rename(columns={'level_0':'vault','level_1':'block'})
+        vaults_df = vaults_df.drop(columns=[0]).join(vaults_df[0].apply(pd.Series))
+        print(vaults_df.drop(columns=['user_balances']))
+        vaults_df.drop(columns=['user_balances']).to_csv('./reports/vault_stats.csv', index=False)
 
