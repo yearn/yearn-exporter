@@ -45,18 +45,19 @@ mapping = {
 
 def export(block, timestamp, data):
     metrics_to_export = []
-    for key, value in data['agg_stats'].items():
-        if key == 'wallet balances usd':
-            for wallet, usd_bal in value.items():
-                label_names = ["param","wallet"]
-                label_values = ["balance usd",wallet]
-                item = _build_item("aggregate", label_names, label_values, usd_bal, timestamp)
-                metrics_to_export.append(item)
-            continue
-        label_names = ['param']
-        label_values = [key]
-        item = _build_item("aggregate", label_names, label_values, value, timestamp)
-        metrics_to_export.append(item)
+    if not os.environ.get("SKIP_WALLET_STATS", False):
+        for key, value in data['agg_stats'].items():
+            if key == 'wallet balances usd':
+                for wallet, usd_bal in value.items():
+                    label_names = ["param","wallet"]
+                    label_values = ["balance usd",wallet]
+                    item = _build_item("aggregate", label_names, label_values, usd_bal, timestamp)
+                    metrics_to_export.append(item)
+                continue
+            label_names = ['param']
+            label_values = [key]
+            item = _build_item("aggregate", label_names, label_values, value, timestamp)
+            metrics_to_export.append(item)
 
     # above this line works
 
