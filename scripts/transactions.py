@@ -3,6 +3,7 @@ from decimal import Decimal
 
 import pandas as pd
 from brownie import ZERO_ADDRESS, chain, web3
+from joblib import Parallel, delayed
 from tqdm import tqdm
 from web3._utils.abi import filter_by_name
 from web3._utils.events import construct_event_topic_set
@@ -83,7 +84,7 @@ def _vault_transfers(vault, start_block, end_block) -> pd.DataFrame:
         web3.codec,
     )
     events = decode_logs(get_logs_asap(vault.address, topics, from_block = start_block, to_block = end_block))
-    return pd.DataFrame([_process_event(event, vault, vault_symbol, vault_decimals) for event in tqdm(events)])
+    return pd.DataFrame([Parallel(8,'threading')(delayed(_process_event)(event, vault, vault_symbol, vault_decimals) for event in tqdm(events))])
     
 def main():
     while True:

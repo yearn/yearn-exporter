@@ -6,6 +6,7 @@ from itertools import count
 import pandas as pd
 import requests
 from brownie import ZERO_ADDRESS, chain
+from joblib import Parallel, delayed
 from tqdm import tqdm
 from yearn.prices.magic import get_price
 from yearn.utils import closest_block_after_timestamp
@@ -133,8 +134,9 @@ def main(block = None):
     if block:
         df = df[df['block'] <= block]
         return _export_block(df,block)
-
-    data = {block: _export_block(df,block) for block in tqdm(_blocks(df))}
+    
+    blocks = _blocks(df)
+    data = dict(zip(blocks,Parallel(8,'multiprocessing')(delayed(_export_block)(df,block) for block in tqdm(blocks))))
 
     if CSV_EXPORT:
         # yearn stats
