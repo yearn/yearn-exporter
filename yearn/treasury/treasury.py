@@ -75,6 +75,14 @@ def get_token_from_event(event):
         logger.critical(event)
         raise
 
+def get_token_from_event(event):
+    try:
+        return event['Transfer'][0].address
+    except EventLookupError:
+        logger.critical(f'One of your cached contracts has an incorrect definition: {event.address}. Please fix this manually')
+        raise(f'One of your cached contracts has an incorrect definition: {event.address}. Please fix this manually')
+       
+
 class Treasury:
     '''
     Used to export Yearn financial reports
