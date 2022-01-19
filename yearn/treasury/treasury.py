@@ -5,6 +5,7 @@ import time
 from brownie import Contract, chain, web3
 from brownie.network.event import EventLookupError
 from eth_abi import encode_single
+from eth_utils import encode_hex
 from joblib import Parallel, delayed
 from yearn.events import decode_logs
 from yearn.multicall2 import fetch_multicall
@@ -16,7 +17,7 @@ from yearn.prices.magic import get_price, logger as logger_price_magic
 from yearn.exceptions import PriceError
 from yearn.utils import contract
 
-from ..constants import TREASURY_WALLETS
+from yearn.constants import TREASURY_WALLETS, ERC20_TRANSFER_EVENT_HASH, ERC677_TRANSFER_EVENT_HASH
 
 logger = logging.getLogger(__name__)
 logger_price_magic.setLevel(logging.CRITICAL)
@@ -62,7 +63,8 @@ def _get_price(token, block=None):
 
 def get_token_from_event(event):
     try:
-        address = event['Transfer'][0].address
+        transfer = event['Transfer']
+        address = transfer[0].address
         # try to download the contract from etherscan
         contract(address)
         return address
@@ -70,13 +72,8 @@ def get_token_from_event(event):
         # some tokens have unverified sources with etherscan, skip them!
         return None
     except EventLookupError:
-        logger.critical(
-            f'One of your cached contracts has an incorrect definition: {event.address}. Please fix this manually'
-        )
-        raise Exception(
-            f'One of your cached contracts has an incorrect definition: {event.address}. Please fix this manually'
-        )
-
+        logger.critical(event)
+        raise
 
 class Treasury:
     '''
@@ -86,15 +83,26 @@ class Treasury:
     def __init__(self, watch_events_forever=False):
         self.addresses = list(TREASURY_WALLETS)
         self._transfers = []
-        self._topics_in = [
-            '0xddf252ad1be2c89b69c2b068fc378daa952ba7f163c4a11628f55a4df523b3ef',
-            None,
-            ['0x000000000000000000000000' + address[2:] for address in self.addresses],
-        ]  # Transfers into Yearn wallets
-        self._topics_out = [
-            '0xddf252ad1be2c89b69c2b068fc378daa952ba7f163c4a11628f55a4df523b3ef',
-            ['0x000000000000000000000000' + address[2:] for address in self.addresses],
-        ]  # Transfers out of Yearn wallets
+        self._start_block = 10502337 # Treasury didn't exist prior to block 10502337
+
+        # define transfer signatures for Transfer events from ERC-20 and ERC-677 contracts
+        transfer_sigs = [
+            ERC20_TRANSFER_EVENT_HASH,
+            ERC677_TRANSFER_EVENT_HASH
+        ]
+        treasury_addresses = [encode_hex(encode_single('address', address)) for address in self.addresses]
+        self._topics = [
+            [
+                transfer_sigs,
+                None,
+                treasury_addresses # Transfers into Treasury wallets
+            ],
+            [
+                transfer_sigs,
+                treasury_addresses # Transfers out of Treasury wallets
+            ]
+        ]
+
         self._watch_events_forever = watch_events_forever
         self._done = threading.Event()
         self._thread = threading.Thread(target=self.watch_transfers, daemon=True)
@@ -110,13 +118,15 @@ class Treasury:
     def token_list(self, address, block=None) -> list:
         self.load_transfers()
         tokens = set()
-        for transfer in self._transfers:
-            token = get_token_from_event(transfer)
+        for event in self._transfers:
+            token = get_token_from_event(event)
             if token is None:
                 continue
-            if transfer['Transfer'].values()[1] == address:
+
+            transfer = event['Transfer']
+            if transfer.values()[1] == address:
                 if block:
-                    if transfer['Transfer'][0].block_number <= block:
+                    if transfer[0].block_number <= block:
                         tokens.add(token)
                 else:
                     tokens.add(token)
@@ -274,14 +284,12 @@ class Treasury:
         logger.info(
             'pulling treasury transfer events, please wait patiently this takes a while...'
         )
-        # Treasury didn't exist prior to block 10502337
-        self.log_filter_in = web3.eth.filter({"fromBlock": 10502337, "topics": self._topics_in})
-        self.log_filter_out = web3.eth.filter({"fromBlock": 10502337, "topics": self._topics_out})
         for block in chain.new_blocks(height_buffer=12):
-            logs = self.log_filter_in.get_new_entries()
-            self.process_transfers(logs)
-            logs = self.log_filter_out.get_new_entries()
-            self.process_transfers(logs)
+            for topics in self._topics:
+                topic_filter = web3.eth.filter({"fromBlock": self._start_block, "topics": topics})
+                logs = topic_filter.get_new_entries()
+                self.process_transfers(logs)
+
             if not self._done.is_set():
                 self._done.set()
                 logger.info(
