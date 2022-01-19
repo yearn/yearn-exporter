@@ -10,6 +10,7 @@ from tqdm import tqdm
 
 CSV_EXPORT = True
 CSV_PATH = './reports/stats.csv'
+VAULT_CSV_PATH = './reports/vault_stats.csv'
 
 def _read_cache():
     try:
@@ -88,6 +89,9 @@ def _generate_snapshot_range(start, end, interval):
         yield snapshot
 
 
+def _vaults(df):
+    return df['vault'].unique()
+
 def _users(df,vault = None):
     if vault:
         df = df[df['vault'] == vault]
@@ -103,15 +107,24 @@ def _count_users_by_num_vaults_used(df: pd.DataFrame):
     for user in _users(df):
         ct = len(df[df['to'] == user]['vault'].unique())
         try:
-            data[f'wallets that used {ct} vaults'] += 1
+            data[f'num wallets used {ct} vaults'] += 1
         except:
-            data[f'wallets that used {ct} vaults'] = 1
+            data[f'num wallets used {ct} vaults'] = 1
+    return data
+
+def _process_vault(df,vault):
+    print(f'vault: {vault}')
+    users = _users(df,vault)
+    data = {
+        'lifetime_users': len(users),
+    }
     return data
 
 def _export_block(df,block):
     df = df[df['block'] <= block]
-    data = _count_users_by_num_vaults_used(df)
-    data['total_users'] = _total_users(df)
+    data = {'stats': _count_users_by_num_vaults_used(df)}
+    data['stats']['total_users'] = _total_users(df)
+    data['vaults'] = {vault: _process_vault(df,vault) for vault in _vaults(df)}
     return data
 
 
@@ -120,10 +133,17 @@ def main(block = None):
     if block:
         df = df[df['block'] <= block]
         return _export_block(df,block)
-    data = {block:_export_block(df,block) for block in tqdm(_blocks(df))}
-    
+
+    data = {block: _export_block(df,block) for block in tqdm(_blocks(df))}
+
     if CSV_EXPORT:
-        df = pd.DataFrame(data).transpose()
-        df.to_csv(CSV_PATH, index=True)
-    
+        # yearn stats
+        export_df = pd.DataFrame(data).transpose()['stats'].apply(pd.Series).fillna(0).astype(int)
+        export_df =export_df[sorted(export_df.columns)]
+        export_df.to_csv(CSV_PATH, index=True)
+
+        # vault stats
+        export_df = pd.DataFrame(data).transpose()['vaults'].apply(pd.Series).unstack().reset_index().dropna().rename(columns={'level_0':'vault','level_1':'block'})
+        export_df = export_df.drop(columns=[0]).join(export_df[0].apply(pd.Series))
+        export_df.to_csv(VAULT_CSV_PATH, index=False)
 
