@@ -47,7 +47,7 @@ def staking(address: str, pool_price: int, base_asset_price: int, block: Optiona
             if not token:
                 break
 
-            data = _get_rewards_data(token, block_identifier=block)
+            data = _get_rewards_data(staking_rewards, token, block)
 
             rate = data.rewardRate / 1e18 if data else 0
             token_price = get_price(token, block=block) or 0
