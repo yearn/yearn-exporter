@@ -98,11 +98,21 @@ def _users(df,vault = None):
 def _total_users(df: pd.DataFrame):
     return len(_users(df))
 
+def _count_users_by_num_vaults_used(df: pd.DataFrame):
+    data = {}
+    for user in _users(df):
+        ct = len(df[df['to'] == user]['vault'].unique())
+        try:
+            data[f'wallets that used {ct} vaults'] += 1
+        except:
+            data[f'wallets that used {ct} vaults'] = 1
+    return data
+
 def _export_block(df,block):
     df = df[df['block'] <= block]
-    return {
-        'total_users': _total_users(df)
-    }
+    data = _count_users_by_num_vaults_used(df)
+    data['total_users'] = _total_users(df)
+    return data
 
 
 def main(block = None):
