@@ -17,6 +17,7 @@ from yearn.exceptions import UnsupportedNetwork
 from yearn.prices import constants
 from yearn.outputs.describers.registry import RegistryWalletDescriber
 
+
 logger = logging.getLogger(__name__)
 
 
@@ -54,9 +55,6 @@ class Yearn:
             self.registries["v2"].load_strategies()
         if load_harvests:
             self.registries["v2"].load_harvests()
-        if load_transfers:
-            self.registries['v1'].load_transfers()
-            self.registries['v2'].load_transfers()
         logger.info('loaded yearn in %.3fs', time() - start)
 
     def describe(self, block=None):

@@ -138,25 +138,10 @@ class Registry(metaclass=Singleton):
         vaults = self.vaults + self.experiments
         Parallel(8, "threading")(delayed(vault.load_harvests)() for vault in vaults)
 
-    def load_transfers(self):
-        vaults = self.vaults + self.experiments
-        Parallel(8, "threading")(delayed(vault.load_transfers)() for vault in vaults)
-
     def describe(self, block=None):
         vaults = self.active_vaults_at(block)
         results = Parallel(8, "threading")(delayed(vault.describe)(block=block) for vault in vaults)
-        results_dict = {vault.name: result for vault, result in zip(vaults, results)}
-        if not os.environ.get("SKIP_WALLET_STATS", False):
-            wallet_balances = Counter()
-            for vault in results:
-                for wallet, data in vault['wallet balances'].items():
-                    wallet_balances[wallet] += data["usd balance"]
-            agg_stats = {
-                "total wallets": len(wallet_balances),
-                "wallet balances usd": wallet_balances,
-            }
-            results_dict.update(agg_stats)
-        return results_dict
+        return {vault.name: result for vault, result in zip(vaults, results)}
 
     def total_value_at(self, block=None):
         vaults = self.active_vaults_at(block)
