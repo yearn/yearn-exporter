@@ -70,7 +70,6 @@ def _get_price(event, vault):
             print(f'ValueError: {str(e)}')
             if str(e) in ["Failed to retrieve data from API: {'status': '0', 'message': 'NOTOK', 'result': 'Max rate limit reached'}","Failed to retrieve data from API: {'status': '0', 'message': 'NOTOK', 'result': 'Max rate limit reached, please use API Key for higher rate limit'}"]:
                 # Try again
-                print(str(e))
                 print('trying again...')
                 time.sleep(5)
             else:
@@ -106,7 +105,7 @@ def _vault_transfers(vault, start_block, end_block) -> pd.DataFrame:
         web3.codec,
     )
     events = decode_logs(get_logs_asap(vault.address, topics, from_block = start_block, to_block = end_block))
-    return pd.DataFrame(Parallel(16,'threading')(delayed(_process_event)(event, vault, vault_symbol, vault_decimals) for event in tqdm(events)))
+    return pd.DataFrame(Parallel(16,'threading')(delayed(_process_event)(event, vault, vault_symbol, vault_decimals) for event in events))
     
 def main():
     while True:
