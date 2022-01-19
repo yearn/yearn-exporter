@@ -99,7 +99,7 @@ def export(block, timestamp, data):
                             metrics_to_export.append(item)
                     continue
 
-                label_values = _get_label_values(params, [vault, key], has_experiments)
+                label_values = _get_label_values(params, [vault, k], has_experiments)
                 label_names = mapping[product]["labels"]
 
                 item = _build_item(metric, label_names, label_values, v, timestamp)
