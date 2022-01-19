@@ -81,6 +81,7 @@ class Yearn:
                 "wallet balances usd": wallet_balances
             }
         }
+        
         data.update(agg_stats)
         return data
 
