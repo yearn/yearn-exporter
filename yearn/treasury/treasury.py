@@ -344,7 +344,7 @@ class Treasury:
                 )
             if not self._watch_events_forever:
                 break
-            time.sleep(30)
+            time.sleep(5)
 
     def process_transfers(self, logs):
         for log in logs:
