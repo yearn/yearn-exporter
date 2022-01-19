@@ -49,9 +49,6 @@ class Registry:
         data.update(agg_stats)
         return data
 
-    def load_transfers(self):
-        Parallel(8, "threading")(delayed(vault.load_transfers)() for vault in self.vaults)
-
     def total_value_at(self, block=None):
         vaults = self.active_vaults_at(block)
         balances = fetch_multicall(*[[vault.vault, "balance"] for vault in vaults], block=block)
