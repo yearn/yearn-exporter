@@ -331,10 +331,13 @@ class Treasury:
         logger.info(
             'pulling treasury transfer events, please wait patiently this takes a while...'
         )
+        transfer_filters = [
+            web3.eth.filter({"fromBlock": self._start_block, "topics": topics})
+            for topics in self._topics
+        ]
         for block in chain.new_blocks(height_buffer=12):
-            for topics in self._topics:
-                topic_filter = web3.eth.filter({"fromBlock": self._start_block, "topics": topics})
-                logs = topic_filter.get_new_entries()
+            for transfer_filter in transfer_filters:
+                logs = transfer_filter.get_new_entries()
                 self.process_transfers(logs)
 
             if not self._done.is_set():
