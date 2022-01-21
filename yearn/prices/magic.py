@@ -14,6 +14,7 @@ from yearn.prices.uniswap.v1 import uniswap_v1
 from yearn.prices.uniswap.v2 import uniswap_v2
 from yearn.prices.uniswap.v3 import uniswap_v3
 from yearn.prices.yearn import yearn_lens
+from yearn.utils import contract
 
 from yearn.prices import balancer, constants, curve
 
@@ -86,6 +87,12 @@ def get_price_ftm(token, block=None):
     if not price:
         price = uniswap_v2.get_price(token, block=block)
         logger.debug("uniswap v2 -> %s", price)
+
+    # xcredit
+    if token == '0xd9e28749e80D867d5d14217416BFf0e668C10645':
+        logger.debug('xcredit -> unwrap')
+        wrapper = contract(token)
+        return get_price(wrapper.token()) * wrapper.getShareValue() / 1e18
 
     if not price:
         logger.error("failed to get price for %s", token)
