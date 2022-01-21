@@ -79,6 +79,8 @@ class UniswapV2:
         scales = [10 ** token.decimals() for token in tokens]
         prices = [self.get_price(token, block=block) for token in tokens]
         supply = supply / 1e18
+        if None in prices or supply == 0:
+            return None
         balances = [
             res / scale * price for res, scale, price in zip(reserves, scales, prices)
         ]
