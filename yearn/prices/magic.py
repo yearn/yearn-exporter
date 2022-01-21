@@ -79,6 +79,10 @@ def get_price_ftm(token, block=None):
         price = band.get_price(token, block=block)
         logger.debug("band -> %s", price)
 
+    if uniswap_v2.is_uniswap_pool(token):
+        price = uniswap_v2.lp_price(token, block=block)
+        logger.debug("uniswap pool -> %s", price)
+
     if not price:
         price = uniswap_v2.get_price(token, block=block)
         logger.debug("uniswap v2 -> %s", price)
