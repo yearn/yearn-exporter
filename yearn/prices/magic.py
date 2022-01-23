@@ -63,6 +63,10 @@ def get_price_arbi(token, block=None):
 def get_price_ftm(token, block=None):
     price = None
 
+    if token in aave:
+        token = aave.atoken_underlying(token)
+        logger.debug("aave -> %s", token)
+
     if token in compound:
         price = compound.get_price(token, block=block)
         logger.debug("compound -> %s", price)

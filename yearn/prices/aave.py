@@ -14,7 +14,11 @@ address_providers = {
         'v1': '0x24a42fD28C976A61Df5D00D0599C34c4f90748c8',
         # https://docs.aave.com/developers/deployed-contracts/deployed-contracts
         'v2': '0xB53C1a33016B2DC2fF3653530bfF1848a515c8c5',
-    }
+    },
+    Network.Fantom: {
+        # https://docs.geist.finance/useful-info/deployments-addresses
+        'v2': '0x6c793c628Fe2b480c5e6FB7957dDa4b9291F9c9b',
+    },
 }
 
 
