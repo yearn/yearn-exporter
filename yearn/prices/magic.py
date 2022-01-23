@@ -71,7 +71,11 @@ def get_price_ftm(token, block=None):
         price = compound.get_price(token, block=block)
         logger.debug("compound -> %s", price)
 
-    elif token in curve.curve:
+    if yearn_lens.is_yearn_vault(token):
+        price = yearn_lens.get_price(token, block=block)
+        logger.debug("yearn -> %s", price)
+
+    if token in curve.curve:
         price = curve.curve.get_price(token, block=block)
         logger.debug("curve lp -> %s", price)
 
