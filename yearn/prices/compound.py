@@ -154,8 +154,11 @@ class CompoundMultiplexer(metaclass=Singleton):
         return any(token in comp.markets for comp in self.compounds)
 
     def get_price(self, token, block=None):
-        comp = next(comp for comp in self.compounds if token in comp.markets)
-        return comp.get_price(token, block)
+        try:
+            comp = next(comp for comp in self.compounds if token in comp.markets)
+            return comp.get_price(token, block)
+        except StopIteration:
+            return None
 
 
 compound = None

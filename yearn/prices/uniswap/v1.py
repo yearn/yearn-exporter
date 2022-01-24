@@ -17,6 +17,12 @@ class UniswapV1(metaclass=Singleton):
         
         self.factory = contract(addresses[chain.id])
 
+    def __repr__(self):
+        return "uniswap v1"
+
+    def __contains__(self, asset):
+        return chain.id in addresses
+
     @ttl_cache(ttl=600)
     def get_price(self, asset, block=None):
         try:

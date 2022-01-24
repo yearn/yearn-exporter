@@ -82,6 +82,9 @@ class CurveRegistry(metaclass=Singleton):
         self.crypto_swap_registry = contract(self.address_provider.get_address(5))
         self.watch_events()
 
+    def __repr__(self):
+        return "curve"
+
     def watch_events(self):
         # TODO keep fresh in background
 
@@ -309,6 +312,8 @@ class CurveRegistry(metaclass=Singleton):
     @ttl_cache(maxsize=None, ttl=600)
     def get_price(self, token, block=None):
         pool = self.get_pool(token)
+        if not pool:
+            return None
 
         # crypto pools can have different tokens, use slow method
         if hasattr(contract(pool), 'price_oracle'):

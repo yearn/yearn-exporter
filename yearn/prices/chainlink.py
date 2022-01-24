@@ -39,6 +39,9 @@ class Chainlink(metaclass=Singleton):
         self.registry = contract(registries[chain.id])
         self.load_feeds()
 
+    def __repr__(self):
+        return "chainlink"
+
     def load_feeds(self):
         logs = decode_logs(
             get_logs_asap(str(self.registry), [self.registry.topics['FeedConfirmed']])
@@ -63,7 +66,7 @@ class Chainlink(metaclass=Singleton):
             return None
         try:
             return self.get_feed(asset).latestAnswer(block_identifier=block) / 1e8
-        except ValueError:
+        except (ValueError, KeyError):
             return None
 
 
