@@ -53,6 +53,14 @@ def get_price_arbi(token, block=None):
         logger.debug("peel %s %s", price, underlying)
         return price * get_price(underlying, block=block)
 
+    if token in curve.curve:
+        price = curve.curve.get_price(token, block=block)
+        logger.debug("curve lp -> %s", price)
+
+    if not price:
+        price = uniswap_v3.get_price(token, block=block)
+        logger.debug("uniswap v3 -> %s", price)
+
     if not price:
         logger.error("failed to get price for %s", token)
         raise PriceError(f'could not fetch price for {token} at {block}')

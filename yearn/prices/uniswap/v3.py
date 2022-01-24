@@ -1,7 +1,7 @@
 import math
 from itertools import cycle
 
-from brownie import chain
+from brownie import chain, interface
 from eth_abi.packed import encode_abi_packed
 from yearn.exceptions import UnsupportedNetwork
 from yearn.multicall2 import fetch_multicall
@@ -63,7 +63,7 @@ class UniswapV3(metaclass=Singleton):
 
         paths += [[token, fee, usdc] for fee in self.fee_tiers]
 
-        scale = 10 ** contract(token).decimals()
+        scale = 10 ** interface.ERC20(token).decimals()
 
         results = fetch_multicall(
             *[
