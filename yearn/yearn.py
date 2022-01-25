@@ -23,25 +23,25 @@ class Yearn:
     Can describe all products.
     """
 
-    def __init__(self, load_strategies=True, load_harvests=False, watch_events_forever=True) -> None:
+    def __init__(self, load_strategies=True, load_harvests=False, watch_events_forever=True, exclude_ib_tvl=True) -> None:
         start = time()
         if chain.id == Network.Mainnet:
             self.registries = {
                 "earn": yearn.iearn.Registry(),
                 "v1": yearn.v1.registry.Registry(),
                 "v2": yearn.v2.registry.Registry(watch_events_forever=watch_events_forever),
-                "ib": yearn.ironbank.Registry(),
+                "ib": yearn.ironbank.Registry(exclude_ib_tvl=exclude_ib_tvl),
                 "special": yearn.special.Registry(),
             }
         elif chain.id ==  Network.Fantom:
             self.registries = {
                 "v2": yearn.v2.registry.Registry(),
-                "ib": yearn.ironbank.Registry(),
+                "ib": yearn.ironbank.Registry(exclude_ib_tvl=exclude_ib_tvl),
             }
         elif chain.id == Network.Arbitrum:
             self.registries = {
                 "v2": yearn.v2.registry.Registry(),
-                "ib": yearn.ironbank.Registry(),
+                "ib": yearn.ironbank.Registry(exclude_ib_tvl=exclude_ib_tvl),
             }
         else:
             raise UnsupportedNetwork('yearn is not supported on this network')

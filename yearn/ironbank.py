@@ -42,9 +42,10 @@ class IronbankMarket:
 
 
 class Registry:
-    def __init__(self):
+    def __init__(self, exclude_ib_tvl=True):
         if chain.id not in addresses:
             raise UnsupportedNetwork('iron bank is not supported on this network')
+        self.exclude_ib_tvl = exclude_ib_tvl
         self.vaults  # load the markets on init
 
     def __repr__(self):
@@ -105,7 +106,7 @@ class Registry:
             for attr in ["getCash", "totalBorrows", "totalReserves"]:
                 res[attr] /= 10 ** m.decimals
 
-            if block >= ib_snapshot_block:
+            if self.exclude_ib_tvl and block >= ib_snapshot_block:
                 tvl = 0
             else:
                 tvl = (res["getCash"] + res["totalBorrows"] - res["totalReserves"]) * price
