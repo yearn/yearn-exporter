@@ -63,7 +63,7 @@ class Chainlink(metaclass=Singleton):
             return None
         try:
             return self.get_feed(asset).latestAnswer(block_identifier=block) / 1e8
-        except (ValueError, KeyError):
+        except ValueError:
             return None
 
 

@@ -309,8 +309,6 @@ class CurveRegistry(metaclass=Singleton):
     @ttl_cache(maxsize=None, ttl=600)
     def get_price(self, token, block=None):
         pool = self.get_pool(token)
-        if not pool:
-            return None
 
         # crypto pools can have different tokens, use slow method
         if hasattr(contract(pool), 'price_oracle'):
