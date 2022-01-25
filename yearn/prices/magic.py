@@ -61,15 +61,15 @@ def find_price(token, block):
         price = get_price(wrapper.token(), block=block) * wrapper.getShareValue() / 1e18
 
     markets = [
-        balancer,
-        yearn_lens,
         chainlink,
+        yearn_lens,
         curve.curve,
         compound,
         fixed_forex,
         synthetix,
         band,
         uniswap_v2,
+        balancer,
         uniswap_v3,
         uniswap_v1
     ]
