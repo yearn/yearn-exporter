@@ -1,7 +1,7 @@
 import math
 from itertools import cycle
 
-from brownie import chain, interface
+from brownie import chain
 from eth_abi.packed import encode_abi_packed
 from yearn.exceptions import UnsupportedNetwork
 from yearn.multicall2 import fetch_multicall
