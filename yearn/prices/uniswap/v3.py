@@ -63,7 +63,7 @@ class UniswapV3(metaclass=Singleton):
 
         paths += [[token, fee, usdc] for fee in self.fee_tiers]
 
-        scale = 10 ** interface.ERC20(token).decimals()
+        scale = 10 ** contract(token).decimals()
 
         results = fetch_multicall(
             *[
