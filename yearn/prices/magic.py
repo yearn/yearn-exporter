@@ -2,7 +2,7 @@ import logging
 
 from brownie import chain
 from cachetools.func import ttl_cache
-from yearn.exceptions import PriceError, UnsupportedNetwork
+from yearn.exceptions import PriceError
 from yearn.networks import Network
 from yearn.prices.aave import aave
 from yearn.prices.band import band
@@ -20,17 +20,8 @@ from yearn.prices import balancer, constants, curve
 
 logger = logging.getLogger(__name__)
 
-NETWORKS = [
-    Network.Arbitrum,
-    Network.Fantom,
-    Network.Mainnet
-]
-
 @ttl_cache(10000)
 def get_price(token, block=None):
-    if chain.id not in NETWORKS:
-        raise UnsupportedNetwork('magic price oracle is not supported on this network %s', Network.label(chain.id))
-
     token = unwrap_token(token)
     return find_price(token, block)
 
