@@ -48,7 +48,14 @@ stablecoins_by_network = {
     },
 }
 
+ib_snapshot_block_by_network = {
+    Network.Mainnet: 14051986,
+    Network.Fantom: 28680044,
+    Network.Arbitrum: 1
+}
+
 weth = tokens_by_network[chain.id]['weth']
 usdc = tokens_by_network[chain.id]['usdc']
 dai = tokens_by_network[chain.id]['dai']
 stablecoins = stablecoins_by_network[chain.id]
+ib_snapshot_block = ib_snapshot_block_by_network[chain.id]

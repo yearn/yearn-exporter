@@ -14,7 +14,8 @@ from yearn.prices import magic
 from yearn.networks import Network
 from yearn.prices.compound import get_fantom_ironbank
 from yearn.prices.compound import compound
-from yearn.utils import contract, get_block_timestamp
+from yearn.utils import contract
+from yearn.prices.constants import ib_snapshot_block
 import logging
 
 logger = logging.getLogger(__name__)
@@ -76,9 +77,6 @@ class Registry:
         return contract(addr) if isinstance(addr, str) else addr()
 
     def describe(self, block=None):
-        block_ts = get_block_timestamp(block)
-        snapshot_ts = datetime.strptime('2022-01-22T00:00:00Z','%Y-%m-%dT%H:%M:%SZ').timestamp()
-
         markets = self.active_vaults_at(block)
         blocks_per_year = 365 * 86400 / 15
         contracts = [m.vault for m in markets]
@@ -107,7 +105,7 @@ class Registry:
             for attr in ["getCash", "totalBorrows", "totalReserves"]:
                 res[attr] /= 10 ** m.decimals
 
-            if block_ts > snapshot_ts:
+            if block >= ib_snapshot_block:
                 tvl = 0
             else:
                 tvl = (res["getCash"] + res["totalBorrows"] - res["totalReserves"]) * price
