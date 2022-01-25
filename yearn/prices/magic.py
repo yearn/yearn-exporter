@@ -40,7 +40,7 @@ def unwrap_token(token):
             return "0x0cec1a9154ff802e7934fc916ed7ca50bde6844e"  # PPOOL -> POOL
 
     if chain.id in [ Network.Mainnet, Network.Fantom ]:
-        if token in aave and aave:
+        if aave and token in aave:
             token = aave.atoken_underlying(token)
             logger.debug("aave -> %s", token)
 
