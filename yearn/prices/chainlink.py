@@ -39,9 +39,6 @@ class Chainlink(metaclass=Singleton):
         self.registry = contract(registries[chain.id])
         self.load_feeds()
 
-    def __repr__(self):
-        return "chainlink"
-
     def load_feeds(self):
         logs = decode_logs(
             get_logs_asap(str(self.registry), [self.registry.topics['FeedConfirmed']])

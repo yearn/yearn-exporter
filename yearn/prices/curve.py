@@ -82,9 +82,6 @@ class CurveRegistry(metaclass=Singleton):
         self.crypto_swap_registry = contract(self.address_provider.get_address(5))
         self.watch_events()
 
-    def __repr__(self):
-        return "curve"
-
     def watch_events(self):
         # TODO keep fresh in background
 

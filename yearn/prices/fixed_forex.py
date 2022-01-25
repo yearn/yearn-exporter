@@ -23,9 +23,6 @@ class FixedForex(metaclass=Singleton):
         self.markets = self.registry.forex()
         logger.info(f'loaded {len(self.markets)} fixed forex markets')
 
-    def __repr__(self):
-        return "fixed forex"
-
     def __contains__(self, token):
         return token in self.markets
 
