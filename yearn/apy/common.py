@@ -41,6 +41,10 @@ class Apy:
     points: Optional[ApyPoints] = None
     composite: Optional[Dict[str, float]] = None
 
+@dataclass
+class StrategyApy:
+    gross_apr: float
+    net_apy: float
 
 @dataclass
 class ApySamples:
