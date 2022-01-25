@@ -15,7 +15,7 @@ from yearn.networks import Network
 from yearn.prices.compound import get_fantom_ironbank
 from yearn.prices.compound import compound
 from yearn.utils import contract
-from yearn.prices.constants import ib_snapshot_block
+from yearn.prices import constants
 import logging
 
 logger = logging.getLogger(__name__)
@@ -106,7 +106,7 @@ class Registry:
             for attr in ["getCash", "totalBorrows", "totalReserves"]:
                 res[attr] /= 10 ** m.decimals
 
-            if self.exclude_ib_tvl and block >= ib_snapshot_block:
+            if self.exclude_ib_tvl and block >= constants.ib_snapshot_block:
                 tvl = 0
             else:
                 tvl = (res["getCash"] + res["totalBorrows"] - res["totalReserves"]) * price
