@@ -8,6 +8,7 @@ from yearn.prices.aave import aave
 from yearn.prices.band import band
 from yearn.prices.chainlink import chainlink
 from yearn.prices.compound import compound
+from yearn.prices.balancer import balancer
 from yearn.prices.fixed_forex import fixed_forex
 from yearn.prices.synthetix import synthetix
 from yearn.prices.uniswap.v1 import uniswap_v1
@@ -16,7 +17,7 @@ from yearn.prices.uniswap.v3 import uniswap_v3
 from yearn.prices.yearn import yearn_lens
 from yearn.utils import contract
 
-from yearn.prices import balancer, constants, curve
+from yearn.prices import constants, curve
 
 logger = logging.getLogger(__name__)
 
