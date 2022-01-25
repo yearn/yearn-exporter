@@ -104,7 +104,7 @@ def simple(vault, samples: ApySamples) -> Apy:
             if gauge_reward_token == addresses[chain.id]['rkp3r_rewards']:
                 rKP3R_contract = interface.rKP3R(gauge_reward_token)
                 discount = rKP3R_contract.discount(block_identifier=block)
-                token_price = get_price(addresses[chain.id]['kp3r'], block=block) * discount / 100
+                token_price = get_price(addresses[chain.id]['kp3r'], block=block) * (100 - discount) / 100
             else:
                 token_price = get_price(gauge_reward_token, block=block)
             current_time = time() if block is None else get_block_timestamp(block)
