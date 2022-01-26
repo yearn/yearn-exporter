@@ -54,15 +54,15 @@ def find_price(token, block):
         logger.debug("stablecoin -> %s", 1)
         return 1
 
-    elif uniswap_v2.is_uniswap_pool(token):
+    elif uniswap_v2 and uniswap_v2.is_uniswap_pool(token):
         price = uniswap_v2.lp_price(token, block=block)
         logger.debug("uniswap pool -> %s", price)
 
-    elif balancer.is_balancer_pool(token):
+    elif balancer and balancer.is_balancer_pool(token):
         price = balancer.get_price(token, block=block)
         logger.debug("balancer pool -> %s", price)
 
-    elif yearn_lens.is_yearn_vault(token):
+    elif yearn_lens and yearn_lens.is_yearn_vault(token):
         price = yearn_lens.get_price(token, block=block)
         logger.debug("yearn -> %s", price)
 
