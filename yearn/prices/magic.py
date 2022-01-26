@@ -8,7 +8,7 @@ from yearn.prices.aave import aave
 from yearn.prices.band import band
 from yearn.prices.chainlink import chainlink
 from yearn.prices.compound import compound
-from yearn.prices.balancer import balancer
+import yearn.prices.balancer as bal
 from yearn.prices.fixed_forex import fixed_forex
 from yearn.prices.synthetix import synthetix
 from yearn.prices.uniswap.v1 import uniswap_v1
@@ -58,8 +58,8 @@ def find_price(token, block):
         price = uniswap_v2.lp_price(token, block=block)
         logger.debug("uniswap pool -> %s", price)
 
-    elif balancer and balancer.is_balancer_pool(token):
-        price = balancer.get_price(token, block=block)
+    elif bal.balancer and bal.balancer.is_balancer_pool(token):
+        price = bal.balancer.get_price(token, block=block)
         logger.debug("balancer pool -> %s", price)
 
     elif yearn_lens and yearn_lens.is_yearn_vault(token):

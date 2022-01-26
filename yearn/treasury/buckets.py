@@ -1,7 +1,7 @@
 from brownie import Contract
 from yearn.cache import memory
 from yearn.constants import BTC_LIKE, ETH_LIKE as _ETH_LIKE
-from yearn.prices.balancer import balancer
+import yearn.prices.balancer as bal
 from yearn.prices.compound import compound
 from yearn.prices.constants import stablecoins, weth
 from yearn.prices.fixed_forex import fixed_forex
@@ -70,7 +70,7 @@ def _unwrap_token(token) -> str:
             str(_unwrap_token(coin)) for coin in curve.get_underlying_coins(pool)
         )
         return _pool_bucket(pool_tokens)
-    if balancer.is_balancer_pool(token):  # should only be YLA # TODO figure this out
+    if bal.balancer and bal.balancer.is_balancer_pool(token):  # should only be YLA # TODO figure this out
         pool_tokens = set(
             str(_unwrap_token(coin)) for coin in contract(token).getCurrentTokens()
         )
