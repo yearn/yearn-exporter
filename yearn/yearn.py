@@ -14,7 +14,7 @@ import yearn.v2.registry
 from yearn.networks import Network
 from yearn.outputs import victoria
 from yearn.exceptions import UnsupportedNetwork
-from yearn.constants import ib_snapshot_block
+from yearn.prices import constants
 
 logger = logging.getLogger(__name__)
 

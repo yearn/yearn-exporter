@@ -5,7 +5,7 @@ import time
 from brownie import chain
 from yearn.yearn import Yearn
 from yearn.outputs import victoria
-from yearn.constants import ib_snapshot_block
+from yearn.prices import constants
 
 logger = logging.getLogger('yearn.exporter')
 sleep_interval = int(os.environ.get('SLEEP_SECONDS', '0'))
