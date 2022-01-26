@@ -124,6 +124,8 @@ def registry_adapter():
         registry_adapter_address = web3.ens.resolve("lens.ychad.eth")
     elif chain.id == Network.Fantom:
         registry_adapter_address = "0xF628Fb7436fFC382e2af8E63DD7ccbaa142E3cd1"
+    elif chain.id == Network.Arbitrum:
+        registry_adapter_address = "0x57AA88A0810dfe3f9b71a9b179Dd8bF5F956C46A"
     return contract(registry_adapter_address)
 
 
@@ -148,7 +150,7 @@ def main():
         special = [YveCRVJar(), Backscratcher()]
         registry_v1 = RegistryV1()
         vaults = itertools.chain(special, registry_v1.vaults, registry_v2.vaults, registry_v2.experiments)
-    elif chain.id == Network.Fantom:
+    else:
         vaults = registry_v2.vaults
 
     assets_metadata = get_assets_metadata(registry_v2.vaults)
