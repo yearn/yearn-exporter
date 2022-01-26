@@ -24,9 +24,6 @@ class Synthetix(metaclass=Singleton):
         self.synths = self.load_synths()
         logger.info(f'loaded {len(self.synths)} synths')
 
-    def __repr__(self):
-        return "synthetix"
-
     @lru_cache(maxsize=None)
     def get_address(self, name):
         """

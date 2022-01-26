@@ -40,9 +40,6 @@ class UniswapV3(metaclass=Singleton):
         self.quoter = contract(conf['quoter'])
         self.fee_tiers = conf['fee_tiers']
 
-    def __repr__(self):
-        return "uniswap v3"
-
     def __contains__(self, asset):
         return chain.id in addresses
 

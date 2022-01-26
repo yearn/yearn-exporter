@@ -101,9 +101,6 @@ class UniswapV2Multiplexer(metaclass=Singleton):
             for conf in addresses[chain.id]
         ]
 
-    def __repr__(self):
-        return "uniswap v2"
-
     def __contains__(self, asset):
         return chain.id in addresses
 
