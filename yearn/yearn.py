@@ -14,6 +14,7 @@ import yearn.v2.registry
 from yearn.networks import Network
 from yearn.outputs import victoria
 from yearn.exceptions import UnsupportedNetwork
+from yearn.constants import ib_snapshot_block
 
 logger = logging.getLogger(__name__)
 
@@ -50,6 +51,8 @@ class Yearn:
             self.registries["v2"].load_strategies()
         if load_harvests:
             self.registries["v2"].load_harvests()
+
+        self.exclude_ib_tvl = exclude_ib_tvl
         logger.info('loaded yearn in %.3fs', time() - start)
 
     def describe(self, block=None):
@@ -94,7 +97,10 @@ class Yearn:
         start = time()
         data = self.describe(block)
         victoria.export(block, ts, data)
-        tvl = sum(vault['tvl'] for product in data.values() for vault in product.values() if type(vault) == dict)
+        products = list(data.keys())
+        if self.exclude_ib_tvl and block > constants.ib_snapshot_block:
+            products.remove('ib')
+        tvl = sum(vault['tvl'] for (product, product_values) in data.items() if product in products for vault in product_values.values() if type(vault) == dict)
         logger.info('exported block=%d tvl=%.0f took=%.3fs', block, tvl, time() - start)
 
     

@@ -105,11 +105,7 @@ class Registry:
             for attr in ["getCash", "totalBorrows", "totalReserves"]:
                 res[attr] /= 10 ** m.decimals
 
-            if self.exclude_ib_tvl:
-                tvl = 0
-            else:
-                tvl = (res["getCash"] + res["totalBorrows"] - res["totalReserves"]) * price
-
+            tvl = (res["getCash"] + res["totalBorrows"] - res["totalReserves"]) * price
             supplied = res["getCash"] + res["totalBorrows"] - res["totalReserves"]
             ratio = res["totalBorrows"] / supplied if supplied != 0 else None
 
