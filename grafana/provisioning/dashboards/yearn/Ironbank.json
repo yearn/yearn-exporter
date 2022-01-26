@@ -65,7 +65,7 @@
   "fiscalYearStartMonth": 0,
   "graphTooltip": 0,
   "id": null,
-  "iteration": 1639228621348,
+  "iteration": 1643208734474,
   "links": [],
   "liveNow": false,
   "panels": [
@@ -80,6 +80,7 @@
           "color": {
             "mode": "thresholds"
           },
+          "decimals": 4,
           "mappings": [],
           "thresholds": {
             "mode": "absolute",
@@ -89,7 +90,8 @@
                 "value": null
               }
             ]
-          }
+          },
+          "unit": "short"
         },
         "overrides": [
           {
@@ -121,7 +123,7 @@
         "orientation": "auto",
         "reduceOptions": {
           "calcs": [
-            "lastNotNull"
+            "last"
           ],
           "fields": "",
           "values": false
@@ -132,8 +134,13 @@
       "pluginVersion": "8.3.1",
       "targets": [
         {
-          "expr": "sum(ironbank{network=\"$networks\", param=\"tvl\"})",
-          "instant": true,
+          "datasource": {
+            "type": "prometheus",
+            "uid": "DS_PROMETHEUS"
+          },
+          "exemplar": true,
+          "expr": "(sum(ironbank_own{network=\"$networks\", param=\"tvl\"})) OR (sum(ironbank{network=\"$networks\", param=\"tvl\"}) or vector(0))",
+          "instant": false,
           "interval": "",
           "legendFormat": "{{vault}}",
           "refId": "A"
@@ -208,8 +215,12 @@
       "pluginVersion": "8.3.1",
       "targets": [
         {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "DS_PROMETHEUS"
+          },
           "exemplar": true,
-          "expr": "sum(delta(ironbank{network=\"$networks\", param=\"tvl\"}[1d]))",
+          "expr": "sum(delta(ironbank_own{network=\"$networks\", param=\"tvl\"}[1d])) OR (sum(delta(ironbank{network=\"$networks\", param=\"tvl\"}[1d])) or vector(0))",
           "instant": false,
           "interval": "",
           "legendFormat": "{{vault}}",
@@ -285,8 +296,12 @@
       "pluginVersion": "8.3.1",
       "targets": [
         {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "DS_PROMETHEUS"
+          },
           "exemplar": true,
-          "expr": "sum(delta(ironbank{network=\"$networks\", param=\"tvl\"}[1w]))",
+          "expr": "sum(delta(ironbank_own{network=\"$networks\", param=\"tvl\"}[1w])) OR (sum(delta(ironbank{network=\"$networks\", param=\"tvl\"}[1w])) or vector(0))",
           "instant": false,
           "interval": "",
           "legendFormat": "{{vault}}",
@@ -362,8 +377,12 @@
       "pluginVersion": "8.3.1",
       "targets": [
         {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "DS_PROMETHEUS"
+          },
           "exemplar": true,
-          "expr": "sum(delta(ironbank{network=\"$networks\", param=\"tvl\"}[4w]))",
+          "expr": "sum(delta(ironbank_own{network=\"$networks\", param=\"tvl\"}[4w])) OR (sum(delta(ironbank{network=\"$networks\", param=\"tvl\"}[4w])) or vector(0))",
           "instant": false,
           "interval": "",
           "legendFormat": "{{vault}}",
@@ -376,7 +395,7 @@
       "type": "stat"
     },
     {
-      "collapsed": true,
+      "collapsed": false,
       "gridPos": {
         "h": 1,
         "w": 24,
@@ -384,131 +403,140 @@
         "y": 9
       },
       "id": 37,
-      "panels": [
+      "panels": [],
+      "title": "TVL - Graph",
+      "type": "row"
+    },
+    {
+      "aliasColors": {},
+      "bars": false,
+      "dashLength": 10,
+      "dashes": false,
+      "datasource": {
+        "type": "prometheus",
+        "uid": "DS_PROMETHEUS"
+      },
+      "decimals": 4,
+      "description": "Ironbank TVL and Daily inflow/outflow. ",
+      "fieldConfig": {
+        "defaults": {
+          "links": [
+            {
+              "targetBlank": true,
+              "title": "Ironbank",
+              "url": "https://v1.yearn.finance/lending"
+            }
+          ],
+          "unit": "short"
+        },
+        "overrides": []
+      },
+      "fill": 2,
+      "fillGradient": 0,
+      "gridPos": {
+        "h": 9,
+        "w": 24,
+        "x": 0,
+        "y": 10
+      },
+      "hiddenSeries": false,
+      "id": 35,
+      "interval": "",
+      "legend": {
+        "avg": false,
+        "current": true,
+        "hideEmpty": true,
+        "hideZero": true,
+        "max": false,
+        "min": false,
+        "show": true,
+        "total": false,
+        "values": true
+      },
+      "lines": true,
+      "linewidth": 2,
+      "nullPointMode": "connected",
+      "options": {
+        "alertThreshold": true
+      },
+      "percentage": false,
+      "pluginVersion": "8.3.1",
+      "pointradius": 2,
+      "points": false,
+      "renderer": "flot",
+      "seriesOverrides": [
         {
-          "aliasColors": {},
-          "bars": false,
-          "dashLength": 10,
-          "dashes": false,
+          "$$hashKey": "object:111",
+          "alias": "net inflow/outflow - daily",
+          "legend": true,
+          "lines": false,
+          "nullPointMode": "connected",
+          "yaxis": 2
+        }
+      ],
+      "spaceLength": 10,
+      "stack": false,
+      "steppedLine": true,
+      "targets": [
+        {
           "datasource": {
             "type": "prometheus",
             "uid": "DS_PROMETHEUS"
           },
-          "decimals": 4,
-          "description": "Ironbank TVL and Daily inflow/outflow. ",
-          "fieldConfig": {
-            "defaults": {
-              "links": [
-                {
-                  "targetBlank": true,
-                  "title": "Ironbank",
-                  "url": "https://v1.yearn.finance/lending"
-                }
-              ],
-              "unit": "short"
-            },
-            "overrides": []
-          },
-          "fill": 2,
-          "fillGradient": 0,
-          "gridPos": {
-            "h": 9,
-            "w": 24,
-            "x": 0,
-            "y": 10
-          },
-          "hiddenSeries": false,
-          "id": 35,
+          "exemplar": true,
+          "expr": "(sum(ironbank_own{network=\"$networks\", param=\"tvl\"})) OR (sum(ironbank{network=\"$networks\", param=\"tvl\"}) or vector(0))",
+          "instant": false,
           "interval": "",
-          "legend": {
-            "avg": false,
-            "current": true,
-            "max": false,
-            "min": false,
-            "show": true,
-            "total": false,
-            "values": true
+          "legendFormat": "TVL",
+          "refId": "A"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "DS_PROMETHEUS"
           },
-          "lines": true,
-          "linewidth": 2,
-          "nullPointMode": "connected",
-          "options": {
-            "alertThreshold": true
-          },
-          "percentage": false,
-          "pluginVersion": "8.3.1",
-          "pointradius": 2,
-          "points": false,
-          "renderer": "flot",
-          "seriesOverrides": [
-            {
-              "$$hashKey": "object:111",
-              "alias": "net inflow/outflow - daily",
-              "legend": true,
-              "lines": false,
-              "nullPointMode": "connected",
-              "yaxis": 2
-            }
-          ],
-          "spaceLength": 10,
-          "stack": false,
-          "steppedLine": true,
-          "targets": [
-            {
-              "exemplar": true,
-              "expr": "sum(ironbank{network=\"$networks\", param=\"tvl\"})",
-              "instant": false,
-              "interval": "",
-              "legendFormat": "TVL",
-              "refId": "A"
-            },
-            {
-              "exemplar": true,
-              "expr": "sum(delta(ironbank{network=\"$networks\", param=\"tvl\"}[1d]))",
-              "hide": false,
-              "interval": "",
-              "legendFormat": "net inflow/outflow - daily",
-              "refId": "B"
-            }
-          ],
-          "thresholds": [],
-          "timeRegions": [],
-          "title": "TVL",
-          "tooltip": {
-            "shared": true,
-            "sort": 2,
-            "value_type": "individual"
-          },
-          "transformations": [],
-          "transparent": true,
-          "type": "graph",
-          "xaxis": {
-            "mode": "time",
-            "show": true,
-            "values": []
-          },
-          "yaxes": [
-            {
-              "$$hashKey": "object:83",
-              "decimals": 2,
-              "format": "short",
-              "logBase": 1,
-              "show": true
-            },
-            {
-              "$$hashKey": "object:84",
-              "format": "short",
-              "logBase": 1,
-              "show": false
-            }
-          ],
-          "yaxis": {
-            "align": false
-          }
+          "exemplar": true,
+          "expr": "sum(delta(ironbank_own{network=\"$networks\", param=\"tvl\"}[1d])) OR (sum(delta(ironbank{network=\"$networks\", param=\"tvl\"}[1d])) or vector(0))",
+          "hide": false,
+          "interval": "",
+          "legendFormat": "net inflow/outflow - daily",
+          "refId": "B"
         }
       ],
-      "title": "TVL - Graph",
-      "type": "row"
+      "thresholds": [],
+      "timeRegions": [],
+      "title": "TVL",
+      "tooltip": {
+        "shared": true,
+        "sort": 2,
+        "value_type": "individual"
+      },
+      "transformations": [],
+      "transparent": true,
+      "type": "graph",
+      "xaxis": {
+        "mode": "time",
+        "show": true,
+        "values": []
+      },
+      "yaxes": [
+        {
+          "$$hashKey": "object:83",
+          "decimals": 2,
+          "format": "short",
+          "logBase": 1,
+          "show": true
+        },
+        {
+          "$$hashKey": "object:84",
+          "format": "short",
+          "logBase": 1,
+          "show": false
+        }
+      ],
+      "yaxis": {
+        "align": false
+      }
     },
     {
       "collapsed": true,
@@ -516,7 +544,7 @@
         "h": 1,
         "w": 24,
         "x": 0,
-        "y": 10
+        "y": 19
       },
       "id": 52,
       "panels": [
@@ -550,7 +578,7 @@
             "h": 12,
             "w": 24,
             "x": 0,
-            "y": 11
+            "y": 20
           },
           "hiddenSeries": false,
           "id": 50,
@@ -596,16 +624,24 @@
           "steppedLine": false,
           "targets": [
             {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "DS_PROMETHEUS"
+              },
               "exemplar": true,
-              "expr": "ironbank{network=\"$networks\", param=\"tvl\"}",
+              "expr": "ironbank_own{network=\"$networks\", param=\"tvl\"} OR ironbank{network=\"$networks\", param=\"tvl\"} ",
               "instant": false,
               "interval": "",
               "legendFormat": "{{vault}}",
               "refId": "A"
             },
             {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "DS_PROMETHEUS"
+              },
               "exemplar": true,
-              "expr": "sum(delta(ironbank{network=\"$networks\", param=\"tvl\"}[1d]))",
+              "expr": "(sum(delta(ironbank{network=\"$networks\", param=\"tvl\"}[1d])) or vector(0)) + (sum(delta(ironbank_own{network=\"$networks\", param=\"tvl\"}[1d])) or vector(0))",
               "hide": false,
               "interval": "",
               "legendFormat": "net inflow/outflow - daily",
@@ -656,7 +692,7 @@
         "h": 1,
         "w": 24,
         "x": 0,
-        "y": 11
+        "y": 20
       },
       "id": 39,
       "panels": [
@@ -693,7 +729,7 @@
             "h": 8,
             "w": 12,
             "x": 0,
-            "y": 12
+            "y": 21
           },
           "id": 6,
           "options": {
@@ -760,7 +796,7 @@
             "h": 8,
             "w": 12,
             "x": 12,
-            "y": 12
+            "y": 21
           },
           "id": 28,
           "options": {
@@ -824,7 +860,7 @@
             "h": 8,
             "w": 12,
             "x": 0,
-            "y": 20
+            "y": 29
           },
           "hiddenSeries": false,
           "id": 10,
@@ -931,7 +967,7 @@
             "h": 8,
             "w": 12,
             "x": 12,
-            "y": 20
+            "y": 29
           },
           "hiddenSeries": false,
           "id": 43,
@@ -1018,7 +1054,7 @@
         "h": 1,
         "w": 24,
         "x": 0,
-        "y": 12
+        "y": 21
       },
       "id": 42,
       "panels": [
@@ -1052,7 +1088,7 @@
             "h": 8,
             "w": 12,
             "x": 0,
-            "y": 41
+            "y": 22
           },
           "hiddenSeries": false,
           "id": 40,
@@ -1160,7 +1196,7 @@
             "h": 8,
             "w": 12,
             "x": 12,
-            "y": 41
+            "y": 22
           },
           "hiddenSeries": false,
           "id": 44,
@@ -1248,7 +1284,7 @@
         "h": 1,
         "w": 24,
         "x": 0,
-        "y": 13
+        "y": 22
       },
       "id": 46,
       "panels": [
@@ -1283,7 +1319,7 @@
             "h": 7,
             "w": 24,
             "x": 0,
-            "y": 42
+            "y": 23
           },
           "id": 29,
           "options": {
@@ -1340,7 +1376,7 @@
             "h": 8,
             "w": 24,
             "x": 0,
-            "y": 49
+            "y": 30
           },
           "hiddenSeries": false,
           "id": 25,
@@ -1430,7 +1466,7 @@
         "h": 1,
         "w": 24,
         "x": 0,
-        "y": 14
+        "y": 23
       },
       "id": 34,
       "panels": [
@@ -1451,7 +1487,7 @@
             "h": 8,
             "w": 12,
             "x": 0,
-            "y": 15
+            "y": 24
           },
           "hiddenSeries": false,
           "id": 4,
@@ -1548,7 +1584,7 @@
             "h": 8,
             "w": 12,
             "x": 12,
-            "y": 15
+            "y": 24
           },
           "hiddenSeries": false,
           "id": 23,
@@ -1640,7 +1676,7 @@
         "h": 1,
         "w": 24,
         "x": 0,
-        "y": 15
+        "y": 24
       },
       "id": 48,
       "panels": [
@@ -1661,7 +1697,7 @@
             "h": 7,
             "w": 12,
             "x": 0,
-            "y": 16
+            "y": 25
           },
           "hiddenSeries": false,
           "id": 26,
@@ -1769,7 +1805,7 @@
             "h": 7,
             "w": 12,
             "x": 12,
-            "y": 16
+            "y": 25
           },
           "hiddenSeries": false,
           "id": 27,
@@ -1864,7 +1900,7 @@
             "h": 7,
             "w": 12,
             "x": 0,
-            "y": 23
+            "y": 32
           },
           "hiddenSeries": false,
           "id": 53,
@@ -1965,7 +2001,7 @@
             "h": 7,
             "w": 12,
             "x": 12,
-            "y": 23
+            "y": 32
           },
           "hiddenSeries": false,
           "id": 54,
@@ -2066,7 +2102,7 @@
             "h": 7,
             "w": 24,
             "x": 0,
-            "y": 30
+            "y": 39
           },
           "hiddenSeries": false,
           "id": 49,
@@ -2191,13 +2227,13 @@
     ]
   },
   "time": {
-    "from": "now-30d",
+    "from": "now-1y",
     "to": "now"
   },
   "timepicker": {},
   "timezone": "",
   "title": "Ironbank",
-  "uid": "6n3HB1hMz2111",
-  "version": 8,
+  "uid": "6n3HB1hMz21111",
+  "version": 17,
   "weekStart": ""
 }
