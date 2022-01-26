@@ -26,12 +26,6 @@ class Balancer(metaclass=Singleton):
     def __contains__(self, token):
         return False
 
-    def is_in_pool(self, address):
-        return self.is_balancer_pool(address)
-
-    def get_pool_price(self, token, block=None):
-        return self.get_price(token, block=block)
-
     def is_balancer_pool(self, address):
         return is_balancer_pool_cached(address)
 

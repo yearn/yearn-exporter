@@ -48,12 +48,6 @@ class YearnLens(metaclass=Singleton):
         # hard check, works with production vaults
         return any(token in market for market in self.markets.values())
 
-    def is_in_pool(self, token):
-        return self.is_yearn_vault(token)
-
-    def get_pool_price(self, token, block=None):
-        return self.get_price(token, block=block)
-
     def is_yearn_vault(self, token):
         # soft check, works with any contracts using a compatible interface
         vault = contract(token)

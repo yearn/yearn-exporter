@@ -107,12 +107,6 @@ class UniswapV2Multiplexer(metaclass=Singleton):
     def __contains__(self, asset):
         return chain.id in addresses
 
-    def is_in_pool(self, asset):
-        return self.is_uniswap_pool(asset)
-
-    def get_pool_price(self, token, block=None):
-        return self.lp_price(token, block=block)
-
     def get_price(self, token, block=None):
         for exchange in self.uniswaps:
             price = exchange.get_price(token, block=block)

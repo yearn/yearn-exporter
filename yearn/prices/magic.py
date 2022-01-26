@@ -54,22 +54,32 @@ def find_price(token, block):
         logger.debug("stablecoin -> %s", 1)
         return 1
 
+    elif uniswap_v2.is_uniswap_pool(token):
+        price = uniswap_v2.lp_price(token, block=block)
+        logger.debug("uniswap pool -> %s", price)
+
+    elif balancer.is_balancer_pool(token):
+        price = balancer.get_price(token, block=block)
+        logger.debug("balancer pool -> %s", price)
+
+    elif yearn_lens.is_yearn_vault(token):
+        price = yearn_lens.get_price(token, block=block)
+        logger.debug("yearn -> %s", price)
+
     # xcredit
-    if chain.id == Network.Fantom and token == '0xd9e28749e80D867d5d14217416BFf0e668C10645':
+    elif chain.id == Network.Fantom and token == '0xd9e28749e80D867d5d14217416BFf0e668C10645':
         logger.debug('xcredit -> unwrap')
         wrapper = contract(token)
         price = get_price(wrapper.token(), block=block) * wrapper.getShareValue() / 1e18
 
     markets = [
         chainlink,
-        yearn_lens,
         curve.curve,
         compound,
         fixed_forex,
         synthetix,
         band,
         uniswap_v2,
-        balancer,
         uniswap_v3,
         uniswap_v1
     ]
@@ -82,9 +92,7 @@ def find_price(token, block):
         market_name = market.__class__.__name__
         logger.debug("getting price for token %s with market %s", token, market_name)
 
-        if hasattr(market, 'is_in_pool') and market.is_in_pool(token):
-            price = market.get_pool_price(token, block=block)
-        if not price and token in market:
+        if token in market:
             price = market.get_price(token, block=block)
 
         logger.debug("%s -> %s", market_name, price)
