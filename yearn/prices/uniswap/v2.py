@@ -101,6 +101,9 @@ class UniswapV2Multiplexer(metaclass=Singleton):
             for conf in addresses[chain.id]
         ]
 
+    def __contains__(self, asset):
+        return chain.id in addresses
+
     def get_price(self, token, block=None):
         for exchange in self.uniswaps:
             price = exchange.get_price(token, block=block)

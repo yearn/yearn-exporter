@@ -89,12 +89,13 @@
         "type": "prometheus",
         "uid": "DS_PROMETHEUS"
       },
-      "description": "This counts all tvl on both eth and fantom chains and subtracts for delegated deposited funds in vaults. ",
+      "description": "This counts all tvl on both eth and fantom chains and subtracts for delegated deposited funds in vaults. This does not count Iron Bank TVL",
       "fieldConfig": {
         "defaults": {
           "color": {
             "mode": "thresholds"
           },
+          "decimals": 2,
           "mappings": [],
           "thresholds": {
             "mode": "percentage",
@@ -122,9 +123,7 @@
         "justifyMode": "center",
         "orientation": "auto",
         "reduceOptions": {
-          "calcs": [
-            "lastNotNull"
-          ],
+          "calcs": ["lastNotNull"],
           "fields": "",
           "values": false
         },
@@ -139,7 +138,7 @@
             "uid": "DS_PROMETHEUS"
           },
           "exemplar": true,
-          "expr": "(sum(yearn{network=\"ETH\", param=\"tvl\"}) or vector(0)) + (avg(yearn{network=\"ETH\", param=\"vecrv balance\"}) * avg(yearn{network=\"ETH\", param=\"crv price\"}) or vector(0)) + (sum(yearn_vault{network=\"ETH\", param=\"tvl\"}) or vector(0)) + (sum(iearn{network=\"ETH\", param=\"tvl\"}) or vector(0)) + (sum(ironbank{network=\"ETH\", param=\"tvl\"}) or vector(0)) - (sum((yearn_strategy{network=\"ETH\", param=\"delegatedAssets\", experimental=\"false\"} / 1000000000000000000 > 0) * on(vault, version) group_left yearn_vault{network=\"ETH\", param=\"token price\", experimental=\"false\"}) or vector(0)) + (sum(ironbank{network=\"FTM\", param=\"tvl\"}) or vector(0)) + (sum(yearn_vault{network=\"FTM\", param=\"tvl\"}) or vector(0))",
+          "expr": "(avg(yearn{network=\"ETH\", param=\"vecrv balance\"}) * avg(yearn{network=\"ETH\", param=\"crv price\"}) or vector(0)) + (sum(yearn{network=\"ETH\", param=\"tvl\"}) or vector(0)) + (sum(yearn_vault{network=\"ETH\", param=\"tvl\"}) or vector(0)) + (sum(yearn_vault{network=\"FTM\", param=\"tvl\"}) or vector(0)) + (sum(iearn{network=\"ETH\", param=\"tvl\"}) or vector(0)) - (sum((yearn_strategy{network=\"ETH\", param=\"delegatedAssets\"} / 1000000000000000000 > 0) * on(vault, version) group_left yearn_vault{network=\"ETH\", param=\"token price\"}) or vector(0))  - (sum((yearn_strategy{network=\"FTM\", param=\"delegatedAssets\"} / 1000000000000000000 > 0) * on(vault, version) group_left yearn_vault{network=\"FTM\", param=\"token price\"}) or vector(0))",
           "instant": false,
           "interval": "",
           "legendFormat": "tvl",
@@ -212,9 +211,7 @@
         "justifyMode": "auto",
         "orientation": "auto",
         "reduceOptions": {
-          "calcs": [
-            "lastNotNull"
-          ],
+          "calcs": ["lastNotNull"],
           "fields": "",
           "values": false
         },
@@ -224,8 +221,12 @@
       "pluginVersion": "8.3.1",
       "targets": [
         {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "DS_PROMETHEUS"
+          },
           "exemplar": true,
-          "expr": "sum(delta(yearn{param=\"tvl\", network=\"ETH\"}[1d])) + sum(delta(ironbank{param=\"tvl\", network=\"ETH\"}[1d])) + sum(delta(yearn_vault{param=\"tvl\", network=\"ETH\"}[1d])) + sum(delta(iearn{param=\"tvl\", network=\"ETH\"}[1d])) + sum(delta(yearn_vault{param=\"tvl\", network=\"FTM\"}[1d])) + sum(delta(ironbank{param=\"tvl\", network=\"FTM\"}[1d]))",
+          "expr": "sum(delta(yearn{param=\"tvl\", network=\"ETH\"}[1d])) + sum(delta(yearn_vault{param=\"tvl\", network=\"ETH\"}[1d])) + sum(delta(iearn{param=\"tvl\", network=\"ETH\"}[1d])) + sum(delta(yearn_vault{param=\"tvl\", network=\"FTM\"}[1d]))",
           "interval": "",
           "legendFormat": "",
           "queryType": "randomWalk",
@@ -277,9 +278,7 @@
         "justifyMode": "auto",
         "orientation": "auto",
         "reduceOptions": {
-          "calcs": [
-            "lastNotNull"
-          ],
+          "calcs": ["lastNotNull"],
           "fields": "",
           "values": false
         },
@@ -289,8 +288,12 @@
       "pluginVersion": "8.3.1",
       "targets": [
         {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "DS_PROMETHEUS"
+          },
           "exemplar": true,
-          "expr": "sum(delta(yearn{param=\"tvl\", network=\"ETH\"}[1w])) + sum(delta(ironbank{param=\"tvl\", network=\"ETH\"}[1w])) + sum(delta(yearn_vault{param=\"tvl\", network=\"ETH\"}[1w])) + sum(delta(iearn{param=\"tvl\", network=\"ETH\"}[1w])) + sum(delta(yearn_vault{param=\"tvl\", network=\"FTM\"}[1w])) + sum(delta(ironbank{param=\"tvl\", network=\"FTM\"}[1w]))",
+          "expr": "sum(delta(yearn{param=\"tvl\", network=\"ETH\"}[1w])) + sum(delta(yearn_vault{param=\"tvl\", network=\"ETH\"}[1w])) + sum(delta(iearn{param=\"tvl\", network=\"ETH\"}[1w])) + sum(delta(yearn_vault{param=\"tvl\", network=\"FTM\"}[1w]))",
           "interval": "",
           "legendFormat": "",
           "queryType": "randomWalk",
@@ -338,9 +341,7 @@
         "justifyMode": "auto",
         "orientation": "auto",
         "reduceOptions": {
-          "calcs": [
-            "lastNotNull"
-          ],
+          "calcs": ["lastNotNull"],
           "fields": "",
           "values": false
         },
@@ -421,9 +422,7 @@
         "justifyMode": "auto",
         "orientation": "auto",
         "reduceOptions": {
-          "calcs": [
-            "lastNotNull"
-          ],
+          "calcs": ["lastNotNull"],
           "fields": "",
           "values": false
         },
@@ -502,9 +501,7 @@
         "justifyMode": "auto",
         "orientation": "auto",
         "reduceOptions": {
-          "calcs": [
-            "lastNotNull"
-          ],
+          "calcs": ["lastNotNull"],
           "fields": "",
           "values": false
         },
@@ -518,7 +515,7 @@
             "uid": "DS_PROMETHEUS"
           },
           "exemplar": true,
-          "expr": "(sum(yearn{network=\"ETH\", param=\"tvl\"}) or vector(0)) + (avg(yearn{network=\"ETH\", param=\"vecrv balance\"}) * avg(yearn{network=\"ETH\", param=\"crv price\"}) or vector(0)) + (sum(yearn_vault{network=\"ETH\", param=\"tvl\"}) or vector(0)) + (sum(iearn{network=\"ETH\", param=\"tvl\"}) or vector(0)) + (sum(ironbank{network=\"ETH\", param=\"tvl\"}) or vector(0)) - (sum((yearn_strategy{network=\"ETH\", param=\"delegatedAssets\", experimental=\"false\"} / 1000000000000000000 > 0) * on(vault, version) group_left yearn_vault{network=\"ETH\", param=\"token price\", experimental=\"false\"}) or vector(0))",
+          "expr": "(sum(yearn{network=\"ETH\", param=\"tvl\"}) or vector(0)) + (avg(yearn{network=\"ETH\", param=\"vecrv balance\"}) * avg(yearn{network=\"ETH\", param=\"crv price\"}) or vector(0)) + (sum(yearn_vault{network=\"ETH\", param=\"tvl\"}) or vector(0)) + (sum(iearn{network=\"ETH\", param=\"tvl\"}) or vector(0)) - (sum((yearn_strategy{network=\"ETH\", param=\"delegatedAssets\", experimental=\"false\"} / 1000000000000000000 > 0) * on(vault, version) group_left yearn_vault{network=\"ETH\", param=\"token price\", experimental=\"false\"}) or vector(0))",
           "instant": false,
           "interval": "",
           "legendFormat": "eth tvl",
@@ -591,9 +588,7 @@
         "justifyMode": "auto",
         "orientation": "auto",
         "reduceOptions": {
-          "calcs": [
-            "lastNotNull"
-          ],
+          "calcs": ["lastNotNull"],
           "fields": "",
           "values": false
         },
@@ -608,7 +603,7 @@
             "uid": "DS_PROMETHEUS"
           },
           "exemplar": true,
-          "expr": "sum(delta(yearn{param=\"tvl\", network=\"ETH\"}[1w])) + sum(delta(ironbank{param=\"tvl\", network=\"ETH\"}[1w])) + sum(delta(yearn_vault{param=\"tvl\", network=\"ETH\"}[1w])) + sum(delta(iearn{param=\"tvl\", network=\"ETH\"}[1w]))",
+          "expr": "sum(delta(yearn{param=\"tvl\", network=\"ETH\"}[1w])) + sum(delta(yearn_vault{param=\"tvl\", network=\"ETH\"}[1w])) + sum(delta(iearn{param=\"tvl\", network=\"ETH\"}[1w]))",
           "interval": "",
           "legendFormat": "",
           "queryType": "randomWalk",
@@ -656,9 +651,7 @@
         "justifyMode": "center",
         "orientation": "auto",
         "reduceOptions": {
-          "calcs": [
-            "lastNotNull"
-          ],
+          "calcs": ["lastNotNull"],
           "fields": "",
           "values": false
         },
@@ -673,7 +666,7 @@
             "uid": "DS_PROMETHEUS"
           },
           "exemplar": true,
-          "expr": "(sum(ironbank{network=\"FTM\", param=\"tvl\"}) or vector(0)) + (sum(yearn_vault{network=\"FTM\", param=\"tvl\"}) or vector(0))",
+          "expr": "(sum(yearn_vault{network=\"FTM\", param=\"tvl\"}) or vector(0))",
           "instant": false,
           "interval": "",
           "legendFormat": "ftm tvl",
@@ -746,9 +739,7 @@
         "justifyMode": "auto",
         "orientation": "auto",
         "reduceOptions": {
-          "calcs": [
-            "lastNotNull"
-          ],
+          "calcs": ["lastNotNull"],
           "fields": "",
           "values": false
         },
@@ -763,7 +754,7 @@
             "uid": "DS_PROMETHEUS"
           },
           "exemplar": true,
-          "expr": "sum(delta(yearn_vault{param=\"tvl\", network=\"FTM\"}[1w])) + sum(delta(ironbank{param=\"tvl\", network=\"FTM\"}[1w]))",
+          "expr": "sum(delta(yearn_vault{param=\"tvl\", network=\"FTM\"}[1w]))",
           "interval": "",
           "legendFormat": "",
           "queryType": "randomWalk",
@@ -783,6 +774,7 @@
         "type": "prometheus",
         "uid": "DS_PROMETHEUS"
       },
+      "description": "Sums tvl and subtracts out vault tvl that is delegated to other vaults",
       "fill": 0,
       "fillGradient": 0,
       "gridPos": {
@@ -797,6 +789,8 @@
         "alignAsTable": true,
         "avg": false,
         "current": true,
+        "hideEmpty": false,
+        "hideZero": false,
         "max": false,
         "min": false,
         "rightSide": true,
@@ -823,6 +817,10 @@
       "steppedLine": true,
       "targets": [
         {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "DS_PROMETHEUS"
+          },
           "exemplar": true,
           "expr": "sum(iearn{param=\"tvl\", network=\"ETH\"})",
           "interval": "",
@@ -831,14 +829,10 @@
           "refId": "A"
         },
         {
-          "exemplar": true,
-          "expr": "sum(ironbank{param=\"tvl\", network=\"ETH\"})",
-          "hide": false,
-          "interval": "",
-          "legendFormat": "ironbank - eth",
-          "refId": "B"
-        },
-        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "DS_PROMETHEUS"
+          },
           "exemplar": true,
           "expr": "sum(yearn{param=\"tvl\", network=\"ETH\"})",
           "hide": false,
@@ -847,28 +841,28 @@
           "refId": "C"
         },
         {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "DS_PROMETHEUS"
+          },
           "exemplar": true,
-          "expr": "sum(yearn_vault{param=\"tvl\", network=\"ETH\"}) - (sum((yearn_strategy{param=\"delegatedAssets\", experimental=\"false\", network=\"ETH\"} / 1000000000000000000 > 0) * on(vault, version) group_left yearn_vault{param=\"token price\", experimental=\"false\", network=\"ETH\"}) or vector(0))",
+          "expr": "sum(yearn_vault{param=\"tvl\", network=\"ETH\"}) - (sum((yearn_strategy{param=\"delegatedAssets\", network=\"ETH\"} / 1000000000000000000 > 0) * on(vault, version) group_left yearn_vault{param=\"token price\", network=\"ETH\"}) or vector(0))",
           "hide": false,
           "interval": "",
           "legendFormat": "v2 - eth",
           "refId": "D"
         },
         {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "DS_PROMETHEUS"
+          },
           "exemplar": true,
-          "expr": "sum(yearn_vault{param=\"tvl\", network=\"FTM\"}) - (sum((yearn_strategy{param=\"delegatedAssets\", experimental=\"false\", network=\"FTM\"} / 1000000000000000000 > 0) * on(vault, version) group_left yearn_vault{param=\"token price\", experimental=\"false\", network=\"FTM\"}) or vector(0))",
+          "expr": "sum(yearn_vault{param=\"tvl\", network=\"FTM\"}) - (sum((yearn_strategy{param=\"delegatedAssets\", network=\"FTM\"} / 1000000000000000000 > 0) * on(vault, version) group_left yearn_vault{param=\"token price\", network=\"FTM\"}) or vector(0))",
           "hide": false,
           "interval": "",
           "legendFormat": "v2 - ftm",
           "refId": "E"
-        },
-        {
-          "exemplar": true,
-          "expr": "sum(ironbank{param=\"tvl\", network=\"FTM\"})",
-          "hide": false,
-          "interval": "",
-          "legendFormat": "ironbank - ftm",
-          "refId": "F"
         }
       ],
       "thresholds": [],
@@ -953,6 +947,10 @@
       "steppedLine": true,
       "targets": [
         {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "DS_PROMETHEUS"
+          },
           "exemplar": true,
           "expr": "sum(delta(iearn{param=\"tvl\", network=\"ETH\"}[1d]))",
           "interval": "",
@@ -961,14 +959,10 @@
           "refId": "A"
         },
         {
-          "exemplar": true,
-          "expr": "sum(delta(ironbank{param=\"tvl\", network=\"ETH\"}[1d]))",
-          "hide": false,
-          "interval": "",
-          "legendFormat": "ironbank - eth",
-          "refId": "B"
-        },
-        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "DS_PROMETHEUS"
+          },
           "exemplar": true,
           "expr": "sum(delta(yearn{param=\"tvl\", network=\"ETH\"}[1d]))",
           "hide": false,
@@ -977,6 +971,10 @@
           "refId": "C"
         },
         {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "DS_PROMETHEUS"
+          },
           "exemplar": true,
           "expr": "sum(delta(yearn_vault{param=\"tvl\", network=\"ETH\"}[1d]))",
           "hide": false,
@@ -985,20 +983,16 @@
           "refId": "D"
         },
         {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "DS_PROMETHEUS"
+          },
           "exemplar": true,
           "expr": "sum(delta(yearn_vault{param=\"tvl\", network=\"FTM\"}[1d]))",
           "hide": false,
           "interval": "",
           "legendFormat": "v2 - ftm",
           "refId": "E"
-        },
-        {
-          "exemplar": true,
-          "expr": "sum(delta(ironbank{param=\"tvl\", network=\"FTM\"}[1d]))",
-          "hide": false,
-          "interval": "",
-          "legendFormat": "ironbank - ftm",
-          "refId": "F"
         }
       ],
       "thresholds": [
@@ -2011,212 +2005,6 @@
             "y": 52
           },
           "hiddenSeries": false,
-          "id": 10,
-          "legend": {
-            "alignAsTable": true,
-            "avg": false,
-            "current": true,
-            "max": false,
-            "min": false,
-            "rightSide": true,
-            "show": true,
-            "sort": "current",
-            "sortDesc": true,
-            "total": false,
-            "values": true
-          },
-          "lines": true,
-          "linewidth": 1,
-          "nullPointMode": "connected",
-          "options": {
-            "alertThreshold": false
-          },
-          "percentage": false,
-          "pluginVersion": "8.3.1",
-          "pointradius": 2,
-          "points": false,
-          "renderer": "flot",
-          "seriesOverrides": [],
-          "spaceLength": 10,
-          "stack": false,
-          "steppedLine": true,
-          "targets": [
-            {
-              "datasource": {
-                "type": "prometheus",
-                "uid": "DS_PROMETHEUS"
-              },
-              "exemplar": true,
-              "expr": "ironbank{param=\"tvl\", network=\"ETH\"} != 0",
-              "interval": "",
-              "legendFormat": "{{vault}}",
-              "queryType": "randomWalk",
-              "refId": "A"
-            }
-          ],
-          "thresholds": [],
-          "timeRegions": [],
-          "title": "ironbank tvl",
-          "tooltip": {
-            "shared": true,
-            "sort": 2,
-            "value_type": "individual"
-          },
-          "transparent": true,
-          "type": "graph",
-          "xaxis": {
-            "mode": "time",
-            "show": true,
-            "values": []
-          },
-          "yaxes": [
-            {
-              "$$hashKey": "object:38",
-              "format": "currencyUSD",
-              "logBase": 1,
-              "show": true
-            },
-            {
-              "$$hashKey": "object:39",
-              "format": "short",
-              "logBase": 1,
-              "show": false
-            }
-          ],
-          "yaxis": {
-            "align": false
-          }
-        },
-        {
-          "aliasColors": {},
-          "bars": false,
-          "dashLength": 10,
-          "dashes": false,
-          "datasource": {
-            "type": "prometheus",
-            "uid": "DS_PROMETHEUS"
-          },
-          "fill": 0,
-          "fillGradient": 0,
-          "gridPos": {
-            "h": 8,
-            "w": 12,
-            "x": 12,
-            "y": 52
-          },
-          "hiddenSeries": false,
-          "id": 11,
-          "legend": {
-            "alignAsTable": true,
-            "avg": false,
-            "current": true,
-            "max": false,
-            "min": false,
-            "rightSide": true,
-            "show": true,
-            "sort": "current",
-            "sortDesc": true,
-            "total": false,
-            "values": true
-          },
-          "lines": true,
-          "linewidth": 1,
-          "nullPointMode": "connected",
-          "options": {
-            "alertThreshold": false
-          },
-          "percentage": false,
-          "pluginVersion": "8.3.1",
-          "pointradius": 2,
-          "points": false,
-          "renderer": "flot",
-          "seriesOverrides": [
-            {
-              "$$hashKey": "object:1727",
-              "alias": "net inflow/outflow",
-              "color": "rgb(204, 204, 220)"
-            }
-          ],
-          "spaceLength": 10,
-          "stack": false,
-          "steppedLine": true,
-          "targets": [
-            {
-              "datasource": {
-                "type": "prometheus",
-                "uid": "DS_PROMETHEUS"
-              },
-              "exemplar": true,
-              "expr": "delta(ironbank{param=\"tvl\", network=\"ETH\"}[1d]) != 0",
-              "interval": "",
-              "legendFormat": "{{vault}}",
-              "queryType": "randomWalk",
-              "refId": "A"
-            },
-            {
-              "datasource": {
-                "type": "prometheus",
-                "uid": "DS_PROMETHEUS"
-              },
-              "exemplar": true,
-              "expr": "sum(delta(ironbank{param=\"tvl\", network=\"ETH\"}[1d]))",
-              "hide": false,
-              "interval": "",
-              "legendFormat": "net inflow/outflow",
-              "refId": "B"
-            }
-          ],
-          "thresholds": [],
-          "timeRegions": [],
-          "title": "ironbank tvl daily",
-          "tooltip": {
-            "shared": true,
-            "sort": 2,
-            "value_type": "individual"
-          },
-          "transparent": true,
-          "type": "graph",
-          "xaxis": {
-            "mode": "time",
-            "show": true,
-            "values": []
-          },
-          "yaxes": [
-            {
-              "$$hashKey": "object:38",
-              "format": "currencyUSD",
-              "logBase": 1,
-              "show": true
-            },
-            {
-              "$$hashKey": "object:39",
-              "format": "short",
-              "logBase": 1,
-              "show": false
-            }
-          ],
-          "yaxis": {
-            "align": false
-          }
-        },
-        {
-          "aliasColors": {},
-          "bars": false,
-          "dashLength": 10,
-          "dashes": false,
-          "datasource": {
-            "type": "prometheus",
-            "uid": "DS_PROMETHEUS"
-          },
-          "fill": 0,
-          "fillGradient": 0,
-          "gridPos": {
-            "h": 8,
-            "w": 12,
-            "x": 0,
-            "y": 60
-          },
-          "hiddenSeries": false,
           "id": 12,
           "legend": {
             "alignAsTable": true,
@@ -2308,7 +2096,7 @@
             "h": 8,
             "w": 12,
             "x": 12,
-            "y": 60
+            "y": 52
           },
           "hiddenSeries": false,
           "id": 13,
@@ -2421,7 +2209,7 @@
             "h": 8,
             "w": 12,
             "x": 0,
-            "y": 68
+            "y": 60
           },
           "hiddenSeries": false,
           "id": 28,
@@ -2515,7 +2303,7 @@
             "h": 8,
             "w": 12,
             "x": 12,
-            "y": 68
+            "y": 60
           },
           "hiddenSeries": false,
           "id": 29,
@@ -2642,7 +2430,7 @@
             "h": 8,
             "w": 12,
             "x": 0,
-            "y": 77
+            "y": 37
           },
           "hiddenSeries": false,
           "id": 35,
@@ -2736,7 +2524,7 @@
             "h": 8,
             "w": 12,
             "x": 12,
-            "y": 77
+            "y": 37
           },
           "hiddenSeries": false,
           "id": 36,
@@ -2842,212 +2630,6 @@
             "type": "prometheus",
             "uid": "DS_PROMETHEUS"
           },
-          "fill": 0,
-          "fillGradient": 0,
-          "gridPos": {
-            "h": 8,
-            "w": 12,
-            "x": 0,
-            "y": 85
-          },
-          "hiddenSeries": false,
-          "id": 37,
-          "legend": {
-            "alignAsTable": true,
-            "avg": false,
-            "current": true,
-            "max": false,
-            "min": false,
-            "rightSide": true,
-            "show": true,
-            "sort": "current",
-            "sortDesc": true,
-            "total": false,
-            "values": true
-          },
-          "lines": true,
-          "linewidth": 1,
-          "nullPointMode": "connected",
-          "options": {
-            "alertThreshold": false
-          },
-          "percentage": false,
-          "pluginVersion": "8.3.1",
-          "pointradius": 2,
-          "points": false,
-          "renderer": "flot",
-          "seriesOverrides": [],
-          "spaceLength": 10,
-          "stack": false,
-          "steppedLine": true,
-          "targets": [
-            {
-              "datasource": {
-                "type": "prometheus",
-                "uid": "DS_PROMETHEUS"
-              },
-              "exemplar": true,
-              "expr": "ironbank{param=\"tvl\", network=\"FTM\"} != 0",
-              "interval": "",
-              "legendFormat": "{{vault}}",
-              "queryType": "randomWalk",
-              "refId": "A"
-            }
-          ],
-          "thresholds": [],
-          "timeRegions": [],
-          "title": "ironbank tvl",
-          "tooltip": {
-            "shared": true,
-            "sort": 2,
-            "value_type": "individual"
-          },
-          "transparent": true,
-          "type": "graph",
-          "xaxis": {
-            "mode": "time",
-            "show": true,
-            "values": []
-          },
-          "yaxes": [
-            {
-              "$$hashKey": "object:38",
-              "format": "currencyUSD",
-              "logBase": 1,
-              "show": true
-            },
-            {
-              "$$hashKey": "object:39",
-              "format": "short",
-              "logBase": 1,
-              "show": false
-            }
-          ],
-          "yaxis": {
-            "align": false
-          }
-        },
-        {
-          "aliasColors": {},
-          "bars": false,
-          "dashLength": 10,
-          "dashes": false,
-          "datasource": {
-            "type": "prometheus",
-            "uid": "DS_PROMETHEUS"
-          },
-          "fill": 0,
-          "fillGradient": 0,
-          "gridPos": {
-            "h": 8,
-            "w": 12,
-            "x": 12,
-            "y": 85
-          },
-          "hiddenSeries": false,
-          "id": 38,
-          "legend": {
-            "alignAsTable": true,
-            "avg": false,
-            "current": true,
-            "max": false,
-            "min": false,
-            "rightSide": true,
-            "show": true,
-            "sort": "current",
-            "sortDesc": true,
-            "total": false,
-            "values": true
-          },
-          "lines": true,
-          "linewidth": 1,
-          "nullPointMode": "connected",
-          "options": {
-            "alertThreshold": false
-          },
-          "percentage": false,
-          "pluginVersion": "8.3.1",
-          "pointradius": 2,
-          "points": false,
-          "renderer": "flot",
-          "seriesOverrides": [
-            {
-              "$$hashKey": "object:1727",
-              "alias": "net inflow/outflow",
-              "color": "rgb(204, 204, 220)"
-            }
-          ],
-          "spaceLength": 10,
-          "stack": false,
-          "steppedLine": true,
-          "targets": [
-            {
-              "datasource": {
-                "type": "prometheus",
-                "uid": "DS_PROMETHEUS"
-              },
-              "exemplar": true,
-              "expr": "delta(ironbank{param=\"tvl\", network=\"FTM\"}[1d]) != 0",
-              "interval": "",
-              "legendFormat": "{{vault}}",
-              "queryType": "randomWalk",
-              "refId": "A"
-            },
-            {
-              "datasource": {
-                "type": "prometheus",
-                "uid": "DS_PROMETHEUS"
-              },
-              "exemplar": true,
-              "expr": "sum(delta(ironbank{param=\"tvl\", network=\"FTM\"}[1d]))",
-              "hide": false,
-              "interval": "",
-              "legendFormat": "net inflow/outflow",
-              "refId": "B"
-            }
-          ],
-          "thresholds": [],
-          "timeRegions": [],
-          "title": "ironbank tvl daily",
-          "tooltip": {
-            "shared": true,
-            "sort": 2,
-            "value_type": "individual"
-          },
-          "transparent": true,
-          "type": "graph",
-          "xaxis": {
-            "mode": "time",
-            "show": true,
-            "values": []
-          },
-          "yaxes": [
-            {
-              "$$hashKey": "object:38",
-              "format": "currencyUSD",
-              "logBase": 1,
-              "show": true
-            },
-            {
-              "$$hashKey": "object:39",
-              "format": "short",
-              "logBase": 1,
-              "show": false
-            }
-          ],
-          "yaxis": {
-            "align": false
-          }
-        },
-        {
-          "aliasColors": {},
-          "bars": false,
-          "dashLength": 10,
-          "dashes": false,
-          "datasource": {
-            "type": "prometheus",
-            "uid": "DS_PROMETHEUS"
-          },
           "description": "Experimental vaults on ape.tax TVL",
           "fill": 0,
           "fillGradient": 0,
@@ -3055,7 +2637,7 @@
             "h": 8,
             "w": 12,
             "x": 0,
-            "y": 93
+            "y": 45
           },
           "hiddenSeries": false,
           "id": 39,
@@ -3149,7 +2731,7 @@
             "h": 8,
             "w": 12,
             "x": 12,
-            "y": 93
+            "y": 45
           },
           "hiddenSeries": false,
           "id": 40,
@@ -3255,9 +2837,7 @@
   "refresh": "1m",
   "schemaVersion": 33,
   "style": "dark",
-  "tags": [
-    "Overview"
-  ],
+  "tags": ["Overview"],
   "templating": {
     "list": []
   },
@@ -3267,8 +2847,8 @@
   },
   "timepicker": {},
   "timezone": "utc",
-  "title": "Overview",
-  "uid": "1S43pFrMk22",
-  "version": 36,
+  "title": "Overview Copy",
+  "uid": "K4sJw2xnk",
+  "version": 6,
   "weekStart": ""
 }

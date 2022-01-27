@@ -72,7 +72,7 @@
   "fiscalYearStartMonth": 0,
   "graphTooltip": 0,
   "id": null,
-  "iteration": 1639142629603,
+  "iteration": 1643233214314,
   "links": [],
   "liveNow": false,
   "panels": [
@@ -129,9 +129,7 @@
         "justifyMode": "auto",
         "orientation": "auto",
         "reduceOptions": {
-          "calcs": [
-            "lastNotNull"
-          ],
+          "calcs": ["lastNotNull"],
           "fields": "",
           "values": false
         },
@@ -199,9 +197,7 @@
         "justifyMode": "auto",
         "orientation": "horizontal",
         "reduceOptions": {
-          "calcs": [
-            "lastNotNull"
-          ],
+          "calcs": ["lastNotNull"],
           "fields": "",
           "values": false
         },
@@ -268,9 +264,7 @@
         "justifyMode": "auto",
         "orientation": "horizontal",
         "reduceOptions": {
-          "calcs": [
-            "lastNotNull"
-          ],
+          "calcs": ["lastNotNull"],
           "fields": "",
           "values": false
         },
@@ -337,9 +331,7 @@
         "justifyMode": "auto",
         "orientation": "auto",
         "reduceOptions": {
-          "calcs": [
-            "lastNotNull"
-          ],
+          "calcs": ["lastNotNull"],
           "fields": "",
           "values": false
         },
@@ -419,9 +411,7 @@
         "justifyMode": "auto",
         "orientation": "auto",
         "reduceOptions": {
-          "calcs": [
-            "lastNotNull"
-          ],
+          "calcs": ["lastNotNull"],
           "fields": "",
           "values": false
         },
@@ -483,9 +473,7 @@
         "justifyMode": "auto",
         "orientation": "auto",
         "reduceOptions": {
-          "calcs": [
-            "lastNotNull"
-          ],
+          "calcs": ["lastNotNull"],
           "fields": "",
           "values": false
         },
@@ -547,9 +535,7 @@
         "justifyMode": "auto",
         "orientation": "auto",
         "reduceOptions": {
-          "calcs": [
-            "lastNotNull"
-          ],
+          "calcs": ["lastNotNull"],
           "fields": "",
           "values": false
         },
@@ -611,9 +597,7 @@
         "justifyMode": "auto",
         "orientation": "auto",
         "reduceOptions": {
-          "calcs": [
-            "lastNotNull"
-          ],
+          "calcs": ["lastNotNull"],
           "fields": "",
           "values": false
         },
@@ -677,9 +661,7 @@
         "justifyMode": "auto",
         "orientation": "auto",
         "reduceOptions": {
-          "calcs": [
-            "lastNotNull"
-          ],
+          "calcs": ["lastNotNull"],
           "fields": "",
           "values": false
         },
@@ -741,9 +723,7 @@
         "justifyMode": "auto",
         "orientation": "auto",
         "reduceOptions": {
-          "calcs": [
-            "lastNotNull"
-          ],
+          "calcs": ["lastNotNull"],
           "fields": "",
           "values": false
         },
@@ -808,9 +788,7 @@
         "justifyMode": "auto",
         "orientation": "auto",
         "reduceOptions": {
-          "calcs": [
-            "last"
-          ],
+          "calcs": ["last"],
           "fields": "",
           "values": false
         },
@@ -889,9 +867,7 @@
         "justifyMode": "auto",
         "orientation": "auto",
         "reduceOptions": {
-          "calcs": [
-            "lastNotNull"
-          ],
+          "calcs": ["lastNotNull"],
           "fields": "",
           "values": false
         },
@@ -967,9 +943,7 @@
         "justifyMode": "auto",
         "orientation": "auto",
         "reduceOptions": {
-          "calcs": [
-            "lastNotNull"
-          ],
+          "calcs": ["lastNotNull"],
           "fields": "",
           "values": false
         },
@@ -1035,9 +1009,7 @@
         "justifyMode": "auto",
         "orientation": "auto",
         "reduceOptions": {
-          "calcs": [
-            "lastNotNull"
-          ],
+          "calcs": ["lastNotNull"],
           "fields": "",
           "values": false
         },
@@ -1395,6 +1367,153 @@
             "type": "prometheus",
             "uid": "DS_PROMETHEUS"
           },
+          "decimals": 4,
+          "description": "Breakdown of free assets. If you see free assets in the vault you can withdrawal from it under this for cheaper and it wont have to pull funds from strategies.",
+          "fieldConfig": {
+            "defaults": {},
+            "overrides": [
+              {
+                "matcher": {
+                  "id": "byFrameRefID",
+                  "options": "B"
+                },
+                "properties": [
+                  {
+                    "id": "unit",
+                    "value": "percentunit"
+                  }
+                ]
+              }
+            ]
+          },
+          "fill": 3,
+          "fillGradient": 3,
+          "gridPos": {
+            "h": 9,
+            "w": 24,
+            "x": 0,
+            "y": 30
+          },
+          "hiddenSeries": false,
+          "id": 111,
+          "legend": {
+            "alignAsTable": true,
+            "avg": false,
+            "current": true,
+            "max": false,
+            "min": false,
+            "rightSide": true,
+            "show": true,
+            "sort": "current",
+            "sortDesc": true,
+            "total": false,
+            "values": true
+          },
+          "lines": true,
+          "linewidth": 1,
+          "nullPointMode": "connected",
+          "options": {
+            "alertThreshold": false
+          },
+          "percentage": false,
+          "pluginVersion": "8.3.1",
+          "pointradius": 2,
+          "points": false,
+          "renderer": "flot",
+          "seriesOverrides": [
+            {
+              "$$hashKey": "object:2853",
+              "alias": "% of Assets Free",
+              "color": "#B877D9",
+              "fill": 0,
+              "fillGradient": 0,
+              "linewidth": 1,
+              "yaxis": 2,
+              "zindex": -3
+            },
+            {
+              "$$hashKey": "object:2986",
+              "alias": "Assets Free",
+              "yaxis": 1
+            }
+          ],
+          "spaceLength": 10,
+          "stack": false,
+          "steppedLine": true,
+          "targets": [
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "DS_PROMETHEUS"
+              },
+              "exemplar": true,
+              "expr": "sum(yearn_vault{network=\"$networks\", param=\"totalAssets\", vault=~\"$vaults\"}) - on(vault, version) sum(yearn_strategy{network=\"$networks\", param=\"totalDebt\", vault=~\"$vaults\"})",
+              "instant": false,
+              "interval": "",
+              "legendFormat": "Assets Free",
+              "queryType": "randomWalk",
+              "refId": "A"
+            },
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "DS_PROMETHEUS"
+              },
+              "exemplar": true,
+              "expr": "(sum(yearn_vault{network=\"$networks\", param=\"totalAssets\", vault=~\"$vaults\"}) - on(vault, version) sum(yearn_strategy{network=\"$networks\", param=\"totalDebt\", vault=~\"$vaults\"})) / (yearn_vault{network=\"$networks\", param=\"totalAssets\", vault=~\"$vaults\"}) ",
+              "hide": false,
+              "interval": "",
+              "legendFormat": "% of Assets Free",
+              "refId": "B"
+            }
+          ],
+          "thresholds": [],
+          "timeRegions": [],
+          "title": "Assets free in vault",
+          "tooltip": {
+            "shared": true,
+            "sort": 2,
+            "value_type": "individual"
+          },
+          "transformations": [],
+          "type": "graph",
+          "xaxis": {
+            "mode": "time",
+            "show": true,
+            "values": []
+          },
+          "yaxes": [
+            {
+              "$$hashKey": "object:585",
+              "decimals": 2,
+              "format": "short",
+              "label": "Amount free in $",
+              "logBase": 1,
+              "show": true
+            },
+            {
+              "$$hashKey": "object:586",
+              "decimals": 2,
+              "format": "percentunit",
+              "label": "% of funds free ",
+              "logBase": 1,
+              "show": true
+            }
+          ],
+          "yaxis": {
+            "align": false,
+            "alignLevel": 0
+          }
+        },
+        {
+          "aliasColors": {},
+          "bars": false,
+          "dashLength": 10,
+          "dashes": false,
+          "datasource": {
+            "type": "prometheus",
+            "uid": "DS_PROMETHEUS"
+          },
           "decimals": 2,
           "description": "Total amount of Deposit tokens in strategy",
           "fill": 4,
@@ -1403,7 +1522,7 @@
             "h": 9,
             "w": 16,
             "x": 0,
-            "y": 30
+            "y": 39
           },
           "hiddenSeries": false,
           "id": 13,
@@ -1514,25 +1633,19 @@
             "h": 9,
             "w": 8,
             "x": 16,
-            "y": 30
+            "y": 39
           },
           "id": 81,
           "options": {
-            "displayLabels": [
-              "percent"
-            ],
+            "displayLabels": ["percent"],
             "legend": {
               "displayMode": "list",
               "placement": "right",
-              "values": [
-                "percent"
-              ]
+              "values": ["percent"]
             },
             "pieType": "pie",
             "reduceOptions": {
-              "calcs": [
-                "lastNotNull"
-              ],
+              "calcs": ["lastNotNull"],
               "fields": "",
               "values": false
             },
@@ -1609,9 +1722,7 @@
             "justifyMode": "auto",
             "orientation": "auto",
             "reduceOptions": {
-              "calcs": [
-                "lastNotNull"
-              ],
+              "calcs": ["lastNotNull"],
               "fields": "",
               "values": false
             },
@@ -1673,9 +1784,7 @@
             "justifyMode": "auto",
             "orientation": "auto",
             "reduceOptions": {
-              "calcs": [
-                "lastNotNull"
-              ],
+              "calcs": ["lastNotNull"],
               "fields": "",
               "values": false
             },
@@ -1736,9 +1845,7 @@
             "justifyMode": "auto",
             "orientation": "auto",
             "reduceOptions": {
-              "calcs": [
-                "lastNotNull"
-              ],
+              "calcs": ["lastNotNull"],
               "fields": "",
               "values": false
             },
@@ -1800,9 +1907,7 @@
             "justifyMode": "auto",
             "orientation": "auto",
             "reduceOptions": {
-              "calcs": [
-                "lastNotNull"
-              ],
+              "calcs": ["lastNotNull"],
               "fields": "",
               "values": false
             },
@@ -1863,9 +1968,7 @@
             "justifyMode": "auto",
             "orientation": "auto",
             "reduceOptions": {
-              "calcs": [
-                "lastNotNull"
-              ],
+              "calcs": ["lastNotNull"],
               "fields": "",
               "values": false
             },
@@ -1928,9 +2031,7 @@
             "justifyMode": "auto",
             "orientation": "auto",
             "reduceOptions": {
-              "calcs": [
-                "lastNotNull"
-              ],
+              "calcs": ["lastNotNull"],
               "fields": "",
               "values": false
             },
@@ -1991,9 +2092,7 @@
             "justifyMode": "auto",
             "orientation": "auto",
             "reduceOptions": {
-              "calcs": [
-                "lastNotNull"
-              ],
+              "calcs": ["lastNotNull"],
               "fields": "",
               "values": false
             },
@@ -2055,9 +2154,7 @@
             "justifyMode": "auto",
             "orientation": "auto",
             "reduceOptions": {
-              "calcs": [
-                "lastNotNull"
-              ],
+              "calcs": ["lastNotNull"],
               "fields": "",
               "values": false
             },
@@ -2118,9 +2215,7 @@
             "justifyMode": "auto",
             "orientation": "auto",
             "reduceOptions": {
-              "calcs": [
-                "lastNotNull"
-              ],
+              "calcs": ["lastNotNull"],
               "fields": "",
               "values": false
             },
@@ -2182,9 +2277,7 @@
             "justifyMode": "auto",
             "orientation": "auto",
             "reduceOptions": {
-              "calcs": [
-                "lastNotNull"
-              ],
+              "calcs": ["lastNotNull"],
               "fields": "",
               "values": false
             },
@@ -2245,9 +2338,7 @@
             "justifyMode": "auto",
             "orientation": "auto",
             "reduceOptions": {
-              "calcs": [
-                "lastNotNull"
-              ],
+              "calcs": ["lastNotNull"],
               "fields": "",
               "values": false
             },
@@ -2310,9 +2401,7 @@
             "justifyMode": "auto",
             "orientation": "auto",
             "reduceOptions": {
-              "calcs": [
-                "lastNotNull"
-              ],
+              "calcs": ["lastNotNull"],
               "fields": "",
               "values": false
             },
@@ -2969,8 +3058,7 @@
                 "mode": "absolute",
                 "steps": [
                   {
-                    "color": "light-blue",
-                    "value": null
+                    "color": "light-blue"
                   }
                 ]
               },
@@ -2991,9 +3079,7 @@
             "justifyMode": "auto",
             "orientation": "horizontal",
             "reduceOptions": {
-              "calcs": [
-                "lastNotNull"
-              ],
+              "calcs": ["lastNotNull"],
               "fields": "",
               "values": false
             },
@@ -3037,8 +3123,7 @@
                 "mode": "absolute",
                 "steps": [
                   {
-                    "color": "light-purple",
-                    "value": null
+                    "color": "light-purple"
                   }
                 ]
               },
@@ -3059,9 +3144,7 @@
             "justifyMode": "auto",
             "orientation": "horizontal",
             "reduceOptions": {
-              "calcs": [
-                "last"
-              ],
+              "calcs": ["last"],
               "fields": "",
               "values": false
             },
@@ -3106,8 +3189,7 @@
                 "mode": "percentage",
                 "steps": [
                   {
-                    "color": "purple",
-                    "value": null
+                    "color": "purple"
                   }
                 ]
               },
@@ -3128,9 +3210,7 @@
             "justifyMode": "auto",
             "orientation": "horizontal",
             "reduceOptions": {
-              "calcs": [
-                "last"
-              ],
+              "calcs": ["last"],
               "fields": "",
               "values": false
             },
@@ -3174,8 +3254,7 @@
                 "mode": "absolute",
                 "steps": [
                   {
-                    "color": "green",
-                    "value": null
+                    "color": "green"
                   },
                   {
                     "color": "red",
@@ -3200,9 +3279,7 @@
             "justifyMode": "auto",
             "orientation": "auto",
             "reduceOptions": {
-              "calcs": [
-                "last"
-              ],
+              "calcs": ["last"],
               "fields": "",
               "values": false
             },
@@ -3243,8 +3320,7 @@
                 "mode": "absolute",
                 "steps": [
                   {
-                    "color": "green",
-                    "value": null
+                    "color": "green"
                   },
                   {
                     "color": "red",
@@ -3269,9 +3345,7 @@
             "justifyMode": "auto",
             "orientation": "auto",
             "reduceOptions": {
-              "calcs": [
-                "last"
-              ],
+              "calcs": ["last"],
               "fields": "",
               "values": false
             },
@@ -3318,8 +3392,7 @@
                 "mode": "absolute",
                 "steps": [
                   {
-                    "color": "green",
-                    "value": null
+                    "color": "green"
                   },
                   {
                     "color": "red",
@@ -3344,9 +3417,7 @@
             "justifyMode": "auto",
             "orientation": "auto",
             "reduceOptions": {
-              "calcs": [
-                "last"
-              ],
+              "calcs": ["last"],
               "fields": "",
               "values": false
             },
@@ -3418,8 +3489,7 @@
                 "mode": "absolute",
                 "steps": [
                   {
-                    "color": "green",
-                    "value": null
+                    "color": "green"
                   }
                 ]
               },
@@ -3436,9 +3506,7 @@
           "id": 106,
           "options": {
             "legend": {
-              "calcs": [
-                "last"
-              ],
+              "calcs": ["last"],
               "displayMode": "list",
               "placement": "bottom"
             },
@@ -3494,8 +3562,7 @@
                 "mode": "absolute",
                 "steps": [
                   {
-                    "color": "green",
-                    "value": null
+                    "color": "green"
                   }
                 ]
               },
@@ -3516,9 +3583,7 @@
             "justifyMode": "auto",
             "orientation": "horizontal",
             "reduceOptions": {
-              "calcs": [
-                "lastNotNull"
-              ],
+              "calcs": ["lastNotNull"],
               "fields": "",
               "values": false
             },
@@ -3562,8 +3627,7 @@
                 "mode": "absolute",
                 "steps": [
                   {
-                    "color": "green",
-                    "value": null
+                    "color": "green"
                   }
                 ]
               },
@@ -3584,9 +3648,7 @@
             "justifyMode": "auto",
             "orientation": "horizontal",
             "reduceOptions": {
-              "calcs": [
-                "lastNotNull"
-              ],
+              "calcs": ["lastNotNull"],
               "fields": "",
               "values": false
             },
@@ -3640,8 +3702,7 @@
                 "mode": "absolute",
                 "steps": [
                   {
-                    "color": "light-blue",
-                    "value": null
+                    "color": "light-blue"
                   }
                 ]
               },
@@ -3662,9 +3723,7 @@
             "justifyMode": "auto",
             "orientation": "horizontal",
             "reduceOptions": {
-              "calcs": [
-                "last"
-              ],
+              "calcs": ["last"],
               "fields": "",
               "values": false
             },
@@ -3709,8 +3768,7 @@
                 "mode": "absolute",
                 "steps": [
                   {
-                    "color": "purple",
-                    "value": null
+                    "color": "purple"
                   }
                 ]
               },
@@ -3731,9 +3789,7 @@
             "justifyMode": "auto",
             "orientation": "auto",
             "reduceOptions": {
-              "calcs": [
-                "lastNotNull"
-              ],
+              "calcs": ["lastNotNull"],
               "fields": "",
               "values": false
             },
@@ -3778,8 +3834,7 @@
                 "mode": "absolute",
                 "steps": [
                   {
-                    "color": "purple",
-                    "value": null
+                    "color": "purple"
                   }
                 ]
               },
@@ -3800,9 +3855,7 @@
             "justifyMode": "auto",
             "orientation": "auto",
             "reduceOptions": {
-              "calcs": [
-                "lastNotNull"
-              ],
+              "calcs": ["lastNotNull"],
               "fields": "",
               "values": false
             },
@@ -3847,8 +3900,7 @@
                 "mode": "absolute",
                 "steps": [
                   {
-                    "color": "green",
-                    "value": null
+                    "color": "green"
                   }
                 ]
               },
@@ -3869,9 +3921,7 @@
             "justifyMode": "auto",
             "orientation": "horizontal",
             "reduceOptions": {
-              "calcs": [
-                "last"
-              ],
+              "calcs": ["last"],
               "fields": "",
               "values": false
             },
@@ -3914,8 +3964,7 @@
                 "mode": "absolute",
                 "steps": [
                   {
-                    "color": "blue",
-                    "value": null
+                    "color": "blue"
                   }
                 ]
               },
@@ -3936,9 +3985,7 @@
             "justifyMode": "auto",
             "orientation": "horizontal",
             "reduceOptions": {
-              "calcs": [
-                "lastNotNull"
-              ],
+              "calcs": ["lastNotNull"],
               "fields": "",
               "values": false
             },
@@ -3983,8 +4030,7 @@
                 "mode": "absolute",
                 "steps": [
                   {
-                    "color": "purple",
-                    "value": null
+                    "color": "purple"
                   }
                 ]
               },
@@ -4005,9 +4051,7 @@
             "justifyMode": "auto",
             "orientation": "auto",
             "reduceOptions": {
-              "calcs": [
-                "lastNotNull"
-              ],
+              "calcs": ["lastNotNull"],
               "fields": "",
               "values": false
             },
@@ -4046,8 +4090,7 @@
                 "mode": "absolute",
                 "steps": [
                   {
-                    "color": "purple",
-                    "value": null
+                    "color": "purple"
                   }
                 ]
               },
@@ -4068,9 +4111,7 @@
             "justifyMode": "auto",
             "orientation": "auto",
             "reduceOptions": {
-              "calcs": [
-                "lastNotNull"
-              ],
+              "calcs": ["lastNotNull"],
               "fields": "",
               "values": false
             },
@@ -4109,8 +4150,7 @@
                 "mode": "absolute",
                 "steps": [
                   {
-                    "color": "purple",
-                    "value": null
+                    "color": "purple"
                   }
                 ]
               },
@@ -4131,9 +4171,7 @@
             "justifyMode": "auto",
             "orientation": "auto",
             "reduceOptions": {
-              "calcs": [
-                "lastNotNull"
-              ],
+              "calcs": ["lastNotNull"],
               "fields": "",
               "values": false
             },
@@ -4176,8 +4214,7 @@
                 "mode": "absolute",
                 "steps": [
                   {
-                    "color": "purple",
-                    "value": null
+                    "color": "purple"
                   }
                 ]
               },
@@ -4198,9 +4235,7 @@
             "justifyMode": "auto",
             "orientation": "auto",
             "reduceOptions": {
-              "calcs": [
-                "lastNotNull"
-              ],
+              "calcs": ["lastNotNull"],
               "fields": "",
               "values": false
             },
@@ -4235,11 +4270,7 @@
   "refresh": false,
   "schemaVersion": 33,
   "style": "dark",
-  "tags": [
-    "yVault",
-    "Version 2",
-    "Production"
-  ],
+  "tags": ["yVault", "Version 2", "Production"],
   "templating": {
     "list": [
       {
@@ -4294,13 +4325,13 @@
     ]
   },
   "time": {
-    "from": "now-6M",
+    "from": "now-24h",
     "to": "now"
   },
   "timepicker": {},
   "timezone": "",
-  "title": "Vault Overview",
-  "uid": "ibsIoEknkdff",
-  "version": 24,
+  "title": "Vault Overview copy",
+  "uid": "ibsIoEknkdffd",
+  "version": 2,
   "weekStart": ""
 }

@@ -1,6 +1,7 @@
 from collections import defaultdict
 from dataclasses import dataclass
 from functools import cached_property
+from datetime import datetime
 
 from brownie import Contract, chain
 from brownie.network.contract import InterfaceContainer
@@ -40,9 +41,10 @@ class IronbankMarket:
 
 
 class Registry:
-    def __init__(self):
+    def __init__(self, exclude_ib_tvl=True):
         if chain.id not in addresses:
             raise UnsupportedNetwork('iron bank is not supported on this network')
+        self.exclude_ib_tvl = exclude_ib_tvl
         self.vaults  # load the markets on init
 
     def __repr__(self):

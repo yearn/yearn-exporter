@@ -40,6 +40,7 @@ stablecoins_by_network = {
     Network.Fantom: {
         "0x04068DA6C83AFCFA0e13ba15A6696662335D5B75": "usdc",
         "0x8D11eC38a3EB5E956B052f67Da8Bdc9bef8Abf3E": "dai",
+        "0xe2D27f06F63d98b8e11b38b5b08A75D0c8dD62B9": "ust"
     },
     Network.Arbitrum: {
         '0xFF970A61A04b1cA14834A43f5dE4533eBDDB5CC8': 'usdc',
@@ -47,7 +48,14 @@ stablecoins_by_network = {
     },
 }
 
+ib_snapshot_block_by_network = {
+    Network.Mainnet: 14051986,
+    Network.Fantom: 28680044,
+    Network.Arbitrum: 1
+}
+
 weth = tokens_by_network[chain.id]['weth']
 usdc = tokens_by_network[chain.id]['usdc']
 dai = tokens_by_network[chain.id]['dai']
 stablecoins = stablecoins_by_network[chain.id]
+ib_snapshot_block = ib_snapshot_block_by_network[chain.id]

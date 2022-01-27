@@ -40,6 +40,9 @@ class UniswapV3(metaclass=Singleton):
         self.quoter = contract(conf['quoter'])
         self.fee_tiers = conf['fee_tiers']
 
+    def __contains__(self, asset):
+        return chain.id in addresses
+
     def encode_path(self, path):
         types = [type for _, type in zip(path, cycle(['address', 'uint24']))]
         return encode_abi_packed(types, path)

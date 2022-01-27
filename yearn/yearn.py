@@ -14,6 +14,7 @@ import yearn.v2.registry
 from yearn.networks import Network
 from yearn.outputs import victoria
 from yearn.exceptions import UnsupportedNetwork
+from yearn.prices import constants
 
 logger = logging.getLogger(__name__)
 
@@ -23,25 +24,25 @@ class Yearn:
     Can describe all products.
     """
 
-    def __init__(self, load_strategies=True, load_harvests=False, watch_events_forever=True) -> None:
+    def __init__(self, load_strategies=True, load_harvests=False, watch_events_forever=True, exclude_ib_tvl=True) -> None:
         start = time()
         if chain.id == Network.Mainnet:
             self.registries = {
                 "earn": yearn.iearn.Registry(),
                 "v1": yearn.v1.registry.Registry(),
                 "v2": yearn.v2.registry.Registry(watch_events_forever=watch_events_forever),
-                "ib": yearn.ironbank.Registry(),
+                "ib": yearn.ironbank.Registry(exclude_ib_tvl=exclude_ib_tvl),
                 "special": yearn.special.Registry(),
             }
         elif chain.id ==  Network.Fantom:
             self.registries = {
                 "v2": yearn.v2.registry.Registry(),
-                "ib": yearn.ironbank.Registry(),
+                "ib": yearn.ironbank.Registry(exclude_ib_tvl=exclude_ib_tvl),
             }
         elif chain.id == Network.Arbitrum:
             self.registries = {
                 "v2": yearn.v2.registry.Registry(),
-                "ib": yearn.ironbank.Registry(),
+                "ib": yearn.ironbank.Registry(exclude_ib_tvl=exclude_ib_tvl),
             }
         else:
             raise UnsupportedNetwork('yearn is not supported on this network')
@@ -50,6 +51,8 @@ class Yearn:
             self.registries["v2"].load_strategies()
         if load_harvests:
             self.registries["v2"].load_harvests()
+
+        self.exclude_ib_tvl = exclude_ib_tvl
         logger.info('loaded yearn in %.3fs', time() - start)
 
     def describe(self, block=None):
@@ -93,8 +96,11 @@ class Yearn:
     def export(self, block, ts):
         start = time()
         data = self.describe(block)
-        victoria.export(ts, data)
-        tvl = sum(vault['tvl'] for product in data.values() for vault in product.values() if type(vault) == dict)
+        victoria.export(block, ts, data)
+        products = list(data.keys())
+        if self.exclude_ib_tvl and block > constants.ib_snapshot_block:
+            products.remove('ib')
+        tvl = sum(vault['tvl'] for (product, product_values) in data.items() if product in products for vault in product_values.values() if type(vault) == dict)
         logger.info('exported block=%d tvl=%.0f took=%.3fs', block, tvl, time() - start)
 
     

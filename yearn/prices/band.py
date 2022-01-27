@@ -19,6 +19,9 @@ class Band(metaclass=Singleton):
             raise UnsupportedNetwork('band is not supported on this network')
         self.oracle = contract(addresses[chain.id])
 
+    def __contains__(self, asset):
+        return chain.id in addresses
+
     @ttl_cache(maxsize=None, ttl=600)
     def get_price(self, asset, block=None):
         asset_symbol = contract(asset).symbol()
