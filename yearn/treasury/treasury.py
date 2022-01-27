@@ -13,7 +13,7 @@ from yearn.constants import (ERC20_TRANSFER_EVENT_HASH,
 from yearn.events import decode_logs
 from yearn.exceptions import PriceError
 from yearn.multicall2 import fetch_multicall
-from yearn.outputs import victoria
+from yearn.outputs.victoria import output_treasury
 from yearn.partners.partners import partners
 from yearn.partners.snapshot import WildcardWrapper, Wrapper
 from yearn.prices import compound
@@ -379,7 +379,7 @@ class Treasury:
     def export(self, block, ts):
         start = time.time()
         data = self.describe(block)
-        victoria.export_treasury(ts, data, self.label)
+        output_treasury.export(ts, data, self.label)
         logger.info('exported block=%d took=%.3fs', block, time.time() - start)
 
 

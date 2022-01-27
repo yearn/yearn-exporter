@@ -12,7 +12,7 @@ import yearn.v1.registry
 import yearn.v2.registry
 from yearn.exceptions import UnsupportedNetwork
 from yearn.networks import Network
-from yearn.outputs import victoria
+from yearn.outputs.victoria import output_base, output_wallets
 from yearn.prices import constants
 from yearn.utils import contract
 
@@ -110,7 +110,7 @@ class Yearn:
     def export(self, block, ts):
         start = time()
         data = self.describe(block)
-        victoria.export(block, ts, data)
+        output_base.export(block, ts, data)
         products = list(data.keys())
         if self.exclude_ib_tvl and block > constants.ib_snapshot_block:
             products.remove('ib')
@@ -121,5 +121,5 @@ class Yearn:
     def export_wallets(self, block, ts):
         start = time()
         data = self.describe_wallets(block)
-        victoria.export_wallets(ts,data)
+        output_wallets.export(ts,data)
         logger.info('exported block=%d took=%.3fs', block, time() - start)

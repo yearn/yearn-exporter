@@ -4,7 +4,7 @@ import time
 
 from brownie import chain
 from yearn.treasury.treasury import YearnTreasury
-from yearn.outputs import victoria
+from yearn.outputs.victoria import output_duration
 
 logger = logging.getLogger('yearn.treasury_exporter')
 sleep_interval = int(os.environ.get('SLEEP_SECONDS', '0'))
@@ -16,5 +16,5 @@ def main():
         start_time = time.time()
         treasury.export(block.number, block.timestamp)
         duration = time.time() - start_time
-        victoria.export_duration(duration, 1, "treasury_forwards", block.timestamp)
+        output_duration.export(duration, 1, "treasury_forwards", block.timestamp)
         time.sleep(sleep_interval)
