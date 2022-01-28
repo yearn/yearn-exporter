@@ -184,9 +184,15 @@ class Strategy:
         
         # Subtract fees
         apr_minus_fees = apr * (1 - performance_fee) - management_fee
+
+        # assume we are compounding every week on mainnet, daily on sidechains
+        if chain.id == 1:
+            compounding = 52
+        else:
+            compounding = 365.25
         
         # Convert APR to annualized estimated APY
-        net_apy = (1 + (apr_minus_fees / 365)) ** 365 - 1
+        net_apy = (1 + (apr_minus_fees / compounding)) ** compounding - 1
 
         # Return estimated APY
         return StrategyApy(apr, net_apy)

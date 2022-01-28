@@ -29,6 +29,7 @@ def closest(haystack, needle):
 
 def simple(vault, samples: ApySamples) -> Apy:
     harvests = sorted([harvest for strategy in vault.strategies for harvest in strategy.harvests])
+    print("run our simple v2")
 
     # we don't want to display APYs when vaults are ramping up
     if len(harvests) < 2:
@@ -73,17 +74,25 @@ def simple(vault, samples: ApySamples) -> Apy:
     month_ago_apy = calculate_roi(now_point, month_ago_point)
     inception_apy = calculate_roi(now_point, inception_point)
 
-    # use the first non-zero apy, ordered by precedence
-    apys = [month_ago_apy, week_ago_apy, inception_apy]
-    net_apy = next((value for value in apys if value != 0), 0)
-
-    # for performance fee, half comes from strategy (strategist share) and half from the vault (treasury share)
     strategy_fees = []
-    for strategy in vault.strategies: # look at all of our strategies
-        debt_ratio = contract.strategies(strategy.strategy)['debtRatio'] / 10000
+    now_apy = 0
+    
+    # generate our average strategy APY and get our fees
+    for strategy in vault.strategies:
+        total_debt_ratio_allocated = vault.vault.debtRatio()
+        if total_debt_ratio_allocated > 0:
+            debt_ratio = (contract.strategies(strategy.strategy)['debtRatio'] / total_debt_ratio_allocated)
+        else:
+            debt_ratio = 0
+        strategy_apy = strategy.apy.net_apy
+        now_apy += debt_ratio * strategy_apy
         performance_fee = contract.strategies(strategy.strategy)['performanceFee']
         proportional_fee = debt_ratio * performance_fee
         strategy_fees.append(proportional_fee)
+
+    # use the first non-zero apy, ordered by precedence
+    apys = [now_apy, week_ago_apy, month_ago_apy, inception_apy]
+    net_apy = next((value for value in apys if value != 0), 0)
     
     strategy_performance = sum(strategy_fees)
     vault_performance = contract.performanceFee() if hasattr(contract, "performanceFee") else 0
@@ -113,6 +122,7 @@ def simple(vault, samples: ApySamples) -> Apy:
 
 def average(vault, samples: ApySamples) -> Apy:
     harvests = sorted([harvest for strategy in vault.strategies for harvest in strategy.harvests])
+    print("run our average v2")
 
     # we don't want to display APYs when vaults are ramping up
     if len(harvests) < 2:
@@ -151,11 +161,27 @@ def average(vault, samples: ApySamples) -> Apy:
     week_ago_apy = calculate_roi(now_point, week_ago_point)
     month_ago_apy = calculate_roi(now_point, month_ago_point)
     inception_apy = calculate_roi(now_point, inception_point)
+
+    strategy_fees = []
+    now_apy = 0
+    
+    # generate our average strategy APY and get our fees
+    for strategy in vault.strategies:
+        total_debt_ratio_allocated = vault.vault.debtRatio()
+        if total_debt_ratio_allocated > 0:
+            debt_ratio = (contract.strategies(strategy.strategy)['debtRatio'] / total_debt_ratio_allocated)
+        else:
+            debt_ratio = 0
+        strategy_apy = strategy.apy.net_apy
+        now_apy += debt_ratio * strategy_apy
+        performance_fee = contract.strategies(strategy.strategy)['performanceFee']
+        proportional_fee = debt_ratio * performance_fee
+        strategy_fees.append(proportional_fee)
     
     # we should look at a vault's harvests, age, etc to determine whether to show new APY or not
 
     # use the first non-zero apy, ordered by precedence
-    apys = [month_ago_apy, week_ago_apy]
+    apys = [now_apy, week_ago_apy, month_ago_apy, inception_apy]
     two_months_ago = datetime.now() - timedelta(days=60)
     if contract.activation() > two_months_ago.timestamp():
         # if the vault was activated less than two months ago then it's ok to use
@@ -194,6 +220,6 @@ def average(vault, samples: ApySamples) -> Apy:
     if net_apy < 0 and Version(vault.api_version) >= Version("0.3.5"):
         net_apy = 0
 
-    points = ApyPoints(week_ago_apy, month_ago_apy, inception_apy)
+    points = ApyPoints(now_apy, week_ago_apy, month_ago_apy, inception_apy)
     fees = ApyFees(performance=performance, management=management)
     return Apy("v2:averaged", gross_apr, net_apy, fees, points=points)

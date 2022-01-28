@@ -27,6 +27,7 @@ class ApyFees:
 
 @dataclass
 class ApyPoints:
+    now: float
     week_ago: float
     month_ago: float
     inception: float
