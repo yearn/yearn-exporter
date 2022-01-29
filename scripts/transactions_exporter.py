@@ -36,15 +36,13 @@ def process_and_cache_user_txs(last_saved_block=None):
     max_block_to_cache = chain.height - 50
     start_block = last_saved_block + 1 if last_saved_block else None
     end_block = (
-        9480000 # NOTE block some arbitrary time after iearn's first deployment
-        if start_block is None
-        else start_block + BATCH_SIZE
-        if start_block + BATCH_SIZE < max_block_to_cache
+        9480000 if start_block is None # NOTE block some arbitrary time after iearn's first deployment
+        else start_block + BATCH_SIZE if start_block + BATCH_SIZE < max_block_to_cache
         else max_block_to_cache
     )
     df = pd.DataFrame()
     for vault in yearn.active_vaults_at(end_block):
-        df = df.append(get_token_transfers(vault.vault, start_block, end_block))
+        df = pd.concat([df, get_token_transfers(vault.vault, start_block, end_block)])
     if len(df):
         # NOTE: We want to insert txs in the order they took place, so wallet exporter
         #       won't have issues in the event that transactions exporter fails mid-run.
