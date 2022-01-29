@@ -58,6 +58,7 @@ services:
     environment:
       - WEB3_PROVIDER=$FTM_WEB3_PROVIDER
       - EXPLORER=$FTM_EXPLORER
+      - FTMSCAN_TOKEN
       - SLEEP_SECONDS
       - NETWORK=ftm-main
     volumes:
@@ -75,6 +76,7 @@ services:
     environment:
       - WEB3_PROVIDER=$FTM_WEB3_PROVIDER
       - EXPLORER=$FTM_EXPLORER
+      - FTMSCAN_TOKEN
       - SLEEP_SECONDS
       - NETWORK=ftm-main
       - POOL_SIZE
