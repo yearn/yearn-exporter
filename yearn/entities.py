@@ -70,11 +70,27 @@ class UserTx(db.Entity):
     PrimaryKey(hash,log_index)
 
 
+class PartnerHarvestEvent(db.Entity):
+    _table_ = 'partners_txs'
+    
+    block = Required(int)
+    timestamp = Required(int)
+    balance = Required(Decimal,38,18)
+    total_supply = Required(Decimal,38,18)
+    vault_price = Required(Decimal,38,18)
+    balance_usd = Required(Decimal,38,18)
+    share = Required(Decimal,38,18)
+    payout_base = Required(Decimal,38,18)
+    protocol_fee = Required(Decimal,38,18)
+    wrapper = Required(Address,columns=["chainid","wrapper"],reverse='partners_tx')
+    vault = Required(str)
+    
+
 db.bind(
     provider="postgres",
-    user=os.environ.get("PGUSER", "postgres"),
-    host=os.environ.get("PGHOST", "postgres"),
-    password=os.environ.get("PGPASS", "yearn-exporter"),
+    user=os.environ.get("POSTGRES_USER", "postgres"),
+    host=os.environ.get('POSTGRES_HOST',"127.0.0.1"),
+    password=os.environ.get("POSTGRES_PASS", "yearn-exporter"),
     database="postgres",
 )
 

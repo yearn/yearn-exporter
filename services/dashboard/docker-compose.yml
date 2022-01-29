@@ -99,6 +99,7 @@ services:
       - ETHERSCAN_TOKEN
       - EXPLORER
       - SLEEP_SECONDS
+      - POSTGRES_HOST=postgres
     volumes:
       - solidity_compilers:/root/.solcx
       - vyper_compilers:/root/.vvm
@@ -192,6 +193,7 @@ services:
       - POSTGRES_PASSWORD=yearn-exporter
       - POSTGRES_USER=postgres
       - POSTGRES_DB=postgres
+      - POSTGRES_HOST=postgres
     volumes:
       - solidity_compilers:/root/.solcx
       - vyper_compilers:/root/.vvm
