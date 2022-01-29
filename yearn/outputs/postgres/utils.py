@@ -10,9 +10,11 @@ from yearn.utils import is_contract
 @memory.cache()
 def cache_address(address: str) -> Address:
     try:
-        return Address[chain.id,address]
+        address_entity = Address[chain.id,address]
     except ObjectNotFound:
-        return Address(chainid=chain.id,address=address,is_contract=is_contract(address))
+        address_entity = Address(chainid=chain.id,address=address,is_contract=is_contract(address))
+    db.commit()
+    return address_entity
 
 @db_session
 @memory.cache()

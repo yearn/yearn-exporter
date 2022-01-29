@@ -48,6 +48,7 @@ class Token(db.Entity):
     decimals = Required(int)
 
     user_tx = Set('UserTx', reverse="vault")
+    partners_tx = Set('PartnerHarvestEvent', reverse="wrapper")
 
 
 class UserTx(db.Entity):
@@ -82,7 +83,7 @@ class PartnerHarvestEvent(db.Entity):
     share = Required(Decimal,38,18)
     payout_base = Required(Decimal,38,18)
     protocol_fee = Required(Decimal,38,18)
-    wrapper = Required(Address,columns=["chainid","wrapper"],reverse='partners_tx')
+    wrapper = Required(Token,columns=["chainid","wrapper"],reverse='partners_tx')
     vault = Required(str)
     
 
