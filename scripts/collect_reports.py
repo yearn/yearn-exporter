@@ -1,16 +1,15 @@
 import logging
 import time, os
 from dotenv import load_dotenv
-from datetime import datetime, timedelta, timezone
-from itertools import count
-from brownie import chain, interface, web3, Contract, ZERO_ADDRESS
+from datetime import datetime, timezone
+from brownie import chain, web3, Contract, ZERO_ADDRESS
 from web3._utils.events import construct_event_topic_set
-from yearn.utils import closest_block_after_timestamp, contract, contract_creation_block
+from yearn.utils import contract, contract_creation_block
 from yearn.prices import magic, constants
 from yearn.db.models import Reports, Transactions, Session, engine, select
-from sqlalchemy import select as Select, desc, asc
+from sqlalchemy import desc, asc
 from yearn.networks import Network
-from yearn.events import create_filter, decode_logs
+from yearn.events import decode_logs
 import warnings
 warnings.filterwarnings("ignore", ".*Class SelectOfScalar will not make use of SQL compilation caching.*")
 warnings.filterwarnings("ignore", ".*It has been discarded*")
@@ -135,16 +134,6 @@ def handle_event(event, multi_harvest, isOldApi):
     txn_hash = event.transaction_hash.hex()
     tx = web3.eth.getTransactionReceipt(txn_hash)
     gas_price = web3.eth.getTransaction(txn_hash).gasPrice
-    # TODO: Detect if endorsed ✅ # Could use review
-    # TODO: Lookup last harvest ✅
-    # TODO: Lookup last harvest on chain id for each abi type ✅
-    # TODO: Block duplicates on insert ✅
-    # TODO: Refactor to two tables: Transactions + Reports ✅
-    # TODO: Add keep3r payment logic ✅
-    # TODO: Add logger
-    # TODO: Make it multichain compatible (better varible lookups) ✅
-    # TODO: Add APY figures ✅
-    # TODO: Get hosting
     ts = chain[event.block_number].timestamp
     dt = datetime.utcfromtimestamp(ts).strftime("%m/%d/%Y, %H:%M:%S")
     r = Reports()
@@ -159,7 +148,7 @@ def handle_event(event, multi_harvest, isOldApi):
         return
     
     txn_record_exists = transaction_record_exists(txn_hash)
-    if not transaction_record_exists(txn_hash):
+    if not txn_record_exists:
         t = Transactions()
         t.chain_id = chain.id
         t.txn_hash = txn_hash
