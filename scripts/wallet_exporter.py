@@ -11,10 +11,6 @@ from yearn.yearn import Yearn
 
 logger = logging.getLogger('yearn.wallet_exporter')
 
-postgres_cached_thru_block = last_recorded_block(UserTx)
-postgres_cached_thru_ts = chain[postgres_cached_thru_block].timestamp
-
-
 def main():
     start = datetime.now(tz=timezone.utc)
     # end: 2020-02-12 first iearn deployment
@@ -52,6 +48,11 @@ def export_snapshot(yearn, snapshot, ts, exporter_name):
 
 
 def _postgres_ready(ts):
+    postgres_cached_thru_block = last_recorded_block(UserTx)
+    postgres_cached_thru_ts = 0
+    if postgres_cached_thru_block:
+        postgres_cached_thru_ts = chain[postgres_cached_thru_block].timestamp
+
     return postgres_cached_thru_ts >= ts
 
 
