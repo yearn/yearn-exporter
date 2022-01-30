@@ -9,25 +9,22 @@ from yearn.utils import is_contract
 @db_session
 @memory.cache()
 def cache_address(address: str) -> Address:
-    try:
-        address_entity = Address[chain.id,address]
-    except ObjectNotFound:
-        address_entity = Address(chainid=chain.id,address=address,is_contract=is_contract(address))
-    db.commit()
+    address_entity = Address.get(chainid=chain.id, address=address)
+    if not address_entity:
+        address_entity = Address(chainid=chain.id, address=address, is_contract=is_contract(address))
     return address_entity
 
 @db_session
 @memory.cache()
 def cache_token(address: str) -> Token:
     address_entity = cache_address(address)
-    try:
-        return Token[chain.id,address]
-    except ObjectNotFound:
+    token = Token.get(chainid=chain.id, address=address)
+    if not token:
         contract = Contract(address)
         symbol, name, decimals = fetch_multicall([contract,'symbol'],[contract,'name'],[contract,'decimals'])
-        entity = Token(token=address_entity,symbol=symbol,name=name,decimals=decimals)
+        token = Token(token=address_entity, symbol=symbol, name=name, decimals=decimals)
         print(f'token {symbol} added to postgres')
-        return entity
+    return token
 
 @db_session
 def last_recorded_block(Entity: db.Entity) -> int:
