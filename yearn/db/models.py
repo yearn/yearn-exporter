@@ -16,7 +16,16 @@ from sqlmodel import (
     select,
 )
 
-
+class Event(object):
+    isOldApi = False
+    event = None
+    txn_hash = ""
+    multi_harvest = False
+    def __init__(self, isOldApi, event, txn_hash):
+        self.isOldApi = isOldApi
+        self.event = event
+        self.txn_hash = txn_hash
+        
 class Block(SQLModel, table=True):
     id: int = Field(primary_key=True)
     chain_id: int

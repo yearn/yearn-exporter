@@ -6,7 +6,7 @@ from brownie import chain, web3, Contract, ZERO_ADDRESS
 from web3._utils.events import construct_event_topic_set
 from yearn.utils import contract, contract_creation_block
 from yearn.prices import magic, constants
-from yearn.db.models import Reports, Transactions, Session, engine, select
+from yearn.db.models import Reports, Event, Transactions, Session, engine, select
 from sqlalchemy import desc, asc
 from yearn.networks import Network
 from yearn.events import decode_logs
