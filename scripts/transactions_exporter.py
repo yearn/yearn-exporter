@@ -89,7 +89,7 @@ def _process_transfer_event(event, token_entity) -> dict:
     price = _get_price(event, token_entity)
     if (
         # NOTE magic.get_price() returns erroneous price due to erroneous ppfs
-        token_entity.token.address == '0x7F83935EcFe4729c4Ea592Ab2bC1A32588409797'
+        token_entity.address.address == '0x7F83935EcFe4729c4Ea592Ab2bC1A32588409797'
         and event.block_number == 12869164
     ):
         price = 99999
@@ -100,8 +100,8 @@ def _process_transfer_event(event, token_entity) -> dict:
         'timestamp': chain[event.block_number].timestamp,
         'hash': txhash,
         'log_index': event.log_index,
-        'token': token_entity.token.address,
-        'type': _event_type(sender, receiver, token_entity.token.address),
+        'token': token_entity.address.address,
+        'type': _event_type(sender, receiver, token_entity.address.address),
         'from': sender,
         'to': receiver,
         'amount': Decimal(amount) / Decimal(10 ** token_entity.decimals),
@@ -116,9 +116,9 @@ def _get_price(event, token_entity):
     while True:
         try:
             try:
-                return magic.get_price(token_entity.token.address, event.block_number)
+                return magic.get_price(token_entity.address.address, event.block_number)
             except TypeError:  # magic.get_price fails because all liquidity was removed for testing and `share_price` returns None
-                return magic.get_price(Contract(token_entity.token.address).token(), event.block_number)
+                return magic.get_price(Contract(token_entity.address.address).token(), event.block_number)
         except ConnectionError as e:
             # Try again
             logger.warn(f'ConnectionError: {str(e)}')

@@ -9,8 +9,9 @@ db = Database()
 
 class Block(db.Entity):
     _table_ = "blocks"
+    block_id = PrimaryKey(int, auto=True)
 
-    block = PrimaryKey(int)
+    block = Required(int, unique=True)
     timestamp = Required(datetime, sql_type="timestamptz")
     snapshot = Optional(datetime, sql_type="timestamptz")
 
@@ -19,6 +20,7 @@ class Block(db.Entity):
 
 class Snapshot(db.Entity):
     _table_ = "snapshots"
+    snapshot_id = PrimaryKey(int, auto=True)
 
     block = Required(Block)
     product = Required(str)
@@ -29,10 +31,12 @@ class Snapshot(db.Entity):
 
 class Address(db.Entity):
     _table_ = "addresses"
+    address_id = PrimaryKey(int, auto=True)
 
     chainid = Required(int)
     address = Required(str)
-    PrimaryKey(chainid,address)
+    composite_key(chainid, address)
+
     is_contract = Required(bool)
     nickname = Optional(str)
 
@@ -41,24 +45,27 @@ class Address(db.Entity):
 
 class Token(db.Entity):
     _table_ = "tokens"
+    token_id = PrimaryKey(int, auto=True)
 
-    token = PrimaryKey(Address, columns=["chainid",'token_address'])
     symbol = Required(str)
     name = Required(str)
     decimals = Required(int)
 
     user_tx = Set('UserTx', reverse="vault")
     partners_tx = Set('PartnerHarvestEvent', reverse="wrapper")
+    address = Required(Address, column="address_id")
 
 
 class UserTx(db.Entity):
     _table_ = "user_txs"
+    user_tx_id = PrimaryKey(int, auto=True)
 
     timestamp = Required(int)
     block = Required(int)
     hash = Required(str)
     log_index = Required(int)
-    vault = Required(Token, columns=["chainid","vault"], reverse="user_tx")
+    composite_key(hash, log_index)
+    vault = Required(Token, reverse="user_tx", column="token_id")
     type = Required(str)
     from_address = Required(str, column="from")
     to_address = Required(str, column="to")
@@ -68,11 +75,11 @@ class UserTx(db.Entity):
     gas_used = Required(Decimal,38,1)
     gas_price = Required(Decimal,38,1)
 
-    PrimaryKey(hash,log_index)
 
 
 class PartnerHarvestEvent(db.Entity):
     _table_ = 'partners_txs'
+    partner_id = PrimaryKey(int, auto=True)
     
     block = Required(int)
     timestamp = Required(int)
@@ -83,7 +90,7 @@ class PartnerHarvestEvent(db.Entity):
     share = Required(Decimal,38,18)
     payout_base = Required(Decimal,38,18)
     protocol_fee = Required(Decimal,38,18)
-    wrapper = Required(Token,columns=["chainid","wrapper"],reverse='partners_tx')
+    wrapper = Required(Token, reverse='partners_tx')
     vault = Required(str)
     
 

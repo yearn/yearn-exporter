@@ -18,11 +18,11 @@ def cache_address(address: str) -> Address:
 @memory.cache()
 def cache_token(address: str) -> Token:
     address_entity = cache_address(address)
-    token = Token.get(chainid=chain.id, address=address)
+    token = Token.get(address=address_entity)
     if not token:
         contract = Contract(address)
         symbol, name, decimals = fetch_multicall([contract,'symbol'],[contract,'name'],[contract,'decimals'])
-        token = Token(token=address_entity, symbol=symbol, name=name, decimals=decimals)
+        token = Token(address=address_entity, symbol=symbol, name=name, decimals=decimals)
         print(f'token {symbol} added to postgres')
     return token
 
@@ -33,9 +33,9 @@ def last_recorded_block(Entity: db.Entity) -> int:
     '''
     TreasuryTx = 1 # NOTE: Get rid of this when treasury txs are implemented
     if Entity == UserTx:
-        return select(max(e.block) for e in Entity if e.vault.token.chainid == chain.id).first()
+        return select(max(e.block) for e in Entity if e.vault.address.chainid == chain.id).first()
     elif Entity == TreasuryTx:
-        return select(max(e.block) for e in Entity if e.token.token.chainid == chain.id).first()
+        return select(max(e.block) for e in Entity if e.token.address.chainid == chain.id).first()
     return select(max(e.block) for e in Entity if e.chainid == chain.id).first()
 
 @db_session
