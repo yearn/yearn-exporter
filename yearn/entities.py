@@ -96,10 +96,10 @@ class PartnerHarvestEvent(db.Entity):
 
 db.bind(
     provider="postgres",
-    user=os.environ.get("POSTGRES_USER", "postgres"),
-    host=os.environ.get('POSTGRES_HOST',"127.0.0.1"),
-    password=os.environ.get("POSTGRES_PASS", "yearn-exporter"),
-    database="postgres",
+    user=os.environ.get("PGUSER", "postgres"),
+    host=os.environ.get("PGHOST", "127.0.0.1"),
+    password=os.environ.get("PGPASSWORD", ""),
+    database=os.environ.get("PGDATABASE", "postgres"),
 )
 
 db.generate_mapping(create_tables=True)

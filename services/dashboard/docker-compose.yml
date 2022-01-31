@@ -99,7 +99,10 @@ services:
       - ETHERSCAN_TOKEN
       - EXPLORER
       - SLEEP_SECONDS
-      - POSTGRES_HOST=postgres
+      - PGHOST=postgres
+      - PGDATABASE=postgres
+      - PGUSER=postgres
+      - PGPASSWORD=yearn-exporter
     volumes:
       - solidity_compilers:/root/.solcx
       - vyper_compilers:/root/.vvm
@@ -190,10 +193,10 @@ services:
     image: yearn-exporter
     command: transactions_exporter
     environment:
-      - POSTGRES_PASSWORD=yearn-exporter
-      - POSTGRES_USER=postgres
-      - POSTGRES_DB=postgres
-      - POSTGRES_HOST=postgres
+      - PGHOST=postgres
+      - PGDATABASE=postgres
+      - PGUSER=postgres
+      - PGPASSWORD=yearn-exporter
     volumes:
       - solidity_compilers:/root/.solcx
       - vyper_compilers:/root/.vvm
@@ -284,9 +287,9 @@ services:
     ports:
       - 127.0.0.1:5432:5432
     environment:
-      - POSTGRES_PASSWORD=yearn-exporter
-      - POSTGRES_USER=postgres
-      - POSTGRES_DB=postgres
+      - POSTGRES_USER=${PGUSER:-postgres}
+      - POSTGRES_PASSWORD=${PGPASSWORD:-yearn-exporter}
+      - POSTGRES_DB=${PGDATABASE:-postgres}
     networks:
       - yearn-exporter
     volumes:
