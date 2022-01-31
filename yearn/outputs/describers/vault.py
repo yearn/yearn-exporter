@@ -39,7 +39,10 @@ def _get_price(token_address, block=None):
             # https://github.com/yearn/yearn-security/blob/master/disclosures/2021-05-13.md
             if token_address == '0x03403154afc09Ce8e44C3B185C82C6aD5f86b9ab' and 12430455 <= block <= 12430661:
                 return 1.091553
+            # GUSD vault state was broken due to an incident, return a post-fix price
+            # https://github.com/yearn/yearn-security/blob/master/disclosures/2021-01-17.md
+            elif token_address == '0x03403154afc09Ce8e44C3B185C82C6aD5f86b9ab' and 11603873 <= block <= 11645877:
+                return 0
 
         logger.exception(e)
-
-    return 0
+        raise e

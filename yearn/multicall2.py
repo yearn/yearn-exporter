@@ -8,6 +8,7 @@ from eth_abi.exceptions import InsufficientDataBytes
 
 from yearn.networks import Network
 from yearn.utils import contract_creation_block, contract
+from yearn.exceptions import MulticallError
 
 MULTICALL2 = {
     Network.Mainnet: '0x5BA1e12693Dc8F9c48aAD8770482f4739bEeD696',
@@ -17,7 +18,7 @@ MULTICALL2 = {
 multicall2 = contract(MULTICALL2[chain.id])
 
 
-def fetch_multicall(*calls, block=None):
+def fetch_multicall(*calls, block=None, require_success=False):
     # https://github.com/makerdao/multicall
     multicall_input = []
     fn_list = []
@@ -52,6 +53,8 @@ def fetch_multicall(*calls, block=None):
             assert ok, "call failed"
             decoded.append(fn.decode_output(data))
         except (AssertionError, InsufficientDataBytes):
+            if require_success:
+                raise MulticallError()
             decoded.append(None)
 
     return decoded

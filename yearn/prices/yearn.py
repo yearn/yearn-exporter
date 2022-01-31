@@ -2,7 +2,7 @@ from yearn.multicall2 import fetch_multicall
 from yearn.networks import Network
 from yearn.utils import Singleton, contract
 from brownie import chain
-from yearn.exceptions import UnsupportedNetwork
+from yearn.exceptions import MulticallError, UnsupportedNetwork
 import logging
 from cachetools.func import ttl_cache
 
@@ -60,23 +60,34 @@ class YearnLens(metaclass=Singleton):
         )
 
     def get_price(self, token, block=None):
-        # v1 vaults use getPricePerFullShare scaled to 18 decimals
         # v2 vaults use pricePerShare scaled to underlying token decimals
         vault = contract(token)
         if hasattr(vault, 'pricePerShare'):
-            share_price, underlying, decimals = fetch_multicall(
-                [vault, 'pricePerShare'],
-                [vault, 'token'],
-                [vault, 'decimals'],
-                block=block,
-            )
-            if share_price and underlying and decimals:
+            try:
+                share_price, underlying, decimals = fetch_multicall(
+                    [vault, 'pricePerShare'],
+                    [vault, 'token'],
+                    [vault, 'decimals'],
+                    block=block,
+                    require_success=True,
+                )
+            except MulticallError:
+                return None
+            else:
                 return [share_price / 10 ** decimals, underlying]
+
+        # v1 vaults use getPricePerFullShare scaled to 18 decimals
         if hasattr(vault, 'getPricePerFullShare'):
-            share_price, underlying = fetch_multicall(
-                [vault, 'getPricePerFullShare'], [vault, 'token'], block=block
-            )
-            if share_price and underlying:
+            try:
+                share_price, underlying = fetch_multicall(
+                    [vault, 'getPricePerFullShare'],
+                    [vault, 'token'],
+                    block=block,
+                    require_success=True,
+                )
+            except MulticallError:
+                return None
+            else:
                 return [share_price / 1e18, underlying]
 
 

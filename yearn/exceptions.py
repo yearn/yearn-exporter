@@ -8,3 +8,7 @@ class PriceError(Exception):
 
 class ArchiveNodeRequired(Exception):
     pass
+
+
+class MulticallError(Exception):
+    pass
