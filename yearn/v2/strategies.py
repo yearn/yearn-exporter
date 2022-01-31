@@ -113,7 +113,7 @@ class Strategy:
 
     @property
     def debt_ratio(self):
-        return self.vault.vault.strategies(self.strategy.address).dict()['debtRatio'] / 1e4
+        return self.vault.vault.strategies(self.strategy)['debtRatio'] / 1e4
 
     @property
     def apy(self) -> StrategyApy:
@@ -160,7 +160,7 @@ class Strategy:
         harvest_profit_previous = latest_harvest_with_profit_previous['event']['profit']
         seconds_between_harvests_previous = chain[latest_harvest_with_profit_previous['block_number']]['timestamp'] - chain[second_latest_harvest_with_profit_previous['block_number']]['timestamp']
         block_before_profitable_harvest_previous = latest_harvest_with_profit_previous['block_number'] - 1
-        strategy_debt_previous = vault.strategies(strategy.address, block_identifier=block_before_profitable_harvest_previous).dict()['totalDebt']
+        strategy_debt_previous = vault.strategies(strategy.address, block_identifier=block_before_profitable_harvest_previous)['totalDebt']
         if strategy_debt_previous == 0:
             previous_apr = 0
         else:
