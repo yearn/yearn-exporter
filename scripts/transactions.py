@@ -109,7 +109,7 @@ def _vault_transfers(vault, start_block, end_block) -> pd.DataFrame:
         web3.codec,
     )
     events = decode_logs(get_logs_asap(vault.address, topics, from_block = start_block, to_block = end_block))
-    return pd.DataFrame([Parallel(8,'threading')(delayed(_process_event)(event, vault, vault_symbol, vault_decimals) for event in tqdm(events))])
+    return pd.DataFrame(Parallel(16,'threading')(delayed(_process_event)(event, vault, vault_symbol, vault_decimals) for event in tqdm(events)))
     
 def main():
     while True:
