@@ -2,22 +2,25 @@ import logging
 import threading
 import time
 
-from brownie import Contract, chain, web3
+from brownie import ZERO_ADDRESS, Contract, chain, web3
 from brownie.network.event import EventLookupError
 from eth_abi import encode_single
 from eth_utils import encode_hex
 from joblib import Parallel, delayed
+from yearn.constants import (ERC20_TRANSFER_EVENT_HASH,
+                             ERC677_TRANSFER_EVENT_HASH, STRATEGIST_MULTISIG,
+                             TREASURY_WALLETS)
 from yearn.events import decode_logs
+from yearn.exceptions import PriceError
 from yearn.multicall2 import fetch_multicall
-from yearn.outputs import victoria
+from yearn.outputs.victoria import output_treasury
 from yearn.partners.partners import partners
 from yearn.partners.snapshot import WildcardWrapper, Wrapper
+from yearn.prices import compound
 from yearn.prices.constants import weth
-from yearn.prices.magic import get_price, logger as logger_price_magic
-from yearn.exceptions import PriceError
+from yearn.prices.magic import get_price
+from yearn.prices.magic import logger as logger_price_magic
 from yearn.utils import contract
-
-from yearn.constants import TREASURY_WALLETS, ERC20_TRANSFER_EVENT_HASH, ERC677_TRANSFER_EVENT_HASH
 
 logger = logging.getLogger(__name__)
 logger_price_magic.setLevel(logging.CRITICAL)
@@ -44,17 +47,17 @@ def _get_price(token, block=None):
     try:
         price = get_price(token, block)
     except AttributeError:
-        logger.warn(
+        logger.error(
             f"AttributeError while getting price for {contract(token).symbol()} {token}"
         )
         raise
     except PriceError:
-        logger.warn(
+        logger.error(
             f"PriceError while getting price for {contract(token).symbol()} {token}"
         )
         price = 0
     except ValueError:
-        logger.warn(
+        logger.error(
             f"ValueError while getting price for {contract(token).symbol()} {token}"
         )
         price = 0
@@ -73,17 +76,22 @@ def get_token_from_event(event):
         return None
     except EventLookupError:
         logger.critical(event)
+        logger.critical(
+            f'One of your cached contracts has an incorrect definition: {event.address}. Please fix this manually'
+        )
         raise
+
 
 class Treasury:
     '''
-    Used to export Yearn financial reports
+    Used to export financial reports
     '''
 
-    def __init__(self, watch_events_forever=False):
-        self.addresses = list(TREASURY_WALLETS)
+    def __init__(self, label, wallets, watch_events_forever=False, start_block=0):
+        self.label = label
+        self.addresses = list(wallets)
+        self._start_block = start_block
         self._transfers = []
-        self._start_block = 10502337 # Treasury didn't exist prior to block 10502337
 
         # define transfer signatures for Transfer events from ERC-20 and ERC-677 contracts
         transfer_sigs = [
@@ -102,7 +110,6 @@ class Treasury:
                 treasury_addresses # Transfers out of Treasury wallets
             ]
         ]
-
         self._watch_events_forever = watch_events_forever
         self._done = threading.Event()
         self._thread = threading.Thread(target=self.watch_transfers, daemon=True)
@@ -174,11 +181,19 @@ class Treasury:
         return balances
 
     def collateral(self, block=None) -> dict:
-        collateral = {
-            'MakerDAO': self.maker_collateral(block=block),
-        }
-        if block is None or block >= 11315910:
-            collateral['Unit.xyz'] = self.unit_collateral(block=block)
+        collateral = {}
+
+        maker_collateral = self.maker_collateral(block=block)
+        if maker_collateral:
+            for address, data in maker_collateral.items():
+                collateral[f'{address} Maker CDP'] = data
+
+        unit_collateral = self.unit_collateral(block=block)
+        if unit_collateral:
+            for address, data in unit_collateral.items():
+                collateral[f'{address} Unit CDP'] = data
+
+        collateral = {key: value for key, value in collateral.items() if len(value)}
         return collateral
 
     def maker_collateral(self, block=None) -> dict:
@@ -187,90 +202,122 @@ class Treasury:
         # ychad = contract('ychad.eth')
         ychad = contract('0xfeb4acf3df3cdea7399794d0869ef76a6efaff52')
         vat = contract('0x35D1b3F3D7966A1DFe207aa4514C12a259A0492B')
-        proxy = proxy_registry.proxies(ychad)
-        cdp = cdp_manager.first(proxy)
-        urn = cdp_manager.urns(cdp)
-        ilk = encode_single('bytes32', b'YFI-A')
-        ink = vat.urns(ilk, urn, block_identifier=block).dict()["ink"]
         yfi = "0x0bc529c00C6401aEF6D220BE8C6Ea1667F6Ad93e"
-        collateral = {
-            yfi: {
-                'balance': ink / 10 ** 18,
-                'usd value': ink / 10 ** 18 * get_price(yfi, block) if ink > 0 else 0,
-            }
-        }
+        ilk = encode_single('bytes32', b'YFI-A')
+        collateral = {}
+        for address in self.addresses:
+            proxy = proxy_registry.proxies(address)
+            cdp = cdp_manager.first(proxy)
+            urn = cdp_manager.urns(cdp)
+            ink = vat.urns(ilk, urn, block_identifier=block).dict()["ink"]
+            if ink:
+                collateral[address] = {
+                    yfi: {
+                        'balance': ink / 10 ** 18,
+                        'usd value': ink / 10 ** 18 * get_price(yfi, block) if ink > 0 else 0,
+                    }
+                }
         return collateral
 
     def unit_collateral(self, block=None) -> dict:
+        # NOTE: This only works for YFI collateral, must extend before using for other collaterals
         if block and block < 11315910:
             return
-        # ychad = contract('ychad.eth')
-        ychad = contract('0xfeb4acf3df3cdea7399794d0869ef76a6efaff52')
         unitVault = contract("0xb1cff81b9305166ff1efc49a129ad2afcd7bcf19")
         yfi = "0x0bc529c00C6401aEF6D220BE8C6Ea1667F6Ad93e"
-        bal = unitVault.collaterals(yfi, ychad, block_identifier=block)
-        collateral = {
-            yfi: {
-                'balance': bal / 10 ** 18,
-                'usd value': bal / 10 ** 18 * get_price(yfi, block),
-            }
-        }
+        collateral = {}
+        for address in self.addresses:
+            bal = unitVault.collaterals(yfi, address, block_identifier=block)
+            if bal:
+                collateral[address] = {
+                    yfi: {
+                        'balance': bal / 10 ** 18,
+                        'usd value': bal / 10 ** 18 * get_price(yfi, block),
+                    }
+                }
         return collateral
-
-    # def bonded_kp3r(self, block=None) -> dict:
 
     # descriptive functions
     # debt
 
     def debt(self, block=None) -> dict:
-        debt = {
-            'MakerDAO': self.maker_debt(block=block),
-        }
-        if not block or block >= 11315910:
-            debt['Unit.xyz'] = self.unit_debt(block=block)
-        # TODO: self.accounts_payable()
-        return debt
+        debt = {address: {} for address in self.addresses}
 
-    def accounts_payable(self, block=None) -> dict:
-        for i, partner in enumerate(partners):
-            if i == 1:
-                flat_wrappers = []
-                for wrapper in partner.wrappers:
-                    if isinstance(wrapper, Wrapper):
-                        flat_wrappers.append(wrapper)
-                    elif isinstance(wrapper, WildcardWrapper):
-                        flat_wrappers.extend(wrapper.unwrap())
-                for wrapper in flat_wrappers:
-                    print(wrapper.protocol_fees(block=block))
+        maker_debt = self.maker_debt(block=block)
+        if maker_debt:
+            for address, data in maker_debt.items():
+                debt[address].update(data)
+        
+        unit_debt = self.unit_debt(block=block)
+        if unit_debt:
+            for address, data in unit_debt.items():
+                debt[address].update(data)
+
+        compound_debt = self.compound_debt(block=block)
+        if compound_debt:
+            for address, data in compound_debt.items():
+                debt[address].update(data)
+
+        debt = {key: value for key, value in debt.items() if len(value)}
+        return debt
 
     def maker_debt(self, block=None) -> dict:
         proxy_registry = contract('0x4678f0a6958e4D2Bc4F1BAF7Bc52E8F3564f3fE4')
         cdp_manager = contract('0x5ef30b9986345249bc32d8928B7ee64DE9435E39')
-        # ychad = contract('ychad.eth')
-        ychad = contract('0xfeb4acf3df3cdea7399794d0869ef76a6efaff52')
         vat = contract('0x35D1b3F3D7966A1DFe207aa4514C12a259A0492B')
-        proxy = proxy_registry.proxies(ychad)
-        cdp = cdp_manager.first(proxy)
-        urn = cdp_manager.urns(cdp)
         ilk = encode_single('bytes32', b'YFI-A')
-        art = vat.urns(ilk, urn, block_identifier=block).dict()["art"]
-        rate = vat.ilks(ilk, block_identifier=block).dict()["rate"]
-        debt = art * rate / 1e45
         dai = '0x6B175474E89094C44Da98b954EedeAC495271d0F'
-        debt = {dai: {'balance': debt, 'usd value': debt}}
-        return debt
+        maker_debt = {}
+        for address in self.addresses:
+            proxy = proxy_registry.proxies(address)
+            cdp = cdp_manager.first(proxy)
+            urn = cdp_manager.urns(cdp)
+            art = vat.urns(ilk, urn, block_identifier=block).dict()["art"]
+            rate = vat.ilks(ilk, block_identifier=block).dict()["rate"]
+            debt = art * rate / 1e45
+            maker_debt[address] = {dai: {'balance': debt, 'usd value': debt}}
+        return maker_debt
 
     def unit_debt(self, block=None) -> dict:
+        # NOTE: This only works for YFI based debt, must extend before using for other collaterals
         if block and block < 11315910:
             return
-        # ychad = contract('ychad.eth')
-        ychad = contract('0xfeb4acf3df3cdea7399794d0869ef76a6efaff52')
         unitVault = contract("0xb1cff81b9305166ff1efc49a129ad2afcd7bcf19")
         yfi = "0x0bc529c00C6401aEF6D220BE8C6Ea1667F6Ad93e"
         usdp = '0x1456688345527bE1f37E9e627DA0837D6f08C925'
-        debt = unitVault.getTotalDebt(yfi, ychad, block_identifier=block) / 10 ** 18
-        debt = {usdp: {'balance': debt, 'usd value': debt}}
-        return debt
+        unit_debt = {}
+        for address in self.addresses:
+            debt = unitVault.getTotalDebt(yfi, address, block_identifier=block) / 10 ** 18
+            unit_debt[address] = {usdp: {'balance': debt, 'usd value': debt}}
+        return unit_debt
+
+    def compound_debt(self, block=None) -> dict:
+        markets = {market.ctoken for comp in compound.compound.compounds for market in comp.markets}
+        gas_token_markets = [market for market in markets if not hasattr(market,'underlying')]
+        other_markets = [market for market in markets if hasattr(market,'underlying')]
+        markets = gas_token_markets + other_markets
+        underlyings = [weth for market in gas_token_markets] + fetch_multicall(*[[market,'underlying'] for market in other_markets])
+        
+        markets_zip = zip(markets,underlyings)
+        markets, underlyings = [], []
+        for contract, underlying in markets_zip:
+            if underlying != ZERO_ADDRESS:
+                markets.append(contract)
+                underlyings.append(underlying)
+        
+        underlying_contracts = [Contract(underlying) for underlying in underlyings]
+        underlying_decimals = fetch_multicall(*[[underlying,'decimals'] for underlying in underlying_contracts])
+
+        compound_debt = {}
+        for address in self.addresses:
+            debts = fetch_multicall(*[[market,'borrowBalanceStored',address] for market in markets],block=block)
+            debts = [debt / 10 ** decimals if debt else None for debt, decimals in zip(debts,underlying_decimals)]
+            compound_debt[address] = {str(underlying): {'balance': debt, 'usd value': debt * get_price(underlying, block=block)} for underlying, debt in zip(underlyings,debts) if debt}
+        return compound_debt
+
+    def aave_debt(self, block=None) -> dict:
+        # TODO: don't need this yet but I want to add anyway for completeness
+        pass
 
     # helper functions
 
@@ -284,20 +331,23 @@ class Treasury:
         logger.info(
             'pulling treasury transfer events, please wait patiently this takes a while...'
         )
+        transfer_filters = [
+            web3.eth.filter({"fromBlock": self._start_block, "topics": topics})
+            for topics in self._topics
+        ]
         for block in chain.new_blocks(height_buffer=12):
-            for topics in self._topics:
-                topic_filter = web3.eth.filter({"fromBlock": self._start_block, "topics": topics})
-                logs = topic_filter.get_new_entries()
+            for transfer_filter in transfer_filters:
+                logs = transfer_filter.get_new_entries()
                 self.process_transfers(logs)
 
             if not self._done.is_set():
                 self._done.set()
                 logger.info(
-                    "loaded treasury transfer events in %.3fs", time.time() - start
+                    f"loaded {self.label} transfer events in %.3fs", time.time() - start
                 )
             if not self._watch_events_forever:
                 break
-            time.sleep(30)
+            time.sleep(5)
 
     def process_transfers(self, logs):
         for log in logs:
@@ -329,5 +379,30 @@ class Treasury:
     def export(self, block, ts):
         start = time.time()
         data = self.describe(block)
-        victoria.export_treasury(ts, data)
+        output_treasury.export(ts, data, self.label)
         logger.info('exported block=%d took=%.3fs', block, time.time() - start)
+
+
+class YearnTreasury(Treasury):
+    def __init__(self,watch_events_forever=False):
+        super().__init__('treasury',TREASURY_WALLETS,watch_events_forever=watch_events_forever,start_block=10502337)
+
+    def partners_debt(self, block=None) -> dict:
+        for i, partner in enumerate(partners):
+            if i == 1:
+                flat_wrappers = []
+                for wrapper in partner.wrappers:
+                    if isinstance(wrapper, Wrapper):
+                        flat_wrappers.append(wrapper)
+                    elif isinstance(wrapper, WildcardWrapper):
+                        flat_wrappers.extend(wrapper.unwrap())
+                for wrapper in flat_wrappers:
+                    print(wrapper.protocol_fees(block=block))
+
+    # def bonded_kp3r(self, block=None) -> dict:
+
+    # def debt - expends super().debt
+
+class StrategistMultisig(Treasury):
+    def __init__(self,watch_events_forever=False):
+        super().__init__('sms',STRATEGIST_MULTISIG,watch_events_forever=watch_events_forever,start_block=11507716)

@@ -36,11 +36,21 @@ stablecoins_by_network = {
         "0x1c48f86ae57291F7686349F12601910BD8D470bb": "usdk",
         "0x056Fd409E1d7A124BD7017459dFEa2F387b6d5Cd": "gusd",
         "0x0E2EC54fC0B509F445631Bf4b91AB8168230C752": "linkusd",
+        "0x99D8a9C45b2ecA8864373A26D1459e3Dff1e17F3": "mim",
+        "0xa47c8bf37f92aBed4A126BDA807A7b7498661acD": "ust",
+        "0x196f4727526eA7FB1e17b2071B3d8eAA38486988": "rsv",
+        "0xdF574c24545E5FfEcb9a659c229253D4111d87e1": "husd",
+        "0x5BC25f649fc4e26069dDF4cF4010F9f706c23831": "dusd",
+        "0xe2f2a5C287993345a840Db3B0845fbC70f5935a5": "musd",
+        "0x739ca6D71365a08f584c8FC4e1029045Fa8ABC4B": "anydai",
+        "0xbbc4A8d076F4B1888fec42581B6fc58d242CF2D5": "anymin",
     },
     Network.Fantom: {
         "0x04068DA6C83AFCFA0e13ba15A6696662335D5B75": "usdc",
         "0x8D11eC38a3EB5E956B052f67Da8Bdc9bef8Abf3E": "dai",
-        "0xe2D27f06F63d98b8e11b38b5b08A75D0c8dD62B9": "ust"
+        "0xe2D27f06F63d98b8e11b38b5b08A75D0c8dD62B9": "ust",
+        "0x82f0B8B456c1A451378467398982d4834b6829c1": "mim",
+        "0x049d68029688eAbF473097a2fC38ef61633A3C7A": "fusdt"
     },
     Network.Arbitrum: {
         '0xFF970A61A04b1cA14834A43f5dE4533eBDDB5CC8': 'usdc',

@@ -1,10 +1,11 @@
 import logging
+import os
 import re
 import threading
 import time
 from typing import List
 
-from brownie import ZERO_ADDRESS, Contract, chain
+from brownie import chain
 from eth_utils import encode_hex, event_abi_to_log_topic
 from joblib import Parallel, delayed
 from semantic_version.base import Version

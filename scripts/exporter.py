@@ -4,7 +4,7 @@ import time
 
 from brownie import chain
 from yearn.yearn import Yearn
-from yearn.outputs import victoria
+from yearn.outputs.victoria import output_duration
 from yearn.prices import constants
 
 logger = logging.getLogger('yearn.exporter')
@@ -16,7 +16,7 @@ def main():
         start_time = time.time()
         yearn.export(block.number, block.timestamp)
         duration = time.time() - start_time
-        victoria.export_duration(duration, 1, "forwards", block.timestamp)
+        output_duration.export(duration, 1, "forwards", block.timestamp)
         time.sleep(sleep_interval)
 
 

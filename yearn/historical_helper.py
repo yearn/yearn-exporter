@@ -9,7 +9,7 @@ import functools
 import requests
 from joblib import Parallel, delayed
 from toolz import partition_all
-from yearn.outputs import victoria
+from yearn.outputs.victoria import output_duration
 from yearn.yearn import Yearn
 from datetime import timedelta
 
@@ -66,7 +66,7 @@ def time_tracking(export_snapshot_func):
         result = export_snapshot_func(*le_args, **kwargs)
         end = time.time()
 
-        victoria.export_duration(end-start, POOL_SIZE, exporter_name, ts)
+        output_duration.export(end-start, POOL_SIZE, exporter_name, ts)
         return result
     return wrap
 

@@ -3,9 +3,6 @@ FROM python:3.9-bullseye
 RUN mkdir -p /app/yearn-exporter
 WORKDIR /app/yearn-exporter
 
-RUN apt-get update
-RUN apt-get install -y build-essential odbc-postgresql python3-dev unixodbc-dev
-
 ADD requirements.txt  ./
 RUN pip3 install -r requirements.txt
 

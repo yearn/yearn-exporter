@@ -1,19 +1,21 @@
 from collections import Counter
-from typing import Union
 
 from joblib.parallel import Parallel, delayed
 from yearn.outputs.describers.vault import VaultWalletDescriber
-from yearn.v1.registry import Registry as RegistryV1
-from yearn.v2.registry import Registry as RegistryV2
-from collections import Counter
+from yearn.utils import contract
 
 
 class RegistryWalletDescriber:
-    def describe_wallets(self, registry: Union[RegistryV1, RegistryV2] , block=None):
-        vaults = registry.active_vaults_at(block=block)
+    def active_vaults_at(self, registry: tuple, block=None):
+        label, registry = registry
+        active = [vault for vault in registry.active_vaults_at(block=block) if vault.vault != contract("0xBa37B002AbaFDd8E89a1995dA52740bbC013D992")]  # [yGov] Doesn't count for this context
+        return active
+        
+    def describe_wallets(self, registry: tuple, block=None):
         describer = VaultWalletDescriber()
-        data = Parallel(8,'threading')(delayed(describer.describe_wallets)(vault, block=block) for vault in vaults)
-        data = {vault.name: desc for vault,desc in zip(vaults,data)}
+        active_vaults = self.active_vaults_at(registry, block=block)
+        data = Parallel(8,'threading')(delayed(describer.describe_wallets)(vault.vault.address, block=block) for vault in active_vaults)
+        data = {vault.name: desc for vault,desc in zip(active_vaults,data)}
 
         wallet_balances = Counter()
         for vault, desc in data.items():

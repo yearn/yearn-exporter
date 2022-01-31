@@ -42,6 +42,7 @@ services:
       - POOL_SIZE
       - CHUNK_SIZE
       - RESOLUTION
+      - SKIP_WALLET_STATS
     volumes:
       - solidity_compilers:/root/.solcx
       - vyper_compilers:/root/.vvm
@@ -57,6 +58,7 @@ services:
     environment:
       - WEB3_PROVIDER=$FTM_WEB3_PROVIDER
       - EXPLORER=$FTM_EXPLORER
+      - FTMSCAN_TOKEN
       - SLEEP_SECONDS
       - NETWORK=ftm-main
     volumes:
@@ -74,6 +76,7 @@ services:
     environment:
       - WEB3_PROVIDER=$FTM_WEB3_PROVIDER
       - EXPLORER=$FTM_EXPLORER
+      - FTMSCAN_TOKEN
       - SLEEP_SECONDS
       - NETWORK=ftm-main
       - POOL_SIZE
@@ -96,10 +99,10 @@ services:
       - ETHERSCAN_TOKEN
       - EXPLORER
       - SLEEP_SECONDS
-      - POOL_SIZE
-      - CHUNK_SIZE
-      - RESOLUTION
-      - SKIP_WALLET_STATS
+      - PGHOST=postgres
+      - PGDATABASE=postgres
+      - PGUSER=postgres
+      - PGPASSWORD=yearn-exporter
     volumes:
       - solidity_compilers:/root/.solcx
       - vyper_compilers:/root/.vvm
@@ -128,6 +131,8 @@ services:
     networks:
       - yearn-exporter
     restart: on-failure
+    depends_on:
+      - postgres
 
   historical-treasury-exporter:
     image: yearn-exporter
@@ -140,6 +145,41 @@ services:
       - POOL_SIZE
       - CHUNK_SIZE
       - RESOLUTION
+      - SKIP_WALLET_STATS
+    volumes:
+      - solidity_compilers:/root/.solcx
+      - vyper_compilers:/root/.vvm
+      - brownie:/root/.brownie
+      - cache:/app/yearn-exporter/cache
+    networks:
+      - yearn-exporter
+    restart: on-failure
+
+  sms-exporter:
+    image: yearn-exporter
+    command: sms_exporter
+    environment:
+      - WEB3_PROVIDER
+      - ETHERSCAN_TOKEN
+      - EXPLORER
+      - SLEEP_SECONDS
+    volumes:
+      - solidity_compilers:/root/.solcx
+      - vyper_compilers:/root/.vvm
+      - brownie:/root/.brownie
+      - cache:/app/yearn-exporter/cache
+    networks:
+      - yearn-exporter
+    restart: on-failure
+
+  historical-sms-exporter:
+    image: yearn-exporter
+    command: historical_sms_exporter
+    environment:
+      - WEB3_PROVIDER
+      - ETHERSCAN_TOKEN
+      - EXPLORER
+      - SLEEP_SECONDS
     volumes:
       - solidity_compilers:/root/.solcx
       - vyper_compilers:/root/.vvm
@@ -153,9 +193,10 @@ services:
     image: yearn-exporter
     command: transactions_exporter
     environment:
-      - POSTGRES_PASSWORD=yearn-exporter
-      - POSTGRES_USER=postgres
-      - POSTGRES_DB=postgres
+      - PGHOST=postgres
+      - PGDATABASE=postgres
+      - PGUSER=postgres
+      - PGPASSWORD=yearn-exporter
     volumes:
       - solidity_compilers:/root/.solcx
       - vyper_compilers:/root/.vvm
@@ -246,9 +287,9 @@ services:
     ports:
       - 127.0.0.1:5432:5432
     environment:
-      - POSTGRES_PASSWORD=yearn-exporter
-      - POSTGRES_USER=postgres
-      - POSTGRES_DB=postgres
+      - POSTGRES_USER=${PGUSER:-postgres}
+      - POSTGRES_PASSWORD=${PGPASSWORD:-yearn-exporter}
+      - POSTGRES_DB=${PGDATABASE:-postgres}
     networks:
       - yearn-exporter
     volumes:
