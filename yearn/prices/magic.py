@@ -16,10 +16,10 @@ from yearn.prices.uniswap.v2 import uniswap_v2
 from yearn.prices.uniswap.v3 import uniswap_v3
 from yearn.prices.curve import curve
 from yearn.prices.yearn import yearn_lens
-from yearn.prices.pps import pps
+from yearn.utils import contract
+
 from yearn.prices import constants
 
-from yearn.utils import contract
 logger = logging.getLogger(__name__)
 
 @ttl_cache(10000)
@@ -65,22 +65,15 @@ def find_price(token, block):
         price = yearn_lens.get_price(token, block=block)
         logger.debug("yearn -> %s", price)
 
-    elif pps and pps.token_wants_pps_price(token, block):
-        price = pps.get_price(token, block)
-        logger.debug("pps -> %s", price)
-
     # xcredit
     elif chain.id == Network.Fantom and token == '0xd9e28749e80D867d5d14217416BFf0e668C10645':
         logger.debug('xcredit -> unwrap')
         wrapper = contract(token)
         price = get_price(wrapper.token(), block=block) * wrapper.getShareValue() / 1e18
     # no liquid market for yveCRV-DAO -> return CRV token price
-    elif chain.id == Network.Mainnet:
-        if token == '0xc5bDdf9843308380375a611c18B50Fb9341f502A' and block and block < 11786563:
-            if curve and curve.crv:
-                return get_price(curve.crv, block=block)
-        elif token == '0xec0d8D3ED5477106c6D4ea27D90a60e594693C90' and block <= 11645697:
-            return 0 # NOTE: yGUSD `share_price` returns `None` because balance() reverts due to hack
+    elif chain.id == Network.Mainnet and token == '0xc5bDdf9843308380375a611c18B50Fb9341f502A' and block and block < 11786563:
+        if curve and curve.crv:
+            return get_price(curve.crv, block=block)
 
     markets = [
         chainlink,
