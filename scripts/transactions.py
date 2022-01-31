@@ -39,7 +39,7 @@ def active_vaults_at(end_block) -> set:
     return v1.union(v2)
 
 def _process_event(event, vault, vault_symbol, vault_decimals) -> dict:
-    price = _get_price(event, vault)
+    sender, receiver, price = _from(event), _to(event), _get_price(event, vault)
     return {
         'block': event.block_number,
         'timestamp': chain[event.block_number].timestamp,
@@ -47,9 +47,9 @@ def _process_event(event, vault, vault_symbol, vault_decimals) -> dict:
         'log_index': event.log_index,
         'vault': vault.address,
         'symbol': vault_symbol,
-        'type': _event_type(event, vault.address),
-        'from': event['from'],
-        'to': event['to'],
+        'type': _event_type(sender, receiver, vault.address),
+        'from': sender,
+        'to': receiver,
         'value': Decimal(event['value']) / Decimal(10 ** vault_decimals),
         'price': price,
         'value_usd': Decimal(event['value']) / Decimal(10 ** vault_decimals) * Decimal(price)
@@ -67,12 +67,24 @@ def _get_price(event, vault):
             # Try again
             time.sleep(1)
 
-def _event_type(event, vault_address) -> str:
-    if event['from'] == ZERO_ADDRESS:
+def _from(event):
+    try:
+        return event['from']
+    except:
+        return event['sender']
+
+def _to(event):
+    try:
+        return event['from']
+    except:
+        return event['sender']
+
+def _event_type(sender, receiver, vault_address) -> str:
+    if sender == ZERO_ADDRESS:
         return 'deposit'
-    elif event['to'] == ZERO_ADDRESS:
+    elif receiver == ZERO_ADDRESS:
         return 'withdrawal'
-    elif event['from'] == vault_address:
+    elif sender == vault_address:
         return 'v2 fees? must confirm'
     else:
         return 'transfer'
