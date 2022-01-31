@@ -70,12 +70,14 @@ class YearnLens(metaclass=Singleton):
                 [vault, 'decimals'],
                 block=block,
             )
-            return [share_price / 10 ** decimals, underlying]
+            if share_price and underlying and decimals:
+                return [share_price / 10 ** decimals, underlying]
         if hasattr(vault, 'getPricePerFullShare'):
             share_price, underlying = fetch_multicall(
                 [vault, 'getPricePerFullShare'], [vault, 'token'], block=block
             )
-            return [share_price / 1e18, underlying]
+            if share_price and underlying:
+                return [share_price / 1e18, underlying]
 
 
 yearn_lens = None
