@@ -10,6 +10,7 @@ from eth_utils import encode_hex, event_abi_to_log_topic
 from yearn.utils import safe_views, contract
 from yearn.multicall2 import fetch_multicall
 from yearn.events import create_filter, decode_logs
+from yearn.networks import Network
 
 SECONDS_IN_YEAR = 31557600
 
@@ -186,7 +187,7 @@ class Strategy:
         apr_minus_fees = apr * (1 - performance_fee) - management_fee
 
         # assume we are compounding every week on mainnet, daily on sidechains
-        if chain.id == 1:
+        if chain.id == Network.Mainnet:
             compounding = 52
         else:
             compounding = 365.25
