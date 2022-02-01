@@ -15,7 +15,7 @@ from yearn.exceptions import UnsupportedNetwork
 from yearn.networks import Network
 from yearn.outputs.victoria import output_base, output_wallets
 from yearn.prices import constants
-from yearn.utils import contract
+from yearn.utils import contract_creation_block
 
 logger = logging.getLogger(__name__)
 
@@ -62,9 +62,14 @@ class Yearn:
             vault
             for registry in self.registries.values()
             for vault in registry.active_vaults_at(block=block)
-            # [yGov] Doesn't count for this context
-            if vault.vault != contract("0xBa37B002AbaFDd8E89a1995dA52740bbC013D992")
         ]
+        
+        # [yGov] Doesn't count for this context
+        if chain.id == Network.Mainnet and (
+            block is None
+            or block > contract_creation_block(yearn.special.Ygov().vault.address)
+            ): active.remove(yearn.special.Ygov())
+
         return active
     
     
