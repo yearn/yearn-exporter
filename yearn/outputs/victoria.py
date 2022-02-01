@@ -4,7 +4,7 @@ import gzip
 import math
 import json
 from typing import List, Dict
-from brownie import Contract, chain
+from brownie import chain
 from yearn.treasury.buckets import get_token_bucket
 from yearn.utils import contract
 from yearn.networks import Network
