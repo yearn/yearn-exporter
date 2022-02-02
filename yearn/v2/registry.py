@@ -16,7 +16,7 @@ from yearn.utils import Singleton, contract_creation_block, contract
 from yearn.v2.vaults import Vault
 from yearn.networks import Network
 from yearn.exceptions import UnsupportedNetwork
-from yearn.decorators import sentry_catch_all, wait_or_exit_before
+from yearn.decorators import sentry_catch_all, wait_or_exit_before, wait_or_exit_after
 
 logger = logging.getLogger(__name__)
 
@@ -72,7 +72,7 @@ class Registry(metaclass=Singleton):
     def __repr__(self) -> str:
         return f"<Registry chain={chain.id} releases={len(self.releases)} vaults={len(self.vaults)} experiments={len(self.experiments)}>"
 
-    @wait_or_exit_before
+    @wait_or_exit_after
     def load_vaults(self):
         if not self._thread._started.is_set():
             self._thread.start()
@@ -90,8 +90,6 @@ class Registry(metaclass=Singleton):
             if not self._watch_events_forever:
                 break
             time.sleep(300)
-
-
 
     def process_events(self, events):
         for event in events:
