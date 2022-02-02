@@ -30,6 +30,14 @@ registries = {
     Network.Mainnet: '0x47Fb2585D2C56Fe188D0E6ec628a38b74fCeeeDf',
 }
 
+@ttl_cache(maxsize=None, ttl=600)
+def get_price_from_feed(feed, asset, block=None):
+    if asset == ZERO_ADDRESS:
+        return None
+    try:
+        return feed.latestAnswer(block_identifier=block) / 1e8
+    except ValueError:
+        return None
 
 class Chainlink(metaclass=Singleton):
     def __init__(self):
@@ -59,13 +67,7 @@ class Chainlink(metaclass=Singleton):
 
     @ttl_cache(maxsize=None, ttl=600)
     def get_price(self, asset, block=None):
-        if asset == ZERO_ADDRESS:
-            return None
-        try:
-            return self.get_feed(asset).latestAnswer(block_identifier=block) / 1e8
-        except ValueError:
-            return None
-
+        return get_price_from_feed(self.get_feed(asset), asset, block=block)
 
 chainlink = None
 try:

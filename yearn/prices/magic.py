@@ -6,7 +6,7 @@ from yearn.exceptions import PriceError
 from yearn.networks import Network
 from yearn.prices.aave import aave
 from yearn.prices.band import band
-from yearn.prices.chainlink import chainlink
+from yearn.prices.chainlink import chainlink, get_price_from_feed
 from yearn.prices.compound import compound
 import yearn.prices.balancer as bal
 from yearn.prices.fixed_forex import fixed_forex
@@ -65,11 +65,21 @@ def find_price(token, block):
         price = yearn_lens.get_price(token, block=block)
         logger.debug("yearn -> %s", price)
 
-    # xcredit
-    elif chain.id == Network.Fantom and token == '0xd9e28749e80D867d5d14217416BFf0e668C10645':
-        logger.debug('xcredit -> unwrap')
-        wrapper = contract(token)
-        price = get_price(wrapper.token(), block=block) * wrapper.getShareValue() / 1e18
+    elif chain.id == Network.Fantom:
+        # xcredit
+        if token == '0xd9e28749e80D867d5d14217416BFf0e668C10645':
+            logger.debug('xcredit -> unwrap')
+            wrapper = contract(token)
+            price = get_price(wrapper.token(), block=block) * wrapper.getShareValue() / 1e18
+
+        # YFI
+        elif token == '0x29b0da86e484e1c0029b56e817912d778ac0ec69':
+            # until there's a CL registry on ftm we read from the price feed manually
+            # https://docs.chain.link/docs/fantom-price-feeds/#Fantom%20Mainnet
+            logger.debug('YFI -> feed')
+            feed = contract('0x9B25eC3d6acfF665DfbbFD68B3C1D896E067F0ae')
+            price = get_price_from_feed(feed, token, block=block)
+
     # no liquid market for yveCRV-DAO -> return CRV token price
     elif chain.id == Network.Mainnet and token == '0xc5bDdf9843308380375a611c18B50Fb9341f502A' and block and block < 11786563:
         if curve and curve.crv:
