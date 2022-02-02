@@ -1,34 +1,62 @@
 version: '3.7'
 
 volumes:
-    grafana_data: {}
-    solidity_compilers: {}
-    vyper_compilers: {}
-    brownie: {}
-    cache: {}
-    victoria_metrics_data: {}
-    postgres_data: {}
+  grafana_data: {}
+  solidity_compilers: {}
+  vyper_compilers: {}
+  brownie: {}
+  cache: {}
+  victoria_metrics_data: {}
+  postgres_data: {}
 
 networks:
   yearn-exporter:
+
+x-common-envs: &common-envs
+  - WEB3_PROVIDER:
+  - EXPLORER:
+  - SLEEP_SECONDS:
+  - SKIP_WALLET_STATS:
+  - ENV:
+  - SENTRY_DSN:
+
+x-common-historical-envs: &common-historical-envs
+  - POOL_SIZE:
+  - CHUNK_SIZE:
+  - RESOLUTION:
+
+x-common-postgres-envs: &common-postgres-envs
+  - PGHOST: postgres
+  - PGDATABASE: postgres
+  - PGUSER: postgres
+  - PGPASSWORD: yearn-exporter
+
+x-common-eth-envs: &common-eth-envs
+  - NETWORK: mainnet
+  - ETHERSCAN_TOKEN:
+
+x-common-ftm-envs: &common-ftm-envs
+  - NETWORK: ftm-main
+  - WEB3_PROVIDER: $FTM_WEB3_PROVIDER
+  - EXPLORER: $FTM_EXPLORER
+  - FTMSCAN_TOKEN:
+
+x-common-volumes: &common-volumes
+  - solidity_compilers:/root/.solcx
+  - vyper_compilers:/root/.vvm
+  - brownie:/root/.brownie
+  - cache:/app/yearn-exporter/cache
+
 
 services:
   eth-exporter:
     build: .
     image: yearn-exporter
     command: exporter
+    volumes: *common-volumes
     environment:
-      - WEB3_PROVIDER
-      - ETHERSCAN_TOKEN
-      - EXPLORER
-      - SLEEP_SECONDS
-      - ENV
-      - SENTRY_DSN
-    volumes:
-      - solidity_compilers:/root/.solcx
-      - vyper_compilers:/root/.vvm
-      - brownie:/root/.brownie
-      - cache:/app/yearn-exporter/cache
+      <<: *common-envs
+      <<: *common-eth-envs
     networks:
       - yearn-exporter
     restart: on-failure
@@ -36,22 +64,11 @@ services:
   historical-eth-exporter:
     image: yearn-exporter
     command: historical_exporter
+    volumes: *common-volumes
     environment:
-      - WEB3_PROVIDER
-      - ETHERSCAN_TOKEN
-      - EXPLORER
-      - SLEEP_SECONDS
-      - POOL_SIZE
-      - CHUNK_SIZE
-      - RESOLUTION
-      - SKIP_WALLET_STATS
-      - ENV
-      - SENTRY_DSN
-    volumes:
-      - solidity_compilers:/root/.solcx
-      - vyper_compilers:/root/.vvm
-      - brownie:/root/.brownie
-      - cache:/app/yearn-exporter/cache
+      <<: *common-envs
+      <<: *common-eth-envs
+      <<: *common-historical-envs
     networks:
       - yearn-exporter
     restart: on-failure
@@ -59,19 +76,10 @@ services:
   ftm-exporter:
     image: yearn-exporter
     command: exporter
+    volumes: *common-volumes
     environment:
-      - WEB3_PROVIDER=$FTM_WEB3_PROVIDER
-      - EXPLORER=$FTM_EXPLORER
-      - FTMSCAN_TOKEN
-      - SLEEP_SECONDS
-      - NETWORK=ftm-main
-      - ENV
-      - SENTRY_DSN
-    volumes:
-      - solidity_compilers:/root/.solcx
-      - vyper_compilers:/root/.vvm
-      - brownie:/root/.brownie
-      - cache:/app/yearn-exporter/cache
+      <<: *common-envs
+      <<: *common-ftm-envs
     networks:
       - yearn-exporter
     restart: on-failure
@@ -79,22 +87,11 @@ services:
   historical-ftm-exporter:
     image: yearn-exporter
     command: historical_exporter
+    volumes: *common-volumes
     environment:
-      - WEB3_PROVIDER=$FTM_WEB3_PROVIDER
-      - EXPLORER=$FTM_EXPLORER
-      - FTMSCAN_TOKEN
-      - SLEEP_SECONDS
-      - NETWORK=ftm-main
-      - POOL_SIZE
-      - CHUNK_SIZE
-      - RESOLUTION
-      - ENV
-      - SENTRY_DSN
-    volumes:
-      - solidity_compilers:/root/.solcx
-      - vyper_compilers:/root/.vvm
-      - brownie:/root/.brownie
-      - cache:/app/yearn-exporter/cache
+      <<: *common-envs
+      <<: *common-ftm-envs
+      <<: *common-historical-envs
     networks:
       - yearn-exporter
     restart: on-failure
@@ -102,26 +99,12 @@ services:
   treasury-exporter:
     image: yearn-exporter
     command: treasury_exporter
+    volumes: *common-volumes
     environment:
-      - WEB3_PROVIDER
-      - ETHERSCAN_TOKEN
-      - EXPLORER
-      - SLEEP_SECONDS
-      - PGHOST=postgres
-      - PGDATABASE=postgres
-      - PGUSER=postgres
-      - PGPASSWORD=yearn-exporter
-      - POOL_SIZE
-      - CHUNK_SIZE
-      - RESOLUTION
-      - SKIP_WALLET_STATS
-      - ENV
-      - SENTRY_DSN
-    volumes:
-      - solidity_compilers:/root/.solcx
-      - vyper_compilers:/root/.vvm
-      - brownie:/root/.brownie
-      - cache:/app/yearn-exporter/cache
+      <<: *common-envs
+      <<: *common-eth-envs
+      <<: *common-historical-envs
+      <<: *common-postgres-envs
     networks:
       - yearn-exporter
     restart: on-failure
@@ -131,45 +114,26 @@ services:
   historical-treasury-exporter:
     image: yearn-exporter
     command: historical_treasury_exporter
+    volumes: *common-volumes
     environment:
-      - WEB3_PROVIDER
-      - ETHERSCAN_TOKEN
-      - EXPLORER
-      - SLEEP_SECONDS
-      - POOL_SIZE
-      - CHUNK_SIZE
-      - RESOLUTION
-      - SKIP_WALLET_STATS
-      - ENV
-      - SENTRY_DSN
-    volumes:
-      - solidity_compilers:/root/.solcx
-      - vyper_compilers:/root/.vvm
-      - brownie:/root/.brownie
-      - cache:/app/yearn-exporter/cache
+      <<: *common-envs
+      <<: *common-eth-envs
+      <<: *common-historical-envs
+      <<: *common-postgres-envs
     networks:
       - yearn-exporter
     restart: on-failure
+    depends_on:
+      - postgres
 
   ftm-treasury-exporter:
     image: yearn-exporter
     command: treasury_exporter
+    volumes: *common-volumes
     environment:
-      - WEB3_PROVIDER=$FTM_WEB3_PROVIDER
-      - EXPLORER=$FTM_EXPLORER
-      - FTMSCAN_TOKEN
-      - SLEEP_SECONDS
-      - NETWORK=ftm-main
-      - POOL_SIZE
-      - CHUNK_SIZE
-      - RESOLUTION
-      - ENV
-      - SENTRY_DSN
-    volumes:
-      - solidity_compilers:/root/.solcx
-      - vyper_compilers:/root/.vvm
-      - brownie:/root/.brownie
-      - cache:/app/yearn-exporter/cache
+      <<: *common-envs
+      <<: *common-ftm-envs
+      <<: *common-postgres-envs
     networks:
       - yearn-exporter
     restart: on-failure
@@ -179,42 +143,25 @@ services:
   historical-ftm-treasury-exporter:
     image: yearn-exporter
     command: historical_treasury_exporter
+    volumes: *common-volumes
     environment:
-      - WEB3_PROVIDER=$FTM_WEB3_PROVIDER
-      - EXPLORER=$FTM_EXPLORER
-      - FTMSCAN_TOKEN
-      - SLEEP_SECONDS
-      - NETWORK=ftm-main
-      - POOL_SIZE
-      - CHUNK_SIZE
-      - RESOLUTION
-      - SKIP_WALLET_STATS
-      - ENV
-      - SENTRY_DSN
-    volumes:
-      - solidity_compilers:/root/.solcx
-      - vyper_compilers:/root/.vvm
-      - brownie:/root/.brownie
-      - cache:/app/yearn-exporter/cache
+      <<: *common-envs
+      <<: *common-ftm-envs
+      <<: *common-historical-envs
+      <<: *common-postgres-envs
     networks:
       - yearn-exporter
     restart: on-failure
+    depends_on:
+      - postgres
 
   sms-exporter:
     image: yearn-exporter
     command: sms_exporter
+    volumes: *common-volumes
     environment:
-      - WEB3_PROVIDER
-      - ETHERSCAN_TOKEN
-      - EXPLORER
-      - SLEEP_SECONDS
-      - ENV
-      - SENTRY_DSN
-    volumes:
-      - solidity_compilers:/root/.solcx
-      - vyper_compilers:/root/.vvm
-      - brownie:/root/.brownie
-      - cache:/app/yearn-exporter/cache
+      <<: *common-envs
+      <<: *common-eth-envs
     networks:
       - yearn-exporter
     restart: on-failure
@@ -222,18 +169,11 @@ services:
   historical-sms-exporter:
     image: yearn-exporter
     command: historical_sms_exporter
+    volumes: *common-volumes
     environment:
-      - WEB3_PROVIDER
-      - ETHERSCAN_TOKEN
-      - EXPLORER
-      - SLEEP_SECONDS
-      - ENV
-      - SENTRY_DSN
-    volumes:
-      - solidity_compilers:/root/.solcx
-      - vyper_compilers:/root/.vvm
-      - brownie:/root/.brownie
-      - cache:/app/yearn-exporter/cache
+      <<: *common-envs
+      <<: *common-eth-envs
+      <<: *common-historical-envs
     networks:
       - yearn-exporter
     restart: on-failure
@@ -241,20 +181,10 @@ services:
   ftm-sms-exporter:
     image: yearn-exporter
     command: sms_exporter
+    volumes: *common-volumes
     environment:
-      - WEB3_PROVIDER=$FTM_WEB3_PROVIDER
-      - EXPLORER=$FTM_EXPLORER
-      - FTMSCAN_TOKEN
-      - SLEEP_SECONDS
-      - NETWORK=ftm-main
-      - POOL_SIZE
-      - CHUNK_SIZE
-      - RESOLUTION
-    volumes:
-      - solidity_compilers:/root/.solcx
-      - vyper_compilers:/root/.vvm
-      - brownie:/root/.brownie
-      - cache:/app/yearn-exporter/cache
+      <<: *common-envs
+      <<: *common-ftm-envs
     networks:
       - yearn-exporter
     restart: on-failure
@@ -262,20 +192,11 @@ services:
   historical-ftm-sms-exporter:
     image: yearn-exporter
     command: historical_sms_exporter
+    volumes: *common-volumes
     environment:
-      - WEB3_PROVIDER=$FTM_WEB3_PROVIDER
-      - EXPLORER=$FTM_EXPLORER
-      - FTMSCAN_TOKEN
-      - SLEEP_SECONDS
-      - NETWORK=ftm-main
-      - POOL_SIZE
-      - CHUNK_SIZE
-      - RESOLUTION
-    volumes:
-      - solidity_compilers:/root/.solcx
-      - vyper_compilers:/root/.vvm
-      - brownie:/root/.brownie
-      - cache:/app/yearn-exporter/cache
+      <<: *common-envs
+      <<: *common-ftm-envs
+      <<: *common-historical-envs
     networks:
       - yearn-exporter
     restart: on-failure
@@ -283,21 +204,12 @@ services:
   transactions-exporter:
     image: yearn-exporter
     command: transactions_exporter
+    volumes: *common-volumes
     environment:
-      - WEB3_PROVIDER
-      - ETHERSCAN_TOKEN
-      - EXPLORER
-      - PGHOST=postgres
-      - PGDATABASE=postgres
-      - PGUSER=postgres
-      - PGPASSWORD=yearn-exporter
-      - ENV
-      - SENTRY_DSN
-    volumes:
-      - solidity_compilers:/root/.solcx
-      - vyper_compilers:/root/.vvm
-      - brownie:/root/.brownie
-      - cache:/app/yearn-exporter/cache
+      <<: *common-envs
+      <<: *common-eth-envs
+      <<: *common-historical-envs
+      <<: *common-postgres-envs
     networks:
       - yearn-exporter
     restart: on-failure
@@ -307,27 +219,17 @@ services:
   wallet-exporter:
     image: yearn-exporter
     command: wallet_exporter
+    volumes: *common-volumes
     environment:
-      - WEB3_PROVIDER
-      - ETHERSCAN_TOKEN
-      - EXPLORER
-      - SLEEP_SECONDS
-      - PGHOST=postgres
-      - PGDATABASE=postgres
-      - PGUSER=postgres
-      - PGPASSWORD=yearn-exporter
-      - POOL_SIZE
-      - CHUNK_SIZE
-      - RESOLUTION
-    volumes:
-      - solidity_compilers:/root/.solcx
-      - vyper_compilers:/root/.vvm
-      - brownie:/root/.brownie
-      - cache:/app/yearn-exporter/cache
+      <<: *common-envs
+      <<: *common-eth-envs
+      <<: *common-historical-envs
+      <<: *common-postgres-envs
     networks:
       - yearn-exporter
     restart: always
-
+    depends_on:
+      - postgres
 
   vmagent:
     image: victoriametrics/vmagent
