@@ -6,84 +6,69 @@ volumes:
     brownie: {}
     cache: {}
 
+x-common-volumes: &common-volumes
+  - solidity_compilers:/root/.solcx
+  - vyper_compilers:/root/.vvm
+  - brownie:/root/.brownie
+  - cache:/app/yearn-exporter/cache
+
+x-common-envs: &common-envs
+  - ENV:
+  - SENTRY_DSN:
+  - BRIDGE_PORT: 1337
+
+x-common-eth-envs: &common-eth-envs
+  - WEB3_PROVIDER:
+  - EXPLORER:
+  - NETWORK: mainnet
+  - ETHERSCAN_TOKEN:
+
+x-common-ftm-envs: &common-ftm-envs
+  - NETWORK: ftm-main
+  - WEB3_PROVIDER: $FTM_WEB3_PROVIDER
+  - EXPLORER: $FTM_EXPLORER
+  - FTMSCAN_TOKEN:
+
 networks:
-  yearn-exporter:
+  yearn-brownie-bridge:
 
 services:
   brownie-bridge-eth:
     build: .
     image: yearn-exporter
     command: brownie_bridge
+    volumes: *common-volumes
     environment:
-      - NETWORK=mainnet
-      - WEB3_PROVIDER
-      - ETHERSCAN_TOKEN
-      - EXPLORER
-      - PGUSER=postgres
-      - PGHOST=postgres
-      - PGPASSWORD=yearn-exporter
-      - PGDATABASE=postgres
-      - BRIDGE_PORT=1337
-      - BRIDGE_HOST=brownie-bridge-eth
-    volumes:
-      - solidity_compilers:/root/.solcx
-      - vyper_compilers:/root/.vvm
-      - brownie:/root/.brownie
-      - cache:/app/yearn-exporter/cache
+      <<: *common-envs
+      <<: *common-eth-envs
+      BRIDGE_HOST: brownie-bridge-eth
     networks:
-      - yearn-exporter
+      - yearn-brownie-bridge
     restart: on-failure
 
   brownie-bridge-ftm:
     build: .
     image: yearn-exporter
     command: brownie_bridge
+    volumes: *common-volumes
     environment:
-      - NETWORK=ftm-main
-      - WEB3_PROVIDER=$FTM_WEB3_PROVIDER
-      - EXPLORER=$FTM_EXPLORER
-      - FTMSCAN_TOKEN
-      - SLEEP_SECONDS
-      - PGUSER=postgres
-      - PGHOST=postgres
-      - PGPASSWORD=yearn-exporter
-      - PGDATABASE=postgres
-      - BRIDGE_PORT=1337
-      - BRIDGE_HOST=brownie-bridge-ftm
-    volumes:
-      - solidity_compilers:/root/.solcx
-      - vyper_compilers:/root/.vvm
-      - brownie:/root/.brownie
-      - cache:/app/yearn-exporter/cache
+      <<: *common-envs
+      <<: *common-ftm-envs
+      BRIDGE_HOST: brownie-bridge-ftm
     networks:
-      - yearn-exporter
+      - yearn-brownie-bridge
     restart: on-failure
 
   brownie-api:
     image: yearn-exporter
+    build: .
     entrypoint: uvicorn brownie_bridge.api:app --host 0.0.0.0 --port 4004
+    volumes: *common-volumes
     environment:
-      - WEB3_PROVIDER
-      - ETHERSCAN_TOKEN
-      - EXPLORER
-      - SLEEP_SECONDS
-      - POOL_SIZE
-      - CHUNK_SIZE
-      - RESOLUTION
-      - SKIP_WALLET_STATS
-      - PGUSER=postgres
-      - PGHOST=postgres
-      - PGPASSWORD=yearn-exporter
-      - PGDATABASE=postgres
-      - BRIDGE_HOST=brownie_bridge
-      - BRIDGE_PORT=1337
+      <<: *common-envs
+      BRIDGE_HOST: brownie_bridge
     ports:
       - 127.0.0.1:4004:4004
-    volumes:
-      - solidity_compilers:/root/.solcx
-      - vyper_compilers:/root/.vvm
-      - brownie:/root/.brownie
-      - cache:/app/yearn-exporter/cache
     networks:
-      - yearn-exporter
+      - yearn-brownie-bridge
     restart: on-failure
