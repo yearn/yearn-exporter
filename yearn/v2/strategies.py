@@ -9,6 +9,7 @@ from eth_utils import encode_hex, event_abi_to_log_topic
 from yearn.utils import safe_views, contract
 from yearn.multicall2 import fetch_multicall
 from yearn.events import create_filter, decode_logs
+from yearn.decorators import sentry_catch_all, wait_or_exit_after
 
 
 STRATEGY_VIEWS_SCALED = [
@@ -47,6 +48,7 @@ class Strategy:
         ]
         self._watch_events_forever = watch_events_forever
         self._done = threading.Event()
+        self._has_exception = False
         self._thread = threading.Thread(target=self.watch_events, daemon=True)
 
     @property
@@ -68,23 +70,20 @@ class Strategy:
 
         raise ValueError("Strategy is only comparable with [Strategy, str]")
 
+    @sentry_catch_all
     def watch_events(self):
-        try:
-            start = time.time()
-            self.log_filter = create_filter(str(self.strategy), topics=self._topics)
-            for block in chain.new_blocks(height_buffer=12):
-                logs = self.log_filter.get_new_entries()
-                events = decode_logs(logs)
-                self.process_events(events)
-                if not self._done.is_set():
-                    self._done.set()
-                    logger.info("loaded %d harvests %s in %.3fs", len(self._harvests), self.name, time.time() - start)
-                if not self._watch_events_forever:
-                    break
-                time.sleep(300)
-        except:
-            self._done.set()
-            raise
+        start = time.time()
+        self.log_filter = create_filter(str(self.strategy), topics=self._topics)
+        for block in chain.new_blocks(height_buffer=12):
+            logs = self.log_filter.get_new_entries()
+            events = decode_logs(logs)
+            self.process_events(events)
+            if not self._done.is_set():
+                self._done.set()
+                logger.info("loaded %d harvests %s in %.3fs", len(self._harvests), self.name, time.time() - start)
+            if not self._watch_events_forever:
+                break
+            time.sleep(300)
 
     def process_events(self, events):
         for event in events:
@@ -93,10 +92,10 @@ class Strategy:
                 logger.debug("%s harvested on %d", self.name, block)
                 self._harvests.append(block)
 
+    @wait_or_exit_after
     def load_harvests(self):
         if not self._thread._started.is_set():
             self._thread.start()
-        self._done.wait()
 
     @property
     def harvests(self) -> List[int]:

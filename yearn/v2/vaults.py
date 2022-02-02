@@ -18,6 +18,7 @@ from yearn.prices.curve import curve
 from yearn.utils import safe_views, contract
 from yearn.v2.strategies import Strategy
 from yearn.exceptions import PriceError
+from yearn.decorators import sentry_catch_all, wait_or_exit_after
 
 VAULT_VIEWS_SCALED = [
     "totalAssets",
@@ -71,6 +72,7 @@ class Vault:
         ]
         self._watch_events_forever = watch_events_forever
         self._done = threading.Event()
+        self._has_exception = False
         self._thread = threading.Thread(target=self.watch_events, daemon=True)
 
     def __repr__(self):
@@ -118,31 +120,28 @@ class Vault:
         # experimental vaults are either listed in the registry or have the 0x address suffix in the name
         return str(self.vault) in self.registry.experiments or re.search(r"0x.*$", self.name) is not None
 
+    @wait_or_exit_after
     def load_strategies(self):
         if not self._thread._started.is_set():
             self._thread.start()
-        self._done.wait()
 
     def load_harvests(self):
         Parallel(8, "threading")(delayed(strategy.load_harvests)() for strategy in self.strategies)
 
+    @sentry_catch_all
     def watch_events(self):
-        try:
-            start = time.time()
-            self.log_filter = create_filter(str(self.vault), topics=self._topics)
-            for block in chain.new_blocks(height_buffer=12):
-                logs = self.log_filter.get_new_entries()
-                events = decode_logs(logs)
-                self.process_events(events)
-                if not self._done.is_set():
-                    self._done.set()
-                    logger.info("loaded %d strategies %s in %.3fs", len(self._strategies), self.name, time.time() - start)
-                if not self._watch_events_forever:
-                    break
-                time.sleep(300)
-        except:
-            self._done.set()
-            raise
+        start = time.time()
+        self.log_filter = create_filter(str(self.vault), topics=self._topics)
+        for block in chain.new_blocks(height_buffer=12):
+            logs = self.log_filter.get_new_entries()
+            events = decode_logs(logs)
+            self.process_events(events)
+            if not self._done.is_set():
+                self._done.set()
+                logger.info("loaded %d strategies %s in %.3fs", len(self._strategies), self.name, time.time() - start)
+            if not self._watch_events_forever:
+                break
+            time.sleep(300)
 
     def process_events(self, events):
         for event in events:

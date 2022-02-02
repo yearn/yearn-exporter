@@ -16,6 +16,7 @@ from yearn.utils import Singleton, contract_creation_block, contract
 from yearn.v2.vaults import Vault
 from yearn.networks import Network
 from yearn.exceptions import UnsupportedNetwork
+from yearn.decorators import sentry_catch_all, wait_or_exit_before
 
 logger = logging.getLogger(__name__)
 
@@ -31,6 +32,7 @@ class Registry(metaclass=Singleton):
         self.registries = self.load_registry()
         # load registry state in the background
         self._done = threading.Event()
+        self._has_exception = False
         self._thread = threading.Thread(target=self.watch_events, daemon=True)
         self._thread.start()
 
@@ -57,40 +59,38 @@ class Registry(metaclass=Singleton):
         return [Contract(event['newAddress']) for event in events]
 
     @property
+    @wait_or_exit_before
     def vaults(self) -> List[Vault]:
-        self._done.wait()
         return list(self._vaults.values())
 
     @property
+    @wait_or_exit_before
     def experiments(self) -> List[Vault]:
-        self._done.wait()
         return list(self._experiments.values())
 
+    @wait_or_exit_before
     def __repr__(self) -> str:
-        self._done.wait()
         return f"<Registry chain={chain.id} releases={len(self.releases)} vaults={len(self.vaults)} experiments={len(self.experiments)}>"
 
+    @wait_or_exit_before
     def load_vaults(self):
         if not self._thread._started.is_set():
             self._thread.start()
-        self._done.wait()
 
+    @sentry_catch_all
     def watch_events(self):
-        try:
-            start = time.time()
-            self.log_filter = create_filter([str(addr) for addr in self.registries])
-            for block in chain.new_blocks(height_buffer=12):
-                logs = self.log_filter.get_new_entries()
-                self.process_events(decode_logs(logs))
-                if not self._done.is_set():
-                    self._done.set()
-                    logger.info("loaded v2 registry in %.3fs", time.time() - start)
-                if not self._watch_events_forever:
-                    break
-                time.sleep(300)
-        except:
-            self._done.set()
-            raise
+        start = time.time()
+        self.log_filter = create_filter([str(addr) for addr in self.registries])
+        for block in chain.new_blocks(height_buffer=12):
+            logs = self.log_filter.get_new_entries()
+            self.process_events(decode_logs(logs))
+            if not self._done.is_set():
+                self._done.set()
+                logger.info("loaded v2 registry in %.3fs", time.time() - start)
+            if not self._watch_events_forever:
+                break
+            time.sleep(300)
+
 
 
     def process_events(self, events):
