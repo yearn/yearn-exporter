@@ -11,7 +11,7 @@ logger = logging.getLogger('yearn.historical_sms_exporter')
 
 def main():
     start = datetime.now(tz=timezone.utc)
-    if Network(chain.id) == Network.Fantom:
+    if chain.id == Network.Fantom:
         # end: 2021-06-17 Fantom SMS deployed
         end = datetime(2021, 6, 17, tzinfo=timezone.utc)
         data_query = 'sms_assets{network="FTM"}'
