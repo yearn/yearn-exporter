@@ -136,7 +136,7 @@ def _get_price(event, token_entity):
                 time.sleep(5)
             else:
                 logger.warn(f'vault: {token_entity.address.address}')
-                raise Exception(str(e))
+                raise
 
 
 def _event_type(sender, receiver, vault_address) -> str:
