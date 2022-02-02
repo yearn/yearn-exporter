@@ -23,8 +23,6 @@ from yearn.prices.magic import get_price
 from yearn.prices.magic import logger as logger_price_magic
 from yearn.utils import contract
 
-from ..constants import STRATEGIST_MULTISIG, TREASURY_WALLETS
-
 logger = logging.getLogger(__name__)
 logger_price_magic.setLevel(logging.CRITICAL)
 

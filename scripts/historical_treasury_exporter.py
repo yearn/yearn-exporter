@@ -11,15 +11,17 @@ logger = logging.getLogger('yearn.historical_treasury_exporter')
 
 def main():
     start = datetime.now(tz=timezone.utc)
-    if Network(chain.id) == Network.Fantom:
-        # end: 2021-10-12 Fantom Multisig deployed
-        end = datetime(2021, 10, 12, tzinfo=timezone.utc)
-        data_query = 'treasury_assets{network="FTM"}'
-    else:
-        # end: 2020-07-21 first treasury tx
-        end = datetime(2020, 7, 21, 10, 1, tzinfo=timezone.utc)
-        data_query = 'treasury_assets{network="ETH"}'
-        
+    
+    end = {
+        Network.Mainnet: datetime(2020, 7, 21, 10, 1, tzinfo=timezone.utc), # first treasury tx
+        Network.Fantom: datetime(2021, 10, 12, tzinfo=timezone.utc), # Fantom Multisig deployed
+    }[chain.id]
+
+    data_query = {
+        Network.Mainnet: 'treasury_assets{network="ETH"}',
+        Network.Fantom: 'treasury_assets{network="FTM"}',
+    }[chain.id]
+
     export_historical(
         start,
         end,

@@ -9,16 +9,19 @@ from yearn.utils import closest_block_after_timestamp
 
 logger = logging.getLogger('yearn.historical_sms_exporter')
 
+
 def main():
     start = datetime.now(tz=timezone.utc)
-    if chain.id == Network.Fantom:
-        # end: 2021-06-17 Fantom SMS deployed
-        end = datetime(2021, 6, 17, tzinfo=timezone.utc)
-        data_query = 'sms_assets{network="FTM"}'
-    else:
-        # end: 2021-01-28 09:09:48 first inbound sms tx
-        end = datetime(2021, 1, 28, 9, 10, tzinfo=timezone.utc)
-        data_query = 'sms_assets{network="ETH"}'
+    
+    end = {
+        Network.Mainnet: datetime(2021, 1, 28, 9, 10, tzinfo=timezone.utc), # first inbound sms tx
+        Network.Fantom: datetime(2021, 6, 17, tzinfo=timezone.utc), # Fantom SMS deployed
+    }[chain.id]
+
+    data_query = {
+        Network.Mainnet: 'sms_assets{network="ETH"}',
+        Network.Fantom: 'sms_assets{network="FTM"}',
+    }[chain.id]
         
     export_historical(
         start,
