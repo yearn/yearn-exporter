@@ -91,27 +91,6 @@ services:
       - yearn-exporter
     restart: on-failure
 
-  wallet-exporter:
-    image: yearn-exporter
-    command: wallet_exporter
-    environment:
-      - WEB3_PROVIDER
-      - ETHERSCAN_TOKEN
-      - EXPLORER
-      - SLEEP_SECONDS
-      - PGHOST=postgres
-      - PGDATABASE=postgres
-      - PGUSER=postgres
-      - PGPASSWORD=yearn-exporter
-    volumes:
-      - solidity_compilers:/root/.solcx
-      - vyper_compilers:/root/.vvm
-      - brownie:/root/.brownie
-      - cache:/app/yearn-exporter/cache
-    networks:
-      - yearn-exporter
-    restart: always
-
   treasury-exporter:
     image: yearn-exporter
     command: treasury_exporter
@@ -155,6 +134,50 @@ services:
       - yearn-exporter
     restart: on-failure
 
+  ftm-treasury-exporter:
+    image: yearn-exporter
+    command: treasury_exporter
+    environment:
+      - WEB3_PROVIDER=$FTM_WEB3_PROVIDER
+      - EXPLORER=$FTM_EXPLORER
+      - FTMSCAN_TOKEN
+      - SLEEP_SECONDS
+      - NETWORK=ftm-main
+      - POOL_SIZE
+      - CHUNK_SIZE
+      - RESOLUTION
+    volumes:
+      - solidity_compilers:/root/.solcx
+      - vyper_compilers:/root/.vvm
+      - brownie:/root/.brownie
+      - cache:/app/yearn-exporter/cache
+    networks:
+      - yearn-exporter
+    restart: on-failure
+    depends_on:
+      - postgres
+
+  historical-ftm-treasury-exporter:
+    image: yearn-exporter
+    command: historical_treasury_exporter
+    environment:
+      - WEB3_PROVIDER=$FTM_WEB3_PROVIDER
+      - EXPLORER=$FTM_EXPLORER
+      - FTMSCAN_TOKEN
+      - SLEEP_SECONDS
+      - NETWORK=ftm-main
+      - POOL_SIZE
+      - CHUNK_SIZE
+      - RESOLUTION
+    volumes:
+      - solidity_compilers:/root/.solcx
+      - vyper_compilers:/root/.vvm
+      - brownie:/root/.brownie
+      - cache:/app/yearn-exporter/cache
+    networks:
+      - yearn-exporter
+    restart: on-failure
+
   sms-exporter:
     image: yearn-exporter
     command: sms_exporter
@@ -189,10 +212,55 @@ services:
       - yearn-exporter
     restart: on-failure
 
+  ftm-sms-exporter:
+    image: yearn-exporter
+    command: sms_exporter
+    environment:
+      - WEB3_PROVIDER=$FTM_WEB3_PROVIDER
+      - EXPLORER=$FTM_EXPLORER
+      - FTMSCAN_TOKEN
+      - SLEEP_SECONDS
+      - NETWORK=ftm-main
+      - POOL_SIZE
+      - CHUNK_SIZE
+      - RESOLUTION
+    volumes:
+      - solidity_compilers:/root/.solcx
+      - vyper_compilers:/root/.vvm
+      - brownie:/root/.brownie
+      - cache:/app/yearn-exporter/cache
+    networks:
+      - yearn-exporter
+    restart: on-failure
+
+  historical-ftm-sms-exporter:
+    image: yearn-exporter
+    command: historical_sms_exporter
+    environment:
+      - WEB3_PROVIDER=$FTM_WEB3_PROVIDER
+      - EXPLORER=$FTM_EXPLORER
+      - FTMSCAN_TOKEN
+      - SLEEP_SECONDS
+      - NETWORK=ftm-main
+      - POOL_SIZE
+      - CHUNK_SIZE
+      - RESOLUTION
+    volumes:
+      - solidity_compilers:/root/.solcx
+      - vyper_compilers:/root/.vvm
+      - brownie:/root/.brownie
+      - cache:/app/yearn-exporter/cache
+    networks:
+      - yearn-exporter
+    restart: on-failure
+
   transactions-exporter:
     image: yearn-exporter
     command: transactions_exporter
     environment:
+      - WEB3_PROVIDER
+      - ETHERSCAN_TOKEN
+      - EXPLORER
       - PGHOST=postgres
       - PGDATABASE=postgres
       - PGUSER=postgres
@@ -207,6 +275,31 @@ services:
     restart: on-failure
     depends_on:
       - postgres
+
+  wallet-exporter:
+    image: yearn-exporter
+    command: wallet_exporter
+    environment:
+      - WEB3_PROVIDER
+      - ETHERSCAN_TOKEN
+      - EXPLORER
+      - SLEEP_SECONDS
+      - PGHOST=postgres
+      - PGDATABASE=postgres
+      - PGUSER=postgres
+      - PGPASSWORD=yearn-exporter
+      - POOL_SIZE
+      - CHUNK_SIZE
+      - RESOLUTION
+    volumes:
+      - solidity_compilers:/root/.solcx
+      - vyper_compilers:/root/.vvm
+      - brownie:/root/.brownie
+      - cache:/app/yearn-exporter/cache
+    networks:
+      - yearn-exporter
+    restart: always
+
 
   vmagent:
     image: victoriametrics/vmagent

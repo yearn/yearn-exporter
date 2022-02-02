@@ -7,11 +7,11 @@ import pandas as pd
 from brownie import ZERO_ADDRESS, Contract, chain, web3
 from brownie.exceptions import BrownieEnvironmentWarning
 from pony.orm import db_session
-from joblib import Parallel, delayed
 from web3._utils.abi import filter_by_name
 from web3._utils.events import construct_event_topic_set
 from yearn.entities import UserTx  # , TreasuryTx
 from yearn.events import decode_logs, get_logs_asap
+from yearn.networks import Network
 from yearn.outputs.postgres.utils import (cache_address, cache_token,
                                           last_recorded_block)
 from yearn.prices import magic
@@ -25,6 +25,11 @@ logger = logging.getLogger('yearn.transactions_exporter')
 
 BATCH_SIZE = 5000
 
+FIRST_END_BLOCK = {
+    Network.Mainnet: 9480000, # NOTE block some arbitrary time after iearn's first deployment
+    Network.Fantom: 5000000, # NOTE block some arbitrary time after v2's first deployment
+}[chain.id]
+
 def main():
     for block in chain.new_blocks(height_buffer=1):
         process_and_cache_user_txs(last_recorded_block(UserTx))
@@ -36,7 +41,7 @@ def process_and_cache_user_txs(last_saved_block=None):
     max_block_to_cache = chain.height - 50
     start_block = last_saved_block + 1 if last_saved_block else None
     end_block = (
-        9480000 if start_block is None # NOTE block some arbitrary time after iearn's first deployment
+        FIRST_END_BLOCK if start_block is None
         else start_block + BATCH_SIZE if start_block + BATCH_SIZE < max_block_to_cache
         else max_block_to_cache
     )
@@ -130,8 +135,8 @@ def _get_price(event, token_entity):
                 logger.warn('trying again...')
                 time.sleep(5)
             else:
-                logger.warn(f'vault: {token_entity.token.address}')
-                raise Exception(str(e))
+                logger.warn(f'vault: {token_entity.address.address}')
+                raise
 
 
 def _event_type(sender, receiver, vault_address) -> str:

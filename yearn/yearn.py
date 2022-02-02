@@ -1,4 +1,5 @@
 import logging
+import os
 from collections import Counter
 from time import time
 
@@ -14,7 +15,7 @@ from yearn.exceptions import UnsupportedNetwork
 from yearn.networks import Network
 from yearn.outputs.victoria import output_base, output_wallets
 from yearn.prices import constants
-from yearn.utils import contract
+from yearn.utils import contract_creation_block
 
 logger = logging.getLogger(__name__)
 
@@ -61,9 +62,14 @@ class Yearn:
             vault
             for registry in self.registries.values()
             for vault in registry.active_vaults_at(block=block)
-            # [yGov] Doesn't count for this context
-            if vault.vault != contract("0xBa37B002AbaFDd8E89a1995dA52740bbC013D992")
         ]
+        
+        # [yGov] Doesn't count for this context
+        if chain.id == Network.Mainnet and (
+            block is None
+            or block > contract_creation_block(yearn.special.Ygov().vault.address)
+            ): active.remove(yearn.special.Ygov())
+
         return active
     
     
@@ -74,11 +80,8 @@ class Yearn:
         )
         return dict(zip(self.registries, desc))
 
-
     def describe_wallets(self, block=None):
-        from yearn.outputs.describers.registry import RegistryWalletDescriber
-        describer = RegistryWalletDescriber()
-        data = Parallel(4,'threading')(delayed(describer.describe_wallets)(registry, block=block) for registry in self.registries.items())
+        data = Parallel(4,'threading')(delayed(self.registries[key].describe_wallets)(block=block) for key in self.registries)
         data = {registry:desc for registry,desc in zip(self.registries,data)}
 
         wallet_balances = Counter()
@@ -94,7 +97,6 @@ class Yearn:
                 "wallet balances usd": wallet_balances
             }
         }
-        
         data.update(agg_stats)
         return data
 

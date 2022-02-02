@@ -13,6 +13,7 @@ from yearn.constants import (ERC20_TRANSFER_EVENT_HASH,
 from yearn.events import decode_logs
 from yearn.exceptions import PriceError
 from yearn.multicall2 import fetch_multicall
+from yearn.networks import Network
 from yearn.outputs.victoria import output_treasury
 from yearn.partners.partners import partners
 from yearn.partners.snapshot import WildcardWrapper, Wrapper
@@ -197,6 +198,7 @@ class Treasury:
         return collateral
 
     def maker_collateral(self, block=None) -> dict:
+        if chain.id != Network.Mainnet: return
         proxy_registry = contract('0x4678f0a6958e4D2Bc4F1BAF7Bc52E8F3564f3fE4')
         cdp_manager = contract('0x5ef30b9986345249bc32d8928B7ee64DE9435E39')
         # ychad = contract('ychad.eth')
@@ -220,9 +222,10 @@ class Treasury:
         return collateral
 
     def unit_collateral(self, block=None) -> dict:
+        if chain.id != Network.Mainnet: return
+        if block and block < 11315910: return
+        
         # NOTE: This only works for YFI collateral, must extend before using for other collaterals
-        if block and block < 11315910:
-            return
         unitVault = contract("0xb1cff81b9305166ff1efc49a129ad2afcd7bcf19")
         yfi = "0x0bc529c00C6401aEF6D220BE8C6Ea1667F6Ad93e"
         collateral = {}
@@ -262,12 +265,14 @@ class Treasury:
         return debt
 
     def maker_debt(self, block=None) -> dict:
+        if chain.id != Network.Mainnet: return
         proxy_registry = contract('0x4678f0a6958e4D2Bc4F1BAF7Bc52E8F3564f3fE4')
         cdp_manager = contract('0x5ef30b9986345249bc32d8928B7ee64DE9435E39')
         vat = contract('0x35D1b3F3D7966A1DFe207aa4514C12a259A0492B')
         ilk = encode_single('bytes32', b'YFI-A')
         dai = '0x6B175474E89094C44Da98b954EedeAC495271d0F'
         maker_debt = {}
+        ilk = encode_single('bytes32', b'YFI-A')
         for address in self.addresses:
             proxy = proxy_registry.proxies(address)
             cdp = cdp_manager.first(proxy)
@@ -279,9 +284,9 @@ class Treasury:
         return maker_debt
 
     def unit_debt(self, block=None) -> dict:
+        if chain.id != Network.Mainnet: return
+        if block and block < 11315910: return
         # NOTE: This only works for YFI based debt, must extend before using for other collaterals
-        if block and block < 11315910:
-            return
         unitVault = contract("0xb1cff81b9305166ff1efc49a129ad2afcd7bcf19")
         yfi = "0x0bc529c00C6401aEF6D220BE8C6Ea1667F6Ad93e"
         usdp = '0x1456688345527bE1f37E9e627DA0837D6f08C925'
@@ -385,7 +390,11 @@ class Treasury:
 
 class YearnTreasury(Treasury):
     def __init__(self,watch_events_forever=False):
-        super().__init__('treasury',TREASURY_WALLETS,watch_events_forever=watch_events_forever,start_block=10502337)
+        start_block = {
+            Network.Mainnet: 10502337,
+            Network.Fantom: 18950072,
+        }[chain.id]
+        super().__init__('treasury',TREASURY_WALLETS,watch_events_forever=watch_events_forever,start_block=start_block)
 
     def partners_debt(self, block=None) -> dict:
         for i, partner in enumerate(partners):
@@ -405,4 +414,8 @@ class YearnTreasury(Treasury):
 
 class StrategistMultisig(Treasury):
     def __init__(self,watch_events_forever=False):
-        super().__init__('sms',STRATEGIST_MULTISIG,watch_events_forever=watch_events_forever,start_block=11507716)
+        start_block = {
+            Network.Mainnet: 11507716,
+            Network.Fantom: 10836306,
+        }[chain.id]
+        super().__init__('sms',STRATEGIST_MULTISIG,watch_events_forever=watch_events_forever,start_block=start_block)

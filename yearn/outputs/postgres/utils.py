@@ -1,13 +1,10 @@
-from brownie import Contract, chain, ZERO_ADDRESS
-from pony.orm import ObjectNotFound, db_session, TransactionIntegrityError, select
-from yearn.cache import memory
-import logging
+from brownie import chain, ZERO_ADDRESS
+from pony.orm import db_session, select
 from yearn.entities import Address, Token, UserTx, db
 from yearn.multicall2 import fetch_multicall
-from yearn.utils import is_contract
+from yearn.utils import is_contract, contract
 
 @db_session
-@memory.cache()
 def cache_address(address: str) -> Address:
     address_entity = Address.get(chainid=chain.id, address=address)
     if not address_entity:
@@ -15,13 +12,12 @@ def cache_address(address: str) -> Address:
     return address_entity
 
 @db_session
-@memory.cache()
 def cache_token(address: str) -> Token:
     address_entity = cache_address(address)
     token = Token.get(address=address_entity)
     if not token:
-        contract = Contract(address)
-        symbol, name, decimals = fetch_multicall([contract,'symbol'],[contract,'name'],[contract,'decimals'])
+        token = contract(address)
+        symbol, name, decimals = fetch_multicall([token,'symbol'],[token,'name'],[token,'decimals'])
         token = Token(address=address_entity, symbol=symbol, name=name, decimals=decimals)
         print(f'token {symbol} added to postgres')
     return token
