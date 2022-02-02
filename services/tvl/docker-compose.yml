@@ -32,6 +32,8 @@ services:
       - PGUSER=postgres
       - PGHOST=postgres
       - PGPASS=yearn
+      - ENV
+      - SENTRY_DSN
     volumes: 
       - solidity_compilers:/root/.solcx
       - vyper_compilers:/root/.vvm

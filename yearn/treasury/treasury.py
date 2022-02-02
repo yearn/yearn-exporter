@@ -22,6 +22,7 @@ from yearn.prices.constants import weth
 from yearn.prices.magic import get_price
 from yearn.prices.magic import logger as logger_price_magic
 from yearn.utils import contract
+from yearn.decorators import sentry_catch_all, wait_or_exit_after
 
 logger = logging.getLogger(__name__)
 logger_price_magic.setLevel(logging.CRITICAL)
@@ -113,6 +114,7 @@ class Treasury:
         ]
         self._watch_events_forever = watch_events_forever
         self._done = threading.Event()
+        self._has_exception = False
         self._thread = threading.Thread(target=self.watch_transfers, daemon=True)
 
     # descriptive functions
@@ -325,12 +327,12 @@ class Treasury:
         pass
 
     # helper functions
-
+    @wait_or_exit_after
     def load_transfers(self):
         if not self._thread._started.is_set():
             self._thread.start()
-        self._done.wait()
 
+    @sentry_catch_all
     def watch_transfers(self):
         start = time.time()
         logger.info(
@@ -353,6 +355,7 @@ class Treasury:
             if not self._watch_events_forever:
                 break
             time.sleep(5)
+
 
     def process_transfers(self, logs):
         for log in logs:

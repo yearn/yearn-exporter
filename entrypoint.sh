@@ -29,4 +29,4 @@ if [[ $# -eq 0 ]]; then
 fi
 
 echo "Running brownie for $@ on network $NETWORK..."
-brownie run $@ --network $NETWORK
+brownie run $@ --network $NETWORK -r
