@@ -15,7 +15,7 @@ bridge_hosts = {
 }
 
 @app.post("/v2/{chain_id}/prices")
-async def main(chain_id: int, addresses: List[str], type: str = "jsonl"):
+async def prices(chain_id: int, addresses: List[str], type: str = "jsonl"):
     if chain_id not in bridge_hosts.keys():
         raise HTTPException(status_code=400, detail="unsupported network specified")
     if not type or type not in ["jsonl", "json"]:
