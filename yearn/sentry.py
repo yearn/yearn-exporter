@@ -20,5 +20,6 @@ def setup_sentry():
             environment=environment,
             before_send=before_send,
             debug=False,
-            integrations=[ThreadingIntegration(propagate_hub=True)]
+            integrations=[ThreadingIntegration(propagate_hub=True)],
+            ignore_errors=[KeyboardInterrupt]
         )
