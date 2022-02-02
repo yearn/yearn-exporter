@@ -136,7 +136,7 @@ def main():
     aliases_repo = requests.get(aliases_repo_url).json()
     commit = aliases_repo["object"]["sha"]
 
-    icon_url = f"https://rawcdn.githack.com/yearn/yearn-assets/{commit}/icons/multichain-tokens/1/%s/logo-128.png"
+    icon_url = f"https://rawcdn.githack.com/yearn/yearn-assets/{commit}/icons/multichain-tokens/{chain.id}/%s/logo-128.png"
 
     aliases_url = "https://raw.githubusercontent.com/yearn/yearn-assets/master/icons/aliases.json"
     aliases = requests.get(aliases_url).json()
