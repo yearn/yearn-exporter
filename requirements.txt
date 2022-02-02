@@ -19,3 +19,5 @@ pony>=0.6.7
 sqlalchemy>=1.4.26
 sentry-sdk>=1.5.1
 pytest-bdd>=5.0.0
+pydantic>=1.9.0
+orjson>=3.6.6

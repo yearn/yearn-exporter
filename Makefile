@@ -7,6 +7,7 @@ dashboards_command := docker-compose --file services/dashboard/docker-compose.ym
 tvl_command := docker-compose --file services/tvl/docker-compose.yml --project-directory .
 test_command := docker-compose --file services/dashboard/docker-compose.test.yml --project-directory .
 all_command := docker-compose --file services/dashboard/docker-compose.yml --project-directory .
+brownie_bridge_command := docker-compose --file services/brownie_bridge/docker-compose.yml --project-directory .
 
 dashboards-up:
 	$(dashboards_command) up $(flags)
@@ -34,6 +35,20 @@ tvl-build:
 
 tvl-clean-volumes:
 	$(tvl_command) down -v
+
+brownie-bridge-up:
+	$(brownie_bridge_command) up $(flags)
+
+brownie-bridge-down:
+	$(brownie_bridge_command) down
+
+brownie-bridge-build:
+	$(brownie_bridge_command) build $(BUILD_FLAGS)
+
+bb-up: brownie-bridge-up
+bb-down: brownie-bridge-down
+bb-build: brownie-bridge-build
+bb-rebuild: brownie-bridge-down brownie-bridge-build brownie-bridge-up
 
 clean-volumes: dashboards-clean-volumes tvl-clean-volumes
 
