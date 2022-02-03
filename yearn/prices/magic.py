@@ -70,7 +70,7 @@ def find_price(token, block):
         if token == '0xd9e28749e80D867d5d14217416BFf0e668C10645':
             logger.debug('xcredit -> unwrap')
             wrapper = contract(token)
-            price = get_price(wrapper.token(), block=block) * wrapper.getShareValue() / 1e18
+            price = get_price(wrapper.token(), block=block) * wrapper.getShareValue(block_identifier=block) / 1e18
 
     elif chain.id == Network.Mainnet:
         # no liquid market for yveCRV-DAO -> return CRV token price
