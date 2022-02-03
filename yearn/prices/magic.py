@@ -65,15 +65,18 @@ def find_price(token, block):
         price = yearn_lens.get_price(token, block=block)
         logger.debug("yearn -> %s", price)
 
-    # xcredit
-    elif chain.id == Network.Fantom and token == '0xd9e28749e80D867d5d14217416BFf0e668C10645':
-        logger.debug('xcredit -> unwrap')
-        wrapper = contract(token)
-        price = get_price(wrapper.token(), block=block) * wrapper.getShareValue() / 1e18
-    # no liquid market for yveCRV-DAO -> return CRV token price
-    elif chain.id == Network.Mainnet and token == '0xc5bDdf9843308380375a611c18B50Fb9341f502A' and block and block < 11786563:
-        if curve and curve.crv:
-            return get_price(curve.crv, block=block)
+    elif chain.id == Network.Fantom:
+        # xcredit
+        if token == '0xd9e28749e80D867d5d14217416BFf0e668C10645':
+            logger.debug('xcredit -> unwrap')
+            wrapper = contract(token)
+            price = get_price(wrapper.token(), block=block) * wrapper.getShareValue(block_identifier=block) / 1e18
+
+    elif chain.id == Network.Mainnet:
+        # no liquid market for yveCRV-DAO -> return CRV token price
+        if token == '0xc5bDdf9843308380375a611c18B50Fb9341f502A' and block and block < 11786563:
+            if curve and curve.crv:
+                return get_price(curve.crv, block=block)
 
     markets = [
         chainlink,
