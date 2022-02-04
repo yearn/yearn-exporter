@@ -342,7 +342,7 @@ class Treasury:
             web3.eth.filter({"fromBlock": self._start_block, "topics": topics})
             for topics in self._topics
         ]
-        for block in chain.new_blocks(height_buffer=12):
+        while True:
             for transfer_filter in transfer_filters:
                 logs = transfer_filter.get_new_entries()
                 self.process_transfers(logs)
@@ -353,7 +353,7 @@ class Treasury:
                     f"loaded {self.label} transfer events in %.3fs", time.time() - start
                 )
             if not self._watch_events_forever:
-                break
+                return
             time.sleep(5)
 
 
