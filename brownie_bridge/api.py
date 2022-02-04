@@ -1,5 +1,5 @@
 from typing import List
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException, Query
 from fastapi.responses import StreamingResponse
 from brownie_bridge.client import send
 import logging
@@ -14,18 +14,20 @@ bridge_hosts = {
   42161: 'brownie-bridge-arb'
 }
 
-@app.post("/v2/{chain_id}/prices")
-async def prices(chain_id: int, addresses: List[str], type: str = "jsonl"):
+@app.get("/v2/{chain_id}/prices")
+async def prices(chain_id: int, a: List[str] = Query(None), type: str = "json"):
+    if not a or len(a) == 0:
+        raise HTTPException(status_code=400, detail="no addresses specified")
     if chain_id not in bridge_hosts.keys():
         raise HTTPException(status_code=400, detail="unsupported network specified")
     if not type or type not in ["jsonl", "json"]:
-        logger.debug("incorrect type specified, defaulting to jsonl")
-        type = "jsonl"
+        logger.debug("incorrect type specified, defaulting to json")
+        type = "json"
 
     request = {
       "function": "get_price",
       "type": type,
-      "data": addresses
+      "data": a
     }
     return StreamingResponse(
       _bridge_streamer(request, bridge_hosts[chain_id])
