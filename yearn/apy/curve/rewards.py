@@ -43,6 +43,9 @@ def staking(address: str, pool_price: int, base_asset_price: int, block: Optiona
         # Multiple reward tokens
         queue = 0
         apr = 0
+        if not hasattr(staking_rewards, "rewardTokens"):
+            print("no reward", staking_rewards.address)
+            return apr
         try:
             token = staking_rewards.rewardTokens(queue, block_identifier=block)
         except ValueError:
