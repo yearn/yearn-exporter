@@ -109,7 +109,8 @@ def find_price(token, block):
         return price * get_price(underlying, block=block)
 
     if not price:
-        logger.error("failed to get price for %s", token)
-        raise PriceError(f'could not fetch price for {token} at {block}')
+        symbol = contract(token).symbol()
+        logger.error(f"failed to get price for {symbol} {token} at {block}'")
+        raise PriceError(f'could not fetch price for {symbol} {token} at {block}')
 
     return price
