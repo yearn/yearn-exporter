@@ -79,10 +79,6 @@ def simple(vault, samples: ApySamples) -> Apy:
     else:
         boost = MAX_BOOST
 
-    # FIXME: The HBTC v1 vault is currently still earning yield, but it is no longer boosted.
-    if vault.vault.address == "0x46AFc2dfBd1ea0c0760CAD8262A5838e803A37e5":
-        boost = 1
-
     # TODO: come up with cleaner way to deal with these new gauge rewards
     reward_apr = 0
     if hasattr(gauge, "reward_contract"):
@@ -127,10 +123,6 @@ def simple(vault, samples: ApySamples) -> Apy:
 
     pool_apr = calculate_roi(now_point, week_ago_point)
     pool_apy = (((pool_apr / 365) + 1) ** 365) - 1
-
-    # FIXME: crvANKR's pool apy going crazy
-    if vault.vault.address == "0xE625F5923303f1CE7A43ACFEFd11fd12f30DbcA4":
-        pool_apy = 0
 
     # prevent circular import for partners calculations
     from yearn.v2.vaults import Vault as VaultV2
