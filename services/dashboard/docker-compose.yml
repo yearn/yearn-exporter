@@ -109,6 +109,7 @@ services:
       - yearn-exporter
     restart: on-failure
     depends_on:
+      - victoria-metrics
       - postgres
 
   historical-treasury-exporter:
@@ -124,6 +125,7 @@ services:
       - yearn-exporter
     restart: on-failure
     depends_on:
+      - victoria-metrics
       - postgres
 
   ftm-treasury-exporter:
@@ -138,6 +140,7 @@ services:
       - yearn-exporter
     restart: on-failure
     depends_on:
+      - victoria-metrics
       - postgres
 
   historical-ftm-treasury-exporter:
@@ -153,6 +156,7 @@ services:
       - yearn-exporter
     restart: on-failure
     depends_on:
+      - victoria-metrics
       - postgres
 
   sms-exporter:
@@ -229,6 +233,7 @@ services:
       - yearn-exporter
     restart: always
     depends_on:
+      - victoria-metrics
       - postgres
 
   vmagent:

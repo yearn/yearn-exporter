@@ -81,7 +81,8 @@ class Yearn:
         return dict(zip(self.registries, desc))
 
     def describe_wallets(self, block=None):
-        data = Parallel(4,'threading')(delayed(self.registries[key].describe_wallets)(block=block) for key in self.registries)
+        from yearn.outputs.describers.registry import RegistryWalletDescriber
+        data = Parallel(4,'threading')(delayed(RegistryWalletDescriber().describe_wallets)(registry, block=block) for registry in self.registries.items())
         data = {registry:desc for registry,desc in zip(self.registries,data)}
 
         wallet_balances = Counter()

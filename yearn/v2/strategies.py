@@ -3,14 +3,11 @@ import threading
 import time
 from typing import List
 
-from brownie import Contract, chain
 from eth_utils import encode_hex, event_abi_to_log_topic
-
-from yearn.utils import safe_views, contract
-from yearn.multicall2 import fetch_multicall
-from yearn.events import create_filter, decode_logs
 from yearn.decorators import sentry_catch_all, wait_or_exit_after
-
+from yearn.events import create_filter, decode_logs
+from yearn.multicall2 import fetch_multicall
+from yearn.utils import contract, safe_views
 
 STRATEGY_VIEWS_SCALED = [
     "maxDebtPerHarvest",
@@ -74,7 +71,7 @@ class Strategy:
     def watch_events(self):
         start = time.time()
         self.log_filter = create_filter(str(self.strategy), topics=self._topics)
-        for block in chain.new_blocks(height_buffer=12):
+        while True:
             logs = self.log_filter.get_new_entries()
             events = decode_logs(logs)
             self.process_events(events)
@@ -82,7 +79,7 @@ class Strategy:
                 self._done.set()
                 logger.info("loaded %d harvests %s in %.3fs", len(self._harvests), self.name, time.time() - start)
             if not self._watch_events_forever:
-                break
+                return
             time.sleep(300)
 
     def process_events(self, events):

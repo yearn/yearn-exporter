@@ -1,6 +1,10 @@
-from sentry_sdk import Hub, init, set_tag, capture_message
-from sentry_sdk.integrations.threading import ThreadingIntegration
 import os
+
+from brownie import chain
+from sentry_sdk import Hub, capture_message, init, set_tag
+from sentry_sdk.integrations.threading import ThreadingIntegration
+
+from yearn.networks import Network
 
 environment = os.getenv('ENV', 'DEVELOPMENT')
 
@@ -21,5 +25,10 @@ def setup_sentry():
             before_send=before_send,
             debug=False,
             integrations=[ThreadingIntegration(propagate_hub=True)],
-            ignore_errors=[KeyboardInterrupt]
+            ignore_errors=[
+                KeyboardInterrupt, # these can be created when exiting a script with ctrl+c or when an exception is raised in a child thread. Ignore in both cases
+            ]
         )
+        set_tag('network',Network(chain.id).name)
+        set_tag('chainid',chain.id)
+

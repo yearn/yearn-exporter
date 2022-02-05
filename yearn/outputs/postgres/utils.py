@@ -36,6 +36,7 @@ def last_recorded_block(Entity: db.Entity) -> int:
 
 @db_session
 def fetch_balances(vault_address: str, block=None):
+    token_dbid = select(t.token_id for t in Token if t.address.chainid == chain.id and t.address.address == vault_address).first()
     if block and block > last_recorded_block(UserTx):
         # NOTE: we use `postgres.` instead of `self.` so we can make use of parallelism
         raise Exception('this block has not yet been cached into postgres')
@@ -44,11 +45,11 @@ def fetch_balances(vault_address: str, block=None):
             a.wallet, coalesce(amount_in,0) - coalesce(amount_out,0) balance
             from (
                 select "to" wallet, sum(amount) amount_in
-                from user_txs where chainid = $(chain.id) and vault = $vault_address and block <= $block
+                from user_txs where token_id = $token_dbid and block <= $block
                 group by "to" ) a
             left join (
                 select "from" wallet, sum(amount) amount_out
-                from user_txs where chainid = $(chain.id) and vault = $vault_address and block <= $block
+                from user_txs where token_id = $token_dbid and block <= $block
                 group by "from") b on a.wallet = b.wallet
                 """)
     else:
@@ -56,11 +57,11 @@ def fetch_balances(vault_address: str, block=None):
             a.wallet, coalesce(amount_in,0) - coalesce(amount_out,0) balance
             from (
                 select "to" wallet, sum(amount) amount_in
-                from user_txs where chainid = $(chain.id) and vault = $vault_address
+                from user_txs where token_id = $token_dbid
                 group by "to" ) a
             left join (
                 select "from" wallet, sum(amount) amount_out
-                from user_txs where chainid = $(chain.id) and vault = $vault_address
+                from user_txs where token_id = $token_dbid
                 group by "from") b on a.wallet = b.wallet
                 """)
     return {wallet: balance for wallet,balance in balances if wallet != ZERO_ADDRESS}
