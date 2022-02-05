@@ -49,7 +49,7 @@ def fetch_balances(vault_address: str, block=None):
                 group by "to" ) a
             left join (
                 select "from" wallet, sum(amount) amount_out
-                from user_txs where token_id = @token_dbid and block <= $block
+                from user_txs where token_id = $token_dbid and block <= $block
                 group by "from") b on a.wallet = b.wallet
                 """)
     else:
@@ -57,7 +57,7 @@ def fetch_balances(vault_address: str, block=None):
             a.wallet, coalesce(amount_in,0) - coalesce(amount_out,0) balance
             from (
                 select "to" wallet, sum(amount) amount_in
-                from user_txs where token_id = @token_dbid
+                from user_txs where token_id = $token_dbid
                 group by "to" ) a
             left join (
                 select "from" wallet, sum(amount) amount_out
