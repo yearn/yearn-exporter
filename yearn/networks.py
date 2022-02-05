@@ -1,5 +1,9 @@
 from enum import IntEnum
 
+from brownie import chain
+
+from yearn.exceptions import UnsupportedNetwork
+
 
 class Network(IntEnum):
     Mainnet = 1
@@ -14,3 +18,7 @@ class Network(IntEnum):
             return "FTM"
         elif chain_id == Network.Arbitrum:
             return "ARRB"
+        else:
+            raise UnsupportedNetwork(
+                f'chainid {chain.id} is not currently supported. Please add network details to yearn-exporter/yearn/networks.py'
+            )
