@@ -44,11 +44,21 @@ ADDITIONAL_FEEDS = {
         "0xe105621721D1293c27be7718e041a4Ce0EbB227E": "0x3E68e68ea2c3698400465e3104843597690ae0f7",  # feur
         "0x29b0Da86e484E1C0029B56e817912d778aC0EC69": "0x9B25eC3d6acfF665DfbbFD68B3C1D896E067F0ae",  # yfi
     },
+    # https://docs.chain.link/docs/avalanche-price-feeds/
+    Network.Avalanche: {
+        "0x976B3D034E162d8bD72D6b9C989d545b839003b0":
+        "0x976B3D034E162d8bD72D6b9C989d545b839003b0", # ETH
+        "0x2779D32d5166BAaa2B2b658333bA7e6Ec0C65743":
+        "0x2779D32d5166BAaa2B2b658333bA7e6Ec0C65743", # BTC
+        "0xF096872672F44d6EBA71458D74fe67F9a77a23B9":
+        "0xF096872672F44d6EBA71458D74fe67F9a77a23B9" # USDC
+    }
 }
 registries = {
     # https://docs.chain.link/docs/feed-registry/#contract-addresses
     Network.Mainnet: '0x47Fb2585D2C56Fe188D0E6ec628a38b74fCeeeDf',
     Network.Fantom: None,
+    Network.Avalanche: None,
 }
 
 
