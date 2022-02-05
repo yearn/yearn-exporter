@@ -109,8 +109,28 @@ def find_price(token, block):
         return price * get_price(underlying, block=block)
 
     if not price:
-        symbol = contract(token).symbol()
-        logger.error(f"failed to get price for {symbol} {token} at {block}'")
-        raise PriceError(f'could not fetch price for {symbol} {token} at {block}')
+        logger.error(f"failed to get price for {describe_err(token, block)}'")
+        raise PriceError(f'could not fetch price for {describe_err(token, block)}')
 
     return price
+
+
+def describe_err(token, block) -> str:
+    '''
+    Assembles a string used to provide as much useful information as possible in PriceError messages
+    '''
+    try:
+        symbol = contract(token).symbol()
+    except:
+        symbol = None
+
+    if block is None:
+        if symbol:
+            return f"{symbol} {token}"
+
+        return f"malformed token {token}"
+
+    if not symbol:
+        return f"{symbol} {token} at {block}"
+
+    return f"malformed token {token} at {block}"
