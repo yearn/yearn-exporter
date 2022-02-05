@@ -108,7 +108,7 @@ def find_price(token, block):
         logger.debug("peel %s %s", price, underlying)
         return price * get_price(underlying, block=block)
 
-    if not price:
+    if price is None:
         logger.error(f"failed to get price for {describe_err(token, block)}'")
         raise PriceError(f'could not fetch price for {describe_err(token, block)}')
 
