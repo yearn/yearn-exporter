@@ -2,6 +2,7 @@ from bisect import bisect_left
 from datetime import datetime, timedelta
 
 from semantic_version.base import Version
+from yearn.networks import Network
 
 from yearn.apy.common import (
     Apy,
@@ -177,8 +178,11 @@ def average(vault, samples: ApySamples) -> Apy:
         performance_fee = contract.strategies(strategy.strategy)['performanceFee']
         proportional_fee = debt_ratio * performance_fee
         strategy_fees.append(proportional_fee)
-    
-    # we should look at a vault's harvests, age, etc to determine whether to show new APY or not
+
+    strategy_performance = sum(strategy_fees)
+    vault_performance = contract.performanceFee() if hasattr(contract, "performanceFee") else 0
+    management = contract.managementFee() if hasattr(contract, "managementFee") else 0
+    performance = vault_performance + strategy_performance
 
     # use the first non-zero apy, ordered by precedence
     apys = [now_apy, week_ago_apy, month_ago_apy, inception_apy]
@@ -189,25 +193,15 @@ def average(vault, samples: ApySamples) -> Apy:
         apys.append(inception_apy)
 
     net_apy = next((value for value in apys if value != 0), 0)
-
-    # for performance fee, half comes from strategy (strategist share) and half from the vault (treasury share)
-    strategy_fees = []
-    for strategy in vault.strategies: # look at all of our strategies
-        debt_ratio = contract.strategies(strategy.strategy)['debtRatio'] / 10000
-        performance_fee = contract.strategies(strategy.strategy)['performanceFee']
-        proportional_fee = debt_ratio * performance_fee
-        strategy_fees.append(proportional_fee)
     
-    strategy_performance = sum(strategy_fees)
-    vault_performance = contract.performanceFee() if hasattr(contract, "performanceFee") else 0
-    management = contract.managementFee() if hasattr(contract, "managementFee") else 0
-    performance = vault_performance + strategy_performance
-
     performance /= 1e4
     management /= 1e4
 
-    # assume we are compounding every week
-    compounding = 52
+    # assume we are compounding every week on mainnet, daily on sidechains
+    if chain.id == Network.Mainnet:
+        compounding = 52
+    else:
+        compounding = 365.25
 
     # calculate our APR after fees
     # if net_apy is negative no fees are charged
