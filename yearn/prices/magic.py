@@ -126,11 +126,11 @@ def describe_err(token, block) -> str:
 
     if block is None:
         if symbol:
-            return f"{symbol} {token}"
+            return f"{symbol} {token} on {Network(chain.id).name}"
 
-        return f"malformed token {token}"
+        return f"malformed token {token} on {Network(chain.id).name}"
 
     if not symbol:
-        return f"{symbol} {token} at {block}"
+        return f"{symbol} {token} on {Network(chain.id).name} at {block}"
 
-    return f"malformed token {token} at {block}"
+    return f"malformed token {token} on {Network(chain.id).name} at {block}"
