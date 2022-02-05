@@ -11,7 +11,10 @@ class Network(IntEnum):
     Arbitrum = 42161
 
     @staticmethod
-    def label(chain_id):
+    def label(chain_id: int = None):
+        if chain_id is None:
+            chain_id = chain.id
+
         if chain_id == Network.Mainnet:
             return "ETH"
         elif chain_id == Network.Fantom:
@@ -20,5 +23,5 @@ class Network(IntEnum):
             return "ARRB"
         else:
             raise UnsupportedNetwork(
-                f'chainid {chain.id} is not currently supported. Please add network details to yearn-exporter/yearn/networks.py'
+                f'chainid {chain_id} is not currently supported. Please add network details to yearn-exporter/yearn/networks.py'
             )
