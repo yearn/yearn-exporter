@@ -10,6 +10,9 @@ from semantic_version.base import Version
 
 SECONDS_PER_YEAR = 31_556_952.0
 
+# set this if we want to try to use composite or not
+try_composite = False
+
 @dataclass
 class SharePricePoint:
     block: int
@@ -46,6 +49,8 @@ class Apy:
 class StrategyApy:
     gross_apr: float
     net_apy: float
+    fees: ApyFees
+    composite: Optional[Dict[str, float]] = None
 
 @dataclass
 class ApySamples:

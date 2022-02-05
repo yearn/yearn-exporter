@@ -13,6 +13,7 @@ from yearn.apy.common import (
     ApySamples,
     SharePricePoint,
     calculate_roi,
+    try_composite as crv_composite
 )
 
 def closest(haystack, needle):
@@ -179,6 +180,73 @@ def average(vault, samples: ApySamples) -> Apy:
         performance_fee = contract.strategies(strategy.strategy)['performanceFee']
         proportional_fee = debt_ratio * performance_fee
         strategy_fees.append(proportional_fee)
+        
+        # for curve vaults, we need more data
+        if hasattr(strategy.strategy, "keepCRV") or hasattr(strategy.strategy, "keepCrvPercent"):
+            # get price points for our historical pool APY
+            lp_token = vault.token.address
+            pool_address = curve.get_pool(lp_token)
+            print("pool_address", pool_address)
+            pool = get_contract(pool_address)         
+            print("pool", pool)   
+            pool_virtual_price = pool.get_virtual_price
+            
+            # get our virtual prices at different timepoints
+            now_price = pool_virtual_price(block_identifier=samples.now)
+            try:
+                week_ago_pool_price = pool_virtual_price(block_identifier=samples.week_ago)
+            except ValueError:
+                week_ago_pool_price = 1e18
+            try:
+                month_ago_pool_price = pool_virtual_price(block_identifier=samples.month_ago)
+            except ValueError:
+                month_ago_pool_price = 1e18
+            try:
+                inception_pool_price = pool_virtual_price(block_identifier=inception_block)
+            except ValueError:
+                inception_pool_price = 1e18
+            
+            now_point = SharePricePoint(samples.now, now_price)
+            week_ago_point = SharePricePoint(samples.week_ago, week_ago_pool_price)
+            month_ago_point = SharePricePoint(samples.month_ago, month_ago_pool_price)
+            inception_point = SharePricePoint(inception_block, inception_pool_price)
+            
+            curve_apy = now_apy
+            
+            # calculate our pool APYs
+            pool_apr = calculate_roi(now_point, week_ago_point)
+            weekly_pool_apy = (((pool_apr / 365) + 1) ** 365) - 1
+            monthly_pool_apr = calculate_roi(now_point, month_ago_point)
+            monthly_pool_apy = (((monthly_pool_apr / 365) + 1) ** 365) - 1
+            inception_pool_apr = calculate_roi(now_point, inception_point)
+            inception_pool_apy = (((inception_pool_apr / 365) + 1) ** 365) - 1
+            
+            # update our historical apys with pool data
+            week_ago_apy = (1+ week_ago_apy) * (1 + weekly_pool_apy) - 1
+            month_ago_apy = (1+ month_ago_apy) * (1 + monthly_pool_apy) - 1
+            inception_apy = (1+ inception_apy) * (1 + inception_pool_apy) - 1
+            
+            if crv_composite:
+               keep_crv += strategy.apy.fees.keep_crv * debt_ratio
+               boost += strategy.apy.strategy_composite["boost"] * debt_ratio
+               pool_apy += strategy.apy.strategy_composite["pool_apy"] * debt_ratio
+               base_apr += strategy.apy.strategy_composite["base_apr"] * debt_ratio
+               boosted_apr += strategy.apy.strategy_composite["boosted_apr"] * debt_ratio
+               reward_apr += strategy.apy.strategy_composite["rewards_apr"] * debt_ratio
+               cvx_apr += strategy.apy.strategy_composite["cvx_apr"] * debt_ratio
+            
+    if crv_composite:
+        composite = {
+            "boost": boost,
+            "pool_apy": pool_apy,
+            "base_apr": base_apr,
+            "boosted_apr": boosted_apr,
+            "rewards_apr": reward_apr,
+            "cvx_apr": cvx_apr,
+        }
+
+    if curve_apy > 0:
+        now_apy = (1 + curve_apy) * (1 + weekly_pool_apy) - 1
 
     strategy_performance = sum(strategy_fees)
     vault_performance = contract.performanceFee() if hasattr(contract, "performanceFee") else 0
@@ -217,4 +285,7 @@ def average(vault, samples: ApySamples) -> Apy:
 
     points = ApyPoints(now_apy, week_ago_apy, month_ago_apy, inception_apy)
     fees = ApyFees(performance=performance, management=management)
-    return Apy("v2:averaged", gross_apr, net_apy, fees, points=points)
+    if crv_composite:
+        return Apy("v2:aggregate", gross_apr, net_apy, fees, points=points, composite=composite)
+    else:
+        return Apy("v2:aggregate", gross_apr, net_apy, fees, points=points)

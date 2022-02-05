@@ -4,7 +4,7 @@ from time import time
 from brownie import ZERO_ADDRESS, Contract, chain, interface
 from semantic_version import Version
 from yearn.apy.common import (SECONDS_PER_YEAR, Apy, ApyError, ApyFees,
-                              ApySamples, SharePricePoint, calculate_roi, get_samples, StrategyApy)
+                              ApySamples, SharePricePoint, calculate_roi, get_samples, StrategyApy, try_composite as crv_composite)
 from yearn.apy.curve.rewards import rewards
 from yearn.networks import Network
 from yearn.prices.curve import curve
@@ -248,8 +248,11 @@ def curve_strategy_apy(strategy) -> StrategyApy:
         
         fees = ApyFees(performance=performance, management=management, keep_crv=keep_crv)
         print("end of convex")
-        return StrategyApy("convex", gross_apr, net_apy, fees) # strategy_composite=strategy_composite)
         
+        if crv_composite:
+            return StrategyApy("convex", gross_apr, net_apy, fees, composite=strategy_composite)
+        else:
+            return StrategyApy("convex", gross_apr, net_apy, fees)     
     else:
         print("not a convex strategy")
 
@@ -258,4 +261,7 @@ def curve_strategy_apy(strategy) -> StrategyApy:
         net_apy = 0
 
     fees = ApyFees(performance=performance, management=management, keep_crv=keep_crv)
-    return StrategyApy("curve", gross_apr, net_apy, fees) # strategy_composite=strategy_composite)
+    if crv_composite:
+        return StrategyApy("curve", gross_apr, net_apy, fees, composite=strategy_composite)
+    else:
+        return StrategyApy("curve", gross_apr, net_apy, fees)
