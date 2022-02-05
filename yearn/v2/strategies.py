@@ -2,7 +2,7 @@ import logging
 import threading
 import time
 from typing import List
-from yearn.apy import StrategyApy
+from yearn.apy.common import StrategyApy, ApyFees
 
 from brownie import Contract, chain
 from eth_utils import encode_hex, event_abi_to_log_topic
@@ -11,6 +11,7 @@ from yearn.utils import safe_views, contract
 from yearn.multicall2 import fetch_multicall
 from yearn.events import create_filter, decode_logs
 from yearn.apy.curve.strategy import curve_strategy_apy
+from yearn.prices.curve import curve
 
 SECONDS_IN_YEAR = 31557600
 
@@ -138,12 +139,12 @@ class Strategy:
 
         # Not enough profitable harvests
         if profitable_harvests_count < 2:
-            return StrategyApy(0, 0)
+            return StrategyApy(0, 0, 0)
 
         # Not enough data
         have_enough_data = second_latest_harvest_with_profit_idx + 1 < len(harvests)
         if have_enough_data == False:
-            return StrategyApy(0, 0)
+            return StrategyApy(0, 0, 0)
 
         # Latest profitable harvest
         latest_harvest_with_profit_current = harvests[latest_harvest_with_profit_idx]
@@ -200,7 +201,8 @@ class Strategy:
         net_apy = (1 + (apr_minus_fees / compounding)) ** compounding - 1
 
         # Return estimated APY
-        return StrategyApy(apr, net_apy)
+        fees = ApyFees(performance=performance_fee, management=management_fee)
+        return StrategyApy(apr, net_apy, fees)
 
     def describe(self, block=None):
         results = fetch_multicall(

@@ -4,7 +4,8 @@ from datetime import datetime, timedelta
 from semantic_version.base import Version
 from yearn.networks import Network
 from brownie import chain
-
+from yearn.prices.curve import curve
+from yearn.utils import contract as get_contract
 from yearn.apy.common import (
     Apy,
     ApyError,
@@ -167,6 +168,7 @@ def average(vault, samples: ApySamples) -> Apy:
 
     strategy_fees = []
     now_apy = 0
+    curve_apy = 0
     
     # generate our average strategy APY and get our fees
     for strategy in vault.strategies:

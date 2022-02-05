@@ -9,7 +9,7 @@ from yearn.apy.curve.rewards import rewards
 from yearn.networks import Network
 from yearn.prices.curve import curve
 from yearn.prices.magic import get_price
-from yearn.utils import get_block_timestamp, contract
+from yearn.utils import get_block_timestamp, contract as get_contract
 
 logger = logging.getLogger(__name__)
 
@@ -37,7 +37,7 @@ def curve_strategy_apy(strategy) -> StrategyApy:
     
     # calculate our curve pool APY, needed for curve and convex
     pool_address = curve.get_pool(lp_token)
-    pool = contract(pool_address)
+    pool = get_contract(pool_address)
     block = samples.now
     pool_price = pool.get_virtual_price(block_identifier=block)
 
@@ -59,11 +59,11 @@ def curve_strategy_apy(strategy) -> StrategyApy:
     if gauge_address is None:
         raise ApyError("crv", "no gauge")
 
-    gauge = contract(gauge_address)
+    gauge = get_contract(gauge_address)
 
     try:
         controller = gauge.controller()
-        controller = contract(controller)
+        controller = get_contract(controller)
     except:
         # newer gauges do not have a 'controller' method
         controller = curve.gauge_controller
@@ -177,22 +177,22 @@ def curve_strategy_apy(strategy) -> StrategyApy:
         else:
             cvx_boost = MAX_BOOST
         
-        cvx_booster = contract(addresses[chain.id]['convex_booster'])
+        cvx_booster = get_contract(addresses[chain.id]['convex_booster'])
         cvx_lock_incentive = cvx_booster.lockIncentive(block_identifier=block)
         cvx_staker_incentive = cvx_booster.stakerIncentive(block_identifier=block)
         cvx_earmark_incentive = cvx_booster.earmarkIncentive(block_identifier=block)
         cvx_platform_fee = cvx_booster.platformFee(block_identifier=block)
         cvx_fee = (cvx_lock_incentive + cvx_staker_incentive + cvx_earmark_incentive + cvx_platform_fee) / 1e4
-        cvx_keep_crv = cvx_strategy.keepCRV(block_identifier=block) / 1e4
+        cvx_keep_crv = strategy_contract.keepCRV(block_identifier=block) / 1e4
         
         # pull data from convex's virtual rewards contracts to get bonus rewards, so far only CVX
-        rewards_contract = contract(cvx_booster.poolInfo(pid)["crvRewards"])
+        rewards_contract = get_contract(cvx_booster.poolInfo(pid)["crvRewards"])
         rewards_length = rewards_contract.extraRewardsLength()
         if rewards_length > 0:
             reward_apr = 0 # reset our rewards apr if we're calculating it via convex
             for x in range(rewards_length):
                 print("This is our x value:", x)
-                virtual_rewards_pool = contract(rewards_contract.extraRewards(x))
+                virtual_rewards_pool = get_contract(rewards_contract.extraRewards(x))
                  # do this for all assets, which will duplicate much of the curve info but we don't want to miss anything
                 if virtual_rewards_pool.periodFinish() > current_time:
                     reward_apr += (virtual_rewards_pool.rewardRate() * SECONDS_PER_YEAR * get_price(virtual_rewards_pool.rewardToken(), block=block)) / (base_asset_price * (pool_price / 1e18) * virtual_rewards_pool.totalSupply())
@@ -201,7 +201,7 @@ def curve_strategy_apy(strategy) -> StrategyApy:
         total_cliff = 1e3
         max_supply = 1e2 * 1e6 * 1e18
         reduction_per_cliff = 1e23
-        cvx = contract(addresses[chain.id]['cvx'])
+        cvx = get_contract(addresses[chain.id]['cvx'])
         supply = cvx.totalSupply(block_identifier=block)
         cliff = supply / reduction_per_cliff
         
