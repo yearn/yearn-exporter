@@ -29,6 +29,6 @@ def setup_sentry():
                 KeyboardInterrupt, # these can be created when exiting a script with ctrl+c or when an exception is raised in a child thread. Ignore in both cases
             ]
         )
-        set_tag('network',Network.label(chain.id))
+        set_tag('network',Network(chain.id).name)
         set_tag('chainid',chain.id)
 
