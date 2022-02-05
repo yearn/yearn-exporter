@@ -10,6 +10,7 @@ from eth_utils import encode_hex, event_abi_to_log_topic
 from yearn.utils import safe_views, contract
 from yearn.multicall2 import fetch_multicall
 from yearn.events import create_filter, decode_logs
+from yearn.apy.curve.strategy import curve_strategy_apy
 
 SECONDS_IN_YEAR = 31557600
 
@@ -117,6 +118,10 @@ class Strategy:
 
     @property
     def apy(self) -> StrategyApy:
+        # use forward-looking data for curve and convex
+        if curve and curve.get_pool(self.strategy.want()):
+            return curve_strategy_apy(self)
+        
         harvests = self.harvests_data
 
         # Find at least two profitable harvests

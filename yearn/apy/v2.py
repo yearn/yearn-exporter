@@ -3,6 +3,7 @@ from datetime import datetime, timedelta
 
 from semantic_version.base import Version
 from yearn.networks import Network
+from brownie import chain
 
 from yearn.apy.common import (
     Apy,
