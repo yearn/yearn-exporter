@@ -14,7 +14,7 @@ from yearn.prices.synthetix import synthetix
 from yearn.prices.uniswap.v1 import uniswap_v1
 from yearn.prices.uniswap.v2 import uniswap_v2
 from yearn.prices.uniswap.v3 import uniswap_v3
-from yearn.prices.curve import curve
+from yearn.prices import curve
 from yearn.prices.yearn import yearn_lens
 from yearn.utils import contract
 
@@ -65,7 +65,8 @@ def find_price(token, block):
         price = yearn_lens.get_price(token, block=block)
         logger.debug("yearn -> %s", price)
 
-    elif chain.id == Network.Fantom:
+    # token-specific overrides
+    if chain.id == Network.Fantom:
         # xcredit
         if token == '0xd9e28749e80D867d5d14217416BFf0e668C10645':
             logger.debug('xcredit -> unwrap')
@@ -75,12 +76,12 @@ def find_price(token, block):
     elif chain.id == Network.Mainnet:
         # no liquid market for yveCRV-DAO -> return CRV token price
         if token == '0xc5bDdf9843308380375a611c18B50Fb9341f502A' and block and block < 11786563:
-            if curve and curve.crv:
-                return get_price(curve.crv, block=block)
+            if curve.curve and curve.curve.crv:
+                return get_price(curve.curve.crv, block=block)
 
     markets = [
         chainlink,
-        curve,
+        curve.curve,
         compound,
         fixed_forex,
         synthetix,
