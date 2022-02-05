@@ -171,8 +171,24 @@ def simple(vault, samples: ApySamples) -> Apy:
         cvx_lock_incentive = cvx_booster.lockIncentive(block_identifier=block)
         cvx_staker_incentive = cvx_booster.stakerIncentive(block_identifier=block)
         cvx_earmark_incentive = cvx_booster.earmarkIncentive(block_identifier=block)
-        cvx_fee = (cvx_lock_incentive + cvx_staker_incentive + cvx_earmark_incentive) / 1e4
+        cvx_platform_fee = cvx_booster.platformFee(block_identifier=block)
+        cvx_fee = (cvx_lock_incentive + cvx_staker_incentive + cvx_earmark_incentive + cvx_platform_fee) / 1e4
         cvx_keep_crv = cvx_strategy.keepCRV(block_identifier=block) / 1e4
+        
+        # pull data from convex's virtual rewards contracts to get bonus rewards, so far only CVX
+        pid = cvx_strategy.pid()
+        rewards_contract = contract(cvx_booster.poolInfo(pid)["crvRewards"])
+        rewards_length = rewards_contract.extraRewardsLength()
+        current_time = time() if block is None else get_block_timestamp(block)
+        if rewards_length > 0:
+            reward_apr = 0 # reset our rewards apr if we're calculating it via convex
+            for x in range(rewards_length):
+                print("This is our x value:", x)
+                virtual_rewards_pool = contract(rewards_contract.extraRewards(x))
+                 # do this for all assets, which will duplicate much of the curve info but we don't want to miss anything
+                if virtual_rewards_pool.periodFinish() > current_time:
+                    reward_apr += (virtual_rewards_pool.rewardRate() * SECONDS_PER_YEAR * get_price(virtual_rewards_pool.rewardToken(), block=block)) / (base_asset_price * (pool_price / 1e18) * virtual_rewards_pool.totalSupply())
+
 
         total_cliff = 1e3
         max_supply = 1e2 * 1e6 * 1e18 # ?
