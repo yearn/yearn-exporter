@@ -27,6 +27,7 @@ from yearn.exceptions import UnsupportedNetwork
 from yearn.multicall2 import fetch_multicall
 from yearn.networks import Network
 from yearn.utils import Singleton, contract
+from yearn.decorators import sentry_catch_all, wait_or_exit_after
 
 from yearn.prices import magic
 
@@ -80,6 +81,8 @@ class Ids(IntEnum):
 
 
 class CurveRegistry(metaclass=Singleton):
+
+    @wait_or_exit_after
     def __init__(self):
         if chain.id not in curve_contracts:
             raise UnsupportedNetwork("curve is not supported on this network")
@@ -98,9 +101,10 @@ class CurveRegistry(metaclass=Singleton):
 
         self._done = threading.Event()
         self._thread = threading.Thread(target=self.watch_events, daemon=True)
+        self._has_exception = False
         self._thread.start()
-        self._done.wait()
 
+    @sentry_catch_all
     def watch_events(self):
         address_provider_filter = create_filter(str(self.address_provider))
         registries = []
