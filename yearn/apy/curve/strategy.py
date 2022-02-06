@@ -140,7 +140,7 @@ def curve_strategy_apy(strategy) -> StrategyApy:
     crv_apr_minus_keep_crv = base_apr * boost * (1 - keep_crv)
 
     # assume we are compounding every week on mainnet, daily on sidechains
-    if chain.id == 1:
+    if chain.id == Network.Mainnet:
         compounding = 52
     else:
         compounding = 365.25
@@ -157,12 +157,12 @@ def curve_strategy_apy(strategy) -> StrategyApy:
     net_apy = ((1 + crv_net_farmed_apy) * (1 + pool_apy)) - 1
         
     strategy_composite = {
-            "boost": boost,
-            "pool_apy": pool_apy,
-            "base_apr": base_apr,
-            "boosted_apr": boosted_apr,
-            "rewards_apr": curve_reward_apr,
-            "cvx_apr": 0,
+            "boost": boost, # the boost, from 1-2.5, that a strategy has
+            "pool_apy": pool_apy, # APY of the underlying pool, generally based on the past week
+            "base_apr": base_apr, # base APR of CRV emissions with no boost
+            "boosted_apr": boosted_apr, # boost * base_apr
+            "rewards_apr": curve_reward_apr, # rewards from extra tokens on the Curve gauge
+            "cvx_apr": 0, # CVX emissions are zero for curve voter strats
     }
 
     # as long as we have a convex strategy, calculate our convex APY
@@ -189,13 +189,13 @@ def curve_strategy_apy(strategy) -> StrategyApy:
         rewards_contract = get_contract(cvx_booster.poolInfo(pid)["crvRewards"])
         rewards_length = rewards_contract.extraRewardsLength()
         if rewards_length > 0:
-            reward_apr = 0 # reset our rewards apr if we're calculating it via convex
+            cvx_reward_apr = 0 # reset our rewards apr if we're calculating it via convex
             for x in range(rewards_length):
                 print("This is our x value:", x)
                 virtual_rewards_pool = get_contract(rewards_contract.extraRewards(x))
                  # do this for all assets, which will duplicate much of the curve info but we don't want to miss anything
                 if virtual_rewards_pool.periodFinish() > current_time:
-                    reward_apr += (virtual_rewards_pool.rewardRate() * SECONDS_PER_YEAR * get_price(virtual_rewards_pool.rewardToken(), block=block)) / (base_asset_price * (pool_price / 1e18) * virtual_rewards_pool.totalSupply())
+                    cvx_reward_apr += (virtual_rewards_pool.rewardRate() * SECONDS_PER_YEAR * get_price(virtual_rewards_pool.rewardToken(), block=block)) / (base_asset_price * (pool_price / 1e18) * virtual_rewards_pool.totalSupply())
 
         # this is some black magic based on CVX emissions from the token contract
         total_cliff = 1e3
@@ -215,12 +215,13 @@ def curve_strategy_apy(strategy) -> StrategyApy:
         else:
             cvx_printed_as_crv = 0
         
-        gross_apr = ((1 - cvx_fee) * cvx_boost * base_apr) * (1 + cvx_printed_as_crv) + reward_apr
+        # this is our gross emissions APR, without the underlying pool earnings
+        convex_apr = ((1 - cvx_fee) * cvx_boost * base_apr) * (1 + cvx_printed_as_crv) + cvx_reward_apr
+        print("This is what makes up our emission-only APR for strategy:", "cvx_fee:", cvx_fee, "cvx_boost:", cvx_boost, "base_apr:", base_apr, "cvx_printed_as_crv:", cvx_printed_as_crv, "cvx_reward_apr:", cvx_reward_apr)
         cvx_boosted_apr = (1 - cvx_fee) * cvx_boost * base_apr
-        cvx_apr_minus_keep_crv = ((1 - cvx_fee) * cvx_boost * base_apr) * ((1 - keep_crv) + cvx_printed_as_crv)
         
         # cvx_apr is how much extra yield convex adds with cvx printing alone, directly for CRV and in virtual rewards pools
-        cvx_apr = gross_apr - cvx_boosted_apr - curve_reward_apr
+        cvx_apr = convex_apr - cvx_boosted_apr - curve_reward_apr
         
         # add in our fees
         strategy_performance_fee = vault_contract.strategies(strategy_contract)['performanceFee'] / 1e4
@@ -228,27 +229,29 @@ def curve_strategy_apy(strategy) -> StrategyApy:
         performance = vault_performance_fee + strategy_performance_fee
         management = vault_contract.managementFee(block_identifier=block) / 1e4 if hasattr(vault_contract, "managementFee") else 0
         
-        # calculate our net apy
-        cvx_net_apr = (cvx_apr_minus_keep_crv + reward_apr) * (1 - performance) - management
+        # calculate our gross APR and net APY
+        gross_apr = (1 + convex_apr) * (1 + pool_apy) - 1
+        cvx_apr_minus_keep_crv = ((1 - cvx_fee) * cvx_boost * base_apr) * ((1 - cvx_keep_crv) + cvx_printed_as_crv)
+        cvx_net_apr = (cvx_apr_minus_keep_crv + cvx_reward_apr) * (1 - performance) - management
         cvx_net_farmed_apy = (1 + (cvx_net_apr / compounding)) ** compounding - 1
         net_apy = ((1 + cvx_net_farmed_apy) * (1 + pool_apy)) - 1
         
         strategy_composite = {
-            "boost": cvx_boost,
-            "pool_apy": pool_apy,
-            "base_apr": base_apr,
-            "boosted_apr": cvx_boosted_apr,
-            "rewards_apr": reward_apr,
-            "cvx_apr": cvx_apr,
+            "boost": cvx_boost, # the boost, from 1-2.5, that a strategy has
+            "pool_apy": pool_apy, # APY of the underlying pool, generally based on the past week
+            "base_apr": base_apr, # base APR of CRV emissions with no boost
+            "boosted_apr": cvx_boosted_apr, # boost * base_apr
+            "rewards_apr": cvx_reward_apr, # rewards from extra tokens on the Curve gauge or that Convex incentivizes with in the virtual reward pools
+            "cvx_apr": cvx_apr, # CVX emissions plus anything from virtual reward
         }
-        
+
         print("Here is our Convex Strat composite data:", strategy_composite)
         
         # 0.3.5+ should never be < 0% because of management
         if net_apy < 0 and Version(vault_contract.api_version()) >= Version("0.3.5"):
             net_apy = 0
         
-        fees = ApyFees(performance=performance, management=management, keep_crv=keep_crv)
+        fees = ApyFees(performance=performance, management=management, keep_crv=cvx_keep_crv)
         print("end of convex")
         
         if crv_composite:

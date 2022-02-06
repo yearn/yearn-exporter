@@ -212,9 +212,7 @@ def average(vault, samples: ApySamples) -> Apy:
             week_ago_point = SharePricePoint(samples.week_ago, week_ago_pool_price)
             month_ago_point = SharePricePoint(samples.month_ago, month_ago_pool_price)
             inception_point = SharePricePoint(inception_block, inception_pool_price)
-            
-            curve_apy = now_apy
-            
+                        
             # calculate our pool APYs
             pool_apr = calculate_roi(now_point, week_ago_point)
             weekly_pool_apy = (((pool_apr / 365) + 1) ** 365) - 1
@@ -246,9 +244,6 @@ def average(vault, samples: ApySamples) -> Apy:
             "rewards_apr": reward_apr,
             "cvx_apr": cvx_apr,
         }
-
-    if curve_apy > 0:
-        now_apy = (1 + curve_apy) * (1 + weekly_pool_apy) - 1
 
     strategy_performance = sum(strategy_fees)
     vault_performance = contract.performanceFee() if hasattr(contract, "performanceFee") else 0

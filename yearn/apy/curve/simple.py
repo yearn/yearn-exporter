@@ -198,6 +198,7 @@ def simple(vault, samples: ApySamples) -> Apy:
             cvx_printed_as_crv = 0
 
         cvx_apr = ((1 - cvx_fee) * cvx_boost * base_apr) * (1 + cvx_printed_as_crv) + reward_apr
+        print("This is what makes up our emission-only APR for vault:", "cvx_fee:", cvx_fee, "cvx_boost:", cvx_boost, "base_apr:", base_apr, "cvx_printed_as_crv:", cvx_printed_as_crv, "cvx_reward_apr:", reward_apr)
         cvx_apr_minus_keep_crv = ((1 - cvx_fee) * cvx_boost * base_apr) * ((1 - cvx_keep_crv) + cvx_printed_as_crv)
         
         crv_debt_ratio = vault.vault.strategies(crv_strategy)[2] / 1e4
