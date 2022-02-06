@@ -242,6 +242,8 @@ def curve_strategy_apy(strategy) -> StrategyApy:
             "cvx_apr": cvx_apr,
         }
         
+        print("Here is our Convex Strat composite data:", strategy_composite)
+        
         # 0.3.5+ should never be < 0% because of management
         if net_apy < 0 and Version(vault_contract.api_version()) >= Version("0.3.5"):
             net_apy = 0
@@ -255,6 +257,7 @@ def curve_strategy_apy(strategy) -> StrategyApy:
             return StrategyApy("convex", gross_apr, net_apy, fees)     
     else:
         print("not a convex strategy")
+        print("Here is our Curve strat omposite data:", strategy_composite)
 
     # 0.3.5+ should never be < 0% because of management
     if net_apy < 0 and Version(vault_contract.api_version()) >= Version("0.3.5"):
