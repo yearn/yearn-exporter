@@ -13,19 +13,22 @@ Metapool Factory (id 3)
     v2 = 0xB9fC157394Af804a3578134A6585C0dc9cc990d4
 """
 import logging
+import threading
+import time
 from collections import defaultdict
+from enum import IntEnum
 from functools import lru_cache
-from itertools import islice
 
 from brownie import ZERO_ADDRESS, chain
+from brownie.convert import to_address
 from cachetools.func import lru_cache, ttl_cache
-
 from yearn.events import create_filter, decode_logs
 from yearn.exceptions import UnsupportedNetwork
 from yearn.multicall2 import fetch_multicall
 from yearn.networks import Network
-from yearn.prices import magic
 from yearn.utils import Singleton, contract
+
+from yearn.prices import magic
 
 logger = logging.getLogger(__name__)
 
@@ -55,6 +58,8 @@ curve_contracts = {
         'crv': '0xD533a949740bb3306d119CC777fa900bA034cd52',
         'voting_escrow': '0x5f3b5DfEb7B28CDbD7FAba78963EE202a494e2A2',
         'gauge_controller': '0x2F50D538606Fa9EDD2B11E2446BEb18C9D5846bB',
+        # additional factories not listed as metapool factory
+        'factories': ['0xF18056Bbd320E96A48e3Fbf8bC061322531aac99'],
     },
     Network.Fantom: {
         'address_provider': ADDRESS_PROVIDER,
@@ -63,6 +68,15 @@ curve_contracts = {
         'address_provider': ADDRESS_PROVIDER,
     },
 }
+
+
+class Ids(IntEnum):
+    Main_Registry = 0
+    PoolInfo_Getters = 1
+    Exchanges = 2
+    Metapool_Factory = 3
+    Fee_Distributor = 4
+    CryptoSwap_Registry = 5
 
 
 class CurveRegistry(metaclass=Singleton):
@@ -76,70 +90,79 @@ class CurveRegistry(metaclass=Singleton):
             self.voting_escrow = contract(addrs['voting_escrow'])
             self.gauge_controller = contract(addrs['gauge_controller'])
 
-        self.pools = set()
-        self.identifiers = defaultdict(list)
+        self.identifiers = defaultdict(list)  # id -> versions
+        self.registries = defaultdict(set)  # registry -> pools
+        self.factories = defaultdict(set)  # factory -> pools
+        self.token_to_pool = dict()  # lp_token -> pool
         self.address_provider = contract(addrs['address_provider'])
-        self.crypto_swap_registry = contract(self.address_provider.get_address(5))
-        self.watch_events()
+
+        self._done = threading.Event()
+        self._thread = threading.Thread(target=self.watch_events, daemon=True)
+        self._thread.start()
+        self._done.wait()
 
     def watch_events(self):
-        # TODO keep fresh in background
+        address_provider_filter = create_filter(str(self.address_provider))
+        registries = []
+        registries_filter = None
 
-        # fetch all registries and factories from address provider
-        log_filter = create_filter(str(self.address_provider))
-        for event in decode_logs(log_filter.get_new_entries()):
-            if event.name == 'NewAddressIdentifier':
-                self.identifiers[event['id']].append(event['addr'])
-            if event.name == 'AddressModified':
-                self.identifiers[event['id']].append(event['new_address'])
+        while True:
+            # fetch all registries and factories from address provider
+            for event in decode_logs(address_provider_filter.get_new_entries()):
+                if event.name == 'NewAddressIdentifier':
+                    self.identifiers[Ids(event['id'])].append(event['addr'])
+                if event.name == 'AddressModified':
+                    self.identifiers[Ids(event['id'])].append(event['new_address'])
 
-        # fetch pools from the latest registry
-        log_filter = create_filter(str(self.registry))
-        for event in decode_logs(log_filter.get_new_entries()):
-            if event.name == 'PoolAdded':
-                self.pools.add(event['pool'])
+            # if registries were updated, recreate the filter
+            _registries = [
+                self.identifiers[i][-1]
+                for i in [Ids.Main_Registry, Ids.CryptoSwap_Registry]
+            ]
+            if _registries != registries:
+                registries = _registries
+                registries_filter = create_filter(registries)
 
-        log_filter = create_filter(str(self.crypto_swap_registry))
-        for event in decode_logs(log_filter.get_new_entries()):
-            if event.name == 'PoolAdded':
-                self.pools.add(event['pool'])    
+            # fetch pools from the latest registries
+            for event in decode_logs(registries_filter.get_new_entries()):
+                if event.name == 'PoolAdded':
+                    self.registries[event.address].add(event['pool'])
+                    lp_token = contract(event.address).get_lp_token(event['pool'])
+                    self.token_to_pool[lp_token] = event['pool']
 
-        logger.info(f'loaded {len(self.pools)} pools')
+            # load metapool and curve v5 factories
+            self.load_factories()
 
-    @property
-    def registry(self):
-        return contract(self.identifiers[0][-1])
+            if not self._done.is_set():
+                self._done.set()
+                logger.info(f'loaded {len(self.token_to_pool)} pools from {len(self.registries)} registries and {len(self.factories)} factories')
 
-    @property
-    @ttl_cache(ttl=3600)
-    def metapools_by_factory(self):
-        """
-        Read cached pools spawned by each factory.
-        TODO Update on factory events
-        """
-        metapool_factories = [contract(factory) for factory in self.identifiers[3]]
-        pool_counts = fetch_multicall(
-            *[[factory, 'pool_count'] for factory in metapool_factories]
+            time.sleep(600)
+
+    def read_pools(self, registry):
+        registry = contract(registry)
+        return fetch_multicall(
+            *[[registry, 'pool_list', i] for i in range(registry.pool_count())]
         )
-        pool_lists = iter(
-            fetch_multicall(
-                *[
-                    [factory, 'pool_list', i]
-                    for factory, pool_count in zip(metapool_factories, pool_counts)
-                    for i in range(pool_count)
-                ]
-            )
-        )
-        return {
-            str(factory): list(islice(pool_lists, pool_count))
-            for factory, pool_count in zip(metapool_factories, pool_counts)
-        }
-    
-    def crypto_swap_registry_supports_pool(self, pool):
-        if self.crypto_swap_registry.get_pool_name(pool):
-            return True
-        else: 
-            return False
+
+    def load_factories(self):
+        # factory events are quite useless, so we use a different method
+        for factory in self.identifiers[Ids.Metapool_Factory]:
+            pool_list = self.read_pools(factory)
+            for pool in pool_list:
+                # for metpool factories pool is the same as lp token
+                self.token_to_pool[pool] = pool
+                self.factories[factory].add(pool)
+
+        for factory in curve_contracts[chain.id].get('factories', []):
+            pool_list = self.read_pools(factory)
+            for pool in pool_list:
+                if pool in self.factories[factory]:
+                    continue
+                # for curve v5 pools, pool and lp token are separate
+                lp_token = contract(factory).get_token(pool)
+                self.token_to_pool[lp_token] = pool
+                self.factories[factory].add(pool)
 
     def get_factory(self, pool):
         """
@@ -148,20 +171,24 @@ class CurveRegistry(metaclass=Singleton):
         try:
             return next(
                 factory
-                for factory, factory_pools in self.metapools_by_factory.items()
+                for factory, factory_pools in self.factories.items()
                 if str(pool) in factory_pools
             )
         except StopIteration:
             return None
 
-    @lru_cache(maxsize=None)
-    def _pool_from_lp_token(self, token):
-        crypto_swap_registry_result = self.crypto_swap_registry.get_pool_from_lp_token(token)
-
-        if crypto_swap_registry_result != ZERO_ADDRESS:
-            return crypto_swap_registry_result
-
-        return self.registry.get_pool_from_lp_token(token)
+    def get_registry(self, pool):
+        """
+        Get registry containing a pool.
+        """
+        try:
+            return next(
+                registry
+                for registry, pools in self.registries.items()
+                if str(pool) in pools
+            )
+        except StopIteration:
+            return None
 
     def __contains__(self, token):
         return self.get_pool(token) is not None
@@ -171,60 +198,52 @@ class CurveRegistry(metaclass=Singleton):
         """
         Get Curve pool (swap) address by LP token address. Supports factory pools.
         """
-        if self.get_factory(token):
-            return token
-
-        pool = self._pool_from_lp_token(token)
-
-        if pool != ZERO_ADDRESS:
-            return pool
+        token = to_address(token)
+        if token in self.token_to_pool:
+            return self.token_to_pool[token]
 
     @lru_cache(maxsize=None)
     def get_gauge(self, pool):
         """
         Get liquidity gauge address by pool.
         """
+        pool = to_address(pool)
         factory = self.get_factory(pool)
+        registry = self.get_registry(pool)
         if factory and hasattr(contract(factory), 'get_gauge'):
             gauge = contract(factory).get_gauge(pool)
             if gauge != ZERO_ADDRESS:
                 return gauge
-
-        if self.crypto_swap_registry_supports_pool(pool):
-            gauges, types = self.crypto_swap_registry.get_gauges(pool)
+        elif registry:
+            gauges, types = contract(registry).get_gauges(pool)
             if gauges[0] != ZERO_ADDRESS:
-                return gauges[0]        
-
-        gauges, types = self.registry.get_gauges(pool)
-        if gauges[0] != ZERO_ADDRESS:
-            return gauges[0]
+                return gauges[0]
 
     @lru_cache(maxsize=None)
     def get_coins(self, pool):
         """
         Get coins of pool.
         """
+        pool = to_address(pool)
         factory = self.get_factory(pool)
-
+        registry = self.get_registry(pool)
         if factory:
             coins = contract(factory).get_coins(pool)
-        elif self.crypto_swap_registry_supports_pool(pool):
-            coins = self.crypto_swap_registry.get_coins(pool)
-        else:
-            coins = self.registry.get_coins(pool)
+        elif registry:
+            coins = contract(registry).get_coins(pool)
 
         # pool not in registry
         if set(coins) == {ZERO_ADDRESS}:
-            coins = fetch_multicall(
-                *[[contract(pool), 'coins', i] for i in range(8)]
-            )
+            coins = fetch_multicall(*[[contract(pool), 'coins', i] for i in range(8)])
 
         return [coin for coin in coins if coin not in {None, ZERO_ADDRESS}]
 
     @lru_cache(maxsize=None)
     def get_underlying_coins(self, pool):
+        pool = to_address(pool)
         factory = self.get_factory(pool)
-        
+        registry = self.get_registry(pool)
+
         if factory:
             factory = contract(factory)
             # new factory reverts for non-meta pools
@@ -232,9 +251,9 @@ class CurveRegistry(metaclass=Singleton):
                 coins = factory.get_underlying_coins(pool)
             else:
                 coins = factory.get_coins(pool)
-        else:
-            coins = self.registry.get_underlying_coins(pool)
-        
+        elif registry:
+            coins = contract(registry).get_underlying_coins(pool)
+
         # pool not in registry, not checking for underlying_coins here
         if set(coins) == {ZERO_ADDRESS}:
             return self.get_coins(pool)
@@ -243,14 +262,10 @@ class CurveRegistry(metaclass=Singleton):
 
     @lru_cache(maxsize=None)
     def get_decimals(self, pool):
+        pool = to_address(pool)
         factory = self.get_factory(pool)
-        if factory: 
-            source = contract(factory)
-        elif self.crypto_swap_registry_supports_pool(pool):
-            source = self.crypto_swap_registry
-        else: 
-            source = source = self.registry
-
+        registry = self.get_registry(pool)
+        source = contract(factory or registry)
         decimals = source.get_decimals(pool)
 
         # pool not in registry
@@ -259,25 +274,21 @@ class CurveRegistry(metaclass=Singleton):
             decimals = fetch_multicall(
                 *[[contract(token), 'decimals'] for token in coins]
             )
-        
+
         return [dec for dec in decimals if dec != 0]
 
     def get_balances(self, pool, block=None):
         """
         Get {token: balance} of liquidity in the pool.
         """
+        pool = to_address(pool)
         factory = self.get_factory(pool)
+        registry = self.get_registry(pool)
         coins = self.get_coins(pool)
         decimals = self.get_decimals(pool)
 
         try:
-            if factory: 
-                source = contract(factory)
-            elif self.crypto_swap_registry_supports_pool(pool):
-                source = self.crypto_swap_registry
-            else:
-                source = self.registry
-
+            source = contract(factory or registry)
             balances = source.get_balances(pool, block_identifier=block)
         # fallback for historical queries
         except ValueError:
@@ -291,31 +302,33 @@ class CurveRegistry(metaclass=Singleton):
         return {
             coin: balance / 10 ** dec
             for coin, balance, dec in zip(coins, balances, decimals)
-            if coin != ZERO_ADDRESS
         }
 
     def get_tvl(self, pool, block=None):
         """
         Get total value in Curve pool.
         """
+        pool = to_address(pool)
         balances = self.get_balances(pool, block=block)
-        if balances is None:
-            return None
 
         return sum(
-            balances[coin] * magic.get_price(coin, block=block) for coin in balances
+            amount * magic.get_price(coin, block=block)
+            for coin, amount in balances.items()
         )
 
     @ttl_cache(maxsize=None, ttl=600)
     def get_price(self, token, block=None):
+        token = to_address(token)
         pool = self.get_pool(token)
-
         # crypto pools can have different tokens, use slow method
         if hasattr(contract(pool), 'price_oracle'):
-            tvl = self.get_tvl(pool, block=block)
-            if tvl is None:
+            try:
+                tvl = self.get_tvl(pool, block=block)
+            except ValueError:
                 return None
             supply = contract(token).totalSupply(block_identifier=block) / 1e18
+            if supply == 0:
+                return 0
             return tvl / supply
 
         # approximate by using the most common base token we find
@@ -339,7 +352,14 @@ class CurveRegistry(metaclass=Singleton):
             block=block,
         )
         results = [x / 1e18 for x in results]
-        gauge_balance, gauge_total, working_balance, working_supply, vecrv_balance, vecrv_total = results
+        (
+            gauge_balance,
+            gauge_total,
+            working_balance,
+            working_supply,
+            vecrv_balance,
+            vecrv_total,
+        ) = results
         try:
             boost = working_balance / gauge_balance * 2.5
         except ZeroDivisionError:
@@ -353,7 +373,9 @@ class CurveRegistry(metaclass=Singleton):
         noboost_lim = gauge_balance * 0.4
         noboost_supply = working_supply + noboost_lim - working_balance
         try:
-            max_boost_possible = (lim / _working_supply) / (noboost_lim / noboost_supply)
+            max_boost_possible = (lim / _working_supply) / (
+                noboost_lim / noboost_supply
+            )
         except ZeroDivisionError:
             max_boost_possible = 1
 
@@ -383,7 +405,9 @@ class CurveRegistry(metaclass=Singleton):
         working_supply, relative_weight, inflation_rate, virtual_price = results
         token_price = magic.get_price(lp_token, block=block)
         try:
-            rate = (inflation_rate * relative_weight * 86400 * 365 / working_supply * 0.4) / token_price
+            rate = (
+                inflation_rate * relative_weight * 86400 * 365 / working_supply * 0.4
+            ) / token_price
         except ZeroDivisionError:
             rate = 0
 
