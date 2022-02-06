@@ -16,6 +16,10 @@ def main():
         end = datetime(2021, 4, 30, tzinfo=timezone.utc)
         # ironbank first product deployed on Fantom
         data_query = 'ironbank{network="FTM"}'
+    if Network(chain.id) == Network.Avalanche:
+        # TODO: Change when deployed
+        end: datetime(2022, 1, 1, tzinfo=timezone.utc)
+        data_query = 'iearn{network="AVAX"}'
     else:
         # end: 2020-02-12 first iearn deployment
         end = datetime(2020, 2, 12, 0, 1, tzinfo=timezone.utc)
