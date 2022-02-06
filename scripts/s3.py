@@ -100,7 +100,7 @@ def wrap_vault(
         "migration": migration,
     }
 
-    if chain.id == 1 and any([isinstance(vault, t) for t in [Backscratcher, YveCRVJar]]):
+    if chain.id == Network.Mainnet and any([isinstance(vault, t) for t in [Backscratcher, YveCRVJar]]):
         object["special"] = True
 
     return object
