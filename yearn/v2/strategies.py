@@ -139,12 +139,12 @@ class Strategy:
 
         # Not enough profitable harvests
         if profitable_harvests_count < 2:
-            return StrategyApy(0, 0, 0)
+            return StrategyApy("new", 0, 0, 0)
 
         # Not enough data
         have_enough_data = second_latest_harvest_with_profit_idx + 1 < len(harvests)
         if have_enough_data == False:
-            return StrategyApy(0, 0, 0)
+            return StrategyApy("new", 0, 0, 0)
 
         # Latest profitable harvest
         latest_harvest_with_profit_current = harvests[latest_harvest_with_profit_idx]
@@ -202,7 +202,7 @@ class Strategy:
 
         # Return estimated APY
         fees = ApyFees(performance=performance_fee, management=management_fee)
-        return StrategyApy(apr, net_apy, fees)
+        return StrategyApy("v2", apr, net_apy, fees)
 
     def describe(self, block=None):
         results = fetch_multicall(

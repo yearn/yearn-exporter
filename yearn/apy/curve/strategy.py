@@ -4,7 +4,7 @@ from time import time
 from brownie import ZERO_ADDRESS, Contract, chain, interface
 from semantic_version import Version
 from yearn.apy.common import (SECONDS_PER_YEAR, Apy, ApyError, ApyFees,
-                              ApySamples, SharePricePoint, calculate_roi, get_samples, StrategyApy, try_composite as crv_composite)
+                              ApySamples, SharePricePoint, calculate_roi, get_samples, StrategyApy)
 from yearn.apy.curve.rewards import rewards
 from yearn.networks import Network
 from yearn.prices.curve import curve
@@ -231,6 +231,7 @@ def curve_strategy_apy(strategy) -> StrategyApy:
         
         # calculate our gross APR and net APY
         gross_apr = (1 + convex_apr) * (1 + pool_apy) - 1
+        print("This is what makes up our gross APR:", "gross_apr:", gross_apr, "convex_apr:", convex_apr, "pool_apy:", pool_apy)
         cvx_apr_minus_keep_crv = ((1 - cvx_fee) * cvx_boost * base_apr) * ((1 - cvx_keep_crv) + cvx_printed_as_crv)
         cvx_net_apr = (cvx_apr_minus_keep_crv + cvx_reward_apr) * (1 - performance) - management
         cvx_net_farmed_apy = (1 + (cvx_net_apr / compounding)) ** compounding - 1
