@@ -3,13 +3,13 @@ from collections import Counter, defaultdict
 from itertools import zip_longest
 
 from brownie import web3, chain
-from brownie.network.event import EventDict, _decode_logs
+from brownie.network.event import EventDict, _decode_logs, _add_deployment_topics
 from joblib import Parallel, delayed
 from toolz import groupby
 from web3.middleware.filter import block_ranges
 
 from yearn.middleware.middleware import BATCH_SIZE
-from yearn.utils import contract_creation_block
+from yearn.utils import contract_creation_block, contract
 
 logger = logging.getLogger(__name__)
 
@@ -32,11 +32,18 @@ def create_filter(address, topics=None):
     Set fromBlock as the earliest creation block.
     """
     if isinstance(address, list):
+        for a in address:
+            add_deployment_topics(a)
         start_block = min(map(contract_creation_block, address))
     else:
+        add_deployment_topics(address)
         start_block = contract_creation_block(address)
 
     return web3.eth.filter({"address": address, "fromBlock": start_block, "topics": topics})
+
+
+def add_deployment_topics(address):
+    _add_deployment_topics(address, contract(address).abi)
 
 
 def get_logs_asap(address, topics, from_block=None, to_block=None, verbose=0):
