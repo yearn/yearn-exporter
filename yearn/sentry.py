@@ -1,7 +1,7 @@
 import os
 
 from brownie import chain
-from sentry_sdk import Hub, capture_message, init, set_tag
+from sentry_sdk import Hub, capture_message, init, set_tag, utils
 from sentry_sdk.integrations.threading import ThreadingIntegration
 
 from yearn.networks import Network
@@ -20,6 +20,8 @@ def set_custom_tags():
 def setup_sentry():
     sentry_dsn = os.getenv('SENTRY_DSN')
     if sentry_dsn:
+        # give remote backtraces a bit more space
+        utils.MAX_STRING_LENGTH = 8192
         init(
             sentry_dsn,
             # Set traces_sample_rate to 1.0 to capture 100%
