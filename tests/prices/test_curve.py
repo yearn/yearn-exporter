@@ -6,10 +6,10 @@ import pytest
 import requests
 from brownie import ZERO_ADDRESS, chain, multicall, web3
 from tabulate import tabulate
-from yearn.prices import curve
 from yearn.exceptions import PriceError
-from yearn.utils import contract, contract_creation_block
+from yearn.prices import curve
 from yearn.prices.magic import get_price
+from yearn.utils import contract, contract_creation_block
 
 pooldata = json.load(open('tests/fixtures/pooldata.json'))
 
@@ -299,8 +299,8 @@ def test_get_balances_fallback(name):
 @pytest.mark.parametrize('pool', range(len(eur_usd_crypto_pool_tokens)))
 def test_crypto_pool_eur_usd_assets(pool):
     lp_token = eur_usd_crypto_pool_tokens[pool]
-    pool = curve.curve.crypto_swap_registry.get_pool_from_lp_token(lp_token)
-    coins = curve.curve.crypto_swap_registry.get_coins(pool)
+    pool = curve.curve.get_pool(lp_token)
+    coins = curve.curve.get_coins(pool)
     non_zero_coins = list(filter(lambda coin: coin != ZERO_ADDRESS, coins))
     underlying_coin_prices = map(lambda coin: get_price(coin), non_zero_coins)
     summed_coin_prices = sum(underlying_coin_prices)
