@@ -12,6 +12,11 @@ def before_send(event, hint):
     # custom event parsing goes here
     return event
 
+def set_custom_tags():
+    set_tag("chain_id", chain.id)
+    set_tag("network_label", Network.label(chain.id))
+
+
 def setup_sentry():
     sentry_dsn = os.getenv('SENTRY_DSN')
     if sentry_dsn:
@@ -30,6 +35,4 @@ def setup_sentry():
                 KeyboardInterrupt, # these can be created when exiting a script with ctrl+c or when an exception is raised in a child thread. Ignore in both cases
             ]
         )
-        set_tag('network',Network(chain.id).name)
-        set_tag('chainid',chain.id)
-
+        set_custom_tags()
