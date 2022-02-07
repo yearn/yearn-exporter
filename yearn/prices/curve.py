@@ -252,7 +252,12 @@ class CurveRegistry(metaclass=Singleton):
             factory = contract(factory)
             # new factory reverts for non-meta pools
             if not hasattr(factory, 'is_meta') or factory.is_meta(pool):
-                coins = factory.get_underlying_coins(pool)
+                if hasattr(factory, 'get_underlying_coins'):
+                    coins = factory.get_underlying_coins(pool)
+                elif hasattr(factory, 'get_coins'):
+                    coins = factory.get_coins(pool)
+                else:
+                    coins = {ZERO_ADDRESS}
             else:
                 coins = factory.get_coins(pool)
         elif registry:
