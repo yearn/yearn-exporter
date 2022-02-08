@@ -154,8 +154,61 @@ def simple(vault, samples: ApySamples) -> Apy:
 
         performance = (strategist_reward + strategist_performance + treasury) / 1e4
         management = 0
+    
+    # these are vaults with only convex strategies attached
+    if isinstance(vault, VaultV2) and len(vault.strategies) == 1 and chain.id == Network.Mainnet:
+        cvx_strategy = vault.strategies[0].strategy
+        convex_voter = addresses[chain.id]['convex_voter_proxy']
+        cvx_working_balance = gauge.working_balances(convex_voter, block_identifier=block)
+        cvx_gauge_balance = gauge.balanceOf(convex_voter, block_identifier=block)
 
-    if isinstance(vault, VaultV2) and len(vault.strategies) == 2:
+        if cvx_gauge_balance > 0:
+            cvx_boost = cvx_working_balance / (PER_MAX_BOOST * cvx_gauge_balance) or 1
+        else:
+            cvx_boost = MAX_BOOST
+        
+        cvx_booster = contract(addresses[chain.id]['convex_booster'])
+        cvx_lock_incentive = cvx_booster.lockIncentive(block_identifier=block)
+        cvx_staker_incentive = cvx_booster.stakerIncentive(block_identifier=block)
+        cvx_earmark_incentive = cvx_booster.earmarkIncentive(block_identifier=block)
+        cvx_fee = (cvx_lock_incentive + cvx_staker_incentive + cvx_earmark_incentive) / 1e4
+        cvx_keep_crv = cvx_strategy.keepCRV(block_identifier=block) / 1e4
+        
+        # pull data from convex's virtual rewards contracts to get bonus rewards
+        pid = cvx_strategy.pid()
+        rewards_contract = contract(cvx_booster.poolInfo(pid)["crvRewards"])
+        rewards_length = rewards_contract.extraRewardsLength()
+        current_time = time() if block is None else get_block_timestamp(block)
+        if rewards_length > 0:
+            convex_reward_apr = 0 # reset our rewards apr if we're calculating it via convex
+            for x in range(rewards_length):
+                print("This is our x value:", x)
+                virtual_rewards_pool = contract(rewards_contract.extraRewards(x))
+                 # do this for all assets, which will duplicate much of the curve info but we don't want to miss anything
+                if virtual_rewards_pool.periodFinish() > current_time:
+                    convex_reward_apr += (virtual_rewards_pool.rewardRate() * SECONDS_PER_YEAR * get_price(virtual_rewards_pool.rewardToken(), block=block)) / (base_asset_price * (pool_price / 1e18) * virtual_rewards_pool.totalSupply())
+
+        total_cliff = 1e3
+        max_supply = 1e2 * 1e6 * 1e18 # ?
+        reduction_per_cliff = 1e23
+        cvx = contract(addresses[chain.id]['cvx'])
+        supply = cvx.totalSupply(block_identifier=block)
+        cliff = supply / reduction_per_cliff
+        if supply <= max_supply:
+            reduction = total_cliff - cliff
+            cvx_minted_as_crv = reduction / total_cliff
+            cvx_price = get_price(cvx, block=block)
+            converted_cvx = cvx_price / crv_price
+            cvx_printed_as_crv = cvx_minted_as_crv * converted_cvx
+        else:
+            cvx_printed_as_crv = 0
+
+        cvx_apr = ((1 - cvx_fee) * cvx_boost * base_apr) * (1 + cvx_printed_as_crv) + reward_apr
+        cvx_apr_minus_keep_crv = ((1 - cvx_fee) * cvx_boost * base_apr) * ((1 - cvx_keep_crv) + cvx_printed_as_crv)
+        
+        crv_debt_ratio = vault.vault.strategies(crv_strategy)[2] / 1e4
+        cvx_debt_ratio = vault.vault.strategies(cvx_strategy)[2] / 1e4
+    elif isinstance(vault, VaultV2) and len(vault.strategies) == 2: # this vault has curve and convex
         crv_strategy = vault.strategies[0].strategy
         cvx_strategy = vault.strategies[1].strategy
         convex_voter = addresses[chain.id]['convex_voter_proxy']
@@ -173,6 +226,20 @@ def simple(vault, samples: ApySamples) -> Apy:
         cvx_earmark_incentive = cvx_booster.earmarkIncentive(block_identifier=block)
         cvx_fee = (cvx_lock_incentive + cvx_staker_incentive + cvx_earmark_incentive) / 1e4
         cvx_keep_crv = cvx_strategy.keepCRV(block_identifier=block) / 1e4
+        
+        # pull data from convex's virtual rewards contracts to get bonus rewards
+        pid = cvx_strategy.pid()
+        rewards_contract = contract(cvx_booster.poolInfo(pid)["crvRewards"])
+        rewards_length = rewards_contract.extraRewardsLength()
+        current_time = time() if block is None else get_block_timestamp(block)
+        if rewards_length > 0:
+            convex_reward_apr = 0 # reset our rewards apr if we're calculating it via convex
+            for x in range(rewards_length):
+                print("This is our x value:", x)
+                virtual_rewards_pool = contract(rewards_contract.extraRewards(x))
+                 # do this for all assets, which will duplicate much of the curve info but we don't want to miss anything
+                if virtual_rewards_pool.periodFinish() > current_time:
+                    convex_reward_apr += (virtual_rewards_pool.rewardRate() * SECONDS_PER_YEAR * get_price(virtual_rewards_pool.rewardToken(), block=block)) / (base_asset_price * (pool_price / 1e18) * virtual_rewards_pool.totalSupply())
 
         total_cliff = 1e3
         max_supply = 1e2 * 1e6 * 1e18 # ?
@@ -189,7 +256,7 @@ def simple(vault, samples: ApySamples) -> Apy:
         else:
             cvx_printed_as_crv = 0
 
-        cvx_apr = ((1 - cvx_fee) * cvx_boost * base_apr) * (1 + cvx_printed_as_crv) + reward_apr
+        cvx_apr = ((1 - cvx_fee) * cvx_boost * base_apr) * (1 + cvx_printed_as_crv) + convex_reward_apr
         cvx_apr_minus_keep_crv = ((1 - cvx_fee) * cvx_boost * base_apr) * ((1 - cvx_keep_crv) + cvx_printed_as_crv)
         
         crv_debt_ratio = vault.vault.strategies(crv_strategy)[2] / 1e4
@@ -206,7 +273,7 @@ def simple(vault, samples: ApySamples) -> Apy:
 
     gross_apr = (1 + (crv_apr * crv_debt_ratio + cvx_apr * cvx_debt_ratio)) * (1 + pool_apy) - 1
 
-    cvx_net_apr = (cvx_apr_minus_keep_crv + reward_apr) * (1 - performance) - management
+    cvx_net_apr = (cvx_apr_minus_keep_crv + convex_reward_apr) * (1 - performance) - management
     cvx_net_farmed_apy = (1 + (cvx_net_apr / COMPOUNDING)) ** COMPOUNDING - 1
     cvx_net_apy = ((1 + cvx_net_farmed_apy) * (1 + pool_apy)) - 1
 
