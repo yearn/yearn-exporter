@@ -171,7 +171,8 @@ def simple(vault, samples: ApySamples) -> Apy:
         cvx_lock_incentive = cvx_booster.lockIncentive(block_identifier=block)
         cvx_staker_incentive = cvx_booster.stakerIncentive(block_identifier=block)
         cvx_earmark_incentive = cvx_booster.earmarkIncentive(block_identifier=block)
-        cvx_fee = (cvx_lock_incentive + cvx_staker_incentive + cvx_earmark_incentive) / 1e4
+        cvx_platform_fee = cvx_booster.platformFee(block_identifier=block)
+        cvx_fee = (cvx_lock_incentive + cvx_staker_incentive + cvx_earmark_incentive + cvx_platform_fee) / 1e4
         cvx_keep_crv = cvx_strategy.keepCRV(block_identifier=block) / 1e4
         
         # pull data from convex's virtual rewards contracts to get bonus rewards
@@ -224,7 +225,8 @@ def simple(vault, samples: ApySamples) -> Apy:
         cvx_lock_incentive = cvx_booster.lockIncentive(block_identifier=block)
         cvx_staker_incentive = cvx_booster.stakerIncentive(block_identifier=block)
         cvx_earmark_incentive = cvx_booster.earmarkIncentive(block_identifier=block)
-        cvx_fee = (cvx_lock_incentive + cvx_staker_incentive + cvx_earmark_incentive) / 1e4
+        cvx_platform_fee = cvx_booster.platformFee(block_identifier=block)
+        cvx_fee = (cvx_lock_incentive + cvx_staker_incentive + cvx_earmark_incentive + cvx_platform_fee) / 1e4
         cvx_keep_crv = cvx_strategy.keepCRV(block_identifier=block) / 1e4
         
         # pull data from convex's virtual rewards contracts to get bonus rewards
