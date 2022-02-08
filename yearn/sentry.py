@@ -1,6 +1,6 @@
 import os
 
-from brownie import chain
+from brownie import chain, web3
 from sentry_sdk import Hub, capture_message, init, set_tag, utils
 from sentry_sdk.integrations.threading import ThreadingIntegration
 
@@ -12,7 +12,8 @@ def before_send(event, hint):
 
 def set_custom_tags():
     set_tag("chain_id", chain.id)
-    set_tag("network_label", Network.label(chain.id))
+    set_tag("network", Network(chain.id).name)
+    set_tag("web3_client_version", web3.clientVersion)
 
 
 def setup_sentry():
