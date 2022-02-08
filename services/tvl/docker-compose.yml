@@ -32,7 +32,8 @@ services:
       - PGUSER=postgres
       - PGHOST=postgres
       - PGPASS=yearn
-      - ENV
+      - SENTRY_RELEASE
+      - SENTRY_ENVIRONMENT=${SENTRY_ENVIRONMENT:-development}
       - SENTRY_DSN
     volumes: 
       - solidity_compilers:/root/.solcx

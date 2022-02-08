@@ -20,7 +20,8 @@ services:
       - IPFS_NODE_ADDRESS
       - IPFS_NODE_KEY
       - IPFS_NODE_SECRET
-      - ENV
+      - SENTRY_RELEASE
+      - SENTRY_ENVIRONMENT=${SENTRY_ENVIRONMENT:-development}
       - SENTRY_DSN
     volumes:
       - solidity_compilers:/root/.solcx

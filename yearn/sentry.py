@@ -1,12 +1,10 @@
 import os
 
-from brownie import chain
+from brownie import chain, web3
 from sentry_sdk import Hub, capture_message, init, set_tag, utils
 from sentry_sdk.integrations.threading import ThreadingIntegration
 
 from yearn.networks import Network
-
-environment = os.getenv('ENV', 'DEVELOPMENT')
 
 def before_send(event, hint):
     # custom event parsing goes here
@@ -14,7 +12,8 @@ def before_send(event, hint):
 
 def set_custom_tags():
     set_tag("chain_id", chain.id)
-    set_tag("network_label", Network.label(chain.id))
+    set_tag("network", Network(chain.id).name)
+    set_tag("web3_client_version", web3.clientVersion)
 
 
 def setup_sentry():
@@ -29,7 +28,6 @@ def setup_sentry():
             # We recommend adjusting this value in production.
             traces_sample_rate=1.0,
             shutdown_timeout=5,
-            environment=environment,
             before_send=before_send,
             debug=False,
             integrations=[ThreadingIntegration(propagate_hub=True)],
