@@ -20,3 +20,4 @@ generated
 .DS_Store
 package*.json
 hardhat.config.js
+.idea

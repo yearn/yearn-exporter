@@ -34,9 +34,12 @@ class Snapshot(SQLModel, table=True):
     block: Block = Relationship(back_populates="snapshots")
 
 
-user = os.environ.get('PGUSER', 'postgres')
+pguser = os.environ.get('PGUSER', 'postgres')
+pgpassword = os.environ.get('PGPASSWORD', 'yearn')
+pghost = os.environ.get('PGHOST', 'localhost')
+pgdatabase = os.environ.get('PGDATABASE', 'yearn')
 
-dsn = f'postgresql://{user}@localhost:5432/yearn'
+dsn = f'postgresql://{pguser}:{pgpassword}@{pghost}:5432/{pgdatabase}'
 engine = create_engine(dsn, echo=False)
 
 # SQLModel.metadata.drop_all(engine)

@@ -13,25 +13,31 @@ networks:
 services:
   api:
     build: .
+    image: yearn-exporter
     entrypoint: uvicorn yearn.api:app --host 0.0.0.0 --port 4000
     ports: 
       - 4000:4000
     environment:
-      - PGUSER=postgres
       - PGHOST=postgres
+      - PGDATABASE=yearn
+      - PGUSER=postgres
+      - PGPASSWORD=yearn
     restart: always
     networks:
       - yearn-exporter-tvl
   yearn-exporter-tvl:
     build: .
+    image: yearn-exporter
     command: historical_tvl
     environment:
       - WEB3_PROVIDER
       - ETHERSCAN_TOKEN
       - EXPLORER
-      - PGUSER=postgres
       - PGHOST=postgres
-      - PGPASS=yearn
+      - PGDATABASE=yearn
+      - PGUSER=postgres
+      - PGPASSWORD=yearn
+      - ENV
       - SENTRY_RELEASE
       - SENTRY_ENVIRONMENT=${SENTRY_ENVIRONMENT:-development}
       - SENTRY_DSN
