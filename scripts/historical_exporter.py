@@ -16,6 +16,10 @@ def main():
         end = datetime(2021, 4, 30, tzinfo=timezone.utc)
         # ironbank first product deployed on Fantom
         data_query = 'ironbank{network="FTM"}'
+    elif Network(chain.id) == Network.Gnosis:
+        # end: yvUSDC vault January-20-2022 06:10:45 AM +-6 UTC
+        end = datetime(2022, 1, 20, tzinfo=timezone.utc)
+        data_query = 'yearn_vault{network="XDAI"}'
     else:
         # end: 2020-02-12 first iearn deployment
         end = datetime(2020, 2, 12, 0, 1, tzinfo=timezone.utc)

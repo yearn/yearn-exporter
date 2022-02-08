@@ -36,6 +36,12 @@ x-common-eth-envs: &common-eth-envs
   - NETWORK: mainnet
   - ETHERSCAN_TOKEN:
 
+x-common-xdai-envs: &common-xdai-envs
+  - NETWORK: xdai-main
+  - WEB3_PROVIDER: $XDAI_WEB3_PROVIDER
+  - EXPLORER: $XDAI_EXPLORER
+  - XDAISCAN_TOKEN:
+
 x-common-ftm-envs: &common-ftm-envs
   - NETWORK: ftm-main
   - WEB3_PROVIDER: $FTM_WEB3_PROVIDER
@@ -69,6 +75,29 @@ services:
     environment:
       <<: *common-envs
       <<: *common-eth-envs
+      <<: *common-historical-envs
+    networks:
+      - yearn-exporter
+    restart: on-failure
+
+  xdai-exporter:
+    image: yearn-exporter
+    command: exporter
+    volumes: *common-volumes
+    environment:
+      <<: *common-envs
+      <<: *common-xdai-envs
+    networks:
+      - yearn-exporter
+    restart: on-failure
+
+  historical-xdai-exporter:
+    image: yearn-exporter
+    command: historical_exporter
+    volumes: *common-volumes
+    environment:
+      <<: *common-envs
+      <<: *common-xdai-envs
       <<: *common-historical-envs
     networks:
       - yearn-exporter
@@ -129,6 +158,37 @@ services:
       - victoria-metrics
       - postgres
 
+  xdai-treasury-exporter:
+    image: yearn-exporter
+    command: treasury_exporter
+    volumes: *common-volumes
+    environment:
+      <<: *common-envs
+      <<: *common-xdai-envs
+      <<: *common-postgres-envs
+    networks:
+      - yearn-exporter
+    restart: on-failure
+    depends_on:
+      - victoria-metrics
+      - postgres
+
+  historical-xdai-treasury-exporter:
+    image: yearn-exporter
+    command: historical_treasury_exporter
+    volumes: *common-volumes
+    environment:
+      <<: *common-envs
+      <<: *common-xdai-envs
+      <<: *common-historical-envs
+      <<: *common-postgres-envs
+    networks:
+      - yearn-exporter
+    restart: on-failure
+    depends_on:
+      - victoria-metrics
+      - postgres
+
   ftm-treasury-exporter:
     image: yearn-exporter
     command: treasury_exporter
@@ -178,6 +238,29 @@ services:
     environment:
       <<: *common-envs
       <<: *common-eth-envs
+      <<: *common-historical-envs
+    networks:
+      - yearn-exporter
+    restart: on-failure
+
+  xdai-sms-exporter:
+    image: yearn-exporter
+    command: sms_exporter
+    volumes: *common-volumes
+    environment:
+      <<: *common-envs
+      <<: *common-xdai-envs
+    networks:
+      - yearn-exporter
+    restart: on-failure
+
+  historical-xdai-sms-exporter:
+    image: yearn-exporter
+    command: historical_sms_exporter
+    volumes: *common-volumes
+    environment:
+      <<: *common-envs
+      <<: *common-xdai-envs
       <<: *common-historical-envs
     networks:
       - yearn-exporter
