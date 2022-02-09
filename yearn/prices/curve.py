@@ -60,7 +60,9 @@ curve_contracts = {
         'voting_escrow': '0x5f3b5DfEb7B28CDbD7FAba78963EE202a494e2A2',
         'gauge_controller': '0x2F50D538606Fa9EDD2B11E2446BEb18C9D5846bB',
         # additional factories not listed as metapool factory
-        'factories': ['0xF18056Bbd320E96A48e3Fbf8bC061322531aac99'],
+        # if we need to manually add a curve factory that isn't recorded
+        # on the registry, uncomment the below line and paste it into the list
+        #'factories': []
     },
     Network.Fantom: {
         'address_provider': ADDRESS_PROVIDER,
@@ -78,6 +80,7 @@ class Ids(IntEnum):
     Metapool_Factory = 3
     Fee_Distributor = 4
     CryptoSwap_Registry = 5
+    CryptoPool_Factory = 6
 
 
 class CurveRegistry(metaclass=Singleton):
@@ -158,6 +161,18 @@ class CurveRegistry(metaclass=Singleton):
                 self.token_to_pool[pool] = pool
                 self.factories[factory].add(pool)
 
+        for factory in self.identifiers[Ids.CryptoPool_Factory]:
+            pool_list = self.read_pools(factory)
+            for pool in pool_list:
+                if pool in self.factories[factory]:
+                    continue
+                # for curve v5 pools, pool and lp token are separate
+                lp_token = contract(factory).get_token(pool)
+                self.token_to_pool[lp_token] = pool
+                self.factories[factory].add(pool)
+
+
+        # we keep this so we can manually add factories that haven't yet been added to the on-chain Curve Registry
         for factory in curve_contracts[chain.id].get('factories', []):
             pool_list = self.read_pools(factory)
             for pool in pool_list:
