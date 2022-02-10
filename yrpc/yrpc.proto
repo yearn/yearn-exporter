@@ -1,0 +1,16 @@
+syntax = "proto3";
+
+service YearnExporter {
+  rpc GetPrices(Addresses) returns (stream AddressPrice) {}
+}
+
+message Addresses {
+  repeated string list = 1;
+}
+
+message AddressPrice {
+  string address = 1;
+  double price = 2;
+  string unit = 3;
+  int64 block = 4;
+}

@@ -1,4 +1,5 @@
 import asyncio
-from brownie_bridge.bridge import start_bridge
+import yrpc
+from yrpc.yrpc_server import serve
 
-asyncio.run(start_bridge())
+asyncio.get_event_loop().run_until_complete(serve())

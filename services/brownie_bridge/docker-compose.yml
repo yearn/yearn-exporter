@@ -41,7 +41,8 @@ services:
     environment:
       <<: *common-envs
       <<: *common-eth-envs
-      BRIDGE_HOST: brownie-bridge-eth
+    ports:
+      - 127.0.0.1:1337:1337
     networks:
       - yearn-brownie-bridge
     restart: on-failure
@@ -54,21 +55,8 @@ services:
     environment:
       <<: *common-envs
       <<: *common-ftm-envs
-      BRIDGE_HOST: brownie-bridge-ftm
-    networks:
-      - yearn-brownie-bridge
-    restart: on-failure
-
-  brownie-api:
-    image: yearn-exporter
-    build: .
-    entrypoint: uvicorn brownie_bridge.api:app --host 0.0.0.0 --port 4004
-    volumes: *common-volumes
-    environment:
-      <<: *common-envs
-      BRIDGE_HOST: brownie_bridge
     ports:
-      - 127.0.0.1:4004:4004
+        - 127.0.0.1:1338:1337
     networks:
       - yearn-brownie-bridge
     restart: on-failure

@@ -21,3 +21,4 @@ sentry-sdk>=1.5.1
 pytest-bdd>=5.0.0
 pydantic>=1.9.0
 orjson>=3.6.6
+grpcio-tools>=1.43.0
