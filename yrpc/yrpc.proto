@@ -12,5 +12,4 @@ message AddressPrice {
   string address = 1;
   double price = 2;
   string unit = 3;
-  int64 block = 4;
 }
