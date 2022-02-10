@@ -13,8 +13,9 @@ x-common-volumes: &common-volumes
   - cache:/app/yearn-exporter/cache
 
 x-common-envs: &common-envs
-  - ENV:
   - SENTRY_DSN:
+  - SENTRY_RELEASE:
+  - SENTRY_ENVIRONMENT:
   - BRIDGE_PORT: 1337
 
 x-common-eth-envs: &common-eth-envs
