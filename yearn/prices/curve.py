@@ -61,7 +61,7 @@ curve_contracts = {
         'gauge_controller': '0x2F50D538606Fa9EDD2B11E2446BEb18C9D5846bB',
         # additional factories not listed as metapool factory
         # if we need to manually add a curve factory that isn't recorded
-        # on the registry, uncomment the below line and paste it into the list
+        # on the address provider, uncomment the below line and paste it into the list
         #'factories': []
     },
     Network.Fantom: {
@@ -172,7 +172,7 @@ class CurveRegistry(metaclass=Singleton):
                 self.factories[factory].add(pool)
 
 
-        # we keep this so we can manually add factories that haven't yet been added to the on-chain Curve Registry
+        # we keep this so we can manually add factories that haven't yet been added to the on-chain address provider
         for factory in curve_contracts[chain.id].get('factories', []):
             pool_list = self.read_pools(factory)
             for pool in pool_list:
