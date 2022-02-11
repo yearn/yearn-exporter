@@ -262,7 +262,11 @@ class CurveRegistry(metaclass=Singleton):
             else:
                 coins = factory.get_coins(pool)
         elif registry:
-            coins = contract(registry).get_underlying_coins(pool)
+            registry = contract(registry)
+            if hasattr(registry, 'get_underlying_coins'):
+                coins = registry.get_underlying_coins(pool)
+            elif hasattr(registry, 'get_coins'):
+                coins = registry.get_coins(pool)
 
         # pool not in registry, not checking for underlying_coins here
         if set(coins) == {ZERO_ADDRESS}:
