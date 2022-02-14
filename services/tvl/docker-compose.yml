@@ -37,7 +37,6 @@ services:
       - PGDATABASE=yearn
       - PGUSER=postgres
       - PGPASSWORD=yearn
-      - ENV
       - SENTRY_RELEASE
       - SENTRY_ENVIRONMENT=${SENTRY_ENVIRONMENT:-development}
       - SENTRY_DSN
