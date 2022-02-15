@@ -158,14 +158,14 @@ def handle_event(event, multi_harvest, isOldApi):
         t.txn_to = tx.to
         t.txn_from = tx["from"]
         t.txn_gas_used = tx.gasUsed
-        t.txn_gas_price = gas_price
+        t.txn_gas_price = gas_price / 1e9 # Use gwei
         t.eth_price_at_block = magic.get_price(constants.weth, t.block)
         t.call_cost_eth = gas_price * tx.gasUsed / 1e18
         t.call_cost_usd = t.eth_price_at_block * t.call_cost_eth
         if chain.id == 1:
             t.kp3r_price_at_block = magic.get_price(CHAIN_VALUES[chain.id]["KEEPER_TOKEN"], t.block)
-            t.kp3r_paid = get_keeper_payment(tx)
-            t.kp3r_paid_usd = t.kp3r_paid * t.kp3r_price_at_block / 1e18
+            t.kp3r_paid = get_keeper_payment(tx) / 1e18
+            t.kp3r_paid_usd = t.kp3r_paid * t.kp3r_price_at_block
             t.keeper_called = t.kp3r_paid > 0
         if chain.id == 250:
             if t.txn_to == CHAIN_VALUES[chain.id]["KEEPER_CALL_CONTRACT"]:
@@ -342,7 +342,7 @@ def check_endorsed(vault_address, block):
         if vault_address not in endorsed_vaults:
             return False
         else:
-            rewards = contract(vault_address, block_identifier=harvest_block).rewards()
+            rewards = contract(vault_address).rewards(block_identifier=harvest_block)
             if rewards == CHAIN_VALUES[chain.id]["YEARN_TREASURY"]:
                 return True
             else:
