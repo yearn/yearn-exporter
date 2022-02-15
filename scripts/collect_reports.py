@@ -184,6 +184,7 @@ def handle_event(event, multi_harvest, isOldApi):
     r.gov_fee_in_want, r.strategist_fee_in_want = parse_fees(tx, r.vault_address, r.strategy_address)
     r.gain_post_fees = r.gain - r.loss - r.strategist_fee_in_want - r.gov_fee_in_want
     r.want_token = strategy.want()
+    print(r.want_token)
     r.want_price_at_block = magic.get_price(r.want_token, r.block)
     r.vault_api = vault.apiVersion()
     r.vault_decimals = vault.decimals()
