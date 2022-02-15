@@ -12,6 +12,7 @@ from yearn.networks import Network
 from yearn.events import decode_logs
 import warnings
 warnings.filterwarnings("ignore", ".*Class SelectOfScalar will not make use of SQL compilation caching.*")
+warnings.filterwarnings("ignore", ".*Locally compiled and on-chain*")
 warnings.filterwarnings("ignore", ".*It has been discarded*")
 
 
@@ -20,13 +21,14 @@ CHAIN_VALUES = {
         "START_DATE": datetime(2020, 2, 12, tzinfo=timezone.utc),
         "START_BLOCK": 11772924,
         "REGISTRY_ADDRESS": "0x50c1a2eA0a861A967D9d0FFE2AE4012c2E053804",
+        "REGISTRY_DEPLOY_BLOCK": 12045555,
         "REGISTRY_HELPER_ADDRESS": "0x52CbF68959e082565e7fd4bBb23D9Ccfb8C8C057",
         "LENS_ADDRESS": "0x5b4F3BE554a88Bd0f8d8769B9260be865ba03B4a",
         "LENS_DEPLOY_BLOCK": 12707450,
         "VAULT_ADDRESS030": "0x5f18C75AbDAe578b483E5F43f12a39cF75b973a9",
         "VAULT_ADDRESS031": "0xdA816459F1AB5631232FE5e97a05BBBb94970c95",
         "KEEPER_CALL_CONTRACT": "0x5f18C75AbDAe578b483E5F43f12a39cF75b973a9",
-        "KEEPER_TOKEN": "0x5f18C75AbDAe578b483E5F43f12a39cF75b973a9",
+        "KEEPER_TOKEN": "0x1cEB5cB57C4D4E2b2433641b95Dd330A33185A44",
         "YEARN_TREASURY": "0x93A62dA5a14C80f265DAbC077fCEE437B1a0Efde",
     },
     Network.Fantom: {
@@ -139,11 +141,11 @@ def handle_event(event, multi_harvest, isOldApi):
     r = Reports()
     r.multi_harvest = multi_harvest
     r.chain_id = chain.id
-    if isOldApi:
-        r.strategy_address, r.gain, r.loss, r.total_gain, r.total_loss, r.total_debt, r.debt_added, r.debt_ratio = event.values()
-    else:
-        r.strategy_address, r.gain, r.loss, r.debt_paid, r.total_gain, r.total_loss, r.total_debt, r.debt_added, r.debt_ratio = event.values()
-    if check_endorsed(r.strategy_address, event.block_number) == False:
+    r.vault_address = event.address
+    vault = contract(r.vault_address)
+    r.vault_decimals = vault.decimals()
+    r.strategy_address, r.gain, r.loss, r.debt_paid, r.total_gain, r.total_loss, r.total_debt, r.debt_added, r.debt_ratio = normalize_event_values(event.values(), r.vault_decimals)
+    if check_endorsed(r.vault_address, event.block_number) == False:
         print(f"skipping: not endorsed. strategy {r.strategy_address} txn hash {txn_hash}. chain id {r.chain_id} sync {event.block_number} / {chain.height}.")
         return
     
@@ -161,12 +163,12 @@ def handle_event(event, multi_harvest, isOldApi):
         t.call_cost_eth = gas_price * tx.gasUsed / 1e18
         t.call_cost_usd = t.eth_price_at_block * t.call_cost_eth
         if chain.id == 1:
-            t.kp3r_price_at_block = magic.get_price("0x1cEB5cB57C4D4E2b2433641b95Dd330A33185A44", t.block)
+            t.kp3r_price_at_block = magic.get_price(CHAIN_VALUES[chain.id]["KEEPER_TOKEN"], t.block)
             t.kp3r_paid = get_keeper_payment(tx)
             t.kp3r_paid_usd = t.kp3r_paid * t.kp3r_price_at_block / 1e18
             t.keeper_called = t.kp3r_paid > 0
         if chain.id == 250:
-            if t.txn_to == "0x39cAcdb557CA1C4a6555E00203B4a00B1c1a94f8":
+            if t.txn_to == CHAIN_VALUES[chain.id]["KEEPER_CALL_CONTRACT"]:
                 t.keeper_called = True
             else:
                 t.keeper_called = False
@@ -175,20 +177,17 @@ def handle_event(event, multi_harvest, isOldApi):
         t.timestamp = ts
         t.updated_timestamp = datetime.now()
 
-    r.vault_address = event.address
     r.block = event.block_number
     r.txn_hash = txn_hash
     strategy = contract(r.strategy_address)
-    vault = contract(r.vault_address)
+    
 
-    r.gov_fee_in_want, r.strategist_fee_in_want = parse_fees(tx, r.vault_address, r.strategy_address)
+    r.gov_fee_in_want, r.strategist_fee_in_want = parse_fees(tx, r.vault_address, r.strategy_address, r.vault_decimals)
     r.gain_post_fees = r.gain - r.loss - r.strategist_fee_in_want - r.gov_fee_in_want
     r.want_token = strategy.want()
-    print(r.want_token)
     r.want_price_at_block = magic.get_price(r.want_token, r.block)
     r.vault_api = vault.apiVersion()
-    r.vault_decimals = vault.decimals()
-    r.want_gain_usd = r.gain / 10**r.vault_decimals * r.want_price_at_block
+    r.want_gain_usd = r.gain * r.want_price_at_block
     r.vault_name = vault.name()
     r.strategy_name = strategy.name()
     r.strategy_api = strategy.apiVersion()
@@ -245,14 +244,16 @@ def last_harvest_block():
     return result1, result2
 
 def get_keeper_payment(tx):
-    kp3r_token = "0x1cEB5cB57C4D4E2b2433641b95Dd330A33185A44"
+    kp3r_token = CHAIN_VALUES[chain.id]["KEEPER_TOKEN"]
     token = contract(kp3r_token)
+    denominator = 10 ** token.decimals()
     token = web3.eth.contract(str(kp3r_token), abi=token.abi)
     decoded_events = token.events.Transfer().processReceipt(tx)
     amount = 0
     for e in decoded_events:
         if e.address == kp3r_token:
             sender, receiver, token_amount = e.args.values()
+            token_amount = token_amount / denominator
             if receiver == tx["from"]:
                 amount = token_amount
     return amount
@@ -271,7 +272,8 @@ def compute_apr(report, previous_report):
             post_fee_apr = report.gain_post_fees / int(previous_report.total_debt) * (SECONDS_IN_A_YEAR / seconds_between_reports)
     return pre_fee_apr, post_fee_apr
 
-def parse_fees(tx, vault_address, strategy_address):
+def parse_fees(tx, vault_address, strategy_address, decimals):
+    denominator = 10 ** decimals
     treasury = CHAIN_VALUES[chain.id]["YEARN_TREASURY"]
     token = contract(vault_address)
     token = web3.eth.contract(str(vault_address), abi=token.abi)
@@ -290,6 +292,7 @@ def parse_fees(tx, vault_address, strategy_address):
     for e in decoded_events:
         if e.address == vault_address:
             sender, receiver, token_amount = e.args.values()
+            token_amount = token_amount / denominator
             if sender == ZERO_ADDRESS:
                 counter = 1
                 continue
@@ -298,7 +301,7 @@ def parse_fees(tx, vault_address, strategy_address):
                 strategist_fee_in_underlying = (
                     token_amount * (
                         contract(vault_address).pricePerShare(block_identifier=tx.blockNumber) /
-                        10 ** contract(vault_address).decimals()
+                        denominator
                     )
                 )
                 continue
@@ -309,7 +312,7 @@ def parse_fees(tx, vault_address, strategy_address):
                 gov_fee_in_underlying = (
                     token_amount * (
                         contract(vault_address).pricePerShare(block_identifier=tx.blockNumber) /
-                        10 ** contract(vault_address).decimals()
+                        denominator
                     )
                 )
                 continue
@@ -318,29 +321,48 @@ def parse_fees(tx, vault_address, strategy_address):
     return gov_fee_in_underlying, strategist_fee_in_underlying
             
 
-def check_endorsed(strategy_address, block):
-    lens = contract(CHAIN_VALUES[chain.id]["LENS_ADDRESS"])
-    deploy_block = contract_creation_block(strategy_address)
-    if deploy_block > CHAIN_VALUES[chain.id]["LENS_DEPLOY_BLOCK"]:
-        # If deployed after lens, we can use lens to lookup
-        prod_strats = list(lens.assetsStrategiesAddresses.call(block_identifier=block))
-        if strategy_address in prod_strats:
-            return True
-        else:
-            return False
+def check_endorsed(vault_address, block):
+    registry = contract(CHAIN_VALUES[chain.id]["REGISTRY_ADDRESS"])
+    harvest_block = block
+    endorsed_vaults = []
+    deploy_block = CHAIN_VALUES[chain.id]["REGISTRY_DEPLOY_BLOCK"]
+    block = deploy_block if block < deploy_block else block
+    num_tokens = registry.numTokens(block_identifier=block)
+    for i in range(0, num_tokens):
+        t = registry.tokens(i, block_identifier=block)
+        for n in range(0, 20):
+            v = registry.vaults(t, n, block_identifier=block)
+            if v == ZERO_ADDRESS:
+                break
+            endorsed_vaults.append(v)
+    if vault_address in endorsed_vaults:
+        return True
     else:
-        # Must lookup using alternate logic.
-        # Here we make the assumption that if at time of harvest, vault.rewards() != Treasury, it is not endorsed.
-        # Further, let's use registry helper's list of endorsed vaults to match against.
-        try:
-            vault_address = contract(strategy_address).vault()
-            if contract(vault_address).rewards(block_identifier=block) != CHAIN_VALUES[chain.id]["YEARN_TREASURY"]:
-                return False
-            registry_helper = contract(CHAIN_VALUES[chain.id]["REGISTRY_HELPER_ADDRESS"])
-            vaults = registry_helper.getVaults()
-            if vault_address in vaults:
+        endorsed_vaults = list(contract(CHAIN_VALUES[chain.id]["REGISTRY_HELPER_ADDRESS"]).getVaults())
+        if vault_address not in endorsed_vaults:
+            return False
+        else:
+            rewards = contract(vault_address, block_identifier=harvest_block).rewards()
+            if rewards == CHAIN_VALUES[chain.id]["YEARN_TREASURY"]:
                 return True
             else:
                 return False
-        except:
-            return False
+
+def normalize_event_values(vals, decimals):
+    denominator = 10**decimals
+    if len(vals) == 8:
+        strategy_address, gain, loss, total_gain, total_loss, total_debt, debt_added, debt_ratio = vals
+        debt_paid = 0
+    if len(vals) == 9:
+        strategy_address, gain, loss, debt_paid, total_gain, total_loss, total_debt, debt_added, debt_ratio = vals
+    return (
+        strategy_address, 
+        gain/denominator, 
+        loss/denominator, 
+        debt_paid/denominator, 
+        total_gain/denominator, 
+        total_loss/denominator, 
+        total_debt/denominator, 
+        debt_added/denominator, 
+        debt_ratio
+    )
