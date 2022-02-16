@@ -66,14 +66,8 @@ class Transactions(SQLModel, table=True):
     date_string: str
     timestamp: str
     updated_timestamp: datetime
+    reports: List["Reports"] = Relationship(back_populates="txn")
 
-pguser = os.environ.get('PGUSER', 'postgres')
-pgpassword = os.environ.get('PGPASSWORD', 'yearn')
-pghost = os.environ.get('PGHOST', 'localhost')
-pgdatabase = os.environ.get('PGDATABASE', 'yearn')
-
-dsn = f'postgresql://{pguser}:{pgpassword}@{pghost}:5432/{pgdatabase}'
-reports: List["Reports"] = Relationship(back_populates="txn")
 
 class Reports(SQLModel, table=True):
     id: int = Field(primary_key=True)
@@ -117,10 +111,17 @@ class Reports(SQLModel, table=True):
     timestamp: str
     updated_timestamp: datetime
     
+
+
+pguser = os.environ.get('PGUSER', 'postgres')
+pgpassword = os.environ.get('PGPASSWORD', 'yearn')
+pghost = os.environ.get('PGHOST', 'localhost')
+pgdatabase = os.environ.get('PGDATABASE', 'yearn')
+dsn = f'postgresql://{pguser}:{pgpassword}@{pghost}:5432/{pgdatabase}'
+
 user = os.environ.get('POSTGRES_USER')
 password = os.environ.get('POSTGRES_PASS')
 host = os.environ.get('POSTGRES_HOST')
-
 dsn = f'postgresql://{user}:{password}@{host}:5432/reports'
 engine = create_engine(dsn, echo=False)
 
