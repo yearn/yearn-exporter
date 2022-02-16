@@ -20,8 +20,5 @@ generated
 .DS_Store
 package*.json
 hardhat.config.js
-<<<<<<< HEAD
 .idea
-=======
 setup_db.py
->>>>>>> 0c30e13 (feat: normalize kp3r payments)
