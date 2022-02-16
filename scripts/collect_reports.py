@@ -33,8 +33,9 @@ CHAIN_VALUES = {
     },
     Network.Fantom: {
         "START_DATE": datetime(2021, 4, 30, tzinfo=timezone.utc),
-        "START_BLOCK": 16241109,
+        "START_BLOCK": 18450847,
         "REGISTRY_ADDRESS": "0x727fe1759430df13655ddb0731dE0D0FDE929b04",
+        "REGISTRY_DEPLOY_BLOCK": 18455565,
         "REGISTRY_HELPER_ADDRESS": "0x8CC45f739104b3Bdb98BFfFaF2423cC0f817ccc1",
         "REGISTRY_HELPER_DEPLOY_BLOCK": 18456459,
         "LENS_ADDRESS": "0x97D0bE2a72fc4Db90eD9Dbc2Ea7F03B4968f6938",
@@ -49,6 +50,7 @@ CHAIN_VALUES = {
         "START_DATE": datetime(2021, 9, 14, tzinfo=timezone.utc),
         "START_BLOCK": 4841854,
         "REGISTRY_ADDRESS": "",
+        "REGISTRY_DEPLOY_BLOCK": 12045555,
         "REGISTRY_HELPER_ADDRESS": "",
         "LENS_ADDRESS": "",
         "VAULT_ADDRESS030": "",
@@ -142,7 +144,10 @@ def handle_event(event, multi_harvest, isOldApi):
     r.multi_harvest = multi_harvest
     r.chain_id = chain.id
     r.vault_address = event.address
-    vault = contract(r.vault_address)
+    try:
+        vault = contract(r.vault_address)
+    except ValueError:
+        return
     r.vault_decimals = vault.decimals()
     r.strategy_address, r.gain, r.loss, r.debt_paid, r.total_gain, r.total_loss, r.total_debt, r.debt_added, r.debt_ratio = normalize_event_values(event.values(), r.vault_decimals)
     if check_endorsed(r.vault_address, event.block_number) == False:
@@ -185,6 +190,7 @@ def handle_event(event, multi_harvest, isOldApi):
     r.gov_fee_in_want, r.strategist_fee_in_want = parse_fees(tx, r.vault_address, r.strategy_address, r.vault_decimals)
     r.gain_post_fees = r.gain - r.loss - r.strategist_fee_in_want - r.gov_fee_in_want
     r.want_token = strategy.want()
+    print(r.want_token)
     r.want_price_at_block = magic.get_price(r.want_token, r.block)
     r.vault_api = vault.apiVersion()
     r.want_gain_usd = r.gain * r.want_price_at_block
