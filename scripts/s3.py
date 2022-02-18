@@ -182,7 +182,13 @@ def main():
     aws_secret = os.environ.get("AWS_ACCESS_SECRET")
     aws_bucket = os.environ.get("AWS_BUCKET")
 
-    s3 = boto3.client("s3", aws_access_key_id=aws_key, aws_secret_access_key=aws_secret)
+    kwargs = {}
+    if aws_key is not None:
+        kwargs["aws_access_key_id"] = aws_secret
+    if aws_secret is not None:
+        kwargs["aws_secret_access_key"] = aws_secret
+
+    s3 = boto3.client("s3", **kwargs)
 
     print(json.dumps(data))
 
