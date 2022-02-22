@@ -1,6 +1,7 @@
 import logging
 import time, os
 from dotenv import load_dotenv
+from yearn.cache import memory
 from datetime import datetime, timezone
 from brownie import chain, web3, Contract, ZERO_ADDRESS
 from web3._utils.events import construct_event_topic_set
@@ -120,22 +121,30 @@ def main(dynamically_find_multi_harvest=False):
                     events_to_process.append(e)
 
             for e in events_to_process:
-                handle_event(e.event, e.multi_harvest, e.isOldApi)
+                handle_event(e.event, e.multi_harvest)
             time.sleep(interval_seconds)
         else:
             for strategy_report_event in decode_logs(event_filter.get_new_entries()):
                 e = Event(False, strategy_report_event, strategy_report_event.transaction_hash.hex())
-                handle_event(e.event, e.multi_harvest, e.isOldApi)
+                handle_event(e.event, e.multi_harvest)
                 
             if chain.id == 1: # Old vault API exists only on Ethereum mainnet
                 for strategy_report_event in decode_logs(event_filter_v030.get_new_entries()):
                     e = Event(True, strategy_report_event, strategy_report_event.transaction_hash.hex())
-                    handle_event(e.event, e.multi_harvest, e.isOldApi)
+                    handle_event(e.event, e.multi_harvest)
 
             time.sleep(interval_seconds)
 
-def handle_event(event, multi_harvest, isOldApi):
+def handle_event(event, multi_harvest):
+    endorsed_vaults = list(contract(CHAIN_VALUES[chain.id]["REGISTRY_HELPER_ADDRESS"]).getVaults())
     txn_hash = event.transaction_hash.hex()
+    if event.address not in endorsed_vaults:
+        print(f"skipping: not endorsed. txn hash {txn_hash}. chain id {chain.id} sync {event.block_number} / {chain.height}.")
+        return
+    if get_vault_endorsement_block(event.address) > event.block_number:
+        print(f"skipping: not endorsed yet. txn hash {txn_hash}. chain id {chain.id} sync {event.block_number} / {chain.height}.")
+        return
+    
     tx = web3.eth.getTransactionReceipt(txn_hash)
     gas_price = web3.eth.getTransaction(txn_hash).gasPrice
     ts = chain[event.block_number].timestamp
@@ -150,9 +159,7 @@ def handle_event(event, multi_harvest, isOldApi):
         return
     r.vault_decimals = vault.decimals()
     r.strategy_address, r.gain, r.loss, r.debt_paid, r.total_gain, r.total_loss, r.total_debt, r.debt_added, r.debt_ratio = normalize_event_values(event.values(), r.vault_decimals)
-    if check_endorsed(r.vault_address, event.block_number) == False:
-        print(f"skipping: not endorsed. strategy {r.strategy_address} txn hash {txn_hash}. chain id {r.chain_id} sync {event.block_number} / {chain.height}.")
-        return
+    
     
     txn_record_exists = transaction_record_exists(txn_hash)
     if not txn_record_exists:
@@ -190,7 +197,6 @@ def handle_event(event, multi_harvest, isOldApi):
     r.gov_fee_in_want, r.strategist_fee_in_want = parse_fees(tx, r.vault_address, r.strategy_address, r.vault_decimals)
     r.gain_post_fees = r.gain - r.loss - r.strategist_fee_in_want - r.gov_fee_in_want
     r.want_token = strategy.want()
-    print(r.want_token)
     r.want_price_at_block = magic.get_price(r.want_token, r.block)
     r.vault_api = vault.apiVersion()
     r.want_gain_usd = r.gain * r.want_price_at_block
@@ -326,33 +332,24 @@ def parse_fees(tx, vault_address, strategy_address, decimals):
                 counter = 0
     return gov_fee_in_underlying, strategist_fee_in_underlying
             
-
-def check_endorsed(vault_address, block):
+@memory.cache()
+def get_vault_endorsement_block(vault_address):
+    token = contract(vault_address).token()
     registry = contract(CHAIN_VALUES[chain.id]["REGISTRY_ADDRESS"])
-    harvest_block = block
-    endorsed_vaults = []
-    deploy_block = CHAIN_VALUES[chain.id]["REGISTRY_DEPLOY_BLOCK"]
-    block = deploy_block if block < deploy_block else block
-    num_tokens = registry.numTokens(block_identifier=block)
-    for i in range(0, num_tokens):
-        t = registry.tokens(i, block_identifier=block)
-        for n in range(0, 20):
-            v = registry.vaults(t, n, block_identifier=block)
-            if v == ZERO_ADDRESS:
-                break
-            endorsed_vaults.append(v)
-    if vault_address in endorsed_vaults:
-        return True
-    else:
-        endorsed_vaults = list(contract(CHAIN_VALUES[chain.id]["REGISTRY_HELPER_ADDRESS"]).getVaults())
-        if vault_address not in endorsed_vaults:
-            return False
-        else:
-            rewards = contract(vault_address).rewards(block_identifier=harvest_block)
-            if rewards == CHAIN_VALUES[chain.id]["YEARN_TREASURY"]:
-                return True
+    height = chain.height
+    lo, hi = CHAIN_VALUES[chain.id]["START_BLOCK"], height
+
+    while hi - lo > 1:
+        mid = lo + (hi - lo) // 2
+        try:
+            num_vaults = registry.numVaults(token, block_identifier=mid)
+            if registry.vaults(token, num_vaults-1, block_identifier=mid) == vault_address:
+                hi = mid
             else:
-                return False
+                lo = mid
+        except:
+            lo = mid
+    return hi
 
 def normalize_event_values(vals, decimals):
     denominator = 10**decimals
