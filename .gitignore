@@ -21,3 +21,4 @@ generated
 package*.json
 hardhat.config.js
 .idea
+setup_db.py
