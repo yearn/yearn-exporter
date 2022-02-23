@@ -29,7 +29,7 @@ from yearn.v2.vaults import Vault as VaultV2
 
 from yearn.utils import contract_creation_block, contract, chunks
 
-from yearn.exceptions import PriceError
+from yearn.exceptions import PriceError, EmptyS3Export
 from yearn.networks import Network
 
 warnings.simplefilter("ignore", BrownieEnvironmentWarning)
@@ -119,6 +119,7 @@ def get_assets_metadata(vault_v2: list) -> dict:
         assets_metadata[datum[0]] = datum[-1]
     return assets_metadata
 
+
 def registry_adapter():
     if chain.id == Network.Mainnet:
         registry_adapter_address = web3.ens.resolve("lens.ychad.eth")
@@ -169,6 +170,9 @@ def main():
 
     endorsed = [vault for vault in data if vault["endorsed"]]
     experimental = [vault for vault in data if not vault["endorsed"]]
+
+    if (len(endorsed) + len(experimental)) == 0:
+        raise EmptyS3Export(f"No data for vaults was found in generated data, aborting upload")
 
     vault_api_all = os.path.join(vaults_api_path, "all")
     with open(os.path.join(out, vault_api_all), "w+") as f:
