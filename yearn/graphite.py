@@ -40,14 +40,3 @@ def send_metric(metric_name: str, value: float, time: datetime, tags=None, resol
         logger.error(f"Failed to send metric {metric_name} with value {value}: {result.text}")
 
     logger.debug('%s: %s' % (result.status_code, result.text))
-
-
-# now = datetime.now()
-# metrics = [
-#     ('my.test.metric', 10, 0.23, now - timedelta(seconds=30)),
-#     ('my.test.metric', 10, 1.23, now - timedelta(seconds=20)),
-#     ('my.test.metric', 10, 2.23, now - timedelta(seconds=10)),
-#     ('my.test.metric', 10, 3.23, now),
-# ]
-
-# write_metrics(metrics, GRAFANA_URL, GRAFANA_APIKEY)
