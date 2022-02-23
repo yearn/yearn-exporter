@@ -7,6 +7,7 @@ import shutil
 import json
 import os
 
+
 from datetime import datetime
 from typing import Any, Union
 from time import time
@@ -29,10 +30,14 @@ from yearn.v2.vaults import Vault as VaultV2
 
 from yearn.utils import contract_creation_block, contract, chunks
 
+from yearn.graphite import send_metric
+
 from yearn.exceptions import PriceError
 from yearn.networks import Network
 
 warnings.simplefilter("ignore", BrownieEnvironmentWarning)
+
+METRIC_NAME = "yearn.exporter.apy"
 
 logging.basicConfig(level=logging.DEBUG)
 logger = logging.getLogger("yearn.apy")
@@ -131,7 +136,7 @@ def registry_adapter():
 
 def main():
     data = []
-
+    metric_tags = {"chain": chain.id}
     aliases_repo_url = "https://api.github.com/repos/yearn/yearn-assets/git/refs/heads/master"
     aliases_repo = requests.get(aliases_repo_url).json()
     commit = aliases_repo["object"]["sha"]
@@ -205,6 +210,10 @@ def main():
         vault_api_experimental,
         ExtraArgs={'ContentType': "application/json", 'CacheControl': "max-age=1800"},
     )
+
+    # Sent a metric so we can track and alert on if this was successfully generated
+    utc_now = datetime.utcnow()
+    send_metric(f"{METRIC_NAME}.success", 1, utc_now, tags=metric_tags)
 
 
 telegram_users_to_alert = ["@jstashh", "@x48114", "@dudesahn"]
