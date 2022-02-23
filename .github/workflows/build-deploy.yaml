@@ -1,9 +1,9 @@
-name: Build and Deploy
+name: APY Build and Deploy
 on:
   workflow_dispatch:
     
 jobs:
-  build_and_deploy:
+  apy_build_and_deploy:
     runs-on: ubuntu-latest
     environment: production
     steps:
