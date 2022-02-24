@@ -20,7 +20,7 @@ warnings.filterwarnings("ignore", ".*Locally compiled and on-chain*")
 warnings.filterwarnings("ignore", ".*It has been discarded*")
 
 telegram_key = os.environ.get('HARVEST_TRACKER_BOT_KEY')
-mainnet_public_channel = os.environ.get('TELEGRAM_CHANNEL_250_PUBLIC')
+mainnet_public_channel = os.environ.get('TELEGRAM_CHANNEL_1_PUBLIC')
 ftm_public_channel = os.environ.get('TELEGRAM_CHANNEL_250_PUBLIC')
 dev_channel = os.environ.get('TELEGRAM_CHANNEL_DEV')
 discord_mainnet = os.environ.get('DISCORD_CHANNEL_1')
