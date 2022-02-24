@@ -55,7 +55,7 @@ CHAIN_VALUES = {
         "LENS_DEPLOY_BLOCK": 12707450,
         "VAULT_ADDRESS030": "0x19D3364A399d251E894aC732651be8B0E4e85001",
         "VAULT_ADDRESS031": "0xdA816459F1AB5631232FE5e97a05BBBb94970c95",
-        "KEEPER_CALL_CONTRACT": "0x5f18C75AbDAe578b483E5F43f12a39cF75b973a9",
+        "KEEPER_CALL_CONTRACT": "0x2150b45626199CFa5089368BDcA30cd0bfB152D6",
         "KEEPER_TOKEN": "0x1cEB5cB57C4D4E2b2433641b95Dd330A33185A44",
         "YEARN_TREASURY": "0x93A62dA5a14C80f265DAbC077fCEE437B1a0Efde",
         "STRATEGIST_MULTISIG": "0x16388463d60FFE0661Cf7F1f31a7D658aC790ff7",
@@ -73,7 +73,7 @@ CHAIN_VALUES = {
         "LENS_DEPLOY_BLOCK": 18842673,
         "VAULT_ADDRESS030": "0x637eC617c86D24E421328e6CAEa1d92114892439",
         "VAULT_ADDRESS031": "0x637eC617c86D24E421328e6CAEa1d92114892439",
-        "KEEPER_CALL_CONTRACT": "0x39cAcdb557CA1C4a6555E00203B4a00B1c1a94f8",
+        "KEEPER_CALL_CONTRACT": "0x000004e4d96d663C809Cbc8D773a764A89D0b37f",
         "KEEPER_TOKEN": "",
         "YEARN_TREASURY": "0x89716Ad7EDC3be3B35695789C475F3e7A3Deb12a",
         "STRATEGIST_MULTISIG": "0x72a34AbafAB09b15E7191822A679f28E067C4a16",
@@ -438,22 +438,23 @@ def prepare_alerts(r, t):
         )
         
         # Send to dev channel
-        m = m + format_dev_telegram(r, t)
+        m = f"CHAIN {chain.id}\n\n" + m + format_dev_telegram(r, t)
         bot.send_message(dev_channel, m, parse_mode="markdown", disable_web_page_preview = True)
 
 def format_public_telegram(r, t):
     explorer = CHAIN_VALUES[chain.id]["EXPLORER_URL"]
     sms = CHAIN_VALUES[chain.id]["STRATEGIST_MULTISIG"]
-    gov = CHAIN_VALUES[chain.id]["STRATEGIST_MULTISIG"]
+    gov = CHAIN_VALUES[chain.id]["GOVERNANCE_MULTISIG"]
+    keeper = CHAIN_VALUES[chain.id]["KEEPER_CALL_CONTRACT"]
     from_indicator = ""
 
-    if t.txn_from == sms or t.txn_from == gov:
+    if t.txn_to == sms or t.txn_to == gov:
         from_indicator = "✍ "
 
-    elif t.txn_from == r.strategist:
+    elif t.txn_from == r.strategist and t.txn_to != sms:
         from_indicator = "🧠 "
 
-    elif t.keeper_called:
+    elif t.keeper_called or t.txn_from == keeper or t.txn_to == keeper:
         from_indicator = "🤖 "
 
     message = ""
