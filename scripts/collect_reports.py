@@ -1,7 +1,10 @@
 import logging
 import time, os
+import telebot
+from discordwebhook import Discord
 from dotenv import load_dotenv
 from yearn.cache import memory
+import pandas as pd
 from datetime import datetime, timezone
 from brownie import chain, web3, Contract, ZERO_ADDRESS
 from web3._utils.events import construct_event_topic_set
@@ -16,21 +19,48 @@ warnings.filterwarnings("ignore", ".*Class SelectOfScalar will not make use of S
 warnings.filterwarnings("ignore", ".*Locally compiled and on-chain*")
 warnings.filterwarnings("ignore", ".*It has been discarded*")
 
+telegram_key = os.environ.get('HARVEST_TRACKER_BOT_KEY')
+mainnet_public_channel = os.environ.get('TELEGRAM_CHANNEL_250_PUBLIC')
+ftm_public_channel = os.environ.get('TELEGRAM_CHANNEL_250_PUBLIC')
+dev_channel = os.environ.get('TELEGRAM_CHANNEL_DEV')
+discord_mainnet = os.environ.get('DISCORD_CHANNEL_1')
+discord_ftm = os.environ.get('DISCORD_CHANNEL_250')
+bot = telebot.TeleBot(telegram_key)
+alerts_enabled = True
+
+OLD_REGISTRY_ENDORSEMENT_BLOCKS = {
+    "0xE14d13d8B3b85aF791b2AADD661cDBd5E6097Db1": 11999957,
+    "0xdCD90C7f6324cfa40d7169ef80b12031770B4325": 11720423,
+    "0x986b4AFF588a109c09B50A03f42E4110E29D353F": 11881934,
+    "0xcB550A6D4C8e3517A939BC79d0c7093eb7cF56B5": 11770630,
+    "0xa9fE4601811213c340e850ea305481afF02f5b28": 11927501,
+    "0xB8C3B7A2A618C552C23B1E4701109a9E756Bab67": 12019352,
+    "0xBFa4D8AA6d8a379aBFe7793399D3DdaCC5bBECBB": 11579535,
+    "0x19D3364A399d251E894aC732651be8B0E4e85001": 11682465,
+    "0xe11ba472F74869176652C35D30dB89854b5ae84D": 11631914,
+    "0xe2F6b9773BF3A015E2aA70741Bde1498bdB9425b": 11579535,
+    "0x5f18C75AbDAe578b483E5F43f12a39cF75b973a9": 11682465,
+    "0x27b7b1ad7288079A66d12350c828D3C00A6F07d7": 12089661,
+}
+
 
 CHAIN_VALUES = {
     Network.Mainnet: {
         "START_DATE": datetime(2020, 2, 12, tzinfo=timezone.utc),
-        "START_BLOCK": 11772924,
+        "START_BLOCK": 11563389,
         "REGISTRY_ADDRESS": "0x50c1a2eA0a861A967D9d0FFE2AE4012c2E053804",
         "REGISTRY_DEPLOY_BLOCK": 12045555,
         "REGISTRY_HELPER_ADDRESS": "0x52CbF68959e082565e7fd4bBb23D9Ccfb8C8C057",
         "LENS_ADDRESS": "0x5b4F3BE554a88Bd0f8d8769B9260be865ba03B4a",
         "LENS_DEPLOY_BLOCK": 12707450,
-        "VAULT_ADDRESS030": "0x5f18C75AbDAe578b483E5F43f12a39cF75b973a9",
+        "VAULT_ADDRESS030": "0x19D3364A399d251E894aC732651be8B0E4e85001",
         "VAULT_ADDRESS031": "0xdA816459F1AB5631232FE5e97a05BBBb94970c95",
         "KEEPER_CALL_CONTRACT": "0x5f18C75AbDAe578b483E5F43f12a39cF75b973a9",
         "KEEPER_TOKEN": "0x1cEB5cB57C4D4E2b2433641b95Dd330A33185A44",
         "YEARN_TREASURY": "0x93A62dA5a14C80f265DAbC077fCEE437B1a0Efde",
+        "STRATEGIST_MULTISIG": "0x16388463d60FFE0661Cf7F1f31a7D658aC790ff7",
+        "GOVERNANCE_MULTISIG": "0xFEB4acf3df3cDEA7399794D0869ef76A6EfAff52",
+        "EXPLORER_URL": "https://etherscan.io/",
     },
     Network.Fantom: {
         "START_DATE": datetime(2021, 4, 30, tzinfo=timezone.utc),
@@ -46,6 +76,9 @@ CHAIN_VALUES = {
         "KEEPER_CALL_CONTRACT": "0x39cAcdb557CA1C4a6555E00203B4a00B1c1a94f8",
         "KEEPER_TOKEN": "",
         "YEARN_TREASURY": "0x89716Ad7EDC3be3B35695789C475F3e7A3Deb12a",
+        "STRATEGIST_MULTISIG": "0x72a34AbafAB09b15E7191822A679f28E067C4a16",
+        "GOVERNANCE_MULTISIG": "0xC0E2830724C946a6748dDFE09753613cd38f6767",
+        "EXPLORER_URL": "https://ftmscan.com/",
     },
     Network.Arbitrum: {
         "START_DATE": datetime(2021, 9, 14, tzinfo=timezone.utc),
@@ -59,6 +92,8 @@ CHAIN_VALUES = {
         "KEEPER_CALL_CONTRACT": "",
         "KEEPER_TOKEN": "",
         "YEARN_TREASURY": "",
+        "STRATEGIST_MULTISIG": "",
+        "GOVERNANCE_MULTISIG": "",
     }
 }
 
@@ -71,6 +106,7 @@ topics = construct_event_topic_set(
 )
 # Deprecated vault interface
 if chain.id == 1:
+    print(CHAIN_VALUES[chain.id]["VAULT_ADDRESS030"])
     vault_v030 = contract(CHAIN_VALUES[chain.id]["VAULT_ADDRESS030"])
     vault_v030 = web3.eth.contract(CHAIN_VALUES[chain.id]["VAULT_ADDRESS030"], abi=vault_v030.abi)
     topics_v030 = construct_event_topic_set(
@@ -87,7 +123,7 @@ def main(dynamically_find_multi_harvest=False):
     print("blocks behind (v0.3.1+ API)", chain.height - last_reported_block)
     if chain.id == 1:
         print("latest block (v0.3.0 API)",last_reported_block030)
-        print("blocks behind (v0.3.0+ API)", chain.height - last_reported_block030)
+        print("blocks behind (v0.3.0 API)", chain.height - last_reported_block030)
     event_filter = web3.eth.filter({'topics': topics, "fromBlock": last_reported_block + 1})
     if chain.id == 1:
         event_filter_v030 = web3.eth.filter({'topics': topics_v030, "fromBlock": last_reported_block030 + 1})
@@ -160,9 +196,9 @@ def handle_event(event, multi_harvest):
     r.vault_decimals = vault.decimals()
     r.strategy_address, r.gain, r.loss, r.debt_paid, r.total_gain, r.total_loss, r.total_debt, r.debt_added, r.debt_ratio = normalize_event_values(event.values(), r.vault_decimals)
     
-    
-    txn_record_exists = transaction_record_exists(txn_hash)
-    if not txn_record_exists:
+    txn_record_exists = False
+    t = transaction_record_exists(txn_hash)
+    if not t:
         t = Transactions()
         t.chain_id = chain.id
         t.txn_hash = txn_hash
@@ -188,7 +224,8 @@ def handle_event(event, multi_harvest):
         t.date_string = dt
         t.timestamp = ts
         t.updated_timestamp = datetime.now()
-
+    else:
+        txn_record_exists = True
     r.block = event.block_number
     r.txn_hash = txn_hash
     strategy = contract(r.strategy_address)
@@ -196,6 +233,7 @@ def handle_event(event, multi_harvest):
 
     r.gov_fee_in_want, r.strategist_fee_in_want = parse_fees(tx, r.vault_address, r.strategy_address, r.vault_decimals)
     r.gain_post_fees = r.gain - r.loss - r.strategist_fee_in_want - r.gov_fee_in_want
+    r.token_symbol = contract(strategy.want()).symbol()
     r.want_token = strategy.want()
     r.want_price_at_block = magic.get_price(r.want_token, r.block)
     r.vault_api = vault.apiVersion()
@@ -203,6 +241,7 @@ def handle_event(event, multi_harvest):
     r.vault_name = vault.name()
     r.strategy_name = strategy.name()
     r.strategy_api = strategy.apiVersion()
+    r.strategist = strategy.strategist()
     r.vault_symbol = vault.symbol()
     r.date = datetime.utcfromtimestamp(ts)
     r.date_string = dt
@@ -219,11 +258,19 @@ def handle_event(event, multi_harvest):
             r.previous_report_id = previous_report_id
             r.rough_apr_pre_fee, r.rough_apr_post_fee = compute_apr(r, previous_report)
         # Insert to database
-        session.add(r)
-        if not txn_record_exists:
-            session.add(t)
-        session.commit()
-        print(f"report added. strategy {r.strategy_address} txn hash {r.txn_hash}. chain id {r.chain_id} sync {r.block} / {chain.height}.")
+        insert_success = False
+        try:
+            session.add(r)
+            if not txn_record_exists:
+                session.add(t)
+            session.commit()
+            print(f"report added. strategy {r.strategy_address} txn hash {r.txn_hash}. chain id {r.chain_id} sync {r.block} / {chain.height}.")
+            insert_success = True
+        except:
+            print(f"skipped duplicate record. strategy: {r.strategy_address} at tx hash: {r.txn_hash}")
+            pass
+        if insert_success:
+            prepare_alerts(r, t)
 
 def transaction_record_exists(txn_hash):
     with Session(engine) as session:
@@ -233,7 +280,7 @@ def transaction_record_exists(txn_hash):
         result = session.exec(query).first()
         if result == None:
             return False
-        return True
+        return result
 
 def last_harvest_block():
     with Session(engine) as session:
@@ -271,7 +318,6 @@ def get_keeper_payment(tx):
     return amount
 
 def compute_apr(report, previous_report):
-    # ADD pre-fee and post-fee APR
     SECONDS_IN_A_YEAR = 31557600
     seconds_between_reports = report.timestamp - previous_report.timestamp
     pre_fee_apr = 0
@@ -335,10 +381,14 @@ def parse_fees(tx, vault_address, strategy_address, decimals):
 @memory.cache()
 def get_vault_endorsement_block(vault_address):
     token = contract(vault_address).token()
+    try:
+        block = OLD_REGISTRY_ENDORSEMENT_BLOCKS[vault_address]
+        return block
+    except KeyError:
+        pass
     registry = contract(CHAIN_VALUES[chain.id]["REGISTRY_ADDRESS"])
     height = chain.height
     lo, hi = CHAIN_VALUES[chain.id]["START_BLOCK"], height
-
     while hi - lo > 1:
         mid = lo + (hi - lo) // 2
         try:
@@ -369,3 +419,74 @@ def normalize_event_values(vals, decimals):
         debt_added/denominator, 
         debt_ratio
     )
+
+def prepare_alerts(r, t):
+    if alerts_enabled:
+        m = format_public_telegram(r, t)
+        # Send to chain specific channels
+        if chain.id == 1:
+            bot.send_message(mainnet_public_channel, m, parse_mode="markdown", disable_web_page_preview = True)
+            discord = Discord(url=discord_mainnet)
+        if chain.id == 250:
+            bot.send_message(ftm_public_channel, m, parse_mode="markdown", disable_web_page_preview = True)
+            discord = Discord(url=discord_ftm)
+        discord.post(
+            embeds=[{
+                "title": "New harvest", 
+                "description": m
+            }],
+        )
+        
+        # Send to dev channel
+        m = m + format_dev_telegram(r, t)
+        bot.send_message(dev_channel, m, parse_mode="markdown", disable_web_page_preview = True)
+
+def format_public_telegram(r, t):
+    explorer = CHAIN_VALUES[chain.id]["EXPLORER_URL"]
+    sms = CHAIN_VALUES[chain.id]["STRATEGIST_MULTISIG"]
+    gov = CHAIN_VALUES[chain.id]["STRATEGIST_MULTISIG"]
+    from_indicator = ""
+
+    if t.txn_from == sms or t.txn_from == gov:
+        from_indicator = "✍ "
+
+    elif t.txn_from == r.strategist:
+        from_indicator = "🧠 "
+
+    elif t.keeper_called:
+        from_indicator = "🤖 "
+
+    message = ""
+    message += from_indicator
+    message += f' [{r.vault_name}]({explorer}address/{r.vault_address})  --  [{r.strategy_name}]({explorer}address/{r.strategy_address})\n\n'
+    message += f'📅 {r.date_string} UTC \n\n'
+    net_profit_want = "{:,.2f}".format(r.gain - r.loss)
+    net_profit_usd = "{:,.2f}".format(r.want_gain_usd)
+    message += f'💰 Net profit: {net_profit_want} {r.token_symbol} (${net_profit_usd})\n\n'
+    txn_cost_str = "${:,.2f}".format(t.call_cost_usd)
+    message += f'💸 Transaction Cost: {txn_cost_str} \n\n'
+    message += f'🔗 [View on Explorer]({explorer}tx/{r.txn_hash})'
+    if r.multi_harvest:
+        message += "\n\n_part of a single txn with multiple harvests_"
+    print(message)
+    return message
+
+def format_dev_telegram(r, t):
+    message = '\n\n'
+    df = pd.DataFrame(index=[''])
+    df[r.vault_name + " " + r.vault_api] = r.vault_address
+    df["Strategy Address"] = r.strategy_address
+    df["Gain"] = "{:,.2f}".format(r.gain) + " (" + "${:,.2f}".format(r.gain * r.want_price_at_block) + ")"
+    df["Loss"] = "{:,.2f}".format(r.loss) + " (" + "${:,.2f}".format(r.loss * r.want_price_at_block) + ")"
+    df["Debt Paid"] = "{:,.2f}".format(r.debt_paid) + " (" + "${:,.2f}".format(r.debt_paid * r.want_price_at_block) + ")"
+    df["Debt Added"] = "{:,.2f}".format(r.debt_added) + " (" + "${:,.2f}".format(r.debt_added * r.want_price_at_block) + ")"
+    df["Total Debt"] = "{:,.2f}".format(r.total_debt) + " (" + "${:,.2f}".format(r.total_debt * r.want_price_at_block) + ")"
+    df["Debt Ratio"] = r.debt_ratio
+    df["Treasury Fee"] = "{:,.2f}".format(r.gov_fee_in_want) + " (" + "${:,.2f}".format(r.gov_fee_in_want * r.want_price_at_block) + ")"
+    df["Strategist Fee"] = "{:,.2f}".format(r.strategist_fee_in_want) + " (" + "${:,.2f}".format(r.strategist_fee_in_want * r.want_price_at_block) + ")"
+    df["Pre-fee APR"] = "{:.2%}".format(r.rough_apr_pre_fee)
+    df["Post-fee APR"] = "{:.2%}".format(r.rough_apr_post_fee)
+    message2 = f"```{df.T.to_string()}\n```"
+    return message + message2
+
+

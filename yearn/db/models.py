@@ -90,6 +90,7 @@ class Reports(SQLModel, table=True):
     debt_ratio: int
     # Looked-up fields
     want_token: str
+    token_symbol: str
     want_price_at_block: int
     want_gain_usd: int
     gov_fee_in_want: int
@@ -103,6 +104,7 @@ class Reports(SQLModel, table=True):
     vault_decimals: int
     strategy_name: str
     strategy_api: str
+    strategist: str
     previous_report_id: int
     multi_harvest: bool
     # Date fields
