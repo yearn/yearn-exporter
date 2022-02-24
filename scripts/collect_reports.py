@@ -438,7 +438,7 @@ def prepare_alerts(r, t):
         )
         
         # Send to dev channel
-        m = f"CHAIN {chain.id}\n\n" + m + format_dev_telegram(r, t)
+        m = f"Chain ID: {chain.id}\n\n" + m + format_dev_telegram(r, t)
         bot.send_message(dev_channel, m, parse_mode="markdown", disable_web_page_preview = True)
 
 def format_public_telegram(r, t):
