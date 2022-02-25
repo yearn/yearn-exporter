@@ -26,7 +26,7 @@ dev_channel = os.environ.get('TELEGRAM_CHANNEL_DEV')
 discord_mainnet = os.environ.get('DISCORD_CHANNEL_1')
 discord_ftm = os.environ.get('DISCORD_CHANNEL_250')
 bot = telebot.TeleBot(telegram_key)
-alerts_enabled = True
+alerts_enabled = True if os.environ.get('ENVIRONMENT') == "PROD" else False
 
 OLD_REGISTRY_ENDORSEMENT_BLOCKS = {
     "0xE14d13d8B3b85aF791b2AADD661cDBd5E6097Db1": 11999957,
@@ -439,6 +439,7 @@ def prepare_alerts(r, t):
         
         # Send to dev channel
         m = f"Chain ID: {chain.id}\n\n" + m + format_dev_telegram(r, t)
+        print(f"Chain ID: {chain.id}\n\n" + m + format_dev_telegram(r, t))
         bot.send_message(dev_channel, m, parse_mode="markdown", disable_web_page_preview = True)
 
 def format_public_telegram(r, t):
@@ -469,14 +470,20 @@ def format_public_telegram(r, t):
     message += f'🔗 [View on Explorer]({explorer}tx/{r.txn_hash})'
     if r.multi_harvest:
         message += "\n\n_part of a single txn with multiple harvests_"
-    print(message)
     return message
 
 def format_dev_telegram(r, t):
     message = '\n\n'
     df = pd.DataFrame(index=[''])
+    last_harvest_ts = contract(r.vault_address).strategies(r.strategy_address, block_identifier=r.block-1).dict()["lastReport"]
+    if last_harvest_ts == 0:
+        time_since_last_report = "n/a"
+    else:
+        seconds_since_report = int(time.time() - last_harvest_ts)
+        time_since_last_report = "%dd, %dhr, %dm" % dhms_from_seconds(seconds_since_report)
     df[r.vault_name + " " + r.vault_api] = r.vault_address
     df["Strategy Address"] = r.strategy_address
+    df["Last Report"] = time_since_last_report
     df["Gain"] = "{:,.2f}".format(r.gain) + " (" + "${:,.2f}".format(r.gain * r.want_price_at_block) + ")"
     df["Loss"] = "{:,.2f}".format(r.loss) + " (" + "${:,.2f}".format(r.loss * r.want_price_at_block) + ")"
     df["Debt Paid"] = "{:,.2f}".format(r.debt_paid) + " (" + "${:,.2f}".format(r.debt_paid * r.want_price_at_block) + ")"
@@ -490,4 +497,8 @@ def format_dev_telegram(r, t):
     message2 = f"```{df.T.to_string()}\n```"
     return message + message2
 
-
+def dhms_from_seconds(seconds):
+	minutes, seconds = divmod(seconds, 60)
+	hours, minutes = divmod(minutes, 60)
+	days, hours = divmod(hours, 24)
+	return (days, hours, minutes)
