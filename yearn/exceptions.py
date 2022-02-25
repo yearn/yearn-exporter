@@ -12,3 +12,7 @@ class ArchiveNodeRequired(Exception):
 
 class MulticallError(Exception):
     pass
+
+
+class EmptyS3Export(Exception):
+    pass
