@@ -71,3 +71,9 @@ make tvl
 ```
 
 After successful startup you can access the tvl rest endpoint at `http://localhost:4000`.
+
+### Setting up GitHub Actions
+
+Create Access Keys for `apy-exporter-service-user` user.
+
+Create a new [environment](https://github.com/numan/yearn-exporter/settings/environments) named `production` and add the newly created `AWS_ACCESS_KEY_ID` and `AWS_SECRET_ACCESS_KEY`.
