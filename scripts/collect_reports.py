@@ -492,8 +492,14 @@ def format_dev_telegram(r, t):
     df["Debt Ratio"] = r.debt_ratio
     df["Treasury Fee"] = "{:,.2f}".format(r.gov_fee_in_want) + " (" + "${:,.2f}".format(r.gov_fee_in_want * r.want_price_at_block) + ")"
     df["Strategist Fee"] = "{:,.2f}".format(r.strategist_fee_in_want) + " (" + "${:,.2f}".format(r.strategist_fee_in_want * r.want_price_at_block) + ")"
-    df["Pre-fee APR"] = "{:.2%}".format(r.rough_apr_pre_fee)
-    df["Post-fee APR"] = "{:.2%}".format(r.rough_apr_post_fee)
+    prefee = "n/a"
+    postfee = "n/a"
+    if r.rough_apr_pre_fee is not None:
+        prefee = "{:.2%}".format(r.rough_apr_pre_fee)
+    if r.rough_apr_post_fee is not None:
+        postfee = "{:.2%}".format(r.rough_apr_post_fee)
+    df["Pre-fee APR"] = prefee
+    df["Post-fee APR"] = postfee
     message2 = f"```{df.T.to_string()}\n```"
     return message + message2
 
