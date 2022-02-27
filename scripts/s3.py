@@ -193,7 +193,7 @@ def main():
 
     kwargs = {}
     if aws_key is not None:
-        kwargs["aws_access_key_id"] = aws_secret
+        kwargs["aws_access_key_id"] = aws_key
     if aws_secret is not None:
         kwargs["aws_secret_access_key"] = aws_secret
 
