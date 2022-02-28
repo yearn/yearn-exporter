@@ -14,7 +14,7 @@ from yearn.exceptions import UnsupportedNetwork
 from yearn.networks import Network
 from yearn.outputs.victoria import output_base, output_wallets
 from yearn.prices import constants
-from yearn.utils import contract, contract_creation_block
+from yearn.utils import contract_creation_block
 
 logger = logging.getLogger(__name__)
 
