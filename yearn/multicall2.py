@@ -21,18 +21,25 @@ multicall2 = contract(MULTICALL2[chain.id])
 def fetch_multicall(*calls, block=None, require_success=False):
     # https://github.com/makerdao/multicall
     multicall_input = []
+    attribute_errors = []
     fn_list = []
     decoded = []
 
-    for contract, fn_name, *fn_inputs in calls:
-        fn = getattr(contract, fn_name)
+    for i, (contract, fn_name, *fn_inputs) in enumerate(calls):
+        try:
+            fn = getattr(contract, fn_name)
 
-        # check that there aren't multiple functions with the same name
-        if hasattr(fn, "_get_fn_from_args"):
-            fn = fn._get_fn_from_args(fn_inputs)
+            # check that there aren't multiple functions with the same name
+            if hasattr(fn, "_get_fn_from_args"):
+                fn = fn._get_fn_from_args(fn_inputs)
 
-        fn_list.append(fn)
-        multicall_input.append((contract, fn.encode_input(*fn_inputs)))
+            fn_list.append(fn)
+            multicall_input.append((contract, fn.encode_input(*fn_inputs)))
+        except AttributeError:
+            if not require_success:
+                attribute_errors.append(i)
+                continue
+            raise
 
     if isinstance(block, int) and block < contract_creation_block(MULTICALL2[chain.id]):
         # use state override to resurrect the contract prior to deployment
@@ -56,6 +63,10 @@ def fetch_multicall(*calls, block=None, require_success=False):
             if require_success:
                 raise MulticallError()
             decoded.append(None)
+
+    # NOTE this will only run if `require_success` is True
+    for i in attribute_errors:
+        decoded.insert(i, None)
 
     return decoded
 
