@@ -1,12 +1,13 @@
 import warnings
-from collections import Counter
-from tabulate import tabulate
 
+import sentry_sdk
 from brownie.exceptions import BrownieEnvironmentWarning
-from click import secho, style
+from click import style
+from tabulate import tabulate
 from toolz import groupby
-
 from yearn.yearn import Yearn
+
+sentry_sdk.set_tag('script','tvl')
 
 warnings.simplefilter("ignore", BrownieEnvironmentWarning)
 

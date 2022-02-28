@@ -3,14 +3,16 @@ from datetime import datetime, timezone
 from pathlib import Path
 
 import requests
+import sentry_sdk
 from brownie import Contract
 from semantic_version import Version
 from tokenlists import TokenInfo, TokenList
 from toolz import unique
-
 from yearn.multicall2 import multicall_matrix
-from yearn.utils import contract_creation_block, get_block_timestamp, contract
+from yearn.utils import contract, contract_creation_block, get_block_timestamp
 from yearn.yearn import Yearn
+
+sentry_sdk.set_tag('script','tokenlist')
 
 
 def main():

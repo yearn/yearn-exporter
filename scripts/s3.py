@@ -1,39 +1,32 @@
 import dataclasses
-import traceback
 import itertools
-import warnings
-import logging
-import shutil
 import json
+import logging
 import os
-
-
+import shutil
+import traceback
+import warnings
 from datetime import datetime
-from typing import Any, Union
 from time import time
+from typing import Any, Union
 
-from brownie.network.contract import Contract
-from brownie import web3, chain
-
-from yearn.special import Backscratcher, YveCRVJar
-
-import requests
 import boto3
-
+import requests
+import sentry_sdk
+from brownie import chain, web3
 from brownie.exceptions import BrownieEnvironmentWarning
-from yearn.apy import ApyFees, ApyPoints, Apy, get_samples, ApySamples, ApyError
+from yearn.apy import Apy, ApyFees, ApyPoints, ApySamples, get_samples
+from yearn.exceptions import EmptyS3Export, PriceError
+from yearn.graphite import send_metric
+from yearn.networks import Network
+from yearn.special import Backscratcher, YveCRVJar
+from yearn.utils import chunks, contract, contract_creation_block
 from yearn.v1.registry import Registry as RegistryV1
-from yearn.v2.registry import Registry as RegistryV2
-
 from yearn.v1.vaults import VaultV1
+from yearn.v2.registry import Registry as RegistryV2
 from yearn.v2.vaults import Vault as VaultV2
 
-from yearn.utils import contract_creation_block, contract, chunks
-
-from yearn.graphite import send_metric
-
-from yearn.exceptions import PriceError, EmptyS3Export
-from yearn.networks import Network
+sentry_sdk.set_tag('script','s3')
 
 warnings.simplefilter("ignore", BrownieEnvironmentWarning)
 

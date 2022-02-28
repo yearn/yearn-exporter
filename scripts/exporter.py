@@ -2,10 +2,13 @@ import logging
 import os
 import time
 
+import sentry_sdk
 from brownie import chain
-from yearn.yearn import Yearn
 from yearn.outputs.victoria import output_duration
 from yearn.prices import constants
+from yearn.yearn import Yearn
+
+sentry_sdk.set_tag('script','exporter')
 
 logger = logging.getLogger('yearn.exporter')
 sleep_interval = int(os.environ.get('SLEEP_SECONDS', '0'))

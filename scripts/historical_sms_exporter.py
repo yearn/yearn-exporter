@@ -1,11 +1,14 @@
 import logging
 from datetime import datetime, timezone
 
+import sentry_sdk
 from brownie import chain
 from yearn.historical_helper import export_historical, time_tracking
 from yearn.networks import Network
 from yearn.treasury.treasury import StrategistMultisig
 from yearn.utils import closest_block_after_timestamp
+
+sentry_sdk.set_tag('script','historical_sms_exporter')
 
 logger = logging.getLogger('yearn.historical_sms_exporter')
 

@@ -2,12 +2,15 @@ import logging
 from datetime import datetime, timezone
 from itertools import count
 
+import sentry_sdk
 from brownie import chain
 from yearn.entities import UserTx
 from yearn.historical_helper import export_historical, has_data, time_tracking
 from yearn.outputs.postgres.utils import last_recorded_block
 from yearn.utils import closest_block_after_timestamp
 from yearn.yearn import Yearn
+
+sentry_sdk.set_tag('script','wallet_exporter')
 
 logger = logging.getLogger('yearn.wallet_exporter')
 

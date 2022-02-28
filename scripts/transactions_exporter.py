@@ -4,6 +4,7 @@ import warnings
 from decimal import Decimal
 
 import pandas as pd
+import sentry_sdk
 from brownie import ZERO_ADDRESS, Contract, chain, web3
 from brownie.exceptions import BrownieEnvironmentWarning
 from pony.orm import db_session
@@ -17,6 +18,8 @@ from yearn.outputs.postgres.utils import (cache_address, cache_token,
                                           last_recorded_block)
 from yearn.prices import magic
 from yearn.yearn import Yearn
+
+sentry_sdk.set_tag('script','transactions_exporter')
 
 warnings.simplefilter("ignore", BrownieEnvironmentWarning)
 

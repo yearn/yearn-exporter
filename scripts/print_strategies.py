@@ -1,7 +1,10 @@
 from datetime import datetime
 
 import click
+import sentry_sdk
 from brownie.utils.output import build_tree
+
+sentry_sdk.set_tag('script','print_strategies')
 
 
 def main():

@@ -2,12 +2,15 @@ import logging
 import time
 from datetime import datetime, timedelta, timezone
 from itertools import count
-from brownie import chain
 
-from yearn.db.models import Block, Snapshot, Session, engine, select
-from yearn.utils import closest_block_after_timestamp, get_block_timestamp
+import sentry_sdk
+from brownie import chain
+from yearn.db.models import Block, Session, Snapshot, engine, select
 from yearn.networks import Network
+from yearn.utils import closest_block_after_timestamp, get_block_timestamp
 from yearn.yearn import Yearn
+
+sentry_sdk.set_tag('script','historical_tvl')
 
 logger = logging.getLogger("yearn.historical_tvl")
 

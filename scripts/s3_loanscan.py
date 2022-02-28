@@ -1,21 +1,25 @@
+import json
+import logging
+import os
+import shutil
+import traceback
+import warnings
+from datetime import datetime
+
+import boto3
+import sentry_sdk
+from brownie import web3
+from brownie.exceptions import BrownieEnvironmentWarning
+from brownie.network.contract import Contract
+from dotenv import find_dotenv, load_dotenv
+from yearn.apy import ApySamples, get_samples
+from yearn.prices import curve
 from yearn.special import Backscratcher
+from yearn.utils import contract
 from yearn.v2.registry import Registry as RegistryV2
 from yearn.v2.vaults import Vault as VaultV2
-from yearn.prices import curve
-from yearn.apy import get_samples, ApySamples
-from yearn.utils import contract
-from brownie import web3
-from brownie.network.contract import Contract
-from brownie.exceptions import BrownieEnvironmentWarning
-import boto3
-from datetime import datetime
-import os
-import json
-import shutil
-import logging
-import warnings
-import traceback
-from dotenv import find_dotenv, load_dotenv
+
+sentry_sdk.set_tag('script','s3_loanscan')
 
 load_dotenv(find_dotenv())
 
