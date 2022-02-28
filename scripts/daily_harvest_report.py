@@ -90,3 +90,4 @@ def main():
             "description": cumulative_message
         }],
     )
+    bot.send_message(dev_channel, date_banner + cumulative_message, parse_mode="markdown", disable_web_page_preview = True)
