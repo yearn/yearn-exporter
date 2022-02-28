@@ -203,8 +203,6 @@ class Treasury:
         if chain.id != Network.Mainnet: return
         proxy_registry = contract('0x4678f0a6958e4D2Bc4F1BAF7Bc52E8F3564f3fE4')
         cdp_manager = contract('0x5ef30b9986345249bc32d8928B7ee64DE9435E39')
-        # ychad = contract('ychad.eth')
-        ychad = contract('0xfeb4acf3df3cdea7399794d0869ef76a6efaff52')
         vat = contract('0x35D1b3F3D7966A1DFe207aa4514C12a259A0492B')
         yfi = "0x0bc529c00C6401aEF6D220BE8C6Ea1667F6Ad93e"
         ilk = encode_single('bytes32', b'YFI-A')
