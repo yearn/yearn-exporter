@@ -110,13 +110,13 @@ def find_price(token, block):
         return price * get_price(underlying, block=block)
 
     if price is None:
-        logger.error(f"failed to get price for {describe_err(token, block)}'")
-        raise PriceError(f'could not fetch price for {describe_err(token, block)}')
+        logger.error(f"failed to get price for {_describe_err(token, block)}'")
+        raise PriceError(f'could not fetch price for {_describe_err(token, block)}')
 
     return price
 
 
-def describe_err(token, block) -> str:
+def _describe_err(token, block) -> str:
     '''
     Assembles a string used to provide as much useful information as possible in PriceError messages
     '''
