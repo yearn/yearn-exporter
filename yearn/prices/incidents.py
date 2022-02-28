@@ -25,8 +25,20 @@ INCIDENTS.update({
             {"start":11893317,"end":12020551,"result":1.0107300938482453},
             {"start":12028696,"end":12194529,"result":1.0125968580471483}
         ],
+
+        # for these, price cannot be fetched from chain because totalSupply == 0
+        # on block of last withdrawal we return price at block - 1
+        # after that block, returns 0
+
         # yvhusd3CRV v1
-        # for this one we return last price before incident, price still cannot be fetched from chain
-        "0x39546945695DCb1c037C836925B355262f551f55": [{"start":12074825,"end":chain.height,"result":1.0110339337578227}],
+        "0x39546945695DCb1c037C836925B355262f551f55": [
+            {"start":12074825,"end":12074825,"result":1.0110339337578227},
+            {"start":12074826,"end":chain.height,"result":0}
+        ],
+        # yvobtccrv v1
+        "0x7F83935EcFe4729c4Ea592Ab2bC1A32588409797": [
+            {"start":12582511,"end":12582511,"result":37611.70819906929},
+            {"start":12582512,"end":chain.height,"result":0}
+        ]
     },
 }.get(chain.id, {}))
