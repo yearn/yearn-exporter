@@ -122,7 +122,7 @@ def _describe_err(token, block) -> str:
     '''
     try:
         symbol = contract(token).symbol()
-    except:
+    except AttributeError:
         symbol = None
 
     if block is None:
@@ -131,7 +131,7 @@ def _describe_err(token, block) -> str:
 
         return f"malformed token {token} on {Network(chain.id).name}"
 
-    if not symbol:
+    if symbol:
         return f"{symbol} {token} on {Network(chain.id).name} at {block}"
 
     return f"malformed token {token} on {Network(chain.id).name} at {block}"
