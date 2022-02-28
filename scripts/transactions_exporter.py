@@ -5,14 +5,13 @@ from decimal import Decimal
 
 import pandas as pd
 import sentry_sdk
-from brownie import ZERO_ADDRESS, Contract, chain, web3
+from brownie import ZERO_ADDRESS, chain, web3
 from brownie.exceptions import BrownieEnvironmentWarning
 from pony.orm import db_session
 from web3._utils.abi import filter_by_name
 from web3._utils.events import construct_event_topic_set
 from yearn.entities import UserTx  # , TreasuryTx
 from yearn.events import decode_logs, get_logs_asap
-from yearn.exceptions import PriceError
 from yearn.networks import Network
 from yearn.outputs.postgres.utils import (cache_address, cache_token,
                                           last_recorded_block)
@@ -27,16 +26,26 @@ yearn = Yearn(load_strategies=False)
 
 logger = logging.getLogger('yearn.transactions_exporter')
 
-BATCH_SIZE = 5000
+BATCH_SIZE = {
+    Network.Mainnet: 5000,
+    Network.Fantom: 20000,
+}[chain.id]
 
 FIRST_END_BLOCK = {
     Network.Mainnet: 9480000, # NOTE block some arbitrary time after iearn's first deployment
     Network.Fantom: 5000000, # NOTE block some arbitrary time after v2's first deployment
 }[chain.id]
 
+_cached_thru_from_last_run = None
+
 def main():
-    for block in chain.new_blocks(height_buffer=1):
-        process_and_cache_user_txs(last_recorded_block(UserTx))
+    while True:
+        cached_thru = last_recorded_block(UserTx)
+        if cached_thru == _cached_thru_from_last_run:
+            logger.critical(f'stuck in infinite loop, increase transactions exporter batch size for {Network.name}')
+        process_and_cache_user_txs(cached_thru)
+        _cached_thru_from_last_run = cached_thru
+        time.sleep(1)
 
 
 @db_session
@@ -73,9 +82,9 @@ def process_and_cache_user_txs(last_saved_block=None):
                 gas_price = row.gas_price
                 )
         if start_block == end_block:
-            logger.warn(f'{len(df)} user txs exported to postrges [block {start_block}]')
+            logger.info(f'{len(df)} user txs exported to postrges [block {start_block}]')
         else:
-            logger.warn(f'{len(df)} user txs exported to postrges [blocks {start_block}-{end_block}]')
+            logger.info(f'{len(df)} user txs exported to postrges [blocks {start_block}-{end_block}]')
 
 
 # Helper functions
