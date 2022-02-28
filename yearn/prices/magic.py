@@ -4,28 +4,27 @@ from brownie import chain
 from cachetools.func import ttl_cache
 from yearn.exceptions import PriceError
 from yearn.networks import Network
+from yearn.prices import balancer as bal
+from yearn.prices import constants, curve
 from yearn.prices.aave import aave
 from yearn.prices.band import band
 from yearn.prices.chainlink import chainlink
 from yearn.prices.compound import compound
-import yearn.prices.balancer as bal
 from yearn.prices.fixed_forex import fixed_forex
+from yearn.prices.incidents import INCIDENTS
 from yearn.prices.synthetix import synthetix
 from yearn.prices.uniswap.v1 import uniswap_v1
 from yearn.prices.uniswap.v2 import uniswap_v2
 from yearn.prices.uniswap.v3 import uniswap_v3
-from yearn.prices import curve
 from yearn.prices.yearn import yearn_lens
 from yearn.utils import contract
-
-from yearn.prices import constants
 
 logger = logging.getLogger(__name__)
 
 @ttl_cache(10000)
-def get_price(token, block=None):
+def get_price(token, block=None, return_price_during_vault_downtime: bool = False):
     token = unwrap_token(token)
-    return find_price(token, block)
+    return find_price(token, block, return_price_during_vault_downtime=return_price_during_vault_downtime)
 
 def unwrap_token(token):
     token = str(token)
@@ -47,7 +46,7 @@ def unwrap_token(token):
     return token
 
 
-def find_price(token, block):
+def find_price(token, block, return_price_during_vault_downtime: bool = False):
     price = None
     if token in constants.stablecoins:
         logger.debug("stablecoin -> %s", 1)
@@ -109,8 +108,13 @@ def find_price(token, block):
         logger.debug("peel %s %s", price, underlying)
         return price * get_price(underlying, block=block)
 
+    if price is None and return_price_during_vault_downtime:
+        for incident in INCIDENTS[token]:
+            if incident['start'] <= block <= incident['end']:
+                return incident['result']
+
     if price is None:
-        logger.error(f"failed to get price for {_describe_err(token, block)}'")
+        logger.error(f"failed to get price for {_describe_err(token, block)}")
         raise PriceError(f'could not fetch price for {_describe_err(token, block)}')
 
     return price

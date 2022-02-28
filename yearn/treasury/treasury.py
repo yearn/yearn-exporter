@@ -47,7 +47,7 @@ def _get_price(token, block=None):
         return 0
     
     try:
-        price = get_price(token, block)
+        price = get_price(token, block, return_price_during_vault_downtime=True)
     except AttributeError:
         logger.error(f"AttributeError while getting price for {_describe_err(token, block)}")
         raise

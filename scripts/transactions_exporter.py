@@ -95,7 +95,7 @@ def _process_transfer_event(event, token_entity) -> dict:
     sender, receiver, amount = event.values()
     cache_address(sender)
     cache_address(receiver)
-    price = _get_price(event, token_entity)
+    price = _get_price_from_event(event, token_entity)
     if (
         # NOTE magic.get_price() returns erroneous price due to erroneous ppfs
         token_entity.address.address == '0x7F83935EcFe4729c4Ea592Ab2bC1A32588409797'
@@ -121,10 +121,10 @@ def _process_transfer_event(event, token_entity) -> dict:
     }
 
 
-def _get_price(event, token_entity):
+def _get_price_from_event(event, token_entity):
     while True:
         try:
-            return magic.get_price(token_entity.address.address, event.block_number)
+            return magic.get_price(token_entity.address.address, event.block_number, return_price_during_vault_downtime=True)
         except ConnectionError as e:
             # Try again
             logger.warn(f'ConnectionError: {str(e)}')
@@ -138,11 +138,6 @@ def _get_price(event, token_entity):
             else:
                 logger.warn(f'vault: {token_entity.address.address}')
                 raise
-        except PriceError:
-            # yUSDC getPricePerFullShare reverts from block 10532764 to block 10532775 because all liquidity was removed for testing
-            # returned price == price after fix
-            if token_entity.address.address == '0x597aD1e0c13Bfe8025993D9e79C69E1c0233522e' and 10532764 <= event.block_number <= 10532775:
-                return 1
 
 
 def _event_type(sender, receiver, vault_address) -> str:
