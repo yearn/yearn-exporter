@@ -19,7 +19,7 @@ from yearn.partners.partners import partners
 from yearn.partners.snapshot import WildcardWrapper, Wrapper
 from yearn.prices import compound
 from yearn.prices.constants import weth
-from yearn.prices.magic import get_price
+from yearn.prices.magic import get_price, _describe_err
 from yearn.prices.magic import logger as logger_price_magic
 from yearn.utils import contract
 from yearn.decorators import sentry_catch_all, wait_or_exit_after
@@ -49,10 +49,10 @@ def _get_price(token, block=None):
     try:
         price = get_price(token, block)
     except AttributeError:
-        logger.error(f"AttributeError while getting price for {contract(token).symbol()} {token}")
+        logger.error(f"AttributeError while getting price for {_describe_err(token, block)}")
         raise
     except Exception as e:
-        logger.error(f"{type(e).__name__} while getting price for {contract(token).symbol()} {token}")
+        logger.error(f"{type(e).__name__} while getting price for {_describe_err(token, block)}")
         price = 0
     return price
 
