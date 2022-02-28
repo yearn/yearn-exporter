@@ -28,6 +28,17 @@ logger = logging.getLogger(__name__)
 logger_price_magic.setLevel(logging.CRITICAL)
 
 
+NFTS = [
+    # These are NFTs # TODO 
+    '0x57f1887a8BF19b14fC0dF6Fd9B2acc9Af147eA85', # ENS domains
+    '0x01234567bac6fF94d7E4f0EE23119CF848F93245', # EthBlocks
+    '0xD7aBCFd05a9ba3ACbc164624402fB2E95eC41be6', # EthJuanchos
+    '0xeF81c2C98cb9718003A89908e6bd1a5fA8A098A3', # SpaceShiba
+    '0xD1E5b0FF1287aA9f9A268759062E4Ab08b9Dacbe', # .crypto Domain
+    '0x437a6B880d4b3Be9ed93BD66D6B7f872fc0f5b5E', # Soda
+    '0x9d45DAb69f1309F1F55A7280b1f6a2699ec918E8', # yFamily 2021
+]
+
 def _get_price(token, block=None):
     SKIP_PRICE = [  # shitcoins
         "0xa9517B2E61a57350D6555665292dBC632C76adFe",
@@ -45,16 +56,14 @@ def _get_price(token, block=None):
     ]
     if token in SKIP_PRICE:
         return 0
-    
     try:
-        price = get_price(token, block, return_price_during_vault_downtime=True)
-    except AttributeError:
-        logger.error(f"AttributeError while getting price for {_describe_err(token, block)}")
-        raise
+        return get_price(token, block, return_price_during_vault_downtime=True)
     except Exception as e:
-        logger.error(f"{type(e).__name__} while getting price for {_describe_err(token, block)}")
-        price = 0
-    return price
+        desc_str = _describe_err(token, block)
+        if desc_str.startswith('yv'):
+            raise
+        logger.critical(f'{type(e).__name__} while fetching price for {desc_str}')
+        return 0
 
 
 def get_token_from_event(event):
@@ -358,25 +367,16 @@ class Treasury:
 
     def process_transfers(self, logs):
         for log in logs:
+            if log.address in NFTS:
+                continue
             try:
                 event = decode_logs(
                     [log]
                 )  # NOTE: We have to decode logs here because NFTs prevent us from batch decoding logs
                 self._transfers.append(event)
             except:
-                if log.address in [
-                    # These are NFTs # TODO 
-                    '0x57f1887a8BF19b14fC0dF6Fd9B2acc9Af147eA85', # ENS domains
-                    '0x01234567bac6fF94d7E4f0EE23119CF848F93245', # EthBlocks
-                    '0xD7aBCFd05a9ba3ACbc164624402fB2E95eC41be6', # EthJuanchos
-                    '0xeF81c2C98cb9718003A89908e6bd1a5fA8A098A3', # SpaceShiba
-                    '0xD1E5b0FF1287aA9f9A268759062E4Ab08b9Dacbe', # .crypto Domain
-                    '0x437a6B880d4b3Be9ed93BD66D6B7f872fc0f5b5E', # Soda
-                    ]:
-                    pass
-                else:
-                    print('unable to decode logs, figure out why')
-                    print(log)
+                logger.error('unable to decode logs, figure out why')
+                logger.error(log)
 
     # export functions
 
