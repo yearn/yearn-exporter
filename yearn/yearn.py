@@ -79,40 +79,6 @@ class Yearn:
         )
         return dict(zip(self.registries, desc))
 
-    def describe_wallets(self, block=None):
-        data = Parallel(4,'threading')(delayed(self.registries[key].describe_wallets)(block=block) for key in self.registries)
-        data = {registry:desc for registry,desc in zip(self.registries,data)}
-
-        wallet_balances = Counter()
-        for registry, reg_desc in data.items():
-            for wallet, usd_bal in reg_desc['wallet balances usd'].items():
-                wallet_balances[wallet] += usd_bal
-        agg_stats = {
-            "agg_stats": {
-                "total wallets": len(wallet_balances),
-                "active wallets": sum(1 if balance > 50 else 0 for wallet, balance in wallet_balances.items()),
-                "wallets > $5k": sum(1 if balance > 5000 else 0 for wallet, balance in wallet_balances.items()),
-                "wallets > $50k": sum(1 if balance > 50000 else 0 for wallet, balance in wallet_balances.items()),
-                "wallet balances usd": wallet_balances
-            }
-        }
-        data.update(agg_stats)
-        return data
-
-    
-    def active_vaults_at(self, block=None):
-        active = set()
-        registries = self.registries.items()
-        for label, registry in registries:
-            if label == 'earn':
-                active = active.union({vault.vault for vault in registry.active_vaults_at_block(block=block)})
-            else:
-                active = active.union({vault.vault for vault in registry.active_vaults_at(block=block)})
-        try:
-            active.remove(contract("0xBa37B002AbaFDd8E89a1995dA52740bbC013D992")) # [yGov] Doesn't count for this context
-        except KeyError:
-            pass
-        return active
 
     def describe_wallets(self, block=None):
         from yearn.outputs.describers.registry import RegistryWalletDescriber
