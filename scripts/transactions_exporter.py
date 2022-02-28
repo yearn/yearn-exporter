@@ -58,6 +58,8 @@ def process_and_cache_user_txs(last_saved_block=None):
         else start_block + BATCH_SIZE if start_block + BATCH_SIZE < max_block_to_cache
         else max_block_to_cache
     )
+    if start_block > end_block:
+        end_block = start_block
     df = pd.DataFrame()
     for vault in yearn.active_vaults_at(end_block):
         df = pd.concat([df, get_token_transfers(vault.vault, start_block, end_block)])
