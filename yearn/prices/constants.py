@@ -43,7 +43,7 @@ stablecoins_by_network = {
         "0x5BC25f649fc4e26069dDF4cF4010F9f706c23831": "dusd",
         "0xe2f2a5C287993345a840Db3B0845fbC70f5935a5": "musd",
         "0x739ca6D71365a08f584c8FC4e1029045Fa8ABC4B": "anydai",
-        "0xbbc4A8d076F4B1888fec42581B6fc58d242CF2D5": "anymin",
+        "0xbbc4A8d076F4B1888fec42581B6fc58d242CF2D5": "anymim",
     },
     Network.Fantom: {
         "0x04068DA6C83AFCFA0e13ba15A6696662335D5B75": "usdc",
@@ -54,6 +54,7 @@ stablecoins_by_network = {
         "0x82f0B8B456c1A451378467398982d4834b6829c1": "mim",
         "0x049d68029688eAbF473097a2fC38ef61633A3C7A": "fusdt",
         "0xdc301622e621166BD8E82f2cA0A26c13Ad0BE355": "frax",
+        "0x95bf7E307BC1ab0BA38ae10fc27084bC36FcD605": "anyusdc"
     },
     Network.Arbitrum: {
         '0xFF970A61A04b1cA14834A43f5dE4533eBDDB5CC8': 'usdc',
