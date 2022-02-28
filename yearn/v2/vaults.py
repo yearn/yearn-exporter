@@ -128,11 +128,6 @@ class Vault:
     def load_harvests(self):
         Parallel(8, "threading")(delayed(strategy.load_harvests)() for strategy in self.strategies)
 
-    def load_transfers(self):
-        if not self._transfers_thread._started.is_set():
-            self._transfers_thread.start()
-        self._transfers_done.wait()
-
     @sentry_catch_all
     def watch_events(self):
         start = time.time()
@@ -175,30 +170,6 @@ class Vault:
                 self._strategies[event["newVersion"]] = Strategy(event["newVersion"], self, self._watch_events_forever)
             elif event.name == "StrategyReported":
                 self._reports.append(event)
-            elif event.name == "Transfer":
-                self._transfers.append(event)
-
-    @sentry_catch_all
-    def watch_transfer_events(self):
-        start = time.time()
-        topic = [
-            [
-                encode_hex(event_abi_to_log_topic(event))
-                for event in self.vault.abi
-                if event["type"] == "event" and event["name"] == 'Transfer'
-            ]
-        ]
-        self.transfer_filter = create_filter(str(self.vault), topics=topic)
-        for block in chain.new_blocks(height_buffer=12):
-            logs = self.transfer_filter.get_new_entries()
-            events = decode_logs(logs)
-            self.process_events(events)
-            if not self._transfers_done.is_set():
-                self._transfers_done.set()
-                logger.info("loaded %d transfers %s in %.3fs", len(self._transfers), self.name, time.time() - start)
-            if not self._watch_events_forever:
-                break
-            time.sleep(300)
 
     def describe(self, block=None):
         try:
