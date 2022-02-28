@@ -237,27 +237,30 @@ services:
       - victoria-metrics
       - postgres
 
+  ftm-transactions-exporter:
+    image: yearn-exporter
+    command: transactions_exporter
+    volumes: *common-volumes
+    environment:
+      <<: *common-envs
+      <<: *common-ftm-envs
+      <<: *common-historical-envs
+      <<: *common-postgres-envs
+    networks:
+      - yearn-exporter
+    restart: on-failure
+    depends_on:
+      - postgres
+
   ftm-wallet-exporter:
     image: yearn-exporter
     command: wallet_exporter
+    volumes: *common-volumes
     environment:
-      - WEB3_PROVIDER=$FTM_WEB3_PROVIDER
-      - EXPLORER=$FTM_EXPLORER
-      - FTMSCAN_TOKEN
-      - NETWORK=ftm-main
-      - SLEEP_SECONDS
-      - PGHOST=postgres
-      - PGDATABASE=postgres
-      - PGUSER=postgres
-      - PGPASSWORD=yearn-exporter
-      - POOL_SIZE
-      - CHUNK_SIZE
-      - RESOLUTION
-    volumes:
-      - solidity_compilers:/root/.solcx
-      - vyper_compilers:/root/.vvm
-      - brownie:/root/.brownie
-      - cache:/app/yearn-exporter/cache
+      <<: *common-envs
+      <<: *common-ftm-envs
+      <<: *common-historical-envs
+      <<: *common-postgres-envs
     networks:
       - yearn-exporter
     restart: always
