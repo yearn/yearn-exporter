@@ -36,9 +36,9 @@ FIRST_END_BLOCK = {
     Network.Fantom: 5000000, # NOTE block some arbitrary time after v2's first deployment
 }[chain.id]
 
-_cached_thru_from_last_run = None
 
 def main():
+    _cached_thru_from_last_run = None
     while True:
         cached_thru = last_recorded_block(UserTx)
         if cached_thru == _cached_thru_from_last_run:
