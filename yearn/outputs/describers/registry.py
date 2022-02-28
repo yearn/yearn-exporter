@@ -1,6 +1,8 @@
 from collections import Counter
 
+from brownie import chain
 from joblib.parallel import Parallel, delayed
+from yearn.networks import Network
 from yearn.outputs.describers.vault import VaultWalletDescriber
 from yearn.utils import contract
 
@@ -8,7 +10,10 @@ from yearn.utils import contract
 class RegistryWalletDescriber:
     def active_vaults_at(self, registry: tuple, block=None):
         label, registry = registry
-        active = [vault for vault in registry.active_vaults_at(block=block) if vault.vault != contract("0xBa37B002AbaFDd8E89a1995dA52740bbC013D992")]  # [yGov] Doesn't count for this context
+        active = [vault for vault in registry.active_vaults_at(block=block)]  
+        if chain.id == Network.Mainnet:
+            # [yGov] Doesn't count for this context
+            active = [vault for vault in active if vault.vault != contract("0xBa37B002AbaFDd8E89a1995dA52740bbC013D992")]
         return active
         
     def describe_wallets(self, registry: tuple, block=None):
