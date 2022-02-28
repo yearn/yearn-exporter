@@ -264,6 +264,8 @@ services:
     networks:
       - yearn-exporter
     restart: always
+    depends_on:
+      - postgres
 
   vmagent:
     image: victoriametrics/vmagent
