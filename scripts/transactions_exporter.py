@@ -66,6 +66,10 @@ def process_and_cache_user_txs(last_saved_block=None):
         #       won't have issues in the event that transactions exporter fails mid-run.
         df = df.sort_values('block')  
         for index, row in df.iterrows():
+            # this addresses one tx with a crazy price due to yvpbtc v1 pricePerFullShare bug.
+            price = row.price if len(str(round(row.price))) <= 20 else 99999999999999999999
+            usd = row.value_usd if len(str(round(row.value_usd))) <= 20 else 99999999999999999999
+            
             UserTx(
                 vault=cache_token(row.token),
                 timestamp=row.timestamp,
@@ -76,8 +80,8 @@ def process_and_cache_user_txs(last_saved_block=None):
                 from_address=row['from'],
                 to_address=row['to'],
                 amount = row.amount,
-                price = row.price,
-                value_usd = row.value_usd,
+                price = price,
+                value_usd = usd,
                 gas_used = row.gas_used,
                 gas_price = row.gas_price
                 )

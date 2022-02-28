@@ -33,12 +33,17 @@ INCIDENTS.update({
         # yvhusd3CRV v1
         "0x39546945695DCb1c037C836925B355262f551f55": [
             {"start":12074825,"end":12074825,"result":1.0110339337578227},
-            {"start":12074826,"end":chain.height,"result":0}
+            {"start":12074826,"end":chain.height,"result":0},
         ],
         # yvobtccrv v1
         "0x7F83935EcFe4729c4Ea592Ab2bC1A32588409797": [
             {"start":12582511,"end":12582511,"result":37611.70819906929},
-            {"start":12582512,"end":chain.height,"result":0}
-        ]
+            {"start":12582512,"end":chain.height,"result":0},
+        ],
+        # yvpbtccrv v1
+        "0x123964EbE096A920dae00Fb795FFBfA0c9Ff4675": [
+            {"start":12868929,"end":12868929,"result":1456401056701488300032},
+            {"start":12868930,"end":chain.height,"result":0},
+        ],
     },
 }.get(chain.id, {}))
