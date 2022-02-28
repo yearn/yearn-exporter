@@ -15,6 +15,7 @@ from yearn.events import create_filter, decode_logs
 from yearn.multicall2 import fetch_multicall
 from yearn.prices import magic
 from yearn.prices.curve import curve
+from yearn.special import Ygov
 from yearn.utils import safe_views, contract
 from yearn.v2.strategies import Strategy
 from yearn.exceptions import PriceError
@@ -87,6 +88,10 @@ class Vault:
 
         if isinstance(other, str):
             return self.vault == other
+        
+        # Needed for transactions_exporter
+        if isinstance(other, Ygov):
+            return False
 
         raise ValueError("Vault is only comparable with [Vault, str]")
 
