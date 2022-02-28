@@ -66,7 +66,10 @@ class UniswapV3(metaclass=Singleton):
 
         paths += [[token, fee, usdc] for fee in self.fee_tiers]
 
-        scale = 10 ** contract(token).decimals()
+        try:
+            scale = 10 ** contract(token).decimals()
+        except AttributeError:
+            return None
 
         results = fetch_multicall(
             *[

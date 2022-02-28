@@ -146,10 +146,11 @@ class Treasury:
             )
             decimals = fetch_multicall(
                 *[[contract(token), "decimals"] for token in tokens],
-                block=block
+                block=block,
+                require_success=False
             )
             token_balances = [
-                balance / 10 ** decimal if decimal else 0
+                balance / 10 ** decimal if decimal else balance
                 for balance, decimal in zip(token_balances, decimals)
             ]
             token_prices = Parallel(8, 'threading')(
