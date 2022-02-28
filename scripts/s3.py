@@ -159,10 +159,16 @@ def main():
     else:
         vaults = registry_v2.vaults
 
+    if len(vaults) == 0:
+        raise ValueError(f"No vaults found for chain_id: {chain.id}")
+
     assets_metadata = get_assets_metadata(registry_v2.vaults)
 
     for vault in vaults:
         data.append(wrap_vault(vault, samples, aliases, icon_url, assets_metadata))
+
+    if len(data) == 0:
+        raise ValueError(f"Data is empty for chain_id: {chain.id}")
 
     out = "generated"
     if os.path.isdir(out):
@@ -171,13 +177,14 @@ def main():
 
     vaults_api_path = os.path.join("v1", "chains", f"{chain.id}", "vaults")
 
-    os.makedirs(os.path.join(out, vaults_api_path), exist_ok=True)
+    file_path = os.path.join(out, vaults_api_path)
+    os.makedirs(file_path, exist_ok=True)
 
     endorsed = [vault for vault in data if vault["endorsed"]]
     experimental = [vault for vault in data if not vault["endorsed"]]
 
     if (len(endorsed) + len(experimental)) == 0:
-        raise EmptyS3Export(f"No data for vaults was found in generated data, aborting upload")
+        raise EmptyS3Export(f"No data for vaults was found in generated data, aborting upload, check output file {file_path}")
 
     vault_api_all = os.path.join(vaults_api_path, "all")
     with open(os.path.join(out, vault_api_all), "w+") as f:
