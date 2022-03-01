@@ -108,10 +108,12 @@ class CurveRegistry(metaclass=Singleton):
         address_provider_filter = create_filter(str(self.address_provider))
         registries = []
         registries_filter = None
+        registry_logs = []
 
+        address_logs = address_provider_filter.get_all_entries()
         while True:
             # fetch all registries and factories from address provider
-            for event in decode_logs(address_provider_filter.get_new_entries()):
+            for event in decode_logs(address_logs):
                 if event.name == 'NewAddressIdentifier':
                     self.identifiers[Ids(event['id'])].append(event['addr'])
                 if event.name == 'AddressModified':
@@ -125,9 +127,10 @@ class CurveRegistry(metaclass=Singleton):
             if _registries != registries:
                 registries = _registries
                 registries_filter = create_filter(registries)
+                registry_logs = registries_filter.get_all_entries()
 
             # fetch pools from the latest registries
-            for event in decode_logs(registries_filter.get_new_entries()):
+            for event in decode_logs(registry_logs):
                 if event.name == 'PoolAdded':
                     self.registries[event.address].add(event['pool'])
                     lp_token = contract(event.address).get_lp_token(event['pool'])
@@ -141,6 +144,11 @@ class CurveRegistry(metaclass=Singleton):
                 logger.info(f'loaded {len(self.token_to_pool)} pools from {len(self.registries)} registries and {len(self.factories)} factories')
 
             time.sleep(600)
+
+            # read new logs at end of loop
+            address_logs = address_provider_filter.get_new_entries()
+            if registries_filter:
+                registry_logs = registries_filter.get_new_entries()
 
     def read_pools(self, registry):
         registry = contract(registry)
