@@ -110,7 +110,10 @@ def export_wallets(timestamp, data):
         label_values = [key]
         item = _build_item("aggregate", label_names, label_values, value, timestamp)
         metrics_to_export.append(item)
-    for product in ['v1','v2']:
+    for key in data.keys():
+        if key == 'agg_stats':
+            continue
+        product = key
         metric = mapping[product]["metric"]
         for key, value in data[product].items():
             if key in mapping[product]["agg_stats"]:
@@ -147,7 +150,7 @@ def export_wallets(timestamp, data):
     # post all wallet metrics for this timestamp at once
     _post(metrics_to_export)
 
-
+'''
 def export_wallets(timestamp, data):
     metrics_to_export = []
     for key, value in data['agg_stats'].items():
@@ -198,6 +201,7 @@ def export_wallets(timestamp, data):
 
     # post all wallet metrics for this timestamp at once
     _post(metrics_to_export)
+'''
 
 def export_treasury(timestamp, data, label):
     metrics_to_export = []
