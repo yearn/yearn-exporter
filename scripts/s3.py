@@ -155,7 +155,7 @@ def main():
     if chain.id == Network.Mainnet:
         special = [YveCRVJar(), Backscratcher()]
         registry_v1 = RegistryV1()
-        vaults = itertools.chain(special, registry_v1.vaults, registry_v2.vaults, registry_v2.experiments)
+        vaults = list(itertools.chain(special, registry_v1.vaults, registry_v2.vaults, registry_v2.experiments))
     else:
         vaults = registry_v2.vaults
 

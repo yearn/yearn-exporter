@@ -79,10 +79,8 @@ class Registry(metaclass=Singleton):
     def watch_events(self):
         start = time.time()
         self.log_filter = create_filter([str(addr) for addr in self.registries])
+        logs = self.log_filter.get_all_entries()
         while True:
-            logs = self.log_filter.get_new_entries()
-            if len(logs) == 0:
-                raise ValueError(f"No logs available for registries {self.registries}")
             self.process_events(decode_logs(logs))
             if not self._done.is_set():
                 self._done.set()
@@ -90,6 +88,9 @@ class Registry(metaclass=Singleton):
             if not self._watch_events_forever:
                 return
             time.sleep(300)
+
+            # read new logs at end of loop
+            logs = self.log_filter.get_new_entries()
 
     def process_events(self, events):
         for event in events:

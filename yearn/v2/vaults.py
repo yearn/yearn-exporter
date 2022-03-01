@@ -132,8 +132,8 @@ class Vault:
     def watch_events(self):
         start = time.time()
         self.log_filter = create_filter(str(self.vault), topics=self._topics)
+        logs = self.log_filter.get_all_entries()
         while True:
-            logs = self.log_filter.get_new_entries()
             events = decode_logs(logs)
             self.process_events(events)
             if not self._done.is_set():
@@ -142,6 +142,10 @@ class Vault:
             if not self._watch_events_forever:
                 return
             time.sleep(300)
+
+            # read new logs at end of loop
+            logs = self.log_filter.get_new_entries()
+
 
     def process_events(self, events):
         for event in events:

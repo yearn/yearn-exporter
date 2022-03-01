@@ -342,9 +342,13 @@ class Treasury:
             web3.eth.filter({"fromBlock": self._start_block, "topics": topics})
             for topics in self._topics
         ]
+
+        transfer_logs = []
+        for transfer_filter in transfer_filters:
+            transfer_logs.append(transfer_filter.get_all_entries())
+
         while True:
-            for transfer_filter in transfer_filters:
-                logs = transfer_filter.get_new_entries()
+            for logs in transfer_logs:
                 self.process_transfers(logs)
 
             if not self._done.is_set():
@@ -355,6 +359,11 @@ class Treasury:
             if not self._watch_events_forever:
                 return
             time.sleep(5)
+
+            # read new logs at end of loop
+            transfer_logs = []
+            for transfer_filter in transfer_filters:
+                transfer_logs.append(transfer_filter.get_new_entries())
 
 
     def process_transfers(self, logs):
