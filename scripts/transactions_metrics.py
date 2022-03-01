@@ -1,12 +1,15 @@
 import pandas as pd
 import os
 from .transactions import CACHE_PATH
-from brownie import chain
+from brownie import chain, ZERO_ADDRESS
 from datetime import datetime, timedelta
 import requests
 from itertools import count
 from yearn.utils import closest_block_after_timestamp
 from tqdm import tqdm
+
+CSV_EXPORT = True
+CSV_PATH = './reports/stats.csv'
 
 def _read_cache():
     try:
@@ -85,18 +88,32 @@ def _generate_snapshot_range(start, end, interval):
         yield snapshot
 
 
+def _users(df,vault = None):
+    if vault:
+        df = df[df['vault'] == vault]
+    df = df[df['to'] != ZERO_ADDRESS]
+    return df['to'].unique()
+    
+
+def _total_users(df: pd.DataFrame):
+    return len(_users(df))
 
 def _export_block(df,block):
-    pass
+    df = df[df['block'] <= block]
+    return {
+        'total_users': _total_users(df)
+    }
+
 
 def main(block = None):
     df = _read_cache()
     if block:
         df = df[df['block'] <= block]
-        _export_block(df,block)
-        return
-    for block in tqdm(_blocks(df)):
-        _export_block(block)
-
-   
+        return _export_block(df,block)
+    data = {block:_export_block(df,block) for block in tqdm(_blocks(df))}
+    
+    if CSV_EXPORT:
+        df = pd.DataFrame(data).transpose()
+        df.to_csv(CSV_PATH, index=True)
+    
 
