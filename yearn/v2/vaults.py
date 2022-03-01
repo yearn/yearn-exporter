@@ -54,7 +54,6 @@ class Vault:
         self._strategies = {}
         self._revoked = {}
         self._reports = []
-        self._transfers = []
         self.vault = vault
         self.api_version = api_version
         if token is None:
@@ -77,8 +76,6 @@ class Vault:
         self._done = threading.Event()
         self._has_exception = False
         self._thread = threading.Thread(target=self.watch_events, daemon=True)
-        self._transfers_done = threading.Event()
-        self._transfers_thread = threading.Thread(target=self.watch_transfer_events, daemon=True)
 
     def __repr__(self):
         strategies = "..."  # don't block if we don't have the strategies loaded

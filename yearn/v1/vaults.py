@@ -25,7 +25,6 @@ class VaultV1:
     strategy: str
     is_wrapped: bool
     is_delegated: bool
-    _watch_events_forever: Optional[bool] = True
     # the rest is populated in post init
     name: Optional[str] = None
     decimals: Optional[int] = None
@@ -40,17 +39,6 @@ class VaultV1:
         self.name = constants.VAULT_ALIASES.get(str(self.vault), self.vault.symbol())
         self.decimals = self.vault.decimals()  # vaults inherit decimals from token
         self.scale = 10 ** self.decimals
-
-        self._transfers = []
-        self._topics = [
-                [
-                    encode_hex(event_abi_to_log_topic(event))
-                    for event in self.vault.abi
-                    if event["type"] == "event" and event["name"] == 'Transfer'
-                ]
-            ]
-        self._done = threading.Event()
-        self._thread = threading.Thread(target=self.watch_events, daemon=True)
 
     def get_price(self, block=None):
         if self.name == "aLINK":
@@ -74,30 +62,6 @@ class VaultV1:
     @cached_property
     def is_curve_vault(self):
         return curve.get_pool(str(self.token)) is not None
-
-    def load_transfers(self):
-        if not self._thread._started.is_set():
-            self._thread.start()
-        self._done.wait()
-
-    def watch_events(self):
-        start = time.time()
-        self.log_filter = create_filter(str(self.vault), topics=self._topics)
-        for block in chain.new_blocks(height_buffer=12):
-            logs = self.log_filter.get_new_entries()
-            events = decode_logs(logs)
-            self.process_events(events)
-            if not self._done.is_set():
-                self._done.set()
-                logger.info("loaded %d transfers %s in %.3fs", len(self._transfers), self.vault.symbol(), time.time() - start)
-            if not self._watch_events_forever:
-                break
-            time.sleep(300)
-
-    def process_events(self, events):
-        for event in events:
-            if event.name == "Transfer":
-                self._transfers.append(event)
 
     def wallets(self, block=None):
         self.load_transfers()
