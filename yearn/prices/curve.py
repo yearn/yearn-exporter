@@ -313,9 +313,15 @@ class CurveRegistry(metaclass=Singleton):
             source = contract(factory or registry)
             balances = source.get_balances(pool, block_identifier=block)
         # fallback for historical queries
-        except ValueError:
+        except ValueError as e:
+            if str(e) not in [
+                'execution reverted',
+                'No data was returned - the call likely reverted'
+                ]: raise
+
             balances = fetch_multicall(
-                *[[contract(pool), 'balances', i] for i, _ in enumerate(coins)]
+                *[[contract(pool), 'balances', i] for i, _ in enumerate(coins)],
+                block=block
             )
 
         if not any(balances):

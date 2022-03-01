@@ -2,14 +2,16 @@ import logging
 from collections import defaultdict
 from concurrent.futures import ThreadPoolExecutor
 from dataclasses import dataclass
-from functools import lru_cache
+from decimal import Decimal
+from functools import cached_property
 from pathlib import Path
+from time import time
 from typing import List, Union
 
 import pandas as pd
-from tabulate import tabulate
-from brownie import Contract, multicall, web3
+from brownie import Contract, chain, convert, multicall, web3
 from joblib.parallel import Parallel, delayed
+from pony.orm import OperationalError, db_session
 from rich import print
 from rich.progress import track
 from web3._utils.abi import filter_by_name
@@ -19,9 +21,19 @@ from yearn.multicall2 import batch_call
 from yearn.partners.charts import make_partner_charts
 from yearn.partners.constants import OPEX_COST, get_tier
 from yearn.prices import magic
-from yearn.utils import contract_creation_block, get_block_timestamp, contract
+from yearn.utils import contract, contract_creation_block, get_block_timestamp
 from yearn.v2.registry import Registry
 from yearn.v2.vaults import Vault
+
+try:
+    from yearn.entities import PartnerHarvestEvent
+    from yearn.outputs.postgres.utils import cache_address
+    USE_POSTGRES_CACHE = True
+except OperationalError as e:
+    if "Is the server running on that host and accepting TCP/IP connections?" in str(e):
+        USE_POSTGRES_CACHE = False
+    else:
+        raise
 
 logger = logging.getLogger(__name__)
 
@@ -33,8 +45,7 @@ def get_timestamps(blocks):
     return pd.to_datetime([x * 1e9 for x in data])
 
 
-@lru_cache()
-def get_protocol_fees(address):
+def get_protocol_fees(address, start_block=None):
     """
     Get all protocol fee payouts for a given vault.
 
@@ -48,36 +59,57 @@ def get_protocol_fees(address):
         web3.codec,
         {'sender': address, 'receiver': rewards},
     )
-    logs = decode_logs(get_logs_asap(address, topics))
-    return {log.block_number: log['value'] / vault.scale for log in logs}
+    logs = decode_logs(get_logs_asap(address, topics, from_block=start_block))
+    return {log.block_number: Decimal(log['value']) / Decimal(vault.scale) for log in logs}
 
 
 @dataclass
 class Wrapper:
-    name: str
-    vault: str
-    wrapper: str
+    def __init__(self, name: str, vault: str, wrapper: str) -> None:
+        self.name = name
+        self.vault = convert.to_address(vault)
+        self.wrapper = convert.to_address(wrapper)
+    
+    @db_session
+    def read_cache(self):
+        entities = PartnerHarvestEvent.select(lambda e: e.vault == self.vault and e.wrapper.address == self.wrapper and e.wrapper.chainid == chain.id)[:]
+        cache = [
+            {
+                'block': e.block,
+                'timestamp': pd.to_datetime(e.timestamp,unit='s'),
+                'balance': e.balance,
+                'total_supply': e.total_supply,
+                'vault_price': e.vault_price,
+                'balance_usd': e.balance_usd,
+                'share': e.share,
+                'payout_base': e.payout_base,
+                'protocol_fee': e.protocol_fee,
+                'wrapper': e.wrapper.address,
+                'vault': e.vault,
+            } for e in entities
+        ]
+        return pd.DataFrame(cache)
 
-    def protocol_fees(self):
-        return get_protocol_fees(self.vault)
+    def protocol_fees(self, start_block=None):
+        return get_protocol_fees(self.vault, start_block=start_block)
 
     def balances(self, blocks):
         vault = Vault.from_address(self.vault)
         balances = batch_call(
             [[vault.vault, 'balanceOf', self.wrapper, block] for block in blocks]
         )
-        return [balance / vault.scale for balance in balances]
+        return [Decimal(balance) / Decimal(vault.scale) for balance in balances]
 
     def total_supplies(self, blocks):
         vault = Vault.from_address(self.vault)
         supplies = batch_call([[vault.vault, 'totalSupply', block] for block in blocks])
-        return [supply / vault.scale for supply in supplies]
+        return [Decimal(supply) / Decimal(vault.scale) for supply in supplies]
 
     def vault_prices(self, blocks):
         prices = Parallel(10, 'threading')(
             delayed(magic.get_price)(self.vault, block=block) for block in blocks
         )
-        return prices
+        return [Decimal(price) for price in prices]
 
 
 class BentoboxWrapper(Wrapper):
@@ -94,7 +126,7 @@ class BentoboxWrapper(Wrapper):
                 for block in blocks
             ]
         )
-        return [(balance or 0) / vault.scale for balance in balances]
+        return [Decimal(balance or 0) / Decimal(vault.scale) for balance in balances]
 
 
 @dataclass
@@ -153,7 +185,8 @@ class Partner:
     wrappers: List[Wrapper]
     treasury: str = None
 
-    def process(self):
+    @cached_property
+    def flat_wrappers(self) -> List[Wrapper]:
         # unwrap wildcard wrappers to a flat list
         flat_wrappers = []
         for wrapper in self.wrappers:
@@ -161,35 +194,62 @@ class Partner:
                 flat_wrappers.append(wrapper)
             elif isinstance(wrapper, WildcardWrapper):
                 flat_wrappers.extend(wrapper.unwrap())
+        return flat_wrappers
 
+    def process(self, use_postgres_cache=USE_POSTGRES_CACHE):
         # snapshot wrapper share at each harvest
         wrappers = []
-        for wrapper in track(flat_wrappers, self.name):
-            protocol_fees = wrapper.protocol_fees()
-            if not protocol_fees:
+        for wrapper in track(self.flat_wrappers, self.name):
+            if use_postgres_cache: 
+                cache = wrapper.read_cache()
+                try:
+                    max_cached_block = int(cache['block'].max())
+                    start_block = max_cached_block + 1
+                    logger.debug(f'{self.name} {wrapper.name} is cached thru block {max_cached_block}')
+                except KeyError:
+                    start_block = None
+                    logger.debug(f'no harvests cached for {self.name} {wrapper.name}')
+                logger.debug(f'start block: {start_block}')
+            else:
+                start_block = None
+            
+            protocol_fees = wrapper.protocol_fees(start_block=start_block)
+            
+            try:
+                blocks, protocol_fees = zip(*protocol_fees.items())
+                wrap = pd.DataFrame(
+                    {
+                        'block': blocks,
+                        'timestamp': get_timestamps(blocks),
+                        'protocol_fee': protocol_fees,
+                        'balance': wrapper.balances(blocks),
+                        'total_supply': wrapper.total_supplies(blocks),
+                        'vault_price': wrapper.vault_prices(blocks),
+                    }
+                )
+                wrap['balance_usd'] = wrap.balance * wrap.vault_price
+                wrap['share'] = wrap.balance / wrap.total_supply
+                wrap['payout_base'] = wrap.share * wrap.protocol_fee * Decimal(1 - OPEX_COST)
+                wrap['protocol_fee'] = wrap.protocol_fee
+                wrap['wrapper'] = wrapper.wrapper
+                wrap['vault'] = wrapper.vault
+            except ValueError as e:
+                if str(e) != 'not enough values to unpack (expected 2, got 0)':
+                    raise
+                wrap = pd.DataFrame()
+
+            if use_postgres_cache:
+                cache_data(wrap)
+                wrap = pd.concat([wrap,cache])
+            
+            try:
+                wrap = wrap.set_index('block')
+            except KeyError:
                 logger.info('no fees for %s', wrapper.name)
                 continue
 
-            blocks, protocol_fees = zip(*protocol_fees.items())
-            wrap = pd.DataFrame(
-                {
-                    'block': blocks,
-                    'timestamp': get_timestamps(blocks),
-                    'protocol_fee': protocol_fees,
-                    'balance': wrapper.balances(blocks),
-                    'total_supply': wrapper.total_supplies(blocks),
-                    'vault_price': wrapper.vault_prices(blocks),
-                }
-            )
-            wrap['balance_usd'] = wrap.balance * wrap.vault_price
-            wrap['share'] = wrap.balance / wrap.total_supply
-            wrap['payout_base'] = wrap.share * wrap.protocol_fee * (1 - OPEX_COST)
-            wrap['protocol_fee'] = wrap.protocol_fee
-            wrap['wrapper'] = wrapper.wrapper
-            wrap['vault'] = wrapper.vault
-            wrap = wrap.set_index('block')
+            # TODO: save a csv for reporting
             wrappers.append(wrap)
-            # save a csv for reporting
 
         # calculate partner fee tier from cummulative wrapper balances
         partner = pd.concat(wrappers)
@@ -263,24 +323,49 @@ class Partner:
         return payouts
 
 
-def process_partners(partners):
+def process_partners(partners, use_postgres_cache=USE_POSTGRES_CACHE):
     total = 0
     payouts = []
+    if not use_postgres_cache:
+        logger.warn('This script can run much faster for subsequent runs if you cache the data to postgres.')
+        logger.warn("Caching will be enabled by default if you run the yearn-exporter locally.")
+        logger.warn('To enable caching without running the exporter, run `make postgres` from project root.')
     for partner in partners:
-        result, payout = partner.process()
+        result, payout = partner.process(use_postgres_cache=use_postgres_cache)
         payouts.append(payout)
         usd = (result.payout * result.vault_price).sum()
-        print(partner.name, usd, 'usd to pay')
+        print(partner.name, round(usd,2), 'usd to pay')
         total += usd
 
-    print(total, 'total so far')
+    print(round(total,2), 'total so far')
     path = Path('research/partners/payouts.csv')
-    pd.concat(payouts).sort_values('timestamp').to_csv(path, index=False)
+    df = pd.concat(payouts).sort_values(['timestamp','partner','token']).fillna(0)
+    df.to_csv(path, index=False)
     print(f'saved to {path}')
 
     # show summary by month and partner
-    df = pd.concat(payouts).sort_values('timestamp')
     print(df.groupby('timestamp').sum().amount_usd)
 
-    df = df.groupby(['timestamp', 'partner']).sum().amount_usd.unstack()
-    print(df.iloc[-9:].T)  # last 9 months
+    summary = df.groupby(['timestamp', 'partner']).sum().amount_usd.unstack()
+    print(summary.iloc[-9:].T)  # last 9 months
+    return df
+
+@db_session
+def cache_data(wrap: pd.DataFrame):
+    '''
+    saves rows into postgres for faster execution on future runs
+    '''
+    for i, row in wrap.iterrows():
+        PartnerHarvestEvent(
+            block=row.block,
+            timestamp=int(row.timestamp.timestamp()),
+            balance=row.balance,
+            total_supply=row.total_supply,
+            vault_price=row.vault_price,
+            balance_usd=row.balance_usd,
+            share=row.share,
+            payout_base=row.payout_base,
+            protocol_fee=row.protocol_fee,
+            wrapper=cache_address(row.wrapper),
+            vault=row.vault,
+        )

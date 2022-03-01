@@ -41,6 +41,7 @@ class Address(db.Entity):
     nickname = Optional(str)
 
     token = Optional('Token')
+    partners_tx = Set('PartnerHarvestEvent', reverse='wrapper')
 
 
 class Token(db.Entity):
@@ -52,7 +53,6 @@ class Token(db.Entity):
     decimals = Required(int)
 
     user_tx = Set('UserTx', reverse="vault")
-    partners_tx = Set('PartnerHarvestEvent', reverse="wrapper")
     address = Required(Address, column="address_id")
 
 
@@ -90,7 +90,7 @@ class PartnerHarvestEvent(db.Entity):
     share = Required(Decimal,38,18)
     payout_base = Required(Decimal,38,18)
     protocol_fee = Required(Decimal,38,18)
-    wrapper = Required(Token, reverse='partners_tx')
+    wrapper = Required(Address, reverse='partners_tx') # we use `Address` instead of `Token` because some partner wrappers are unverified
     vault = Required(str)
     
 
@@ -101,5 +101,5 @@ db.bind(
     password=os.environ.get("PGPASSWORD", ""),
     database=os.environ.get("PGDATABASE", "postgres"),
 )
-
+    
 db.generate_mapping(create_tables=True)

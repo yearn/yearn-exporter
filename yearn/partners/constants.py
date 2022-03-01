@@ -1,4 +1,5 @@
 from bisect import bisect_right
+from decimal import Decimal
 
 OPEX_COST = 0.35
 
@@ -19,4 +20,4 @@ TIERS = {
 def get_tier(amount):
     keys = sorted(TIERS)
     index = bisect_right(keys, amount) - 1
-    return TIERS[keys[index]]
+    return Decimal(TIERS[keys[index]])
