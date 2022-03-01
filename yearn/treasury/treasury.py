@@ -24,6 +24,8 @@ from yearn.prices.magic import logger as logger_price_magic
 from yearn.utils import contract
 from yearn.decorators import sentry_catch_all, wait_or_exit_after
 
+from ..constants import STRATEGIST_MULTISIG, TREASURY_WALLETS
+
 logger = logging.getLogger(__name__)
 logger_price_magic.setLevel(logging.CRITICAL)
 

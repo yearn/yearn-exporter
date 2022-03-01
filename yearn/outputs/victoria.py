@@ -199,7 +199,7 @@ def export_wallets(timestamp, data):
     # post all wallet metrics for this timestamp at once
     _post(metrics_to_export)
 
-def export_treasury(timestamp, data):
+def export_treasury(timestamp, data, label):
     metrics_to_export = []
     for section, section_data in data.items():
         for wallet, wallet_data in section_data.items():
@@ -209,7 +209,7 @@ def export_treasury(timestamp, data):
                     if value != 0:
                         label_names = ['param','wallet','token_address','token','bucket']
                         label_values = [key,wallet,token,symbol,get_token_bucket(token)]
-                        item = _build_item(f"treasury_{section}",label_names,label_values,value,timestamp)
+                        item = _build_item(f"{label}_{section}",label_names,label_values,value,timestamp)
                         metrics_to_export.append(item)
     
     # post all metrics for this timestamp at once
