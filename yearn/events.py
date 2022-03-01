@@ -23,6 +23,7 @@ def decode_logs(logs) -> EventDict:
         setattr(decoded[i], "block_number", log["blockNumber"])
         setattr(decoded[i], "transaction_hash", log["transactionHash"])
         setattr(decoded[i], "log_index", log["logIndex"])
+        setattr(decoded[i], "address", log["address"])
     return decoded
 
 
@@ -31,6 +32,10 @@ def create_filter(address, topics=None):
     Create a log filter for one or more contracts.
     Set fromBlock as the earliest creation block.
     """
+    if address is None:
+        # Treasury didn't exist prior to block 10502337
+        return web3.eth.filter({"fromBlock": 10502337, "topics": topics}) 
+
     if isinstance(address, list):
         for a in address:
             add_deployment_topics(a)
