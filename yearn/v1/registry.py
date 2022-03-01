@@ -29,13 +29,13 @@ class Registry:
         vaults = [vault for vault, share_price in zip(vaults, share_prices) if share_price]
         data = Parallel(8, "threading")(delayed(vault.describe)(block=block) for vault in vaults)
         results_dict = {vault.name: desc for vault, desc in zip(vaults, data)}
-        user_balances = Counter()
-        for result in data:
-            for user, data in result['user balances'].items():
-                user_balances[user] += data["usd balance"]
+        wallet_balances = Counter()
+        for vault in data:
+            for wallet, bals in vault['wallet balances'].items():
+                wallet_balances[wallet] += bals["usd balance"]
         agg_stats = {
-            "total users": len(user_balances),
-            "user balances usd": dict(user_balances),
+            "total wallets": len(wallet_balances),
+            "wallet balances usd": wallet_balances,
         }
         results_dict.update(agg_stats)
         return results_dict
