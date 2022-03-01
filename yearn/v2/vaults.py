@@ -4,7 +4,8 @@ import threading
 import time
 from typing import List
 
-from brownie import chain
+from brownie import ZERO_ADDRESS, chain
+from collections import Counter
 from eth_utils import encode_hex, event_abi_to_log_topic
 from joblib import Parallel, delayed
 from semantic_version.base import Version
@@ -52,6 +53,7 @@ class Vault:
         self._strategies = {}
         self._revoked = {}
         self._reports = []
+        self._transfers = []
         self.vault = vault
         self.api_version = api_version
         if token is None:
@@ -74,6 +76,8 @@ class Vault:
         self._done = threading.Event()
         self._has_exception = False
         self._thread = threading.Thread(target=self.watch_events, daemon=True)
+        self._transfers_done = threading.Event()
+        self._transfers_thread = threading.Thread(target=self.watch_transfer_events, daemon=True)
 
     def __repr__(self):
         strategies = "..."  # don't block if we don't have the strategies loaded
@@ -128,6 +132,11 @@ class Vault:
     def load_harvests(self):
         Parallel(8, "threading")(delayed(strategy.load_harvests)() for strategy in self.strategies)
 
+    def load_transfers(self):
+        if not self._transfers_thread._started.is_set():
+            self._transfers_thread.start()
+        self._transfers_done.wait()
+
     @sentry_catch_all
     def watch_events(self):
         start = time.time()
@@ -170,6 +179,46 @@ class Vault:
                 self._strategies[event["newVersion"]] = Strategy(event["newVersion"], self, self._watch_events_forever)
             elif event.name == "StrategyReported":
                 self._reports.append(event)
+            elif event.name == "Transfer":
+                self._transfers.append(event)
+
+    @sentry_catch_all
+    def watch_transfer_events(self):
+        start = time.time()
+        topic = [
+            [
+                encode_hex(event_abi_to_log_topic(event))
+                for event in self.vault.abi
+                if event["type"] == "event" and event["name"] == 'Transfer'
+            ]
+        ]
+        self.log_filter = create_filter(str(self.vault), topics=topic)
+        for block in chain.new_blocks(height_buffer=12):
+            logs = self.log_filter.get_new_entries()
+            events = decode_logs(logs)
+            self.process_events(events)
+            if not self._transfers_done.is_set():
+                self._transfers_done.set()
+                logger.info("loaded %d transfers %s in %.3fs", len(self._transfers), self.name, time.time() - start)
+            if not self._watch_events_forever:
+                break
+            time.sleep(300)
+
+    def users(self, block=None):
+        self.load_transfers()
+        transfers = [event for event in self._transfers if event.block_number <= block]
+        return set(receiver for sender, receiver, value in transfers if receiver != ZERO_ADDRESS)
+
+    def user_balances(self, block=None):
+        self.load_transfers()
+        balances = Counter()
+        for event in [transfer for transfer in self._transfers if transfer.block_number <= block]:
+            sender, receiver, amount = event.values()
+            if sender != ZERO_ADDRESS:
+                balances[sender] -= amount
+            if receiver != ZERO_ADDRESS:
+                balances[receiver] += amount
+        return balances
 
     def describe(self, block=None):
         try:

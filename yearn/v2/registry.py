@@ -4,6 +4,7 @@ import time
 from typing import List
 
 from brownie import Contract, chain, web3
+from collections import Counter
 from joblib import Parallel, delayed
 from web3._utils.abi import filter_by_name
 from web3._utils.events import construct_event_topic_set
@@ -142,10 +143,24 @@ class Registry(metaclass=Singleton):
         vaults = self.vaults + self.experiments
         Parallel(8, "threading")(delayed(vault.load_harvests)() for vault in vaults)
 
+    def load_transfers(self):
+        vaults = self.vaults + self.experiments
+        Parallel(8, "threading")(delayed(vault.load_transfers)() for vault in vaults)
+
     def describe(self, block=None):
         vaults = self.active_vaults_at(block)
         results = Parallel(8, "threading")(delayed(vault.describe)(block=block) for vault in vaults)
-        return {vault.name: result for vault, result in zip(vaults, results)}
+        results_dict = {vault.name: result for vault, result in zip(vaults, results)}
+        user_balances = Counter()
+        for result in results:
+            for user, data in result['user balances'].items():
+                user_balances[user] += data["usd balance"]
+        agg_stats = {
+            "total users": len(set(user for result in results for user, bal in result['user balances'].items())),
+            "user balances usd": user_balances,
+        }
+        results_dict.update(agg_stats)
+        return results_dict
 
     def total_value_at(self, block=None):
         vaults = self.active_vaults_at(block)

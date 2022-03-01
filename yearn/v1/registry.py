@@ -12,7 +12,7 @@ logger = logging.getLogger(__name__)
 
 
 class Registry:
-    def __init__(self):
+    def __init__(self, load_transfers=False, watch_events_forever=True):
         self.registry = interface.YRegistry(web3.ens.resolve("registry.ychad.eth"))
         addresses_provider = contract("0x9be19Ee7Bc4099D62737a7255f5c227fBcd6dB93")
         addresses_generator_v1_vaults = contract(addresses_provider.addressById("ADDRESSES_GENERATOR_V1_VAULTS"))
@@ -28,7 +28,20 @@ class Registry:
         share_prices = fetch_multicall(*[[vault.vault, "getPricePerFullShare"] for vault in vaults], block=block)
         vaults = [vault for vault, share_price in zip(vaults, share_prices) if share_price]
         data = Parallel(8, "threading")(delayed(vault.describe)(block=block) for vault in vaults)
-        return {vault.name: desc for vault, desc in zip(vaults, data)}
+        results_dict = {vault.name: desc for vault, desc in zip(vaults, data)}
+        user_balances = Counter()
+        for result in data:
+            for user, data in result['user balances'].items():
+                user_balances[user] += data["usd balance"]
+        agg_stats = {
+            "total users": len(user_balances),
+            "user balances usd": dict(user_balances),
+        }
+        results_dict.update(agg_stats)
+        return results_dict
+
+    def load_transfers(self):
+        Parallel(8, "threading")(delayed(vault.load_transfers)() for vault in self.vaults)
 
     def total_value_at(self, block=None):
         vaults = self.active_vaults_at(block)
