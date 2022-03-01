@@ -38,7 +38,7 @@ def create_filter(address, topics=None):
     else:
         add_deployment_topics(address)
         start_block = contract_creation_block(address)
-        
+
     return web3.eth.filter({"address": address, "fromBlock": start_block, "topics": topics})
 
 
