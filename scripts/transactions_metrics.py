@@ -14,9 +14,9 @@ VAULT_CSV_PATH = './reports/vault_stats.csv'
 
 def _read_cache():
     try:
-        return pd.read_csv(CACHE_PATH)
+        return pd.read_pickle(CACHE_PATH)
     except FileNotFoundError:
-        raise FileNotFoundError('You must export transactions.csv using `brownie run transactions` before running this script.')
+        raise FileNotFoundError('You must export transactions.pickle using `brownie run transactions` before running this script.')
 
 
 def _blocks(df):
