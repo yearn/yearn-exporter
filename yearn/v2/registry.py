@@ -81,8 +81,6 @@ class Registry(metaclass=Singleton):
         self.log_filter = create_filter([str(addr) for addr in self.registries])
         logs = self.log_filter.get_all_entries()
         while True:
-            if len(logs) == 0:
-                raise ValueError(f"No logs available for registries {self.registries}")
             self.process_events(decode_logs(logs))
             if not self._done.is_set():
                 self._done.set()
