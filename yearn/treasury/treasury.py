@@ -93,7 +93,7 @@ def get_token_from_event(event):
         logger.critical(
             f'One of your cached contracts has an incorrect definition: {event.address}. Please fix this manually'
         )
-        raise (
+        raise Exception(
             f'One of your cached contracts has an incorrect definition: {event.address}. Please fix this manually'
         )
 
