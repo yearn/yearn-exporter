@@ -40,6 +40,7 @@ def make_partner_charts(partner, data):
     agg_balance.plot(title=f'yearn x {partner.name}', label='balance, usd', legend=True, ax=ax[0], c=colors['blue'])
 
     # tier assigned at the end of each day
+    df['tier'] = df['tier'].astype(float)
     daily_tier = df.resample('1D').last().tier.ffill()
     ax.append(
         daily_tier.plot(
@@ -48,10 +49,13 @@ def make_partner_charts(partner, data):
     )
 
     # accumulated earnings
+    df['vault_price'] = df['vault_price'].astype(float)
+    df['payout'] = df['payout'].astype(float)
     earnings = (df.vault_price * df.payout).resample('1D').sum().cumsum().ffill()
     earnings.plot(label='earnings, usd', legend=True, ax=ax[1], c=colors['blue'])
 
     # share of gross revenue
+    df['protocol_fee'] = df['protocol_fee'].astype(float)
     ratio = (df.payout / df.protocol_fee).resample('1D').mean().ffill()
     ax.append(ratio.plot(label='share of revenue', legend=True, ax=ax[1], secondary_y=True, c=colors['yellow']))
 

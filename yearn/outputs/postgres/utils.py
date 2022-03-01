@@ -1,11 +1,16 @@
-from brownie import chain, ZERO_ADDRESS
+import logging
+
+from brownie import ZERO_ADDRESS, chain, convert
 from pony.orm import db_session, select
 from yearn.entities import Address, Token, UserTx, db
 from yearn.multicall2 import fetch_multicall
-from yearn.utils import is_contract, contract
+from yearn.utils import contract, is_contract
+
+logger = logging.getLogger(__name__)
 
 @db_session
 def cache_address(address: str) -> Address:
+    address = convert.to_address(address)
     address_entity = Address.get(chainid=chain.id, address=address)
     if not address_entity:
         address_entity = Address(chainid=chain.id, address=address, is_contract=is_contract(address))
