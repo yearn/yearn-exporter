@@ -41,7 +41,7 @@ def main():
     _cached_thru_from_last_run = None
     while True:
         cached_thru = last_recorded_block(UserTx)
-        if cached_thru == _cached_thru_from_last_run and cached_thru <= chain.height - BATCH_SIZE:
+        if cached_thru and cached_thru == _cached_thru_from_last_run and cached_thru <= chain.height - BATCH_SIZE:
             logger.critical(f'stuck in infinite loop, increase transactions exporter batch size for {Network(chain.id).name}')
         process_and_cache_user_txs(cached_thru)
         _cached_thru_from_last_run = cached_thru
