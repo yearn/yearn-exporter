@@ -237,6 +237,31 @@ services:
       - victoria-metrics
       - postgres
 
+  ftm-wallet-exporter:
+    image: yearn-exporter
+    command: wallet_exporter
+    environment:
+      - WEB3_PROVIDER=$FTM_WEB3_PROVIDER
+      - EXPLORER=$FTM_EXPLORER
+      - FTMSCAN_TOKEN
+      - NETWORK=ftm-main
+      - SLEEP_SECONDS
+      - PGHOST=postgres
+      - PGDATABASE=postgres
+      - PGUSER=postgres
+      - PGPASSWORD=yearn-exporter
+      - POOL_SIZE
+      - CHUNK_SIZE
+      - RESOLUTION
+    volumes:
+      - solidity_compilers:/root/.solcx
+      - vyper_compilers:/root/.vvm
+      - brownie:/root/.brownie
+      - cache:/app/yearn-exporter/cache
+    networks:
+      - yearn-exporter
+    restart: always
+
   vmagent:
     image: victoriametrics/vmagent
     volumes:
