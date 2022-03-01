@@ -71,7 +71,6 @@ def get_token_bucket(token) -> str:
         return 'Other long term assets'
     return 'Other short term assets'
 
-
 @memory.cache()
 def _unwrap_token(token) -> str:
     '''
@@ -101,7 +100,6 @@ def _unwrap_token(token) -> str:
         except AttributeError:
             return weth
     return token
-
 
 def _pool_bucket(pool_tokens: set) -> str:
     if pool_tokens < BTC_LIKE:
