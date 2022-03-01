@@ -11,7 +11,7 @@ logger = logging.getLogger('yearn.exporter')
 sleep_interval = int(os.environ.get('SLEEP_SECONDS', '0'))
 
 def main():
-    yearn = Yearn(load_transfers=os.environ.get('SKIP_WALLET_STATS', False))
+    yearn = Yearn(load_transfers= not os.environ.get('SKIP_WALLET_STATS', False))
     for block in chain.new_blocks(height_buffer=1):
         start_time = time.time()
         yearn.export(block.number, block.timestamp)
