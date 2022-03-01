@@ -3,7 +3,7 @@ from dataclasses import dataclass
 from functools import cached_property
 from typing import Optional
 
-from brownie import ZERO_ADDRESS, chain, interface
+from brownie import ZERO_ADDRESS, interface
 from brownie.network.contract import InterfaceContainer
 from yearn import apy, constants
 from yearn.apy.common import ApySamples
@@ -11,7 +11,6 @@ from yearn.common import Tvl
 from yearn.multicall2 import fetch_multicall
 from yearn.prices import magic
 from yearn.prices.curve import curve
-from yearn.outputs.postgres.utils import fetch_balances
 from yearn.utils import contract
 from yearn.exceptions import PriceError
 
@@ -63,12 +62,6 @@ class VaultV1:
     @cached_property
     def is_curve_vault(self):
         return curve.get_pool(str(self.token)) is not None
-
-    def wallets(self, block=None):
-        return self.wallet_balances(block=block).keys()
-
-    def wallet_balances(self, block=None):
-        return fetch_balances(self.vault.address, block=block)
 
     def describe(self, block=None):
         info = {}
