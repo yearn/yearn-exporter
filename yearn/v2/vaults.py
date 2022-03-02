@@ -197,7 +197,7 @@ class Vault:
         return info
 
     def apy(self, samples: ApySamples):
-        if _needs_curve_simple():
+        if self._needs_curve_simple():
             return apy.curve.simple(self, samples)
         elif Version(self.api_version) >= Version("0.3.2"):
             return apy.v2.average(self, samples)
@@ -214,7 +214,7 @@ class Vault:
         return Tvl(total_assets, price, tvl)
 
 
-    def _needs_curve_simple():
+    def _needs_curve_simple(self):
         curve_simple_excludes = {
             Network.Fantom: [
                 # yvCurve-Tricrypto vault holds a lp_token 0x58e57cA18B7A47112b877E31929798Cd3D703b0f
