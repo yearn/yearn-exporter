@@ -217,6 +217,8 @@ class Vault:
     def _needs_curve_simple():
         curve_simple_excludes = {
             Network.Fantom: [
+                # yvCurve-Tricrypto vault holds a lp_token 0x58e57cA18B7A47112b877E31929798Cd3D703b0f
+                # which doesn't have curve gauge semantics on fantom
                 "0xCbCaF8cB8cbeAFA927ECEE0c5C56560F83E9B7D9"
             ]
         }
