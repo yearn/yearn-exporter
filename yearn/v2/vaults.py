@@ -19,6 +19,7 @@ from yearn.utils import safe_views, contract
 from yearn.v2.strategies import Strategy
 from yearn.exceptions import PriceError
 from yearn.decorators import sentry_catch_all, wait_or_exit_after
+from yearn.networks import Network
 
 VAULT_VIEWS_SCALED = [
     "totalAssets",
@@ -196,7 +197,7 @@ class Vault:
         return info
 
     def apy(self, samples: ApySamples):
-        if curve and curve.get_pool(self.token.address):
+        if _needs_curve_simple():
             return apy.curve.simple(self, samples)
         elif Version(self.api_version) >= Version("0.3.2"):
             return apy.v2.average(self, samples)
@@ -211,3 +212,18 @@ class Vault:
             price = None
         tvl = total_assets * price / 10 ** self.vault.decimals(block_identifier=block) if price else None
         return Tvl(total_assets, price, tvl)
+
+
+    def _needs_curve_simple():
+        curve_simple_excludes = {
+            Network.Fantom: [
+                # yvCurve-Tricrypto vault holds a lp_token 0x58e57cA18B7A47112b877E31929798Cd3D703b0f
+                # which doesn't have curve gauge semantics on fantom
+                "0xCbCaF8cB8cbeAFA927ECEE0c5C56560F83E9B7D9"
+            ]
+        }
+        needs_simple = True
+        if chain.id in curve_simple_excludes:
+            needs_simple = self.vault.address not in curve_simple_excludes[chain.id]
+
+        return needs_simple and curve and curve.get_pool(self.token.address)
