@@ -272,4 +272,14 @@ partners = [
                 ),
             ],
         ),
+    Partner(
+        name='ambire',
+        treasury='0xa07D75aacEFd11b425AF7181958F0F85c312f143',
+        wrappers=[
+            WildcardWrapper(
+                name="batcher",
+                wrapper="0x460fad03099f67391d84c9cc0ea7aa2457969cea",
+            ),
+        ],
+    ),
 ]
