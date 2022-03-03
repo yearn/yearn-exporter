@@ -251,6 +251,10 @@ class Partner:
             # TODO: save a csv for reporting
             wrappers.append(wrap)
 
+        # if nothing to report, move to next partner
+        if len(wrappers) == 0:
+            return pd.DataFrame(), pd.DataFrame()
+
         # calculate partner fee tier from cummulative wrapper balances
         partner = pd.concat(wrappers)
         total_balances = (
@@ -332,6 +336,8 @@ def process_partners(partners, use_postgres_cache=USE_POSTGRES_CACHE):
         logger.warn('To enable caching without running the exporter, run `make postgres` from project root.')
     for partner in partners:
         result, payout = partner.process(use_postgres_cache=use_postgres_cache)
+        if len(result) == len(payout) == 0:
+            continue
         payouts.append(payout)
         usd = (result.payout * result.vault_price).sum()
         print(partner.name, round(usd,2), 'usd to pay')
