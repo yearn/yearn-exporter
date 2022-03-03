@@ -150,7 +150,8 @@ def main():
 
     samples = get_samples()
 
-    registry_v2 = RegistryV2()
+    include_experimental = os.getenv('INCLUDE_EXPERIMENTAL', False)
+    registry_v2 = RegistryV2(include_experimental=include_experimental)
 
     if chain.id == Network.Mainnet:
         special = [YveCRVJar(), Backscratcher()]

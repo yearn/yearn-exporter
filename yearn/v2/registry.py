@@ -20,13 +20,14 @@ logger = logging.getLogger(__name__)
 
 
 class Registry(metaclass=Singleton):
-    def __init__(self, watch_events_forever=True):
+    def __init__(self, watch_events_forever=True, include_experimental=True):
         self.releases = {}  # api_version => template
         self._vaults = {}  # address -> Vault
         self._experiments = {}  # address => Vault
         self.governance = None
         self.tags = {}
         self._watch_events_forever = watch_events_forever
+        self.include_experimental = include_experimental
         self.registries = self.load_registry()
         # load registry state in the background
         self._done = threading.Event()
@@ -115,7 +116,7 @@ class Registry(metaclass=Singleton):
                     self._vaults[event["vault"]] = vault
                     logger.debug("new vault %s %s", vault.vault, vault.name)
 
-            if event.name == "NewExperimentalVault":
+            if self.include_experimental and event.name == "NewExperimentalVault":
                 vault = self.vault_from_event(event)
                 vault.name = f"{vault.vault.symbol()} {event['api_version']} {event['vault'][:8]}"
                 self._experiments[event["vault"]] = vault
