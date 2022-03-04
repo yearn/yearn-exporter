@@ -137,7 +137,12 @@ def registry_adapter():
 
 def main():
     data = []
-    metric_tags = {"chain": chain.id}
+    allowed_export_modes = ["endorsed", "experimental"]
+    export_mode = os.getenv("EXPORT_MODE", "endorsed")
+    if export_mode not in allowed_export_modes:
+        raise ValueError(f"export_mode must be one of {allowed_export_modes}")
+
+    metric_tags = {"chain": chain.id, "export_mode": export_mode}
     aliases_repo_url = "https://api.github.com/repos/yearn/yearn-assets/git/refs/heads/master"
     aliases_repo = requests.get(aliases_repo_url).json()
     commit = aliases_repo["object"]["sha"]
@@ -149,11 +154,6 @@ def main():
     aliases = {alias["address"]: alias for alias in aliases}
 
     samples = get_samples()
-
-    allowed_export_modes = ["endorsed", "experimental"]
-    export_mode = os.getenv("EXPORT_MODE", "endorsed")
-    if export_mode not in allowed_export_modes:
-        raise ValueError(f"export_mode must be one of {allowed_export_modes}")
 
     registry_v2 = RegistryV2(include_experimental=(export_mode == "experimental"))
 
