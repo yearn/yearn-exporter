@@ -150,8 +150,12 @@ def main():
 
     samples = get_samples()
 
-    include_experimental = os.getenv('INCLUDE_EXPERIMENTAL', False)
-    registry_v2 = RegistryV2(include_experimental=include_experimental)
+    allowed_export_modes = ["endorsed", "experimental"]
+    export_mode = os.getenv("EXPORT_MODE", "endorsed")
+    if export_mode not in allowed_export_modes:
+        raise ValueError(f"export_mode must be one of {allowed_export_modes}")
+
+    registry_v2 = RegistryV2(include_experimental=(export_mode == "experimental"))
 
     if chain.id == Network.Mainnet:
         special = [YveCRVJar(), Backscratcher()]
@@ -171,30 +175,42 @@ def main():
     if len(data) == 0:
         raise ValueError(f"Data is empty for chain_id: {chain.id}")
 
-    out = "generated"
-    if os.path.isdir(out):
-        shutil.rmtree(out)
-    os.makedirs(out, exist_ok=True)
+    to_export = []
+    suffix = None
+    if export_mode == "endorsed":
+        to_export = [vault for vault in data if vault["endorsed"]]
+        suffix = "all"
+    elif export_mode == "experimental":
+        to_export = [vault for vault in data if not vault["endorsed"]]
+        suffix = "experimental"
 
-    vaults_api_path = os.path.join("v1", "chains", f"{chain.id}", "vaults")
+    if len(to_export) == 0:
+        raise EmptyS3Export(f"No data for vaults was found in generated data, aborting upload")
 
-    file_path = os.path.join(out, vaults_api_path)
-    os.makedirs(file_path, exist_ok=True)
+    file_name, s3_path = _get_export_paths(suffix)
+    _export(to_export, file_name, s3_path)
 
-    endorsed = [vault for vault in data if vault["endorsed"]]
-    experimental = [vault for vault in data if not vault["endorsed"]]
+    # Sent a metric so we can track and alert on if this was successfully generated
+    utc_now = datetime.utcnow()
+    send_metric(f"{METRIC_NAME}.success", 1, utc_now, tags=metric_tags)
 
-    if (len(endorsed) + len(experimental)) == 0:
-        raise EmptyS3Export(f"No data for vaults was found in generated data, aborting upload, check output file {file_path}")
 
-    vault_api_all = os.path.join(vaults_api_path, "all")
-    with open(os.path.join(out, vault_api_all), "w+") as f:
-        json.dump(endorsed, f)
+def _export(data, file_name, s3_path):
+    print(json.dumps(data))
 
-    vault_api_experimental = os.path.join(vaults_api_path, "experimental")
-    with open(os.path.join(out, vault_api_experimental), "w+") as f:
-        json.dump(experimental, f)
+    with open(file_name, "w+") as f:
+        json.dump(data, f)
 
+    s3 = _get_s3()
+    s3.upload_file(
+        file_name,
+        aws_bucket,
+        s3_path,
+        ExtraArgs={'ContentType': "application/json", 'CacheControl': "max-age=1800"},
+    )
+
+
+def _get_s3():
     aws_key = os.environ.get("AWS_ACCESS_KEY")
     aws_secret = os.environ.get("AWS_ACCESS_SECRET")
     aws_bucket = os.environ.get("AWS_BUCKET")
@@ -206,26 +222,23 @@ def main():
         kwargs["aws_secret_access_key"] = aws_secret
 
     s3 = boto3.client("s3", **kwargs)
+    return s3
 
-    print(json.dumps(data))
 
-    s3.upload_file(
-        os.path.join(out, vault_api_all),
-        aws_bucket,
-        vault_api_all,
-        ExtraArgs={'ContentType': "application/json", 'CacheControl': "max-age=1800"},
-    )
+def _get_export_paths(suffix):
+    out = "generated"
+    if os.path.isdir(out):
+        shutil.rmtree(out)
+    os.makedirs(out, exist_ok=True)
 
-    s3.upload_file(
-        os.path.join(out, vault_api_experimental),
-        aws_bucket,
-        vault_api_experimental,
-        ExtraArgs={'ContentType': "application/json", 'CacheControl': "max-age=1800"},
-    )
+    vaults_api_path = os.path.join("v1", "chains", f"{chain.id}", "vaults")
 
-    # Sent a metric so we can track and alert on if this was successfully generated
-    utc_now = datetime.utcnow()
-    send_metric(f"{METRIC_NAME}.success", 1, utc_now, tags=metric_tags)
+    file_base_path = os.path.join(out, vaults_api_path)
+    os.makedirs(file_base_path, exist_ok=True)
+
+    file_name = os.path.join(file_base_path, suffix)
+    s3_path = os.path.join(vaults_api_path, suffix)
+    return file_name, s3_path
 
 
 telegram_users_to_alert = ["@jstashh", "@x48114", "@dudesahn"]
