@@ -221,8 +221,7 @@ def _get_s3():
     if aws_secret is not None:
         kwargs["aws_secret_access_key"] = aws_secret
 
-    s3 = boto3.client("s3", **kwargs)
-    return s3
+    return boto3.client("s3", **kwargs)
 
 
 def _get_export_paths(suffix):
