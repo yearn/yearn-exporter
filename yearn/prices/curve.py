@@ -135,7 +135,9 @@ class CurveRegistry(metaclass=Singleton):
                     self.registries[event.address].add(event['pool'])
                     lp_token = contract(event.address).get_lp_token(event['pool'])
                     self.token_to_pool[lp_token] = event['pool']
-
+                elif event.name == 'PoolRemoved':
+                    self.registries[event.address].remove(event['pool'])
+                    
             # load metapool and curve v5 factories
             self.load_factories()
 
