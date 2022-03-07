@@ -201,6 +201,8 @@ def _export(data, file_name, s3_path):
     with open(file_name, "w+") as f:
         json.dump(data, f)
 
+    aws_bucket = os.environ.get("AWS_BUCKET")
+
     s3 = _get_s3()
     s3.upload_file(
         file_name,
@@ -213,7 +215,6 @@ def _export(data, file_name, s3_path):
 def _get_s3():
     aws_key = os.environ.get("AWS_ACCESS_KEY")
     aws_secret = os.environ.get("AWS_ACCESS_SECRET")
-    aws_bucket = os.environ.get("AWS_BUCKET")
 
     kwargs = {}
     if aws_key is not None:
