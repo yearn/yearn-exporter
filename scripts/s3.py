@@ -137,7 +137,12 @@ def registry_adapter():
 
 def main():
     data = []
-    metric_tags = {"chain": chain.id}
+    allowed_export_modes = ["endorsed", "experimental"]
+    export_mode = os.getenv("EXPORT_MODE", "endorsed")
+    if export_mode not in allowed_export_modes:
+        raise ValueError(f"export_mode must be one of {allowed_export_modes}")
+
+    metric_tags = {"chain": chain.id, "export_mode": export_mode}
     aliases_repo_url = "https://api.github.com/repos/yearn/yearn-assets/git/refs/heads/master"
     aliases_repo = requests.get(aliases_repo_url).json()
     commit = aliases_repo["object"]["sha"]
@@ -150,7 +155,7 @@ def main():
 
     samples = get_samples()
 
-    registry_v2 = RegistryV2()
+    registry_v2 = RegistryV2(include_experimental=(export_mode == "experimental"))
 
     if chain.id == Network.Mainnet:
         special = [YveCRVJar(), Backscratcher()]
@@ -170,33 +175,46 @@ def main():
     if len(data) == 0:
         raise ValueError(f"Data is empty for chain_id: {chain.id}")
 
-    out = "generated"
-    if os.path.isdir(out):
-        shutil.rmtree(out)
-    os.makedirs(out, exist_ok=True)
+    to_export = []
+    suffix = None
+    if export_mode == "endorsed":
+        to_export = [vault for vault in data if vault["endorsed"]]
+        suffix = "all"
+    elif export_mode == "experimental":
+        to_export = [vault for vault in data if not vault["endorsed"]]
+        suffix = "experimental"
 
-    vaults_api_path = os.path.join("v1", "chains", f"{chain.id}", "vaults")
+    if len(to_export) == 0:
+        raise EmptyS3Export(f"No data for vaults was found in generated data, aborting upload")
 
-    file_path = os.path.join(out, vaults_api_path)
-    os.makedirs(file_path, exist_ok=True)
+    file_name, s3_path = _get_export_paths(suffix)
+    _export(to_export, file_name, s3_path)
 
-    endorsed = [vault for vault in data if vault["endorsed"]]
-    experimental = [vault for vault in data if not vault["endorsed"]]
+    # Sent a metric so we can track and alert on if this was successfully generated
+    utc_now = datetime.utcnow()
+    send_metric(f"{METRIC_NAME}.success", 1, utc_now, tags=metric_tags)
 
-    if (len(endorsed) + len(experimental)) == 0:
-        raise EmptyS3Export(f"No data for vaults was found in generated data, aborting upload, check output file {file_path}")
 
-    vault_api_all = os.path.join(vaults_api_path, "all")
-    with open(os.path.join(out, vault_api_all), "w+") as f:
-        json.dump(endorsed, f)
+def _export(data, file_name, s3_path):
+    print(json.dumps(data))
 
-    vault_api_experimental = os.path.join(vaults_api_path, "experimental")
-    with open(os.path.join(out, vault_api_experimental), "w+") as f:
-        json.dump(experimental, f)
+    with open(file_name, "w+") as f:
+        json.dump(data, f)
 
+    aws_bucket = os.environ.get("AWS_BUCKET")
+
+    s3 = _get_s3()
+    s3.upload_file(
+        file_name,
+        aws_bucket,
+        s3_path,
+        ExtraArgs={'ContentType': "application/json", 'CacheControl': "max-age=1800"},
+    )
+
+
+def _get_s3():
     aws_key = os.environ.get("AWS_ACCESS_KEY")
     aws_secret = os.environ.get("AWS_ACCESS_SECRET")
-    aws_bucket = os.environ.get("AWS_BUCKET")
 
     kwargs = {}
     if aws_key is not None:
@@ -204,27 +222,23 @@ def main():
     if aws_secret is not None:
         kwargs["aws_secret_access_key"] = aws_secret
 
-    s3 = boto3.client("s3", **kwargs)
+    return boto3.client("s3", **kwargs)
 
-    print(json.dumps(data))
 
-    s3.upload_file(
-        os.path.join(out, vault_api_all),
-        aws_bucket,
-        vault_api_all,
-        ExtraArgs={'ContentType': "application/json", 'CacheControl': "max-age=1800"},
-    )
+def _get_export_paths(suffix):
+    out = "generated"
+    if os.path.isdir(out):
+        shutil.rmtree(out)
+    os.makedirs(out, exist_ok=True)
 
-    s3.upload_file(
-        os.path.join(out, vault_api_experimental),
-        aws_bucket,
-        vault_api_experimental,
-        ExtraArgs={'ContentType': "application/json", 'CacheControl': "max-age=1800"},
-    )
+    vaults_api_path = os.path.join("v1", "chains", f"{chain.id}", "vaults")
 
-    # Sent a metric so we can track and alert on if this was successfully generated
-    utc_now = datetime.utcnow()
-    send_metric(f"{METRIC_NAME}.success", 1, utc_now, tags=metric_tags)
+    file_base_path = os.path.join(out, vaults_api_path)
+    os.makedirs(file_base_path, exist_ok=True)
+
+    file_name = os.path.join(file_base_path, suffix)
+    s3_path = os.path.join(vaults_api_path, suffix)
+    return file_name, s3_path
 
 
 telegram_users_to_alert = ["@jstashh", "@x48114", "@dudesahn"]
@@ -244,9 +258,10 @@ def with_monitoring():
         main()
     except Exception as error:
         tb = traceback.format_exc()
+        export_mode = os.getenv("EXPORT_MODE", "endorsed")
         now = datetime.now()
         tags = " ".join(telegram_users_to_alert)
-        message = f"`[{now}]`\n🔥 API (vaults) update for {Network(chain.id).name} failed!\n```\n{tb}\n```\n{tags}"[:4000]
+        message = f"`[{now}]`\n🔥 API ({export_mode} vaults) update for {Network(chain.id).name} failed!\n```\n{tb}\n```\n{tags}"[:4000]
         updater.bot.send_message(chat_id=private_group, text=message, parse_mode="Markdown", reply_to_message_id=ping)
         updater.bot.send_message(chat_id=public_group, text=message, parse_mode="Markdown")
         raise error
