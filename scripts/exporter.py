@@ -26,7 +26,7 @@ def main():
 def tvl():
     yearn = Yearn()
     for block in chain.new_blocks(height_buffer=1):
-        data = yearn.total_value_at()
+        data = yearn.total_value_at(block.number)
         products = list(data.keys())
         if yearn.exclude_ib_tvl and block > constants.ib_snapshot_block:
             products.remove('ib')
