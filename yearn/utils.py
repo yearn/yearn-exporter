@@ -2,7 +2,7 @@ import logging
 from functools import lru_cache
 import threading
 
-from brownie import Contract, chain, web3
+from brownie import Contract, chain, web3, interface
 
 from yearn.cache import memory
 from yearn.exceptions import ArchiveNodeRequired
@@ -16,6 +16,11 @@ BINARY_SEARCH_BARRIER = {
     Network.Arbitrum: 0,
 }
 
+PREFER_INTERFACE = {
+    Network.Arbitrum: [
+        "0x2f2a2543B76A4166549F7aaB2e75Bef0aefC5B0f", # empty ABI for WBTC when compiling the contract
+    ]
+}
 
 def safe_views(abi):
     return [
@@ -117,9 +122,14 @@ class Singleton(type):
 # cached Contract instance, saves about 20ms of init time
 _contract_lock = threading.Lock()
 _contract = lru_cache(maxsize=None)(Contract)
+_interface = lru_cache(maxsize=None)(interface.ERC20)
 
 def contract(address):
     with _contract_lock:
+        if chain.id in PREFER_INTERFACE:
+            if address in PREFER_INTERFACE[chain.id]:
+                return _interface(address)
+
         return _contract(address)
 
 
