@@ -13,6 +13,7 @@ from yearn.prices.band import band
 from yearn.prices.chainlink import chainlink
 from yearn.prices.compound import compound
 from yearn.prices.fixed_forex import fixed_forex
+from yearn.prices.generic_amm import generic_amm
 from yearn.prices.incidents import INCIDENTS
 from yearn.prices.synthetix import synthetix
 from yearn.prices.uniswap.v1 import uniswap_v1
@@ -85,6 +86,7 @@ def find_price(token, block, return_price_during_vault_downtime: bool = False):
         curve.curve,
         compound,
         fixed_forex,
+        generic_amm,
         synthetix,
         band,
         uniswap_v2,
