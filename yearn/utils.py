@@ -2,7 +2,7 @@ import logging
 from functools import lru_cache
 import threading
 
-from brownie import Contract, chain, web3
+from brownie import Contract, chain, web3, interface
 
 from yearn.cache import memory
 from yearn.exceptions import ArchiveNodeRequired
@@ -16,6 +16,13 @@ BINARY_SEARCH_BARRIER = {
     Network.Arbitrum: 0,
 }
 
+_erc20 = lru_cache(maxsize=None)(interface.ERC20)
+
+PREFER_INTERFACE = {
+    Network.Arbitrum: {
+        "0x2f2a2543B76A4166549F7aaB2e75Bef0aefC5B0f": _erc20, # empty ABI for WBTC when compiling the contract
+    }
+}
 
 def safe_views(abi):
     return [
@@ -120,6 +127,11 @@ _contract = lru_cache(maxsize=None)(Contract)
 
 def contract(address):
     with _contract_lock:
+        if chain.id in PREFER_INTERFACE:
+            if address in PREFER_INTERFACE[chain.id]:
+                _interface = PREFER_INTERFACE[chain.id][address]
+                return _interface(address)
+
         return _contract(address)
 
 
