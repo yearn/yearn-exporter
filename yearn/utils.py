@@ -129,7 +129,8 @@ def contract(address):
     with _contract_lock:
         if chain.id in PREFER_INTERFACE:
             if address in PREFER_INTERFACE[chain.id]:
-                return PREFER_INTERFACE[chain.id][address]
+                _interface = PREFER_INTERFACE[chain.id][address]
+                return _interface(address)
 
         return _contract(address)
 
