@@ -331,6 +331,9 @@ class Partner:
 
 
 def process_partners(partners: List[Partner], use_postgres_cache: bool = USE_POSTGRES_CACHE) -> DataFrame:
+    if not partners:
+        raise UnsupportedNetwork(f'There are no partners on {Network.label()}')
+
     total = 0
     payouts = []
     if not use_postgres_cache:
