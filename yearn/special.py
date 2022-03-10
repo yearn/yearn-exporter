@@ -11,11 +11,11 @@ from joblib import Parallel, delayed
 
 from yearn.prices import magic
 from yearn.prices.curve import curve
-from yearn.utils import contract_creation_block, contract
+from yearn.utils import Singleton, contract_creation_block, contract
 from yearn.apy import ApySamples
 from yearn.exceptions import PriceError
 
-class YveCRVJar:
+class YveCRVJar(metaclass = Singleton):
     def __init__(self):
         self.id = "yvecrv-eth"
         self.name = "pickling SushiSwap LP Token"
@@ -46,7 +46,7 @@ class YveCRVJar:
         tvl = data[self.id]
         return Tvl(tvl=tvl)
 
-class Backscratcher:
+class Backscratcher(metaclass = Singleton):
     def __init__(self):
         self.name = "yveCRV"
         self.vault = contract("0xc5bDdf9843308380375a611c18B50Fb9341f502A")
@@ -111,7 +111,7 @@ class Backscratcher:
         
 
 
-class Ygov:
+class Ygov(metaclass = Singleton):
     def __init__(self):
         self.name = "yGov"
         self.vault = contract("0xBa37B002AbaFDd8E89a1995dA52740bbC013D992")
@@ -132,7 +132,7 @@ class Ygov:
         return yfi_locked * yfi_price
 
 
-class Registry:
+class Registry(metaclass = Singleton):
     def __init__(self) -> None:
         self.vaults = [
             Backscratcher(),

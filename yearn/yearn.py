@@ -1,5 +1,4 @@
 import logging
-import os
 from collections import Counter
 from time import time
 
@@ -79,6 +78,7 @@ class Yearn:
             for key in self.registries
         )
         return dict(zip(self.registries, desc))
+
 
     def describe_wallets(self, block=None):
         from yearn.outputs.describers.registry import RegistryWalletDescriber

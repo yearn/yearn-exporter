@@ -1,20 +1,19 @@
-import json
 import dataclasses
-import warnings
+import json
 import logging
+import warnings
 
+import sentry_sdk
 from brownie.exceptions import BrownieEnvironmentWarning
-
 from tabulate import tabulate
-
-from yearn.apy import get_samples, ApyError
+from yearn.apy import ApyError, get_samples
+from yearn.special import Backscratcher, YveCRVJar
 from yearn.v1.registry import Registry as RegistryV1
 from yearn.v2.registry import Registry as RegistryV2
-
-from yearn.v2.vaults import Vault as VaultV2
 from yearn.v2.strategies import Strategy as StrategyV2
+from yearn.v2.vaults import Vault as VaultV2
 
-from yearn.special import Backscratcher, YveCRVJar
+sentry_sdk.set_tag('script','apy')
 
 warnings.simplefilter("ignore", BrownieEnvironmentWarning)
 

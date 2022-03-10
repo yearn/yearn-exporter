@@ -237,6 +237,37 @@ services:
       - victoria-metrics
       - postgres
 
+  ftm-transactions-exporter:
+    image: yearn-exporter
+    command: transactions_exporter
+    volumes: *common-volumes
+    environment:
+      <<: *common-envs
+      <<: *common-ftm-envs
+      <<: *common-historical-envs
+      <<: *common-postgres-envs
+    networks:
+      - yearn-exporter
+    restart: on-failure
+    depends_on:
+      - postgres
+
+  ftm-wallet-exporter:
+    image: yearn-exporter
+    command: wallet_exporter
+    volumes: *common-volumes
+    environment:
+      <<: *common-envs
+      <<: *common-ftm-envs
+      <<: *common-historical-envs
+      <<: *common-postgres-envs
+    networks:
+      - yearn-exporter
+    restart: always
+    depends_on:
+      - victoria-metrics
+      - postgres
+
   vmagent:
     image: victoriametrics/vmagent
     volumes:

@@ -56,7 +56,13 @@ ETH_LIKE = _ETH_LIKE.union(
 
 def get_token_bucket(token) -> str:
     token = str(token)
-    token = str(_unwrap_token(token))
+    try:
+        token = str(_unwrap_token(token))
+    except ValueError as e:
+        if str(e).startswith('Source for') and str(e).endswith('has not been verified'):
+            return 'Other short term assets'
+        raise
+    
     if (
         token in stablecoins or token in INTL_STABLECOINS or (fixed_forex and token in fixed_forex)
     ):  # or token == '0x9ba60bA98413A60dB4C651D4afE5C937bbD8044B': # yla

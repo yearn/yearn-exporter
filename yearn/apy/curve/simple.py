@@ -1,15 +1,15 @@
 import logging
 from time import time
 
-from brownie import ZERO_ADDRESS, Contract, chain, interface
+from brownie import ZERO_ADDRESS, chain, interface
 from semantic_version import Version
 from yearn.apy.common import (SECONDS_PER_YEAR, Apy, ApyError, ApyFees,
                               ApySamples, SharePricePoint, calculate_roi)
 from yearn.apy.curve.rewards import rewards
 from yearn.networks import Network
+from yearn.prices import magic
 from yearn.prices.curve import curve
-from yearn.prices.magic import get_price
-from yearn.utils import get_block_timestamp, contract
+from yearn.utils import contract, get_block_timestamp
 
 logger = logging.getLogger(__name__)
 
@@ -58,9 +58,9 @@ def simple(vault, samples: ApySamples) -> Apy:
     pool = contract(pool_address)
     pool_price = pool.get_virtual_price(block_identifier=block)
 
-    base_asset_price = get_price(lp_token, block=block) or 1
+    base_asset_price = magic.get_price(lp_token, block=block) or 1
 
-    crv_price = get_price(curve.crv, block=block)
+    crv_price = magic.get_price(curve.crv, block=block)
 
     yearn_voter = addresses[chain.id]['yearn_voter_proxy']
     y_working_balance = gauge.working_balances(yearn_voter, block_identifier=block)
@@ -104,9 +104,9 @@ def simple(vault, samples: ApySamples) -> Apy:
             if gauge_reward_token == addresses[chain.id]['rkp3r_rewards']:
                 rKP3R_contract = interface.rKP3R(gauge_reward_token)
                 discount = rKP3R_contract.discount(block_identifier=block)
-                token_price = get_price(addresses[chain.id]['kp3r'], block=block) * (100 - discount) / 100
+                token_price = magic.get_price(addresses[chain.id]['kp3r'], block=block) * (100 - discount) / 100
             else:
-                token_price = get_price(gauge_reward_token, block=block)
+                token_price = magic.get_price(gauge_reward_token, block=block)
             current_time = time() if block is None else get_block_timestamp(block)
             if period_finish < current_time:
                 reward_apr = 0
@@ -183,7 +183,7 @@ def simple(vault, samples: ApySamples) -> Apy:
         if supply <= max_supply:
             reduction = total_cliff - cliff
             cvx_minted_as_crv = reduction / total_cliff
-            cvx_price = get_price(cvx, block=block)
+            cvx_price = magic.get_price(cvx, block=block)
             converted_cvx = cvx_price / crv_price
             cvx_printed_as_crv = cvx_minted_as_crv * converted_cvx
         else:

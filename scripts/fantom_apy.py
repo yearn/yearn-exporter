@@ -1,9 +1,13 @@
-import json
 import dataclasses
+import json
+
+import sentry_sdk
+from brownie import chain
 from yearn.apy import get_samples
 from yearn.networks import Network
 from yearn.v2.vaults import Vault as VaultV2
-from brownie import chain
+
+sentry_sdk.set_tag('script','fantom_apy')
 
 def wftm():
     fetch_apy("0x0DEC85e74A92c52b7F708c4B10207D9560CEFaf0")

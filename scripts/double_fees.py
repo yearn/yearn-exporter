@@ -1,11 +1,14 @@
 from collections import Counter
 from pathlib import Path
 
+import sentry_sdk
 import toml
 from brownie import ZERO_ADDRESS, chain, web3
 from tabulate import tabulate
 from web3._utils.events import construct_event_topic_set
 from yearn.events import decode_logs, get_logs_asap
+
+sentry_sdk.set_tag('script','double_fees')
 
 abi = {
     "anonymous": False,

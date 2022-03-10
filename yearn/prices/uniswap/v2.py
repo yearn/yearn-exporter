@@ -55,7 +55,10 @@ class UniswapV2:
         Always uses intermediate WETH pair.
         """
         tokens = [contract(str(token)) for token in [token_in, token_out]]
-        amount_in = 10 ** tokens[0].decimals()
+        try:
+            amount_in = 10 ** tokens[0].decimals()
+        except AttributeError:
+            return None
         path = (
             [token_in, token_out]
             if weth in (token_in, token_out)

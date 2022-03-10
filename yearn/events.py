@@ -18,6 +18,10 @@ def decode_logs(logs) -> EventDict:
     """
     Decode logs to events and enrich them with additional info.
     """
+    addresses = {log.address for log in logs}
+    for address in addresses:
+        __add_deployment_topics(address)
+
     decoded = _decode_logs(logs)
     for i, log in enumerate(logs):
         setattr(decoded[i], "block_number", log["blockNumber"])
@@ -32,17 +36,14 @@ def create_filter(address, topics=None):
     Set fromBlock as the earliest creation block.
     """
     if isinstance(address, list):
-        for a in address:
-            add_deployment_topics(a)
         start_block = min(map(contract_creation_block, address))
     else:
-        add_deployment_topics(address)
         start_block = contract_creation_block(address)
 
     return web3.eth.filter({"address": address, "fromBlock": start_block, "topics": topics})
 
 
-def add_deployment_topics(address):
+def __add_deployment_topics(address):
     _add_deployment_topics(address, contract(address).abi)
 
 

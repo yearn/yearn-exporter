@@ -2,13 +2,15 @@ import logging
 import os
 
 import pandas as pd
+import sentry_sdk
 from brownie import Contract, chain, convert, web3
+from eth_abi import encode_single
 from pandas.core.frame import DataFrame
 from requests import get
 from yearn.prices import magic
 from yearn.utils import contract
 
-from eth_abi import encode_single
+sentry_sdk.set_tag('script','treasury')
 
 moralis = 'https://deep-index.moralis.io/api/v2/'
 moralis_key = os.environ['MORALIS_KEY']

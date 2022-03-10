@@ -2,10 +2,13 @@ import logging
 import os
 import time
 
+import sentry_sdk
 from brownie import chain
-from yearn.yearn import Yearn
 from yearn.outputs.victoria import output_duration
 from yearn.prices import constants
+from yearn.yearn import Yearn
+
+sentry_sdk.set_tag('script','exporter')
 
 logger = logging.getLogger('yearn.exporter')
 sleep_interval = int(os.environ.get('SLEEP_SECONDS', '0'))
@@ -23,7 +26,7 @@ def main():
 def tvl():
     yearn = Yearn()
     for block in chain.new_blocks(height_buffer=1):
-        data = yearn.total_value_at()
+        data = yearn.total_value_at(block.number)
         products = list(data.keys())
         if yearn.exclude_ib_tvl and block > constants.ib_snapshot_block:
             products.remove('ib')

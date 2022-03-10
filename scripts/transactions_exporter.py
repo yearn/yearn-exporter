@@ -4,7 +4,8 @@ import warnings
 from decimal import Decimal
 
 import pandas as pd
-from brownie import ZERO_ADDRESS, Contract, chain, web3
+import sentry_sdk
+from brownie import ZERO_ADDRESS, chain, web3
 from brownie.exceptions import BrownieEnvironmentWarning
 from pony.orm import db_session
 from web3._utils.abi import filter_by_name
@@ -17,22 +18,34 @@ from yearn.outputs.postgres.utils import (cache_address, cache_token,
 from yearn.prices import magic
 from yearn.yearn import Yearn
 
+sentry_sdk.set_tag('script','transactions_exporter')
+
 warnings.simplefilter("ignore", BrownieEnvironmentWarning)
 
 yearn = Yearn(load_strategies=False)
 
 logger = logging.getLogger('yearn.transactions_exporter')
 
-BATCH_SIZE = 5000
+BATCH_SIZE = {
+    Network.Mainnet: 5000,
+    Network.Fantom: 20000,
+}[chain.id]
 
 FIRST_END_BLOCK = {
     Network.Mainnet: 9480000, # NOTE block some arbitrary time after iearn's first deployment
     Network.Fantom: 5000000, # NOTE block some arbitrary time after v2's first deployment
 }[chain.id]
 
+
 def main():
-    for block in chain.new_blocks(height_buffer=1):
-        process_and_cache_user_txs(last_recorded_block(UserTx))
+    _cached_thru_from_last_run = None
+    while True:
+        cached_thru = last_recorded_block(UserTx)
+        if cached_thru and cached_thru == _cached_thru_from_last_run and cached_thru <= chain.height - BATCH_SIZE:
+            logger.critical(f'stuck in infinite loop, increase transactions exporter batch size for {Network(chain.id).name}')
+        process_and_cache_user_txs(cached_thru)
+        _cached_thru_from_last_run = cached_thru
+        time.sleep(1)
 
 
 @db_session
@@ -45,6 +58,8 @@ def process_and_cache_user_txs(last_saved_block=None):
         else start_block + BATCH_SIZE if start_block + BATCH_SIZE < max_block_to_cache
         else max_block_to_cache
     )
+    if start_block and start_block > end_block:
+        end_block = start_block
     df = pd.DataFrame()
     for vault in yearn.active_vaults_at(end_block):
         df = pd.concat([df, get_token_transfers(vault.vault, start_block, end_block)])
@@ -53,6 +68,10 @@ def process_and_cache_user_txs(last_saved_block=None):
         #       won't have issues in the event that transactions exporter fails mid-run.
         df = df.sort_values('block')  
         for index, row in df.iterrows():
+            # this addresses one tx with a crazy price due to yvpbtc v1 pricePerFullShare bug.
+            price = row.price if len(str(round(row.price))) <= 20 else 99999999999999999999
+            usd = row.value_usd if len(str(round(row.value_usd))) <= 20 else 99999999999999999999
+            
             UserTx(
                 vault=cache_token(row.token),
                 timestamp=row.timestamp,
@@ -63,15 +82,15 @@ def process_and_cache_user_txs(last_saved_block=None):
                 from_address=row['from'],
                 to_address=row['to'],
                 amount = row.amount,
-                price = row.price,
-                value_usd = row.value_usd,
+                price = price,
+                value_usd = usd,
                 gas_used = row.gas_used,
                 gas_price = row.gas_price
                 )
         if start_block == end_block:
-            logger.warn(f'{len(df)} user txs exported to postrges [block {start_block}]')
+            logger.info(f'{len(df)} user txs exported to postrges [block {start_block}]')
         else:
-            logger.warn(f'{len(df)} user txs exported to postrges [blocks {start_block}-{end_block}]')
+            logger.info(f'{len(df)} user txs exported to postrges [blocks {start_block}-{end_block}]')
 
 
 # Helper functions
@@ -91,7 +110,7 @@ def _process_transfer_event(event, token_entity) -> dict:
     sender, receiver, amount = event.values()
     cache_address(sender)
     cache_address(receiver)
-    price = _get_price(event, token_entity)
+    price = _get_price_from_event(event, token_entity)
     if (
         # NOTE magic.get_price() returns erroneous price due to erroneous ppfs
         token_entity.address.address == '0x7F83935EcFe4729c4Ea592Ab2bC1A32588409797'
@@ -117,13 +136,10 @@ def _process_transfer_event(event, token_entity) -> dict:
     }
 
 
-def _get_price(event, token_entity):
+def _get_price_from_event(event, token_entity):
     while True:
         try:
-            try:
-                return magic.get_price(token_entity.address.address, event.block_number)
-            except TypeError:  # magic.get_price fails because all liquidity was removed for testing and `share_price` returns None
-                return magic.get_price(Contract(token_entity.address.address).token(), event.block_number)
+            return magic.get_price(token_entity.address.address, event.block_number, return_price_during_vault_downtime=True)
         except ConnectionError as e:
             # Try again
             logger.warn(f'ConnectionError: {str(e)}')
