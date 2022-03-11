@@ -448,7 +448,7 @@ def prepare_alerts(r, t):
         )
         
         # Send to dev channel
-        m = f'Network: {CHAIN_VALUES[chain.id]["NETWORK_EMOJI"]} {CHAIN_VALUES[chain.id]["NETWORK_SYMBOL"]}\n\n' + m + format_dev_telegram(r, t)
+        m = f'Network: {CHAIN_VALUES[chain.id]["EMOJI"]} {CHAIN_VALUES[chain.id]["NETWORK_SYMBOL"]}\n\n' + m + format_dev_telegram(r, t)
         print(f'Chain ID: {chain.id}\n\n' + m + format_dev_telegram(r, t))
         bot.send_message(dev_channel, m, parse_mode="markdown", disable_web_page_preview = True)
 
