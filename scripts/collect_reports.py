@@ -483,7 +483,7 @@ def format_public_telegram(r, t):
     return message
 
 def format_dev_telegram(r, t):
-    message = '/ [Tenderly](https://dashboard.tenderly.co/yearn/sms/tx/{r.chain_id}/{r.txn_hash})\n\n'
+    message = f' / [Tenderly](https://dashboard.tenderly.co/yearn/sms/tx/{r.chain_id}/{r.txn_hash})\n\n'
     df = pd.DataFrame(index=[''])
     last_harvest_ts = contract(r.vault_address).strategies(r.strategy_address, block_identifier=r.block-1).dict()["lastReport"]
     if last_harvest_ts == 0:
