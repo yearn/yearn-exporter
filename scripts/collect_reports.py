@@ -46,6 +46,9 @@ OLD_REGISTRY_ENDORSEMENT_BLOCKS = {
 
 CHAIN_VALUES = {
     Network.Mainnet: {
+        "NETWORK_NAME": "Ethereum Mainnet",
+        "NETWORK_SYMBOL": "ETH",
+        "EMOJI": "🇪🇹",
         "START_DATE": datetime(2020, 2, 12, tzinfo=timezone.utc),
         "START_BLOCK": 11563389,
         "REGISTRY_ADDRESS": "0x50c1a2eA0a861A967D9d0FFE2AE4012c2E053804",
@@ -63,6 +66,9 @@ CHAIN_VALUES = {
         "EXPLORER_URL": "https://etherscan.io/",
     },
     Network.Fantom: {
+        "NETWORK_NAME": "Fantom",
+        "NETWORK_SYMBOL": "FTM",
+        "EMOJI": "👻",
         "START_DATE": datetime(2021, 4, 30, tzinfo=timezone.utc),
         "START_BLOCK": 18450847,
         "REGISTRY_ADDRESS": "0x727fe1759430df13655ddb0731dE0D0FDE929b04",
@@ -81,19 +87,22 @@ CHAIN_VALUES = {
         "EXPLORER_URL": "https://ftmscan.com/",
     },
     Network.Arbitrum: {
+        "NETWORK_NAME": "Arbitrum",
+        "NETWORK_SYMBOL": "ARRB",
+        "EMOJI": "🤠",
         "START_DATE": datetime(2021, 9, 14, tzinfo=timezone.utc),
         "START_BLOCK": 4841854,
         "REGISTRY_ADDRESS": "",
         "REGISTRY_DEPLOY_BLOCK": 12045555,
-        "REGISTRY_HELPER_ADDRESS": "",
-        "LENS_ADDRESS": "",
-        "VAULT_ADDRESS030": "",
-        "VAULT_ADDRESS031": "",
+        "REGISTRY_HELPER_ADDRESS": "0x237C3623bed7D115Fc77fEB08Dd27E16982d972B",
+        "LENS_ADDRESS": "0xcAd10033C86B0C1ED6bfcCAa2FF6779938558E9f",
+        "VAULT_ADDRESS030": "0x239e14A19DFF93a17339DCC444f74406C17f8E67",
+        "VAULT_ADDRESS031": "0x239e14A19DFF93a17339DCC444f74406C17f8E67",
         "KEEPER_CALL_CONTRACT": "",
         "KEEPER_TOKEN": "",
-        "YEARN_TREASURY": "",
-        "STRATEGIST_MULTISIG": "",
-        "GOVERNANCE_MULTISIG": "",
+        "YEARN_TREASURY": "0x1DEb47dCC9a35AD454Bf7f0fCDb03c09792C08c1",
+        "STRATEGIST_MULTISIG": "0x6346282DB8323A54E840c6C772B4399C9c655C0d",
+        "GOVERNANCE_MULTISIG": "0xb6bc033D34733329971B938fEf32faD7e98E56aD",
     }
 }
 
@@ -172,6 +181,7 @@ def main(dynamically_find_multi_harvest=False):
             time.sleep(interval_seconds)
 
 def handle_event(event, multi_harvest):
+    # exception because skeletor didnt verify contract
     endorsed_vaults = list(contract(CHAIN_VALUES[chain.id]["REGISTRY_HELPER_ADDRESS"]).getVaults())
     txn_hash = event.transaction_hash.hex()
     if event.address not in endorsed_vaults:
@@ -438,8 +448,8 @@ def prepare_alerts(r, t):
         )
         
         # Send to dev channel
-        m = f"Chain ID: {chain.id}\n\n" + m + format_dev_telegram(r, t)
-        print(f"Chain ID: {chain.id}\n\n" + m + format_dev_telegram(r, t))
+        m = f'Network: {CHAIN_VALUES[chain.id]["NETWORK_EMOJI"]} {CHAIN_VALUES[chain.id]["NETWORK_SYMBOL"]}\n\n' + m + format_dev_telegram(r, t)
+        print(f'Chain ID: {chain.id}\n\n' + m + format_dev_telegram(r, t))
         bot.send_message(dev_channel, m, parse_mode="markdown", disable_web_page_preview = True)
 
 def format_public_telegram(r, t):
@@ -463,7 +473,7 @@ def format_public_telegram(r, t):
     message += f' [{r.vault_name}]({explorer}address/{r.vault_address})  --  [{r.strategy_name}]({explorer}address/{r.strategy_address})\n\n'
     message += f'📅 {r.date_string} UTC \n\n'
     net_profit_want = "{:,.2f}".format(r.gain - r.loss)
-    net_profit_usd = "{:,.2f}".format(r.want_gain_usd)
+    net_profit_usd = "{:,.2f}".format((r.gain - r.loss) * r.want_price_at_block)
     message += f'💰 Net profit: {net_profit_want} {r.token_symbol} (${net_profit_usd})\n\n'
     txn_cost_str = "${:,.2f}".format(t.call_cost_usd)
     message += f'💸 Transaction Cost: {txn_cost_str} \n\n'
@@ -473,7 +483,7 @@ def format_public_telegram(r, t):
     return message
 
 def format_dev_telegram(r, t):
-    message = '\n\n'
+    message = '/ [Tenderly](https://dashboard.tenderly.co/yearn/sms/tx/{r.chain_id}/{r.txn_hash})\n\n'
     df = pd.DataFrame(index=[''])
     last_harvest_ts = contract(r.vault_address).strategies(r.strategy_address, block_identifier=r.block-1).dict()["lastReport"]
     if last_harvest_ts == 0:
