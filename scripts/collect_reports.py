@@ -64,6 +64,7 @@ CHAIN_VALUES = {
         "STRATEGIST_MULTISIG": "0x16388463d60FFE0661Cf7F1f31a7D658aC790ff7",
         "GOVERNANCE_MULTISIG": "0xFEB4acf3df3cDEA7399794D0869ef76A6EfAff52",
         "EXPLORER_URL": "https://etherscan.io/",
+        "TENDERLY_CHAIN_IDENTIFIER": "mainnet",
     },
     Network.Fantom: {
         "NETWORK_NAME": "Fantom",
@@ -85,6 +86,7 @@ CHAIN_VALUES = {
         "STRATEGIST_MULTISIG": "0x72a34AbafAB09b15E7191822A679f28E067C4a16",
         "GOVERNANCE_MULTISIG": "0xC0E2830724C946a6748dDFE09753613cd38f6767",
         "EXPLORER_URL": "https://ftmscan.com/",
+        "TENDERLY_CHAIN_IDENTIFIER": "arbitrum",
     },
     Network.Arbitrum: {
         "NETWORK_NAME": "Arbitrum",
@@ -103,6 +105,7 @@ CHAIN_VALUES = {
         "YEARN_TREASURY": "0x1DEb47dCC9a35AD454Bf7f0fCDb03c09792C08c1",
         "STRATEGIST_MULTISIG": "0x6346282DB8323A54E840c6C772B4399C9c655C0d",
         "GOVERNANCE_MULTISIG": "0xb6bc033D34733329971B938fEf32faD7e98E56aD",
+        "TENDERLY_CHAIN_IDENTIFIER": "",
     }
 }
 
@@ -483,7 +486,8 @@ def format_public_telegram(r, t):
     return message
 
 def format_dev_telegram(r, t):
-    message = f' / [Tenderly](https://dashboard.tenderly.co/yearn/sms/tx/{r.chain_id}/{r.txn_hash})\n\n'
+    tenderly_str = CHAIN_VALUES[chain.id]["TENDERLY_CHAIN_IDENTIFIER"]
+    message = f' / [Tenderly](https://dashboard.tenderly.co/tx/{tenderly_str}/{r.txn_hash})\n\n'
     df = pd.DataFrame(index=[''])
     last_harvest_ts = contract(r.vault_address).strategies(r.strategy_address, block_identifier=r.block-1).dict()["lastReport"]
     if last_harvest_ts == 0:
