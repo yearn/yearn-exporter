@@ -129,3 +129,9 @@ def old_dai():
 
 def eurs_usdc():
     calculate_apy("0x801Ab06154Bf539dea4385a39f5fa8534fB53073")
+<<<<<<< HEAD
+=======
+
+def crv_eth():
+    calculate_apy("0x6A5468752f8DB94134B6508dAbAC54D3b45efCE6")
+>>>>>>> a918d51 (refactor: split convex apy calculations into more methods)

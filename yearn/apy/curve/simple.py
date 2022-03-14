@@ -14,19 +14,12 @@ from yearn.utils import contract, get_block_timestamp
 
 
 @dataclass 
-class CurveVaultApyData:
+class ConvexApyData:
     cvx_apr: float
     cvx_apr_minus_keep_crv: float
     cvx_keep_crv: float
-    crv_debt_ratio: float
     cvx_debt_ratio: float
-
-
-@dataclass
-class ConvexApyData:
-    cvx_fee: float
     convex_reward_apr: float
-    cvx_keep_crv: float
 
 
 logger = logging.getLogger(__name__)
@@ -173,17 +166,22 @@ def simple(vault, samples: ApySamples) -> Apy:
         performance = (strategist_reward + strategist_performance + treasury) / 1e4
         management = 0
     
-    if is_convex_vault(vault):
-        apy_data = get_convex_vault_apy_data(vault, gauge, base_asset_price, pool_price, base_apr, reward_apr, block)
+    if _is_convex_vault(vault):
+        cvx_strategy = vault.strategies[0].strategy
+        apy_data = _get_convex_vault_apy_data(cvx_strategy, vault, gauge, base_asset_price, pool_price, base_apr, block)
+        crv_debt_ratio = 0
     elif isinstance(vault, VaultV2) and len(vault.strategies) == 2: # this vault has curve and convex
-        apy_data = get_curve_and_convex_vault_apy_data(vault, gauge, base_asset_price, pool_price, base_apr, block)
+        crv_strategy = vault.strategies[0].strategy
+        cvx_strategy = vault.strategies[1].strategy
+        apy_data = _get_convex_vault_apy_data(cvx_strategy, vault, gauge, base_asset_price, pool_price, base_apr, block)
+        crv_debt_ratio = vault.vault.strategies(crv_strategy)[2] / 1e4
     else:
-        apy_data = CurveVaultApyData(0, 0, 0, 1, 0)
+        apy_data = ConvexApyData(0, 0, 0, 0, 0)
 
     crv_apr = base_apr * boost + reward_apr
     crv_apr_minus_keep_crv = base_apr * boost * (1 - crv_keep_crv)
 
-    gross_apr = (1 + (crv_apr * apy_data.crv_debt_ratio + apy_data.cvx_apr * apy_data.cvx_debt_ratio)) * (1 + pool_apy) - 1
+    gross_apr = (1 + (crv_apr * crv_debt_ratio + apy_data.cvx_apr * apy_data.cvx_debt_ratio)) * (1 + pool_apy) - 1
 
     cvx_net_apr = (apy_data.cvx_apr_minus_keep_crv + apy_data.convex_reward_apr) * (1 - performance) - management
     cvx_net_farmed_apy = (1 + (cvx_net_apr / COMPOUNDING)) ** COMPOUNDING - 1
@@ -193,7 +191,7 @@ def simple(vault, samples: ApySamples) -> Apy:
     crv_net_farmed_apy = (1 + (crv_net_apr / COMPOUNDING)) ** COMPOUNDING - 1
     crv_net_apy = ((1 + crv_net_farmed_apy) * (1 + pool_apy)) - 1
 
-    net_apy = crv_net_apy * apy_data.crv_debt_ratio + cvx_net_apy * apy_data.cvx_debt_ratio
+    net_apy = crv_net_apy * crv_debt_ratio + cvx_net_apy * apy_data.cvx_debt_ratio
 
     # 0.3.5+ should never be < 0% because of management
     if isinstance(vault, VaultV2) and net_apy < 0 and Version(vault.api_version) >= Version("0.3.5"):
@@ -212,7 +210,7 @@ def simple(vault, samples: ApySamples) -> Apy:
     return Apy("crv", gross_apr, net_apy, fees, composite=composite)
 
 
-def is_convex_vault(vault) -> bool:
+def _is_convex_vault(vault) -> bool:
     # prevent circular import for partners calculations
     from yearn.v2.vaults import Vault as VaultV2
     if not isinstance(vault, VaultV2):
@@ -221,7 +219,7 @@ def is_convex_vault(vault) -> bool:
     return len(vault.strategies) == 1 and "convex" in vault.strategies[0].name.lower()
 
 
-def get_cvx_printed_as_crv(block=None) -> float:
+def _get_cvx_emissions_printed_as_crv(block=None) -> float:
     crv_price = magic.get_price(curve.crv, block=block)
     total_cliff = 1e3
     max_supply = 1e2 * 1e6 * 1e18 # ?
@@ -239,40 +237,24 @@ def get_cvx_printed_as_crv(block=None) -> float:
         return 0
 
 
-def get_curve_and_convex_vault_apy_data(vault, gauge, base_asset_price, pool_price, base_apr, block=None):
-    crv_strategy = vault.strategies[0].strategy
-    cvx_strategy = vault.strategies[1].strategy
+def _get_convex_vault_apy_data(cvx_strategy, vault, gauge, base_asset_price, pool_price, base_apr, block=None) -> ConvexApyData:
+    cvx_boost = _get_cvx_boost(gauge, block)
+    cvx_printed_as_crv = _get_cvx_emissions_printed_as_crv()
+    cvx_keep_crv = cvx_strategy.keepCRV(block_identifier=block) / 1e4
 
-    cvx_boost = get_cvx_boost(gauge, block)
-    covex_apy_data = get_convex_apy_data(cvx_strategy, base_asset_price, pool_price, block)
-    cvx_printed_as_crv = get_cvx_printed_as_crv()
+    cvx_booster = contract(addresses[chain.id]['convex_booster'])
+    cvx_fee = _get_convex_fee(cvx_booster, block)
+    convex_reward_apr = _get_convex_reward_apr(cvx_strategy, cvx_booster, base_asset_price, pool_price, block)
 
-    cvx_apr = ((1 - covex_apy_data.cvx_fee) * cvx_boost * base_apr) * (1 + cvx_printed_as_crv) + covex_apy_data.convex_reward_apr
-    cvx_apr_minus_keep_crv = ((1 - covex_apy_data.cvx_fee) * cvx_boost * base_apr) * ((1 - covex_apy_data.cvx_keep_crv) + cvx_printed_as_crv)
+    cvx_apr = ((1 - cvx_fee) * cvx_boost * base_apr) * (1 + cvx_printed_as_crv) + convex_reward_apr
+    cvx_apr_minus_keep_crv = ((1 - cvx_fee) * cvx_boost * base_apr) * ((1 - cvx_keep_crv) + cvx_printed_as_crv)
     
-    crv_debt_ratio = vault.vault.strategies(crv_strategy)[2] / 1e4
     cvx_debt_ratio = vault.vault.strategies(cvx_strategy)[2] / 1e4
 
-    return CurveVaultApyData(cvx_apr, cvx_apr_minus_keep_crv, covex_apy_data.cvx_keep_crv, crv_debt_ratio, cvx_debt_ratio)
+    return ConvexApyData(cvx_apr, cvx_apr_minus_keep_crv, cvx_keep_crv, cvx_debt_ratio, convex_reward_apr)
 
 
-def get_convex_vault_apy_data(vault, gauge, base_asset_price, pool_price, base_apr, reward_apr, block=None) -> CurveVaultApyData:
-    cvx_strategy = vault.strategies[0].strategy
-    
-    cvx_boost = get_cvx_boost(gauge, block)
-    covex_apy_data = get_convex_apy_data(cvx_strategy, base_asset_price, pool_price, block)
-    cvx_printed_as_crv = get_cvx_printed_as_crv()
-
-    cvx_apr = ((1 - covex_apy_data.cvx_fee) * cvx_boost * base_apr) * (1 + cvx_printed_as_crv) + reward_apr
-    cvx_apr_minus_keep_crv = ((1 - covex_apy_data.cvx_fee) * cvx_boost * base_apr) * ((1 - covex_apy_data.cvx_keep_crv) + cvx_printed_as_crv)
-    
-    crv_debt_ratio = 0
-    cvx_debt_ratio = vault.vault.strategies(cvx_strategy)[2] / 1e4
-
-    return CurveVaultApyData(cvx_apr, cvx_apr_minus_keep_crv, covex_apy_data.cvx_keep_crv, crv_debt_ratio, cvx_debt_ratio)
-
-
-def get_cvx_boost(gauge, block=None) -> float:
+def _get_cvx_boost(gauge, block=None) -> float:
     convex_voter = addresses[chain.id]['convex_voter_proxy']
     cvx_working_balance = gauge.working_balances(convex_voter, block_identifier=block)
     cvx_gauge_balance = gauge.balanceOf(convex_voter, block_identifier=block)
@@ -283,15 +265,7 @@ def get_cvx_boost(gauge, block=None) -> float:
         return MAX_BOOST
 
 
-def get_convex_apy_data(cvx_strategy, base_asset_price, pool_price, block=None) -> ConvexApyData:
-    cvx_booster = contract(addresses[chain.id]['convex_booster'])
-    cvx_lock_incentive = cvx_booster.lockIncentive(block_identifier=block)
-    cvx_staker_incentive = cvx_booster.stakerIncentive(block_identifier=block)
-    cvx_earmark_incentive = cvx_booster.earmarkIncentive(block_identifier=block)
-    cvx_platform_fee = cvx_booster.platformFee(block_identifier=block)
-    cvx_fee = (cvx_lock_incentive + cvx_staker_incentive + cvx_earmark_incentive + cvx_platform_fee) / 1e4
-    cvx_keep_crv = cvx_strategy.keepCRV(block_identifier=block) / 1e4
-    
+def _get_convex_reward_apr(cvx_strategy, cvx_booster, base_asset_price, pool_price, block=None) -> float:
     # pull data from convex's virtual rewards contracts to get bonus rewards
     pid = cvx_strategy.pid()
     rewards_contract = contract(cvx_booster.poolInfo(pid)["crvRewards"])
@@ -306,4 +280,12 @@ def get_convex_apy_data(cvx_strategy, base_asset_price, pool_price, block=None) 
             if virtual_rewards_pool.periodFinish() > current_time:
                 convex_reward_apr += (virtual_rewards_pool.rewardRate() * SECONDS_PER_YEAR * magic.get_price(virtual_rewards_pool.rewardToken(), block=block)) / (base_asset_price * (pool_price / 1e18) * virtual_rewards_pool.totalSupply())
 
-    return ConvexApyData(cvx_fee, convex_reward_apr, cvx_keep_crv)
+    return convex_reward_apr
+
+
+def _get_convex_fee(cvx_booster, block=None) -> float:
+    cvx_lock_incentive = cvx_booster.lockIncentive(block_identifier=block)
+    cvx_staker_incentive = cvx_booster.stakerIncentive(block_identifier=block)
+    cvx_earmark_incentive = cvx_booster.earmarkIncentive(block_identifier=block)
+    cvx_platform_fee = cvx_booster.platformFee(block_identifier=block)
+    return (cvx_lock_incentive + cvx_staker_incentive + cvx_earmark_incentive + cvx_platform_fee) / 1e4
