@@ -264,7 +264,7 @@ class _ConvexVault:
 
     def _get_cvx_emissions_printed_as_crv(self) -> float:
         """The amount of CVX emissions at the current block, in terms of CRV."""
-        crv_price = get_price(curve.crv, block=self.block)
+        crv_price = magic.get_price(curve.crv, block=self.block)
         total_cliff = 1e3 # the total number of cliffs to happen
         max_supply = 1e2 * 1e6 * 1e18 # the maximum amount of CVX that will be minted
         reduction_per_cliff = 1e23 # the reduction in emission per cliff
@@ -274,7 +274,7 @@ class _ConvexVault:
         if supply <= max_supply:
             reduction = total_cliff - cliff
             cvx_minted_as_crv = reduction / total_cliff
-            cvx_price = get_price(cvx, block=self.block)
+            cvx_price = magic.get_price(cvx, block=self.block)
             converted_cvx = cvx_price / crv_price
             return cvx_minted_as_crv * converted_cvx
         else:
