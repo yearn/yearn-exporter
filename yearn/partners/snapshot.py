@@ -11,6 +11,7 @@ from typing import Dict, List, Tuple, Union
 import pandas as pd
 from brownie import Contract, chain, convert, multicall, web3
 from joblib.parallel import Parallel, delayed
+from pandas import DataFrame
 from pandas.core.tools.datetimes import DatetimeScalar
 from pony.orm import OperationalError, db_session
 from rich import print
@@ -74,7 +75,7 @@ class Wrapper:
         self.wrapper = convert.to_address(wrapper)
     
     @db_session
-    def read_cache(self) -> pd.DataFrame:
+    def read_cache(self) -> DataFrame:
         entities = PartnerHarvestEvent.select(lambda e: e.vault == self.vault and e.wrapper.address == self.wrapper and e.wrapper.chainid == chain.id)[:]
         cache = [
             {
@@ -91,7 +92,7 @@ class Wrapper:
                 'vault': e.vault,
             } for e in entities
         ]
-        return pd.DataFrame(cache)
+        return DataFrame(cache)
 
     def protocol_fees(self, start_block: int = None) -> Dict[int,Decimal]:
         return get_protocol_fees(self.vault, start_block=start_block)
@@ -199,7 +200,7 @@ class Partner:
                 flat_wrappers.extend(wrapper.unwrap())
         return flat_wrappers
 
-    def process(self, use_postgres_cache: bool = USE_POSTGRES_CACHE) -> Tuple[pd.DataFrame,pd.DataFrame]:
+    def process(self, use_postgres_cache: bool = USE_POSTGRES_CACHE) -> Tuple[DataFrame,DataFrame]:
         # snapshot wrapper share at each harvest
         wrappers = []
         for wrapper in track(self.flat_wrappers, self.name):
@@ -220,7 +221,7 @@ class Partner:
             
             try:
                 blocks, protocol_fees = zip(*protocol_fees.items())
-                wrap = pd.DataFrame(
+                wrap = DataFrame(
                     {
                         'block': blocks,
                         'timestamp': get_timestamps(blocks),
@@ -239,7 +240,7 @@ class Partner:
             except ValueError as e:
                 if str(e) != 'not enough values to unpack (expected 2, got 0)':
                     raise
-                wrap = pd.DataFrame()
+                wrap = DataFrame()
 
             if use_postgres_cache:
                 cache_data(wrap)
@@ -256,7 +257,7 @@ class Partner:
 
         # if nothing to report, move to next partner
         if len(wrappers) == 0:
-            return pd.DataFrame(), pd.DataFrame()
+            return DataFrame(), DataFrame()
 
         # calculate partner fee tier from cummulative wrapper balances
         partner = pd.concat(wrappers)
@@ -281,12 +282,12 @@ class Partner:
 
         return partner, payouts
 
-    def export_csv(self, partner: pd.DataFrame) -> None:
+    def export_csv(self, partner: DataFrame) -> None:
         path = Path(f'research/partners/{self.name}/partner.csv')
         path.parent.mkdir(parents=True, exist_ok=True)
         partner.to_csv(path)
 
-    def export_payouts(self, partner: pd.DataFrame) -> pd.DataFrame:
+    def export_payouts(self, partner: DataFrame) -> DataFrame:
         # calculate payouts grouped by month and vault token
         payouts = (
             pd.pivot_table(
@@ -330,7 +331,7 @@ class Partner:
         return payouts
 
 
-def process_partners(partners: List[Partner], use_postgres_cache: bool = USE_POSTGRES_CACHE) -> pd.DataFrame:
+def process_partners(partners: List[Partner], use_postgres_cache: bool = USE_POSTGRES_CACHE) -> DataFrame:
     total = 0
     payouts = []
     if not use_postgres_cache:
@@ -360,7 +361,7 @@ def process_partners(partners: List[Partner], use_postgres_cache: bool = USE_POS
     return df
 
 @db_session
-def cache_data(wrap: pd.DataFrame) -> None:
+def cache_data(wrap: DataFrame) -> None:
     '''
     saves rows into postgres for faster execution on future runs
     '''
