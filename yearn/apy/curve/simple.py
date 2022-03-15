@@ -266,7 +266,7 @@ class _ConvexVault:
         """The amount of CVX emissions at the current block, in terms of CRV."""
         crv_price = get_price(curve.crv, block=self.block)
         total_cliff = 1e3 # the total number of cliffs to happen
-        max_supply = 1e2 * 1e6 * 1e18 # the maximum amount of CVX that will be mintex
+        max_supply = 1e2 * 1e6 * 1e18 # the maximum amount of CVX that will be minted
         reduction_per_cliff = 1e23 # the reduction in emission per cliff
         cvx = contract(addresses[chain.id]['cvx'])
         supply = cvx.totalSupply(block_identifier=self.block) # current supply of CVX 
