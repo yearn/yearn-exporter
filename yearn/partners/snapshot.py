@@ -5,19 +5,22 @@ from dataclasses import dataclass
 from decimal import Decimal
 from functools import cached_property
 from pathlib import Path
-from time import time
-from typing import List, Union
+from typing import Dict, List, Tuple, Union
 
 import pandas as pd
 from brownie import Contract, chain, convert, multicall, web3
 from joblib.parallel import Parallel, delayed
+from pandas import DataFrame
+from pandas.core.tools.datetimes import DatetimeScalar
 from pony.orm import OperationalError, db_session
 from rich import print
 from rich.progress import track
 from web3._utils.abi import filter_by_name
 from web3._utils.events import construct_event_topic_set
 from yearn.events import decode_logs, get_logs_asap
+from yearn.exceptions import UnsupportedNetwork
 from yearn.multicall2 import batch_call
+from yearn.networks import Network
 from yearn.partners.charts import make_partner_charts
 from yearn.partners.constants import OPEX_COST, get_tier
 from yearn.prices import magic
@@ -38,14 +41,14 @@ except OperationalError as e:
 logger = logging.getLogger(__name__)
 
 
-def get_timestamps(blocks):
+def get_timestamps(blocks: Tuple[int,...]) -> DatetimeScalar:
     data = Parallel(10, 'threading')(
         delayed(get_block_timestamp)(block) for block in blocks
     )
     return pd.to_datetime([x * 1e9 for x in data])
 
 
-def get_protocol_fees(address, start_block=None):
+def get_protocol_fees(address: str, start_block: int = None) -> Dict[int,Decimal]:
     """
     Get all protocol fee payouts for a given vault.
 
@@ -71,7 +74,7 @@ class Wrapper:
         self.wrapper = convert.to_address(wrapper)
     
     @db_session
-    def read_cache(self):
+    def read_cache(self) -> DataFrame:
         entities = PartnerHarvestEvent.select(lambda e: e.vault == self.vault and e.wrapper.address == self.wrapper and e.wrapper.chainid == chain.id)[:]
         cache = [
             {
@@ -88,24 +91,24 @@ class Wrapper:
                 'vault': e.vault,
             } for e in entities
         ]
-        return pd.DataFrame(cache)
+        return DataFrame(cache)
 
-    def protocol_fees(self, start_block=None):
+    def protocol_fees(self, start_block: int = None) -> Dict[int,Decimal]:
         return get_protocol_fees(self.vault, start_block=start_block)
 
-    def balances(self, blocks):
+    def balances(self, blocks: Tuple[int,...]) -> List[Decimal]:
         vault = Vault.from_address(self.vault)
         balances = batch_call(
             [[vault.vault, 'balanceOf', self.wrapper, block] for block in blocks]
         )
         return [Decimal(balance) / Decimal(vault.scale) for balance in balances]
 
-    def total_supplies(self, blocks):
+    def total_supplies(self, blocks: Tuple[int,...]) -> List[Decimal]:
         vault = Vault.from_address(self.vault)
         supplies = batch_call([[vault.vault, 'totalSupply', block] for block in blocks])
         return [Decimal(supply) / Decimal(vault.scale) for supply in supplies]
 
-    def vault_prices(self, blocks):
+    def vault_prices(self, blocks: Tuple[int,...]) -> List[Decimal]:
         prices = Parallel(10, 'threading')(
             delayed(magic.get_price)(self.vault, block=block) for block in blocks
         )
@@ -117,7 +120,7 @@ class BentoboxWrapper(Wrapper):
     Use BentoBox deposits by wrapper.
     """
 
-    def balances(self, blocks):
+    def balances(self, blocks) -> List[Decimal]:
         bentobox = contract('0xF5BCE5077908a1b7370B9ae04AdC565EBd643966')
         vault = Vault.from_address(self.vault)
         balances = batch_call(
@@ -196,7 +199,7 @@ class Partner:
                 flat_wrappers.extend(wrapper.unwrap())
         return flat_wrappers
 
-    def process(self, use_postgres_cache=USE_POSTGRES_CACHE):
+    def process(self, use_postgres_cache: bool = USE_POSTGRES_CACHE) -> Tuple[DataFrame,DataFrame]:
         # snapshot wrapper share at each harvest
         wrappers = []
         for wrapper in track(self.flat_wrappers, self.name):
@@ -217,7 +220,7 @@ class Partner:
             
             try:
                 blocks, protocol_fees = zip(*protocol_fees.items())
-                wrap = pd.DataFrame(
+                wrap = DataFrame(
                     {
                         'block': blocks,
                         'timestamp': get_timestamps(blocks),
@@ -236,7 +239,7 @@ class Partner:
             except ValueError as e:
                 if str(e) != 'not enough values to unpack (expected 2, got 0)':
                     raise
-                wrap = pd.DataFrame()
+                wrap = DataFrame()
 
             if use_postgres_cache:
                 cache_data(wrap)
@@ -253,7 +256,7 @@ class Partner:
 
         # if nothing to report, move to next partner
         if len(wrappers) == 0:
-            return pd.DataFrame(), pd.DataFrame()
+            return DataFrame(), DataFrame()
 
         # calculate partner fee tier from cummulative wrapper balances
         partner = pd.concat(wrappers)
@@ -278,12 +281,12 @@ class Partner:
 
         return partner, payouts
 
-    def export_csv(self, partner):
+    def export_csv(self, partner: DataFrame) -> None:
         path = Path(f'research/partners/{self.name}/partner.csv')
         path.parent.mkdir(parents=True, exist_ok=True)
         partner.to_csv(path)
 
-    def export_payouts(self, partner):
+    def export_payouts(self, partner: DataFrame) -> DataFrame:
         # calculate payouts grouped by month and vault token
         payouts = (
             pd.pivot_table(
@@ -327,7 +330,10 @@ class Partner:
         return payouts
 
 
-def process_partners(partners, use_postgres_cache=USE_POSTGRES_CACHE):
+def process_partners(partners: List[Partner], use_postgres_cache: bool = USE_POSTGRES_CACHE) -> DataFrame:
+    if not partners:
+        raise UnsupportedNetwork(f'There are no partners on {Network.label()}')
+
     total = 0
     payouts = []
     if not use_postgres_cache:
@@ -357,7 +363,7 @@ def process_partners(partners, use_postgres_cache=USE_POSTGRES_CACHE):
     return df
 
 @db_session
-def cache_data(wrap: pd.DataFrame):
+def cache_data(wrap: DataFrame) -> None:
     '''
     saves rows into postgres for faster execution on future runs
     '''
