@@ -7,3 +7,4 @@ compiler:
     solc:
         use_latest_patch:
             - '0x514910771AF9Ca656af840dff83E8264EcF986CA'
+            - '0x2f2a2543B76A4166549F7aaB2e75Bef0aefC5B0f'

@@ -19,14 +19,16 @@ warnings.filterwarnings("ignore", ".*Class SelectOfScalar will not make use of S
 warnings.filterwarnings("ignore", ".*Locally compiled and on-chain*")
 warnings.filterwarnings("ignore", ".*It has been discarded*")
 
+
+# mainnet_public_channel = os.environ.get('TELEGRAM_CHANNEL_1_PUBLIC')
+# ftm_public_channel = os.environ.get('TELEGRAM_CHANNEL_250_PUBLIC')
+# discord_mainnet = os.environ.get('DISCORD_CHANNEL_1')
+# discord_ftm = os.environ.get('DISCORD_CHANNEL_250')
+
 telegram_key = os.environ.get('HARVEST_TRACKER_BOT_KEY')
-mainnet_public_channel = os.environ.get('TELEGRAM_CHANNEL_1_PUBLIC')
-ftm_public_channel = os.environ.get('TELEGRAM_CHANNEL_250_PUBLIC')
-dev_channel = os.environ.get('TELEGRAM_CHANNEL_DEV')
-discord_mainnet = os.environ.get('DISCORD_CHANNEL_1')
-discord_ftm = os.environ.get('DISCORD_CHANNEL_250')
 bot = telebot.TeleBot(telegram_key)
 alerts_enabled = True if os.environ.get('ENVIRONMENT') == "PROD" else False
+dev_channel = os.environ.get('TELEGRAM_CHANNEL_DEV')
 
 OLD_REGISTRY_ENDORSEMENT_BLOCKS = {
     "0xE14d13d8B3b85aF791b2AADD661cDBd5E6097Db1": 11999957,
@@ -65,6 +67,8 @@ CHAIN_VALUES = {
         "GOVERNANCE_MULTISIG": "0xFEB4acf3df3cDEA7399794D0869ef76A6EfAff52",
         "EXPLORER_URL": "https://etherscan.io/",
         "TENDERLY_CHAIN_IDENTIFIER": "mainnet",
+        "TELEGRAM_CHAT_ID": os.environ.get('TELEGRAM_CHANNEL_1_PUBLIC'),
+        "DISCORD_CHAN": os.environ.get('DISCORD_CHANNEL_1'),
     },
     Network.Fantom: {
         "NETWORK_NAME": "Fantom",
@@ -80,13 +84,15 @@ CHAIN_VALUES = {
         "LENS_DEPLOY_BLOCK": 18842673,
         "VAULT_ADDRESS030": "0x637eC617c86D24E421328e6CAEa1d92114892439",
         "VAULT_ADDRESS031": "0x637eC617c86D24E421328e6CAEa1d92114892439",
-        "KEEPER_CALL_CONTRACT": "0x000004e4d96d663C809Cbc8D773a764A89D0b37f",
+        "KEEPER_CALL_CONTRACT": "0x57419fb50fa588fc165acc26449b2bf4c7731458",
         "KEEPER_TOKEN": "",
         "YEARN_TREASURY": "0x89716Ad7EDC3be3B35695789C475F3e7A3Deb12a",
         "STRATEGIST_MULTISIG": "0x72a34AbafAB09b15E7191822A679f28E067C4a16",
         "GOVERNANCE_MULTISIG": "0xC0E2830724C946a6748dDFE09753613cd38f6767",
         "EXPLORER_URL": "https://ftmscan.com/",
         "TENDERLY_CHAIN_IDENTIFIER": "fantom",
+        "TELEGRAM_CHAT_ID": os.environ.get('TELEGRAM_CHANNEL_250_PUBLIC'),
+        "DISCORD_CHAN": os.environ.get('DISCORD_CHANNEL_250'),
     },
     Network.Arbitrum: {
         "NETWORK_NAME": "Arbitrum",
@@ -94,7 +100,7 @@ CHAIN_VALUES = {
         "EMOJI": "🤠",
         "START_DATE": datetime(2021, 9, 14, tzinfo=timezone.utc),
         "START_BLOCK": 4841854,
-        "REGISTRY_ADDRESS": "",
+        "REGISTRY_ADDRESS": "0x3199437193625DCcD6F9C9e98BDf93582200Eb1f",
         "REGISTRY_DEPLOY_BLOCK": 12045555,
         "REGISTRY_HELPER_ADDRESS": "0x237C3623bed7D115Fc77fEB08Dd27E16982d972B",
         "LENS_ADDRESS": "0xcAd10033C86B0C1ED6bfcCAa2FF6779938558E9f",
@@ -106,6 +112,8 @@ CHAIN_VALUES = {
         "STRATEGIST_MULTISIG": "0x6346282DB8323A54E840c6C772B4399C9c655C0d",
         "GOVERNANCE_MULTISIG": "0xb6bc033D34733329971B938fEf32faD7e98E56aD",
         "TENDERLY_CHAIN_IDENTIFIER": "arbitrum",
+        "TELEGRAM_CHAT_ID": os.environ.get('TELEGRAM_CHANNEL_42161_PUBLIC'),
+        "DISCORD_CHAN": os.environ.get('DISCORD_CHANNEL_42161'),
     }
 }
 
@@ -228,7 +236,7 @@ def handle_event(event, multi_harvest):
             t.kp3r_paid = get_keeper_payment(tx) / 1e18
             t.kp3r_paid_usd = t.kp3r_paid * t.kp3r_price_at_block
             t.keeper_called = t.kp3r_paid > 0
-        if chain.id == 250:
+        else:
             if t.txn_to == CHAIN_VALUES[chain.id]["KEEPER_CALL_CONTRACT"]:
                 t.keeper_called = True
             else:
@@ -437,12 +445,8 @@ def prepare_alerts(r, t):
     if alerts_enabled:
         m = format_public_telegram(r, t)
         # Send to chain specific channels
-        if chain.id == 1:
-            bot.send_message(mainnet_public_channel, m, parse_mode="markdown", disable_web_page_preview = True)
-            discord = Discord(url=discord_mainnet)
-        if chain.id == 250:
-            bot.send_message(ftm_public_channel, m, parse_mode="markdown", disable_web_page_preview = True)
-            discord = Discord(url=discord_ftm)
+        bot.send_message(CHAIN_VALUES[chain.id]["TELEGRAM_CHAT_ID"], m, parse_mode="markdown", disable_web_page_preview = True)
+        discord = Discord(url=CHAIN_VALUES[chain.id]["DISCORD_CHAN"])
         discord.post(
             embeds=[{
                 "title": "New harvest", 
