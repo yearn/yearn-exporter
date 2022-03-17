@@ -269,7 +269,7 @@ services:
       - postgres
 
   vmagent:
-    image: victoriametrics/vmagent
+    image: victoriametrics/vmagent:v1.72.0
     volumes:
       - ./prometheus/:/etc/prometheus/
     command:
@@ -285,7 +285,7 @@ services:
     restart: always
 
   victoria-metrics:
-    image: victoriametrics/victoria-metrics
+    image: victoriametrics/victoria-metrics:v1.72.0
     volumes:
       - victoria_metrics_data:/victoria-metrics-data
     command:
