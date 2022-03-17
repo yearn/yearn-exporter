@@ -2,7 +2,7 @@ import math
 
 from time import time
 from yearn.common import Tvl
-from yearn.apy.common import Apy, ApyFees, ApyPoints
+from yearn.apy.common import Apy, ApyFees, ApyPoints, ApySamples
 
 import requests
 
@@ -12,7 +12,6 @@ from joblib import Parallel, delayed
 from yearn.prices import magic
 from yearn.prices.curve import curve
 from yearn.utils import Singleton, contract_creation_block, contract
-from yearn.apy import ApySamples
 from yearn.exceptions import PriceError
 
 class YveCRVJar(metaclass = Singleton):
@@ -78,7 +77,7 @@ class Backscratcher(metaclass = Singleton):
         voter = "0xF147b8125d2ef93FB6965Db97D6746952a133934"
         crv_price = magic.get_price("0xD533a949740bb3306d119CC777fa900bA034cd52")
         yvecrv_price = magic.get_price("0xc5bDdf9843308380375a611c18B50Fb9341f502A")
-        
+
         total_vecrv = curve_voting_escrow.totalSupply()
         yearn_vecrv = curve_voting_escrow.balanceOf(voter)
         vault_supply = self.vault.totalSupply()
@@ -106,9 +105,9 @@ class Backscratcher(metaclass = Singleton):
         except PriceError:
             price = None
         tvl = total_assets * price / 10 ** self.vault.decimals(block_identifier=block) if price else None
-        return Tvl(total_assets, price, tvl) 
+        return Tvl(total_assets, price, tvl)
 
-        
+
 
 
 class Ygov(metaclass = Singleton):

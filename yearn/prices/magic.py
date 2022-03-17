@@ -3,7 +3,7 @@ import logging
 from brownie import chain
 from cachetools.func import ttl_cache
 
-from yearn import special
+from yearn.special import Backscratcher
 from yearn.exceptions import PriceError
 from yearn.networks import Network
 from yearn.prices import balancer as bal
@@ -77,7 +77,7 @@ def find_price(token, block, return_price_during_vault_downtime: bool = False):
 
     elif chain.id == Network.Mainnet:
         # no liquid market for yveCRV-DAO -> return CRV token price
-        if token == special.Backscratcher().vault.address and block and block < 11786563:
+        if token == Backscratcher().vault.address and block and block < 11786563:
             if curve.curve and curve.curve.crv:
                 return get_price(curve.curve.crv, block=block)
 
