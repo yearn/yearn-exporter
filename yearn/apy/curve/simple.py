@@ -280,7 +280,7 @@ class _ConvexVault:
             return 0
 
     def _get_cvx_boost(self) -> float:
-        """The amount of boost being applied to this pool by Convex."""
+        """The Curve boost (1-2.5x) being applied to this pool thanks to veCRV locked in Convex's voter proxy."""
         convex_voter = addresses[chain.id]['convex_voter_proxy']
         cvx_working_balance = self.gauge.working_balances(convex_voter, block_identifier=self.block)
         cvx_gauge_balance = self.gauge.balanceOf(convex_voter, block_identifier=self.block)
