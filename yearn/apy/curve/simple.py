@@ -181,9 +181,8 @@ def simple(vault, samples: ApySamples) -> Apy:
         crv_debt_ratio = vault.vault.strategies(crv_strategy)[2] / 1e4
         cvx_apy_data = cvx_vault.get_detailed_apy_data(base_asset_price, pool_price, base_apr)
     else:
-        # otherwise there's no convex/curve strategy data to use 
         cvx_apy_data = ConvexDetailedApyData()
-        crv_debt_ratio = 0
+        crv_debt_ratio = 1
 
     crv_apr = base_apr * boost + reward_apr
     crv_apr_minus_keep_crv = base_apr * boost * (1 - crv_keep_crv)
