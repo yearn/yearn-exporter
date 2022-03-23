@@ -28,11 +28,11 @@ def closest(haystack, needle):
 
 
 def simple(vault, samples: ApySamples) -> Apy:
-    reports = vault.reports
+    harvests = sorted([harvest for strategy in vault.strategies for harvest in strategy.harvests])
 
     # we don't want to display APYs when vaults are ramping up
-    if len(reports) < 2:
-        raise ApyError("v2:reports", "reports are < 2")
+    if len(harvests) < 2:
+        raise ApyError("v2:harvests", "harvests are < 2")
     
     # set our time values for simple calcs, closest to a harvest around that time period
     now = closest(harvests, samples.now)
@@ -47,7 +47,8 @@ def simple(vault, samples: ApySamples) -> Apy:
     now_price = price_per_share(block_identifier=now)
 
     # get our inception data
-    inception_block = reports[0].block_number
+    # the first report is when the vault first allocates funds to farm with
+    inception_block = vault.reports[0].block_number
     inception_price = price_per_share(block_identifier=inception_block)
 
     if now_price == inception_price:
@@ -125,6 +126,7 @@ def average(vault, samples: ApySamples) -> Apy:
     now_price = price_per_share(block_identifier=samples.now)
 
     # get our inception data
+    # the first report is when the vault first allocates funds to farm with
     inception_block = reports[0].block_number
     inception_price = price_per_share(block_identifier=inception_block)
 
