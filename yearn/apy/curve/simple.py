@@ -272,10 +272,10 @@ class _ConvexVault:
         cliff = supply / reduction_per_cliff # the current cliff we're on
         if supply <= max_supply:
             reduction = total_cliff - cliff
-            cvx_minted_as_crv = reduction / total_cliff
+            cvx_minted = reduction / total_cliff
             cvx_price = magic.get_price(cvx, block=self.block)
             converted_cvx = cvx_price / crv_price
-            return cvx_minted_as_crv * converted_cvx
+            return cvx_minted * converted_cvx
         else:
             return 0
 
