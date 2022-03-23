@@ -255,13 +255,13 @@ class _ConvexVault:
         convex_reward_apr = self._get_reward_apr(self._cvx_strategy, cvx_booster, base_asset_price, pool_price, self.block)
 
         cvx_boost = self._get_cvx_boost()
-        cvx_printed_as_crv = self._get_cvx_emissions_printed_as_crv()
+        cvx_printed_as_crv = self._get_cvx_emissions_converted_to_crv()
         cvx_apr = ((1 - cvx_fee) * cvx_boost * base_apr) * (1 + cvx_printed_as_crv) + convex_reward_apr
         cvx_apr_minus_keep_crv = ((1 - cvx_fee) * cvx_boost * base_apr) * ((1 - cvx_keep_crv) + cvx_printed_as_crv)
         
         return ConvexDetailedApyData(cvx_apr, cvx_apr_minus_keep_crv, cvx_keep_crv, self._debt_ratio, convex_reward_apr)
 
-    def _get_cvx_emissions_printed_as_crv(self) -> float:
+    def _get_cvx_emissions_converted_to_crv(self) -> float:
         """The amount of CVX emissions at the current block, in terms of CRV."""
         crv_price = magic.get_price(curve.crv, block=self.block)
         total_cliff = 1e3 # the total number of cliffs to happen
