@@ -262,7 +262,7 @@ class _ConvexVault:
         return ConvexDetailedApyData(cvx_apr, cvx_apr_minus_keep_crv, cvx_keep_crv, self._debt_ratio, convex_reward_apr)
 
     def _get_cvx_emissions_converted_to_crv(self) -> float:
-        """The amount of CVX emissions at the current block, in terms of CRV."""
+        """The amount of CVX emissions at the current block for a given pool, converted to CRV (from a pricing standpoint) to ease calculation of total APY."""
         crv_price = magic.get_price(curve.crv, block=self.block)
         total_cliff = 1e3 # the total number of cliffs to happen
         max_supply = 1e2 * 1e6 * 1e18 # the maximum amount of CVX that will be minted
