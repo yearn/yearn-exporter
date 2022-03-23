@@ -310,7 +310,7 @@ class _ConvexVault:
         return convex_reward_apr
 
     def _get_convex_fee(self, cvx_booster, block=None) -> float:
-        """The fee % that Convex charges."""
+        """The fee % that Convex charges on all CRV yield."""
         cvx_lock_incentive = cvx_booster.lockIncentive(block_identifier=block)
         cvx_staker_incentive = cvx_booster.stakerIncentive(block_identifier=block)
         cvx_earmark_incentive = cvx_booster.earmarkIncentive(block_identifier=block)
