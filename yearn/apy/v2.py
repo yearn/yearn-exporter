@@ -126,8 +126,8 @@ def average(vault, samples: ApySamples) -> Apy:
     now_price = price_per_share(block_identifier=samples.now)
 
     # get our inception data
-    inception_price = 10 ** contract.decimals()
     inception_block = harvests[0]
+    inception_price = price_per_share(block_identifier=inception_block)
 
     if now_price == inception_price:
         raise ApyError("v2:inception", "no change from inception price")
