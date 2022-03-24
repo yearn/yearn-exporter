@@ -114,6 +114,12 @@ class Vault:
         return list(self._revoked.values())
 
     @property
+    def reports(self):
+        # strategy reports are loaded at the same time as other vault strategy events
+        self.load_strategies()
+        return self._reports
+
+    @property
     def is_endorsed(self):
         if not self.registry:
             return None
