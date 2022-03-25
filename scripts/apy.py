@@ -66,7 +66,7 @@ def lusd():
 
 def rai():
     calculate_apy("0x873fB544277FD7b977B196a826459a69E27eA4ea")
-    
+
 
 def tricrypto():
     calculate_apy("0x3D980E50508CFd41a13837A60149927a11c037")
@@ -94,7 +94,7 @@ def cvxCRV():
 
 def ibJPY():
     calculate_apy("0x59518884EeBFb03e90a18ADBAAAB770d4666471e")
-    
+
 
 def ibKRW():
     calculate_apy("0x528D50dC9a333f01544177a924893FA1F5b9F748")
@@ -102,27 +102,19 @@ def ibKRW():
 
 def yfi():
     calculate_apy("0xdb25cA703181E7484a155DD612b06f57E12Be5F0")
-    
+
 
 def sushi():
     calculate_apy("0x6d765CbE5bC922694afE112C140b8878b9FB0390")
-    
 
-def ibeur():
-    calculate_apy("0x67e019bfbd5a67207755D04467D6A70c0B75bF60")
-    
 
 def ibgbp():
     calculate_apy("0x595a68a8c9D5C230001848B69b1947ee2A607164")
-    
 
-def ibkrw():
-    calculate_apy("0x528D50dC9a333f01544177a924893FA1F5b9F748")
-    
 
 def dai():
     calculate_apy("0xdA816459F1AB5631232FE5e97a05BBBb94970c95")
-    
+
 
 def old_dai():
     calculate_apy("0x19D3364A399d251E894aC732651be8B0E4e85001")
