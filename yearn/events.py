@@ -1,7 +1,7 @@
 import logging
 from collections import Counter, defaultdict
 from itertools import zip_longest
-from typing import List, Optional
+from typing import Dict, List, Optional
 
 from brownie import chain, web3
 from brownie.network.event import (EventDict, _add_deployment_topics,
@@ -9,14 +9,16 @@ from brownie.network.event import (EventDict, _add_deployment_topics,
 from joblib import Parallel, delayed
 from toolz import groupby
 from web3.middleware.filter import block_ranges
+from web3.types import LogReceipt, RPCEndpoint
 
 from yearn.middleware.middleware import BATCH_SIZE
+from yearn.typing import Address, Block, Topics
 from yearn.utils import contract, contract_creation_block
 
 logger = logging.getLogger(__name__)
 
 
-def decode_logs(logs) -> EventDict:
+def decode_logs(logs: List[LogReceipt]) -> EventDict:
     """
     Decode logs to events and enrich them with additional info.
     """
@@ -32,7 +34,7 @@ def decode_logs(logs) -> EventDict:
     return decoded
 
 
-def create_filter(address, topics=None):
+def create_filter(address: Address, topics: Optional[Topics] = None) -> RPCEndpoint:
     """
     Create a log filter for one or more contracts.
     Set fromBlock as the earliest creation block.
@@ -45,18 +47,18 @@ def create_filter(address, topics=None):
     return web3.eth.filter({"address": address, "fromBlock": start_block, "topics": topics})
 
 
-def __add_deployment_topics(address):
+def __add_deployment_topics(address: Address) -> None:
     _add_deployment_topics(address, contract(address).abi)
 
 
 def get_logs_asap(
-    address: Optional[str],
-    topics: Optional[List[str]],
-    from_block: Optional[int] = None,
-    to_block: Optional[int] = None,
+    address: Optional[Address],
+    topics: Optional[Topics],
+    from_block: Optional[Block] = None,
+    to_block: Optional[Block] = None,
     verbose: int = 0
-    ):
-    
+    ) -> List[LogReceipt]:
+
     logs = []
 
     if from_block is None:
@@ -79,7 +81,7 @@ def get_logs_asap(
     return logs
 
 
-def logs_to_balance_checkpoints(logs):
+def logs_to_balance_checkpoints(logs: List[LogReceipt]) -> Dict[Address,Dict[Block,int]]:
     """
     Convert Transfer logs to `{address: {from_block: balance}}` checkpoints.
     """
@@ -97,7 +99,7 @@ def logs_to_balance_checkpoints(logs):
     return checkpoints
 
 
-def checkpoints_to_weight(checkpoints, start_block, end_block):
+def checkpoints_to_weight(checkpoints, start_block: Block, end_block: Block):
     total = 0
     for a, b in zip_longest(list(checkpoints), list(checkpoints)[1:]):
         if a < start_block or a > end_block:
