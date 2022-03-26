@@ -4,6 +4,7 @@ from brownie import Contract
 from brownie.convert.datatypes import EthAddress, HexBytes
 from eth_typing import AnyAddress, BlockNumber
 
+AddressString = str
 Address = Union[str,HexBytes,AnyAddress,EthAddress]
 AddressOrContract = Union[Address,Contract]
 
