@@ -1,15 +1,17 @@
 import logging
 from collections import Counter, defaultdict
 from itertools import zip_longest
+from typing import List, Optional
 
-from brownie import web3, chain
-from brownie.network.event import EventDict, _decode_logs, _add_deployment_topics
+from brownie import chain, web3
+from brownie.network.event import (EventDict, _add_deployment_topics,
+                                   _decode_logs)
 from joblib import Parallel, delayed
 from toolz import groupby
 from web3.middleware.filter import block_ranges
 
 from yearn.middleware.middleware import BATCH_SIZE
-from yearn.utils import contract_creation_block, contract
+from yearn.utils import contract, contract_creation_block
 
 logger = logging.getLogger(__name__)
 
@@ -47,11 +49,19 @@ def __add_deployment_topics(address):
     _add_deployment_topics(address, contract(address).abi)
 
 
-def get_logs_asap(address, topics, from_block=None, to_block=None, verbose=0):
+def get_logs_asap(
+    address: Optional[str],
+    topics: Optional[List[str]],
+    from_block: Optional[int] = None,
+    to_block: Optional[int] = None,
+    verbose: int = 0
+    ):
+    
     logs = []
 
     if from_block is None:
-        from_block = contract_creation_block(address)
+        from_block = contract_creation_block(address) if address else 0
+
     if to_block is None:
         to_block = chain.height
 
