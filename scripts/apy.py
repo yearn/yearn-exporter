@@ -84,19 +84,19 @@ def yvboost():
     calculate_apy("0x9d409a0A012CFbA9B15F6D4B36Ac57A46966Ab9a")
 
 
-def ibEUR():
+def ibeur():
     calculate_apy("0x67e019bfbd5a67207755D04467D6A70c0B75bF60")
 
 
-def cvxCRV():
+def cvxcrv():
     calculate_apy("0x4560b99C904aAD03027B5178CCa81584744AC01f")
 
 
-def ibJPY():
+def ibjpy():
     calculate_apy("0x59518884EeBFb03e90a18ADBAAAB770d4666471e")
 
 
-def ibKRW():
+def ibkrw():
     calculate_apy("0x528D50dC9a333f01544177a924893FA1F5b9F748")
 
 
