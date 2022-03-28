@@ -291,6 +291,8 @@ def test_curve_total_value(name, curve_tvl_api):
 def test_get_balances_fallback(name):
     registry_deploy = 12195750
     pool = web3.toChecksumAddress(pooldata[name]['swap_address'])
+    if contract_creation_block(pool) > registry_deploy:
+        pytest.skip('not applicable to pools deployed after test block')
     if curve.curve.get_factory(pool):
         pytest.skip('not applicable to metapools')
     print(name, curve.curve.get_balances(pool, block=registry_deploy))
