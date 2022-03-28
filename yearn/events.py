@@ -1,7 +1,7 @@
 import logging
 from collections import Counter, defaultdict
 from itertools import zip_longest
-from typing import Dict, List, Optional
+from typing import Dict, List, Optional, Union
 
 from brownie import chain, web3
 from brownie.network.event import (EventDict, _add_deployment_topics,
@@ -52,7 +52,7 @@ def __add_deployment_topics(address: Address) -> None:
 
 
 def get_logs_asap(
-    address: Optional[Address],
+    addresses: Optional[Union[Address,List[Address]]],
     topics: Optional[Topics],
     from_block: Optional[Block] = None,
     to_block: Optional[Block] = None,
@@ -62,7 +62,12 @@ def get_logs_asap(
     logs = []
 
     if from_block is None:
-        from_block = contract_creation_block(address) if address else 0
+        if type(addresses) == list:
+            min(map(lambda address: contract_creation_block(address), addresses))
+        elif addresses:
+            from_block = contract_creation_block(addresses)
+        else:
+            from_block = 0
 
     if to_block is None:
         to_block = chain.height
@@ -72,7 +77,7 @@ def get_logs_asap(
         logger.info('fetching %d batches', len(ranges))
 
     batches = Parallel(8, "threading", verbose=verbose)(
-        delayed(web3.eth.get_logs)({"address": address, "topics": topics, "fromBlock": start, "toBlock": end})
+        delayed(web3.eth.get_logs)({"address": addresses, "topics": topics, "fromBlock": start, "toBlock": end})
         for start, end in ranges
     )
     for batch in batches:
