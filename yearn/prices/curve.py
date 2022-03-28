@@ -136,7 +136,7 @@ class CurveRegistry(metaclass=Singleton):
                     self.token_to_pool[lp_token] = event['pool']
                 elif event.name == 'PoolRemoved':
                     self.registries[event.address].discard(event['pool'])
-                    
+
             # load metapool and curve v5 factories
             self.load_factories()
 
@@ -228,8 +228,8 @@ class CurveRegistry(metaclass=Singleton):
             gauge = contract(factory).get_gauge(pool)
             if gauge != ZERO_ADDRESS:
                 return gauge
-        elif registry:
-            gauges, types = contract(registry).get_gauges(pool)
+        if registry:
+            gauges, _ = contract(registry).get_gauges(pool)
             if gauges[0] != ZERO_ADDRESS:
                 return gauges[0]
 
