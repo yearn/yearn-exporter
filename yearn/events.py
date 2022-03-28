@@ -63,7 +63,7 @@ def get_logs_asap(
 
     if from_block is None:
         if addresses:
-            from_block = min(map(lambda address: contract_creation_block(address), addresses))
+            from_block = min(map(contract_creation_block, addresses))
         else:
             from_block = 0
 
