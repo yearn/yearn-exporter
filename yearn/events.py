@@ -1,7 +1,7 @@
 import logging
 from collections import Counter, defaultdict
 from itertools import zip_longest
-from typing import Dict, List, Optional, Union
+from typing import Any, Dict, List, Optional, Union
 
 from brownie import chain, web3
 from brownie.network.event import (EventDict, _add_deployment_topics,
@@ -77,7 +77,7 @@ def get_logs_asap(
         logger.info('fetching %d batches', len(ranges))
 
     batches = Parallel(8, "threading", verbose=verbose)(
-        delayed(web3.eth.get_logs)({"address": addresses, "topics": topics, "fromBlock": start, "toBlock": end})
+        delayed(web3.eth.get_logs)(_get_logs_params(addresses, topics, start, end))
         for start, end in ranges
     )
     for batch in batches:
@@ -112,3 +112,15 @@ def checkpoints_to_weight(checkpoints, start_block: Block, end_block: Block):
         b = min(b, end_block) if b else end_block
         total += checkpoints[a] * (b - a) / (end_block - start_block)
     return total
+
+def _get_logs_params(
+    addresses: Optional[Union[Address,List[Address]]],
+    topics: Optional[Topics],
+    start: Block,
+    end: Block
+    ) -> Dict[str,Any]:
+    params = {"topics": topics, "fromBlock": start, "toBlock": end}
+    if addresses:
+        # pass in a list of addresses
+        params["address"] = addresses
+    return params
