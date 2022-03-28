@@ -1,9 +1,9 @@
 import logging
+from typing import Optional
 
 from brownie import chain
 from cachetools.func import ttl_cache
 
-from yearn.special import Backscratcher
 from yearn.exceptions import PriceError
 from yearn.networks import Network
 from yearn.prices import balancer as bal
@@ -20,16 +20,23 @@ from yearn.prices.uniswap.v1 import uniswap_v1
 from yearn.prices.uniswap.v2 import uniswap_v2
 from yearn.prices.uniswap.v3 import uniswap_v3
 from yearn.prices.yearn import yearn_lens
+from yearn.special import Backscratcher
+from yearn.typing import Address, AddressOrContract, AddressString, Block
 from yearn.utils import contract
 
 logger = logging.getLogger(__name__)
 
 @ttl_cache(10000)
-def get_price(token, block=None, return_price_during_vault_downtime: bool = False):
+def get_price(
+    token: AddressOrContract,
+    block: Optional[Block] = None,
+    return_price_during_vault_downtime: bool = False
+    ) -> float:
+
     token = unwrap_token(token)
     return find_price(token, block, return_price_during_vault_downtime=return_price_during_vault_downtime)
 
-def unwrap_token(token):
+def unwrap_token(token: AddressOrContract) -> AddressString:
     token = str(token)
     logger.debug("unwrapping %s", token)
 
@@ -49,7 +56,12 @@ def unwrap_token(token):
     return token
 
 
-def find_price(token, block, return_price_during_vault_downtime: bool = False):
+def find_price(
+    token: Address,
+    block: Optional[Block],
+    return_price_during_vault_downtime: bool = False
+    ) -> float:
+
     price = None
     if token in constants.stablecoins:
         logger.debug("stablecoin -> %s", 1)
@@ -124,7 +136,7 @@ def find_price(token, block, return_price_during_vault_downtime: bool = False):
     return price
 
 
-def _describe_err(token, block) -> str:
+def _describe_err(token: Address, block: Optional[Block]) -> str:
     '''
     Assembles a string used to provide as much useful information as possible in PriceError messages
     '''

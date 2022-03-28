@@ -17,7 +17,6 @@ import threading
 import time
 from collections import defaultdict
 from enum import IntEnum
-from functools import lru_cache
 
 from brownie import ZERO_ADDRESS, chain
 from brownie.convert import to_address

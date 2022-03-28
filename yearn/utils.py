@@ -1,12 +1,14 @@
 import logging
 from functools import lru_cache
 import threading
+from typing import List
 
 from brownie import Contract, chain, web3, interface
 
 from yearn.cache import memory
 from yearn.exceptions import ArchiveNodeRequired
 from yearn.networks import Network
+from yearn.typing import Address
 
 logger = logging.getLogger(__name__)
 
@@ -24,7 +26,7 @@ PREFER_INTERFACE = {
     }
 }
 
-def safe_views(abi):
+def safe_views(abi: List) -> List[str]:
     return [
         item["name"]
         for item in abi
@@ -125,7 +127,7 @@ class Singleton(type):
 _contract_lock = threading.Lock()
 _contract = lru_cache(maxsize=None)(Contract)
 
-def contract(address):
+def contract(address: Address) -> Contract:
     with _contract_lock:
         if chain.id in PREFER_INTERFACE:
             if address in PREFER_INTERFACE[chain.id]:
