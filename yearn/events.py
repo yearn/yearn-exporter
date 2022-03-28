@@ -52,7 +52,7 @@ def __add_deployment_topics(address: Address) -> None:
 
 
 def get_logs_asap(
-    topics: Topics,
+    topics: Optional[Topics] = None,
     addresses: Optional[List[Address]] = None,
     from_block: Optional[Block] = None,
     to_block: Optional[Block] = None,
@@ -113,8 +113,11 @@ def checkpoints_to_weight(checkpoints, start_block: Block, end_block: Block):
 
 
 def _get_log_params(addresses, topics, start, end):
-    log_params = {"topics": topics, "fromBlock": start, "toBlock": end}
+    log_params = {"fromBlock": start, "toBlock": end}
     if addresses:
         # pass in a list of addresses
         log_params["address"] = addresses
+    if topics:
+        log_params["topics"] = topics
+
     return log_params
