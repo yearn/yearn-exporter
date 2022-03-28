@@ -67,7 +67,7 @@ class Chainlink(metaclass=Singleton):
 
     def load_feeds(self):
         logs = decode_logs(
-            get_logs_asap(str(self.registry), [self.registry.topics['FeedConfirmed']])
+            get_logs_asap(topics=[self.registry.topics['FeedConfirmed']], addresses=[str(self.registry)])
         )
         self.feeds = {
             log['asset']: log['latestAggregator']

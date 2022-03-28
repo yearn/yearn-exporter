@@ -101,7 +101,7 @@ def get_token_transfers(token, start_block, end_block) -> pd.DataFrame:
     )
     token_entity = cache_token(token.address)
     events = decode_logs(
-        get_logs_asap(token.address, topics, from_block=start_block, to_block=end_block)
+        get_logs_asap(topics=topics, addresses=[token.address], from_block=start_block, to_block=end_block)
     )
     return pd.DataFrame([_process_transfer_event(event, token_entity) for event in events])
 

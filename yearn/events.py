@@ -52,8 +52,8 @@ def __add_deployment_topics(address: Address) -> None:
 
 
 def get_logs_asap(
-    address: Optional[Address],
-    topics: Optional[Topics],
+    topics: Topics,
+    addresses: Optional[List[Address]] = None,
     from_block: Optional[Block] = None,
     to_block: Optional[Block] = None,
     verbose: int = 0
@@ -72,7 +72,7 @@ def get_logs_asap(
         logger.info('fetching %d batches', len(ranges))
 
     batches = Parallel(8, "threading", verbose=verbose)(
-        delayed(web3.eth.get_logs)({"address": address, "topics": topics, "fromBlock": start, "toBlock": end})
+        delayed(web3.eth.get_logs)(_get_log_params(addresses, topics, start, end))
         for start, end in ranges
     )
     for batch in batches:
@@ -107,3 +107,11 @@ def checkpoints_to_weight(checkpoints, start_block: Block, end_block: Block):
         b = min(b, end_block) if b else end_block
         total += checkpoints[a] * (b - a) / (end_block - start_block)
     return total
+
+
+def _get_log_params(addresses, topics, start, end):
+    log_params = {"topics": topics, "fromBlock": start, "toBlock": end}
+    if addresses:
+        # pass in a list of addresses
+        log_params["address"] = addresses
+    return log_params

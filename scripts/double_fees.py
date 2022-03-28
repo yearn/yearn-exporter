@@ -47,7 +47,7 @@ def find_double_fees(withdrawals, fees, blacklist=None):
 
 def find_transfers(address, from_address, to_address, start_block, end_block):
     topics = construct_event_topic_set(abi, web3.codec, {"from": from_address, "to": to_address})
-    return get_logs_asap(address, topics, start_block, end_block)
+    return get_logs_asap(topics=topics, addresses=[address], from_block=start_block, to_block=end_block)
 
 
 def reimburse_weth_in_dai():

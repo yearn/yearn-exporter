@@ -53,7 +53,7 @@ class Registry(metaclass=Singleton):
             web3.codec,
             {'node': web3.ens.namehash('v2.registry.ychad.eth')},
         )
-        events = decode_logs(get_logs_asap(str(resolver), topics))
+        events = decode_logs(get_logs_asap(topics=topics, addresses=[str(resolver)]))
         logger.info('loaded %d registry versions', len(events))
         return [Contract(event['newAddress']) for event in events]
 

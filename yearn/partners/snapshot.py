@@ -62,7 +62,7 @@ def get_protocol_fees(address: str, start_block: int = None) -> Dict[int,Decimal
         web3.codec,
         {'sender': address, 'receiver': rewards},
     )
-    logs = decode_logs(get_logs_asap(address, topics, from_block=start_block))
+    logs = decode_logs(get_logs_asap(topics=topics, addresses=[address], from_block=start_block))
     return {log.block_number: Decimal(log['value']) / Decimal(vault.scale) for log in logs}
 
 
@@ -154,7 +154,7 @@ class WildcardWrapper:
 
         # wrapper -> {vaults}
         deposits = defaultdict(set)
-        for log in decode_logs(get_logs_asap(addresses, topics, from_block)):
+        for log in decode_logs(get_logs_asap(topics=topics, addresses=addresses, from_block=from_block)):
             deposits[log['receiver']].add(log.address)
 
         return [
