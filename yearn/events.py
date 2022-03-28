@@ -62,7 +62,10 @@ def get_logs_asap(
     logs = []
 
     if from_block is None:
-        from_block = contract_creation_block(address) if address else 0
+        if addresses:
+            from_block = min(map(lambda address: contract_creation_block(address), addresses))
+        else:
+            from_block = 0
 
     if to_block is None:
         to_block = chain.height
