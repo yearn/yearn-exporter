@@ -52,8 +52,8 @@ def __add_deployment_topics(address: Address) -> None:
 
 
 def get_logs_asap(
-    addresses: Optional[Union[Address,List[Address]]],
-    topics: Optional[Topics],
+    addresses: Optional[Union[Address,List[Address]]] = None,
+    topics: Optional[Topics] = None,
     from_block: Optional[Block] = None,
     to_block: Optional[Block] = None,
     verbose: int = 0
