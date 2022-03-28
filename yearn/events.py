@@ -119,8 +119,10 @@ def _get_logs_params(
     start: Block,
     end: Block
     ) -> Dict[str,Any]:
-    params = {"topics": topics, "fromBlock": start, "toBlock": end}
+    params = {"fromBlock": start, "toBlock": end}
     if addresses:
         # pass in a list of addresses
         params["address"] = addresses
+    if topics:
+        params["topics"] = topics
     return params
