@@ -1,7 +1,7 @@
 from brownie import chain
 from yearn.networks import Network
 from yearn.partners.snapshot import (BentoboxWrapper, Partner, WildcardWrapper,
-                                     Wrapper, YApeSwapFactoryWrapper)
+                                     Wrapper, YApeSwapFactoryWrapper, GearboxWrapper)
 
 partners = {
     Network.Mainnet: [
@@ -290,5 +290,19 @@ partners = {
                 ),
             ],
         ),
+        Partner(
+            name='gearbox',
+            treasury='0x7b065Fcb0760dF0CEA8CFd144e08554F3CeA73D1',
+            wrappers=[            
+                GearboxWrapper(
+                    name='gearbox usdc v1',
+                    vault='0xa354F35829Ae975e850e23e9615b11Da1B3dC4DE',
+                ),
+                GearboxWrapper(
+                    name='gearbox dai v1',
+                    vault='0xdA816459F1AB5631232FE5e97a05BBBb94970c95',
+                ),                
+            ],     
+        ),         
     ],
 }.get(chain.id, [])
