@@ -47,8 +47,9 @@ def simple(vault, samples: ApySamples) -> Apy:
     now_price = price_per_share(block_identifier=now)
 
     # get our inception data
-    inception_price = 10 ** contract.decimals()
-    inception_block = harvests[:2][-1]
+    # the first report is when the vault first allocates funds to farm with
+    inception_block = vault.reports[0].block_number
+    inception_price = price_per_share(block_identifier=inception_block)
 
     if now_price == inception_price:
         raise ApyError("v2:inception", "no change from inception price")
@@ -112,22 +113,22 @@ def simple(vault, samples: ApySamples) -> Apy:
 
 
 def average(vault, samples: ApySamples) -> Apy:
-    harvests = sorted([harvest for strategy in vault.strategies for harvest in strategy.harvests])
+    reports = vault.reports
 
     # we don't want to display APYs when vaults are ramping up
-    if len(harvests) < 2:
-        raise ApyError("v2:harvests", "harvests are < 2")
+    if len(reports) < 2:
+        raise ApyError("v2:reports", "reports are < 2")
     
     # set our parameters
     contract = vault.vault
     price_per_share = contract.pricePerShare
-    
     # calculate our current price
     now_price = price_per_share(block_identifier=samples.now)
 
     # get our inception data
-    inception_price = 10 ** contract.decimals()
-    inception_block = harvests[:2][-1]
+    # the first report is when the vault first allocates funds to farm with
+    inception_block = reports[0].block_number
+    inception_price = price_per_share(block_identifier=inception_block)
 
     if now_price == inception_price:
         raise ApyError("v2:inception", "no change from inception price")

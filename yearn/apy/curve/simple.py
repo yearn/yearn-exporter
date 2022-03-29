@@ -60,7 +60,7 @@ def simple(vault, samples: ApySamples) -> Apy:
         controller = curve.gauge_controller
 
     block = samples.now
-    gauge_weight = controller.gauge_relative_weight.call(gauge_address, block_identifier=block) 
+    gauge_weight = controller.gauge_relative_weight.call(gauge_address, block_identifier=block)
     gauge_working_supply = gauge.working_supply(block_identifier=block)
     if gauge_working_supply == 0:
         raise ApyError("crv", "gauge working supply is zero")
