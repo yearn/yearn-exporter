@@ -49,7 +49,7 @@ def simple(vault, samples: ApySamples) -> Apy:
         controller = curve.gauge_controller
 
     block = samples.now
-    gauge_weight = controller.gauge_relative_weight.call(gauge_address, block_identifier=block) 
+    gauge_weight = controller.gauge_relative_weight.call(gauge_address, block_identifier=block)
     gauge_working_supply = gauge.working_supply(block_identifier=block)
     if gauge_working_supply == 0:
         raise ApyError("crv", "gauge working supply is zero")
@@ -166,7 +166,7 @@ def simple(vault, samples: ApySamples) -> Apy:
             cvx_boost = cvx_working_balance / (PER_MAX_BOOST * cvx_gauge_balance) or 1
         else:
             cvx_boost = MAX_BOOST
-        
+
         cvx_booster = contract(addresses[chain.id]['convex_booster'])
         cvx_lock_incentive = cvx_booster.lockIncentive(block_identifier=block)
         cvx_staker_incentive = cvx_booster.stakerIncentive(block_identifier=block)
@@ -191,7 +191,7 @@ def simple(vault, samples: ApySamples) -> Apy:
 
         cvx_apr = ((1 - cvx_fee) * cvx_boost * base_apr) * (1 + cvx_printed_as_crv) + reward_apr
         cvx_apr_minus_keep_crv = ((1 - cvx_fee) * cvx_boost * base_apr) * ((1 - cvx_keep_crv) + cvx_printed_as_crv)
-        
+
         crv_debt_ratio = vault.vault.strategies(crv_strategy)[2] / 1e4
         cvx_debt_ratio = vault.vault.strategies(cvx_strategy)[2] / 1e4
     else:
