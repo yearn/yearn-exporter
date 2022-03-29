@@ -133,21 +133,23 @@ def average(vault, samples: ApySamples) -> Apy:
     if now_price == inception_price:
         raise ApyError("v2:inception", "no change from inception price")
     
+    now_point = SharePricePoint(samples.now, now_price)
+    inception_point = SharePricePoint(inception_block, inception_price)
+
     # check our historical data
     if samples.week_ago > inception_block:
         week_ago_price = price_per_share(block_identifier=samples.week_ago)
+        week_ago_point = SharePricePoint(samples.week_ago, week_ago_price)
     else:
         week_ago_price = inception_price
+        week_ago_point = inception_point
 
     if samples.month_ago > inception_block:
         month_ago_price = price_per_share(block_identifier=samples.month_ago)
+        month_ago_point = SharePricePoint(samples.month_ago, month_ago_price)
     else:
         month_ago_price = inception_price
-
-    now_point = SharePricePoint(samples.now, now_price)
-    week_ago_point = SharePricePoint(samples.week_ago, week_ago_price)
-    month_ago_point = SharePricePoint(samples.month_ago, month_ago_price)
-    inception_point = SharePricePoint(inception_block, inception_price)
+        month_ago_point = inception_point
 
     week_ago_apy = calculate_roi(now_point, week_ago_point)
     month_ago_apy = calculate_roi(now_point, month_ago_point)

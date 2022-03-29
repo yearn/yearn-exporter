@@ -121,3 +121,6 @@ def old_dai():
 
 def eurs_usdc():
     calculate_apy("0x801Ab06154Bf539dea4385a39f5fa8534fB53073")
+
+def crv_eth():
+    calculate_apy("0x6A5468752f8DB94134B6508dAbAC54D3b45efCE6")
