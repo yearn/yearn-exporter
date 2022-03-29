@@ -188,22 +188,28 @@ class GearboxWrapper(Wrapper):
     """
 
     def balances(self, blocks) -> List[Decimal]:
-        GearboxAccountFactory = contract('0x444CD42BaEdDEB707eeD823f7177b9ABcC779C04')
+        GearboxAccountFactory = contract(self.wrapper)
+        vault = Vault.from_address(self.vault)
+
         with multicall:
             CAs = [GearboxAccountFactory.creditAccounts(i) for i in range(GearboxAccountFactory.countCreditAccounts())]
-            
-        vault = Vault.from_address(self.vault)       
-        balances = batch_call(
-            [
-                batch_call([
-                    [self.vault, 'balanceOf', ca, block]
+        
+        balances = []
+        for block in blocks:       
+            balances_at_block = batch_call(
+                [
+                    [
+                        vault.vault,
+                        'balanceOf',
+                        ca,
+                        block
+                    ]
                     for ca in CAs
                 ]
-                )    
-                for block in blocks
-            ]
-        )
-        return [Decimal(sum(filter(None, balance))) / Decimal(vault.scale) for balance in balances]
+            )   
+            tvl = sum(balance for balance in balances_at_block) / Decimal(vault.scale)
+            balances.append(tvl)
+        return balances
 
     
 @dataclass

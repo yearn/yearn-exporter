@@ -297,10 +297,12 @@ partners = {
                 GearboxWrapper(
                     name='gearbox usdc v1',
                     vault='0xa354F35829Ae975e850e23e9615b11Da1B3dC4DE',
+                    wrapper='0x444CD42BaEdDEB707eeD823f7177b9ABcC779C04',
                 ),
                 GearboxWrapper(
                     name='gearbox dai v1',
                     vault='0xdA816459F1AB5631232FE5e97a05BBBb94970c95',
+                    wrapper='0x444CD42BaEdDEB707eeD823f7177b9ABcC779C04',
                 ),                
             ],     
         ),         
