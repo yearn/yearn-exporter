@@ -6,6 +6,22 @@ from yearn.partners.snapshot import (BentoboxWrapper, Partner, WildcardWrapper,
 partners = {
     Network.Mainnet: [
         Partner(
+            name='tempus',
+            treasury='0xab40a7e3cef4afb323ce23b6565012ac7c76bfef',
+            wrappers=[
+                Wrapper(
+                    name='yvUSDC Tempus Pool',
+                    vault='0xa354F35829Ae975e850e23e9615b11Da1B3dC4DE',
+                    wrapper='0x443297DE16C074fDeE19d2C9eCF40fdE2f5F62C2',
+                ),
+                Wrapper(
+                    name='yvDAI Tempus Pool',
+                    vault='0xdA816459F1AB5631232FE5e97a05BBBb94970c95',
+                    wrapper='0x7e0fc07280f47bac3D55815954e0f904c86f642E',
+                )
+            ]
+        ),
+        Partner(
             name='coinomo',
             treasury='0xd3877d9df3cb52006b7d932e8db4b36e22e89242',
             wrappers=[
@@ -291,4 +307,37 @@ partners = {
             ],
         ),
     ],
+    Network.Fantom: [
+        Partner(
+            name='tempus',
+            treasury='0x51252c520375C6A236Bb56DdF0C407A099B2EC0e',
+            wrappers=[
+                Wrapper(
+                    name='yvUSDC Tempus Pool',
+                    vault='0xEF0210eB96c7EB36AF8ed1c20306462764935607',
+                    wrapper='0x943B73d3B7373de3e5Dd68f64dbf85E6F4f56c9E',
+                ),
+                Wrapper(
+                    name='yvDAI Tempus Pool',
+                    vault='0x637eC617c86D24E421328e6CAEa1d92114892439',
+                    wrapper='0x9c0273E4abB665ce156422a75F5a81db3c264A23',
+                ),
+                Wrapper(
+                    name='yvUSDT Tempus Pool',
+                    vault='0x148c05caf1Bb09B5670f00D511718f733C54bC4c',
+                    wrapper='0xE9b557f9766Fb20651E3685374cd1DF6f977d36B',
+                ),
+                Wrapper(
+                    name='yvWETH Tempus Pool',
+                    vault='0xCe2Fc0bDc18BD6a4d9A725791A3DEe33F3a23BB7',
+                    wrapper='0xA9C549aeFa21ee6e79bEFCe91fa0E16a9C7d585a',
+                ),
+                Wrapper(
+                    name='yvYFI Tempus Pool',
+                    vault='0x2C850cceD00ce2b14AA9D658b7Cad5dF659493Db',
+                    wrapper='0xAE7E5242eb52e8a592605eE408268091cC8794b8',
+                )
+            ]
+        )
+    ]
 }.get(chain.id, [])
