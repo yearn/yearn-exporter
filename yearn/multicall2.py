@@ -1,14 +1,18 @@
 from collections import defaultdict
 from itertools import count, product
 from operator import itemgetter
+from typing import Any, Dict, List, Union
 
 import requests
-from brownie import Contract, chain, web3
+from brownie import chain, web3
 from eth_abi.exceptions import InsufficientDataBytes
+from hexbytes import HexBytes
+from joblib import Parallel, delayed
+from tqdm import tqdm
 
-from yearn.networks import Network
-from yearn.utils import contract_creation_block, contract
 from yearn.exceptions import MulticallError
+from yearn.networks import Network
+from yearn.utils import contract, contract_creation_block
 
 MULTICALL2 = {
     Network.Mainnet: '0x5BA1e12693Dc8F9c48aAD8770482f4739bEeD696',
@@ -111,9 +115,28 @@ def batch_call(calls):
                 ],
             }
         )
+    # NOTE Batch calls do not work on Fantom but scripts still need to. This is a quick solution.
+    # TODO Implement this in a cleaner way.
+    response: List[Dict[str,Union[str,int,HexBytes]]]
 
-    response = requests.post(web3.provider.endpoint_uri, json=jsonrpc_batch).json()
+    if chain.id == Network.Fantom:
+        response = Parallel(16,'threading')(delayed(_spoof_batch_call_for_params)(i, batch['params'][0]) for i, batch in tqdm(enumerate(jsonrpc_batch)))
+    else:
+        response = requests.post(web3.provider.endpoint_uri, json=jsonrpc_batch).json()
+    
     return [
         fn.decode_output(res['result']) if res['result'] != '0x' else None
         for res in sorted(response, key=itemgetter('id'))
     ]
+
+
+def _spoof_batch_call_for_params(id: int, params: Dict[str,Any]) -> Dict[str,Union[str,int]]:
+    '''
+    Returns the result of a call as if it were part of a JSON-RPC batch call.
+    Example: `{'jsonrpc': '2.0', 'id': 0, 'result': '0x000000000000000000000000000000000000000000680a6a58cd45bce7104e16'}`
+    '''
+    return {
+        'jsonrpc': 'not really lol',
+        'id': id,
+        'result': web3.eth.call(params).hex()
+        }
