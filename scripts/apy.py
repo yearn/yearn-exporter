@@ -124,3 +124,6 @@ def eurs_usdc():
 
 def crv_eth():
     calculate_apy("0x6A5468752f8DB94134B6508dAbAC54D3b45efCE6")
+
+def spooky():
+    calculate_apy("0x0fBbf9848D969776a5Eb842EdAfAf29ef4467698")
