@@ -175,8 +175,20 @@ def simple(vault, samples: ApySamples) -> Apy:
 
     # if the vault has two strategies then the first is curve and the second is convex
     if isinstance(vault, VaultV2) and len(vault.strategies) == 2: # this vault has curve and convex
-        crv_strategy = vault.strategies[0].strategy
-        cvx_strategy = vault.strategies[1].strategy
+
+        # The first strategy should be curve, the second should be convex.
+        # However the order on the vault object here does not correspond
+        # to the order on the withdrawal queue on chain, therefore we need to 
+        # re-order so convex is always second if necessary 
+        first_strategy = vault.strategies[0].strategy
+        second_strategy = vault.strategies[1].strategy
+
+        crv_strategy = first_strategy
+        cvx_strategy = second_strategy
+        if not _ConvexVault.is_convex_strategy(vault.strategies[1]):
+            cvx_strategy = first_strategy
+            crv_strategy = second_strategy
+
         cvx_vault = _ConvexVault(cvx_strategy, vault, gauge)
         crv_debt_ratio = vault.vault.strategies(crv_strategy)[2] / 1e4
         cvx_apy_data = cvx_vault.get_detailed_apy_data(base_asset_price, pool_price, base_apr)
@@ -232,7 +244,11 @@ class _ConvexVault:
         if not isinstance(vault, VaultV2):
             return False 
 
-        return len(vault.strategies) == 1 and "convex" in vault.strategies[0].name.lower()
+        return len(vault.strategies) == 1 and _ConvexVault.is_convex_strategy(vault.strategies[0])
+
+    @staticmethod
+    def is_convex_strategy(strategy) -> bool:
+        return "convex" in strategy.name.lower()
 
     def apy(self, base_asset_price, pool_price, base_apr, pool_apy: float, management_fee: float, performance_fee: float) -> Apy:
         """The standard APY data."""
@@ -299,13 +315,28 @@ class _ConvexVault:
         rewards_contract = contract(cvx_booster.poolInfo(pid)["crvRewards"])
         rewards_length = rewards_contract.extraRewardsLength()
         current_time = time() if block is None else get_block_timestamp(block)
-        if rewards_length > 0:
-            convex_reward_apr = 0 # reset our rewards apr if we're calculating it via convex
-            for x in range(rewards_length):
-                virtual_rewards_pool = contract(rewards_contract.extraRewards(x))
-                    # do this for all assets, which will duplicate much of the curve info but we don't want to miss anything
-                if virtual_rewards_pool.periodFinish() > current_time:
-                    convex_reward_apr += (virtual_rewards_pool.rewardRate() * SECONDS_PER_YEAR * magic.get_price(virtual_rewards_pool.rewardToken(), block=block)) / (base_asset_price * (pool_price / 1e18) * virtual_rewards_pool.totalSupply())
+        if rewards_length == 0:
+            return 0
+
+        convex_reward_apr = 0 # reset our rewards apr if we're calculating it via convex
+
+        for x in range(rewards_length):
+            virtual_rewards_pool = contract(rewards_contract.extraRewards(x))
+                # do this for all assets, which will duplicate much of the curve info but we don't want to miss anything
+            if virtual_rewards_pool.periodFinish() > current_time:
+                reward_token = virtual_rewards_pool.rewardToken()
+               
+                # if the reward token is rKP3R we need to calculate it's price in 
+                # terms of KP3R after the discount
+                if reward_token == addresses[chain.id]['rkp3r_rewards']:
+                    rKP3R_contract = interface.rKP3R(reward_token)
+                    discount = rKP3R_contract.discount(block_identifier=block)
+                    reward_token_price = magic.get_price(addresses[chain.id]['kp3r'], block=block) * (100 - discount) / 100
+                else:
+                    reward_token_price = magic.get_price(reward_token, block=block)
+
+                reward_apr = (virtual_rewards_pool.rewardRate() * SECONDS_PER_YEAR * reward_token_price) / (base_asset_price * (pool_price / 1e18) * virtual_rewards_pool.totalSupply())
+                convex_reward_apr += reward_apr
 
         return convex_reward_apr
 
