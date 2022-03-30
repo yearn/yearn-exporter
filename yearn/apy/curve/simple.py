@@ -314,7 +314,7 @@ class _ConvexVault:
         try:
             pid = cvx_strategy.pid()
         except AttributeError:
-            # Curve hBTC strategy uses id rather than pid - 0x7Ed0d52C5944C7BF92feDC87FEC49D474ee133ce
+            # Convex hBTC strategy uses id rather than pid - 0x7Ed0d52C5944C7BF92feDC87FEC49D474ee133ce
             pid = cvx_strategy.id()
         rewards_contract = contract(cvx_booster.poolInfo(pid)["crvRewards"])
         rewards_length = rewards_contract.extraRewardsLength()
