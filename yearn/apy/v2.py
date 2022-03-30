@@ -81,9 +81,9 @@ def simple(vault, samples: ApySamples) -> Apy:
     # The APYs on Fantom vary quickly and harvests are more frequent than on mainnet, 
     # where infrequent harvests mean showing the weekly APY results in misleading spikes
     if chain.id == Network.Fantom:
-        apys = [week_ago_apy, month_ago_apy]
+        apys = [week_ago_apy, month_ago_apy, inception_apy]
     else:
-        apys = [month_ago_apy, week_ago_apy]
+        apys = [month_ago_apy, week_ago_apy, inception_apy]
 
     net_apy = next((value for value in apys if value != 0), 0)
 
