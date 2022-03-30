@@ -95,6 +95,22 @@ partners = {
             ],
         ),
         Partner(
+            name='qidao',
+            treasury='0x679016B3F8E98673f85c6F72567f22b58Aa15A54',
+            wrappers=[
+                Wrapper(
+                    name='fantom',
+                    vault='0x0dec85e74a92c52b7f708c4b10207d9560cefaf0',
+                    wrapper='0x7efb260662a6fa95c1ce1092c53ca23733202798',
+                ),
+                Wrapper(
+                    name='dai',
+                    vault='0x637ec617c86d24e421328e6caea1d92114892439',
+                    wrapper='0x682e473fca490b0adfa7efe94083c1e63f28f034',
+                ),
+            ],
+        ),
+        Partner(
             name='pickle',
             treasury='0x066419EaEf5DE53cc5da0d8702b990c5bc7D1AB3',
             wrappers=[
