@@ -311,7 +311,10 @@ class _ConvexVault:
         to Convex, assuming that they will be sold for profit.
         """
         # pull data from convex's virtual rewards contracts to get bonus rewards
-        pid = cvx_strategy.pid()
+        try:
+            pid = cvx_strategy.pid()
+        except AttributeError:
+            pid = cvx_strategy.id()
         rewards_contract = contract(cvx_booster.poolInfo(pid)["crvRewards"])
         rewards_length = rewards_contract.extraRewardsLength()
         current_time = time() if block is None else get_block_timestamp(block)
