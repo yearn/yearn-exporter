@@ -315,12 +315,13 @@ class _ConvexVault:
         """The cumulative apr of all extra tokens that are emitted by depositing 
         to Convex, assuming that they will be sold for profit.
         """
-        # pull data from convex's virtual rewards contracts to get bonus rewards
-        try:
-            pid = cvx_strategy.pid()
-        except AttributeError:
+        if hasattr(cvx_strategy, "id"):
             # Convex hBTC strategy uses id rather than pid - 0x7Ed0d52C5944C7BF92feDC87FEC49D474ee133ce
             pid = cvx_strategy.id()
+        else:
+            pid = cvx_strategy.pid()
+            
+        # pull data from convex's virtual rewards contracts to get bonus rewards
         rewards_contract = contract(cvx_booster.poolInfo(pid)["crvRewards"])
         rewards_length = rewards_contract.extraRewardsLength()
         current_time = time() if block is None else get_block_timestamp(block)
