@@ -111,13 +111,7 @@ def simple(vault, samples: ApySamples) -> Apy:
             rate = reward_data['rate']
             period_finish = reward_data['period_finish']
             total_supply = gauge.totalSupply()
-            token_price = 0
-            if gauge_reward_token == addresses[chain.id]['rkp3r_rewards']:
-                rKP3R_contract = interface.rKP3R(gauge_reward_token)
-                discount = rKP3R_contract.discount(block_identifier=block)
-                token_price = magic.get_price(addresses[chain.id]['kp3r'], block=block) * (100 - discount) / 100
-            else:
-                token_price = magic.get_price(gauge_reward_token, block=block)
+            token_price = _get_reward_token_price(gauge_reward_token)
             current_time = time() if block is None else get_block_timestamp(block)
             if period_finish < current_time:
                 reward_apr = 0
@@ -329,15 +323,7 @@ class _ConvexVault:
                 # do this for all assets, which will duplicate much of the curve info but we don't want to miss anything
             if virtual_rewards_pool.periodFinish() > current_time:
                 reward_token = virtual_rewards_pool.rewardToken()
-               
-                # if the reward token is rKP3R we need to calculate it's price in 
-                # terms of KP3R after the discount
-                if reward_token == addresses[chain.id]['rkp3r_rewards']:
-                    rKP3R_contract = interface.rKP3R(reward_token)
-                    discount = rKP3R_contract.discount(block_identifier=block)
-                    reward_token_price = magic.get_price(addresses[chain.id]['kp3r'], block=block) * (100 - discount) / 100
-                else:
-                    reward_token_price = magic.get_price(reward_token, block=block)
+                reward_token_price = _get_reward_token_price(reward_token, block)
 
                 reward_apr = (virtual_rewards_pool.rewardRate() * SECONDS_PER_YEAR * reward_token_price) / (base_asset_price * (pool_price / 1e18) * virtual_rewards_pool.totalSupply())
                 convex_reward_apr += reward_apr
@@ -356,3 +342,14 @@ class _ConvexVault:
     def _debt_ratio(self) -> float:
         """The debt ratio of the Convex strategy."""
         return self.vault.vault.strategies(self._cvx_strategy)[2] / 1e4
+
+
+def _get_reward_token_price(reward_token, block=None):
+    # if the reward token is rKP3R we need to calculate it's price in 
+    # terms of KP3R after the discount
+    if reward_token == addresses[chain.id]['rkp3r_rewards']:
+        rKP3R_contract = interface.rKP3R(reward_token)
+        discount = rKP3R_contract.discount(block_identifier=block)
+        return magic.get_price(addresses[chain.id]['kp3r'], block=block) * (100 - discount) / 100
+    else:
+        return magic.get_price(reward_token, block=block)
