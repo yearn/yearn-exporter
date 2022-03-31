@@ -338,6 +338,32 @@ partners = {
                     wrapper='0xAE7E5242eb52e8a592605eE408268091cC8794b8',
                 )
             ]
-        )
-    ]
+        ),
+        Partner(
+            name='Sturdy',
+            treasury='0xFd1D36995d76c0F75bbe4637C84C06E4A68bBB3a',
+            wrappers=[
+                Wrapper(
+                    name='yvWFTM',
+                    vault='0x0DEC85e74A92c52b7F708c4B10207D9560CEFaf0',
+                    wrapper='0x7d939674451ab005EC51d523f5D6846B745e2565',
+                ),
+                Wrapper(
+                    name='yvBOO',
+                    vault='0x0fBbf9848D969776a5Eb842EdAfAf29ef4467698',
+                    wrapper='0x6C5ee1f9B050E0De3489d60f687bEf16ee5c4C3D',
+                ),
+                Wrapper(
+                    name='yvfBEETS',
+                    vault='0x1e2fe8074a5ce1Bb7394856B0C618E75D823B93b',
+                    wrapper='0x63F925C970ba617662fde778Cf5fB70d798B2bB8',
+                ),
+                Wrapper(
+                    name='yvLINK',
+                    vault='0xf2d323621785A066E64282d2B407eAc79cC04966',
+                    wrapper='0x197dcF678163C20d0D34dC8065F6eba36D5BAD3E',
+                ),
+            ],
+        ),
+    ],
 }.get(chain.id, [])
