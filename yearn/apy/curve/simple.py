@@ -258,7 +258,18 @@ class _ConvexVault:
 
     def get_detailed_apy_data(self, base_asset_price, pool_price, base_apr) -> ConvexDetailedApyData:
         """Detailed data about the apy."""
-        cvx_keep_crv = self._cvx_strategy.keepCRV(block_identifier=self.block) / 1e4
+        # some strategies have a localCRV property which is used based on a flag, otherwise
+        # falling back to the global curve config contract.
+        # note the spelling mistake in the variable name uselLocalCRV
+        if hasattr(self._cvx_strategy, "uselLocalCRV"):
+            use_local_crv = self._cvx_strategy.uselLocalCRV(block_identifier=self.block)
+            if use_local_crv:
+                cvx_keep_crv = self._cvx_strategy.localCRV(block_identifier=self.block)  / 1e4
+            else:
+                curve_global = contract(self._cvx_strategy.curveGlobal(block_identifier=self.block))
+                cvx_keep_crv = curve_global.keepCRV(block_identifier=self.block) / 1e4
+        else: 
+            cvx_keep_crv = self._cvx_strategy.keepCRV(block_identifier=self.block) / 1e4
 
         cvx_booster = contract(addresses[chain.id]['convex_booster'])
         cvx_fee = self._get_convex_fee(cvx_booster, self.block)
