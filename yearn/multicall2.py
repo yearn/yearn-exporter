@@ -107,7 +107,7 @@ def batch_call(calls):
                 'method': 'eth_call',
                 'params': [
                     {'to': str(contract), 'data': fn.encode_input(*fn_inputs)},
-                    block,
+                    hex(block),
                 ],
             }
         )
