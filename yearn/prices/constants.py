@@ -17,6 +17,11 @@ tokens_by_network = {
         'usdc': '0xFF970A61A04b1cA14834A43f5dE4533eBDDB5CC8',
         'dai': '0xDA10009cBd5D07dd0CeCc66161FC93D7c9000da1',
     },
+    Network.Avalanche: {
+        'weth': '0x49d5c2bdffac6ce2bfdb6640f4f80f226bc10bab',
+        'usdc': '0xb97ef9ef8734c71904d8002f8b6bc66dd9c48a6e',
+        'dai': '0xd586e7f844cea2f87f50152665bcbc2c279d8d70',
+    }
 }
 
 stablecoins_by_network = {
@@ -60,12 +65,18 @@ stablecoins_by_network = {
         '0xFF970A61A04b1cA14834A43f5dE4533eBDDB5CC8': 'usdc',
         '0xDA10009cBd5D07dd0CeCc66161FC93D7c9000da1': 'dai',
     },
+    Network.Avalanche: {
+        '0xb97ef9ef8734c71904d8002f8b6bc66dd9c48a6e': 'usdc',
+        '0xd586e7f844cea2f87f50152665bcbc2c279d8d70': 'dai',
+        '0x130966628846bfd36ff31a822705796e8cb8c18d': 'mim',
+    }
 }
 
 ib_snapshot_block_by_network = {
     Network.Mainnet: 14051986,
     Network.Fantom: 28680044,
-    Network.Arbitrum: 1
+    Network.Arbitrum: 1,
+    Network.Avalanche: 1
 }
 
 weth = tokens_by_network[chain.id]['weth']
