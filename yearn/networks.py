@@ -19,7 +19,7 @@ class Network(IntEnum):
         if chain_id == Network.Mainnet:
             return "ETH"
         elif chain_id == Network.Gnosis:
-            return "XDAI"
+            return "GNO"
         elif chain_id == Network.Fantom:
             return "FTM"
         elif chain_id == Network.Arbitrum:
