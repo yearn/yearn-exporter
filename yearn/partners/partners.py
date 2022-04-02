@@ -321,6 +321,9 @@ partners = {
                     name='dai',
                     vault='0x637ec617c86d24e421328e6caea1d92114892439',
                     wrapper='0x682e473fca490b0adfa7efe94083c1e63f28f034',
+            ]
+        ),
+        Partner(
             name='tempus',
             treasury='0x51252c520375C6A236Bb56DdF0C407A099B2EC0e',
             wrappers=[
