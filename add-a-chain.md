@@ -9,8 +9,9 @@ You must add the following constants:
 - [ ] specify a network label in `Networks.label`.
 
 - in ./yearn/constants.py:
-- [ ] specify Treasury address. (if Yearn has a treasury contract deployed)
-- [ ] specify Strategist Multisig address. (if Yearn has a SMS deployed)
+- [ ] specify Treasury address. (if Yearn has a treasury contract deployed) This would be the rewards() address of any vault.
+- [ ] specify Multisig address. This would be the governance() address of any vault
+- [ ] specify Strategist Multisig address. (if Yearn has a SMS deployed) This would be the management() address of any vault.
 
 - in ./yearn/prices/constants.py:
 - [ ] add weth address to `tokens_by_network`.
