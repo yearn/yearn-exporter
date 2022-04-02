@@ -119,7 +119,7 @@ class Yearn:
         data = self.describe(block)
         output_base.export(block, ts, data)
         products = list(data.keys())
-        if self.exclude_ib_tvl and block > constants.ib_snapshot_block:
+        if chain.id in yearn.ironbank.addresses and self.exclude_ib_tvl and block > constants.ib_snapshot_block:
             products.remove('ib')
         tvl = sum(vault['tvl'] for (product, product_values) in data.items() if product in products for vault in product_values.values() if type(vault) == dict)
         logger.info('exported block=%d tvl=%.0f took=%.3fs', block, tvl, time() - start)
