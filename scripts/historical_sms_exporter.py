@@ -14,6 +14,7 @@ logger = logging.getLogger('yearn.historical_sms_exporter')
 
 
 def main():
+    data_query = 'sms_assets{network="' + Network.label() + '"}'
     start = datetime.now(tz=timezone.utc)
     
     end = {
@@ -22,12 +23,6 @@ def main():
         Network.Gnosis: datetime(2022, 2, 3, 23, 45, tzinfo=timezone.utc), # Block 20455212, first tx in SMS
     }[chain.id]
 
-    data_query = {
-        Network.Mainnet: 'sms_assets{network="ETH"}',
-        Network.Fantom: 'sms_assets{network="FTM"}',
-        Network.Gnosis: 'sms_assets{network="GNO"},
-    }[chain.id]
-        
     export_historical(
         start,
         end,
