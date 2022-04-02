@@ -1,12 +1,16 @@
 import _thread
 import functools
+import logging
+
+logger = logging.getLogger(__name__)
 
 def sentry_catch_all(func):
     @functools.wraps(func)
     def wrap(self):
         try:
             func(self)
-        except:
+        except Exception as e:
+            logger.critical(str(e))
             self._has_exception = True
             self._done.set()
             raise
