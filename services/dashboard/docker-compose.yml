@@ -351,6 +351,37 @@ services:
       - victoria-metrics
       - postgres
 
+  xdai-transactions-exporter:
+    image: yearn-exporter
+    command: transactions_exporter
+    volumes: *common-volumes
+    environment:
+      <<: *common-envs
+      <<: *common-xdai-envs
+      <<: *common-historical-envs
+      <<: *common-postgres-envs
+    networks:
+      - yearn-exporter
+    restart: on-failure
+    depends_on:
+      - postgres
+
+  gnosis-wallet-exporter:
+    image: yearn-exporter
+    command: wallet_exporter
+    volumes: *common-volumes
+    environment:
+      <<: *common-envs
+      <<: *common-xdai-envs
+      <<: *common-historical-envs
+      <<: *common-postgres-envs
+    networks:
+      - yearn-exporter
+    restart: always
+    depends_on:
+      - victoria-metrics
+      - postgres
+
   vmagent:
     image: victoriametrics/vmagent
     volumes:
