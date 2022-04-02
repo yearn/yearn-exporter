@@ -21,6 +21,9 @@ elif [[ $NETWORK == "ftm-main" ]]; then
 elif [[ $NETWORK == "arbitrum-main" ]]; then
   CHAIN_ID=42161
   EXPLORER=${EXPLORER:-https://api.arbiscan.io/api}
+elif [[ $NETWORK == "avalanche-main" ]]; then
+  CHAIN_ID=43114
+  EXPLORER=${EXPLORER:-https://api.snowtrace.io/api}
 fi
 
 # modify the network

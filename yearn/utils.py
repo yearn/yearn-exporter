@@ -16,6 +16,7 @@ BINARY_SEARCH_BARRIER = {
     Network.Mainnet: 0,
     Network.Fantom: 4_564_024,  # fantom returns "missing trie node" before that
     Network.Arbitrum: 0,
+    Network.Avalanche: 0,
 }
 
 _erc20 = lru_cache(maxsize=None)(interface.ERC20)
