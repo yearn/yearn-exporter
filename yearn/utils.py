@@ -14,6 +14,7 @@ logger = logging.getLogger(__name__)
 
 BINARY_SEARCH_BARRIER = {
     Network.Mainnet: 0,
+    Network.Gnosis: 0,
     Network.Fantom: 4_564_024,  # fantom returns "missing trie node" before that
     Network.Arbitrum: 0,
 }

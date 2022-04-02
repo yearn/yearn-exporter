@@ -14,6 +14,15 @@ if [[ $NETWORK == "mainnet" ]]; then
     fi
   fi
 
+elif [[ $NETWORK == "xdai-main" ]]; then
+  CHAIN_ID=100
+  EXPLORER=${EXPLORER:-https://blockscout.com/xdai/mainnet/api}
+
+  if [[ ! -z "$WEB3_PROVIDER" ]]; then
+    brownie networks modify xdai-main host=$WEB3_PROVIDER chainid=$CHAIN_ID explorer=$EXPLORER
+  fi
+fi
+
 elif [[ $NETWORK == "ftm-main" ]]; then
   CHAIN_ID=250
   EXPLORER=${EXPLORER:-https://api.ftmscan.com/api}

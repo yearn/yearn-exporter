@@ -59,6 +59,9 @@ curve_contracts = {
         'voting_escrow': '0x5f3b5DfEb7B28CDbD7FAba78963EE202a494e2A2',
         'gauge_controller': '0x2F50D538606Fa9EDD2B11E2446BEb18C9D5846bB',
     },
+    # Network.Gnosis: {
+        # 'address_provider': ADDRESS_PROVIDER, # curve has not properly initialized the provider. contract(self.address_provider.get_address(5)) returns 0x0
+    # },
     Network.Fantom: {
         'address_provider': ADDRESS_PROVIDER,
     },

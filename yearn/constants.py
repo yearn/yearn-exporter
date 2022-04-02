@@ -142,5 +142,8 @@ STRATEGIST_MULTISIG = {
     },
     Network.Fantom: {
         "0x72a34AbafAB09b15E7191822A679f28E067C4a16",
+    },
+    Network.Gnosis: {
+        "0x22eAe41c7Da367b9a15e942EB6227DF849Bb498C"
     }
 }.get(chain.id,set())
