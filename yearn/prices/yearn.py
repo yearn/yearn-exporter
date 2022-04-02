@@ -27,14 +27,17 @@ addresses = {
 
 
 class YearnLens(metaclass=Singleton):
-    def __init__(self):
-        if chain.id not in addresses:
+    def __init__(self, force_init: bool = False):
+        if chain.id not in addresses and not force_init:
             raise UnsupportedNetwork('yearn is not supported on this network')
         self.markets
 
     @property
     @ttl_cache(ttl=3600)
     def markets(self):
+        if chain.id not in addresses:
+            return {}
+        
         markets = {
             name: list(contract(addr).assetsAddresses())
             for name, addr in addresses[chain.id].items()
@@ -91,8 +94,4 @@ class YearnLens(metaclass=Singleton):
                 return [share_price / 1e18, underlying]
 
 
-yearn_lens = None
-try:
-    yearn_lens = YearnLens()
-except UnsupportedNetwork:
-    pass
+yearn_lens = YearnLens(force_init=True)
