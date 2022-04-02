@@ -24,6 +24,7 @@ def main():
     data_query = {
         Network.Mainnet: 'sms_assets{network="ETH"}',
         Network.Fantom: 'sms_assets{network="FTM"}',
+        Network.Gnosis: 'sms_assets{network="GNO"},
     }[chain.id]
         
     export_historical(
