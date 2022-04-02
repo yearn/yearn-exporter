@@ -6,7 +6,7 @@ from typing import List
 from brownie import Contract, chain, web3, interface
 
 from yearn.cache import memory
-from yearn.exceptions import ArchiveNodeRequired
+from yearn.exceptions import ArchiveNodeRequired, NodeNotSynced
 from yearn.networks import Network
 from yearn.typing import Address
 
@@ -88,6 +88,11 @@ def contract_creation_block(address) -> int:
     barrier = BINARY_SEARCH_BARRIER[chain.id]
     lo = barrier
     hi = end = chain.height
+
+    if hi == 0:
+        raise NodeNotSynced(f'''
+            `chain.height` returns 0 on your node, which means it is not fully synced.
+            You can only use contract_creation_block on a fully synced node.''')
 
     while hi - lo > 1:
         mid = lo + (hi - lo) // 2
