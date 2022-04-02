@@ -36,7 +36,7 @@ x-common-eth-envs: &common-eth-envs
   - NETWORK: mainnet
   - ETHERSCAN_TOKEN:
 
-x-common-xdai-envs: &common-xdai-envs
+x-common-gnosis-envs: &common-gnosis-envs
   - NETWORK: xdai-main
   - WEB3_PROVIDER: $XDAI_WEB3_PROVIDER
   - EXPLORER: $XDAI_EXPLORER
@@ -80,24 +80,24 @@ services:
       - yearn-exporter
     restart: on-failure
 
-  xdai-exporter:
+  gnosis-exporter:
     image: yearn-exporter
     command: exporter
     volumes: *common-volumes
     environment:
       <<: *common-envs
-      <<: *common-xdai-envs
+      <<: *common-gnosis-envs
     networks:
       - yearn-exporter
     restart: on-failure
 
-  historical-xdai-exporter:
+  historical-gnosis-exporter:
     image: yearn-exporter
     command: historical_exporter
     volumes: *common-volumes
     environment:
       <<: *common-envs
-      <<: *common-xdai-envs
+      <<: *common-gnosis-envs
       <<: *common-historical-envs
     networks:
       - yearn-exporter
@@ -158,13 +158,13 @@ services:
       - victoria-metrics
       - postgres
 
-  xdai-treasury-exporter:
+  gnosis-treasury-exporter:
     image: yearn-exporter
     command: treasury_exporter
     volumes: *common-volumes
     environment:
       <<: *common-envs
-      <<: *common-xdai-envs
+      <<: *common-gnosis-envs
       <<: *common-postgres-envs
     networks:
       - yearn-exporter
@@ -173,13 +173,13 @@ services:
       - victoria-metrics
       - postgres
 
-  historical-xdai-treasury-exporter:
+  historical-gnosis-treasury-exporter:
     image: yearn-exporter
     command: historical_treasury_exporter
     volumes: *common-volumes
     environment:
       <<: *common-envs
-      <<: *common-xdai-envs
+      <<: *common-gnosis-envs
       <<: *common-historical-envs
       <<: *common-postgres-envs
     networks:
@@ -243,24 +243,24 @@ services:
       - yearn-exporter
     restart: on-failure
 
-  xdai-sms-exporter:
+  gnosis-sms-exporter:
     image: yearn-exporter
     command: sms_exporter
     volumes: *common-volumes
     environment:
       <<: *common-envs
-      <<: *common-xdai-envs
+      <<: *common-gnosis-envs
     networks:
       - yearn-exporter
     restart: on-failure
 
-  historical-xdai-sms-exporter:
+  historical-gnosis-sms-exporter:
     image: yearn-exporter
     command: historical_sms_exporter
     volumes: *common-volumes
     environment:
       <<: *common-envs
-      <<: *common-xdai-envs
+      <<: *common-gnosis-envs
       <<: *common-historical-envs
     networks:
       - yearn-exporter
@@ -351,13 +351,13 @@ services:
       - victoria-metrics
       - postgres
 
-  xdai-transactions-exporter:
+  gnosis-transactions-exporter:
     image: yearn-exporter
     command: transactions_exporter
     volumes: *common-volumes
     environment:
       <<: *common-envs
-      <<: *common-xdai-envs
+      <<: *common-gnosis-envs
       <<: *common-historical-envs
       <<: *common-postgres-envs
     networks:
@@ -372,7 +372,7 @@ services:
     volumes: *common-volumes
     environment:
       <<: *common-envs
-      <<: *common-xdai-envs
+      <<: *common-gnosis-envs
       <<: *common-historical-envs
       <<: *common-postgres-envs
     networks:
