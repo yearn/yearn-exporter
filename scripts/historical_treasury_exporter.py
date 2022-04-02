@@ -18,6 +18,7 @@ def main():
     end = {
         Network.Mainnet: datetime(2020, 7, 21, 10, 1, tzinfo=timezone.utc), # first treasury tx
         Network.Fantom: datetime(2021, 10, 12, tzinfo=timezone.utc), # Fantom Multisig deployed
+        Network.Gnosis: datetime(2022, 01, 08, 02, 20, 50, tzinfo=timezone.utc), # Block 20_000_000, some time near the first tx in the Gnosis treasury EOA. Further testing is needed to confirm as first tx was not fully apparent on block explorer. 
     }[chain.id]
 
     data_query = {
