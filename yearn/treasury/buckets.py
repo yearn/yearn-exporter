@@ -101,7 +101,7 @@ def _unwrap_token(token) -> str:
         return _pool_bucket(pool_tokens)
     if aave and token in aave:
         return aave.atoken_underlying(token)
-    if token in compound:
+    if compound and token in compound:
         try:
             return contract(token).underlying()
         except AttributeError:
