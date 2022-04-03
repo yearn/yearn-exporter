@@ -100,6 +100,7 @@ def contract_creation_block(address) -> int:
             return 0
         except ValueError as exc:
             # ValueError occurs in gnosis when there is no state for a block
+            # with no access to historical state, we'll have to scan logs from start
             logger.error(exc) 
             return 0
         if code:
