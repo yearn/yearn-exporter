@@ -285,8 +285,10 @@ class Treasury:
         return maker_debt
 
     def unit_debt(self, block=None) -> dict:
-        if chain.id != Network.Mainnet: return
-        if block and block < 11315910: return
+        if chain.id != Network.Mainnet:
+            return None
+        if block and block < 11315910:
+            return None
         # NOTE: This only works for YFI based debt, must extend before using for other collaterals
         unitVault = contract("0xb1cff81b9305166ff1efc49a129ad2afcd7bcf19")
         yfi = "0x0bc529c00C6401aEF6D220BE8C6Ea1667F6Ad93e"
@@ -298,6 +300,9 @@ class Treasury:
         return unit_debt
 
     def compound_debt(self, block=None) -> dict:
+        if not compound.compound: # if yearn.prices.compound doesn't support any Compound forks on current chain
+            return None
+        
         markets = {market.ctoken for comp in compound.compound.compounds for market in comp.markets}
         gas_token_markets = [market for market in markets if not hasattr(market,'underlying')]
         other_markets = [market for market in markets if hasattr(market,'underlying')]
@@ -393,8 +398,9 @@ class Treasury:
 class YearnTreasury(Treasury):
     def __init__(self,watch_events_forever=False):
         start_block = {
-            Network.Mainnet: 10502337,
-            Network.Fantom: 18950072,
+            Network.Mainnet: 10_502_337,
+            Network.Fantom: 18_950_072,
+            Network.Gnosis: 20_000_000,
         }[chain.id]
         super().__init__('treasury',TREASURY_WALLETS,watch_events_forever=watch_events_forever,start_block=start_block)
 
@@ -417,7 +423,8 @@ class YearnTreasury(Treasury):
 class StrategistMultisig(Treasury):
     def __init__(self,watch_events_forever=False):
         start_block = {
-            Network.Mainnet: 11507716,
-            Network.Fantom: 10836306,
+            Network.Mainnet: 11_507_716,
+            Network.Fantom: 10_836_306,
+            Network.Gnosis: 20_455_212,
         }[chain.id]
         super().__init__('sms',STRATEGIST_MULTISIG,watch_events_forever=watch_events_forever,start_block=start_block)

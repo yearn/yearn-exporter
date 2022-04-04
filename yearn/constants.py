@@ -129,7 +129,11 @@ TREASURY_WALLETS = {
     },
     Network.Fantom: {
         "0x89716Ad7EDC3be3B35695789C475F3e7A3Deb12a", # Yearn Multisig
-    }
+    },
+    Network.Gnosis: {
+        "0x22eAe41c7Da367b9a15e942EB6227DF849Bb498C", # Yearn Multisig
+        "0x5FcdC32DfC361a32e9d5AB9A384b890C62D0b8AC", # Yearn Treasury (EOA?)
+    },
 }.get(chain.id,set())
 
 # EVENTS
@@ -142,5 +146,8 @@ STRATEGIST_MULTISIG = {
     },
     Network.Fantom: {
         "0x72a34AbafAB09b15E7191822A679f28E067C4a16",
+    },
+    Network.Gnosis: {
+        "0xFB4464a18d18f3FF439680BBbCE659dB2806A187"
     }
 }.get(chain.id,set())

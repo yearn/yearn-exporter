@@ -6,7 +6,7 @@ from typing import List
 from brownie import Contract, chain, web3, interface
 
 from yearn.cache import memory
-from yearn.exceptions import ArchiveNodeRequired
+from yearn.exceptions import ArchiveNodeRequired, NodeNotSynced
 from yearn.networks import Network
 from yearn.typing import Address
 
@@ -14,6 +14,7 @@ logger = logging.getLogger(__name__)
 
 BINARY_SEARCH_BARRIER = {
     Network.Mainnet: 0,
+    Network.Gnosis: 15_659_482, # gnosis returns "No state available for block 0x3f9e020290502d1d41f4b5519e7d456f0935dea980ec310935206cac8239117e"
     Network.Fantom: 4_564_024,  # fantom returns "missing trie node" before that
     Network.Arbitrum: 0,
 }
@@ -89,6 +90,11 @@ def contract_creation_block(address) -> int:
     lo = barrier
     hi = end = chain.height
 
+    if hi == 0:
+        raise NodeNotSynced(f'''
+            `chain.height` returns 0 on your node, which means it is not fully synced.
+            You can only use contract_creation_block on a fully synced node.''')
+
     while hi - lo > 1:
         mid = lo + (hi - lo) // 2
         try:
@@ -96,6 +102,11 @@ def contract_creation_block(address) -> int:
         except ArchiveNodeRequired as exc:
             logger.error(exc)
             # with no access to historical state, we'll have to scan logs from start
+            return 0
+        except ValueError as exc:
+            # ValueError occurs in gnosis when there is no state for a block
+            # with no access to historical state, we'll have to scan logs from start
+            logger.error(exc) 
             return 0
         if code:
             hi = mid

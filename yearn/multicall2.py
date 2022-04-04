@@ -12,6 +12,7 @@ from yearn.exceptions import MulticallError
 
 MULTICALL2 = {
     Network.Mainnet: '0x5BA1e12693Dc8F9c48aAD8770482f4739bEeD696',
+    Network.Gnosis: '0xFAa296891cA6CECAF2D86eF5F7590316d0A17dA0', # maker has not yet deployed multicall2. This is from another deployment
     Network.Fantom: '0xD98e3dBE5950Ca8Ce5a4b59630a5652110403E5c',
     Network.Arbitrum: '0x5B5CFE992AdAC0C9D48E05854B2d91C73a003858',
 }
@@ -107,7 +108,7 @@ def batch_call(calls):
                 'method': 'eth_call',
                 'params': [
                     {'to': str(contract), 'data': fn.encode_input(*fn_inputs)},
-                    block,
+                    hex(block),
                 ],
             }
         )

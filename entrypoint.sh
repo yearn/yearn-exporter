@@ -14,6 +14,10 @@ if [[ $NETWORK == "mainnet" ]]; then
     fi
   fi
 
+elif [[ $NETWORK == "xdai-main" ]]; then
+  CHAIN_ID=100
+  EXPLORER=${EXPLORER:-https://blockscout.com/xdai/mainnet/api}
+
 elif [[ $NETWORK == "ftm-main" ]]; then
   CHAIN_ID=250
   EXPLORER=${EXPLORER:-https://api.ftmscan.com/api}

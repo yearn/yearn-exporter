@@ -38,6 +38,8 @@ class Registry(metaclass=Singleton):
     def load_registry(self):
         if chain.id == Network.Mainnet:
             return self.load_from_ens()
+        elif chain.id == Network.Gnosis:
+            return [contract('0xe2F12ebBa58CAf63fcFc0e8ab5A61b145bBA3462')]
         elif chain.id == Network.Fantom:
             return [contract('0x727fe1759430df13655ddb0731dE0D0FDE929b04')]
         elif chain.id == Network.Arbitrum:

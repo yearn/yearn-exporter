@@ -6,6 +6,22 @@ from yearn.partners.snapshot import (BentoboxWrapper, Partner, WildcardWrapper,
 partners = {
     Network.Mainnet: [
         Partner(
+            name='tempus',
+            treasury='0xab40a7e3cef4afb323ce23b6565012ac7c76bfef',
+            wrappers=[
+                Wrapper(
+                    name='yvUSDC Tempus Pool',
+                    vault='0xa354F35829Ae975e850e23e9615b11Da1B3dC4DE',
+                    wrapper='0x443297DE16C074fDeE19d2C9eCF40fdE2f5F62C2',
+                ),
+                Wrapper(
+                    name='yvDAI Tempus Pool',
+                    vault='0xdA816459F1AB5631232FE5e97a05BBBb94970c95',
+                    wrapper='0x7e0fc07280f47bac3D55815954e0f904c86f642E',
+                )
+            ]
+        ),
+        Partner(
             name='coinomo',
             treasury='0xd3877d9df3cb52006b7d932e8db4b36e22e89242',
             wrappers=[
@@ -291,6 +307,7 @@ partners = {
             ],
         ),
         Partner(
+<<<<<<< HEAD
             name='gearbox',
             treasury='0x7b065Fcb0760dF0CEA8CFd144e08554F3CeA73D1',
             wrappers=[            
@@ -306,5 +323,105 @@ partners = {
                 ),                
             ],     
         ),         
+=======
+            name='wido',
+            treasury='0x5EF7F250f74d4F11A68054AE4e150705474a6D4a',
+            wrappers=[
+                WildcardWrapper(
+                    name='dt',
+                    wrapper='0x7Bbd6348db83C2fb3633Eebb70367E1AEc258764',
+                ),
+                WildcardWrapper(
+                    name='st',
+                    wrapper='0x926D47CBf3ED22872F8678d050e70b198bAE1559',
+                ),
+            ],
+        ),
+    ],
+    Network.Fantom: [
+        Partner(
+            name='qidao',
+            treasury='0x679016B3F8E98673f85c6F72567f22b58Aa15A54',
+            wrappers=[
+                Wrapper(
+                    name='fantom',
+                    vault='0x0dec85e74a92c52b7f708c4b10207d9560cefaf0',
+                    wrapper='0x7efb260662a6fa95c1ce1092c53ca23733202798',
+                ),
+                Wrapper(
+                    name='dai',
+                    vault='0x637ec617c86d24e421328e6caea1d92114892439',
+                    wrapper='0x682e473fca490b0adfa7efe94083c1e63f28f034',
+                ),
+            ]
+        ),
+        Partner(
+            name='tempus',
+            treasury='0x51252c520375C6A236Bb56DdF0C407A099B2EC0e',
+            wrappers=[
+                Wrapper(
+                    name='yvUSDC Tempus Pool',
+                    vault='0xEF0210eB96c7EB36AF8ed1c20306462764935607',
+                    wrapper='0x943B73d3B7373de3e5Dd68f64dbf85E6F4f56c9E',
+                ),
+                Wrapper(
+                    name='yvDAI Tempus Pool',
+                    vault='0x637eC617c86D24E421328e6CAEa1d92114892439',
+                    wrapper='0x9c0273E4abB665ce156422a75F5a81db3c264A23',
+                ),
+                Wrapper(
+                    name='yvUSDT Tempus Pool',
+                    vault='0x148c05caf1Bb09B5670f00D511718f733C54bC4c',
+                    wrapper='0xE9b557f9766Fb20651E3685374cd1DF6f977d36B',
+                ),
+                Wrapper(
+                    name='yvWETH Tempus Pool',
+                    vault='0xCe2Fc0bDc18BD6a4d9A725791A3DEe33F3a23BB7',
+                    wrapper='0xA9C549aeFa21ee6e79bEFCe91fa0E16a9C7d585a',
+                ),
+                Wrapper(
+                    name='yvYFI Tempus Pool',
+                    vault='0x2C850cceD00ce2b14AA9D658b7Cad5dF659493Db',
+                    wrapper='0xAE7E5242eb52e8a592605eE408268091cC8794b8',
+                )
+            ]
+        ),
+        Partner(
+            name='Sturdy',
+            treasury='0xFd1D36995d76c0F75bbe4637C84C06E4A68bBB3a',
+            wrappers=[
+                Wrapper(
+                    name='yvWFTM',
+                    vault='0x0DEC85e74A92c52b7F708c4B10207D9560CEFaf0',
+                    wrapper='0x7d939674451ab005EC51d523f5D6846B745e2565',
+                ),
+                Wrapper(
+                    name='yvBOO',
+                    vault='0x0fBbf9848D969776a5Eb842EdAfAf29ef4467698',
+                    wrapper='0x6C5ee1f9B050E0De3489d60f687bEf16ee5c4C3D',
+                ),
+                Wrapper(
+                    name='yvfBEETS',
+                    vault='0x1e2fe8074a5ce1Bb7394856B0C618E75D823B93b',
+                    wrapper='0x63F925C970ba617662fde778Cf5fB70d798B2bB8',
+                ),
+                Wrapper(
+                    name='yvLINK',
+                    vault='0xf2d323621785A066E64282d2B407eAc79cC04966',
+                    wrapper='0x197dcF678163C20d0D34dC8065F6eba36D5BAD3E',
+                ),
+            ],
+        ),
+        Partner(
+            name='wido',
+            treasury='0x5EF7F250f74d4F11A68054AE4e150705474a6D4a',
+            wrappers=[
+                WildcardWrapper(
+                    name='Router',
+                    wrapper='0x7Bbd6348db83C2fb3633Eebb70367E1AEc258764',
+                ),
+            ],
+        ),
+>>>>>>> c97fc21c4a15a63541a398fcef1dc7d11de554e5
     ],
 }.get(chain.id, [])

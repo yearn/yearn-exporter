@@ -1,5 +1,7 @@
 from bisect import bisect_left
 from datetime import datetime, timedelta
+from brownie import chain
+from yearn.networks import Network
 
 from semantic_version.base import Version
 
@@ -75,7 +77,14 @@ def simple(vault, samples: ApySamples) -> Apy:
     inception_apy = calculate_roi(now_point, inception_point)
 
     # use the first non-zero apy, ordered by precedence
-    apys = [month_ago_apy, week_ago_apy, inception_apy]
+    # For Fantom, prioritize the weekly APY over the monthly. 
+    # The APYs on Fantom vary quickly and harvests are more frequent than on mainnet, 
+    # where infrequent harvests mean showing the weekly APY results in misleading spikes
+    if chain.id == Network.Fantom:
+        apys = [week_ago_apy, month_ago_apy, inception_apy]
+    else:
+        apys = [month_ago_apy, week_ago_apy, inception_apy]
+
     net_apy = next((value for value in apys if value != 0), 0)
 
     # for performance fee, half comes from strategy (strategist share) and half from the vault (treasury share)
@@ -133,21 +142,23 @@ def average(vault, samples: ApySamples) -> Apy:
     if now_price == inception_price:
         raise ApyError("v2:inception", "no change from inception price")
     
+    now_point = SharePricePoint(samples.now, now_price)
+    inception_point = SharePricePoint(inception_block, inception_price)
+
     # check our historical data
     if samples.week_ago > inception_block:
         week_ago_price = price_per_share(block_identifier=samples.week_ago)
+        week_ago_point = SharePricePoint(samples.week_ago, week_ago_price)
     else:
         week_ago_price = inception_price
+        week_ago_point = inception_point
 
     if samples.month_ago > inception_block:
         month_ago_price = price_per_share(block_identifier=samples.month_ago)
+        month_ago_point = SharePricePoint(samples.month_ago, month_ago_price)
     else:
         month_ago_price = inception_price
-
-    now_point = SharePricePoint(samples.now, now_price)
-    week_ago_point = SharePricePoint(samples.week_ago, week_ago_price)
-    month_ago_point = SharePricePoint(samples.month_ago, month_ago_price)
-    inception_point = SharePricePoint(inception_block, inception_price)
+        month_ago_point = inception_point
 
     week_ago_apy = calculate_roi(now_point, week_ago_point)
     month_ago_apy = calculate_roi(now_point, month_ago_point)
@@ -156,7 +167,14 @@ def average(vault, samples: ApySamples) -> Apy:
     # we should look at a vault's harvests, age, etc to determine whether to show new APY or not
 
     # use the first non-zero apy, ordered by precedence
-    apys = [month_ago_apy, week_ago_apy]
+    # For Fantom, prioritize the weekly APY over the monthly. 
+    # The APYs on Fantom vary quickly and harvests are more frequent than on mainnet, 
+    # where infrequent harvests mean showing the weekly APY results in misleading spikes
+    if chain.id == Network.Fantom:
+        apys = [week_ago_apy, month_ago_apy]
+    else:
+        apys = [month_ago_apy, week_ago_apy]
+
     two_months_ago = datetime.now() - timedelta(days=60)
     if contract.activation() > two_months_ago.timestamp():
         # if the vault was activated less than two months ago then it's ok to use

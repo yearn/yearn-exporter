@@ -7,6 +7,11 @@ tokens_by_network = {
         'usdc': '0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48',
         'dai': '0x6B175474E89094C44Da98b954EedeAC495271d0F',
     },
+    Network.Gnosis: {
+        'weth': '0x6A023CCd1ff6F2045C3309768eAd9E68F978f6e1',
+        'usdc': '0xDDAfbb505ad214D7b80b1f830fcCc89B60fb7A83',
+        'dai': '0xe91D153E0b41518A2Ce8Dd3D7944Fa863463a97d', # wxdai address
+    },
     Network.Fantom: {
         'weth': '0x21be370D5312f44cB42ce377BC9b8a0cEF1A4C83',
         'usdc': '0x04068DA6C83AFCFA0e13ba15A6696662335D5B75',
@@ -45,6 +50,11 @@ stablecoins_by_network = {
         "0x739ca6D71365a08f584c8FC4e1029045Fa8ABC4B": "anydai",
         "0xbbc4A8d076F4B1888fec42581B6fc58d242CF2D5": "anymim",
     },
+    Network.Gnosis: {
+        "0xDDAfbb505ad214D7b80b1f830fcCc89B60fb7A83": "usdc",
+        "0x4ECaBa5870353805a9F068101A40E0f32ed605C6": "usdt",
+        "0xe91d153e0b41518a2ce8dd3d7944fa863463a97d": "wxdai"
+    },
     Network.Fantom: {
         "0x04068DA6C83AFCFA0e13ba15A6696662335D5B75": "usdc",
         "0x8D11eC38a3EB5E956B052f67Da8Bdc9bef8Abf3E": "dai",
@@ -65,6 +75,7 @@ stablecoins_by_network = {
 ib_snapshot_block_by_network = {
     Network.Mainnet: 14051986,
     Network.Fantom: 28680044,
+    Network.Gnosis: 1, # TODO revisit as IB is not deployed in gnosis
     Network.Arbitrum: 1
 }
 
