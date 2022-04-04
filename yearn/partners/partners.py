@@ -307,8 +307,6 @@ partners = {
             ],
         ),
         Partner(
-<<<<<<< HEAD
-<<<<<<< HEAD
             name='gearbox',
             treasury='0x7b065Fcb0760dF0CEA8CFd144e08554F3CeA73D1',
             wrappers=[            
@@ -324,9 +322,7 @@ partners = {
                 ),                
             ],     
         ),         
-=======
-=======
->>>>>>> c97fc21c4a15a63541a398fcef1dc7d11de554e5
+        Partner(
             name='wido',
             treasury='0x5EF7F250f74d4F11A68054AE4e150705474a6D4a',
             wrappers=[
@@ -425,9 +421,5 @@ partners = {
                 ),
             ],
         ),
-<<<<<<< HEAD
->>>>>>> c97fc21c4a15a63541a398fcef1dc7d11de554e5
-=======
->>>>>>> c97fc21c4a15a63541a398fcef1dc7d11de554e5
     ],
 }.get(chain.id, [])
