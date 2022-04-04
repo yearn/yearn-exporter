@@ -33,13 +33,12 @@ class Snapshot(SQLModel, table=True):
     block_id: int = Field(foreign_key="block.id")
     block: Block = Relationship(back_populates="snapshots")
 
-
 pguser = os.environ.get('PGUSER', 'postgres')
 pgpassword = os.environ.get('PGPASSWORD', 'yearn')
 pghost = os.environ.get('PGHOST', 'localhost')
 pgdatabase = os.environ.get('PGDATABASE', 'yearn')
-
 dsn = f'postgresql://{pguser}:{pgpassword}@{pghost}:5432/{pgdatabase}'
+
 engine = create_engine(dsn, echo=False)
 
 # SQLModel.metadata.drop_all(engine)

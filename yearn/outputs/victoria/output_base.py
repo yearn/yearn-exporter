@@ -1,15 +1,21 @@
-from yearn.outputs.victoria.output_helper import mapping, _get_label_values, _build_item, _post, _flatten_dict
 from brownie import chain
-from yearn.prices import constants
+from yearn.ironbank import addresses as ironbank_registries
 from yearn.networks import Network
+from yearn.outputs.victoria.output_helper import (_build_item, _flatten_dict,
+                                                  _get_label_values, _post,
+                                                  mapping)
+from yearn.prices import constants
+
 
 def export(block, timestamp, data):
     metrics_to_export = []
 
-    if Network(chain.id) == Network.Fantom:
+    if chain.id == Network.Mainnet:
+        simple_products = ["v1", "earn", "ib", "special"]
+    elif chain.id in ironbank_registries:
         simple_products = ["ib"]
     else:
-        simple_products = ["v1", "earn", "ib", "special"]
+        simple_products = []
 
     for product in simple_products:
         metric = mapping[product]["metric"]

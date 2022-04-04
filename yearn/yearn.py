@@ -34,6 +34,10 @@ class Yearn:
                 "ib": yearn.ironbank.Registry(exclude_ib_tvl=exclude_ib_tvl),
                 "special": yearn.special.Registry(),
             }
+        elif chain.id ==  Network.Gnosis:
+            self.registries = {
+                "v2": yearn.v2.registry.Registry(watch_events_forever=watch_events_forever),
+            }
         elif chain.id ==  Network.Fantom:
             self.registries = {
                 "v2": yearn.v2.registry.Registry(watch_events_forever=watch_events_forever),
@@ -115,7 +119,7 @@ class Yearn:
         data = self.describe(block)
         output_base.export(block, ts, data)
         products = list(data.keys())
-        if self.exclude_ib_tvl and block > constants.ib_snapshot_block:
+        if 'ib' in products and self.exclude_ib_tvl and block > constants.ib_snapshot_block:
             products.remove('ib')
         tvl = sum(vault['tvl'] for (product, product_values) in data.items() if product in products for vault in product_values.values() if type(vault) == dict)
         logger.info('exported block=%d tvl=%.0f took=%.3fs', block, tvl, time() - start)

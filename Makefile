@@ -64,3 +64,31 @@ logs-all:
 
 postgres:
 	$(dashboards_command) up -d --build postgres
+
+# Mainnet:
+mainnet:
+	$(all_command) up -d --build eth-exporter historical-eth-exporter treasury-exporter historical-treasury-exporter sms-exporter historical-sms-exporter transactions-exporter wallet-exporter
+
+logs-mainnet:
+	$(all_command) logs -ft eth-exporter historical-eth-exporter treasury-exporter historical-treasury-exporter sms-exporter historical-sms-exporter transactions-exporter wallet-exporter
+
+eth:
+	make mainnet
+
+logs-eth:
+	make logs-mainnet
+
+# Fantom:
+fantom:
+	$(all_command) up -d --build ftm-exporter historical-ftm-exporter ftm-treasury-exporter historical-ftm-treasury-exporter ftm-sms-exporter historical-ftm-sms-exporter ftm-transactions-exporter ftm-wallet-exporter
+
+logs-fantom:
+	$(all_command) logs -ft ftm-exporter historical-ftm-exporter ftm-treasury-exporter historical-ftm-treasury-exporter ftm-sms-exporter historical-ftm-sms-exporter ftm-transactions-exporter ftm-wallet-exporter
+	
+
+# Gnosis chain:
+gnosis:
+	$(all_command) up -d --build gnosis-exporter historical-gnosis-exporter gnosis-treasury-exporter historical-gnosis-treasury-exporter gnosis-sms-exporter historical-gnosis-sms-exporter gnosis-transactions-exporter gnosis-wallet-exporter
+
+logs-gnosis:
+	$(all_command) logs -ft gnosis-exporter historical-gnosis-exporter gnosis-treasury-exporter historical-gnosis-treasury-exporter gnosis-sms-exporter historical-gnosis-sms-exporter gnosis-transactions-exporter gnosis-wallet-exporter

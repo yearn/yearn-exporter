@@ -59,6 +59,11 @@ curve_contracts = {
         'voting_escrow': '0x5f3b5DfEb7B28CDbD7FAba78963EE202a494e2A2',
         'gauge_controller': '0x2F50D538606Fa9EDD2B11E2446BEb18C9D5846bB',
     },
+    Network.Gnosis: {
+        # Curve has not properly initialized the provider. contract(self.address_provider.get_address(5)) returns 0x0.
+        # CurveRegistry class has extra handling to fetch registry in this case.
+        'address_provider': ADDRESS_PROVIDER, 
+    },
     Network.Fantom: {
         'address_provider': ADDRESS_PROVIDER,
     },
@@ -117,11 +122,16 @@ class CurveRegistry(metaclass=Singleton):
                     self.identifiers[Ids(event['id'])].append(event['addr'])
                 if event.name == 'AddressModified':
                     self.identifiers[Ids(event['id'])].append(event['new_address'])
-
+            
+            # NOTE: Gnosis chain's address provider fails to provide registry via events.
+            if not self.identifiers[Ids.Main_Registry]:
+                self.identifiers[Ids.Main_Registry] = self.address_provider.get_registry()
+            
             # if registries were updated, recreate the filter
             _registries = [
                 self.identifiers[i][-1]
                 for i in [Ids.Main_Registry, Ids.CryptoSwap_Registry]
+                if self.identifiers[i]
             ]
             if _registries != registries:
                 registries = _registries
