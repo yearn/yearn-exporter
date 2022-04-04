@@ -182,6 +182,36 @@ class YApeSwapFactoryWrapper(WildcardWrapper):
         return WildcardWrapper(self.name, farming).unwrap()
 
 
+class GearboxWrapper(Wrapper):
+    """
+    Use Gearbox CAs as wrappers.
+    """
+
+    def balances(self, blocks) -> List[Decimal]:
+        GearboxAccountFactory = contract(self.wrapper)
+        vault = Vault.from_address(self.vault)
+
+        with multicall:
+            CAs = [GearboxAccountFactory.creditAccounts(i) for i in range(GearboxAccountFactory.countCreditAccounts())]
+        
+        balances = []
+        for block in blocks:       
+            balances_at_block = batch_call(
+                [
+                    [
+                        vault.vault,
+                        'balanceOf',
+                        ca,
+                        block
+                    ]
+                    for ca in CAs
+                ]
+            )   
+            tvl = sum(balance / Decimal(vault.scale) for balance in balances_at_block)
+            balances.append(tvl)
+        return balances
+
+    
 @dataclass
 class Partner:
     name: str
