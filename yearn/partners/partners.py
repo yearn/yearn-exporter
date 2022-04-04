@@ -306,6 +306,20 @@ partners = {
                 ),
             ],
         ),
+        Partner(
+            name='wido',
+            treasury='0x5EF7F250f74d4F11A68054AE4e150705474a6D4a',
+            wrappers=[
+                WildcardWrapper(
+                    name='dt',
+                    wrapper='0x7Bbd6348db83C2fb3633Eebb70367E1AEc258764',
+                ),
+                WildcardWrapper(
+                    name='st',
+                    wrapper='0x926D47CBf3ED22872F8678d050e70b198bAE1559',
+                ),
+            ],
+        ),
     ],
     Network.Fantom: [
         Partner(
@@ -362,6 +376,16 @@ partners = {
                     name='yvLINK',
                     vault='0xf2d323621785A066E64282d2B407eAc79cC04966',
                     wrapper='0x197dcF678163C20d0D34dC8065F6eba36D5BAD3E',
+                ),
+            ],
+        ),
+        Partner(
+            name='wido',
+            treasury='0x5EF7F250f74d4F11A68054AE4e150705474a6D4a',
+            wrappers=[
+                WildcardWrapper(
+                    name='Router',
+                    wrapper='0x7Bbd6348db83C2fb3633Eebb70367E1AEc258764',
                 ),
             ],
         ),
