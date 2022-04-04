@@ -207,7 +207,7 @@ class GearboxWrapper(Wrapper):
                     for ca in CAs
                 ]
             )   
-            tvl = sum(balance for balance in balances_at_block) / Decimal(vault.scale)
+            tvl = sum(balance / Decimal(vault.scale) for balance in balances_at_block)
             balances.append(tvl)
         return balances
 
