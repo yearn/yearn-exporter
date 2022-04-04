@@ -1,5 +1,6 @@
 import logging
 import time
+from typing import Optional
 import warnings
 from decimal import Decimal
 
@@ -12,10 +13,12 @@ from web3._utils.abi import filter_by_name
 from web3._utils.events import construct_event_topic_set
 from yearn.entities import UserTx  # , TreasuryTx
 from yearn.events import decode_logs, get_logs_asap
+from yearn.exceptions import BatchSizeError
 from yearn.networks import Network
 from yearn.outputs.postgres.utils import (cache_address, cache_token,
                                           last_recorded_block)
 from yearn.prices import magic
+from yearn.typing import Block
 from yearn.yearn import Yearn
 
 sentry_sdk.set_tag('script','transactions_exporter')
@@ -27,13 +30,15 @@ yearn = Yearn(load_strategies=False)
 logger = logging.getLogger('yearn.transactions_exporter')
 
 BATCH_SIZE = {
-    Network.Mainnet: 5000,
-    Network.Fantom: 20000,
+    Network.Mainnet: 5_000,
+    Network.Fantom: 20_000,
+    Network.Gnosis: 2_000_000,
 }[chain.id]
 
 FIRST_END_BLOCK = {
-    Network.Mainnet: 9480000, # NOTE block some arbitrary time after iearn's first deployment
-    Network.Fantom: 5000000, # NOTE block some arbitrary time after v2's first deployment
+    Network.Mainnet: 9_480_000, # NOTE block some arbitrary time after iearn's first deployment
+    Network.Fantom: 5_000_000, # NOTE block some arbitrary time after v2's first deployment
+    Network.Gnosis: 21_440_000, # # NOTE block some arbitrary time after first vault deployment
 }[chain.id]
 
 
@@ -163,3 +168,11 @@ def _event_type(sender, receiver, vault_address) -> str:
         return 'v2 fees'
     else:
         return 'transfer'
+
+
+def _check_for_infinite_loop(cached_thru: Optional[Block], cached_thru_from_last_run: Optional[Block]) -> None:
+    if not cached_thru == cached_thru_from_last_run:
+        return
+    if cached_thru and cached_thru > chain.height - BATCH_SIZE:
+        return
+    raise BatchSizeError(f'Stuck in infinite loop, increase transactions exporter batch size for {Network(chain.id).name}.')
