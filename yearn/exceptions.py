@@ -16,3 +16,7 @@ class MulticallError(Exception):
 
 class EmptyS3Export(Exception):
     pass
+
+
+class NodeNotSynced(Exception):
+    pass
