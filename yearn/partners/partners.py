@@ -321,6 +321,7 @@ partners = {
                     name='dai',
                     vault='0x637ec617c86d24e421328e6caea1d92114892439',
                     wrapper='0x682e473fca490b0adfa7efe94083c1e63f28f034',
+                ),
             ]
         ),
         Partner(
