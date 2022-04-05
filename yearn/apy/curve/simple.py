@@ -41,6 +41,9 @@ PER_MAX_BOOST = 1.0 / MAX_BOOST
 
 
 def simple(vault, samples: ApySamples) -> Apy:
+    if chain.id != Network.Mainnet:
+        raise ApyError("crv", "chain not supported")
+        
     lp_token = vault.token.address
 
     pool_address = curve.get_pool(lp_token)
