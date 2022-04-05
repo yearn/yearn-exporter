@@ -362,10 +362,10 @@ class _ConvexVault:
 def _get_reward_token_price(reward_token, block=None):
     # if the reward token is rKP3R we need to calculate it's price in 
     # terms of KP3R after the discount
-    addresses = addresses[chain.id]
-    if reward_token == addresses['rkp3r_rewards']:
+    contract_addresses = addresses[chain.id]
+    if reward_token == contract_addresses['rkp3r_rewards']:
         rKP3R_contract = interface.rKP3R(reward_token)
         discount = rKP3R_contract.discount(block_identifier=block)
-        return magic.get_price(addresses['kp3r'], block=block) * (100 - discount) / 100
+        return magic.get_price(contract_addresses['kp3r'], block=block) * (100 - discount) / 100
     else:
         return magic.get_price(reward_token, block=block)
