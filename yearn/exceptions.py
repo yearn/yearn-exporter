@@ -20,3 +20,7 @@ class EmptyS3Export(Exception):
 
 class NodeNotSynced(Exception):
     pass
+
+
+class BatchSizeError(Exception):
+    pass
