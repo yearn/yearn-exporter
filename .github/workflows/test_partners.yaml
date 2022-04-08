@@ -1,0 +1,71 @@
+
+name: Test Partners
+on:
+  push:
+    branch: test-partners-with-gh-actions
+    
+  pull_request:
+    branches: [ master ]
+    paths:
+      - '**/partners.py'
+      - '**/snapshot.py'
+      - '**/test_partners.yaml'
+      - '**/contracts.py'
+      - '**/events.py'
+      - '**/middleware.py'
+
+jobs:
+  test:
+    runs-on: ${{ matrix.os }}
+    #timeout-minutes: 10
+    strategy:
+      matrix:
+        os: [ ubuntu-latest, macos-latest, windows-latest ]
+        network: [ mainnet, ftm-main, arb-main ]
+        include:
+        - os: ubuntu-latest
+          path: ~/.cache/pip
+        - os: macos-latest
+          path: ~/Library/Caches/pip
+        - os: windows-latest
+          path: ~\AppData\Local\pip\Cache
+        # Providers for all chains.
+        - network: mainnet
+          provider: WEB3_PROVIDER
+        - network: ftm-main
+          provider: FTM_WEB3_PROVIDER
+        - network: arb-main
+          provider: ARB_WEB3_PROVIDER
+        # Block explorer API tokens go down below.
+
+    steps:
+      - name: Check out repository code
+        uses: actions/checkout@v2
+
+      - name: Setup Python (faster than using Python container)
+        uses: actions/setup-python@v2
+        with:
+          python-version: "3.9"
+
+      - name: Cache dependencies
+        uses: actions/cache@v3
+        with:
+          key: ${{ runner.os }}-pip-${{ hashFiles('**/requirements.txt') }}-${{ hashFiles('**/requirements-dev.txt') }}
+          path: |
+            ${{ matrix.path }}
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+      
+      - name: Setup brownie networks
+        run: brownie networks modify ${{ matrix.network }} host=${{ secrets[matrix.provider] }}
+        continue-on-error: true
+
+      - name: Test partners.py
+        env:
+          # Explorer tokens for all chains:
+          ETHERSCAN_TOKEN: ${{ secrets.ETHERSCAN_TOKEN }}
+          FTMSCAN_TOKEN: ${{ secrets.FTMSCAN_TOKEN }}
+          ARBISCAN_TOKEN: ${{ secrets.ARBISCAN_TOKEN }}
+        run: brownie run partners --network ${{ matrix.network }}
+        continue-on-error: true
