@@ -3,7 +3,7 @@ name: Test Partners
 on:
   push:
     branch: test-partners-with-gh-actions
-    
+
   pull_request:
     branches: [ master ]
     paths:
@@ -50,16 +50,30 @@ jobs:
       - name: Cache dependencies
         uses: actions/cache@v3
         with:
-          key: ${{ runner.os }}-pip-${{ hashFiles('**/requirements.txt') }}-${{ hashFiles('**/requirements-dev.txt') }}
+          key: ${{ runner.os }}-pip-${{ hashFiles('**/requirements.txt') }}
+          path: ${{ matrix.path }}
+      
+      - name: Cache joblib middleware cache
+        uses: actions/cache@v3
+        with:
+          # Include requirements.txt so we recache if web3 version changes (via brownie)
+          key: partners-${{ runner.os }}-${{ matrix.network }}-${{ hashFiles('**/middleware.py') }}-${{ hashFiles('**/requirements.txt') }}
+          path: ./cache/*/joblib/web3/middleware/filter/middleware
+        
+      - name: Cache compilers and brownie deployments
+        uses: actions/cache@v3
+        with:
+          key: partners-${{ runner.os }}-brownie-cache-${{ matrix.network }}
           path: |
-            ${{ matrix.path }}
-
+            ~/.brownie/deployments.db
+            ~/.solcx
+            ~/.vvm
+        
       - name: Install dependencies
         run: pip install -r requirements.txt
       
       - name: Setup brownie networks
         run: brownie networks modify ${{ matrix.network }} host=${{ secrets[matrix.provider] }}
-        continue-on-error: true
 
       - name: Test partners.py
         env:
@@ -68,4 +82,3 @@ jobs:
           FTMSCAN_TOKEN: ${{ secrets.FTMSCAN_TOKEN }}
           ARBISCAN_TOKEN: ${{ secrets.ARBISCAN_TOKEN }}
         run: brownie run partners --network ${{ matrix.network }}
-        continue-on-error: true
