@@ -27,7 +27,7 @@ jobs:
     strategy:
       matrix:
         os: [ ubuntu-latest, macos-latest, windows-latest ]
-        network: [ mainnet , ftm-main ] #, arb-main ]
+        network: [ mainnet, ftm-main ] #, arb-main ]
         include:
         - os: ubuntu-latest
           path: ~/.cache/pip
