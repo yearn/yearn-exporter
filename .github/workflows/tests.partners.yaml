@@ -5,7 +5,7 @@ on:
     paths:
       - '**/partners.py'
       - '**/snapshot.py'
-      - '**/test_partners.yaml'
+      - '**/tests.partners.yaml'
       - '**/contracts.py'
       - '**/events.py'
       - '**/middleware.py'
@@ -14,7 +14,7 @@ on:
     paths:
       - '**/partners.py'
       - '**/snapshot.py'
-      - '**/test_partners.yaml'
+      - '**/tests.partners.yaml'
       - '**/contracts.py'
       - '**/events.py'
       - '**/middleware.py'
@@ -38,6 +38,7 @@ jobs:
           provider: WEB3_PROVIDER
         - network: ftm-main
           provider: FTM_WEB3_PROVIDER
+      fail-fast: false
 
     steps:
       - name: Check out repository code
