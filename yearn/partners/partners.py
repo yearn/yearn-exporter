@@ -421,5 +421,15 @@ partners = {
                 ),
             ],
         ),
+        Partner(
+            name='beethovenx',
+            treasury='0xa1E849B1d6c2Fd31c63EEf7822e9E0632411ada7',
+            wrappers=[
+                WildcardWrapper(
+                    name='Vault',
+                    wrapper='0x20dd72Ed959b6147912C2e529F0a0C651c33c9ce',
+                ),
+            ],
+        ),
     ],
 }.get(chain.id, [])
