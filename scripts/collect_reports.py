@@ -197,6 +197,7 @@ def handle_event(event, multi_harvest):
     endorsed_vaults = list(contract(CHAIN_VALUES[chain.id]["REGISTRY_HELPER_ADDRESS"]).getVaults())
     txn_hash = event.transaction_hash.hex()
     if event.address not in endorsed_vaults:
+        print("trying",event.address)
         print(f"skipping: not endorsed. txn hash {txn_hash}. chain id {chain.id} sync {event.block_number} / {chain.height}.")
         return
     if get_vault_endorsement_block(event.address) > event.block_number:
@@ -385,9 +386,7 @@ def parse_fees(tx, vault_address, strategy_address, decimals):
                     )
                 )
                 continue
-            elif counter == 1:
-                counter = 0
-            if receiver == treasury and counter == 2:
+            if receiver == treasury and (counter == 1 or counter == 2):
                 counter = 0
                 gov_fee_in_underlying = (
                     token_amount * (
