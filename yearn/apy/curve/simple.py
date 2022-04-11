@@ -41,6 +41,9 @@ PER_MAX_BOOST = 1.0 / MAX_BOOST
 
 
 def simple(vault, samples: ApySamples) -> Apy:
+    if chain.id != Network.Mainnet:
+        raise ApyError("crv", "chain not supported")
+
     lp_token = vault.token.address
 
     pool_address = curve.get_pool(lp_token)
@@ -111,13 +114,7 @@ def simple(vault, samples: ApySamples) -> Apy:
             rate = reward_data['rate']
             period_finish = reward_data['period_finish']
             total_supply = gauge.totalSupply()
-            token_price = 0
-            if gauge_reward_token == addresses[chain.id]['rkp3r_rewards']:
-                rKP3R_contract = interface.rKP3R(gauge_reward_token)
-                discount = rKP3R_contract.discount(block_identifier=block)
-                token_price = magic.get_price(addresses[chain.id]['kp3r'], block=block) * (100 - discount) / 100
-            else:
-                token_price = magic.get_price(gauge_reward_token, block=block)
+            token_price = _get_reward_token_price(gauge_reward_token)
             current_time = time() if block is None else get_block_timestamp(block)
             if period_finish < current_time:
                 reward_apr = 0
@@ -175,8 +172,20 @@ def simple(vault, samples: ApySamples) -> Apy:
 
     # if the vault has two strategies then the first is curve and the second is convex
     if isinstance(vault, VaultV2) and len(vault.strategies) == 2: # this vault has curve and convex
-        crv_strategy = vault.strategies[0].strategy
-        cvx_strategy = vault.strategies[1].strategy
+
+        # The first strategy should be curve, the second should be convex.
+        # However the order on the vault object here does not correspond
+        # to the order on the withdrawal queue on chain, therefore we need to 
+        # re-order so convex is always second if necessary 
+        first_strategy = vault.strategies[0].strategy
+        second_strategy = vault.strategies[1].strategy
+
+        crv_strategy = first_strategy
+        cvx_strategy = second_strategy
+        if not _ConvexVault.is_convex_strategy(vault.strategies[1]):
+            cvx_strategy = first_strategy
+            crv_strategy = second_strategy
+
         cvx_vault = _ConvexVault(cvx_strategy, vault, gauge)
         crv_debt_ratio = vault.vault.strategies(crv_strategy)[2] / 1e4
         cvx_apy_data = cvx_vault.get_detailed_apy_data(base_asset_price, pool_price, base_apr)
@@ -232,7 +241,11 @@ class _ConvexVault:
         if not isinstance(vault, VaultV2):
             return False 
 
-        return len(vault.strategies) == 1 and "convex" in vault.strategies[0].name.lower()
+        return len(vault.strategies) == 1 and _ConvexVault.is_convex_strategy(vault.strategies[0])
+
+    @staticmethod
+    def is_convex_strategy(strategy) -> bool:
+        return "convex" in strategy.name.lower()
 
     def apy(self, base_asset_price, pool_price, base_apr, pool_apy: float, management_fee: float, performance_fee: float) -> Apy:
         """The standard APY data."""
@@ -248,7 +261,18 @@ class _ConvexVault:
 
     def get_detailed_apy_data(self, base_asset_price, pool_price, base_apr) -> ConvexDetailedApyData:
         """Detailed data about the apy."""
-        cvx_keep_crv = self._cvx_strategy.keepCRV(block_identifier=self.block) / 1e4
+        # some strategies have a localCRV property which is used based on a flag, otherwise
+        # falling back to the global curve config contract.
+        # note the spelling mistake in the variable name uselLocalCRV
+        if hasattr(self._cvx_strategy, "uselLocalCRV"):
+            use_local_crv = self._cvx_strategy.uselLocalCRV(block_identifier=self.block)
+            if use_local_crv:
+                cvx_keep_crv = self._cvx_strategy.localCRV(block_identifier=self.block)  / 1e4
+            else:
+                curve_global = contract(self._cvx_strategy.curveGlobal(block_identifier=self.block))
+                cvx_keep_crv = curve_global.keepCRV(block_identifier=self.block) / 1e4
+        else: 
+            cvx_keep_crv = self._cvx_strategy.keepCRV(block_identifier=self.block) / 1e4
 
         cvx_booster = contract(addresses[chain.id]['convex_booster'])
         cvx_fee = self._get_convex_fee(cvx_booster, self.block)
@@ -294,18 +318,30 @@ class _ConvexVault:
         """The cumulative apr of all extra tokens that are emitted by depositing 
         to Convex, assuming that they will be sold for profit.
         """
+        if hasattr(cvx_strategy, "id"):
+            # Convex hBTC strategy uses id rather than pid - 0x7Ed0d52C5944C7BF92feDC87FEC49D474ee133ce
+            pid = cvx_strategy.id()
+        else:
+            pid = cvx_strategy.pid()
+            
         # pull data from convex's virtual rewards contracts to get bonus rewards
-        pid = cvx_strategy.pid()
         rewards_contract = contract(cvx_booster.poolInfo(pid)["crvRewards"])
         rewards_length = rewards_contract.extraRewardsLength()
         current_time = time() if block is None else get_block_timestamp(block)
-        if rewards_length > 0:
-            convex_reward_apr = 0 # reset our rewards apr if we're calculating it via convex
-            for x in range(rewards_length):
-                virtual_rewards_pool = contract(rewards_contract.extraRewards(x))
-                    # do this for all assets, which will duplicate much of the curve info but we don't want to miss anything
-                if virtual_rewards_pool.periodFinish() > current_time:
-                    convex_reward_apr += (virtual_rewards_pool.rewardRate() * SECONDS_PER_YEAR * magic.get_price(virtual_rewards_pool.rewardToken(), block=block)) / (base_asset_price * (pool_price / 1e18) * virtual_rewards_pool.totalSupply())
+        if rewards_length == 0:
+            return 0
+
+        convex_reward_apr = 0 # reset our rewards apr if we're calculating it via convex
+
+        for x in range(rewards_length):
+            virtual_rewards_pool = contract(rewards_contract.extraRewards(x))
+                # do this for all assets, which will duplicate much of the curve info but we don't want to miss anything
+            if virtual_rewards_pool.periodFinish() > current_time:
+                reward_token = virtual_rewards_pool.rewardToken()
+                reward_token_price = _get_reward_token_price(reward_token, block)
+
+                reward_apr = (virtual_rewards_pool.rewardRate() * SECONDS_PER_YEAR * reward_token_price) / (base_asset_price * (pool_price / 1e18) * virtual_rewards_pool.totalSupply())
+                convex_reward_apr += reward_apr
 
         return convex_reward_apr
 
@@ -321,3 +357,15 @@ class _ConvexVault:
     def _debt_ratio(self) -> float:
         """The debt ratio of the Convex strategy."""
         return self.vault.vault.strategies(self._cvx_strategy)[2] / 1e4
+
+
+def _get_reward_token_price(reward_token, block=None):
+    # if the reward token is rKP3R we need to calculate it's price in 
+    # terms of KP3R after the discount
+    contract_addresses = addresses[chain.id]
+    if reward_token == contract_addresses['rkp3r_rewards']:
+        rKP3R_contract = interface.rKP3R(reward_token)
+        discount = rKP3R_contract.discount(block_identifier=block)
+        return magic.get_price(contract_addresses['kp3r'], block=block) * (100 - discount) / 100
+    else:
+        return magic.get_price(reward_token, block=block)

@@ -12,16 +12,20 @@ networks:
 services:
   test:
     image: yearn-exporter
-    entrypoint: pytest tests
+    build: .
+    entrypoint: /app/yearn-exporter/tests.sh
     environment:
       - WEB3_PROVIDER
       - ETHERSCAN_TOKEN
       - EXPLORER
       - SLEEP_SECONDS
+      - TEST_CMD
     volumes:
+      - .:/tests
       - solidity_compilers:/root/.solcx
       - vyper_compilers:/root/.vvm
       - brownie:/root/.brownie
       - cache:/app/yearn-exporter/cache
     networks:
       - yearn-exporter
+    tty: true
