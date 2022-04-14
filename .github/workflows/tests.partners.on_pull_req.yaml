@@ -1,16 +1,9 @@
 
 name: Test Partners
 on:
-  push:
-    paths:
-      - '**/partners.py'
-      - '**/snapshot.py'
-      - '**/tests.partners.yaml'
-      - '**/contracts.py'
-      - '**/events.py'
-      - '**/middleware.py'
-  pull_request:
+  pull_request_target:
     branches: [ master ]
+    types: [ labeled ]
     paths:
       - '**/partners.py'
       - '**/snapshot.py'
@@ -21,6 +14,7 @@ on:
 
 jobs:
   test_partners:
+    if: ${{ github.event.label.name == 'safe to test' }}
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
@@ -43,6 +37,9 @@ jobs:
     steps:
       - name: Check out repository code
         uses: actions/checkout@v2
+        with:
+          ref: ${{github.event.pull_request.head.ref}}
+          repository: ${{github.event.pull_request.head.repo.full_name}}
 
       - name: Setup Python (faster than using Python container)
         uses: actions/setup-python@v2
