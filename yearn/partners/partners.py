@@ -271,7 +271,7 @@ partners = {
                 DegenboxWrapper(
                     name='yvDAI',
                     vault='0xdA816459F1AB5631232FE5e97a05BBBb94970c95',
-                    wrapper='0xB7DD8fa14b48e96437d3Ed5B6AF85f94D9705719',
+                    wrapper='0x7Ce7D9ED62B9A6c5aCe1c6Ec9aeb115FA3064757',
                 )
             ],
         ),
