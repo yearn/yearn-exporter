@@ -7,7 +7,7 @@ on:
     paths:
       - '**/partners.py'
       - '**/snapshot.py'
-      - '**/tests.partners.yaml'
+      - '**/tests.partners.on_pull_req.yaml'
       - '**/contracts.py'
       - '**/events.py'
       - '**/middleware.py'
@@ -36,10 +36,10 @@ jobs:
 
     steps:
       - name: Check out repository code
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
         with:
-          ref: ${{github.event.pull_request.head.ref}}
-          repository: ${{github.event.pull_request.head.repo.full_name}}
+          ref: ${{github.event.pull_request.head.sha}}
+          persist-credentials: false
 
       - name: Setup Python (faster than using Python container)
         uses: actions/setup-python@v2

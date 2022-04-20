@@ -5,7 +5,7 @@ on:
     paths:
       - '**/partners.py'
       - '**/snapshot.py'
-      - '**/tests.partners.yaml'
+      - '**/tests.partners.on_push.yaml'
       - '**/contracts.py'
       - '**/events.py'
       - '**/middleware.py'
@@ -33,7 +33,9 @@ jobs:
 
     steps:
       - name: Check out repository code
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
+        with:
+          persist-credentials: false
 
       - name: Setup Python (faster than using Python container)
         uses: actions/setup-python@v2
