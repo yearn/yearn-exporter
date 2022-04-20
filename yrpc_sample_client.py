@@ -2,8 +2,8 @@ import os
 import asyncio
 import grpc
 from typing import Dict, List
-from yrpc_pb2_grpc import YearnExporterStub
-from yrpc_pb2 import AddressPrice, GetPriceRequest
+from yrpc.yrpc_pb2_grpc import YearnExporterStub
+from yrpc.yrpc_pb2 import AddressPrice, GetPriceRequest
 
 NETWORK_ETH = "mainnet"
 NETWORK_FTM = "ftm-main"
