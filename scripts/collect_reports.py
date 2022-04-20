@@ -127,7 +127,6 @@ topics = construct_event_topic_set(
 )
 # Deprecated vault interface
 if chain.id == 1:
-    print(CHAIN_VALUES[chain.id]["VAULT_ADDRESS030"])
     vault_v030 = contract(CHAIN_VALUES[chain.id]["VAULT_ADDRESS030"])
     vault_v030 = web3.eth.contract(CHAIN_VALUES[chain.id]["VAULT_ADDRESS030"], abi=vault_v030.abi)
     topics_v030 = construct_event_topic_set(
@@ -508,7 +507,7 @@ def format_dev_telegram(r, t):
     df["Total Debt"] = "{:,.2f}".format(r.total_debt) + " (" + "${:,.2f}".format(r.total_debt * r.want_price_at_block) + ")"
     df["Debt Ratio"] = r.debt_ratio
     df["Treasury Fee"] = "{:,.2f}".format(r.gov_fee_in_want) + " (" + "${:,.2f}".format(r.gov_fee_in_want * r.want_price_at_block) + ")"
-    df["Strategist Fee"] = "{:,.2f}".format(r.strategist_fee_in_want) + " (" + "${:,.2f}".format(r.strategist_fee_in_want * r.want_price_at_block) + ")"
+    #df["Strategist Fee"] = "{:,.2f}".format(r.strategist_fee_in_want) + " (" + "${:,.2f}".format(r.strategist_fee_in_want * r.want_price_at_block) + ")"
     prefee = "n/a"
     postfee = "n/a"
     if r.rough_apr_pre_fee is not None:
