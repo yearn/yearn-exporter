@@ -11,12 +11,14 @@ x-common-volumes: &common-volumes
   - vyper_compilers:/root/.vvm
   - brownie:/root/.brownie
   - cache:/app/yearn-exporter/cache
+  - $PWD/yrpc/tls:/app/yearn-exporter/tls
 
 x-common-envs: &common-envs
   - SENTRY_DSN:
   - SENTRY_RELEASE:
   - SENTRY_ENVIRONMENT:
-  - BRIDGE_PORT: 1337
+  - USE_TLS: 'False'
+  - GRPC_POLL_STRATEGY: 'poll'
 
 x-common-eth-envs: &common-eth-envs
   - WEB3_PROVIDER:
