@@ -1,15 +1,20 @@
 syntax = "proto3";
 
 service YearnExporter {
-  rpc GetPrices(Addresses) returns (stream AddressPrice) {}
+  rpc GetPrices(GetPriceRequest) returns (stream AddressPrice) {}
 }
 
-message Addresses {
-  repeated string list = 1;
+message GetPriceRequest {
+  message Address {
+    string address = 1;
+    string network = 2;
+  }
+  repeated Address addresses = 1;
 }
 
 message AddressPrice {
   string address = 1;
   double price = 2;
-  string unit = 3;
+  int32 chain_id = 3;
+  string denominator = 4;
 }

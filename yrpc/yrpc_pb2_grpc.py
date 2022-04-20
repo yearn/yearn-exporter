@@ -16,7 +16,7 @@ class YearnExporterStub(object):
         """
         self.GetPrices = channel.unary_stream(
                 '/YearnExporter/GetPrices',
-                request_serializer=yrpc__pb2.Addresses.SerializeToString,
+                request_serializer=yrpc__pb2.GetPriceRequest.SerializeToString,
                 response_deserializer=yrpc__pb2.AddressPrice.FromString,
                 )
 
@@ -35,7 +35,7 @@ def add_YearnExporterServicer_to_server(servicer, server):
     rpc_method_handlers = {
             'GetPrices': grpc.unary_stream_rpc_method_handler(
                     servicer.GetPrices,
-                    request_deserializer=yrpc__pb2.Addresses.FromString,
+                    request_deserializer=yrpc__pb2.GetPriceRequest.FromString,
                     response_serializer=yrpc__pb2.AddressPrice.SerializeToString,
             ),
     }
@@ -60,7 +60,7 @@ class YearnExporter(object):
             timeout=None,
             metadata=None):
         return grpc.experimental.unary_stream(request, target, '/YearnExporter/GetPrices',
-            yrpc__pb2.Addresses.SerializeToString,
+            yrpc__pb2.GetPriceRequest.SerializeToString,
             yrpc__pb2.AddressPrice.FromString,
             options, channel_credentials,
             insecure, call_credentials, compression, wait_for_ready, timeout, metadata)

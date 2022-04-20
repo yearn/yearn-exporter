@@ -19,24 +19,31 @@ DESCRIPTOR = _descriptor.FileDescriptor(
   syntax='proto3',
   serialized_options=None,
   create_key=_descriptor._internal_create_key,
-  serialized_pb=b'\n\nyrpc.proto\"\x19\n\tAddresses\x12\x0c\n\x04list\x18\x01 \x03(\t\"K\n\x0c\x41\x64\x64ressPrice\x12\x0f\n\x07\x61\x64\x64ress\x18\x01 \x01(\t\x12\r\n\x05price\x18\x02 \x01(\x01\x12\x0c\n\x04unit\x18\x03 \x01(\t\x12\r\n\x05\x62lock\x18\x04 \x01(\x03\x32;\n\rYearnExporter\x12*\n\tGetPrices\x12\n.Addresses\x1a\r.AddressPrice\"\x00\x30\x01\x62\x06proto3'
+  serialized_pb=b'\n\nyrpc.proto\"k\n\x0fGetPriceRequest\x12+\n\taddresses\x18\x01 \x03(\x0b\x32\x18.GetPriceRequest.Address\x1a+\n\x07\x41\x64\x64ress\x12\x0f\n\x07\x61\x64\x64ress\x18\x01 \x01(\t\x12\x0f\n\x07network\x18\x02 \x01(\t\"U\n\x0c\x41\x64\x64ressPrice\x12\x0f\n\x07\x61\x64\x64ress\x18\x01 \x01(\t\x12\r\n\x05price\x18\x02 \x01(\x01\x12\x10\n\x08\x63hain_id\x18\x03 \x01(\x05\x12\x13\n\x0b\x64\x65nominator\x18\x04 \x01(\t2A\n\rYearnExporter\x12\x30\n\tGetPrices\x12\x10.GetPriceRequest\x1a\r.AddressPrice\"\x00\x30\x01\x62\x06proto3'
 )
 
 
 
 
-_ADDRESSES = _descriptor.Descriptor(
-  name='Addresses',
-  full_name='Addresses',
+_GETPRICEREQUEST_ADDRESS = _descriptor.Descriptor(
+  name='Address',
+  full_name='GetPriceRequest.Address',
   filename=None,
   file=DESCRIPTOR,
   containing_type=None,
   create_key=_descriptor._internal_create_key,
   fields=[
     _descriptor.FieldDescriptor(
-      name='list', full_name='Addresses.list', index=0,
-      number=1, type=9, cpp_type=9, label=3,
-      has_default_value=False, default_value=[],
+      name='address', full_name='GetPriceRequest.Address.address', index=0,
+      number=1, type=9, cpp_type=9, label=1,
+      has_default_value=False, default_value=b"".decode('utf-8'),
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      serialized_options=None, file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
+    _descriptor.FieldDescriptor(
+      name='network', full_name='GetPriceRequest.Address.network', index=1,
+      number=2, type=9, cpp_type=9, label=1,
+      has_default_value=False, default_value=b"".decode('utf-8'),
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
       serialized_options=None, file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
@@ -52,8 +59,39 @@ _ADDRESSES = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
+  serialized_start=78,
+  serialized_end=121,
+)
+
+_GETPRICEREQUEST = _descriptor.Descriptor(
+  name='GetPriceRequest',
+  full_name='GetPriceRequest',
+  filename=None,
+  file=DESCRIPTOR,
+  containing_type=None,
+  create_key=_descriptor._internal_create_key,
+  fields=[
+    _descriptor.FieldDescriptor(
+      name='addresses', full_name='GetPriceRequest.addresses', index=0,
+      number=1, type=11, cpp_type=10, label=3,
+      has_default_value=False, default_value=[],
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      serialized_options=None, file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
+  ],
+  extensions=[
+  ],
+  nested_types=[_GETPRICEREQUEST_ADDRESS, ],
+  enum_types=[
+  ],
+  serialized_options=None,
+  is_extendable=False,
+  syntax='proto3',
+  extension_ranges=[],
+  oneofs=[
+  ],
   serialized_start=14,
-  serialized_end=39,
+  serialized_end=121,
 )
 
 
@@ -80,16 +118,16 @@ _ADDRESSPRICE = _descriptor.Descriptor(
       is_extension=False, extension_scope=None,
       serialized_options=None, file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
     _descriptor.FieldDescriptor(
-      name='unit', full_name='AddressPrice.unit', index=2,
-      number=3, type=9, cpp_type=9, label=1,
-      has_default_value=False, default_value=b"".decode('utf-8'),
+      name='chain_id', full_name='AddressPrice.chain_id', index=2,
+      number=3, type=5, cpp_type=1, label=1,
+      has_default_value=False, default_value=0,
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
       serialized_options=None, file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
     _descriptor.FieldDescriptor(
-      name='block', full_name='AddressPrice.block', index=3,
-      number=4, type=3, cpp_type=2, label=1,
-      has_default_value=False, default_value=0,
+      name='denominator', full_name='AddressPrice.denominator', index=3,
+      number=4, type=9, cpp_type=9, label=1,
+      has_default_value=False, default_value=b"".decode('utf-8'),
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
       serialized_options=None, file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
@@ -105,20 +143,30 @@ _ADDRESSPRICE = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=41,
-  serialized_end=116,
+  serialized_start=123,
+  serialized_end=208,
 )
 
-DESCRIPTOR.message_types_by_name['Addresses'] = _ADDRESSES
+_GETPRICEREQUEST_ADDRESS.containing_type = _GETPRICEREQUEST
+_GETPRICEREQUEST.fields_by_name['addresses'].message_type = _GETPRICEREQUEST_ADDRESS
+DESCRIPTOR.message_types_by_name['GetPriceRequest'] = _GETPRICEREQUEST
 DESCRIPTOR.message_types_by_name['AddressPrice'] = _ADDRESSPRICE
 _sym_db.RegisterFileDescriptor(DESCRIPTOR)
 
-Addresses = _reflection.GeneratedProtocolMessageType('Addresses', (_message.Message,), {
-  'DESCRIPTOR' : _ADDRESSES,
+GetPriceRequest = _reflection.GeneratedProtocolMessageType('GetPriceRequest', (_message.Message,), {
+
+  'Address' : _reflection.GeneratedProtocolMessageType('Address', (_message.Message,), {
+    'DESCRIPTOR' : _GETPRICEREQUEST_ADDRESS,
+    '__module__' : 'yrpc_pb2'
+    # @@protoc_insertion_point(class_scope:GetPriceRequest.Address)
+    })
+  ,
+  'DESCRIPTOR' : _GETPRICEREQUEST,
   '__module__' : 'yrpc_pb2'
-  # @@protoc_insertion_point(class_scope:Addresses)
+  # @@protoc_insertion_point(class_scope:GetPriceRequest)
   })
-_sym_db.RegisterMessage(Addresses)
+_sym_db.RegisterMessage(GetPriceRequest)
+_sym_db.RegisterMessage(GetPriceRequest.Address)
 
 AddressPrice = _reflection.GeneratedProtocolMessageType('AddressPrice', (_message.Message,), {
   'DESCRIPTOR' : _ADDRESSPRICE,
@@ -136,15 +184,15 @@ _YEARNEXPORTER = _descriptor.ServiceDescriptor(
   index=0,
   serialized_options=None,
   create_key=_descriptor._internal_create_key,
-  serialized_start=118,
-  serialized_end=177,
+  serialized_start=210,
+  serialized_end=275,
   methods=[
   _descriptor.MethodDescriptor(
     name='GetPrices',
     full_name='YearnExporter.GetPrices',
     index=0,
     containing_service=None,
-    input_type=_ADDRESSES,
+    input_type=_GETPRICEREQUEST,
     output_type=_ADDRESSPRICE,
     serialized_options=None,
     create_key=_descriptor._internal_create_key,
