@@ -148,9 +148,10 @@ def contract(address: Address) -> Contract:
         return _contract(address)
 
 
+@lru_cache(maxsize=None)
 def is_contract(address: str) -> bool:
     '''checks to see if the input address is a contract'''
-    return web3.eth.get_code(address) != '0x'
+    return web3.eth.get_code(address) not in ['0x',b'']
 
 
 def chunks(lst, n):
