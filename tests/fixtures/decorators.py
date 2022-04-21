@@ -1,10 +1,9 @@
 
 import pytest
 from brownie import chain
-from yearn.networks import Network
 from yearn import ironbank
-from yearn.prices import fixed_forex
-from yearn.prices import aave
+from yearn.networks import Network
+from yearn.prices import aave, fixed_forex, synthetix
 
 mainnet_only = pytest.mark.skipif(
     chain.id != Network.Mainnet,
@@ -24,4 +23,9 @@ ib_chains_only = pytest.mark.skipif(
 ff_chains_only = pytest.mark.skipif(
     chain.id not in fixed_forex.addresses,
     reason='Not applicable on chains without Fixed Forex deployments.'
+)
+
+synthetix_chains_only = pytest.mark.skipif(
+    chain.id not in synthetix.addresses,
+    reason='Not applicable on chains without Synthetix deployments.'
 )
