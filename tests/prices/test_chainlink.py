@@ -1,5 +1,5 @@
 import pytest
-from brownie import ZERO_ADDRESS
+from brownie import ZERO_ADDRESS, convert
 from yearn.prices.chainlink import chainlink
 
 FEEDS = [
@@ -34,7 +34,6 @@ FEEDS = [
     "0x3845badAde8e6dFF049820680d1F14bD3903a5d0",
     "0x408e41876cCCDC0F92210600ef50372656052a38",
     "0x4575f41308EC1483f3d399aa9a2826d74Da13Deb",
-    "0x4688a8b1F292FDaB17E9a90c8Bc379dC1DBd8713",
     "0x4C19596f5aAfF459fA38B0f7eD92F11AE6543784",
     "0x4Fabb145d64652a948d72533023f6E7A623C7C53",
     "0x514910771AF9Ca656af840dff83E8264EcF986CA",
@@ -48,7 +47,6 @@ FEEDS = [
     "0x7D1AfA7B718fb893dB30A3aBc0Cfc608AaCfeBB0",
     "0x7Fc66500c84A76Ad7e9c93437bFc5Ac33E2DDaE9",
     "0x8290333ceF9e6D528dD5618Fb97a76f268f3EDD4",
-    "0x84cA8bc7997272c7CfB4D0Cd3D55cd942B3c9419",
     "0x8Ab7404063Ec4DBcfd4598215992DC3F8EC853d7",
     "0x8CE9137d39326AD0cD6491fb5CC0CbA0e089b6A9",
     "0x967da4048cD07aB37855c090aAF366e4ce1b9F48",
@@ -82,6 +80,22 @@ FEEDS = [
     "0xf8C3527CC04340b208C854E985240c02F7B7793f",
     "0xfF20817765cB7f73d4bde2e66e067E58D11095C2",
 ]
+
+
+@pytest.mark.parametrize('token', FEEDS)
+def test_chainlink_contains(token):
+    """
+    Tests `token in chainlink` with both lowercase address and checksum address.
+    """
+    assert convert.to_address(token) in chainlink
+
+
+@pytest.mark.parametrize('token', FEEDS)
+def test_chainlink_get_feed(token):
+    """
+    Tests `chainlink.get_feed` with both lowercase address and checksum address.
+    """
+    assert chainlink.get_feed(convert.to_address(token)) != ZERO_ADDRESS
 
 
 @pytest.mark.parametrize('token', FEEDS)
