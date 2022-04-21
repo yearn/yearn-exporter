@@ -47,9 +47,9 @@ def test_describe_vault_v1(vault: VaultV1):
             assert "available" in description
 
         if hasattr(vault.vault, "min") and hasattr(vault.vault, "max"):
-            assert "min" in description
-            assert "max" in description
-            assert description["strategy buffer"]
+            assert "min" not in description
+            assert "max" not in description
+            assert "strategy buffer" in description
 
         if vault.is_curve_vault() and hasattr(strategy, "proxy"):
             vote_proxy, gauge = fetch_multicall(
