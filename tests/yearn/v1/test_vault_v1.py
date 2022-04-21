@@ -77,13 +77,13 @@ def test_describe_vault_v1(vault: VaultV1):
 @mainnet_only
 @pytest.mark.parametrize('block',blocks)
 def test_active_vaults_at_v1(block):
-    assert registry.active_vaults_at(block=block)
+    assert registry.active_vaults_at(block=block), f"Unable to fetch active v1 vaults at block {block}."
 
 
 @mainnet_only
 @pytest.mark.parametrize('block',blocks)
 def test_total_value_at_v1(block):
-    assert registry.total_value_at(block=block)
+    assert registry.total_value_at(block=block), f"Unable to fetch v1 tvl at block {block}."
 
 
 @mainnet_only
