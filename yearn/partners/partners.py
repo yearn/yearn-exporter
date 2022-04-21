@@ -437,6 +437,7 @@ partners = {
             wrappers=[
                 Wrapper(
                     name='cofi-usdc-v1',
+                    vault='0xa354F35829Ae975e850e23e9615b11Da1B3dC4DE',
                     wrapper='0x39936db69a547f617E96C42C241f4C574Fa81eE6',
                 ),
             ],
