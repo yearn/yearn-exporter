@@ -1,0 +1,78 @@
+
+name: Test Ironbank
+on:
+  push:
+    branches-ignore:
+      - master
+    paths:
+      - '**/ironbank.py'
+      - '**/test_ironbank.py'
+      - '**/tests.yearn.ironbank.yaml'
+
+jobs:
+  test_ironbank:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ ubuntu-latest, macos-latest, windows-latest ]
+        network: [ mainnet, ftm-main ]
+        include:
+        - os: ubuntu-latest
+          path: ~/.cache/pip
+        - os: macos-latest
+          path: ~/Library/Caches/pip
+        - os: windows-latest
+          path: ~\AppData\Local\pip\Cache
+        # Providers for all chains.
+        - network: mainnet
+          provider: WEB3_PROVIDER
+        - network: ftm-main
+          provider: FTM_WEB3_PROVIDER
+      fail-fast: false
+
+    steps:
+      - name: Check out repository code
+        uses: actions/checkout@v2
+
+      - name: Setup Python (faster than using Python container)
+        uses: actions/setup-python@v2
+        with:
+          python-version: "3.9"
+
+      - name: Cache dependencies
+        uses: actions/cache@v3
+        with:
+          key: ${{ runner.os }}-pip-${{ hashFiles('**/requirements.txt') }}
+          path: ${{ matrix.path }}
+      
+      - name: Cache joblib middleware cache
+        uses: actions/cache@v3
+        with:
+          # Include requirements.txt so we recache if web3 version changes (via brownie)
+          key: ironbank-${{ runner.os }}-${{ matrix.network }}-${{ hashFiles('**/middleware.py') }}-${{ hashFiles('**/requirements.txt') }}
+          path: ./cache/*/joblib/web3/middleware/filter/middleware
+        
+      - name: Cache compilers and brownie deployments
+        uses: actions/cache@v3
+        with:
+          key: ironbank-${{ runner.os }}-brownie-cache-${{ matrix.network }}
+          path: |
+            ~/.brownie/deployments.db
+            ~/.solcx
+            ~/.vvm
+        
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+      
+      - name: Setup brownie networks
+        run: brownie networks modify ${{ matrix.network }} host=${{ secrets[matrix.provider] }}
+        # continue-on-error is needed because this step will raise an exception on Windows, but will still correctly set the host.
+        continue-on-error: true
+
+      - name: Test Ironbank
+        env:
+          PYTEST_NETWORK: ${{ matrix.network }}
+          # Explorer tokens for all chains:
+          ETHERSCAN_TOKEN: ${{ secrets.ETHERSCAN_TOKEN }}
+          FTMSCAN_TOKEN: ${{ secrets.FTMSCAN_TOKEN }}
+        run: pytest tests/yearn/test_ironbank.py
