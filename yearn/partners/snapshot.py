@@ -131,6 +131,22 @@ class BentoboxWrapper(Wrapper):
         )
         return [Decimal(balance or 0) / Decimal(vault.scale) for balance in balances]
 
+class DegenboxWrapper(Wrapper):
+    """
+    Use DegenBox deposits by wrapper.
+    """
+
+    def balances(self, blocks) -> List[Decimal]:
+        degenbox = contract('0xd96f48665a1410C0cd669A88898ecA36B9Fc2cce')
+        vault = Vault.from_address(self.vault)
+        balances = batch_call(
+            [
+                [degenbox, 'balanceOf', self.vault, self.wrapper, block]
+                for block in blocks
+            ]
+        )
+        return [Decimal(balance or 0) / Decimal(vault.scale) for balance in balances]
+
 
 @dataclass
 class WildcardWrapper:

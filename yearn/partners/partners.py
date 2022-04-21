@@ -1,6 +1,6 @@
 from brownie import chain
 from yearn.networks import Network
-from yearn.partners.snapshot import (BentoboxWrapper, Partner, WildcardWrapper,
+from yearn.partners.snapshot import (BentoboxWrapper, DegenboxWrapper, Partner, WildcardWrapper,
                                      Wrapper, YApeSwapFactoryWrapper, GearboxWrapper)
 
 partners = {
@@ -225,7 +225,7 @@ partners = {
         ),
         Partner(
             name='abracadabra',
-            treasury='0x5A7C5505f3CFB9a0D9A8493EC41bf27EE48c406D',
+            treasury='0xDF2C270f610Dc35d8fFDA5B453E74db5471E126B',
             # brownie run abracadabra_wrappers
             wrappers=[
                 BentoboxWrapper(
@@ -263,6 +263,16 @@ partners = {
                     vault='0xa9fE4601811213c340e850ea305481afF02f5b28',
                     wrapper='0x6Ff9061bB8f97d948942cEF376d98b51fA38B91f',
                 ),
+                DegenboxWrapper(
+                    name='yvCurve-CVXETH',
+                    vault='0x1635b506a88fBF428465Ad65d00e8d6B6E5846C3',
+                    wrapper='0xf179fe36a36B32a4644587B8cdee7A23af98ed37',
+                ),
+                DegenboxWrapper(
+                    name='yvDAI',
+                    vault='0xdA816459F1AB5631232FE5e97a05BBBb94970c95',
+                    wrapper='0x7Ce7D9ED62B9A6c5aCe1c6Ec9aeb115FA3064757',
+                )
             ],
         ),
         Partner(
@@ -338,6 +348,17 @@ partners = {
         ),
     ],
     Network.Fantom: [
+        Partner(
+            name='abracadabra',
+            treasury='0xb4ad8B57Bd6963912c80FCbb6Baea99988543c1c',
+            wrappers=[
+                BentoboxWrapper(
+                    name='yvFTM',
+                    vault='0x0DEC85e74A92c52b7F708c4B10207D9560CEFaf0',
+                    wrapper='0xed745b045f9495B8bfC7b58eeA8E0d0597884e12'
+                )
+            ]
+        ),
         Partner(
             name='qidao',
             treasury='0x679016B3F8E98673f85c6F72567f22b58Aa15A54',
