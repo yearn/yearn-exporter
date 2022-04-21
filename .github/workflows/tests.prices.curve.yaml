@@ -75,4 +75,4 @@ jobs:
           # Explorer tokens for all chains:
           ETHERSCAN_TOKEN: ${{ secrets.ETHERSCAN_TOKEN }}
           FTMSCAN_TOKEN: ${{ secrets.FTMSCAN_TOKEN }}
-        run: pytest tests/prices/test_curve.py
+        run: pytest tests/prices/test_curve.py -W ignore

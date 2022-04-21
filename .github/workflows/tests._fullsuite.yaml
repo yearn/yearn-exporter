@@ -74,4 +74,4 @@ jobs:
           # Explorer tokens for all chains:
           ETHERSCAN_TOKEN: ${{ secrets.ETHERSCAN_TOKEN }}
           FTMSCAN_TOKEN: ${{ secrets.FTMSCAN_TOKEN }}
-        run: pytest
+        run: pytest -W ignore
