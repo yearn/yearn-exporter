@@ -87,6 +87,7 @@ def test_chainlink_contains(token):
     """
     Tests `token in chainlink` with both lowercase address and checksum address.
     """
+    assert token.lower() in chainlink
     assert convert.to_address(token) in chainlink
 
 
@@ -95,6 +96,7 @@ def test_chainlink_get_feed(token):
     """
     Tests `chainlink.get_feed` with both lowercase address and checksum address.
     """
+    assert chainlink.get_feed(token.lower()) != ZERO_ADDRESS
     assert chainlink.get_feed(convert.to_address(token)) != ZERO_ADDRESS
 
 
