@@ -32,7 +32,7 @@ def test_describe_vault_v2(vault: Vault):
         if 'totalAssets' in description:
             assert "tvl" in description, f"Unable to fetch tvl for {vault.name}."
                 
-        assert description["strategies"], f"No strategies fetched for {vault.name}."
+        assert "strategies" in description, f"No strategies fetched for {vault.name}."
         for strategy in vault.strategies:
             assert strategy._views, f"Unable to fetch views for strategy {strategy.unique_name}."
             for view in strategy._views:
@@ -45,7 +45,7 @@ def test_active_vaults_at_v2_current():
         Network.Fantom: 18,
     }[chain.id]
 
-    assert len(registry.active_vaults_at()) >= 91, "One or more vaults are missing from v2.Registry().active_vaults_at(None)"
+    assert len(registry.active_vaults_at()) >= MIN_CT_VAULTS, "One or more vaults are missing from v2.Registry().active_vaults_at(None)"
 
 
 @pytest.mark.parametrize('block',blocks)
