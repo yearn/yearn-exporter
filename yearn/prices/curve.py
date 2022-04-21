@@ -17,18 +17,20 @@ import threading
 import time
 from collections import defaultdict
 from enum import IntEnum
+from typing import Dict, List, Optional
 
 from brownie import ZERO_ADDRESS, chain
 from brownie.convert import to_address
 from cachetools.func import lru_cache, ttl_cache
+
+from yearn.decorators import sentry_catch_all, wait_or_exit_after
 from yearn.events import create_filter, decode_logs
 from yearn.exceptions import UnsupportedNetwork
 from yearn.multicall2 import fetch_multicall
 from yearn.networks import Network
-from yearn.utils import Singleton, contract
-from yearn.decorators import sentry_catch_all, wait_or_exit_after
-
 from yearn.prices import magic
+from yearn.typing import Address, AddressOrContract, Block
+from yearn.utils import Singleton, contract
 
 logger = logging.getLogger(__name__)
 
@@ -342,6 +344,15 @@ class CurveRegistry(metaclass=Singleton):
             coin: balance / 10 ** dec
             for coin, balance, dec in zip(coins, balances, decimals)
         }
+    
+    def get_virtual_price(self, pool: Address, block: Optional[Block] = None) -> Optional[float]:
+        pool = contract(pool)
+        try:
+            return pool.get_virtual_price(block_identifier=block) / 1e18
+        except ValueError as e:
+            if str(e) == "execution reverted":
+                return None
+            raise
 
     def get_tvl(self, pool, block=None):
         """
@@ -376,9 +387,11 @@ class CurveRegistry(metaclass=Singleton):
             coin = (set(coins) & BASIC_TOKENS).pop()
         except KeyError:
             coin = coins[0]
-
-        virtual_price = contract(pool).get_virtual_price(block_identifier=block) / 1e18
-        return virtual_price * magic.get_price(coin, block)
+        
+        virtual_price = self.get_virtual_price(pool, block)
+        
+        if virtual_price:
+            return virtual_price * magic.get_price(coin, block)
 
     def calculate_boost(self, gauge, addr, block=None):
         results = fetch_multicall(

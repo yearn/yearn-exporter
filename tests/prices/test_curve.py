@@ -7,6 +7,10 @@ import requests
 from brownie import ZERO_ADDRESS, chain, multicall, web3
 from tabulate import tabulate
 from yearn.exceptions import PriceError
+
+# This import fixes a circular import issue with the curve import below.
+# TODO Resolve circular import issue
+from yearn.prices import magic
 from yearn.prices import curve
 from yearn.prices.magic import get_price
 from yearn.utils import contract, contract_creation_block
@@ -265,10 +269,10 @@ def test_curve_lp_price_oracle_historical(name):
     for block in blocks:
         try:
             prices.append(curve.curve.get_price(token, block))
-        except (PriceError, TypeError):
+        except PriceError:
             prices.append(None)
 
-    virtual_prices = [contract(swap).get_virtual_price(block_identifier=block) / 1e18 for block in blocks]
+    virtual_prices = [curve.curve.get_virtual_price(curve.curve.get_pool(token),block) for block in blocks]
 
     print(tabulate(list(zip(blocks, prices, virtual_prices)), headers=['block', 'price', 'vp']))
 
