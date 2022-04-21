@@ -9,7 +9,7 @@ on:
       - '**/tests._fullsuite.yaml'
 
 jobs:
-  test_aave:
+  test_full_suite:
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
@@ -48,13 +48,13 @@ jobs:
         uses: actions/cache@v3
         with:
           # Include requirements.txt so we recache if web3 version changes (via brownie)
-          key: aave-${{ runner.os }}-${{ matrix.network }}-${{ hashFiles('**/middleware.py') }}-${{ hashFiles('**/requirements.txt') }}
+          key: full-test-suite-${{ runner.os }}-${{ matrix.network }}-${{ hashFiles('**/middleware.py') }}-${{ hashFiles('**/requirements.txt') }}
           path: ./cache/*/joblib/web3/middleware/filter/middleware
         
       - name: Cache compilers and brownie deployments
         uses: actions/cache@v3
         with:
-          key: aave-${{ runner.os }}-brownie-cache-${{ matrix.network }}
+          key: full-test-suite-${{ runner.os }}-brownie-cache-${{ matrix.network }}
           path: |
             ~/.brownie/deployments.db
             ~/.solcx
@@ -68,7 +68,7 @@ jobs:
         # continue-on-error is needed because this step will raise an exception on Windows, but will still correctly set the host.
         continue-on-error: true
 
-      - name: Test Aave
+      - name: Test Full Suite
         env:
           PYTEST_NETWORK: ${{ matrix.network }}
           # Explorer tokens for all chains:
