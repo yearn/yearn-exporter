@@ -19,8 +19,9 @@ from collections import defaultdict
 from enum import IntEnum
 from typing import Dict, List, Optional
 
-from brownie import ZERO_ADDRESS, chain
+from brownie import ZERO_ADDRESS, Contract, chain
 from brownie.convert import to_address
+from brownie.convert.datatypes import EthAddress
 from cachetools.func import lru_cache, ttl_cache
 
 from yearn.decorators import sentry_catch_all, wait_or_exit_after
@@ -88,7 +89,7 @@ class Ids(IntEnum):
 class CurveRegistry(metaclass=Singleton):
 
     @wait_or_exit_after
-    def __init__(self):
+    def __init__(self) -> None:
         if chain.id not in curve_contracts:
             raise UnsupportedNetwork("curve is not supported on this network")
 
@@ -110,7 +111,7 @@ class CurveRegistry(metaclass=Singleton):
         self._thread.start()
 
     @sentry_catch_all
-    def watch_events(self):
+    def watch_events(self) -> None:
         address_provider_filter = create_filter(str(self.address_provider))
         registries = []
         registries_filter = None
@@ -163,13 +164,13 @@ class CurveRegistry(metaclass=Singleton):
             if registries_filter:
                 registry_logs = registries_filter.get_new_entries()
 
-    def read_pools(self, registry):
+    def read_pools(self, registry: Address) -> List[EthAddress]:
         registry = contract(registry)
         return fetch_multicall(
             *[[registry, 'pool_list', i] for i in range(registry.pool_count())]
         )
 
-    def load_factories(self):
+    def load_factories(self) -> None:
         # factory events are quite useless, so we use a different method
         for factory in self.identifiers[Ids.Metapool_Factory]:
             pool_list = self.read_pools(factory)
@@ -190,7 +191,7 @@ class CurveRegistry(metaclass=Singleton):
                 self.token_to_pool[lp_token] = pool
                 self.factories[factory].add(pool)
 
-    def get_factory(self, pool):
+    def get_factory(self, pool: Address) -> EthAddress:
         """
         Get metapool factory that has spawned a pool.
         """
@@ -203,7 +204,7 @@ class CurveRegistry(metaclass=Singleton):
         except StopIteration:
             return None
 
-    def get_registry(self, pool):
+    def get_registry(self, pool: Address) -> EthAddress:
         """
         Get registry containing a pool.
         """
@@ -216,11 +217,11 @@ class CurveRegistry(metaclass=Singleton):
         except StopIteration:
             return None
 
-    def __contains__(self, token):
+    def __contains__(self, token: AddressOrContract) -> bool:
         return self.get_pool(token) is not None
 
     @lru_cache(maxsize=None)
-    def get_pool(self, token):
+    def get_pool(self, token: AddressOrContract) -> Address:
         """
         Get Curve pool (swap) address by LP token address. Supports factory pools.
         """
@@ -229,7 +230,7 @@ class CurveRegistry(metaclass=Singleton):
             return self.token_to_pool[token]
 
     @lru_cache(maxsize=None)
-    def get_gauge(self, pool):
+    def get_gauge(self, pool: AddressOrContract) -> EthAddress:
         """
         Get liquidity gauge address by pool.
         """
@@ -246,7 +247,7 @@ class CurveRegistry(metaclass=Singleton):
                 return gauges[0]
 
     @lru_cache(maxsize=None)
-    def get_coins(self, pool):
+    def get_coins(self, pool: AddressOrContract) -> List[EthAddress]:
         """
         Get coins of pool.
         """
@@ -265,7 +266,7 @@ class CurveRegistry(metaclass=Singleton):
         return [coin for coin in coins if coin not in {None, ZERO_ADDRESS}]
 
     @lru_cache(maxsize=None)
-    def get_underlying_coins(self, pool):
+    def get_underlying_coins(self, pool: Address) -> List[EthAddress]:
         pool = to_address(pool)
         factory = self.get_factory(pool)
         registry = self.get_registry(pool)
@@ -296,7 +297,7 @@ class CurveRegistry(metaclass=Singleton):
         return [coin for coin in coins if coin != ZERO_ADDRESS]
 
     @lru_cache(maxsize=None)
-    def get_decimals(self, pool):
+    def get_decimals(self, pool: AddressOrContract) -> List[int]:
         pool = to_address(pool)
         factory = self.get_factory(pool)
         registry = self.get_registry(pool)
@@ -312,7 +313,7 @@ class CurveRegistry(metaclass=Singleton):
 
         return [dec for dec in decimals if dec != 0]
 
-    def get_balances(self, pool, block=None):
+    def get_balances(self, pool: AddressOrContract, block: Optional[Block] = None) -> Dict[EthAddress,float]:
         """
         Get {token: balance} of liquidity in the pool.
         """
@@ -354,7 +355,7 @@ class CurveRegistry(metaclass=Singleton):
                 return None
             raise
 
-    def get_tvl(self, pool, block=None):
+    def get_tvl(self, pool: AddressOrContract, block: Optional[Block] = None) -> float:
         """
         Get total value in Curve pool.
         """
@@ -367,7 +368,7 @@ class CurveRegistry(metaclass=Singleton):
         )
 
     @ttl_cache(maxsize=None, ttl=600)
-    def get_price(self, token, block=None):
+    def get_price(self, token: AddressOrContract, block: Optional[Block] = None) -> Optional[float]:
         token = to_address(token)
         pool = self.get_pool(token)
         # crypto pools can have different tokens, use slow method
@@ -393,7 +394,7 @@ class CurveRegistry(metaclass=Singleton):
         if virtual_price:
             return virtual_price * magic.get_price(coin, block)
 
-    def calculate_boost(self, gauge, addr, block=None):
+    def calculate_boost(self, gauge: Contract, addr, block: Optional[Block] = None) -> Dict[str,float]:
         results = fetch_multicall(
             [gauge, "balanceOf", addr],
             [gauge, "totalSupply"],
@@ -443,7 +444,7 @@ class CurveRegistry(metaclass=Singleton):
             "min vecrv": min_vecrv,
         }
 
-    def calculate_apy(self, gauge, lp_token, block=None):
+    def calculate_apy(self, gauge: Contract, lp_token: AddressOrContract, block: Optional[Block] = None) -> Dict[str,float]:
         crv_price = magic.get_price(self.crv)
         pool = contract(self.get_pool(lp_token))
         results = fetch_multicall(
