@@ -1,15 +1,102 @@
+from random import randint
+
 import pytest
-from brownie import Contract, chain
-from yearn.networks import Network
-from yearn.utils import contract
+from brownie import chain
+from tests.fixtures.decorators import mainnet_only
+from yearn.exceptions import UnsupportedNetwork
+from yearn.multicall2 import fetch_multicall
+from yearn.utils import contract, contract_creation_block
 from yearn.v1.registry import Registry
+from yearn.v1.vaults import VaultV1
 
-registry = None
-if chain.id == Network.Mainnet:
+try:
     registry = Registry()
+    start_block = start_block = min(contract_creation_block(vault.vault.address)for vault in registry.vaults)
+    blocks = [randint(start_block,chain.height) for i in range(50)]
+except UnsupportedNetwork:
+    registry = None
 
 
-@pytest.mark.require_network('mainnet')
+@mainnet_only
+@pytest.mark.parametrize('block',blocks)
+def test_describe_v1(block):
+    assert registry.describe(block=block)
+
+
+@mainnet_only
+@pytest.mark.parametrize('vault',registry.vaults)
+def test_describe_vault_v1(vault: VaultV1):
+    blocks = [randint(contract_creation_block(vault.vault.address), chain.height) for i in range(25)]
+    for block in blocks:
+        description = vault.describe(block=block) 
+        strategy = vault.get_strategy(block=block)
+
+        assert description["vault balance"]
+        assert description["vault total"]
+        assert description["strategy balance"]
+        assert description["share price"]
+
+        if hasattr(vault.vault, "available"):
+            assert description["available"]
+
+        if hasattr(vault.vault, "min") and hasattr(vault.vault, "max"):
+            assert description["min"]
+            assert description["max"]
+            assert description["strategy buffer"]
+
+        if vault.is_curve_vault() and hasattr(strategy, "proxy"):
+            vote_proxy, gauge = fetch_multicall(
+                [strategy, "voter"],  # voter is static, can pin
+                [strategy, "gauge"],  # gauge is static per strategy, can cache
+                block=block,
+            )
+            if vote_proxy and gauge:
+                assert description["earned"]
+                # curve.calculate_boost
+                assert description["gauge balance"]
+                assert description["gauge total"]
+                assert description["vecrv balance"]
+                assert description["vecrv total"]
+                assert description["working balance"]
+                assert description["working total"]
+                assert description["boost"]
+                assert description["max boost"]
+                assert description["min vecrv"]
+                # curve.calculate_apy
+                assert description["crv price"]
+                assert description["relative weight"]
+                assert description["inflation rate"]
+                assert description["virtual price"]
+                assert description["crv reward rate"]
+                assert description["crv apy"]
+                assert description["token price"]
+
+        if hasattr(strategy, "earned"):
+            assert description["lifetime earned"]
+        
+        if strategy._name == "StrategyYFIGovernance":
+            assert description["earned"]
+            assert description["reward rate"]
+            assert description["ygov balance"]
+            assert description["ygov total"]
+
+        assert description["token price"]
+        assert description["tvl"]
+
+
+@mainnet_only
+@pytest.mark.parametrize('block',blocks)
+def test_active_vaults_at_v1(block):
+    assert registry.active_vaults_at(block=block)
+
+
+@mainnet_only
+@pytest.mark.parametrize('block',blocks)
+def test_total_value_at_v1(block):
+    assert registry.total_value_at(block=block)
+
+
+@mainnet_only
 def test_get_v1_strategy():
     old_block = 10532708
     vault = next(x for x in registry.vaults if x.vault == '0x597aD1e0c13Bfe8025993D9e79C69E1c0233522e')
@@ -23,7 +110,7 @@ def test_get_v1_strategy():
     assert vault.get_controller(new_block) == vault.controller
 
 
-@pytest.mark.require_network('mainnet')
+@mainnet_only
 def test_gusd_fooling_heuristic():
     # gusd vault got mistakengly treated as curve and sent to curve apy calculations
     vault = next(x for x in registry.vaults if x.name == 'GUSD')
@@ -31,7 +118,7 @@ def test_gusd_fooling_heuristic():
     assert vault.describe(11597690)
 
 
-@pytest.mark.require_network('mainnet')
+@mainnet_only
 def test_is_curve_vault():
     non_curve = ['USDC', 'TUSD', 'DAI', 'USDT', 'YFI', 'WETH', 'GUSD', 'mUSD']
     for vault in registry.vaults:
