@@ -1,12 +1,11 @@
 from random import randint
 from brownie import chain
 import pytest
-from yearn.multicall2 import fetch_multicall
 from yearn.utils import contract_creation_block
 from yearn.v2.registry import Registry
 from yearn.v2.vaults import Vault
 
-registry = Registry()
+registry = Registry(watch_events_forever=False)
 start_block = start_block = min(contract_creation_block(vault.vault.address)for vault in registry.vaults)
 blocks = [randint(start_block,chain.height) for i in range(50)]
 
