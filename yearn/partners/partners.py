@@ -431,5 +431,15 @@ partners = {
                 ),
             ],
         ),
+        Partner(
+            name='cofi',
+            treasury='0x982646BA80a706B402Bf6e286A815c06f5b71129',
+            wrappers=[
+                Wrapper(
+                    name='cofi-usdc-v1',
+                    wrapper='0x39936db69a547f617E96C42C241f4C574Fa81eE6',
+                ),
+            ],
+        ),
     ],
 }.get(chain.id, [])
