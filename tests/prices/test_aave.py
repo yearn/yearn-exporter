@@ -14,7 +14,7 @@ DAI = {
 }.get(chain.id, None)
 
 MIN_CT_MARKETS = {
-    Network.Mainnet: 10,
+    Network.Mainnet: 56,
     Network.Fantom: 9,
 }.get(chain.id, None)
 
@@ -28,4 +28,4 @@ def test_aave():
 @aave_chains_only
 def test_markets():
     assert aave.markets[aDAI] == DAI
-    assert len(aave.markets) > MIN_CT_MARKETS
+    assert len(aave.markets) >= MIN_CT_MARKETS
