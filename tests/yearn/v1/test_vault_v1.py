@@ -16,6 +16,15 @@ try:
 except UnsupportedNetwork:
     registry = None
 
+params = "vault balance", "vault total", "strategy balance", "share price"
+
+curve_params = [
+    "earned",
+    # curve.calculate_boost
+    "gauge balance", "gauge total", "vecrv balance", "vecrv total", "working balance", "working total", "boost", "max boost", "min vecrv",
+    # curve.calculate_apy
+    "crv price", "relative weight", "inflation rate", "virtual price", "crv reward rate", "crv apy", "token price",
+]
 
 @mainnet_only
 @pytest.mark.parametrize('block',blocks)
@@ -31,7 +40,6 @@ def test_describe_vault_v1(vault: VaultV1):
         description = vault.describe(block=block) 
         strategy = vault.get_strategy(block=block)
 
-        params = "vault balance", "vault total", "strategy balance", "share price"
         for param in params:
             assert param in description, f'Unable to fetch {param} for vault {vault.name}'
 
@@ -50,14 +58,7 @@ def test_describe_vault_v1(vault: VaultV1):
                 block=block,
             )
             if vote_proxy and gauge:
-                params = [
-                    "earned",
-                    # curve.calculate_boost
-                    "gauge balance", "gauge total", "vecrv balance", "vecrv total", "working balance", "working total", "boost", "max boost", "min vecrv",
-                    # curve.calculate_apy
-                    "crv price", "relative weight", "inflation rate", "virtual price", "crv reward rate", "crv apy", "token price",
-                ]
-                for param in params:
+                for param in curve_params:
                     assert param in description, f'Unable to fetch {param} for vault {vault.name}'
 
         if hasattr(strategy, "earned"):
