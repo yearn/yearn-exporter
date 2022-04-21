@@ -29,6 +29,7 @@ jobs:
           provider: WEB3_PROVIDER
         - network: ftm-main
           provider: FTM_WEB3_PROVIDER
+      fail-fast: false
 
     steps:
       - name: Check out repository code
