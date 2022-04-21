@@ -1,6 +1,8 @@
 from random import randint
-from brownie import chain
+
 import pytest
+from brownie import chain
+from yearn.networks import Network
 from yearn.utils import contract_creation_block
 from yearn.v2.registry import Registry
 from yearn.v2.vaults import Vault
@@ -38,6 +40,11 @@ def test_describe_vault_v2(vault: Vault):
 
 
 def test_active_vaults_at_v2_current():
+    MIN_CT_VAULTS = {
+        Network.Mainnet: 92,
+        Network.Fantom: 18,
+    }[chain.id]
+
     assert len(registry.active_vaults_at()) >= 91, "One or more vaults are missing from v2.Registry().active_vaults_at(None)"
 
 
