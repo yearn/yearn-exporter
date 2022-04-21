@@ -11,10 +11,11 @@ from yearn.v1.vaults import VaultV1
 
 try:
     registry = Registry()
-    start_block = start_block = min(contract_creation_block(vault.vault.address)for vault in registry.vaults)
+    vaults = registry.vaults
+    start_block = min(contract_creation_block(vault.vault.address) for vault in vaults)
     blocks = [randint(start_block,chain.height) for i in range(50)]
 except UnsupportedNetwork:
-    registry = None
+    registry, vaults, blocks = None, [], []
 
 params = "vault balance", "vault total", "strategy balance", "share price"
 
