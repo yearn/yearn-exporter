@@ -1,7 +1,7 @@
 from random import randint
 
 import pytest
-from brownie import chain
+from brownie import ZERO_ADDRESS, chain
 from tests.fixtures.decorators import mainnet_only
 from yearn.exceptions import UnsupportedNetwork
 from yearn.multicall2 import fetch_multicall
@@ -34,16 +34,27 @@ def test_describe_v1(block):
 
 
 @mainnet_only
-@pytest.mark.parametrize('vault',registry.vaults)
+@pytest.mark.parametrize('vault',vaults)
 def test_describe_vault_v1(vault: VaultV1):
     blocks = [randint(contract_creation_block(vault.vault.address), chain.height) for i in range(25)]
     for block in blocks:
-        description = vault.describe(block=block) 
+
         strategy = vault.get_strategy(block=block)
+        
+        if not strategy:
+            controller = vault.get_controller(block=block)
+            assert controller
+            strategy = controller.strategies(vault.token, block_identifier=block)
+            assert strategy == ZERO_ADDRESS
+        
+        description = vault.describe(block=block) 
 
         for param in params:
-            assert param in description, f'Unable to fetch {param} for vault {vault.name}'
-
+            if param in ["share price", "vault balance"] and param not in description:
+                assert description["vault total"] == 0
+            else:
+                assert param in description, f'Unable to fetch {param} for vault {vault.name}'
+                
         if hasattr(vault.vault, "available"):
             assert "available" in description
 
@@ -52,7 +63,7 @@ def test_describe_vault_v1(vault: VaultV1):
             assert "max" not in description
             assert "strategy buffer" in description
 
-        if vault.is_curve_vault() and hasattr(strategy, "proxy"):
+        if vault.is_curve_vault and hasattr(strategy, "proxy"):
             vote_proxy, gauge = fetch_multicall(
                 [strategy, "voter"],  # voter is static, can pin
                 [strategy, "gauge"],  # gauge is static per strategy, can cache
@@ -63,16 +74,16 @@ def test_describe_vault_v1(vault: VaultV1):
                     assert param in description, f'Unable to fetch {param} for vault {vault.name}'
 
         if hasattr(strategy, "earned"):
-            assert description["lifetime earned"]
+            assert "lifetime earned" in description
         
         if strategy._name == "StrategyYFIGovernance":
-            assert description["earned"]
-            assert description["reward rate"]
-            assert description["ygov balance"]
-            assert description["ygov total"]
+            assert "earned" in description
+            assert "reward rate" in description
+            assert "ygov balance" in description
+            assert "ygov total" in description
 
         assert description["token price"]
-        assert description["tvl"]
+        assert "tvl" in description
 
 
 @mainnet_only
