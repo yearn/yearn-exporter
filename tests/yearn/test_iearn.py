@@ -14,7 +14,7 @@ try:
     start_block = min(contract_creation_block(iearn.vault.address)for iearn in registry.vaults)
     blocks = [randint(start_block,chain.height) for i in range(50)]
 except UnsupportedNetwork:
-    pass
+    blocks = []
 
 @mainnet_only
 @pytest.mark.parametrize('block',blocks)
