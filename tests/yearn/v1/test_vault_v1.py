@@ -40,8 +40,8 @@ def test_describe_vault_v1(vault: VaultV1):
             assert description["available"]
 
         if hasattr(vault.vault, "min") and hasattr(vault.vault, "max"):
-            assert description["min"]
-            assert description["max"]
+            assert "min" in description
+            assert "max" in description
             assert description["strategy buffer"]
 
         if vault.is_curve_vault() and hasattr(strategy, "proxy"):
