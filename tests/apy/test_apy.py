@@ -1,11 +1,15 @@
 from datetime import datetime
+
 import pytest
-from pytest_bdd import scenario, given, then, parsers
-from yearn.apy.curve.simple import simple
+from pytest_bdd import given, parsers, scenario, then
+from tests.fixtures.decorators import mainnet_only
 from yearn.apy.common import get_samples
+from yearn.apy.curve.simple import simple
 from yearn.v2.vaults import Vault as VaultV2
 
-@scenario("curve_simple_apy.feature", "Calculating curve simple")
+
+@mainnet_only
+@scenario(f"curve_simple_apy.feature", "Calculating curve simple")
 def test_curve_simple_apy():
     pass
 
