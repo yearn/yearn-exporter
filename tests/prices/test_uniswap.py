@@ -1,17 +1,18 @@
 import pytest
 from brownie import chain
+from tests.fixtures.decorators import mainnet_only, uni_v3_chains_only
+from yearn.networks import Network
 from yearn.prices import magic
 from yearn.prices.uniswap import v1, v2, v3
-from yearn.networks import Network
 
+V1_TOKENS = [
+    '0x6B175474E89094C44Da98b954EedeAC495271d0F',
+    '0x9f8F72aA9304c8B593d555F12eF6589cC3A579A2',
+    '0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2',
+]
 
-if chain.id == Network.Mainnet:
-    V1_TOKENS = [
-        '0x6B175474E89094C44Da98b954EedeAC495271d0F',
-        '0x9f8F72aA9304c8B593d555F12eF6589cC3A579A2',
-        '0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2',
-    ]
-    V2_TOKENS = [
+V2_TOKENS = {
+    Network.Mainnet: [
         '0x7Fc66500c84A76Ad7e9c93437bFc5Ac33E2DDaE9',
         '0xBA11D00c5f74255f56a5E366F4F77f5A186d7f55',
         '0xc00e94Cb662C3520282E6f5717214004A7f26888',
@@ -33,9 +34,11 @@ if chain.id == Network.Mainnet:
         '0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2',
         '0x0bc529c00C6401aEF6D220BE8C6Ea1667F6Ad93e',
         '0xE41d2489571d322189246DaFA5ebDe1F4699F498',
-    ]
+    ],
+}.get(chain.id, [])
 
 
+@mainnet_only
 @pytest.mark.parametrize('token', V1_TOKENS)
 def test_uniswap_v1(token):
     price = v1.uniswap_v1.get_price(token)
@@ -53,6 +56,7 @@ def test_uniswap_v2(token):
     assert price == pytest.approx(alt_price, rel=5e-2)
 
 
+@uni_v3_chains_only
 @pytest.mark.parametrize('token', V2_TOKENS)
 def test_uniswap_v3(token):
     price = v3.uniswap_v3.get_price(token)
