@@ -11,7 +11,12 @@ from yearn.utils import contract_creation_block
 
 try:
     registry = Registry()
-    start_block = min(contract_creation_block(vault.vault.address)for vault in registry.vaults)
+    start_block = min(
+        contract_creation_block(vault.vault.address)
+        for vault in registry.vaults
+        # Disregard when block == 0 due to binary search issue.
+        if contract_creation_block(vault.vault.address)
+    )
     blocks = [randint(start_block,chain.height) for i in range(50)]
 except UnsupportedNetwork:
     pass
@@ -33,7 +38,8 @@ def test_ironbank_contract():
 @pytest.mark.parametrize('block',blocks)
 def test_describe_ib(block):
     description = registry.describe(block=block)
-    assert description
+    if not description:
+        assert 
     for ib in registry.vaults:
         name = ib.name
         if name not in description:
