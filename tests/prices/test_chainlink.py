@@ -3,6 +3,7 @@ from brownie import ZERO_ADDRESS, chain, convert
 from tests.fixtures.decorators import mainnet_only
 from yearn.networks import Network
 from yearn.prices.chainlink import chainlink
+from yearn.utils import contract_creation_block
 
 FEEDS = {
     Network.Mainnet: [
@@ -114,7 +115,11 @@ def test_chainlink_latest(token):
 @mainnet_only
 @pytest.mark.parametrize('token', FEEDS)
 def test_chainlink_before_registry(token):
-    price = chainlink.get_price(token, block=12800000)
+    BLOCK = 12_800_000
+    feed = chainlink.get_feed(token)
+    if contract_creation_block(feed.address) > BLOCK:
+        pytest.skip('Not applicable to feeds deployed after registry')
+    price = chainlink.get_price(token, block=BLOCK)
     assert price, 'no feed available'
 
 
