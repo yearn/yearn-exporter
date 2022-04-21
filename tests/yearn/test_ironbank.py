@@ -38,8 +38,7 @@ def test_ironbank_contract():
 @pytest.mark.parametrize('block',blocks)
 def test_describe_ib(block):
     description = registry.describe(block=block)
-    if not description:
-        assert 
+    assert description
     for ib in registry.vaults:
         name = ib.name
         if name not in description:
