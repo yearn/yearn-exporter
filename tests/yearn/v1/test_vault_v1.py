@@ -31,13 +31,12 @@ def test_describe_vault_v1(vault: VaultV1):
         description = vault.describe(block=block) 
         strategy = vault.get_strategy(block=block)
 
-        assert description["vault balance"]
-        assert description["vault total"]
-        assert description["strategy balance"]
-        assert description["share price"]
+        params = "vault balance", "vault total", "strategy balance", "share price"
+        for param in params:
+            assert param in description, f'Unable to fetch {param} for vault {vault.name}'
 
         if hasattr(vault.vault, "available"):
-            assert description["available"]
+            assert "available" in description
 
         if hasattr(vault.vault, "min") and hasattr(vault.vault, "max"):
             assert "min" in description
@@ -51,25 +50,15 @@ def test_describe_vault_v1(vault: VaultV1):
                 block=block,
             )
             if vote_proxy and gauge:
-                assert description["earned"]
-                # curve.calculate_boost
-                assert description["gauge balance"]
-                assert description["gauge total"]
-                assert description["vecrv balance"]
-                assert description["vecrv total"]
-                assert description["working balance"]
-                assert description["working total"]
-                assert description["boost"]
-                assert description["max boost"]
-                assert description["min vecrv"]
-                # curve.calculate_apy
-                assert description["crv price"]
-                assert description["relative weight"]
-                assert description["inflation rate"]
-                assert description["virtual price"]
-                assert description["crv reward rate"]
-                assert description["crv apy"]
-                assert description["token price"]
+                params = [
+                    "earned",
+                    # curve.calculate_boost
+                    "gauge balance", "gauge total", "vecrv balance", "vecrv total", "working balance", "working total", "boost", "max boost", "min vecrv",
+                    # curve.calculate_apy
+                    "crv price", "relative weight", "inflation rate", "virtual price", "crv reward rate", "crv apy", "token price",
+                ]
+                for param in params:
+                    assert param in description, f'Unable to fetch {param} for vault {vault.name}'
 
         if hasattr(strategy, "earned"):
             assert description["lifetime earned"]

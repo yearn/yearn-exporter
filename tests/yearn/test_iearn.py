@@ -21,15 +21,17 @@ except UnsupportedNetwork:
 def test_describe_iearn(block):
     description = registry.describe(block=block)
     for iearn in registry.vaults:
-        assert iearn in description
-        assert description[iearn]["total supply"]
-        assert description[iearn]["available balance"]
-        assert description[iearn]["pooled balance"]
-        assert description[iearn]["price per share"]
-        assert description[iearn]["token price"]
-        assert description[iearn]["tvl"]
-        assert description[iearn]["address"]
-        assert description[iearn]["version"]
+        name = iearn.name
+        if name not in description:
+            assert contract_creation_block(iearn.vault.address) > block, f'iearn {iearn.name} missing from Registry().describe({block}).'
+            continue
+
+        assert description[name]["address"] == iearn.vault.address, f'Incorrect address returned for iearn {iearn.name}'
+
+        params = "total supply", "available balance", "pooled balance", "price per share", "token price", "tvl", "version"
+        for param in params:
+            assert param in description[name], f'Unable to fetch {param} for iearn {iearn.name}.'
+
 
 @mainnet_only
 @pytest.mark.parametrize('block',blocks)
