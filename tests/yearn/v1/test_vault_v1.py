@@ -2,6 +2,7 @@ from random import randint
 
 import pytest
 from brownie import ZERO_ADDRESS, chain
+from brownie.exceptions import VirtualMachineError
 from tests.fixtures.decorators import mainnet_only
 from yearn.exceptions import UnsupportedNetwork
 from yearn.multicall2 import fetch_multicall
@@ -38,6 +39,17 @@ def test_describe_v1(block):
 def test_describe_vault_v1(vault: VaultV1):
     blocks = [randint(contract_creation_block(vault.vault.address), chain.height) for i in range(25)]
     for block in blocks:
+        try:
+            vault.vault.getPricePerFullShare(block_identifier=block)
+        except (ValueError, VirtualMachineError) as e:
+            expected_errors = [
+                "execution reverted",
+                "revert: SafeMath: division by zero",
+            ]
+            if not any([str(e) == err for err in expected_errors]):
+                raise
+            print('Not applicable until vault has a ppfs. Skipping.')
+            continue
 
         strategy = vault.get_strategy(block=block)
         
