@@ -74,6 +74,7 @@ CHAIN_VALUES = {
         "EXPLORER_URL": "https://etherscan.io/",
         "TENDERLY_CHAIN_IDENTIFIER": "mainnet",
         "TELEGRAM_CHAT_ID": os.environ.get('TELEGRAM_CHANNEL_1_PUBLIC'),
+        "TELEGRAM_CHAT_ID_INVERSE_ALERTS": os.environ.get('TELEGRAM_CHAT_ID_INVERSE_ALERTS'),
         "DISCORD_CHAN": os.environ.get('DISCORD_CHANNEL_1'),
     },
     Network.Fantom: {
