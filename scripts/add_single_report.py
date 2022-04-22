@@ -133,7 +133,8 @@ if chain.id == 1:
         vault_v030.events.StrategyReported().abi, web3.codec, {}
     )
 
-def main(dynamically_find_multi_harvest=False):
+def main(target_vault, dynamically_find_multi_harvest=False):
+    start_block = CHAIN_VALUES[chain.id]["START_BLOCK"]
     print(f"dynamic multi_harvest detection is enabled: {dynamically_find_multi_harvest}")
     interval_seconds = 25
 
@@ -144,9 +145,9 @@ def main(dynamically_find_multi_harvest=False):
     if chain.id == 1:
         print("latest block (v0.3.0 API)",last_reported_block030)
         print("blocks behind (v0.3.0 API)", chain.height - last_reported_block030)
-    event_filter = web3.eth.filter({'topics': topics, "fromBlock": last_reported_block + 1})
+    event_filter = web3.eth.filter({'address':target_vault, 'topics': topics, "fromBlock": start_block + 1})
     if chain.id == 1:
-        event_filter_v030 = web3.eth.filter({'topics': topics_v030, "fromBlock": last_reported_block030 + 1})
+        event_filter_v030 = web3.eth.filter({'address':target_vault, 'topics': topics_v030, "fromBlock": start_block + 1})
     
     while True: # Keep this as a long-running script
         events_to_process = []
@@ -259,7 +260,7 @@ def handle_event(event, multi_harvest):
     r.want_token = strategy.want()
     r.want_price_at_block = 0
     if r.want_token == "0x447Ddd4960d9fdBF6af9a790560d0AF76795CB08":
-        r.want_price_at_block = magic.get_price(constants.weth, r.block) * contract(strategy.want()).getExchangeRate() / 1e18
+        r.want_price_at_block = magic.get_price(constants.weth, r.block) * contract("0xae78736Cd615f374D3085123A210448E74Fc6393").getExchangeRate() / 1e18
     else:
         r.want_price_at_block = magic.get_price(r.want_token, r.block)
     r.vault_api = vault.apiVersion()
