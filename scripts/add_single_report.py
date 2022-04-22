@@ -45,6 +45,11 @@ OLD_REGISTRY_ENDORSEMENT_BLOCKS = {
     "0x27b7b1ad7288079A66d12350c828D3C00A6F07d7": 12089661,
 }
 
+INVERSE_PRIVATE_VAULTS = [
+    "0xD4108Bb1185A5c30eA3f4264Fd7783473018Ce17",
+    "0x67B9F46BCbA2DF84ECd41cC6511ca33507c9f4E9",
+]
+
 
 CHAIN_VALUES = {
     Network.Mainnet: {
@@ -68,6 +73,7 @@ CHAIN_VALUES = {
         "EXPLORER_URL": "https://etherscan.io/",
         "TENDERLY_CHAIN_IDENTIFIER": "mainnet",
         "TELEGRAM_CHAT_ID": os.environ.get('TELEGRAM_CHANNEL_1_PUBLIC'),
+        "TELEGRAM_CHAT_ID_INVERSE_ALERTS": os.environ.get('TELEGRAM_CHAT_ID_INVERSE_ALERTS'),
         "DISCORD_CHAN": os.environ.get('DISCORD_CHANNEL_1'),
     },
     Network.Fantom: {
@@ -197,12 +203,15 @@ def handle_event(event, multi_harvest):
     endorsed_vaults = list(contract(CHAIN_VALUES[chain.id]["REGISTRY_HELPER_ADDRESS"]).getVaults())
     txn_hash = event.transaction_hash.hex()
     if event.address not in endorsed_vaults:
-        print("trying",event.address)
-        print(f"skipping: not endorsed. txn hash {txn_hash}. chain id {chain.id} sync {event.block_number} / {chain.height}.")
-        return
-    if get_vault_endorsement_block(event.address) > event.block_number:
-        print(f"skipping: not endorsed yet. txn hash {txn_hash}. chain id {chain.id} sync {event.block_number} / {chain.height}.")
-        return
+        # check if a vault from inverse partnership
+        if event.address not in INVERSE_PRIVATE_VAULTS:
+            print("trying",event.address)
+            print(f"skipping: not endorsed. txn hash {txn_hash}. chain id {chain.id} sync {event.block_number} / {chain.height}.")
+            return
+    if event.address not in INVERSE_PRIVATE_VAULTS:
+        if get_vault_endorsement_block(event.address) > event.block_number:
+            print(f"skipping: not endorsed yet. txn hash {txn_hash}. chain id {chain.id} sync {event.block_number} / {chain.height}.")
+            return
     
     tx = web3.eth.getTransactionReceipt(txn_hash)
     gas_price = web3.eth.getTransaction(txn_hash).gasPrice
@@ -447,20 +456,25 @@ def normalize_event_values(vals, decimals):
 
 def prepare_alerts(r, t):
     if alerts_enabled:
-        m = format_public_telegram(r, t)
-        # Send to chain specific channels
-        bot.send_message(CHAIN_VALUES[chain.id]["TELEGRAM_CHAT_ID"], m, parse_mode="markdown", disable_web_page_preview = True)
-        discord = Discord(url=CHAIN_VALUES[chain.id]["DISCORD_CHAN"])
-        discord.post(
-            embeds=[{
-                "title": "New harvest", 
-                "description": m
-            }],
-        )
-        
-        # Send to dev channel
-        m = f'Network: {CHAIN_VALUES[chain.id]["EMOJI"]} {CHAIN_VALUES[chain.id]["NETWORK_SYMBOL"]}\n\n' + m + format_dev_telegram(r, t)
-        bot.send_message(dev_channel, m, parse_mode="markdown", disable_web_page_preview = True)
+        if r.vault_address not in INVERSE_PRIVATE_VAULTS:
+            m = format_public_telegram(r, t)
+            # Send to chain specific channels
+            bot.send_message(CHAIN_VALUES[chain.id]["TELEGRAM_CHAT_ID"], m, parse_mode="markdown", disable_web_page_preview = True)
+            discord = Discord(url=CHAIN_VALUES[chain.id]["DISCORD_CHAN"])
+            discord.post(
+                embeds=[{
+                    "title": "New harvest", 
+                    "description": m
+                }],
+            )
+            
+            # Send to dev channel
+            m = f'Network: {CHAIN_VALUES[chain.id]["EMOJI"]} {CHAIN_VALUES[chain.id]["NETWORK_SYMBOL"]}\n\n' + m + format_dev_telegram(r, t)
+            bot.send_message(dev_channel, m, parse_mode="markdown", disable_web_page_preview = True)
+        else:
+            m = format_public_telegram(r, t)
+            # Send to chain specific channels
+            bot.send_message(CHAIN_VALUES[chain.id]["TELEGRAM_CHAT_ID_INVERSE_ALERTS"], m, parse_mode="markdown", disable_web_page_preview = True)
 
 def format_public_telegram(r, t):
     explorer = CHAIN_VALUES[chain.id]["EXPLORER_URL"]
