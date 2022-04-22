@@ -474,6 +474,7 @@ def prepare_alerts(r, t):
             bot.send_message(dev_channel, m, parse_mode="markdown", disable_web_page_preview = True)
         else:
             m = format_public_telegram(r, t)
+            m = f'Network: {CHAIN_VALUES[chain.id]["EMOJI"]} {CHAIN_VALUES[chain.id]["NETWORK_SYMBOL"]}\n\n' + m + format_dev_telegram(r, t)
             invbot.send_message(CHAIN_VALUES[chain.id]["TELEGRAM_CHAT_ID_INVERSE_ALERTS"], m, parse_mode="markdown", disable_web_page_preview = True)
 
 def format_public_telegram(r, t):
