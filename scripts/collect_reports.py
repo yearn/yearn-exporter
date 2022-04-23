@@ -473,8 +473,8 @@ def prepare_alerts(r, t):
             m = f'Network: {CHAIN_VALUES[chain.id]["EMOJI"]} {CHAIN_VALUES[chain.id]["NETWORK_SYMBOL"]}\n\n' + m + format_dev_telegram(r, t)
             bot.send_message(dev_channel, m, parse_mode="markdown", disable_web_page_preview = True)
         else:
-            m = format_public_telegram(r, t)
-            m = f'Network: {CHAIN_VALUES[chain.id]["EMOJI"]} {CHAIN_VALUES[chain.id]["NETWORK_SYMBOL"]}\n\n' + m + format_dev_telegram(r, t)
+            m = format_public_telegram_inv(r, t)
+            m = m + format_dev_telegram(r, t)
             invbot.send_message(CHAIN_VALUES[chain.id]["TELEGRAM_CHAT_ID_INVERSE_ALERTS"], m, parse_mode="markdown", disable_web_page_preview = True)
 
 def format_public_telegram(r, t):
@@ -507,9 +507,29 @@ def format_public_telegram(r, t):
         message += "\n\n_part of a single txn with multiple harvests_"
     return message
 
+def format_public_telegram_inv(r, t):
+    explorer = CHAIN_VALUES[chain.id]["EXPLORER_URL"]
+    sms = CHAIN_VALUES[chain.id]["STRATEGIST_MULTISIG"]
+    gov = CHAIN_VALUES[chain.id]["GOVERNANCE_MULTISIG"]
+    keeper = CHAIN_VALUES[chain.id]["KEEPER_CALL_CONTRACT"]
+    from_indicator = ""
+
+    message = f'👨‍🌾 New Harvest Detected!\n\n'
+    message += f' [{r.vault_name}]({explorer}address/{r.vault_address})  --  [{r.strategy_name}]({explorer}address/{r.strategy_address})\n'
+    message += f'{r.date_string} UTC \n'
+    net_profit_want = "{:,.2f}".format(r.gain - r.loss)
+    net_profit_usd = "{:,.2f}".format((r.gain - r.loss) * r.want_price_at_block)
+    message += f'Net profit: {net_profit_want} {r.token_symbol} (${net_profit_usd})\n'
+    txn_cost_str = "${:,.2f}".format(t.call_cost_usd)
+    message += f'Transaction Cost: {txn_cost_str} \n'
+    message += f'[View on Explorer]({explorer}tx/{r.txn_hash})'
+    if r.multi_harvest:
+        message += "\n\n_part of a single txn with multiple harvests_"
+    return message
+
 def format_dev_telegram(r, t):
     tenderly_str = CHAIN_VALUES[chain.id]["TENDERLY_CHAIN_IDENTIFIER"]
-    message = f' / [Tenderly](https://dashboard.tenderly.co/tx/{tenderly_str}/{r.txn_hash})\n\n'
+    message = f' | [Tenderly](https://dashboard.tenderly.co/tx/{tenderly_str}/{r.txn_hash})\n\n'
     df = pd.DataFrame(index=[''])
     last_harvest_ts = contract(r.vault_address).strategies(r.strategy_address, block_identifier=r.block-1).dict()["lastReport"]
     if last_harvest_ts == 0:
