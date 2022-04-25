@@ -1,3 +1,5 @@
+import os
+
 from brownie import network
 
-network.connect('mainnet')
+network.connect(os.environ.get('PYTEST_NETWORK','mainnet'))

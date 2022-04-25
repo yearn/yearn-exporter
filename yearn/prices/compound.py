@@ -1,11 +1,10 @@
 from functools import cached_property
-from sys import base_prefix
-from typing import Optional
+from typing import List, Optional
 from brownie import chain, Contract
 from brownie.network.contract import ContractContainer
 from yearn.exceptions import UnsupportedNetwork
+from yearn.typing import Address, Block
 from yearn.utils import Singleton, contract
-from yearn.multicall2 import fetch_multicall
 from yearn.networks import Network
 import logging
 from cachetools.func import ttl_cache
@@ -114,24 +113,24 @@ class CompoundMarket:
 
 
 class Compound:
-    def __init__(self, name, unitroller, oracle_base):
+    def __init__(self, name: str, unitroller: Contract, oracle_base: str) -> None:
         self.name = name
         self.unitroller = contract(unitroller) if isinstance(unitroller, str) else unitroller()
         self.oracle_base = oracle_base
         self.markets  # load markets on init
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return f'<Compound name={self.name} unitroller={self.unitroller}>'
 
     @property
     @ttl_cache(ttl=3600)
-    def markets(self):
+    def markets(self) -> List[CompoundMarket]:
         all_markets = self.unitroller.getAllMarkets()
         markets = [CompoundMarket(token, self.unitroller) for token in all_markets]
         logger.info(f'loaded {len(markets)} {self.name} markets')
         return markets
 
-    def get_price(self, token, block=None):
+    def get_price(self, token: Address, block: Optional[Block] = None) -> Union[float,List[Union[float,str]]]:
         market = next(x for x in self.markets if x == token)
         exchange_rate = market.get_exchange_rate(block)
         underlying_price = market.get_underlying_price(block)

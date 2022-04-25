@@ -2,7 +2,7 @@ import logging
 import re
 import threading
 import time
-from typing import List
+from typing import Dict, List
 
 from brownie import chain
 from eth_utils import encode_hex, event_abi_to_log_topic
@@ -16,6 +16,7 @@ from yearn.multicall2 import fetch_multicall
 from yearn.prices import magic
 from yearn.prices.curve import curve
 from yearn.special import Ygov
+from yearn.typing import Address
 from yearn.utils import safe_views, contract
 from yearn.v2.strategies import Strategy
 from yearn.exceptions import PriceError
@@ -51,8 +52,8 @@ logger = logging.getLogger(__name__)
 
 class Vault:
     def __init__(self, vault, api_version=None, token=None, registry=None, watch_events_forever=True):
-        self._strategies = {}
-        self._revoked = {}
+        self._strategies: Dict[Address, Strategy] = {}
+        self._revoked: Dict[Address, Strategy] = {}
         self._reports = []
         self.vault = vault
         self.api_version = api_version

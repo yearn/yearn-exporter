@@ -1,11 +1,11 @@
 import logging
-import os
-from collections import Counter
 
-from brownie import Contract, interface, web3
+from brownie import chain, interface, web3
 from joblib import Parallel, delayed
+from yearn.exceptions import UnsupportedNetwork
 from yearn.multicall2 import fetch_multicall
-from yearn.utils import contract_creation_block, contract
+from yearn.networks import Network
+from yearn.utils import contract, contract_creation_block
 from yearn.v1.vaults import VaultV1
 
 logger = logging.getLogger(__name__)
@@ -13,6 +13,9 @@ logger = logging.getLogger(__name__)
 
 class Registry:
     def __init__(self):
+        if chain.id != Network.Mainnet:
+            raise UnsupportedNetwork("Vaults V1 registry is only available on Mainnet.")
+
         self.registry = interface.YRegistry(web3.ens.resolve("registry.ychad.eth"))
         addresses_provider = contract("0x9be19Ee7Bc4099D62737a7255f5c227fBcd6dB93")
         addresses_generator_v1_vaults = contract(addresses_provider.addressById("ADDRESSES_GENERATOR_V1_VAULTS"))

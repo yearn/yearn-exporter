@@ -1,11 +1,13 @@
 from collections import defaultdict
 
-from brownie import Contract
+from brownie import chain
 from joblib import Parallel, delayed
 
-from yearn.utils import contract_creation_block, contract
+from yearn.exceptions import UnsupportedNetwork
 from yearn.multicall2 import fetch_multicall, multicall_matrix
+from yearn.networks import Network
 from yearn.prices import magic
+from yearn.utils import contract, contract_creation_block
 
 IEARN = {
     # v1 - deprecated
@@ -37,6 +39,8 @@ class Earn:
 
 class Registry:
     def __init__(self):
+        if chain.id != Network.Mainnet:
+            raise UnsupportedNetwork()
         self.vaults = [Earn(name, vault) for name, vault in IEARN.items()]
 
     def __repr__(self):
