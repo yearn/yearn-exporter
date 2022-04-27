@@ -336,6 +336,17 @@ partners = {
                 ),
             ],
         ),
+        Partner(
+            name='cofi',
+            treasury='0x982646BA80a706B402Bf6e286A815c06f5b71129',
+            wrappers=[
+                Wrapper(
+                    name='cofi-usdc-v1',
+                    vault='0xa354F35829Ae975e850e23e9615b11Da1B3dC4DE',
+                    wrapper='0x39936db69a547f617E96C42C241f4C574Fa81eE6',
+                ),
+            ],
+        ),
     ],
     Network.Fantom: [
         Partner(
@@ -428,17 +439,6 @@ partners = {
                 WildcardWrapper(
                     name='Vault',
                     wrapper='0x20dd72Ed959b6147912C2e529F0a0C651c33c9ce',
-                ),
-            ],
-        ),
-        Partner(
-            name='cofi',
-            treasury='0x982646BA80a706B402Bf6e286A815c06f5b71129',
-            wrappers=[
-                Wrapper(
-                    name='cofi-usdc-v1',
-                    vault='0xa354F35829Ae975e850e23e9615b11Da1B3dC4DE',
-                    wrapper='0x39936db69a547f617E96C42C241f4C574Fa81eE6',
                 ),
             ],
         ),
