@@ -147,18 +147,19 @@ class UniswapV2:
         all_pairs_len = self.factory.allPairsLength()
         if len(pairs) < all_pairs_len:
             logger.debug("Oh no! looks like your node can't look back that far. Checking for the missing pools...")
-            pools_your_node_couldnt_get = [i for i in range(all_pairs_len) if i not in pairs]
-            logger.debug(f'pools: {pools_your_node_couldnt_get}')
-            pools_your_node_couldnt_get = fetch_multicall(*[[self.factory,'allPairs',i] for i in pools_your_node_couldnt_get])
-            token0s = fetch_multicall(*[[Contract(pool), 'token0'] for pool in pools_your_node_couldnt_get])
-            token1s = fetch_multicall(*[[Contract(pool), 'token1'] for pool in pools_your_node_couldnt_get])
-            pools_your_node_couldnt_get = {
+            poolids_your_node_couldnt_get = [i for i in range(all_pairs_len) if i not in pairs]
+            logger.debug(f'missing poolids: {poolids_your_node_couldnt_get}')
+            pools_your_node_couldnt_get = fetch_multicall(*[[self.factory,'allPairs',i] for i in poolids_your_node_couldnt_get])
+            token0s = fetch_multicall(*[[contract(pool), 'token0'] for pool in pools_your_node_couldnt_get])
+            token1s = fetch_multicall(*[[contract(pool), 'token1'] for pool in pools_your_node_couldnt_get])
+            additional_pools = {
                 convert.to_address(pool): {
                     'token0':convert.to_address(token0),
                     'token1':convert.to_address(token1),
                 }
-            for pool, token0, token1 in zip(pools_your_node_couldnt_get,token0s,token1s)}
-            pools.update(pools_your_node_couldnt_get)
+                for pool, token0, token1 in zip(pools_your_node_couldnt_get,token0s,token1s)
+            }
+            pools.update(additional_pools)
 
         return pools
     
