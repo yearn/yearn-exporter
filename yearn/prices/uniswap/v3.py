@@ -34,6 +34,7 @@ addresses = {
     },
 }
 
+USDC_SCALE = 1e6
 FEE_DENOMINATOR = 1_000_000
 
 
@@ -78,7 +79,7 @@ class UniswapV3(metaclass=Singleton):
         )
 
         outputs = [
-            amount / self.undo_fees(path) / 1e6
+            amount / self.undo_fees(path) / USDC_SCALE
             for amount, path in zip(results, paths)
             if amount
         ]
