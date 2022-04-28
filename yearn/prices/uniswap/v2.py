@@ -1,10 +1,19 @@
-from brownie import Contract, chain
+import logging
+from collections import defaultdict
+from functools import cached_property
+from typing import Dict, List
+
+from brownie import Contract, chain, convert
+from brownie.exceptions import EventLookupError
 from cachetools.func import lru_cache, ttl_cache
+from yearn.events import decode_logs, get_logs_asap
 from yearn.exceptions import UnsupportedNetwork
 from yearn.multicall2 import fetch_multicall
 from yearn.networks import Network
-from yearn.prices.constants import usdc, weth
+from yearn.prices.constants import stablecoins, usdc, weth
 from yearn.utils import Singleton, contract
+
+logger = logging.getLogger(__name__)
 
 # NOTE insertion order defines priority, higher priority get queried first.
 addresses = {
@@ -42,6 +51,10 @@ addresses = {
 }
 
 
+class CantFindSwapPath(Exception):
+    pass
+
+
 class UniswapV2:
     name: str
     factory: str
@@ -61,16 +74,23 @@ class UniswapV2:
         Calculate a price based on Uniswap Router quote for selling one `token_in`.
         Always uses intermediate WETH pair.
         """
+        token_in = convert.to_address(token_in)
+        token_out = convert.to_address(token_out)
         tokens = [contract(str(token)) for token in [token_in, token_out]]
         try:
             amount_in = 10 ** tokens[0].decimals()
         except AttributeError:
             return None
-        path = (
-            [token_in, token_out]
-            if weth in (token_in, token_out)
-            else [token_in, weth, token_out]
-        )
+            
+        if token_in in stablecoins:
+            path = self.get_path_to_stables(token_in)
+        else:
+            path = (
+                [token_in, token_out]
+                if weth in (token_in, token_out)
+                else [token_in, weth, token_out]
+            )
+            
         fees = 0.997 ** (len(path) - 1)
         try:
             quote = self.router.getAmountsOut(amount_in, path, block_identifier=block)
@@ -100,6 +120,131 @@ class UniswapV2:
             res / scale * price for res, scale, price in zip(reserves, scales, prices)
         ]
         return sum(balances) / supply
+    
+    @cached_property
+    def pools(self) -> Dict[str,Dict[str,str]]:
+        '''
+        Returns a dictionary with all pools
+        {pool:{'token0':token0,'token1':token1}}
+        '''
+        logger.info(f'Fetching pools for {self.name} on {Network.label()}. If this is your first time running yearn-exporter, this can take a while. Please wait patiently...')
+        PairCreated = ['0x0d3648bd0f6ba80134a33ba9275ac585d9d315f0ad8355cddefde31afa28d0e9']
+        events = decode_logs(get_logs_asap(self.factory.address, PairCreated))
+        try:
+            pairs = {
+                event['']: {
+                    convert.to_address(event['pair']): {
+                        'token0':convert.to_address(event['token0']),
+                        'token1':convert.to_address(event['token1']),
+                    }
+                }
+                for event in events
+            }
+            pools = {pool: tokens for i, pair in pairs.items() for pool, tokens in pair.items()}
+        except EventLookupError:
+            pairs, pools = {}, {}
+        
+        all_pairs_len = self.factory.allPairsLength()
+        if len(pairs) < all_pairs_len:
+            logger.debug("Oh no! looks like your node can't look back that far. Checking for the missing pools...")
+            pools_your_node_couldnt_get = [i for i in range(all_pairs_len) if i not in pairs]
+            logger.debug(f'pools: {pools_your_node_couldnt_get}')
+            pools_your_node_couldnt_get = fetch_multicall(*[[self.factory,'allPairs',i] for i in pools_your_node_couldnt_get])
+            token0s = fetch_multicall(*[[Contract(pool), 'token0'] for pool in pools_your_node_couldnt_get])
+            token1s = fetch_multicall(*[[Contract(pool), 'token1'] for pool in pools_your_node_couldnt_get])
+            pools_your_node_couldnt_get = {
+                convert.to_address(pool): {
+                    'token0':convert.to_address(token0),
+                    'token1':convert.to_address(token1),
+                }
+            for pool, token0, token1 in zip(pools_your_node_couldnt_get,token0s,token1s)}
+            pools.update(pools_your_node_couldnt_get)
+
+        return pools
+    
+    @cached_property
+    def pool_mapping(self) -> Dict[str,Dict[str,str]]:
+        '''
+        Returns a dictionary with all available combinations of {token_in:{pool:token_out}}
+        '''
+        pool_mapping = defaultdict(dict)
+        for pool, tokens in self.pools.items():
+            token0, token1 = tokens.values()
+            pool_mapping[token0][pool] = token1
+            pool_mapping[token1][pool] = token0
+        logger.info(f'Loaded {len(self.pools)} pools supporting {len(pool_mapping)} tokens on {self.name}')
+        return pool_mapping
+    
+    def pools_for_token(self, token_address: str) -> Dict[str,str]:
+        try:
+            return self.pool_mapping[token_address]
+        except KeyError:
+            return {}
+
+
+    def deepest_pool(self, token_address, block = None, _ignore_pools: List[str] = [] ):
+        token_address = convert.to_address(token_address)
+        if token_address == weth or token_address in stablecoins:
+            return self.deepest_stable_pool(token_address)
+        pools = self.pools_for_token(token_address)
+        reserves = fetch_multicall(*[[pool,'getReserves'] for pool in pools], block=block, require_success=False)
+
+        deepest_pool = None
+        deepest_pool_balance = 0
+        for pool, reserves in zip(pools,reserves):
+            if reserves is None or pool in _ignore_pools: continue
+            if token_address == self.pools[pool]['token0']: reserve = reserves[0]
+            elif token_address == self.pools[pool]['token1']: reserve = reserves[1]
+            if reserve > deepest_pool_balance: 
+                deepest_pool = pool
+                deepest_pool_balance = reserve
+        return deepest_pool
+    
+    def deepest_stable_pool(self, token_address: str, block: int = None) -> Dict[str, str]:
+        token_address = convert.to_address(token_address)
+        pools = {pool: paired_with for pool, paired_with in self.pools_for_token(token_address).items() if paired_with in stablecoins}
+        reserves = fetch_multicall(*[[pool, 'getReserves'] for pool in pools], block=block, require_success=False)
+
+        deepest_stable_pool = None
+        deepest_stable_pool_balance = 0
+        for pool, reserves in zip(pools, reserves):
+            if reserves is None: continue
+            if token_address == self.pools[pool]['token0']: reserve = reserves[0]
+            elif token_address == self.pools[pool]['token1']: reserve = reserves[1]
+            if reserve > deepest_stable_pool_balance:
+                deepest_stable_pool = pool
+                deepest_stable_pool_balance = reserve
+        return deepest_stable_pool
+    
+    def get_path_to_stables(self, token_address: str, block: int = None, _loop_count: int = 0, _ignore_pools: List[str] = [] ):
+        if _loop_count > 10:
+            raise CantFindSwapPath
+        
+        token_address = convert.to_address(token_address)
+        path = [token_address]
+        deepest_pool = self.deepest_pool(token_address, block, _ignore_pools)
+        if deepest_pool:
+            paired_with = self.pool_mapping[token_address][deepest_pool]
+            deepest_stable_pool = self.deepest_stable_pool(token_address, block)
+            if deepest_stable_pool and deepest_pool == deepest_stable_pool:
+                last_step = self.pool_mapping[token_address][deepest_stable_pool]
+                path.append(last_step)
+                return path
+
+            if path == [token_address]:
+                try: path.extend(
+                        self.get_path_to_stables(
+                            paired_with,
+                            block=block, 
+                            _loop_count=_loop_count+1, 
+                            _ignore_pools=_ignore_pools + [deepest_pool]
+                        )
+                    )
+                except CantFindSwapPath: pass
+
+        if path == [token_address]: raise CantFindSwapPath(f'Unable to find swap path for {token_address} on {Network.label()}')
+
+        return path
 
 
 class UniswapV2Multiplexer(metaclass=Singleton):
