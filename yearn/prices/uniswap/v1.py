@@ -1,4 +1,6 @@
-from brownie import Contract, chain, interface
+from typing import Optional
+
+from brownie import ZERO_ADDRESS, Contract, chain, interface
 from brownie.exceptions import ContractNotFound
 from cachetools.func import ttl_cache
 from yearn.cache import memory
@@ -46,6 +48,13 @@ class UniswapV1(metaclass=Singleton):
     
     def get_exchange(self, token: str) -> str:
         return _get_exchange(self.factory, token)
+    
+    def deepest_pool_balance(self, token_in: str, block: Optional[int] = None) -> int:
+        exchange = self.get_exchange(token_in)
+        if exchange == ZERO_ADDRESS:
+            return None
+        reserves = contract(token_in).balanceOf(exchange, block_identifier=block)
+        return reserves
 
 
 uniswap_v1 = None

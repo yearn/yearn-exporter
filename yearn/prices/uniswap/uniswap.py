@@ -27,12 +27,16 @@ class UniswapVersionMultiplexer:
                 continue
             return price
         return None
-    
+
+
     def deepest_uniswap(self, token_in: str, block: Optional[int]) -> Optional[Uniswap]:
         deepest_uniswap = None
         deepest_uniswap_balance = 0
-        uniswaps = [uniswap for uniswap in self.uniswaps.values() if uniswap is not None]
-        for uniswap in uniswaps
-
+        for uniswap in self.uniswaps.values():
+            deepest_pool_balance = uniswap.deepest_pool_balance(token_in, block)
+            if deepest_pool_balance and deepest_pool_balance > deepest_uniswap_balance:
+                deepest_uniswap = uniswap
+                deepest_uniswap_balance = deepest_pool_balance
+        return deepest_uniswap
 
 uniswaps = UniswapVersionMultiplexer()

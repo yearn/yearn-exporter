@@ -1,7 +1,7 @@
 import logging
 from collections import defaultdict
 from functools import cached_property
-from typing import Dict, List
+from typing import Dict, List, Optional
 
 from brownie import Contract, chain, convert
 from brownie.exceptions import EventLookupError
@@ -64,6 +64,9 @@ class UniswapV2:
         self.name = name
         self.factory = contract(factory)
         self.router = contract(router)
+
+        # Used for internals
+        self._depth_cache = defaultdict(dict)
 
     def __repr__(self):
         return f'<UniswapV2 name={self.name} factory={self.factory} router={self.router}>'
@@ -284,6 +287,34 @@ class UniswapV2Multiplexer(metaclass=Singleton):
             return None
         else:
             return exchange.lp_price(token, block)
+    
+    def deepest_uniswap(self, token_in: str, block: int = None) -> UniswapV2:
+        token_in = convert.to_address(token_in)
+        pool_to_uniswap = {pool: uniswap for uniswap in self.uniswaps for pool in uniswap.pools_for_token(token_in)}
+        reserves = fetch_multicall(*[[pool, 'getReserves'] for pool in pool_to_uniswap], block=block)
+        
+        deepest_uniswap = None
+        deepest_uniswap_balance = 0
+        for uniswap, pool, reserves in zip(pool_to_uniswap.values(), pool_to_uniswap.keys(),reserves):
+            if reserves is None:
+                continue
+            if token_in == uniswap.pools[pool]['token0']:
+                reserve = reserves[0]
+            elif token_in == uniswap.pools[pool]['token1']:
+                reserve = reserves[1]
+            if reserve > deepest_uniswap_balance: 
+                deepest_uniswap = uniswap
+                deepest_uniswap_balance = reserve
+        
+        if deepest_uniswap:
+            deepest_uniswap._depth_cache[token_in][block] = deepest_uniswap_balance
+            return deepest_uniswap
+    
+    def deepest_pool_balance(self, token_in: str, block: Optional[int] = None) -> Optional[int]:
+        token_in = convert.to_address(token_in)
+        deepest_uniswap = self.deepest_uniswap(token_in, block)
+        if deepest_uniswap:
+            return deepest_uniswap._depth_cache[token_in][block]
 
 
 uniswap_v2 = None
