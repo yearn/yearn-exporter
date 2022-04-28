@@ -2,6 +2,7 @@ import pytest
 from tests.fixtures.decorators import synthetix_chains_only
 from yearn.prices.synthetix import synthetix
 from yearn.utils import contract
+from tests.conftest import mainnet_only
 
 SYNTHS = []
 if synthetix:
