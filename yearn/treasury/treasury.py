@@ -15,6 +15,7 @@ from yearn.constants import (ERC20_TRANSFER_EVENT_HASH,
                              TREASURY_WALLETS)
 from yearn.decorators import sentry_catch_all, wait_or_exit_after
 from yearn.events import decode_logs
+from yearn.exceptions import PriceError
 from yearn.multicall2 import fetch_multicall
 from yearn.networks import Network
 from yearn.outputs.victoria import output_treasury
@@ -87,12 +88,17 @@ def _get_price(token: EthAddress, block: int = None) -> float:
         return 0
     try:
         return get_price(token, block, return_price_during_vault_downtime=True)
-    except Exception as e:
+    except PriceError:
         desc_str = _describe_err(token, block)
         if desc_str.startswith('yv'):
             raise
-        logger.critical(f'{type(e).__name__} while fetching price for {desc_str}')
-        return 0
+        logger.critical(f'PriceError while fetching price for {desc_str}')
+    except (AttributeError,ValueError) as e:
+        desc_str = _describe_err(token, block)
+        if desc_str.startswith('yv'):
+            raise
+        logger.critical(f'{type(e).__name__} while fetching price for {desc_str} | {e}')
+    return 0
 
 
 def get_token_from_event(event: _EventItem) -> EthAddress:
