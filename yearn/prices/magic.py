@@ -16,9 +16,8 @@ from yearn.prices.fixed_forex import fixed_forex
 from yearn.prices.generic_amm import generic_amm
 from yearn.prices.incidents import INCIDENTS
 from yearn.prices.synthetix import synthetix
-from yearn.prices.uniswap.v1 import uniswap_v1
 from yearn.prices.uniswap.v2 import uniswap_v2
-from yearn.prices.uniswap.v3 import uniswap_v3
+from yearn.prices.uniswap.uniswap import uniswaps
 from yearn.prices.yearn import yearn_lens
 from yearn.special import Backscratcher
 from yearn.typing import Address, AddressOrContract, AddressString, Block
@@ -101,9 +100,7 @@ def find_price(
         generic_amm,
         synthetix,
         band,
-        uniswap_v2,
-        uniswap_v3,
-        uniswap_v1
+        uniswaps
     ]
     for market in markets:
         if price:
