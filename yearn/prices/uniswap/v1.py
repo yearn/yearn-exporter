@@ -44,7 +44,7 @@ class UniswapV1(metaclass=Singleton):
             fees = 0.997 ** 2
             return usdc_bought / fees
         except (ContractNotFound, ValueError) as e:
-            pass
+            return None
     
     def get_exchange(self, token: str) -> str:
         return _get_exchange(self.factory, token)
