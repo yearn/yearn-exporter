@@ -161,6 +161,8 @@ def test_chainlink_before_registry(token):
 
 
 def test_chainlink_nonexistent():
+    with pytest.raises(KeyError):
+        chainlink.get_feed(ZERO_ADDRESS)
     price = chainlink.get_price(ZERO_ADDRESS)
     assert price is None
 
