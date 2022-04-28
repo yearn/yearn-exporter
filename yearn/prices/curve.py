@@ -19,7 +19,7 @@ from collections import defaultdict
 from enum import IntEnum
 from typing import Dict, List, Optional
 
-from brownie import ZERO_ADDRESS, Contract, chain
+from brownie import ZERO_ADDRESS, Contract, chain, convert
 from brownie.convert import to_address
 from brownie.convert.datatypes import EthAddress
 from cachetools.func import lru_cache, ttl_cache
@@ -191,7 +191,7 @@ class CurveRegistry(metaclass=Singleton):
                 self.token_to_pool[lp_token] = pool
                 self.factories[factory].add(pool)
 
-    def get_factory(self, pool: Address) -> EthAddress:
+    def get_factory(self, pool: AddressOrContract) -> EthAddress:
         """
         Get metapool factory that has spawned a pool.
         """
@@ -199,12 +199,12 @@ class CurveRegistry(metaclass=Singleton):
             return next(
                 factory
                 for factory, factory_pools in self.factories.items()
-                if str(pool) in factory_pools
+                if convert.to_address(pool) in factory_pools
             )
         except StopIteration:
             return None
 
-    def get_registry(self, pool: Address) -> EthAddress:
+    def get_registry(self, pool: AddressOrContract) -> EthAddress:
         """
         Get registry containing a pool.
         """
@@ -212,7 +212,7 @@ class CurveRegistry(metaclass=Singleton):
             return next(
                 registry
                 for registry, pools in self.registries.items()
-                if str(pool) in pools
+                if convert.to_address(pool) in pools
             )
         except StopIteration:
             return None
@@ -221,7 +221,7 @@ class CurveRegistry(metaclass=Singleton):
         return self.get_pool(token) is not None
 
     @lru_cache(maxsize=None)
-    def get_pool(self, token: AddressOrContract) -> Address:
+    def get_pool(self, token: AddressOrContract) -> EthAddress:
         """
         Get Curve pool (swap) address by LP token address. Supports factory pools.
         """
@@ -266,7 +266,7 @@ class CurveRegistry(metaclass=Singleton):
         return [coin for coin in coins if coin not in {None, ZERO_ADDRESS}]
 
     @lru_cache(maxsize=None)
-    def get_underlying_coins(self, pool: Address) -> List[EthAddress]:
+    def get_underlying_coins(self, pool: AddressOrContract) -> List[EthAddress]:
         pool = to_address(pool)
         factory = self.get_factory(pool)
         registry = self.get_registry(pool)
@@ -394,7 +394,7 @@ class CurveRegistry(metaclass=Singleton):
         if virtual_price:
             return virtual_price * magic.get_price(coin, block)
 
-    def calculate_boost(self, gauge: Contract, addr, block: Optional[Block] = None) -> Dict[str,float]:
+    def calculate_boost(self, gauge: Contract, addr: Address, block: Optional[Block] = None) -> Dict[str,float]:
         results = fetch_multicall(
             [gauge, "balanceOf", addr],
             [gauge, "totalSupply"],

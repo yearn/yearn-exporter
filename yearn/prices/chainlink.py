@@ -1,11 +1,13 @@
 import logging
+from typing import Optional
 
-from brownie import ZERO_ADDRESS, chain, convert
+from brownie import ZERO_ADDRESS, Contract, chain, convert
 from cachetools.func import ttl_cache
 
 from yearn.events import decode_logs, get_logs_asap
 from yearn.exceptions import UnsupportedNetwork
 from yearn.networks import Network
+from yearn.typing import Address, AddressOrContract, Block
 from yearn.utils import Singleton, contract
 
 logger = logging.getLogger(__name__)
@@ -72,7 +74,7 @@ registries = {
 
 
 class Chainlink(metaclass=Singleton):
-    def __init__(self):
+    def __init__(self) -> None:
         if chain.id not in registries:
             raise UnsupportedNetwork('chainlink is not supported on this network')
 
@@ -82,7 +84,7 @@ class Chainlink(metaclass=Singleton):
         else:
             self.feeds = ADDITIONAL_FEEDS[chain.id]
 
-    def load_feeds(self):
+    def load_feeds(self) -> None:
         logs = decode_logs(
             get_logs_asap(str(self.registry), [self.registry.topics['FeedConfirmed']])
         )
@@ -94,14 +96,14 @@ class Chainlink(metaclass=Singleton):
         self.feeds.update(ADDITIONAL_FEEDS[chain.id])
         logger.info(f'loaded {len(self.feeds)} feeds')
 
-    def get_feed(self, asset):
+    def get_feed(self, asset: AddressOrContract) -> Contract:
         return contract(self.feeds[convert.to_address(asset)])
 
-    def __contains__(self, asset):
+    def __contains__(self, asset: AddressOrContract) -> bool:
         return convert.to_address(asset) in self.feeds
 
     @ttl_cache(maxsize=None, ttl=600)
-    def get_price(self, asset, block=None):
+    def get_price(self, asset: AddressOrContract, block: Optional[Block] = None) -> Optional[float]:
         if asset == ZERO_ADDRESS:
             return None
         try:

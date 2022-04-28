@@ -4,6 +4,7 @@ from typing import Any, Dict, Optional, Union
 from yearn.prices.uniswap.v1 import UniswapV1, uniswap_v1
 from yearn.prices.uniswap.v2 import UniswapV2Multiplexer, uniswap_v2
 from yearn.prices.uniswap.v3 import UniswapV3, uniswap_v3
+from yearn.typing import Address, Block
 
 Uniswap = Union[UniswapV1,UniswapV2Multiplexer,UniswapV3]
 
@@ -20,13 +21,13 @@ class UniswapVersionMultiplexer:
     def __contains__(self, token: Any) -> bool:
         return len(self.uniswaps) > 0
 
-    def get_price(self, token: str, block: Optional[int] = None) -> Optional[float]:
+    def get_price(self, token: Address, block: Optional[Block] = None) -> Optional[float]:
         deepest_uniswap = self.deepest_uniswap(token, block)
         if deepest_uniswap:
             return deepest_uniswap.get_price(token, block=block)
         return None
 
-    def deepest_uniswap(self, token_in: str, block: Optional[int] = None) -> Optional[Uniswap]:
+    def deepest_uniswap(self, token_in: Address, block: Optional[Block] = None) -> Optional[Uniswap]:
         deepest_uniswap = None
         deepest_uniswap_balance = 0
         for uniswap in self.uniswaps.values():

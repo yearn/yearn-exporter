@@ -1,12 +1,14 @@
 from typing import Any, Optional
 
 from brownie import ZERO_ADDRESS, Contract, chain, interface
+from brownie.convert.datatypes import EthAddress
 from brownie.exceptions import ContractNotFound
 from cachetools.func import ttl_cache
 from yearn.cache import memory
 from yearn.exceptions import UnsupportedNetwork
 from yearn.networks import Network
 from yearn.prices.constants import usdc
+from yearn.typing import Address, AddressOrContract, Block
 from yearn.utils import Singleton, contract
 
 addresses = {
@@ -14,7 +16,7 @@ addresses = {
 }
 
 @memory.cache()
-def _get_exchange(factory: Contract, token: str) -> str:
+def _get_exchange(factory: Contract, token: AddressOrContract) -> EthAddress:
     """
     I extracted this fn for caching purposes.
     On-disk caching should be fine since no new pools should be added to uni v1
@@ -34,7 +36,7 @@ class UniswapV1(metaclass=Singleton):
         return chain.id in addresses
 
     @ttl_cache(ttl=600)
-    def get_price(self, asset: str, block: Optional[int] = None) -> Optional[float]:
+    def get_price(self, asset: Address, block: Optional[Block] = None) -> Optional[float]:
         try:
             asset = contract(asset)
             exchange = interface.UniswapV1Exchange(self.get_exchange(asset))
@@ -46,10 +48,10 @@ class UniswapV1(metaclass=Singleton):
         except (ContractNotFound, ValueError) as e:
             return None
     
-    def get_exchange(self, token: str) -> str:
+    def get_exchange(self, token: AddressOrContract) -> EthAddress:
         return _get_exchange(self.factory, token)
     
-    def deepest_pool_balance(self, token_in: str, block: Optional[int] = None) -> int:
+    def deepest_pool_balance(self, token_in: Address, block: Optional[Block] = None) -> int:
         exchange = self.get_exchange(token_in)
         if exchange == ZERO_ADDRESS:
             return None

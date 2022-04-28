@@ -1,12 +1,12 @@
-from functools import cached_property
+from typing import Optional
+
 from brownie import chain
-
 from cachetools.func import ttl_cache
-from yearn.utils import Singleton
-from yearn.networks import Network
-from yearn.exceptions import UnsupportedNetwork
-from yearn.utils import contract
 
+from yearn.exceptions import UnsupportedNetwork
+from yearn.networks import Network
+from yearn.typing import Address, AddressOrContract, Block
+from yearn.utils import Singleton, contract
 
 addresses = {
     # https://docs.fantom.foundation/tutorials/band-protocol-standard-dataset
@@ -38,16 +38,16 @@ supported_assets = {
 }
 
 class Band(metaclass=Singleton):
-    def __init__(self):
+    def __init__(self) -> None:
         if chain.id not in addresses:
             raise UnsupportedNetwork('band is not supported on this network')
         self.oracle = contract(addresses[chain.id])
 
-    def __contains__(self, asset):
+    def __contains__(self, asset: AddressOrContract) -> bool:
         return chain.id in addresses and asset in supported_assets[chain.id]
 
     @ttl_cache(maxsize=None, ttl=600)
-    def get_price(self, asset, block=None):
+    def get_price(self, asset: Address, block: Optional[Block] = None) -> Optional[float]:
         asset_symbol = contract(asset).symbol()
         try:
             return self.oracle.getReferenceData(asset_symbol, 'USDC', block_identifier=block)[0] / 1e18

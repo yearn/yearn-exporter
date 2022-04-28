@@ -3,7 +3,8 @@ from collections import defaultdict
 from functools import cached_property
 from typing import Any, Dict, List, Optional
 
-from brownie import Contract, chain, convert
+from brownie import Contract, chain, convert, interface
+from brownie.convert.datatypes import EthAddress
 from brownie.exceptions import EventLookupError
 from cachetools.func import lru_cache, ttl_cache
 from yearn.events import decode_logs, get_logs_asap
@@ -11,6 +12,7 @@ from yearn.exceptions import UnsupportedNetwork
 from yearn.multicall2 import fetch_multicall
 from yearn.networks import Network
 from yearn.prices.constants import stablecoins, usdc, weth
+from yearn.typing import Address, AddressOrContract, Block
 from yearn.utils import Singleton, contract
 
 logger = logging.getLogger(__name__)
@@ -56,19 +58,19 @@ class CantFindSwapPath(Exception):
 
 
 class UniswapV2:
-    def __init__(self, name: str, factory: str, router: str) -> None:
+    def __init__(self, name: str, factory: Address, router: Address) -> None:
         self.name = name
         self.factory: Contract = contract(factory)
         self.router: Contract = contract(router)
 
         # Used for internals
-        self._depth_cache: Dict[str,Dict[int,int]] = defaultdict(dict)
+        self._depth_cache: Dict[Address,Dict[Block,int]] = defaultdict(dict)
 
     def __repr__(self) -> str:
         return f'<UniswapV2 name={self.name} factory={self.factory} router={self.router}>'
 
     @ttl_cache(ttl=600)
-    def get_price(self, token_in: str, token_out: Optional[str] = usdc, block: Optional[int] = None) -> Optional[float]:
+    def get_price(self, token_in: AddressOrContract, token_out: AddressOrContract = usdc, block: Optional[Block] = None) -> Optional[float]:
         """
         Calculate a price based on Uniswap Router quote for selling one `token_in`.
         Always uses intermediate WETH pair.
@@ -100,7 +102,7 @@ class UniswapV2:
             return None
     
     @ttl_cache(ttl=600)
-    def lp_price(self, address: str, block: Optional[int] = None) -> Optional[float]:
+    def lp_price(self, address: Address, block: Optional[Block] = None) -> Optional[float]:
         """Get Uniswap/Sushiswap LP token price."""
         pair = contract(address)
         token0, token1, supply, reserves = fetch_multicall(
@@ -110,7 +112,7 @@ class UniswapV2:
             [pair, "getReserves"],
             block=block,
         )
-        tokens = [Contract(token) for token in [token0, token1]]
+        tokens = [contract(token) for token in [token0, token1]]
         scales = [10 ** token.decimals() for token in tokens]
         prices = [self.get_price(token, block=block) for token in tokens]
         supply = supply / 1e18
@@ -122,7 +124,7 @@ class UniswapV2:
         return sum(balances) / supply
     
     @cached_property
-    def pools(self) -> Dict[str,Dict[str,str]]:
+    def pools(self) -> Dict[Address,Dict[Address,Address]]:
         '''
         Returns a dictionary with all pools
         {pool:{'token0':token0,'token1':token1}}
@@ -164,11 +166,11 @@ class UniswapV2:
         return pools
     
     @cached_property
-    def pool_mapping(self) -> Dict[str,Dict[str,str]]:
+    def pool_mapping(self) -> Dict[Address,Dict[Address,Address]]:
         '''
         Returns a dictionary with all available combinations of {token_in:{pool:token_out}}
         '''
-        pool_mapping: Dict[str,Dict[str,str]] = defaultdict(dict)
+        pool_mapping: Dict[Address,Dict[Address,Address]] = defaultdict(dict)
 
         for pool, tokens in self.pools.items():
             token0, token1 = tokens.values()
@@ -177,14 +179,13 @@ class UniswapV2:
         logger.info(f'Loaded {len(self.pools)} pools supporting {len(pool_mapping)} tokens on {self.name}')
         return pool_mapping
     
-    def pools_for_token(self, token_address: str) -> Dict[str,str]:
+    def pools_for_token(self, token_address: Address) -> Dict[Address,Address]:
         try:
             return self.pool_mapping[token_address]
         except KeyError:
             return {}
 
-
-    def deepest_pool(self, token_address: str, block: Optional[int] = None, _ignore_pools: List[str] = []):
+    def deepest_pool(self, token_address: AddressOrContract, block: Optional[Block] = None, _ignore_pools: List[Address] = []) -> Optional[EthAddress]:
         token_address = convert.to_address(token_address)
         if token_address == weth or token_address in stablecoins:
             return self.deepest_stable_pool(token_address)
@@ -205,7 +206,7 @@ class UniswapV2:
                 deepest_pool_balance = reserve
         return deepest_pool
     
-    def deepest_stable_pool(self, token_address: str, block: Optional[int] = None) -> Optional[str]:
+    def deepest_stable_pool(self, token_address: AddressOrContract, block: Optional[Block] = None) -> Optional[EthAddress]:
         token_address = convert.to_address(token_address)
         pools = {pool: paired_with for pool, paired_with in self.pools_for_token(token_address).items() if paired_with in stablecoins}
         reserves = fetch_multicall(*[[contract(pool), 'getReserves'] for pool in pools], block=block, require_success=False)
@@ -224,7 +225,7 @@ class UniswapV2:
                 deepest_stable_pool_balance = reserve
         return deepest_stable_pool
     
-    def get_path_to_stables(self, token_address: str, block: Optional[int] = None, _loop_count: int = 0, _ignore_pools: List[str] = []) -> List[str]:
+    def get_path_to_stables(self, token_address: AddressOrContract, block: Optional[Block] = None, _loop_count: int = 0, _ignore_pools: List[Address] = []) -> List[AddressOrContract]:
         if _loop_count > 10:
             raise CantFindSwapPath
         
@@ -267,14 +268,14 @@ class UniswapV2Multiplexer(metaclass=Singleton):
     def __contains__(self, asset: Any) -> bool:
         return chain.id in addresses
 
-    def get_price(self, token: str, block: Optional[int] = None) -> Optional[float]:
+    def get_price(self, token: AddressOrContract, block: Optional[Block] = None) -> Optional[float]:
         deepest_uniswap = self.deepest_uniswap(token, block)
         if deepest_uniswap:
             return deepest_uniswap.get_price(token, block=block)
         return None
 
     @lru_cache(maxsize=None)
-    def is_uniswap_pool(self, address: str) -> bool:
+    def is_uniswap_pool(self, address: Address) -> bool:
         try:
             return contract(address).factory() in [x.factory for x in self.uniswaps]
         except (ValueError, OverflowError, AttributeError):
@@ -282,7 +283,7 @@ class UniswapV2Multiplexer(metaclass=Singleton):
         return False
 
     @ttl_cache(ttl=600)
-    def lp_price(self, token: str, block: Optional[int] = None) -> Optional[float]:
+    def lp_price(self, token: Address, block: Optional[Block] = None) -> Optional[float]:
         pair = contract(token)
         factory = pair.factory()
         try:
@@ -293,10 +294,10 @@ class UniswapV2Multiplexer(metaclass=Singleton):
             return exchange.lp_price(token, block)
     
     @lru_cache(maxsize=100)
-    def deepest_uniswap(self, token_in: str, block: int = None) -> Optional[UniswapV2]:
+    def deepest_uniswap(self, token_in: AddressOrContract, block: Optional[Block] = None) -> Optional[UniswapV2]:
         token_in = convert.to_address(token_in)
         pool_to_uniswap = {pool: uniswap for uniswap in self.uniswaps for pool in uniswap.pools_for_token(token_in)}
-        reserves = fetch_multicall(*[[contract(pool), 'getReserves'] for pool in pool_to_uniswap], block=block)
+        reserves = fetch_multicall(*[[interface.UniswapPair(pool), 'getReserves'] for pool in pool_to_uniswap], block=block)
         
         deepest_uniswap = None
         deepest_uniswap_balance = 0
@@ -317,7 +318,7 @@ class UniswapV2Multiplexer(metaclass=Singleton):
             return deepest_uniswap
         return None
     
-    def deepest_pool_balance(self, token_in: str, block: Optional[int] = None) -> Optional[int]:
+    def deepest_pool_balance(self, token_in: AddressOrContract, block: Optional[Block] = None) -> Optional[Block]:
         if block is None:
             block = chain.height
         token_in = convert.to_address(token_in)
