@@ -4,12 +4,13 @@ from functools import lru_cache
 from typing import List
 
 import eth_retry
-from brownie import Contract, chain, interface, web3
+from brownie import Contract, chain, convert, interface, web3
+from brownie.exceptions import CompilerError
 
 from yearn.cache import memory
 from yearn.exceptions import ArchiveNodeRequired, NodeNotSynced
 from yearn.networks import Network
-from yearn.typing import Address
+from yearn.typing import Address, AddressOrContract
 
 logger = logging.getLogger(__name__)
 
@@ -80,12 +81,13 @@ def get_code(address, block=None):
 
 
 @memory.cache()
-def contract_creation_block(address) -> int:
+def contract_creation_block(address: AddressOrContract) -> int:
     """
     Find contract creation block using binary search.
     NOTE Requires access to historical state. Doesn't account for CREATE2 or SELFDESTRUCT.
     """
     logger.info("contract creation block %s", address)
+    address = convert.to_address(address)
 
     barrier = BINARY_SEARCH_BARRIER[chain.id]
     lo = barrier
@@ -147,8 +149,17 @@ def contract(address: Address) -> Contract:
                 _interface = PREFER_INTERFACE[chain.id][address]
                 return _interface(address)
 
-        return _contract(address)
 
+        failed_attempts = 0
+        while True:
+            try:
+                return _contract(address)
+            except (AssertionError, CompilerError) as e:
+                if failed_attempts == 10:
+                    raise
+                logger.warning(e)
+                Contract.remove_deployment(address)
+                failed_attempts += 1
 
 @lru_cache(maxsize=None)
 def is_contract(address: str) -> bool:
