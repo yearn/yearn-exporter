@@ -6,6 +6,16 @@ from yearn.partners.snapshot import (BentoboxWrapper, DegenboxWrapper, Partner, 
 partners = {
     Network.Mainnet: [
         Partner(
+            name='popcorndao',
+            treasury='0x403d41e72308b5D89a383C3F6789EDD7D3576Ee0',
+            wrappers=[
+                WildcardWrapper(
+                    name='btr',
+                    wrapper='0x109d2034e97ec88f50beebc778b5a5650f98c124',
+                ),
+            ],
+        ),
+        Partner(
             name='tempus',
             treasury='0xab40a7e3cef4afb323ce23b6565012ac7c76bfef',
             wrappers=[
