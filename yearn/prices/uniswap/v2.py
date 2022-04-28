@@ -1,7 +1,7 @@
 import logging
 from collections import defaultdict
 from functools import cached_property
-from typing import Dict, List, Optional
+from typing import Any, Dict, List, Optional
 
 from brownie import Contract, chain, convert
 from brownie.exceptions import EventLookupError
@@ -16,7 +16,7 @@ from yearn.utils import Singleton, contract
 logger = logging.getLogger(__name__)
 
 # NOTE insertion order defines priority, higher priority get queried first.
-addresses = {
+addresses: List[Dict[str,str]] = {
     Network.Mainnet: [
         {
             'name': 'sushiswap',
@@ -56,23 +56,19 @@ class CantFindSwapPath(Exception):
 
 
 class UniswapV2:
-    name: str
-    factory: str
-    router: str
-
-    def __init__(self, name, factory, router):
+    def __init__(self, name: str, factory: str, router: str) -> None:
         self.name = name
-        self.factory = contract(factory)
-        self.router = contract(router)
+        self.factory: Contract = contract(factory)
+        self.router: Contract = contract(router)
 
         # Used for internals
-        self._depth_cache = defaultdict(dict)
+        self._depth_cache: Dict[str,Dict[int,int]] = defaultdict(dict)
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return f'<UniswapV2 name={self.name} factory={self.factory} router={self.router}>'
 
     @ttl_cache(ttl=600)
-    def get_price(self, token_in, token_out=usdc, block=None):
+    def get_price(self, token_in: str, token_out: Optional[str] = usdc, block: Optional[int] = None) -> Optional[float]:
         """
         Calculate a price based on Uniswap Router quote for selling one `token_in`.
         Always uses intermediate WETH pair.
@@ -104,7 +100,7 @@ class UniswapV2:
             return None
     
     @ttl_cache(ttl=600)
-    def lp_price(self, address, block=None):
+    def lp_price(self, address: str, block: Optional[int] = None) -> Optional[float]:
         """Get Uniswap/Sushiswap LP token price."""
         pair = contract(address)
         token0, token1, supply, reserves = fetch_multicall(
@@ -171,7 +167,8 @@ class UniswapV2:
         '''
         Returns a dictionary with all available combinations of {token_in:{pool:token_out}}
         '''
-        pool_mapping = defaultdict(dict)
+        pool_mapping: Dict[str,Dict[str,str]] = defaultdict(dict)
+        
         for pool, tokens in self.pools.items():
             token0, token1 = tokens.values()
             pool_mapping[token0][pool] = token1
@@ -186,7 +183,7 @@ class UniswapV2:
             return {}
 
 
-    def deepest_pool(self, token_address, block = None, _ignore_pools: List[str] = [] ):
+    def deepest_pool(self, token_address: str, block: Optional[int] = None, _ignore_pools: List[str] = []):
         token_address = convert.to_address(token_address)
         if token_address == weth or token_address in stablecoins:
             return self.deepest_stable_pool(token_address)
@@ -207,7 +204,7 @@ class UniswapV2:
                 deepest_pool_balance = reserve
         return deepest_pool
     
-    def deepest_stable_pool(self, token_address: str, block: int = None) -> Dict[str, str]:
+    def deepest_stable_pool(self, token_address: str, block: Optional[int] = None) -> Optional[str]:
         token_address = convert.to_address(token_address)
         pools = {pool: paired_with for pool, paired_with in self.pools_for_token(token_address).items() if paired_with in stablecoins}
         reserves = fetch_multicall(*[[pool, 'getReserves'] for pool in pools], block=block, require_success=False)
@@ -226,7 +223,7 @@ class UniswapV2:
                 deepest_stable_pool_balance = reserve
         return deepest_stable_pool
     
-    def get_path_to_stables(self, token_address: str, block: int = None, _loop_count: int = 0, _ignore_pools: List[str] = [] ):
+    def get_path_to_stables(self, token_address: str, block: Optional[int] = None, _loop_count: int = 0, _ignore_pools: List[str] = []) -> List[str]:
         if _loop_count > 10:
             raise CantFindSwapPath
         
@@ -258,7 +255,7 @@ class UniswapV2:
 
 
 class UniswapV2Multiplexer(metaclass=Singleton):
-    def __init__(self):
+    def __init__(self) -> None:
         if chain.id not in addresses:
             raise UnsupportedNetwork('uniswap v2 is not supported on this network')
         self.uniswaps = [
@@ -266,17 +263,17 @@ class UniswapV2Multiplexer(metaclass=Singleton):
             for conf in addresses[chain.id]
         ]
 
-    def __contains__(self, asset):
+    def __contains__(self, asset: Any) -> bool:
         return chain.id in addresses
 
-    def get_price(self, token, block=None):
-        for exchange in self.uniswaps:
-            price = exchange.get_price(token, block=block)
-            if price:
-                return price
+    def get_price(self, token: str, block: Optional[int] = None) -> Optional[float]:
+        deepest_uniswap = self.deepest_uniswap(token, block)
+        if deepest_uniswap:
+            return deepest_uniswap.get_price(token, block=block)
+        return None
 
     @lru_cache(maxsize=None)
-    def is_uniswap_pool(self, address):
+    def is_uniswap_pool(self, address: str) -> bool:
         try:
             return contract(address).factory() in [x.factory for x in self.uniswaps]
         except (ValueError, OverflowError, AttributeError):
@@ -284,7 +281,7 @@ class UniswapV2Multiplexer(metaclass=Singleton):
         return False
 
     @ttl_cache(ttl=600)
-    def lp_price(self, token, block=None):
+    def lp_price(self, token: str, block: Optional[int] = None) -> Optional[float]:
         pair = contract(token)
         factory = pair.factory()
         try:
@@ -294,7 +291,8 @@ class UniswapV2Multiplexer(metaclass=Singleton):
         else:
             return exchange.lp_price(token, block)
     
-    def deepest_uniswap(self, token_in: str, block: int = None) -> UniswapV2:
+    @lru_cache(maxsize=100)
+    def deepest_uniswap(self, token_in: str, block: int = None) -> Optional[UniswapV2]:
         token_in = convert.to_address(token_in)
         pool_to_uniswap = {pool: uniswap for uniswap in self.uniswaps for pool in uniswap.pools_for_token(token_in)}
         reserves = fetch_multicall(*[[pool, 'getReserves'] for pool in pool_to_uniswap], block=block)
