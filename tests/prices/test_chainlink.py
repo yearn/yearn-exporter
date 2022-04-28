@@ -126,9 +126,10 @@ def test_chainlink_get_feed(token):
 
 @pytest.mark.parametrize('token', FEEDS)
 def test_chainlink_latest(token):
-    price = chainlink.get_price(token)
-    print(price)
-    assert price, 'no feed available'
+    for token in [token.lower(), convert.to_address(token)]:
+        price = chainlink.get_price(token)
+        print(price)
+        assert price, 'no feed available'
 
 
 @mainnet_only
