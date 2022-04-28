@@ -3,9 +3,9 @@ import math
 from collections import defaultdict
 from functools import cached_property
 from itertools import cycle
-from typing import Dict, Optional, Union
+from typing import Dict, List, Optional, Union
 
-from brownie import chain
+from brownie import Contract, chain, convert
 from eth_abi.packed import encode_abi_packed
 from yearn.events import decode_logs, get_logs_asap
 from yearn.exceptions import UnsupportedNetwork
@@ -43,8 +43,8 @@ class UniswapV3(metaclass=Singleton):
             raise UnsupportedNetwork('compound is not supported on this network')
 
         conf = addresses[chain.id]
-        self.factory = contract(conf['factory'])
-        self.quoter = contract(conf['quoter'])
+        self.factory: Contract = contract(conf['factory'])
+        self.quoter: Contract = contract(conf['quoter'])
         self.fee_tiers = conf['fee_tiers']
 
     def __contains__(self, asset):
@@ -62,16 +62,7 @@ class UniswapV3(metaclass=Singleton):
         if block and block < contract_creation_block(UNISWAP_V3_QUOTER):
             return None
 
-        if token == usdc:
-            return 1
-
-        paths = []
-        if token != weth:
-            paths += [
-                [token, fee, weth, self.fee_tiers[0], usdc] for fee in self.fee_tiers
-            ]
-
-        paths += [[token, fee, usdc] for fee in self.fee_tiers]
+        paths = self.get_paths(token)
 
         try:
             scale = 10 ** contract(token).decimals()
@@ -116,7 +107,7 @@ class UniswapV3(metaclass=Singleton):
         '''
         Returns a dict {token_in:{pool:token_out}}
         '''
-        pool_mapping = defaultdict(dict)
+        pool_mapping: Dict[str,Dict[str,str]] = defaultdict(dict)
         for pool, attributes in self.pools.items():
             token0, token1, fee, tick_spacing = attributes.values()
             pool_mapping[token0][pool] = token1
@@ -128,9 +119,9 @@ class UniswapV3(metaclass=Singleton):
         '''
         Returns the depth of the deepest pool for `token`, used to compary liquidity across dexes.
         '''
-        token = contract(token)
-        pools = self.pool_mapping[token.address]
-        reserves = fetch_multicall(*[[token,'balanceOf',pool] for pool in pools], block=block)
+        token_contract = contract(token)
+        pools = self.pool_mapping[token_contract.address]
+        reserves = fetch_multicall(*[[token_contract,'balanceOf',pool] for pool in pools], block=block)
 
         deepest_pool_balance = 0
         for pool, balance in zip(pools, reserves):
@@ -138,6 +129,29 @@ class UniswapV3(metaclass=Singleton):
                 deepest_pool_balance = balance
 
         return deepest_pool_balance
+    
+    def get_paths(self, token: str) -> List[List[Union[str,int]]]:
+        token = convert.to_address(token)
+        paths = [[token, fee, usdc] for fee in self.fee_tiers]
+
+        if token == weth:
+            return paths
+        
+        pools = self.pool_mapping[token]
+        for pool in pools:
+            token0, token1, fee, tick_spacing = self.pools[pool].values()
+            if token == token0 and token1 == weth:
+                paths += [[token0, fee, token1, tier, usdc] for tier in self.fee_tiers]
+            elif token == token0:
+                paths += [[token0, fee, token1, tier, weth, self.fee_tiers[0], usdc] for tier in self.fee_tiers]
+            elif token == token1 and token0 == weth:
+                paths += [[token1, fee, token0, tier, usdc] for tier in self.fee_tiers]
+            elif token == token1:
+                paths += [[token1, fee, token0, tier, weth, self.fee_tiers[0], usdc] for tier in self.fee_tiers]
+
+        return paths
+        
+        
 
 
 uniswap_v3 = None
