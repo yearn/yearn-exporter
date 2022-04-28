@@ -41,6 +41,33 @@ NFTS = [
     '0x9d45DAb69f1309F1F55A7280b1f6a2699ec918E8', # yFamily 2021
 ]
 
+# The exporter will completely ignore transfers from the following contract addresses:
+SKIP_LOGS = {
+    Network.Mainnet: [
+        # Spam:
+        '0x0734E85525Ca6838fe48EC6EB29b9d457F254F73', # SOLID spam
+        '0x459176FDC68C945B6bb23eB946eee62457041567', # SOLID spam
+        '0x4709099BE25D156578405132d66aeBfC2e12937A', # SOLID spam
+        '0x698068C6a369b1BF04D516f5fE48424797973DCf', # SOLID spam
+        '0x7cfa05320D83A20980Ac76B91a3A11981877Ef3A', # SOLID spam
+        '0x84d12988D71244a8937a9816037BeB3e61E17FdD', # SOLID spam
+        '0x875bf9be244970B8572DD042053508bF758371Ee', # SOLID spam
+        '0x908599FDf490b73D171B57731bd4Ca95b7F0DE6a', # SOLID spam
+        '0xa10c97bF5629340A35c41a8AA308af0804750605', # SOLID spam
+        '0xf8358bd95dcA48187e3F4BE05847F3593776C086', # SOLID spam
+        "0x26004d228fC8A32c5bd1a106108c8647A455B04a", # RSwap spam
+        '0x1412ECa9dc7daEf60451e3155bB8Dbf9DA349933', # A68 spam
+        '0xa9517B2E61a57350D6555665292dBC632C76adFe', # long name spam
+        '0xb07de4b2989E180F8907B8C7e617637C26cE2776', # long name spam
+        '0x830Cbe766EE470B67F77ea62a56246863F75f376', # ILH spam
+        '0x2B000332CD291eF558aF76298A4d6F6001E4e015', # XAR spam
+        '0x6A007E207E50B4C6B2ADCFc6a873F6e698645fE3', # LENS spam
+        '0x4ab16CDc82a4eA4727Ab40caee1bb46622C13641', # fake SABLIER clone spam
+        # Other:
+        '0x1BA4b447d0dF64DA64024e5Ec47dA94458C1e97f', # Hegic Option Token from strategist testing, expired and worthless
+    ],
+}.get(chain.id,[])
+
 def _get_price(token: EthAddress, block: int = None) -> float:
     SKIP_PRICE = [  # shitcoins
         "0xa9517B2E61a57350D6555665292dBC632C76adFe",
@@ -374,7 +401,7 @@ class Treasury:
 
     def process_transfers(self, logs: List) -> None:
         for log in logs:
-            if log.address in NFTS:
+            if log.address in NFTS or log.address in SKIP_LOGS:
                 continue
             try:
                 event = decode_logs(
