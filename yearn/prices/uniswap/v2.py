@@ -168,7 +168,7 @@ class UniswapV2:
         Returns a dictionary with all available combinations of {token_in:{pool:token_out}}
         '''
         pool_mapping: Dict[str,Dict[str,str]] = defaultdict(dict)
-        
+
         for pool, tokens in self.pools.items():
             token0, token1 = tokens.values()
             pool_mapping[token0][pool] = token1
@@ -188,7 +188,7 @@ class UniswapV2:
         if token_address == weth or token_address in stablecoins:
             return self.deepest_stable_pool(token_address)
         pools = self.pools_for_token(token_address)
-        reserves = fetch_multicall(*[[pool,'getReserves'] for pool in pools], block=block, require_success=False)
+        reserves = fetch_multicall(*[[contract(pool),'getReserves'] for pool in pools], block=block, require_success=False)
 
         deepest_pool = None
         deepest_pool_balance = 0
@@ -207,7 +207,7 @@ class UniswapV2:
     def deepest_stable_pool(self, token_address: str, block: Optional[int] = None) -> Optional[str]:
         token_address = convert.to_address(token_address)
         pools = {pool: paired_with for pool, paired_with in self.pools_for_token(token_address).items() if paired_with in stablecoins}
-        reserves = fetch_multicall(*[[pool, 'getReserves'] for pool in pools], block=block, require_success=False)
+        reserves = fetch_multicall(*[[contract(pool), 'getReserves'] for pool in pools], block=block, require_success=False)
 
         deepest_stable_pool = None
         deepest_stable_pool_balance = 0
@@ -295,7 +295,7 @@ class UniswapV2Multiplexer(metaclass=Singleton):
     def deepest_uniswap(self, token_in: str, block: int = None) -> Optional[UniswapV2]:
         token_in = convert.to_address(token_in)
         pool_to_uniswap = {pool: uniswap for uniswap in self.uniswaps for pool in uniswap.pools_for_token(token_in)}
-        reserves = fetch_multicall(*[[pool, 'getReserves'] for pool in pool_to_uniswap], block=block)
+        reserves = fetch_multicall(*[[contract(pool), 'getReserves'] for pool in pool_to_uniswap], block=block)
         
         deepest_uniswap = None
         deepest_uniswap_balance = 0
