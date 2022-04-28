@@ -4,6 +4,7 @@ from functools import cached_property
 from typing import Any, Callable, List, Optional, Union
 
 from brownie import Contract, chain
+from brownie.convert.datatypes import EthAddress
 from brownie.network.contract import ContractContainer
 from cachetools.func import ttl_cache
 
@@ -151,6 +152,9 @@ class CompoundMultiplexer(metaclass=Singleton):
         ]
 
     def __contains__(self, token: AddressOrContract) -> bool:
+        if isinstance(token, EthAddress):
+            # Must convert in order to compare to CompoundMarket.
+            token = str(token)
         return any(token in comp.markets for comp in self.compounds)
 
     def get_price(self, token: AddressOrContract, block: Optional[Block] = None) -> float:
