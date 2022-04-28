@@ -1,9 +1,10 @@
 import logging
-from functools import lru_cache
 import threading
+from functools import lru_cache
 from typing import List
 
-from brownie import Contract, chain, web3, interface
+import eth_retry
+from brownie import Contract, chain, interface, web3
 
 from yearn.cache import memory
 from yearn.exceptions import ArchiveNodeRequired, NodeNotSynced
@@ -138,6 +139,7 @@ class Singleton(type):
 _contract_lock = threading.Lock()
 _contract = lru_cache(maxsize=None)(Contract)
 
+@eth_retry.auto_retry
 def contract(address: Address) -> Contract:
     with _contract_lock:
         if chain.id in PREFER_INTERFACE:

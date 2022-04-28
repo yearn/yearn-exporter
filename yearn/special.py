@@ -1,18 +1,17 @@
 import math
-
 from time import time
-from yearn.common import Tvl
-from yearn.apy.common import Apy, ApyFees, ApyPoints, ApySamples
 
+import eth_retry
 import requests
-
-from brownie.network.contract import Contract
 from joblib import Parallel, delayed
 
+from yearn.apy.common import Apy, ApyFees, ApyPoints, ApySamples
+from yearn.common import Tvl
+from yearn.exceptions import PriceError
 from yearn.prices import magic
 from yearn.prices.curve import curve
-from yearn.utils import Singleton, contract_creation_block, contract
-from yearn.exceptions import PriceError
+from yearn.utils import Singleton, contract, contract_creation_block
+
 
 class YveCRVJar(metaclass = Singleton):
     def __init__(self):
@@ -33,6 +32,7 @@ class YveCRVJar(metaclass = Singleton):
     def symbol(self):
         return 'pSLP'
 
+    @eth_retry.auto_retry
     def apy(self, _: ApySamples) -> Apy:
         data = requests.get("https://api.pickle.finance/prod/protocol/pools").json()
         yvboost_eth_pool  = [pool for pool in data if pool["identifier"] == "yvboost-eth"][0]
@@ -40,6 +40,7 @@ class YveCRVJar(metaclass = Singleton):
         points = ApyPoints(apy, apy, apy)
         return Apy("yvecrv-jar", apy, apy, ApyFees(), points=points)
 
+    @eth_retry.auto_retry
     def tvl(self, block=None) -> Tvl:
         data = requests.get("https://api.pickle.finance/prod/protocol/value").json()
         tvl = data[self.id]
