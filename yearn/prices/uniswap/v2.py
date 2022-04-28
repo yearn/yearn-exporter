@@ -5,7 +5,7 @@ from typing import Any, Dict, List, Optional
 
 from brownie import Contract, chain, convert, interface
 from brownie.convert.datatypes import EthAddress
-from brownie.exceptions import EventLookupError
+from brownie.exceptions import EventLookupError, VirtualMachineError
 from cachetools.func import lru_cache, ttl_cache
 from yearn.events import decode_logs, get_logs_asap
 from yearn.exceptions import UnsupportedNetwork
@@ -98,7 +98,10 @@ class UniswapV2:
             quote = self.router.getAmountsOut(amount_in, path, block_identifier=block)
             amount_out = quote[-1] / 10 ** tokens[1].decimals()
             return amount_out / fees
-        except ValueError:
+        except VirtualMachineError as e:
+            okay_errs = ['INSUFFICIENT_INPUT_AMOUNT']
+            if not any([err in str(e) for err in okay_errs]):
+                raise
             return None
     
     @ttl_cache(ttl=600)
