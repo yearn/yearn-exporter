@@ -77,14 +77,15 @@ class UniswapV2:
         token_in = convert.to_address(token_in)
         token_out = convert.to_address(token_out)
         tokens = [contract(str(token)) for token in [token_in, token_out]]
-        try:
-            amount_in = 10 ** tokens[0].decimals()
-        except AttributeError:
-            return None
-            
-        if token_in in stablecoins:
-            path = self.get_path_to_stables(token_in)
-        else:
+        amount_in = 10 ** tokens[0].decimals()
+        path = None
+        if token_out in stablecoins:
+            try:
+                path = self.get_path_to_stables(token_in)
+            except CantFindSwapPath:
+                pass
+        
+        if not path:
             path = (
                 [token_in, token_out]
                 if weth in (token_in, token_out)
