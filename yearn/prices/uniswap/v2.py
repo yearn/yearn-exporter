@@ -311,11 +311,14 @@ class UniswapV2Multiplexer(metaclass=Singleton):
                 deepest_uniswap_balance = reserve
         
         if deepest_uniswap:
-            deepest_uniswap._depth_cache[token_in][block] = deepest_uniswap_balance
+            if block is not None:
+                deepest_uniswap._depth_cache[token_in][block] = deepest_uniswap_balance
             return deepest_uniswap
         return None
     
     def deepest_pool_balance(self, token_in: str, block: Optional[int] = None) -> Optional[int]:
+        if block is None:
+            block = chain.height
         token_in = convert.to_address(token_in)
         deepest_uniswap = self.deepest_uniswap(token_in, block)
         if deepest_uniswap:
