@@ -1,17 +1,20 @@
 import logging
 import threading
 import time
+from typing import Dict, List, Optional, Set
 
 from brownie import ZERO_ADDRESS, Contract, chain, web3
-from brownie.network.event import EventLookupError
+from brownie.convert.datatypes import EthAddress
+from yearn.typing import Block
+from brownie.network.event import EventLookupError, _EventItem
 from eth_abi import encode_single
 from eth_utils import encode_hex
 from joblib import Parallel, delayed
 from yearn.constants import (ERC20_TRANSFER_EVENT_HASH,
                              ERC677_TRANSFER_EVENT_HASH, STRATEGIST_MULTISIG,
                              TREASURY_WALLETS)
+from yearn.decorators import sentry_catch_all, wait_or_exit_after
 from yearn.events import decode_logs
-from yearn.exceptions import PriceError
 from yearn.multicall2 import fetch_multicall
 from yearn.networks import Network
 from yearn.outputs.victoria import output_treasury
@@ -19,10 +22,9 @@ from yearn.partners.partners import partners
 from yearn.partners.snapshot import WildcardWrapper, Wrapper
 from yearn.prices import compound
 from yearn.prices.constants import weth
-from yearn.prices.magic import get_price, _describe_err
+from yearn.prices.magic import _describe_err, get_price
 from yearn.prices.magic import logger as logger_price_magic
 from yearn.utils import contract
-from yearn.decorators import sentry_catch_all, wait_or_exit_after
 
 logger = logging.getLogger(__name__)
 logger_price_magic.setLevel(logging.CRITICAL)
@@ -39,7 +41,7 @@ NFTS = [
     '0x9d45DAb69f1309F1F55A7280b1f6a2699ec918E8', # yFamily 2021
 ]
 
-def _get_price(token, block=None):
+def _get_price(token: EthAddress, block: int = None) -> float:
     SKIP_PRICE = [  # shitcoins
         "0xa9517B2E61a57350D6555665292dBC632C76adFe",
         "0xb07de4b2989E180F8907B8C7e617637C26cE2776",
@@ -66,7 +68,7 @@ def _get_price(token, block=None):
         return 0
 
 
-def get_token_from_event(event):
+def get_token_from_event(event: _EventItem) -> EthAddress:
     try:
         transfer = event['Transfer']
         address = transfer[0].address
@@ -89,7 +91,7 @@ class Treasury:
     Used to export financial reports
     '''
 
-    def __init__(self, label, wallets, watch_events_forever=False, start_block=0):
+    def __init__(self, label: str, wallets: Set[EthAddress], watch_events_forever: bool = False, start_block: int = 0) -> None:
         self.label = label
         self.addresses = list(wallets)
         self._start_block = start_block
@@ -120,12 +122,12 @@ class Treasury:
     # descriptive functions
     # assets
 
-    def assets(self, block=None) -> dict:
+    def assets(self, block: int = None) -> Dict[EthAddress,Dict[EthAddress,Dict[str,float]]]:
         assets = self.held_assets(block=block)
         assets.update(self.collateral(block=block))
         return assets
 
-    def token_list(self, address, block=None) -> list:
+    def token_list(self, address: EthAddress, block: int = None) -> List[EthAddress]:
         self.load_transfers()
         tokens = set()
         for event in self._transfers:
@@ -144,7 +146,7 @@ class Treasury:
         return list(tokens)
 
 
-    def held_assets(self, block=None) -> dict:
+    def held_assets(self, block: int = None) -> Dict[EthAddress,Dict[EthAddress,Dict[str,float]]]:
         balances = {}
         for address in self.addresses:
             # get token balances
@@ -184,7 +186,7 @@ class Treasury:
             }
         return balances
 
-    def collateral(self, block=None) -> dict:
+    def collateral(self, block: int = None) -> Dict[EthAddress,Dict[EthAddress,Dict[str,float]]]:
         collateral = {}
 
         maker_collateral = self.maker_collateral(block=block)
@@ -200,7 +202,7 @@ class Treasury:
         collateral = {key: value for key, value in collateral.items() if len(value)}
         return collateral
 
-    def maker_collateral(self, block=None) -> dict:
+    def maker_collateral(self, block: int = None) -> Dict[EthAddress,Dict[EthAddress,Dict[str,float]]]:
         if chain.id != Network.Mainnet: return
         proxy_registry = contract('0x4678f0a6958e4D2Bc4F1BAF7Bc52E8F3564f3fE4')
         cdp_manager = contract('0x5ef30b9986345249bc32d8928B7ee64DE9435E39')
@@ -222,7 +224,7 @@ class Treasury:
                 }
         return collateral
 
-    def unit_collateral(self, block=None) -> dict:
+    def unit_collateral(self, block: int = None) -> Dict[EthAddress,Dict[EthAddress,Dict[str,float]]]:
         if chain.id != Network.Mainnet: return
         if block and block < 11315910: return
         
@@ -244,7 +246,7 @@ class Treasury:
     # descriptive functions
     # debt
 
-    def debt(self, block=None) -> dict:
+    def debt(self, block: int = None) -> Dict[EthAddress,Dict[EthAddress,Dict[str,float]]]:
         debt = {address: {} for address in self.addresses}
 
         maker_debt = self.maker_debt(block=block)
@@ -265,7 +267,7 @@ class Treasury:
         debt = {key: value for key, value in debt.items() if len(value)}
         return debt
 
-    def maker_debt(self, block=None) -> dict:
+    def maker_debt(self, block: int = None) -> Dict[EthAddress,Dict[EthAddress,Dict[str,float]]]:
         if chain.id != Network.Mainnet: return
         proxy_registry = contract('0x4678f0a6958e4D2Bc4F1BAF7Bc52E8F3564f3fE4')
         cdp_manager = contract('0x5ef30b9986345249bc32d8928B7ee64DE9435E39')
@@ -284,11 +286,11 @@ class Treasury:
             maker_debt[address] = {dai: {'balance': debt, 'usd value': debt}}
         return maker_debt
 
-    def unit_debt(self, block=None) -> dict:
+    def unit_debt(self, block: Optional[Block] = None) -> Dict[EthAddress,Dict[EthAddress,Dict[str,float]]]:
         if chain.id != Network.Mainnet:
-            return None
+            return
         if block and block < 11315910:
-            return None
+            return
         # NOTE: This only works for YFI based debt, must extend before using for other collaterals
         unitVault = contract("0xb1cff81b9305166ff1efc49a129ad2afcd7bcf19")
         yfi = "0x0bc529c00C6401aEF6D220BE8C6Ea1667F6Ad93e"
@@ -298,11 +300,11 @@ class Treasury:
             debt = unitVault.getTotalDebt(yfi, address, block_identifier=block) / 10 ** 18
             unit_debt[address] = {usdp: {'balance': debt, 'usd value': debt}}
         return unit_debt
-
-    def compound_debt(self, block=None) -> dict:
+        
+    def compound_debt(self, block: Optional[Block] = None) -> Dict[EthAddress,Dict[EthAddress,Dict[str,float]]]:
         if not compound.compound: # if yearn.prices.compound doesn't support any Compound forks on current chain
             return None
-        
+
         markets = {market.ctoken for comp in compound.compound.compounds for market in comp.markets}
         gas_token_markets = [market for market in markets if not hasattr(market,'underlying')]
         other_markets = [market for market in markets if hasattr(market,'underlying')]
@@ -326,18 +328,18 @@ class Treasury:
             compound_debt[address] = {str(underlying): {'balance': debt, 'usd value': debt * get_price(underlying, block=block)} for underlying, debt in zip(underlyings,debts) if debt}
         return compound_debt
 
-    def aave_debt(self, block=None) -> dict:
+    def aave_debt(self, block: int = None) -> Dict[EthAddress,Dict[EthAddress,Dict[str,float]]]:
         # TODO: don't need this yet but I want to add anyway for completeness
         pass
 
     # helper functions
     @wait_or_exit_after
-    def load_transfers(self):
+    def load_transfers(self) -> None:
         if not self._thread._started.is_set():
             self._thread.start()
 
     @sentry_catch_all
-    def watch_transfers(self):
+    def watch_transfers(self) -> None:
         start = time.time()
         logger.info(
             'pulling treasury transfer events, please wait patiently this takes a while...'
@@ -370,7 +372,7 @@ class Treasury:
                 transfer_logs.append(transfer_filter.get_new_entries())
 
 
-    def process_transfers(self, logs):
+    def process_transfers(self, logs: List) -> None:
         for log in logs:
             if log.address in NFTS:
                 continue
@@ -385,10 +387,10 @@ class Treasury:
 
     # export functions
 
-    def describe(self, block) -> dict:
+    def describe(self, block: int) -> dict:
         return {'assets': self.assets(block), 'debt': self.debt(block)}
 
-    def export(self, block, ts):
+    def export(self, block: int, ts: int) -> None:
         start = time.time()
         data = self.describe(block)
         output_treasury.export(ts, data, self.label)
@@ -396,7 +398,7 @@ class Treasury:
 
 
 class YearnTreasury(Treasury):
-    def __init__(self,watch_events_forever=False):
+    def __init__(self, watch_events_forever: bool = False) -> None:
         start_block = {
             Network.Mainnet: 10_502_337,
             Network.Fantom: 18_950_072,
@@ -404,7 +406,7 @@ class YearnTreasury(Treasury):
         }[chain.id]
         super().__init__('treasury',TREASURY_WALLETS,watch_events_forever=watch_events_forever,start_block=start_block)
 
-    def partners_debt(self, block=None) -> dict:
+    def partners_debt(self, block: int = None) -> dict:
         for i, partner in enumerate(partners):
             if i == 1:
                 flat_wrappers = []
@@ -421,7 +423,7 @@ class YearnTreasury(Treasury):
     # def debt - expends super().debt
 
 class StrategistMultisig(Treasury):
-    def __init__(self,watch_events_forever=False):
+    def __init__(self, watch_events_forever: bool = False) -> None:
         start_block = {
             Network.Mainnet: 11_507_716,
             Network.Fantom: 10_836_306,
