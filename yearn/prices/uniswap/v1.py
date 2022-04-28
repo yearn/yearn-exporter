@@ -1,4 +1,4 @@
-from typing import Optional
+from typing import Any, Optional
 
 from brownie import ZERO_ADDRESS, Contract, chain, interface
 from brownie.exceptions import ContractNotFound
@@ -24,17 +24,17 @@ def _get_exchange(factory: Contract, token: str) -> str:
 
 
 class UniswapV1(metaclass=Singleton):
-    def __init__(self):
+    def __init__(self) -> None:
         if chain.id not in addresses:
             raise UnsupportedNetwork('uniswap v1 is not supported on this network')
         
         self.factory = contract(addresses[chain.id])
 
-    def __contains__(self, asset):
+    def __contains__(self, asset: Any) -> bool:
         return chain.id in addresses
 
     @ttl_cache(ttl=600)
-    def get_price(self, asset, block=None):
+    def get_price(self, asset: str, block: Optional[int] = None) -> Optional[float]:
         try:
             asset = contract(asset)
             exchange = interface.UniswapV1Exchange(self.get_exchange(asset))
