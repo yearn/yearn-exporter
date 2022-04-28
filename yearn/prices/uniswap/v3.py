@@ -3,7 +3,7 @@ import math
 from collections import defaultdict
 from functools import cached_property
 from itertools import cycle
-from typing import Dict, List, Optional, Union
+from typing import Dict, List, Optional, Tuple, Union
 
 from brownie import Contract, chain, convert
 from eth_abi.packed import encode_abi_packed
@@ -144,14 +144,24 @@ class UniswapV3(metaclass=Singleton):
             if token == token0 and token1 == weth:
                 paths += [[token0, fee, token1, tier, usdc] for tier in self.fee_tiers]
             elif token == token0:
-                paths += [[token0, fee, token1, tier, weth, self.fee_tiers[0], usdc] for tier in self.fee_tiers]
+                paths += [[token0, fee, token1, tier0, weth, tier1, usdc] for tier0, tier1 in self.tier_pairs]
             elif token == token1 and token0 == weth:
                 paths += [[token1, fee, token0, tier, usdc] for tier in self.fee_tiers]
             elif token == token1:
-                paths += [[token1, fee, token0, tier, weth, self.fee_tiers[0], usdc] for tier in self.fee_tiers]
+                paths += [[token1, fee, token0, tier0, weth, tier1, usdc] for tier0, tier1 in self.tier_pairs]
 
         return paths
-        
+    
+    @cached_property
+    def tier_pairs(self) -> List[Tuple[int,int]]:
+        '''
+        Returns a list containing all possible pairs of fees for a 2 hop swap.
+        '''
+        return [
+            (tier0,tier1)
+            for tier0 in self.fee_tiers
+            for tier1 in self.fee_tiers
+        ]
         
 
 
