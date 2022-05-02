@@ -1,4 +1,3 @@
-from xml.dom.minidom import Element
 from brownie import chain
 from yearn.networks import Network
 from yearn.partners.snapshot import (BentoboxWrapper, DegenboxWrapper, ElementWrapper, Partner, WildcardWrapper,
