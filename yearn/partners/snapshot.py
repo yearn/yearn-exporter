@@ -5,6 +5,8 @@ from dataclasses import dataclass
 from decimal import Decimal
 from functools import cached_property
 from pathlib import Path
+import string
+from tokenize import String
 from typing import Dict, List, Tuple, Union
 
 import pandas as pd
@@ -147,6 +149,25 @@ class DegenboxWrapper(Wrapper):
         )
         return [Decimal(balance or 0) / Decimal(vault.scale) for balance in balances]
 
+class ElementWrapper(Wrapper):
+    """
+    Use Element deposits by wrapper
+    """
+    def wrappers(self) -> List[Wrapper]:
+        registry = contract('0x149f615057F905988fFC97994E29c0Cc7DaB5337')
+        wrapper_addresses = registry.functions.viewRegistry().call()
+        wrappers = []
+
+        for wrapper in wrapper_addresses:
+            vault = contract(wrapper).vault()
+            wrappers.append(
+                Wrapper(
+                    name=contract(wrapper).name(),
+                    vault=vault,
+                    wrapper=wrapper,
+                )
+            )
+        return wrappers
 
 @dataclass
 class WildcardWrapper:

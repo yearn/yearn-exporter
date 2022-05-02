@@ -1,6 +1,7 @@
+from xml.dom.minidom import Element
 from brownie import chain
 from yearn.networks import Network
-from yearn.partners.snapshot import (BentoboxWrapper, DegenboxWrapper, Partner, WildcardWrapper,
+from yearn.partners.snapshot import (BentoboxWrapper, DegenboxWrapper, ElementWrapper, Partner, WildcardWrapper,
                                      Wrapper, YApeSwapFactoryWrapper, GearboxWrapper)
 
 partners = {
@@ -476,7 +477,7 @@ partners = {
         Partner(
             name='element',
             treasury='0xF6094C3A380AD6161Fb8240F3043392A0E427CAC',
-            # script run?
+            wrappers=ElementWrapper.wrappers()
         ),
     ],
 }.get(chain.id, [])
