@@ -475,7 +475,7 @@ partners = {
         ),
         Partner(
             name='element',
-            treasury='0xF6094C3A380AD6161Fb8240F3043392A0E427CAC',
+            treasury='0x82eF450FB7f06E3294F2f19ed1713b255Af0f541',
             wrappers=ElementWrapper.wrappers()
         ),
     ],
