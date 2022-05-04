@@ -1,3 +1,4 @@
+import os
 import logging
 import threading
 from functools import lru_cache
@@ -6,11 +7,13 @@ from typing import List
 import eth_retry
 from brownie import Contract, chain, convert, interface, web3
 from brownie.exceptions import CompilerError
-
+from time import time
 from yearn.cache import memory
 from yearn.exceptions import ArchiveNodeRequired, NodeNotSynced
 from yearn.networks import Network
 from yearn.typing import Address, AddressOrContract
+from yearn.singleton import Singleton
+from yearn.rpc_utils import CachedContract
 
 logger = logging.getLogger(__name__)
 
@@ -122,19 +125,6 @@ def contract_creation_block(address: AddressOrContract) -> int:
         return 0
 
     return hi if hi != end else None
-
-
-class Singleton(type):
-    def __init__(self, *args, **kwargs):
-        self.__instance = None
-        super().__init__(*args, **kwargs)
-
-    def __call__(self, *args, **kwargs):
-        if self.__instance is None:
-            self.__instance = super().__call__(*args, **kwargs)
-            return self.__instance
-        else:
-            return self.__instance
 
 
 # cached Contract instance, saves about 20ms of init time

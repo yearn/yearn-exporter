@@ -13,7 +13,8 @@ from yearn.multicall2 import fetch_multicall
 from yearn.networks import Network
 from yearn.prices.constants import usdc, weth
 from yearn.typing import Address, Block
-from yearn.utils import Singleton, contract, contract_creation_block
+from yearn.utils import contract, contract_creation_block
+from yearn.singleton import Singleton
 
 logger = logging.getLogger(__name__)
 

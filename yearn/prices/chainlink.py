@@ -8,7 +8,9 @@ from yearn.events import decode_logs, get_logs_asap
 from yearn.exceptions import UnsupportedNetwork
 from yearn.networks import Network
 from yearn.typing import Address, AddressOrContract, Block
-from yearn.utils import Singleton, contract
+from yearn.utils import contract
+from yearn.singleton import Singleton
+
 
 logger = logging.getLogger(__name__)
 

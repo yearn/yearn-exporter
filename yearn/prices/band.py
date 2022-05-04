@@ -3,11 +3,11 @@ from typing import Optional
 from brownie import chain
 from brownie.exceptions import VirtualMachineError
 from cachetools.func import ttl_cache
-
-from yearn.exceptions import UnsupportedNetwork
+from yearn.singleton import Singleton
 from yearn.networks import Network
+from yearn.exceptions import UnsupportedNetwork
+from yearn.utils import contract
 from yearn.typing import Address, AddressOrContract, Block
-from yearn.utils import Singleton, contract
 
 addresses = {
     # https://docs.fantom.foundation/tutorials/band-protocol-standard-dataset

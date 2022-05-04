@@ -9,10 +9,12 @@ from brownie.network.contract import ContractContainer
 from cachetools.func import ttl_cache
 
 from yearn.exceptions import UnsupportedNetwork
+from yearn.multicall2 import fetch_multicall
 from yearn.networks import Network
 from yearn.prices.constants import usdc, weth
 from yearn.typing import Address, AddressOrContract, Block
-from yearn.utils import Singleton, contract
+from yearn.utils import contract
+from yearn.singleton import Singleton
 
 logger = logging.getLogger(__name__)
 

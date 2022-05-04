@@ -8,7 +8,9 @@ from yearn.exceptions import UnsupportedNetwork
 from yearn.multicall2 import fetch_multicall
 from yearn.networks import Network
 from yearn.typing import AddressOrContract
-from yearn.utils import Singleton, contract
+from yearn.utils import contract
+from yearn.singleton import Singleton
+
 
 address_providers = {
     Network.Mainnet: {

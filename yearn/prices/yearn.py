@@ -9,7 +9,9 @@ from yearn.exceptions import MulticallError, UnsupportedNetwork
 from yearn.multicall2 import fetch_multicall
 from yearn.networks import Network
 from yearn.typing import Address, AddressOrContract, Block, VaultVersion
-from yearn.utils import Singleton, contract
+from yearn.utils import contract
+from yearn.singleton import Singleton
+import logging
 
 logger = logging.getLogger(__name__)
 

@@ -9,7 +9,8 @@ from yearn.exceptions import UnsupportedNetwork
 from yearn.networks import Network
 from yearn.prices.constants import usdc
 from yearn.typing import Address, AddressOrContract, Block
-from yearn.utils import Singleton, contract
+from yearn.utils import contract
+from yearn.singleton import Singleton
 
 addresses = {
     Network.Mainnet: '0xc0a47dFe034B400B47bDaD5FecDa2621de6c4d95',
