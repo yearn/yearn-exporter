@@ -5,6 +5,7 @@ from cachetools.func import ttl_cache
 from yearn.utils import Singleton
 from yearn.networks import Network
 from yearn.exceptions import UnsupportedNetwork
+from brownie.exceptions import VirtualMachineError
 from yearn.utils import contract
 
 
@@ -52,6 +53,8 @@ class Band(metaclass=Singleton):
         try:
             return self.oracle.getReferenceData(asset_symbol, 'USDC', block_identifier=block)[0] / 1e18
         except ValueError:
+            return None
+        except VirtualMachineError:
             return None
 
 
