@@ -11,13 +11,13 @@ from semantic_version.base import Version
 from yearn import apy
 from yearn.apy.common import ApySamples
 from yearn.common import Tvl
-from yearn.events import create_filter, decode_logs
+from yearn.events import decode_logs, filter_logs
 from yearn.multicall2 import fetch_multicall
 from yearn.prices import magic
 from yearn.prices.curve import curve
 from yearn.special import Ygov
 from yearn.typing import Address
-from yearn.utils import safe_views, contract
+from yearn.utils import safe_views, contract, get_start_block
 from yearn.v2.strategies import Strategy
 from yearn.exceptions import PriceError
 from yearn.decorators import sentry_catch_all, wait_or_exit_after
@@ -144,9 +144,11 @@ class Vault:
     @sentry_catch_all
     def watch_events(self):
         start = time.time()
-        self.log_filter = create_filter(str(self.vault), topics=self._topics)
-        logs = self.log_filter.get_all_entries()
+        address = str(self.vault)
+        start_block = get_start_block(address)
         while True:
+            height = chain.height
+            logs = filter_logs(address, topics=self._topics, start_block=start_block)
             events = decode_logs(logs)
             self.process_events(events)
             if not self._done.is_set():
@@ -156,9 +158,8 @@ class Vault:
                 return
             time.sleep(300)
 
-            # read new logs at end of loop
-            logs = self.log_filter.get_new_entries()
-
+            # start from previous chain.height in the next iteration
+            start_block = height
 
     def process_events(self, events):
         for event in events:

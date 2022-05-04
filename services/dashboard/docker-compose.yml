@@ -20,6 +20,7 @@ x-common-envs: &common-envs
   - SENTRY_ENVIRONMENT: ${SENTRY_ENVIRONMENT:-development}
   - SENTRY_RELEASE:
   - SENTRY_DSN:
+  - GRPC_POLL_STRATEGY: "poll"
 
 x-common-historical-envs: &common-historical-envs
   - POOL_SIZE:
@@ -34,6 +35,7 @@ x-common-postgres-envs: &common-postgres-envs
 
 x-common-eth-envs: &common-eth-envs
   - NETWORK: mainnet
+  - HASH_BROWNIE_HOST:
   - ETHERSCAN_TOKEN:
 
 x-common-gnosis-envs: &common-gnosis-envs
@@ -44,6 +46,7 @@ x-common-gnosis-envs: &common-gnosis-envs
 
 x-common-ftm-envs: &common-ftm-envs
   - NETWORK: ftm-main
+  - HASH_BROWNIE_HOST:
   - WEB3_PROVIDER: $FTM_WEB3_PROVIDER
   - EXPLORER: $FTM_EXPLORER
   - FTMSCAN_TOKEN:

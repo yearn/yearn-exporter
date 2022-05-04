@@ -7,7 +7,7 @@ from brownie import Contract, chain, web3
 from joblib import Parallel, delayed
 from web3._utils.abi import filter_by_name
 from web3._utils.events import construct_event_topic_set
-from yearn.events import create_filter, decode_logs, get_logs_asap
+from yearn.events import decode_logs, get_logs_asap, filter_logs
 from yearn.multicall2 import fetch_multicall
 from yearn.prices import magic
 from yearn.utils import contract_creation_block, contract, get_start_block
@@ -82,9 +82,11 @@ class Registry(metaclass=Singleton):
     @sentry_catch_all
     def watch_events(self):
         start = time.time()
-        self.log_filter = create_filter([str(addr) for addr in self.registries])
-        logs = self.log_filter.get_all_entries()
+        addresses = [str(addr) for addr in self.registries]
+        start_block = get_start_block(addresses)
         while True:
+            height = chain.height
+            logs = filter_logs(addresses=addresses, start_block=start_block)
             self.process_events(decode_logs(logs))
             if not self._done.is_set():
                 self._done.set()
@@ -93,8 +95,8 @@ class Registry(metaclass=Singleton):
                 return
             time.sleep(300)
 
-            # read new logs at end of loop
-            logs = self.log_filter.get_new_entries()
+            # start from previous chain.height in the next iteration
+            start_block = height
 
     def process_events(self, events):
         for event in events:

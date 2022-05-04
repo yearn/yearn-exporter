@@ -5,9 +5,10 @@ from typing import List
 
 from eth_utils import encode_hex, event_abi_to_log_topic
 from yearn.decorators import sentry_catch_all, wait_or_exit_after
-from yearn.events import create_filter, decode_logs
+from yearn.events import decode_logs, filter_logs
 from yearn.multicall2 import fetch_multicall
-from yearn.utils import contract, safe_views
+from yearn.utils import contract, safe_views, get_start_block
+from brownie import chain
 
 STRATEGY_VIEWS_SCALED = [
     "maxDebtPerHarvest",
@@ -70,9 +71,11 @@ class Strategy:
     @sentry_catch_all
     def watch_events(self):
         start = time.time()
-        self.log_filter = create_filter(str(self.strategy), topics=self._topics)
-        logs = self.log_filter.get_all_entries()
+        address = str(self.strategy)
+        start_block = get_start_block(address)
         while True:
+            height = chain.height
+            logs = filter_logs(addresses=address, topics=self._topics, start_block=start_block)
             events = decode_logs(logs)
             self.process_events(events)
             if not self._done.is_set():
@@ -82,8 +85,8 @@ class Strategy:
                 return
             time.sleep(300)
 
-            # read new logs at end of loop
-            logs = self.log_filter.get_new_entries()
+            # start from previous chain.height in the next iteration
+            start_block = height
 
 
     def process_events(self, events):

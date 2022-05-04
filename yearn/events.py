@@ -1,4 +1,5 @@
 import logging
+import os
 from collections import Counter, defaultdict
 from itertools import zip_longest
 from typing import Any, Dict, List, Optional, Union
@@ -13,7 +14,8 @@ from web3.types import LogReceipt, RPCEndpoint
 
 from yearn.middleware.middleware import BATCH_SIZE
 from yearn.typing import Address, Block, Topics
-from yearn.utils import contract, contract_creation_block
+from yearn.utils import contract, contract_creation_block, get_start_block
+from yearn.rpc_utils import cached_logs
 
 logger = logging.getLogger(__name__)
 
@@ -34,17 +36,26 @@ def decode_logs(logs: List[LogReceipt]) -> EventDict:
     return decoded
 
 
-def create_filter(address: Address, topics: Optional[Topics] = None) -> RPCEndpoint:
+def create_filter(address: Address, topics: Optional[Topics] = None, start_block = None) -> RPCEndpoint:
     """
     Create a log filter for one or more contracts.
     Set fromBlock as the earliest creation block.
     """
-    if isinstance(address, list):
-        start_block = min(map(contract_creation_block, address))
-    else:
-        start_block = contract_creation_block(address)
+    if start_block is None:
+        start_block = get_start_block(address)
 
     return web3.eth.filter({"address": address, "fromBlock": start_block, "topics": topics})
+
+
+def filter_logs(addresses, topics=None, start_block=None):
+    if start_block is None:
+        start_block = get_start_block(addresses)
+
+    if os.getenv("HASH_BROWNIE_HOST"):
+        return cached_logs(addresses, topics=topics, start_block=start_block)
+    else:
+        log_filter = create_filter(addresses, topics=topics, start_block=start_block)
+        return log_filter.get_all_entries()
 
 
 def __add_deployment_topics(address: Address) -> None:

@@ -1,0 +1,58 @@
+syntax = "proto3";
+
+service HashBrownie {
+  rpc GetAbi(GetAbiRequest) returns (Abi) {}
+  rpc GetLogs(GetLogsRequest) returns (Logs) {}
+}
+
+message GetAbiRequest {
+  string address = 1;
+}
+
+message GetLogsRequest {
+  message Topic {
+    repeated string topics = 1;
+  }
+  repeated string addresses = 1;
+  repeated Topic topics = 2;
+  optional int64 start_block = 3;
+}
+
+message Abi {
+  message AbiEntry {
+    message IO {
+      string name = 1;
+      string type = 2;
+      string internalType = 3;
+      optional bool indexed = 4;
+      repeated IO components = 5;
+    }
+    string type = 1;
+    optional string name = 2;
+    optional bool anonymous = 3;
+    optional int64 gas = 4;
+    optional string stateMutability = 5;
+    optional bool constant = 6;
+    optional bool payable = 7;
+    repeated IO inputs = 8;
+    repeated IO outputs = 9;
+  }
+
+  repeated AbiEntry entries = 1;
+}
+
+message Logs {
+  message LogEntry {
+    string address = 1;
+    repeated bytes topics = 2;
+    string data = 3;
+    int64 blockNumber = 4;
+    bytes transactionHash = 5;
+    int64 transactionIndex = 6;
+    bytes blockHash = 7;
+    int64 logIndex = 8;
+    bool removed = 9;
+  }
+  repeated LogEntry entries = 1;
+  string key = 2;
+}

@@ -113,14 +113,15 @@ class CurveRegistry(metaclass=Singleton):
         self._thread.start()
 
     @sentry_catch_all
-    def watch_events(self) -> None:
-        address_provider_filter = create_filter(str(self.address_provider))
+    def watch_events(self):
+        address = str(self.address_provider)
+        start_block = get_start_block(address)
         registries = []
-        registries_filter = None
-        registry_logs = []
-
-        address_logs = address_provider_filter.get_all_entries()
         while True:
+            registry_logs = []
+            height = chain.height
+            address_logs = filter_logs(addresses=address, start_block=start_block)
+
             # fetch all registries and factories from address provider
             for event in decode_logs(address_logs):
                 if event.name == 'NewAddressIdentifier':
@@ -140,8 +141,7 @@ class CurveRegistry(metaclass=Singleton):
             ]
             if _registries != registries:
                 registries = _registries
-                registries_filter = create_filter(registries)
-                registry_logs = registries_filter.get_all_entries()
+                registry_logs = filter_logs(addresses=registries, start_block=start_block)
 
             # fetch pools from the latest registries
             for event in decode_logs(registry_logs):
@@ -161,10 +161,8 @@ class CurveRegistry(metaclass=Singleton):
 
             time.sleep(600)
 
-            # read new logs at end of loop
-            address_logs = address_provider_filter.get_new_entries()
-            if registries_filter:
-                registry_logs = registries_filter.get_new_entries()
+            # start from previous chain.height in the next iteration
+            start_block = height
 
     def read_pools(self, registry: Address) -> List[EthAddress]:
         registry = contract(registry)

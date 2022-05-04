@@ -127,9 +127,17 @@ def contract_creation_block(address: AddressOrContract) -> int:
     return hi if hi != end else None
 
 
+def get_start_block(address: Address):
+    if isinstance(address, list):
+        return min(map(contract_creation_block, address))
+    else:
+        return contract_creation_block(address)
+
+
 # cached Contract instance, saves about 20ms of init time
 _contract_lock = threading.Lock()
 _contract = lru_cache(maxsize=None)(Contract)
+_cached_contract = lru_cache(maxsize=None)(CachedContract)
 
 @eth_retry.auto_retry
 def contract(address: Address) -> Contract:
@@ -143,14 +151,23 @@ def contract(address: Address) -> Contract:
         failed_attempts = 0
         while True:
             try:
-                c = _contract(address)
-                return _squeeze(c)
+                if os.getenv("HASH_BROWNIE_HOST"):
+                    start = time()
+                    c = _cached_contract(address)
+                    logger.debug("loaded cached contract %s in %.3fms", address, (time()-start)*1E3)
+                    return _squeeze(c)
+                else:
+                    start = time()
+                    c = _contract(address)
+                    logger.debug("loaded contract %s in %.3fms", address, (time()-start)*1E3)
+                    return _squeeze(c)
             except (AssertionError, CompilerError) as e:
                 if failed_attempts == 10:
                     raise
                 logger.warning(e)
                 Contract.remove_deployment(address)
                 failed_attempts += 1
+
 
 @lru_cache(maxsize=None)
 def is_contract(address: str) -> bool:
