@@ -151,21 +151,18 @@ class ElementWrapper(Wrapper):
     """
     Use Element deposits by wrapper
     """
-    def wrappers(self) -> List[Wrapper]:
-        registry = contract('0x149f615057F905988fFC97994E29c0Cc7DaB5337')
-        wrapper_addresses = registry.functions.viewRegistry().call()
-        wrappers = []
 
-        for wrapper in wrapper_addresses:
-            vault = contract(wrapper).vault()
-            wrappers.append(
-                Wrapper(
-                    name=contract(wrapper).name(),
-                    vault=vault,
-                    wrapper=wrapper,
-                )
-            )
-        return wrappers
+    name: str
+    wrapper: str
+
+    def unwrap(self) -> List[Wrapper]:
+        registry = contract(self.wrapper)
+        wrappers = registry.functions.viewRegistry().call()
+
+        return [
+            Wrapper(name=contract(wrapper).name(), vault=contract(wrapper).vault(), wrapper=wrapper)
+            for wrapper in wrappers
+        ]
 
 @dataclass
 class WildcardWrapper:

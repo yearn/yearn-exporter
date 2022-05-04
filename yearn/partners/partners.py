@@ -476,7 +476,12 @@ partners = {
         Partner(
             name='element',
             treasury='0x82eF450FB7f06E3294F2f19ed1713b255Af0f541',
-            wrappers=ElementWrapper.wrappers()
+            wrappers=[
+                ElementWrapper(
+                    name='WrapperRegistry',
+                    wrapper='0x149f615057F905988fFC97994E29c0Cc7DaB5337',
+                ),
+            ],
         ),
     ],
 }.get(chain.id, [])
