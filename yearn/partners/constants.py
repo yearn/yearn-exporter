@@ -1,7 +1,7 @@
 from bisect import bisect_right
 from decimal import Decimal
 
-OPEX_COST = 0.35
+OPEX_COST = 0.45
 
 TIERS = {
     0: 0,

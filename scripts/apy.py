@@ -124,3 +124,6 @@ def eurs_usdc():
 
 def crv_eth():
     calculate_apy("0x6A5468752f8DB94134B6508dAbAC54D3b45efCE6")
+
+def mim_crv():
+    calculate_apy("0xA97E7dA01C7047D6a65f894c99bE8c832227a8BC")

@@ -1,6 +1,7 @@
 from typing import Optional
 
 from brownie import chain
+from brownie.exceptions import VirtualMachineError
 from cachetools.func import ttl_cache
 
 from yearn.exceptions import UnsupportedNetwork
@@ -52,6 +53,8 @@ class Band(metaclass=Singleton):
         try:
             return self.oracle.getReferenceData(asset_symbol, 'USDC', block_identifier=block)[0] / 1e18
         except ValueError:
+            return None
+        except VirtualMachineError:
             return None
 
 
