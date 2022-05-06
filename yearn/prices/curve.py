@@ -27,7 +27,7 @@ from yearn.events import decode_logs, filter_logs
 from yearn.exceptions import UnsupportedNetwork
 from yearn.multicall2 import fetch_multicall
 from yearn.networks import Network
-from yearn.utils import contract, get_start_block
+from yearn.utils import contract, get_start_block, get_next_start_block
 from yearn.singleton import Singleton
 from yearn.decorators import sentry_catch_all, wait_or_exit_after
 
@@ -116,11 +116,14 @@ class CurveRegistry(metaclass=Singleton):
     def watch_events(self):
         address = str(self.address_provider)
         start_block = get_start_block(address)
+        start_block_address = start_block
+        start_block_registries = start_block
         registries = []
         while True:
             registry_logs = []
             height = chain.height
-            address_logs = filter_logs(addresses=address, start_block=start_block)
+            address_logs = filter_logs(addresses=address, start_block=start_block_address)
+            start_block_address = get_next_start_block(address_logs)
 
             # fetch all registries and factories from address provider
             for event in decode_logs(address_logs):
@@ -141,7 +144,8 @@ class CurveRegistry(metaclass=Singleton):
             ]
             if _registries != registries:
                 registries = _registries
-                registry_logs = filter_logs(addresses=registries, start_block=start_block)
+                registry_logs = filter_logs(addresses=registries, start_block=start_block_registries)
+                start_block_registries = get_next_start_block(registry_logs)
 
             # fetch pools from the latest registries
             for event in decode_logs(registry_logs):
@@ -161,8 +165,6 @@ class CurveRegistry(metaclass=Singleton):
 
             time.sleep(600)
 
-            # start from previous chain.height in the next iteration
-            start_block = height
 
     def read_pools(self, registry: Address) -> List[EthAddress]:
         registry = contract(registry)

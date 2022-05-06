@@ -10,7 +10,7 @@ from web3._utils.events import construct_event_topic_set
 from yearn.events import decode_logs, get_logs_asap, filter_logs
 from yearn.multicall2 import fetch_multicall
 from yearn.prices import magic
-from yearn.utils import contract_creation_block, contract, get_start_block
+from yearn.utils import contract_creation_block, contract, get_start_block, get_next_start_block
 from yearn.singleton import Singleton
 from yearn.v2.vaults import Vault
 from yearn.networks import Network
@@ -85,7 +85,6 @@ class Registry(metaclass=Singleton):
         addresses = [str(addr) for addr in self.registries]
         start_block = get_start_block(addresses)
         while True:
-            height = chain.height
             logs = filter_logs(addresses=addresses, start_block=start_block)
             self.process_events(decode_logs(logs))
             if not self._done.is_set():
@@ -95,8 +94,8 @@ class Registry(metaclass=Singleton):
                 return
             time.sleep(300)
 
-            # start from previous chain.height in the next iteration
-            start_block = height
+            # get the start block for the next iteration
+            start_block = get_next_start_block(logs)
 
     def process_events(self, events):
         for event in events:

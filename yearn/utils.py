@@ -134,6 +134,10 @@ def get_start_block(address: Address):
         return contract_creation_block(address)
 
 
+def get_next_start_block(logs):
+    return logs[-1]["blockNumber"] + 1
+
+
 # cached Contract instance, saves about 20ms of init time
 _contract_lock = threading.Lock()
 _contract = lru_cache(maxsize=None)(Contract)

@@ -17,7 +17,7 @@ from yearn.prices import magic
 from yearn.prices.curve import curve
 from yearn.special import Ygov
 from yearn.typing import Address
-from yearn.utils import safe_views, contract, get_start_block
+from yearn.utils import safe_views, contract, get_start_block, get_next_start_block
 from yearn.v2.strategies import Strategy
 from yearn.exceptions import PriceError
 from yearn.decorators import sentry_catch_all, wait_or_exit_after
@@ -147,7 +147,6 @@ class Vault:
         address = str(self.vault)
         start_block = get_start_block(address)
         while True:
-            height = chain.height
             logs = filter_logs(address, topics=self._topics, start_block=start_block)
             events = decode_logs(logs)
             self.process_events(events)
@@ -158,8 +157,9 @@ class Vault:
                 return
             time.sleep(300)
 
-            # start from previous chain.height in the next iteration
-            start_block = height
+            # get the start block for the next iteration
+            start_block = get_next_start_block(logs)
+
 
     def process_events(self, events):
         for event in events:
