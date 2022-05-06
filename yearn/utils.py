@@ -143,9 +143,11 @@ def contract(address: Address) -> Contract:
         if chain.id in PREFER_INTERFACE:
             if address in PREFER_INTERFACE[chain.id]:
                 _interface = PREFER_INTERFACE[chain.id][address]
-                return _interface(address)
+                i = _interface(address)
+                return _squeeze(i)
 
-        return _contract(address)
+        c = _contract(address)
+        return _squeeze(c)
 
 
 @lru_cache(maxsize=None)
@@ -158,3 +160,11 @@ def chunks(lst, n):
     """Yield successive n-sized chunks from lst."""
     for i in range(0, len(lst), n):
         yield lst[i:i + n]
+
+
+# reduce the contract size in RAM significantly
+def _squeeze(it):
+    for k in ["ast", "bytecode", "coverageMap", "deployedBytecode", "deployedSourceMap", "natspec", "opcodes", "pcMap"]:
+        if it._build and k in it._build.keys():
+            it._build[k] = {}
+    return it
