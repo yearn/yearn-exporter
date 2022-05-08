@@ -9,6 +9,7 @@ on:
       - '**/contracts.py'
       - '**/events.py'
       - '**/middleware.py'
+      - '**/requirements.txt'
 
 jobs:
   test_partners:
