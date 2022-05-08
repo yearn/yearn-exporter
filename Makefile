@@ -51,7 +51,7 @@ rebuild: down build up
 scratch: clean-volumes build up
 
 logs:
-	$(dashboards_command) logs -f -t eth-exporter historical-eth-exporter ftm-exporter historical-ftm-exporter treasury-exporter historical-treasury-exporter ftm-treasury-exporter historical-ftm-treasury-exporter sms-exporter historical-sms-exporter ftm-sms-exporter historical-ftm-sms-exporter transactions-exporter ftm-transactions-exporter
+	$(dashboards_command) logs -f -t eth-exporter historical-eth-exporter ftm-exporter historical-ftm-exporter treasury-exporter historical-treasury-exporter ftm-treasury-exporter historical-ftm-treasury-exporter sms-exporter historical-sms-exporter ftm-sms-exporter historical-ftm-sms-exporter transactions-exporter ftm-transactions-exporter gnosis-exporter historical-gnosis-exporter gnosis-treasury-exporter historical-gnosis-treasury-exporter gnosis-sms-exporter historical-gnosis-sms-exporter gnosis-transactions-exporter
 
 test:
 	$(test_command) up

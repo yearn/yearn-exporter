@@ -1,14 +1,16 @@
 from collections import defaultdict
 from itertools import count, product
 from operator import itemgetter
+from typing import Any, List, Optional
 
 import requests
-from brownie import Contract, chain, web3
+from brownie import chain, web3
 from eth_abi.exceptions import InsufficientDataBytes
 
-from yearn.networks import Network
-from yearn.utils import contract_creation_block, contract
 from yearn.exceptions import MulticallError
+from yearn.networks import Network
+from yearn.typing import Block
+from yearn.utils import contract, contract_creation_block
 
 MULTICALL2 = {
     Network.Mainnet: '0x5BA1e12693Dc8F9c48aAD8770482f4739bEeD696',
@@ -19,7 +21,7 @@ MULTICALL2 = {
 multicall2 = contract(MULTICALL2[chain.id])
 
 
-def fetch_multicall(*calls, block=None, require_success=False):
+def fetch_multicall(*calls, block: Optional[Block] = None, require_success: bool = False) -> List[Any]:
     # https://github.com/makerdao/multicall
     multicall_input = []
     attribute_errors = []
@@ -42,19 +44,27 @@ def fetch_multicall(*calls, block=None, require_success=False):
                 continue
             raise
 
-    if isinstance(block, int) and block < contract_creation_block(MULTICALL2[chain.id]):
-        # use state override to resurrect the contract prior to deployment
-        data = multicall2.tryAggregate.encode_input(False, multicall_input)
-        call = web3.eth.call(
-            {'to': str(multicall2), 'data': data},
-            block or 'latest',
-            {str(multicall2): {'code': f'0x{multicall2.bytecode}'}},
-        )
-        result = multicall2.tryAggregate.decode_output(call)
-    else:
-        result = multicall2.tryAggregate.call(
-            False, multicall_input, block_identifier=block or 'latest'
-        )
+    try:
+        if isinstance(block, int) and block < contract_creation_block(MULTICALL2[chain.id]):
+            # use state override to resurrect the contract prior to deployment
+            data = multicall2.tryAggregate.encode_input(False, multicall_input)
+            call = web3.eth.call(
+                {'to': str(multicall2), 'data': data},
+                block or 'latest',
+                {str(multicall2): {'code': f'0x{multicall2.bytecode}'}},
+            )
+            result = multicall2.tryAggregate.decode_output(call)
+        else:
+            result = multicall2.tryAggregate.call(
+                False, multicall_input, block_identifier=block or 'latest'
+            )
+    except ValueError as e:
+        if 'out of gas' in str(e):
+            halfpoint = len(calls) // 2
+            batch0 = fetch_multicall(*calls[:halfpoint],block=block,require_success=require_success)
+            batch1 = fetch_multicall(*calls[halfpoint:],block=block,require_success=require_success)
+            return batch0 + batch1
+        raise
 
     for fn, (ok, data) in zip(fn_list, result):
         try:

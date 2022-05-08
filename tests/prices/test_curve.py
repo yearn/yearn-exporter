@@ -393,8 +393,17 @@ def test_curve_lp_price_oracle_historical(name):
     token = web3.toChecksumAddress(pooldata[name]['lp_token_address'])
     swap = web3.toChecksumAddress(pooldata[name]['swap_address'])
     deploy = contract_creation_block(swap)
+
+    abnormal_start_blocks = {
+        # `pool.get_virtual_price` will revert before these blocks.
+        '0x845838DF265Dcd2c412A1Dc9e959c7d08537f8a2': 9567758,  # cDAI+cUSDC
+        '0xDE5331AC4B3630f94853Ff322B66407e0D6331E8': 11445709, # pBTC/sbtcCRV
+        '0x194eBd173F6cDacE046C53eACcE9B953F28411d1': 11485492, # eursCRV
+    }
+    start_block = deploy if token not in abnormal_start_blocks else abnormal_start_blocks[token]
+
     # sample 10 blocks over the pool lifetime
-    blocks = [int(block) for block in np.linspace(deploy + 10000, chain.height, 10)]
+    blocks = [int(block) for block in np.linspace(start_block + 10000, chain.height, 10)]
     prices = []
     for block in blocks:
         try:

@@ -1,14 +1,16 @@
 import logging
-from functools import lru_cache
 import threading
+from functools import lru_cache
 from typing import List
 
-from brownie import Contract, chain, web3, interface
+import eth_retry
+from brownie import Contract, chain, convert, interface, web3
+from brownie.exceptions import CompilerError
 
 from yearn.cache import memory
 from yearn.exceptions import ArchiveNodeRequired, NodeNotSynced
 from yearn.networks import Network
-from yearn.typing import Address
+from yearn.typing import Address, AddressOrContract
 
 logger = logging.getLogger(__name__)
 
@@ -79,12 +81,13 @@ def get_code(address, block=None):
 
 
 @memory.cache()
-def contract_creation_block(address) -> int:
+def contract_creation_block(address: AddressOrContract) -> int:
     """
     Find contract creation block using binary search.
     NOTE Requires access to historical state. Doesn't account for CREATE2 or SELFDESTRUCT.
     """
     logger.info("contract creation block %s", address)
+    address = convert.to_address(address)
 
     barrier = BINARY_SEARCH_BARRIER[chain.id]
     lo = barrier
@@ -138,6 +141,7 @@ class Singleton(type):
 _contract_lock = threading.Lock()
 _contract = lru_cache(maxsize=None)(Contract)
 
+@eth_retry.auto_retry
 def contract(address: Address) -> Contract:
     with _contract_lock:
         if chain.id in PREFER_INTERFACE:
@@ -146,9 +150,17 @@ def contract(address: Address) -> Contract:
                 i = _interface(address)
                 return _squeeze(i)
 
-        c = _contract(address)
-        return _squeeze(c)
-
+        failed_attempts = 0
+        while True:
+            try:
+                c = _contract(address)
+                return _squeeze(c)
+            except (AssertionError, CompilerError) as e:
+                if failed_attempts == 10:
+                    raise
+                logger.warning(e)
+                Contract.remove_deployment(address)
+                failed_attempts += 1
 
 @lru_cache(maxsize=None)
 def is_contract(address: str) -> bool:
@@ -162,8 +174,8 @@ def chunks(lst, n):
         yield lst[i:i + n]
 
 
-# reduce the contract size in RAM significantly
 def _squeeze(it):
+    """ Reduce the contract size in RAM significantly. """
     for k in ["ast", "bytecode", "coverageMap", "deployedBytecode", "deployedSourceMap", "natspec", "opcodes", "pcMap"]:
         if it._build and k in it._build.keys():
             it._build[k] = {}

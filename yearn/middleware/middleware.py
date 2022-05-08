@@ -1,5 +1,6 @@
 import logging
 
+import eth_retry
 from brownie import chain
 from brownie import web3 as w3
 from eth_utils import encode_hex
@@ -8,9 +9,8 @@ from requests import Session
 from requests.adapters import HTTPAdapter
 from web3 import HTTPProvider
 from web3.middleware import filter
-from yearn.middleware import yearn_filter
-
 from yearn.cache import memory
+from yearn.middleware import yearn_filter
 from yearn.networks import Network
 
 logger = logging.getLogger(__name__)
@@ -53,6 +53,15 @@ def cache_middleware(make_request, w3):
     return middleware
 
 
+def catch_and_retry_middleware(make_request, w3):
+
+    @eth_retry.auto_retry
+    def middleware(method, params):
+        return make_request(method, params)
+
+    return middleware
+
+
 def setup_middleware():
     # patch web3 provider with more connections and higher timeout
     if w3.provider:
@@ -67,3 +76,4 @@ def setup_middleware():
         filter.MAX_BLOCK_REQUEST = BATCH_SIZE[chain.id]
         w3.middleware_onion.add(yearn_filter.local_filter_middleware)
         w3.middleware_onion.add(cache_middleware)
+        w3.middleware_onion.add(catch_and_retry_middleware)

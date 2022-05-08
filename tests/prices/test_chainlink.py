@@ -16,7 +16,7 @@ FEEDS = {
         "0x000000000000000000000000000000000000022A",
         "0x0000000000000000000000000000000000000236",
         "0x0000000000000000000000000000000000000260",
-        "0x0000000000000000000000000000000000000283",
+        #"0x0000000000000000000000000000000000000283", chainlink feed disabled at block 14673916 - 0xd1898776f4f2333c26c170b58ec98430d29c224a81256fd70add5db05a036b20
         "0x00000000000000000000000000000000000002be",
         "0x00000000000000000000000000000000000002c6",
         "0x00000000000000000000000000000000000002F4",
@@ -123,12 +123,30 @@ def test_chainlink_get_feed(token):
     assert chainlink.get_feed(token.lower()) != ZERO_ADDRESS
     assert chainlink.get_feed(convert.to_address(token)) != ZERO_ADDRESS
 
+@pytest.mark.parametrize('token', FEEDS)
+def test_chainlink_contains(token):
+    """
+    Tests `token in chainlink` with both lowercase address and checksum address.
+    """
+    for token in [token.lower(), convert.to_address(token)]:
+        assert token in chainlink
+
+
+@pytest.mark.parametrize('token', FEEDS)
+def test_chainlink_get_feed(token):
+    """
+    Tests `chainlink.get_feed` with both lowercase address and checksum address.
+    """
+    for token in [token.lower(), convert.to_address(token)]:
+        assert chainlink.get_feed(token) != ZERO_ADDRESS
+
 
 @pytest.mark.parametrize('token', FEEDS)
 def test_chainlink_latest(token):
-    price = chainlink.get_price(token)
-    print(price)
-    assert price, 'no feed available'
+    for token in [token.lower(), convert.to_address(token)]:
+        price = chainlink.get_price(token)
+        print(price)
+        assert price, 'no feed available'
 
 
 @mainnet_only
@@ -143,6 +161,8 @@ def test_chainlink_before_registry(token):
 
 
 def test_chainlink_nonexistent():
+    with pytest.raises(KeyError):
+        chainlink.get_feed(ZERO_ADDRESS)
     price = chainlink.get_price(ZERO_ADDRESS)
     assert price is None
 

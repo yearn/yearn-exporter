@@ -1,10 +1,15 @@
+import logging
+from typing import Dict, List, Optional
+
+from brownie import chain
+from brownie.convert.datatypes import EthAddress
+from cachetools.func import ttl_cache
+
+from yearn.exceptions import MulticallError, UnsupportedNetwork
 from yearn.multicall2 import fetch_multicall
 from yearn.networks import Network
+from yearn.typing import Address, AddressOrContract, Block, VaultVersion
 from yearn.utils import Singleton, contract
-from brownie import chain
-from yearn.exceptions import MulticallError, UnsupportedNetwork
-import logging
-from cachetools.func import ttl_cache
 
 logger = logging.getLogger(__name__)
 
@@ -27,17 +32,17 @@ addresses = {
 
 
 class YearnLens(metaclass=Singleton):
-    def __init__(self, force_init: bool = False):
+    def __init__(self, force_init: bool = False) -> None:
         if chain.id not in addresses and not force_init:
             raise UnsupportedNetwork('yearn is not supported on this network')
         self.markets
 
     @property
     @ttl_cache(ttl=3600)
-    def markets(self):
+    def markets(self) -> Dict[VaultVersion,List[EthAddress]]:
         if chain.id not in addresses:
             return {}
-        
+
         markets = {
             name: list(contract(addr).assetsAddresses())
             for name, addr in addresses[chain.id].items()
@@ -47,11 +52,11 @@ class YearnLens(metaclass=Singleton):
         logger.info(f'loaded {log_counts} markets')
         return markets
 
-    def __contains__(self, token):
+    def __contains__(self, token: AddressOrContract) -> bool:
         # hard check, works with production vaults
         return any(token in market for market in self.markets.values())
 
-    def is_yearn_vault(self, token):
+    def is_yearn_vault(self, token: Address) -> bool:
         # soft check, works with any contracts using a compatible interface
         vault = contract(token)
         return any(
@@ -62,7 +67,7 @@ class YearnLens(metaclass=Singleton):
             ]
         )
 
-    def get_price(self, token, block=None):
+    def get_price(self, token: Address, block: Optional[Block] = None) -> Optional[float]:
         # v2 vaults use pricePerShare scaled to underlying token decimals
         vault = contract(token)
         if hasattr(vault, 'pricePerShare'):

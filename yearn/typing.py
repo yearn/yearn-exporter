@@ -1,8 +1,10 @@
-from typing import List, Union
+from typing import List, Literal, Union
 
 from brownie import Contract
 from brownie.convert.datatypes import EthAddress, HexBytes
 from eth_typing import AnyAddress, BlockNumber
+
+VaultVersion = Literal['v1','v2']
 
 AddressString = str
 Address = Union[str,HexBytes,AnyAddress,EthAddress]

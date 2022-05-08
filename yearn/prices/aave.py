@@ -1,11 +1,13 @@
-from typing import Optional
+from typing import Dict, Optional
 
 from brownie import chain
+from brownie.convert.datatypes import EthAddress
 from cachetools.func import ttl_cache
 
 from yearn.exceptions import UnsupportedNetwork
 from yearn.multicall2 import fetch_multicall
 from yearn.networks import Network
+from yearn.typing import AddressOrContract
 from yearn.utils import Singleton, contract
 
 address_providers = {
@@ -23,19 +25,19 @@ address_providers = {
 
 
 class Aave(metaclass=Singleton):
-    def __init__(self):
+    def __init__(self) -> None:
         if chain.id not in address_providers:
             raise UnsupportedNetwork("aave is not supported on this network")
 
-    def __contains__(self, token):
+    def __contains__(self, token: AddressOrContract) -> bool:
         return token in self.markets
 
-    def atoken_underlying(self, atoken: str) -> Optional[str]:
+    def atoken_underlying(self, atoken: AddressOrContract) -> Optional[EthAddress]:
         return self.markets.get(atoken)
 
     @property
     @ttl_cache(ttl=3600)
-    def markets(self):
+    def markets(self) -> Dict[EthAddress,EthAddress]:
         atoken_to_token = {}
         for version, provider in address_providers[chain.id].items():
             lending_pool = contract(contract(provider).getLendingPool())
