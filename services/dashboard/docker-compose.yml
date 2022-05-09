@@ -20,6 +20,7 @@ x-common-envs: &common-envs
   - SENTRY_ENVIRONMENT: ${SENTRY_ENVIRONMENT:-development}
   - SENTRY_RELEASE:
   - SENTRY_DSN:
+  - USE_TLS: "False"
   - GRPC_POLL_STRATEGY: "poll"
 
 x-common-historical-envs: &common-historical-envs
@@ -35,7 +36,7 @@ x-common-postgres-envs: &common-postgres-envs
 
 x-common-eth-envs: &common-eth-envs
   - NETWORK: mainnet
-  - HASH_BROWNIE_HOST:
+  - HASH_BROWNIE_HOST: hash-brownie-eth
   - ETHERSCAN_TOKEN:
 
 x-common-gnosis-envs: &common-gnosis-envs
@@ -46,10 +47,15 @@ x-common-gnosis-envs: &common-gnosis-envs
 
 x-common-ftm-envs: &common-ftm-envs
   - NETWORK: ftm-main
-  - HASH_BROWNIE_HOST:
+  - HASH_BROWNIE_HOST: hash-brownie-ftm
   - WEB3_PROVIDER: $FTM_WEB3_PROVIDER
   - EXPLORER: $FTM_EXPLORER
   - FTMSCAN_TOKEN:
+
+x-common-hb-envs: &common-hb-envs
+  - USE_TLS: "False"
+  - GRPC_POLL_STRATEGY: "poll"
+  - DATA_DIR: /app/hash-brownie/data
 
 x-common-volumes: &common-volumes
   - solidity_compilers:/root/.solcx
@@ -472,3 +478,31 @@ services:
     volumes:
       - postgres_data:/var/lib/postgresql/data
     restart: always
+
+  hash-brownie-eth:
+    image: ghcr.io/mariuspod/hash-brownie
+    pull_policy: always
+    ports:
+      - 127.0.0.1:1337:1337
+    volumes: *common-volumes
+    environment:
+      <<: *common-envs
+      <<: *common-eth-envs
+      <<: *common-hb-envs
+    networks:
+      - yearn-exporter
+    restart: on-failure
+
+  hash-brownie-ftm:
+    image: ghcr.io/mariuspod/hash-brownie
+    pull_policy: always
+    ports:
+      - 127.0.0.1:1338:1337
+    volumes: *common-volumes
+    environment:
+      <<: *common-envs
+      <<: *common-ftm-envs
+      <<: *common-hb-envs
+    networks:
+      - yearn-exporter
+    restart: on-failure
