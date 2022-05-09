@@ -14,7 +14,7 @@ class HashBrownieClient(metaclass=Singleton):
     def __init__(self, host=os.getenv("HASH_BROWNIE_HOST"), port=1337):
         self._channel = self._open_channel(host, port)
         self._client = HashBrownieStub(self._channel)
-  
+
 
     def _open_channel(self, host, port):
         use_tls = os.getenv("USE_TLS", "false").lower() == "true"
@@ -63,7 +63,7 @@ def cached_logs(addresses, topics=None, start_block=None):
         for t in topics:
             topic_entry = request.topics.add()
             topic_entry.topics[:] = t
-        
+
     client = HashBrownieClient().get_client()
     logs = client.GetLogs(request)
     return [ _format_log(log) for log in logs.entries ]
@@ -92,9 +92,9 @@ def _format_abi(abi_message):
         # cast gas to int
         if "gas" in entry:
             entry["gas"] = int(entry["gas"])
-        
+
         # fill outputs with empty defaults
         if "outputs" not in entry:
             entry["outputs"] = []
-        
+
     return asDict["entries"]
