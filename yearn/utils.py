@@ -135,7 +135,10 @@ def get_start_block(address: Address):
 
 
 def get_next_start_block(logs):
-    return logs[-1]["blockNumber"] + 1
+    if len(logs) == 0:
+        return chain.height
+    else:
+        return logs[-1]["blockNumber"] + 1
 
 
 # cached Contract instance, saves about 20ms of init time

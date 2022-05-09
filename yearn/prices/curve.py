@@ -121,7 +121,6 @@ class CurveRegistry(metaclass=Singleton):
         registries = []
         while True:
             registry_logs = []
-            height = chain.height
             address_logs = filter_logs(addresses=address, start_block=start_block_address)
             start_block_address = get_next_start_block(address_logs)
 
