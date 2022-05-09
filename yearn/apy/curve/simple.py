@@ -256,6 +256,10 @@ class _ConvexVault:
         cvx_net_farmed_apy = (1 + (cvx_net_apr / COMPOUNDING)) ** COMPOUNDING - 1
         cvx_net_apy = ((1 + cvx_net_farmed_apy) * (1 + pool_apy)) - 1
 
+        # 0.3.5+ should never be < 0% because of management
+        if cvx_net_apy < 0 and Version(self.vault.api_version) >= Version("0.3.5"): 
+            cvx_net_apy = 0
+
         fees = ApyFees(performance=performance_fee, management=management_fee, cvx_keep_crv=apy_data.cvx_keep_crv)
         return Apy("convex", gross_apr, cvx_net_apy, fees)
 
