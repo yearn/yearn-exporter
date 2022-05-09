@@ -12,7 +12,6 @@ from yearn.v1.registry import Registry as RegistryV1
 from yearn.v2.registry import Registry as RegistryV2
 from yearn.v2.strategies import Strategy as StrategyV2
 from yearn.v2.vaults import Vault as VaultV2
-from yearn.prices.magic import get_price
 
 sentry_sdk.set_tag('script','apy')
 
@@ -128,8 +127,3 @@ def crv_eth():
 
 def mim_crv():
     calculate_apy("0xA97E7dA01C7047D6a65f894c99bE8c832227a8BC")
-
-def reth():
-    calculate_apy("0x5c0A86A32c129538D62C106Eb8115a8b02358d57")
-    # price = get_price("0x447Ddd4960d9fdBF6af9a790560d0AF76795CB08")
-    # print(price)
