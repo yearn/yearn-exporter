@@ -39,6 +39,7 @@ message Abi {
   }
 
   repeated AbiEntry entries = 1;
+  string contract_name = 2;
 }
 
 message Logs {

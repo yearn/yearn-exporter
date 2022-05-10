@@ -44,7 +44,7 @@ class CachedContract(Contract):
         build = {
             "abi": _format_abi(abi),
             "address": address,
-            "contractName": "yrpc-abi", # TODO fix name
+            "contractName": abi.contract_name,
             "type": "contract"
         }
         _ContractBase.__init__(self, None, build, {})  # type: ignore
