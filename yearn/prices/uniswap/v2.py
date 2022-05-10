@@ -147,7 +147,8 @@ class UniswapV2:
                 for event in events
             }
             pools = {pool: tokens for i, pair in pairs.items() for pool, tokens in pair.items()}
-        except EventLookupError:
+        except EventLookupError as e:
+            logger.error(e)
             pairs, pools = {}, {}
         
         all_pairs_len = self.factory.allPairsLength()
