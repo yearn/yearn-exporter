@@ -152,9 +152,6 @@ class ElementWrapper(Wrapper):
     Use Element deposits by wrapper
     """
 
-    name: str
-    wrapper: str
-
     def unwrap(self) -> List[Wrapper]:
         registry = contract(self.wrapper)
         wrappers = registry.functions.viewRegistry().call()
