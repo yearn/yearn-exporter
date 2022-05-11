@@ -383,7 +383,7 @@ services:
       - postgres
 
   vmagent:
-    image: victoriametrics/vmagent
+    image: victoriametrics/vmagent:heads-public-single-node-0-g52eb9c99e
     volumes:
       - ./prometheus/:/etc/prometheus/
     command:
