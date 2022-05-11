@@ -97,4 +97,13 @@ def _format_abi(abi_message):
         if "outputs" not in entry:
             entry["outputs"] = []
 
+        for input_entry in entry["inputs"]:
+            if "name" in input_entry:
+                if input_entry["name"] == "\0":
+                    input_entry["name"] = ""
+        for output_entry in entry["outputs"]:
+            if "name" in output_entry:
+                if output_entry["name"] == "\0":
+                    output_entry["name"] = ""
+
     return asDict["entries"]
