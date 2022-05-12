@@ -147,19 +147,6 @@ class DegenboxWrapper(Wrapper):
         )
         return [Decimal(balance or 0) / Decimal(vault.scale) for balance in balances]
 
-class ElementWrapper(Wrapper):
-    """
-    Use Element deposits by wrapper
-    """
-
-    def unwrap(self) -> List[Wrapper]:
-        registry = contract(self.wrapper)
-        wrappers = registry.functions.viewRegistry().call()
-
-        return [
-            Wrapper(name=contract(wrapper).name(), vault=contract(wrapper).vault(), wrapper=wrapper)
-            for wrapper in wrappers
-        ]
 
 @dataclass
 class WildcardWrapper:
@@ -191,6 +178,24 @@ class WildcardWrapper:
             for wrapper in wrappers
             for vault in registry.vaults
             if str(vault.vault) in deposits[wrapper]
+        ]
+
+
+class ElementWrapper(WildcardWrapper):
+    """
+    Use Element deposits by wrapper
+    """
+
+    name: str
+    wrapper: str
+
+    def unwrap(self) -> List[Wrapper]:
+        registry = contract(self.wrapper)
+        wrappers = registry.viewRegistry()
+
+        return [
+            Wrapper(name=contract(wrapper).name(), vault=contract(wrapper).vault(), wrapper=wrapper)
+            for wrapper in wrappers
         ]
 
 

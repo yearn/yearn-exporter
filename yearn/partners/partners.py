@@ -479,7 +479,6 @@ partners = {
             wrappers=[
                 ElementWrapper(
                     name='WrapperRegistry',
-                    vault='0xdA816459F1AB5631232FE5e97a05BBBb94970c95',
                     wrapper='0x149f615057F905988fFC97994E29c0Cc7DaB5337',
                 ),
             ],
