@@ -1,8 +1,8 @@
 {
   "__inputs": [
     {
-      "name": "DS_DS_PROMETHEUS",
-      "label": "DS_PROMETHEUS",
+      "name": "DS_PROMETHEUS",
+      "label": "Prometheus",
       "description": "",
       "type": "datasource",
       "pluginId": "prometheus",
@@ -71,7 +71,7 @@
     {
       "datasource": {
         "type": "prometheus",
-        "uid": "${DS_DS_PROMETHEUS}"
+        "uid": "DS_PROMETHEUS"
       },
       "description": "Total TVL of yearn vaults not subtracting delegated deposits",
       "fieldConfig": {
@@ -120,7 +120,7 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "${DS_DS_PROMETHEUS}"
+            "uid": "DS_PROMETHEUS"
           },
           "exemplar": true,
           "expr": "sum(sum by (vault) (yearn_vault{param=\"tvl\", experimental=\"false\", vault!~\"yvUSDC 0.2.2|yvDAI 0.2.2|yvWBTC 0.3.1|yvHEGIC 0.3.0\"}))",
@@ -138,7 +138,7 @@
     {
       "datasource": {
         "type": "prometheus",
-        "uid": "${DS_DS_PROMETHEUS}"
+        "uid": "DS_PROMETHEUS"
       },
       "description": "$ of Funds unallocated",
       "fieldConfig": {
@@ -187,7 +187,7 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "${DS_DS_PROMETHEUS}"
+            "uid": "DS_PROMETHEUS"
           },
           "exemplar": true,
           "expr": "sum(sum by (vault) (yearn_vault{param=\"tvl\", experimental=\"false\", vault!~\"yvUSDC 0.2.2|yvDAI 0.2.2|yvWBTC 0.3.1|yvHEGIC 0.3.0\"}) * ((sum by (vault) (yearn_vault{param=\"totalAssets\", experimental=\"false\", vault!~\"yvUSDC 0.2.2|yvDAI 0.2.2|yvWBTC 0.3.1|yvHEGIC 0.3.0\"})-(sum by (vault) (yearn_vault{param=\"totalDebt\", experimental=\"false\", vault!~\"yvUSDC 0.2.2|yvDAI 0.2.2|yvWBTC 0.3.1|yvHEGIC 0.3.0\"}))) / (sum by (vault) (yearn_vault{param=\"totalAssets\", experimental=\"false\", vault!~\"yvUSDC 0.2.2|yvDAI 0.2.2|yvWBTC 0.3.1|yvHEGIC 0.3.0\"}) )))",
@@ -205,7 +205,7 @@
     {
       "datasource": {
         "type": "prometheus",
-        "uid": "${DS_DS_PROMETHEUS}"
+        "uid": "DS_PROMETHEUS"
       },
       "description": "% of Funds unallocated",
       "fieldConfig": {
@@ -277,7 +277,7 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "${DS_DS_PROMETHEUS}"
+            "uid": "DS_PROMETHEUS"
           },
           "exemplar": true,
           "expr": "sum(sum by (vault) (yearn_vault{param=\"tvl\", experimental=\"false\", vault!~\"yvUSDC 0.2.2|yvDAI 0.2.2|yvWBTC 0.3.1|yvHEGIC 0.3.0\"}) * ((sum by (vault) (yearn_vault{param=\"totalAssets\", experimental=\"false\", vault!~\"yvUSDC 0.2.2|yvDAI 0.2.2|yvWBTC 0.3.1|yvHEGIC 0.3.0\"}))-(sum by (vault) (yearn_vault{param=\"totalDebt\", experimental=\"false\", vault!~\"yvUSDC 0.2.2|yvDAI 0.2.2|yvWBTC 0.3.1|yvHEGIC 0.3.0\"}))) / (sum by (vault) (yearn_vault{param=\"totalAssets\", experimental=\"false\", vault!~\"yvUSDC 0.2.2|yvDAI 0.2.2|yvWBTC 0.3.1|yvHEGIC 0.3.0\"}) )) / sum((yearn_vault{param=\"tvl\", experimental=\"false\", vault!~\"yvUSDC 0.2.2|yvDAI 0.2.2|yvWBTC 0.3.1|yvHEGIC 0.3.0\"}))",
@@ -294,7 +294,7 @@
     {
       "datasource": {
         "type": "prometheus",
-        "uid": "${DS_DS_PROMETHEUS}"
+        "uid": "DS_PROMETHEUS"
       },
       "description": "Avg summed apy for all production vaults. This is with weekly compounding taking the share price difference over a week.",
       "fieldConfig": {
@@ -346,7 +346,7 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "${DS_DS_PROMETHEUS}"
+            "uid": "DS_PROMETHEUS"
           },
           "exemplar": true,
           "expr": "avg((((delta(yearn_vault{param=\"pricePerShare\", experimental=\"false\", vault!~\"yvUSDC 0.2.2|yvDAI 0.2.2|yvWBTC 0.3.1|yvHEGIC 0.3.0\"}[7d]) + 1) ^ (1/7)) ^ 365 - 1) < 1000)",
@@ -357,7 +357,7 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "${DS_DS_PROMETHEUS}"
+            "uid": "DS_PROMETHEUS"
           },
           "exemplar": true,
           "expr": "stddev((((delta(yearn_vault{param=\"pricePerShare\", experimental=\"false\", vault!~\"yvUSDC 0.2.2|yvDAI 0.2.2|yvWBTC 0.3.1|yvHEGIC 0.3.0\"}[7d]) + 1) ^ (1/7)) ^ 365 - 1) < 1000)",
@@ -374,7 +374,7 @@
     {
       "datasource": {
         "type": "prometheus",
-        "uid": "${DS_DS_PROMETHEUS}"
+        "uid": "DS_PROMETHEUS"
       },
       "description": "Current Standard Deviation of summed APY ",
       "fieldConfig": {
@@ -426,7 +426,7 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "${DS_DS_PROMETHEUS}"
+            "uid": "DS_PROMETHEUS"
           },
           "exemplar": true,
           "expr": "avg((((delta(yearn_vault{param=\"pricePerShare\", experimental=\"false\", vault!~\"yvUSDC 0.2.2|yvDAI 0.2.2|yvWBTC 0.3.1|yvHEGIC 0.3.0\"}[7d]) + 1) ^ (1/7)) ^ 365 - 1) < 1000)",
@@ -438,7 +438,7 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "${DS_DS_PROMETHEUS}"
+            "uid": "DS_PROMETHEUS"
           },
           "exemplar": true,
           "expr": "stddev((((delta(yearn_vault{param=\"pricePerShare\", experimental=\"false\", vault!~\"yvUSDC 0.2.2|yvDAI 0.2.2|yvWBTC 0.3.1|yvHEGIC 0.3.0\"}[7d]) + 1) ^ (1/7)) ^ 365 - 1) < 1000)",
@@ -465,7 +465,7 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "${DS_DS_PROMETHEUS}"
+            "uid": "DS_PROMETHEUS"
           },
           "description": "$ of Funds unallocated from 7 days ago",
           "fieldConfig": {
@@ -513,7 +513,7 @@
             {
               "datasource": {
                 "type": "prometheus",
-                "uid": "${DS_DS_PROMETHEUS}"
+                "uid": "DS_PROMETHEUS"
               },
               "exemplar": true,
               "expr": "sum(sum by (vault) (yearn_vault{param=\"tvl\", experimental=\"false\", vault!~\"yvUSDC 0.2.2|yvDAI 0.2.2|yvWBTC 0.3.1|yvHEGIC 0.3.0\"})) offset 7d",
@@ -531,7 +531,7 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "${DS_DS_PROMETHEUS}"
+            "uid": "DS_PROMETHEUS"
           },
           "description": "$ of Funds unallocated from 7 days ago",
           "fieldConfig": {
@@ -579,7 +579,7 @@
             {
               "datasource": {
                 "type": "prometheus",
-                "uid": "${DS_DS_PROMETHEUS}"
+                "uid": "DS_PROMETHEUS"
               },
               "exemplar": true,
               "expr": "sum(sum by (vault) (yearn_vault{param=\"tvl\", experimental=\"false\", vault!~\"yvUSDC 0.2.2|yvDAI 0.2.2|yvWBTC 0.3.1|yvHEGIC 0.3.0\"}) * ((sum by (vault) (yearn_vault{param=\"totalAssets\", experimental=\"false\", vault!~\"yvUSDC 0.2.2|yvDAI 0.2.2|yvWBTC 0.3.1|yvHEGIC 0.3.0\"})-(sum by (vault) (yearn_vault{param=\"totalDebt\", experimental=\"false\", vault!~\"yvUSDC 0.2.2|yvDAI 0.2.2|yvWBTC 0.3.1|yvHEGIC 0.3.0\"}))) / (sum by (vault) (yearn_vault{param=\"totalAssets\", experimental=\"false\", vault!~\"yvUSDC 0.2.2|yvDAI 0.2.2|yvWBTC 0.3.1|yvHEGIC 0.3.0\"}) ))) offset 7d",
@@ -597,7 +597,7 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "${DS_DS_PROMETHEUS}"
+            "uid": "DS_PROMETHEUS"
           },
           "description": "% of Funds unallocated from 7 days ago",
           "fieldConfig": {
@@ -668,7 +668,7 @@
             {
               "datasource": {
                 "type": "prometheus",
-                "uid": "${DS_DS_PROMETHEUS}"
+                "uid": "DS_PROMETHEUS"
               },
               "exemplar": true,
               "expr": "sum(sum by (vault) (yearn_vault{param=\"tvl\", experimental=\"false\", vault!~\"yvUSDC 0.2.2|yvDAI 0.2.2|yvWBTC 0.3.1|yvHEGIC 0.3.0\"}) * ((sum by (vault) (yearn_vault{param=\"totalAssets\", experimental=\"false\", vault!~\"yvUSDC 0.2.2|yvDAI 0.2.2|yvWBTC 0.3.1|yvHEGIC 0.3.0\"}))-(sum by (vault) (yearn_vault{param=\"totalDebt\", experimental=\"false\", vault!~\"yvUSDC 0.2.2|yvDAI 0.2.2|yvWBTC 0.3.1|yvHEGIC 0.3.0\"}))) / (sum by (vault) (yearn_vault{param=\"totalAssets\", experimental=\"false\", vault!~\"yvUSDC 0.2.2|yvDAI 0.2.2|yvWBTC 0.3.1|yvHEGIC 0.3.0\"}) )) / sum((yearn_vault{param=\"tvl\", experimental=\"false\", vault!~\"yvUSDC 0.2.2|yvDAI 0.2.2|yvWBTC 0.3.1|yvHEGIC 0.3.0\"})) offset 7d",
@@ -685,7 +685,7 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "${DS_DS_PROMETHEUS}"
+            "uid": "DS_PROMETHEUS"
           },
           "description": "Avg summed apy for all production vaults. This is with weekly compunding taking the share price difference over a week from 7 days ago. ",
           "fieldConfig": {
@@ -736,7 +736,7 @@
             {
               "datasource": {
                 "type": "prometheus",
-                "uid": "${DS_DS_PROMETHEUS}"
+                "uid": "DS_PROMETHEUS"
               },
               "exemplar": true,
               "expr": "avg((((delta(yearn_vault{param=\"pricePerShare\", experimental=\"false\", vault!~\"yvUSDC 0.2.2|yvDAI 0.2.2|yvWBTC 0.3.1|yvHEGIC 0.3.0\"}[7d]) + 1) ^ (1/7)) ^ 365 - 1) < 1000) offset 7d",
@@ -752,7 +752,7 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "${DS_DS_PROMETHEUS}"
+            "uid": "DS_PROMETHEUS"
           },
           "description": "Standard deviation from 7 days ago",
           "fieldConfig": {
@@ -803,7 +803,7 @@
             {
               "datasource": {
                 "type": "prometheus",
-                "uid": "${DS_DS_PROMETHEUS}"
+                "uid": "DS_PROMETHEUS"
               },
               "exemplar": true,
               "expr": "avg((((delta(yearn_vault{param=\"pricePerShare\", experimental=\"false\", vault!~\"yvUSDC 0.2.2|yvDAI 0.2.2|yvWBTC 0.3.1|yvHEGIC 0.3.0\"}[7d]) + 1) ^ (1/7)) ^ 365 - 1) < 1000)",
@@ -815,7 +815,7 @@
             {
               "datasource": {
                 "type": "prometheus",
-                "uid": "${DS_DS_PROMETHEUS}"
+                "uid": "DS_PROMETHEUS"
               },
               "exemplar": true,
               "expr": "stddev((((delta(yearn_vault{param=\"pricePerShare\", experimental=\"false\", vault!~\"yvUSDC 0.2.2|yvDAI 0.2.2|yvWBTC 0.3.1|yvHEGIC 0.3.0\"}[7d]) + 1) ^ (1/7)) ^ 365 - 1) < 1000) offset 7d",
@@ -832,7 +832,7 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "${DS_DS_PROMETHEUS}"
+            "uid": "DS_PROMETHEUS"
           },
           "description": "% of TVL from 7 days ago,  % change from 7 day to current",
           "fieldConfig": {
@@ -915,7 +915,7 @@
             {
               "datasource": {
                 "type": "prometheus",
-                "uid": "${DS_DS_PROMETHEUS}"
+                "uid": "DS_PROMETHEUS"
               },
               "exemplar": true,
               "expr": "sum(sum by (vault) (yearn_vault{param=\"tvl\", experimental=\"false\", vault!~\"yvUSDC 0.2.2|yvDAI 0.2.2|yvWBTC 0.3.1|yvHEGIC 0.3.0\"}))",
@@ -927,7 +927,7 @@
             {
               "datasource": {
                 "type": "prometheus",
-                "uid": "${DS_DS_PROMETHEUS}"
+                "uid": "DS_PROMETHEUS"
               },
               "exemplar": true,
               "expr": "sum(sum by (vault) (yearn_vault{param=\"tvl\", experimental=\"false\", vault!~\"yvUSDC 0.2.2|yvDAI 0.2.2|yvWBTC 0.3.1|yvHEGIC 0.3.0\"})) offset 7d",
@@ -978,7 +978,7 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "${DS_DS_PROMETHEUS}"
+            "uid": "DS_PROMETHEUS"
           },
           "description": "$ of Funds unallocated from 7 days ago, % change from 7 day to current",
           "fieldConfig": {
@@ -1046,7 +1046,7 @@
             {
               "datasource": {
                 "type": "prometheus",
-                "uid": "${DS_DS_PROMETHEUS}"
+                "uid": "DS_PROMETHEUS"
               },
               "exemplar": true,
               "expr": "sum(sum by (vault) (yearn_vault{param=\"tvl\", experimental=\"false\", vault!~\"yvUSDC 0.2.2|yvDAI 0.2.2|yvWBTC 0.3.1|yvHEGIC 0.3.0\"}) * ((sum by (vault) (yearn_vault{param=\"totalAssets\", experimental=\"false\", vault!~\"yvUSDC 0.2.2|yvDAI 0.2.2|yvWBTC 0.3.1|yvHEGIC 0.3.0\"})-(sum by (vault) (yearn_vault{param=\"totalDebt\", experimental=\"false\", vault!~\"yvUSDC 0.2.2|yvDAI 0.2.2|yvWBTC 0.3.1|yvHEGIC 0.3.0\"}))) / (sum by (vault) (yearn_vault{param=\"totalAssets\", experimental=\"false\", vault!~\"yvUSDC 0.2.2|yvDAI 0.2.2|yvWBTC 0.3.1|yvHEGIC 0.3.0\"}) )))",
@@ -1059,7 +1059,7 @@
             {
               "datasource": {
                 "type": "prometheus",
-                "uid": "${DS_DS_PROMETHEUS}"
+                "uid": "DS_PROMETHEUS"
               },
               "exemplar": true,
               "expr": "sum(sum by (vault) (yearn_vault{param=\"tvl\", experimental=\"false\", vault!~\"yvUSDC 0.2.2|yvDAI 0.2.2|yvWBTC 0.3.1|yvHEGIC 0.3.0\"}) * ((sum by (vault) (yearn_vault{param=\"totalAssets\", experimental=\"false\", vault!~\"yvUSDC 0.2.2|yvDAI 0.2.2|yvWBTC 0.3.1|yvHEGIC 0.3.0\"})-(sum by (vault) (yearn_vault{param=\"totalDebt\", experimental=\"false\", vault!~\"yvUSDC 0.2.2|yvDAI 0.2.2|yvWBTC 0.3.1|yvHEGIC 0.3.0\"}))) / (sum by (vault) (yearn_vault{param=\"totalAssets\", experimental=\"false\", vault!~\"yvUSDC 0.2.2|yvDAI 0.2.2|yvWBTC 0.3.1|yvHEGIC 0.3.0\"}) ))) offset 7d",
@@ -1110,7 +1110,7 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "${DS_DS_PROMETHEUS}"
+            "uid": "DS_PROMETHEUS"
           },
           "description": "$ of Funds unallocated from 7 days ago, % change from 7 day to current",
           "fieldConfig": {
@@ -1180,7 +1180,7 @@
             {
               "datasource": {
                 "type": "prometheus",
-                "uid": "${DS_DS_PROMETHEUS}"
+                "uid": "DS_PROMETHEUS"
               },
               "exemplar": true,
               "expr": "sum(sum by (vault) (yearn_vault{param=\"tvl\", experimental=\"false\", vault!~\"yvUSDC 0.2.2|yvDAI 0.2.2|yvWBTC 0.3.1|yvHEGIC 0.3.0\"}) * ((sum by (vault) (yearn_vault{param=\"totalAssets\", experimental=\"false\", vault!~\"yvUSDC 0.2.2|yvDAI 0.2.2|yvWBTC 0.3.1|yvHEGIC 0.3.0\"}))-(sum by (vault) (yearn_vault{param=\"totalDebt\", experimental=\"false\", vault!~\"yvUSDC 0.2.2|yvDAI 0.2.2|yvWBTC 0.3.1|yvHEGIC 0.3.0\"}))) / (sum by (vault) (yearn_vault{param=\"totalAssets\", experimental=\"false\", vault!~\"yvUSDC 0.2.2|yvDAI 0.2.2|yvWBTC 0.3.1|yvHEGIC 0.3.0\"}) )) / sum((yearn_vault{param=\"tvl\", experimental=\"false\", vault!~\"yvUSDC 0.2.2|yvDAI 0.2.2|yvWBTC 0.3.1|yvHEGIC 0.3.0\"})) ",
@@ -1193,7 +1193,7 @@
             {
               "datasource": {
                 "type": "prometheus",
-                "uid": "${DS_DS_PROMETHEUS}"
+                "uid": "DS_PROMETHEUS"
               },
               "exemplar": true,
               "expr": "sum(sum by (vault) (yearn_vault{param=\"tvl\", experimental=\"false\", vault!~\"yvUSDC 0.2.2|yvDAI 0.2.2|yvWBTC 0.3.1|yvHEGIC 0.3.0\"}) * ((sum by (vault) (yearn_vault{param=\"totalAssets\", experimental=\"false\", vault!~\"yvUSDC 0.2.2|yvDAI 0.2.2|yvWBTC 0.3.1|yvHEGIC 0.3.0\"}))-(sum by (vault) (yearn_vault{param=\"totalDebt\", experimental=\"false\", vault!~\"yvUSDC 0.2.2|yvDAI 0.2.2|yvWBTC 0.3.1|yvHEGIC 0.3.0\"}))) / (sum by (vault) (yearn_vault{param=\"totalAssets\", experimental=\"false\", vault!~\"yvUSDC 0.2.2|yvDAI 0.2.2|yvWBTC 0.3.1|yvHEGIC 0.3.0\"}) )) / sum((yearn_vault{param=\"tvl\", experimental=\"false\", vault!~\"yvUSDC 0.2.2|yvDAI 0.2.2|yvWBTC 0.3.1|yvHEGIC 0.3.0\"})) offset 7d",
@@ -1244,7 +1244,7 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "${DS_DS_PROMETHEUS}"
+            "uid": "DS_PROMETHEUS"
           },
           "description": "Avg summed apy for all production vaults. This is with weekly compunding taking the share price difference over a week from 7 days ago,  % change from 7 day to current",
           "fieldConfig": {
@@ -1313,7 +1313,7 @@
             {
               "datasource": {
                 "type": "prometheus",
-                "uid": "${DS_DS_PROMETHEUS}"
+                "uid": "DS_PROMETHEUS"
               },
               "exemplar": true,
               "expr": "avg((((delta(yearn_vault{param=\"pricePerShare\", experimental=\"false\", vault!~\"yvUSDC 0.2.2|yvDAI 0.2.2|yvWBTC 0.3.1|yvHEGIC 0.3.0\"}[7d]) + 1) ^ (1/7)) ^ 365 - 1) < 1000)",
@@ -1325,7 +1325,7 @@
             {
               "datasource": {
                 "type": "prometheus",
-                "uid": "${DS_DS_PROMETHEUS}"
+                "uid": "DS_PROMETHEUS"
               },
               "exemplar": true,
               "expr": "avg((((delta(yearn_vault{param=\"pricePerShare\", experimental=\"false\", vault!~\"yvUSDC 0.2.2|yvDAI 0.2.2|yvWBTC 0.3.1|yvHEGIC 0.3.0\"}[7d]) + 1) ^ (1/7)) ^ 365 - 1) < 1000) offset 7d",
@@ -1376,7 +1376,7 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "${DS_DS_PROMETHEUS}"
+            "uid": "DS_PROMETHEUS"
           },
           "description": "Standard deviation from 7 days ago,  % change from 7 day to current",
           "fieldConfig": {
@@ -1445,7 +1445,7 @@
             {
               "datasource": {
                 "type": "prometheus",
-                "uid": "${DS_DS_PROMETHEUS}"
+                "uid": "DS_PROMETHEUS"
               },
               "exemplar": true,
               "expr": "stddev((((delta(yearn_vault{param=\"pricePerShare\", experimental=\"false\", vault!~\"yvUSDC 0.2.2|yvDAI 0.2.2|yvWBTC 0.3.1|yvHEGIC 0.3.0\"}[7d]) + 1) ^ (1/7)) ^ 365 - 1) < 1000)",
@@ -1457,7 +1457,7 @@
             {
               "datasource": {
                 "type": "prometheus",
-                "uid": "${DS_DS_PROMETHEUS}"
+                "uid": "DS_PROMETHEUS"
               },
               "exemplar": true,
               "expr": "stddev((((delta(yearn_vault{param=\"pricePerShare\", experimental=\"false\", vault!~\"yvUSDC 0.2.2|yvDAI 0.2.2|yvWBTC 0.3.1|yvHEGIC 0.3.0\"}[7d]) + 1) ^ (1/7)) ^ 365 - 1) < 1000) offset 7d",
@@ -1522,7 +1522,7 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "${DS_DS_PROMETHEUS}"
+            "uid": "DS_PROMETHEUS"
           },
           "description": "$ of Funds unallocated from time range selected",
           "fieldConfig": {
@@ -1570,7 +1570,7 @@
             {
               "datasource": {
                 "type": "prometheus",
-                "uid": "${DS_DS_PROMETHEUS}"
+                "uid": "DS_PROMETHEUS"
               },
               "exemplar": true,
               "expr": "sum(sum by (vault) (yearn_vault{param=\"tvl\", experimental=\"false\", vault!~\"yvUSDC 0.2.2|yvDAI 0.2.2|yvWBTC 0.3.1|yvHEGIC 0.3.0\"})) offset $__range",
@@ -1588,7 +1588,7 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "${DS_DS_PROMETHEUS}"
+            "uid": "DS_PROMETHEUS"
           },
           "description": "$ of Funds unallocated from time range selected",
           "fieldConfig": {
@@ -1636,7 +1636,7 @@
             {
               "datasource": {
                 "type": "prometheus",
-                "uid": "${DS_DS_PROMETHEUS}"
+                "uid": "DS_PROMETHEUS"
               },
               "exemplar": true,
               "expr": "sum(sum by (vault) (yearn_vault{param=\"tvl\", experimental=\"false\", vault!~\"yvUSDC 0.2.2|yvDAI 0.2.2|yvWBTC 0.3.1|yvHEGIC 0.3.0\"}) * ((sum by (vault) (yearn_vault{param=\"totalAssets\", experimental=\"false\", vault!~\"yvUSDC 0.2.2|yvDAI 0.2.2|yvWBTC 0.3.1|yvHEGIC 0.3.0\"})-(sum by (vault) (yearn_vault{param=\"totalDebt\", experimental=\"false\", vault!~\"yvUSDC 0.2.2|yvDAI 0.2.2|yvWBTC 0.3.1|yvHEGIC 0.3.0\"}))) / (sum by (vault) (yearn_vault{param=\"totalAssets\", experimental=\"false\", vault!~\"yvUSDC 0.2.2|yvDAI 0.2.2|yvWBTC 0.3.1|yvHEGIC 0.3.0\"}) ))) offset $__range",
@@ -1654,7 +1654,7 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "${DS_DS_PROMETHEUS}"
+            "uid": "DS_PROMETHEUS"
           },
           "description": "% of Funds unallocated from time range selected",
           "fieldConfig": {
@@ -1725,7 +1725,7 @@
             {
               "datasource": {
                 "type": "prometheus",
-                "uid": "${DS_DS_PROMETHEUS}"
+                "uid": "DS_PROMETHEUS"
               },
               "exemplar": true,
               "expr": "sum(sum by (vault) (yearn_vault{param=\"tvl\", experimental=\"false\", vault!~\"yvUSDC 0.2.2|yvDAI 0.2.2|yvWBTC 0.3.1|yvHEGIC 0.3.0\"}) * ((sum by (vault) (yearn_vault{param=\"totalAssets\", experimental=\"false\", vault!~\"yvUSDC 0.2.2|yvDAI 0.2.2|yvWBTC 0.3.1|yvHEGIC 0.3.0\"}))-(sum by (vault) (yearn_vault{param=\"totalDebt\", experimental=\"false\", vault!~\"yvUSDC 0.2.2|yvDAI 0.2.2|yvWBTC 0.3.1|yvHEGIC 0.3.0\"}))) / (sum by (vault) (yearn_vault{param=\"totalAssets\", experimental=\"false\", vault!~\"yvUSDC 0.2.2|yvDAI 0.2.2|yvWBTC 0.3.1|yvHEGIC 0.3.0\"}) )) / sum((yearn_vault{param=\"tvl\", experimental=\"false\", vault!~\"yvUSDC 0.2.2|yvDAI 0.2.2|yvWBTC 0.3.1|yvHEGIC 0.3.0\"})) offset $__range",
@@ -1742,7 +1742,7 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "${DS_DS_PROMETHEUS}"
+            "uid": "DS_PROMETHEUS"
           },
           "description": "Avg summed apy for all production vaults. This is with weekly compounding taking the share price difference over a week from time range selected.",
           "fieldConfig": {
@@ -1793,7 +1793,7 @@
             {
               "datasource": {
                 "type": "prometheus",
-                "uid": "${DS_DS_PROMETHEUS}"
+                "uid": "DS_PROMETHEUS"
               },
               "exemplar": true,
               "expr": "avg((((delta(yearn_vault{param=\"pricePerShare\", experimental=\"false\", vault!~\"yvUSDC 0.2.2|yvDAI 0.2.2|yvWBTC 0.3.1|yvHEGIC 0.3.0\"}[7d]) + 1) ^ (1/7)) ^ 365 - 1) < 1000) offset $__range",
@@ -1809,7 +1809,7 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "${DS_DS_PROMETHEUS}"
+            "uid": "DS_PROMETHEUS"
           },
           "description": "Standard deviation from time range selected",
           "fieldConfig": {
@@ -1860,7 +1860,7 @@
             {
               "datasource": {
                 "type": "prometheus",
-                "uid": "${DS_DS_PROMETHEUS}"
+                "uid": "DS_PROMETHEUS"
               },
               "exemplar": true,
               "expr": "avg((((delta(yearn_vault{param=\"pricePerShare\", experimental=\"false\", vault!~\"yvUSDC 0.2.2|yvDAI 0.2.2|yvWBTC 0.3.1|yvHEGIC 0.3.0\"}[7d]) + 1) ^ (1/7)) ^ 365 - 1) < 1000)",
@@ -1872,7 +1872,7 @@
             {
               "datasource": {
                 "type": "prometheus",
-                "uid": "${DS_DS_PROMETHEUS}"
+                "uid": "DS_PROMETHEUS"
               },
               "exemplar": true,
               "expr": "stddev((((delta(yearn_vault{param=\"pricePerShare\", experimental=\"false\", vault!~\"yvUSDC 0.2.2|yvDAI 0.2.2|yvWBTC 0.3.1|yvHEGIC 0.3.0\"}[7d]) + 1) ^ (1/7)) ^ 365 - 1) < 1000) offset $__range",
@@ -1889,7 +1889,7 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "${DS_DS_PROMETHEUS}"
+            "uid": "DS_PROMETHEUS"
           },
           "description": "% of TVL from 7 days ago,  % change from time range selected to current",
           "fieldConfig": {
@@ -1972,7 +1972,7 @@
             {
               "datasource": {
                 "type": "prometheus",
-                "uid": "${DS_DS_PROMETHEUS}"
+                "uid": "DS_PROMETHEUS"
               },
               "exemplar": true,
               "expr": "sum(sum by (vault) (yearn_vault{param=\"tvl\", experimental=\"false\", vault!~\"yvUSDC 0.2.2|yvDAI 0.2.2|yvWBTC 0.3.1|yvHEGIC 0.3.0\"}))",
@@ -1984,7 +1984,7 @@
             {
               "datasource": {
                 "type": "prometheus",
-                "uid": "${DS_DS_PROMETHEUS}"
+                "uid": "DS_PROMETHEUS"
               },
               "exemplar": true,
               "expr": "sum(sum by (vault) (yearn_vault{param=\"tvl\", experimental=\"false\", vault!~\"yvUSDC 0.2.2|yvDAI 0.2.2|yvWBTC 0.3.1|yvHEGIC 0.3.0\"})) offset $__range",
@@ -2035,7 +2035,7 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "${DS_DS_PROMETHEUS}"
+            "uid": "DS_PROMETHEUS"
           },
           "description": "$ of Funds unallocated from time range selected, % change from time range selected to current",
           "fieldConfig": {
@@ -2103,7 +2103,7 @@
             {
               "datasource": {
                 "type": "prometheus",
-                "uid": "${DS_DS_PROMETHEUS}"
+                "uid": "DS_PROMETHEUS"
               },
               "exemplar": true,
               "expr": "sum(sum by (vault) (yearn_vault{param=\"tvl\", experimental=\"false\", vault!~\"yvUSDC 0.2.2|yvDAI 0.2.2|yvWBTC 0.3.1|yvHEGIC 0.3.0\"}) * ((sum by (vault) (yearn_vault{param=\"totalAssets\", experimental=\"false\", vault!~\"yvUSDC 0.2.2|yvDAI 0.2.2|yvWBTC 0.3.1|yvHEGIC 0.3.0\"})-(sum by (vault) (yearn_vault{param=\"totalDebt\", experimental=\"false\", vault!~\"yvUSDC 0.2.2|yvDAI 0.2.2|yvWBTC 0.3.1|yvHEGIC 0.3.0\"}))) / (sum by (vault) (yearn_vault{param=\"totalAssets\", experimental=\"false\", vault!~\"yvUSDC 0.2.2|yvDAI 0.2.2|yvWBTC 0.3.1|yvHEGIC 0.3.0\"}) )))",
@@ -2116,7 +2116,7 @@
             {
               "datasource": {
                 "type": "prometheus",
-                "uid": "${DS_DS_PROMETHEUS}"
+                "uid": "DS_PROMETHEUS"
               },
               "exemplar": true,
               "expr": "sum(sum by (vault) (yearn_vault{param=\"tvl\", experimental=\"false\", vault!~\"yvUSDC 0.2.2|yvDAI 0.2.2|yvWBTC 0.3.1|yvHEGIC 0.3.0\"}) * ((sum by (vault) (yearn_vault{param=\"totalAssets\", experimental=\"false\", vault!~\"yvUSDC 0.2.2|yvDAI 0.2.2|yvWBTC 0.3.1|yvHEGIC 0.3.0\"})-(sum by (vault) (yearn_vault{param=\"totalDebt\", experimental=\"false\", vault!~\"yvUSDC 0.2.2|yvDAI 0.2.2|yvWBTC 0.3.1|yvHEGIC 0.3.0\"}))) / (sum by (vault) (yearn_vault{param=\"totalAssets\", experimental=\"false\", vault!~\"yvUSDC 0.2.2|yvDAI 0.2.2|yvWBTC 0.3.1|yvHEGIC 0.3.0\"}) ))) offset $__range",
@@ -2167,7 +2167,7 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "${DS_DS_PROMETHEUS}"
+            "uid": "DS_PROMETHEUS"
           },
           "description": "$ of Funds unallocated from time range selected, % change from time range selected to current",
           "fieldConfig": {
@@ -2237,7 +2237,7 @@
             {
               "datasource": {
                 "type": "prometheus",
-                "uid": "${DS_DS_PROMETHEUS}"
+                "uid": "DS_PROMETHEUS"
               },
               "exemplar": true,
               "expr": "sum(sum by (vault) (yearn_vault{param=\"tvl\", experimental=\"false\", vault!~\"yvUSDC 0.2.2|yvDAI 0.2.2|yvWBTC 0.3.1|yvHEGIC 0.3.0\"}) * ((sum by (vault) (yearn_vault{param=\"totalAssets\", experimental=\"false\", vault!~\"yvUSDC 0.2.2|yvDAI 0.2.2|yvWBTC 0.3.1|yvHEGIC 0.3.0\"}))-(sum by (vault) (yearn_vault{param=\"totalDebt\", experimental=\"false\", vault!~\"yvUSDC 0.2.2|yvDAI 0.2.2|yvWBTC 0.3.1|yvHEGIC 0.3.0\"}))) / (sum by (vault) (yearn_vault{param=\"totalAssets\", experimental=\"false\", vault!~\"yvUSDC 0.2.2|yvDAI 0.2.2|yvWBTC 0.3.1|yvHEGIC 0.3.0\"}) )) / sum((yearn_vault{param=\"tvl\", experimental=\"false\", vault!~\"yvUSDC 0.2.2|yvDAI 0.2.2|yvWBTC 0.3.1|yvHEGIC 0.3.0\"})) ",
@@ -2250,7 +2250,7 @@
             {
               "datasource": {
                 "type": "prometheus",
-                "uid": "${DS_DS_PROMETHEUS}"
+                "uid": "DS_PROMETHEUS"
               },
               "exemplar": true,
               "expr": "sum(sum by (vault) (yearn_vault{param=\"tvl\", experimental=\"false\", vault!~\"yvUSDC 0.2.2|yvDAI 0.2.2|yvWBTC 0.3.1|yvHEGIC 0.3.0\"}) * ((sum by (vault) (yearn_vault{param=\"totalAssets\", experimental=\"false\", vault!~\"yvUSDC 0.2.2|yvDAI 0.2.2|yvWBTC 0.3.1|yvHEGIC 0.3.0\"}))-(sum by (vault) (yearn_vault{param=\"totalDebt\", experimental=\"false\", vault!~\"yvUSDC 0.2.2|yvDAI 0.2.2|yvWBTC 0.3.1|yvHEGIC 0.3.0\"}))) / (sum by (vault) (yearn_vault{param=\"totalAssets\", experimental=\"false\", vault!~\"yvUSDC 0.2.2|yvDAI 0.2.2|yvWBTC 0.3.1|yvHEGIC 0.3.0\"}) )) / sum((yearn_vault{param=\"tvl\", experimental=\"false\", vault!~\"yvUSDC 0.2.2|yvDAI 0.2.2|yvWBTC 0.3.1|yvHEGIC 0.3.0\"})) offset $__range",
@@ -2301,7 +2301,7 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "${DS_DS_PROMETHEUS}"
+            "uid": "DS_PROMETHEUS"
           },
           "description": "Avg summed apy for all production vaults. This is with weekly compunding taking the share price difference over a week from time range selected,  % change from time range selected to current",
           "fieldConfig": {
@@ -2370,7 +2370,7 @@
             {
               "datasource": {
                 "type": "prometheus",
-                "uid": "${DS_DS_PROMETHEUS}"
+                "uid": "DS_PROMETHEUS"
               },
               "exemplar": true,
               "expr": "avg((((delta(yearn_vault{param=\"pricePerShare\", experimental=\"false\", vault!~\"yvUSDC 0.2.2|yvDAI 0.2.2|yvWBTC 0.3.1|yvHEGIC 0.3.0\"}[7d]) + 1) ^ (1/7)) ^ 365 - 1) < 1000)",
@@ -2382,7 +2382,7 @@
             {
               "datasource": {
                 "type": "prometheus",
-                "uid": "${DS_DS_PROMETHEUS}"
+                "uid": "DS_PROMETHEUS"
               },
               "exemplar": true,
               "expr": "avg((((delta(yearn_vault{param=\"pricePerShare\", experimental=\"false\", vault!~\"yvUSDC 0.2.2|yvDAI 0.2.2|yvWBTC 0.3.1|yvHEGIC 0.3.0\"}[7d]) + 1) ^ (1/7)) ^ 365 - 1) < 1000) offset $__range",
@@ -2433,7 +2433,7 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "${DS_DS_PROMETHEUS}"
+            "uid": "DS_PROMETHEUS"
           },
           "description": "Standard deviation from time range selected,  % change from time range selected to current",
           "fieldConfig": {
@@ -2502,7 +2502,7 @@
             {
               "datasource": {
                 "type": "prometheus",
-                "uid": "${DS_DS_PROMETHEUS}"
+                "uid": "DS_PROMETHEUS"
               },
               "exemplar": true,
               "expr": "stddev((((delta(yearn_vault{param=\"pricePerShare\", experimental=\"false\", vault!~\"yvUSDC 0.2.2|yvDAI 0.2.2|yvWBTC 0.3.1|yvHEGIC 0.3.0\"}[7d]) + 1) ^ (1/7)) ^ 365 - 1) < 1000)",
@@ -2514,7 +2514,7 @@
             {
               "datasource": {
                 "type": "prometheus",
-                "uid": "${DS_DS_PROMETHEUS}"
+                "uid": "DS_PROMETHEUS"
               },
               "exemplar": true,
               "expr": "stddev((((delta(yearn_vault{param=\"pricePerShare\", experimental=\"false\", vault!~\"yvUSDC 0.2.2|yvDAI 0.2.2|yvWBTC 0.3.1|yvHEGIC 0.3.0\"}[7d]) + 1) ^ (1/7)) ^ 365 - 1) < 1000) offset $__range",
@@ -2582,7 +2582,7 @@
     {
       "datasource": {
         "type": "prometheus",
-        "uid": "${DS_DS_PROMETHEUS}"
+        "uid": "DS_PROMETHEUS"
       },
       "description": "Unalllocated tvl > 35m",
       "fieldConfig": {
@@ -2660,7 +2660,7 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "${DS_DS_PROMETHEUS}"
+            "uid": "DS_PROMETHEUS"
           },
           "exemplar": true,
           "expr": "sum(sum by (vault) (yearn_vault{param=\"tvl\", experimental=\"false\", vault!~\"yvUSDC 0.2.2|yvDAI 0.2.2|yvWBTC 0.3.1|yvHEGIC 0.3.0\"}) * ((sum by (vault) (yearn_vault{param=\"totalAssets\", experimental=\"false\", vault!~\"yvUSDC 0.2.2|yvDAI 0.2.2|yvWBTC 0.3.1|yvHEGIC 0.3.0\"})-(sum by (vault) (yearn_vault{param=\"totalDebt\", experimental=\"false\", vault!~\"yvUSDC 0.2.2|yvDAI 0.2.2|yvWBTC 0.3.1|yvHEGIC 0.3.0\"}))) / (sum by (vault) (yearn_vault{param=\"totalAssets\", experimental=\"false\", vault!~\"yvUSDC 0.2.2|yvDAI 0.2.2|yvWBTC 0.3.1|yvHEGIC 0.3.0\"}) )))",
@@ -2677,7 +2677,7 @@
     {
       "datasource": {
         "type": "prometheus",
-        "uid": "${DS_DS_PROMETHEUS}"
+        "uid": "DS_PROMETHEUS"
       },
       "fieldConfig": {
         "defaults": {
@@ -2774,7 +2774,7 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "${DS_DS_PROMETHEUS}"
+            "uid": "DS_PROMETHEUS"
           },
           "exemplar": true,
           "expr": "sum(sum by (vault) (yearn_vault{param=\"tvl\", experimental=\"false\", vault!~\"yvUSDC 0.2.2|yvDAI 0.2.2|yvWBTC 0.3.1|yvHEGIC 0.3.0\"}) * ((sum by (vault) (yearn_vault{param=\"totalAssets\", experimental=\"false\", vault!~\"yvUSDC 0.2.2|yvDAI 0.2.2|yvWBTC 0.3.1|yvHEGIC 0.3.0\"}))-(sum by (vault) (yearn_vault{param=\"totalDebt\", experimental=\"false\", vault!~\"yvUSDC 0.2.2|yvDAI 0.2.2|yvWBTC 0.3.1|yvHEGIC 0.3.0\"}))) / (sum by (vault) (yearn_vault{param=\"totalAssets\", experimental=\"false\", vault!~\"yvUSDC 0.2.2|yvDAI 0.2.2|yvWBTC 0.3.1|yvHEGIC 0.3.0\"}) )) / sum((yearn_vault{param=\"tvl\", experimental=\"false\", vault!~\"yvUSDC 0.2.2|yvDAI 0.2.2|yvWBTC 0.3.1|yvHEGIC 0.3.0\"}))",
@@ -2790,7 +2790,7 @@
     {
       "datasource": {
         "type": "prometheus",
-        "uid": "${DS_DS_PROMETHEUS}"
+        "uid": "DS_PROMETHEUS"
       },
       "fieldConfig": {
         "defaults": {
@@ -2866,7 +2866,7 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "${DS_DS_PROMETHEUS}"
+            "uid": "DS_PROMETHEUS"
           },
           "exemplar": true,
           "expr": "sum(sum by (vault) (yearn_vault{param=\"tvl\", experimental=\"false\", vault!~\"yvUSDC 0.2.2|yvDAI 0.2.2|yvWBTC 0.3.1|yvHEGIC 0.3.0\"}))",
@@ -2877,7 +2877,7 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "${DS_DS_PROMETHEUS}"
+            "uid": "DS_PROMETHEUS"
           },
           "exemplar": true,
           "expr": "sum(sum by (vault) (yearn_vault{network=\"ETH\", param=\"tvl\", experimental=\"false\", vault!~\"yvUSDC 0.2.2|yvDAI 0.2.2|yvWBTC 0.3.1|yvHEGIC 0.3.0\"}))",
@@ -2889,7 +2889,7 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "${DS_DS_PROMETHEUS}"
+            "uid": "DS_PROMETHEUS"
           },
           "exemplar": true,
           "expr": "sum(sum by (vault) (yearn_vault{network=\"FTM\", param=\"tvl\", experimental=\"false\"}))",
@@ -2910,7 +2910,7 @@
       "dashes": false,
       "datasource": {
         "type": "prometheus",
-        "uid": "${DS_DS_PROMETHEUS}"
+        "uid": "DS_PROMETHEUS"
       },
       "description": "Avg summed apy for all production vaults. This is with weekly compunding taking the share price difference over a week. ",
       "fill": 1,
@@ -2965,7 +2965,7 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "${DS_DS_PROMETHEUS}"
+            "uid": "DS_PROMETHEUS"
           },
           "exemplar": true,
           "expr": "avg((((delta(yearn_vault{param=\"pricePerShare\", experimental=\"false\", vault!~\"yvUSDC 0.2.2|yvDAI 0.2.2|yvWBTC 0.3.1|yvHEGIC 0.3.0\"}[7d]) + 1) ^ (1/7)) ^ 365 - 1) < 1000)",
@@ -2976,7 +2976,7 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "${DS_DS_PROMETHEUS}"
+            "uid": "DS_PROMETHEUS"
           },
           "exemplar": true,
           "expr": "stddev((((delta(yearn_vault{param=\"pricePerShare\", experimental=\"false\", vault!~\"yvUSDC 0.2.2|yvDAI 0.2.2|yvWBTC 0.3.1|yvHEGIC 0.3.0\"}[7d]) + 1) ^ (1/7)) ^ 365 - 1) < 1000)",
@@ -3033,7 +3033,7 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "${DS_DS_PROMETHEUS}"
+            "uid": "DS_PROMETHEUS"
           },
           "fieldConfig": {
             "defaults": {
@@ -3124,7 +3124,7 @@
             {
               "datasource": {
                 "type": "prometheus",
-                "uid": "${DS_DS_PROMETHEUS}"
+                "uid": "DS_PROMETHEUS"
               },
               "exemplar": true,
               "expr": "(avg by (vault) (yearn_vault{param=\"totalDebt\", experimental=\"false\", vault!~\"yvUSDC 0.2.2|yvDAI 0.2.2|yvWBTC 0.3.1|yvHEGIC 0.3.0\", network=\"ETH\"}) / avg by (vault) (yearn_vault{param=\"totalAssets\", experimental=\"false\", vault!~\"yvUSDC 0.2.2|yvDAI 0.2.2|yvWBTC 0.3.1|yvHEGIC 0.3.0\", network=\"ETH\"}) )",
@@ -3139,7 +3139,7 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "${DS_DS_PROMETHEUS}"
+            "uid": "DS_PROMETHEUS"
           },
           "description": "",
           "fieldConfig": {
@@ -3231,7 +3231,7 @@
             {
               "datasource": {
                 "type": "prometheus",
-                "uid": "${DS_DS_PROMETHEUS}"
+                "uid": "DS_PROMETHEUS"
               },
               "exemplar": true,
               "expr": "(avg by (vault) (yearn_vault{param=\"totalDebt\", experimental=\"false\", vault!~\"yvAVAX 0.4.3\", network=\"FTM\"}) / avg by (vault) (yearn_vault{param=\"totalAssets\", experimental=\"false\", vault!~\"yvAVAX 0.4.3\", network=\"FTM\"}) )",
