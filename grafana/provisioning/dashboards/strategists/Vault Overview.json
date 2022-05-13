@@ -72,7 +72,7 @@
   "fiscalYearStartMonth": 0,
   "graphTooltip": 0,
   "id": null,
-  "iteration": 1643233214314,
+  "iteration": 1652376038075,
   "links": [],
   "liveNow": false,
   "panels": [
@@ -117,7 +117,7 @@
         "overrides": []
       },
       "gridPos": {
-        "h": 4,
+        "h": 6,
         "w": 2,
         "x": 0,
         "y": 1
@@ -129,7 +129,9 @@
         "justifyMode": "auto",
         "orientation": "auto",
         "reduceOptions": {
-          "calcs": ["lastNotNull"],
+          "calcs": [
+            "lastNotNull"
+          ],
           "fields": "",
           "values": false
         },
@@ -144,7 +146,7 @@
             "uid": "DS_PROMETHEUS"
           },
           "exemplar": false,
-          "expr": "sum(yearn_strategy{network=\"$networks\", vault=\"$vaults\", param=\"isActive\"})",
+          "expr": "sum(yearn_strategy{network=\"$networks\", vault=\"$vaults\", param=\"isActive\", experimental=\"$exp\"})",
           "instant": true,
           "interval": "",
           "legendFormat": "{{strategy}}",
@@ -197,7 +199,9 @@
         "justifyMode": "auto",
         "orientation": "horizontal",
         "reduceOptions": {
-          "calcs": ["lastNotNull"],
+          "calcs": [
+            "lastNotNull"
+          ],
           "fields": "",
           "values": false
         },
@@ -212,7 +216,7 @@
             "uid": "DS_PROMETHEUS"
           },
           "exemplar": false,
-          "expr": "yearn_strategy{network=\"$networks\", vault=\"$vaults\", param=\"isActive\"} > 0",
+          "expr": "yearn_strategy{network=\"$networks\", vault=\"$vaults\", param=\"isActive\", experimental=\"$exp\"} > 0",
           "instant": true,
           "interval": "",
           "legendFormat": "{{strategy}}",
@@ -264,7 +268,9 @@
         "justifyMode": "auto",
         "orientation": "horizontal",
         "reduceOptions": {
-          "calcs": ["lastNotNull"],
+          "calcs": [
+            "lastNotNull"
+          ],
           "fields": "",
           "values": false
         },
@@ -279,7 +285,7 @@
             "uid": "DS_PROMETHEUS"
           },
           "exemplar": false,
-          "expr": "yearn_strategy{network=\"$networks\", vault=\"$vaults\", param=\"isActive\"} < 0.1",
+          "expr": "yearn_strategy{network=\"$networks\", vault=\"$vaults\", param=\"isActive\", experimental=\"$exp\"} < 0.1",
           "instant": true,
           "interval": "",
           "legendFormat": "{{strategy}}",
@@ -319,7 +325,7 @@
         "overrides": []
       },
       "gridPos": {
-        "h": 4,
+        "h": 6,
         "w": 2,
         "x": 22,
         "y": 1
@@ -331,7 +337,9 @@
         "justifyMode": "auto",
         "orientation": "auto",
         "reduceOptions": {
-          "calcs": ["lastNotNull"],
+          "calcs": [
+            "lastNotNull"
+          ],
           "fields": "",
           "values": false
         },
@@ -346,7 +354,7 @@
             "uid": "DS_PROMETHEUS"
           },
           "exemplar": false,
-          "expr": "count(yearn_strategy{network=\"$networks\", vault=\"$vaults\", param=\"isActive\"} < 0.1)",
+          "expr": "count(yearn_strategy{network=\"$networks\", vault=\"$vaults\", param=\"isActive\", experimental=\"$exp\"} < 0.1)",
           "instant": true,
           "interval": "",
           "legendFormat": "{{strategy}}",
@@ -369,7 +377,7 @@
       },
       "id": 2,
       "panels": [],
-      "title": "Assets",
+      "title": "Overview",
       "type": "row"
     },
     {
@@ -401,7 +409,7 @@
       "gridPos": {
         "h": 4,
         "w": 4,
-        "x": 2,
+        "x": 0,
         "y": 11
       },
       "id": 4,
@@ -411,7 +419,9 @@
         "justifyMode": "auto",
         "orientation": "auto",
         "reduceOptions": {
-          "calcs": ["lastNotNull"],
+          "calcs": [
+            "lastNotNull"
+          ],
           "fields": "",
           "values": false
         },
@@ -421,8 +431,12 @@
       "pluginVersion": "8.3.1",
       "targets": [
         {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "DS_PROMETHEUS"
+          },
           "exemplar": true,
-          "expr": "yearn_vault{network=\"$networks\", param=\"totalAssets\", vault=~\"$vaults\"}",
+          "expr": "yearn_vault{network=\"$networks\", param=\"totalAssets\", vault=~\"$vaults\", experimental=\"$exp\"}",
           "instant": false,
           "interval": "",
           "legendFormat": "{{param}}",
@@ -463,7 +477,7 @@
       "gridPos": {
         "h": 4,
         "w": 4,
-        "x": 6,
+        "x": 4,
         "y": 11
       },
       "id": 66,
@@ -473,7 +487,9 @@
         "justifyMode": "auto",
         "orientation": "auto",
         "reduceOptions": {
-          "calcs": ["lastNotNull"],
+          "calcs": [
+            "lastNotNull"
+          ],
           "fields": "",
           "values": false
         },
@@ -483,8 +499,12 @@
       "pluginVersion": "8.3.1",
       "targets": [
         {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "DS_PROMETHEUS"
+          },
           "exemplar": true,
-          "expr": "yearn_vault{network=\"$networks\", param=\"tvl\", vault=~\"$vaults\"}",
+          "expr": "yearn_vault{network=\"$networks\", param=\"tvl\", vault=~\"$vaults\", experimental=\"$exp\"}",
           "instant": false,
           "interval": "",
           "legendFormat": "{{param}}",
@@ -525,7 +545,7 @@
       "gridPos": {
         "h": 4,
         "w": 4,
-        "x": 10,
+        "x": 8,
         "y": 11
       },
       "id": 20,
@@ -535,260 +555,9 @@
         "justifyMode": "auto",
         "orientation": "auto",
         "reduceOptions": {
-          "calcs": ["lastNotNull"],
-          "fields": "",
-          "values": false
-        },
-        "text": {},
-        "textMode": "auto"
-      },
-      "pluginVersion": "8.3.1",
-      "targets": [
-        {
-          "exemplar": true,
-          "expr": "sum(yearn_strategy{network=\"$networks\", param=\"totalDebt\", vault=~\"$vaults\"})",
-          "instant": false,
-          "interval": "",
-          "legendFormat": "{{param}}",
-          "queryType": "randomWalk",
-          "refId": "A"
-        }
-      ],
-      "title": "totalDebt",
-      "transformations": [],
-      "type": "stat"
-    },
-    {
-      "datasource": {
-        "type": "prometheus",
-        "uid": "DS_PROMETHEUS"
-      },
-      "description": "Sum of the total amount of gain from all strategies in underlying token.",
-      "fieldConfig": {
-        "defaults": {
-          "color": {
-            "mode": "thresholds"
-          },
-          "decimals": 2,
-          "mappings": [],
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              {
-                "color": "purple",
-                "value": null
-              }
-            ]
-          },
-          "unit": "short"
-        },
-        "overrides": []
-      },
-      "gridPos": {
-        "h": 4,
-        "w": 4,
-        "x": 14,
-        "y": 11
-      },
-      "id": 80,
-      "options": {
-        "colorMode": "value",
-        "graphMode": "none",
-        "justifyMode": "auto",
-        "orientation": "auto",
-        "reduceOptions": {
-          "calcs": ["lastNotNull"],
-          "fields": "",
-          "values": false
-        },
-        "text": {},
-        "textMode": "auto"
-      },
-      "pluginVersion": "8.3.1",
-      "targets": [
-        {
-          "exemplar": true,
-          "expr": "sum(yearn_strategy{network=\"$networks\", param=\"totalGain\", vault=~\"$vaults\"})",
-          "instant": false,
-          "interval": "",
-          "legendFormat": "{{param}}",
-          "queryType": "randomWalk",
-          "refId": "A"
-        }
-      ],
-      "title": "totalGain",
-      "transformations": [],
-      "type": "stat"
-    },
-    {
-      "datasource": {
-        "type": "prometheus",
-        "uid": "DS_PROMETHEUS"
-      },
-      "description": "",
-      "fieldConfig": {
-        "defaults": {
-          "color": {
-            "mode": "thresholds"
-          },
-          "decimals": 2,
-          "mappings": [],
-          "max": 1,
-          "min": 0,
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              {
-                "color": "purple",
-                "value": null
-              }
-            ]
-          },
-          "unit": "percentunit"
-        },
-        "overrides": []
-      },
-      "gridPos": {
-        "h": 4,
-        "w": 4,
-        "x": 18,
-        "y": 11
-      },
-      "id": 92,
-      "options": {
-        "colorMode": "value",
-        "graphMode": "none",
-        "justifyMode": "auto",
-        "orientation": "auto",
-        "reduceOptions": {
-          "calcs": ["lastNotNull"],
-          "fields": "",
-          "values": false
-        },
-        "text": {},
-        "textMode": "auto"
-      },
-      "pluginVersion": "8.3.1",
-      "targets": [
-        {
-          "exemplar": true,
-          "expr": "yearn_vault{network=\"$networks\", param=\"totalAssets\", vault=\"$vaults\"} / on(vault,version) yearn_vault{network=\"$networks\", param=\"depositLimit\", vault=\"$vaults\"}",
-          "instant": true,
-          "interval": "",
-          "legendFormat": "% to Limit",
-          "queryType": "randomWalk",
-          "refId": "A"
-        }
-      ],
-      "title": "% to Deposit Limit",
-      "transformations": [],
-      "type": "stat"
-    },
-    {
-      "datasource": {
-        "type": "prometheus",
-        "uid": "DS_PROMETHEUS"
-      },
-      "description": "Share price of Vault token",
-      "fieldConfig": {
-        "defaults": {
-          "color": {
-            "mode": "thresholds"
-          },
-          "decimals": 10,
-          "mappings": [],
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              {
-                "color": "purple",
-                "value": null
-              }
-            ]
-          },
-          "unit": "short"
-        },
-        "overrides": []
-      },
-      "gridPos": {
-        "h": 4,
-        "w": 4,
-        "x": 2,
-        "y": 15
-      },
-      "id": 77,
-      "options": {
-        "colorMode": "value",
-        "graphMode": "none",
-        "justifyMode": "auto",
-        "orientation": "auto",
-        "reduceOptions": {
-          "calcs": ["lastNotNull"],
-          "fields": "",
-          "values": false
-        },
-        "text": {},
-        "textMode": "auto"
-      },
-      "pluginVersion": "8.3.1",
-      "targets": [
-        {
-          "exemplar": true,
-          "expr": "yearn_vault{network=\"$networks\", param=\"pricePerShare\", vault=~\"$vaults\"}",
-          "instant": false,
-          "interval": "",
-          "legendFormat": "{{param}}",
-          "queryType": "randomWalk",
-          "refId": "A"
-        }
-      ],
-      "title": "Share Price",
-      "transformations": [],
-      "type": "stat"
-    },
-    {
-      "datasource": {
-        "type": "prometheus",
-        "uid": "DS_PROMETHEUS"
-      },
-      "description": "",
-      "fieldConfig": {
-        "defaults": {
-          "color": {
-            "mode": "thresholds"
-          },
-          "decimals": 4,
-          "mappings": [],
-          "max": 1,
-          "min": 0,
-          "noValue": "Select shorter time frame",
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              {
-                "color": "purple",
-                "value": null
-              }
-            ]
-          },
-          "unit": "percentunit"
-        },
-        "overrides": []
-      },
-      "gridPos": {
-        "h": 4,
-        "w": 4,
-        "x": 6,
-        "y": 15
-      },
-      "id": 110,
-      "options": {
-        "colorMode": "value",
-        "graphMode": "none",
-        "justifyMode": "auto",
-        "orientation": "auto",
-        "reduceOptions": {
-          "calcs": ["last"],
+          "calcs": [
+            "lastNotNull"
+          ],
           "fields": "",
           "values": false
         },
@@ -803,15 +572,16 @@
             "uid": "DS_PROMETHEUS"
           },
           "exemplar": true,
-          "expr": "(yearn_vault{network=\"$networks\", param=\"pricePerShare\", vault=~\"$vaults\"} / yearn_vault{network=\"$networks\", param=\"pricePerShare\", vault=~\"$vaults\"} offset $__range) - 1",
+          "expr": "sum(yearn_strategy{network=\"$networks\", param=\"totalDebt\", vault=~\"$vaults\", experimental=\"$exp\"})",
           "instant": false,
           "interval": "",
-          "legendFormat": "{{vault}}",
+          "legendFormat": "{{param}}",
           "queryType": "randomWalk",
           "refId": "A"
         }
       ],
-      "title": "% Share Price Change over Time Range",
+      "title": "totalDebt",
+      "transformations": [],
       "type": "stat"
     },
     {
@@ -857,8 +627,8 @@
       "gridPos": {
         "h": 4,
         "w": 4,
-        "x": 10,
-        "y": 15
+        "x": 12,
+        "y": 11
       },
       "id": 99,
       "options": {
@@ -867,7 +637,9 @@
         "justifyMode": "auto",
         "orientation": "auto",
         "reduceOptions": {
-          "calcs": ["lastNotNull"],
+          "calcs": [
+            "lastNotNull"
+          ],
           "fields": "",
           "values": false
         },
@@ -877,8 +649,12 @@
       "pluginVersion": "8.3.1",
       "targets": [
         {
-          "exemplar": true,
-          "expr": "sum(yearn_strategy{network=\"$networks\", param=\"totalDebt\", vault=~\"$vaults\"}) / on(vault, version) sum(yearn_vault{network=\"$networks\", param=\"totalAssets\", vault=~\"$vaults\"})",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "DS_PROMETHEUS"
+          },
+          "exemplar": false,
+          "expr": "sum(yearn_strategy{network=\"$networks\", param=\"totalDebt\", vault=~\"$vaults\", experimental=\"$exp\"}) / on(vault, version) sum(yearn_vault{network=\"$networks\", param=\"totalAssets\", vault=~\"$vaults\", experimental=\"$exp\"})",
           "instant": true,
           "interval": "",
           "legendFormat": "% to Limit",
@@ -887,6 +663,608 @@
         }
       ],
       "title": "% of Assets Deployed",
+      "transformations": [],
+      "type": "stat"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "DS_PROMETHEUS"
+      },
+      "description": "",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "decimals": 2,
+          "mappings": [],
+          "max": 1,
+          "min": 0,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "purple",
+                "value": null
+              }
+            ]
+          },
+          "unit": "percentunit"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 4,
+        "x": 16,
+        "y": 11
+      },
+      "id": 92,
+      "options": {
+        "colorMode": "value",
+        "graphMode": "none",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "text": {},
+        "textMode": "auto"
+      },
+      "pluginVersion": "8.3.1",
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "DS_PROMETHEUS"
+          },
+          "exemplar": false,
+          "expr": "yearn_vault{network=\"$networks\", param=\"totalAssets\", vault=\"$vaults\", experimental=\"$exp\"} / on(vault,version) yearn_vault{network=\"$networks\", param=\"depositLimit\", vault=\"$vaults\", experimental=\"$exp\"}",
+          "instant": true,
+          "interval": "",
+          "legendFormat": "% to Limit",
+          "queryType": "randomWalk",
+          "refId": "A"
+        }
+      ],
+      "title": "% to Deposit Limit",
+      "transformations": [],
+      "type": "stat"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "DS_PROMETHEUS"
+      },
+      "description": "Price of the underlying deposit token",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "decimals": 2,
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "purple",
+                "value": null
+              }
+            ]
+          },
+          "unit": "currencyUSD"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 4,
+        "x": 20,
+        "y": 11
+      },
+      "id": 120,
+      "options": {
+        "colorMode": "value",
+        "graphMode": "none",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "text": {},
+        "textMode": "auto"
+      },
+      "pluginVersion": "8.3.1",
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "DS_PROMETHEUS"
+          },
+          "exemplar": true,
+          "expr": "yearn_vault{network=\"$networks\", param=\"token price\", experimental=\"$exp\", vault=\"$vaults\"}",
+          "instant": false,
+          "interval": "",
+          "legendFormat": "{{param}}",
+          "queryType": "randomWalk",
+          "refId": "A"
+        }
+      ],
+      "title": "Deposit Token Price",
+      "transformations": [],
+      "type": "stat"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "DS_PROMETHEUS"
+      },
+      "description": "Sum of the total amount of gain from all strategies in underlying token.",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "decimals": 2,
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "purple",
+                "value": null
+              }
+            ]
+          },
+          "unit": "short"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 4,
+        "x": 0,
+        "y": 15
+      },
+      "id": 80,
+      "options": {
+        "colorMode": "value",
+        "graphMode": "none",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "text": {},
+        "textMode": "auto"
+      },
+      "pluginVersion": "8.3.1",
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "DS_PROMETHEUS"
+          },
+          "exemplar": true,
+          "expr": "sum(yearn_strategy{network=\"$networks\", param=\"totalGain\", vault=~\"$vaults\", experimental=\"$exp\"})",
+          "instant": false,
+          "interval": "",
+          "legendFormat": "{{param}}",
+          "queryType": "randomWalk",
+          "refId": "A"
+        }
+      ],
+      "title": "totalGain",
+      "transformations": [],
+      "type": "stat"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "DS_PROMETHEUS"
+      },
+      "description": "Sum of all gains actualized from all strategies in terms of $",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "decimals": 2,
+          "mappings": [],
+          "min": 0,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "purple",
+                "value": null
+              }
+            ]
+          },
+          "unit": "currencyUSD"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 4,
+        "x": 4,
+        "y": 15
+      },
+      "id": 118,
+      "options": {
+        "colorMode": "value",
+        "graphMode": "none",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "text": {},
+        "textMode": "auto"
+      },
+      "pluginVersion": "8.3.1",
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "DS_PROMETHEUS"
+          },
+          "exemplar": false,
+          "expr": "sum(yearn_strategy{network=\"$networks\", param=\"totalGain\", vault=~\"$vaults\", experimental=\"$exp\"})",
+          "hide": true,
+          "instant": true,
+          "interval": "",
+          "legendFormat": "TotalLossDepositToken",
+          "queryType": "randomWalk",
+          "refId": "A"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "DS_PROMETHEUS"
+          },
+          "exemplar": true,
+          "expr": "yearn_vault{network=\"$networks\", param=\"token price\", experimental=\"$exp\", vault=\"$vaults\"}",
+          "hide": true,
+          "interval": "",
+          "legendFormat": "Token Price",
+          "refId": "B"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "DS_PROMETHEUS"
+          },
+          "exemplar": true,
+          "expr": "sum(yearn_strategy{network=\"$networks\", param=\"totalGain\", vault=~\"$vaults\", experimental=\"$exp\"}) * yearn_vault{network=\"$networks\", param=\"token price\", experimental=\"$exp\", vault=\"$vaults\"}",
+          "hide": false,
+          "interval": "",
+          "legendFormat": "TotalGain$",
+          "refId": "C"
+        }
+      ],
+      "title": "totalGain $",
+      "transformations": [],
+      "type": "stat"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "DS_PROMETHEUS"
+      },
+      "description": "Share price of Vault token",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "decimals": 10,
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "purple",
+                "value": null
+              }
+            ]
+          },
+          "unit": "short"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 4,
+        "x": 8,
+        "y": 15
+      },
+      "id": 77,
+      "options": {
+        "colorMode": "value",
+        "graphMode": "none",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "text": {},
+        "textMode": "auto"
+      },
+      "pluginVersion": "8.3.1",
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "DS_PROMETHEUS"
+          },
+          "exemplar": true,
+          "expr": "yearn_vault{network=\"$networks\", param=\"pricePerShare\", vault=~\"$vaults\", experimental=\"$exp\"}",
+          "instant": false,
+          "interval": "",
+          "legendFormat": "{{param}}",
+          "queryType": "randomWalk",
+          "refId": "A"
+        }
+      ],
+      "title": "Share Price",
+      "transformations": [],
+      "type": "stat"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "DS_PROMETHEUS"
+      },
+      "description": "",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "decimals": 4,
+          "mappings": [],
+          "max": 1,
+          "min": 0,
+          "noValue": "Select shorter time frame",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "purple",
+                "value": null
+              }
+            ]
+          },
+          "unit": "percentunit"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 4,
+        "x": 12,
+        "y": 15
+      },
+      "id": 110,
+      "options": {
+        "colorMode": "value",
+        "graphMode": "none",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": [
+            "last"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "text": {},
+        "textMode": "auto"
+      },
+      "pluginVersion": "8.3.1",
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "DS_PROMETHEUS"
+          },
+          "exemplar": true,
+          "expr": "(yearn_vault{network=\"$networks\", param=\"pricePerShare\", vault=~\"$vaults\", experimental=\"$exp\"} / yearn_vault{network=\"$networks\", param=\"pricePerShare\", vault=~\"$vaults\", experimental=\"$exp\"} offset $__range) - 1",
+          "instant": false,
+          "interval": "",
+          "legendFormat": "{{vault}}",
+          "queryType": "randomWalk",
+          "refId": "A"
+        }
+      ],
+      "title": "% Share Price Change over Time Range",
+      "type": "stat"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "DS_PROMETHEUS"
+      },
+      "description": "Sum of all losses actualized from all strategies in underlying token terms",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "decimals": 2,
+          "mappings": [],
+          "min": 0,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "purple",
+                "value": null
+              }
+            ]
+          },
+          "unit": "short"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 4,
+        "x": 16,
+        "y": 15
+      },
+      "id": 119,
+      "options": {
+        "colorMode": "value",
+        "graphMode": "none",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "text": {},
+        "textMode": "auto"
+      },
+      "pluginVersion": "8.3.1",
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "DS_PROMETHEUS"
+          },
+          "exemplar": false,
+          "expr": "sum(yearn_strategy{network=\"$networks\", param=\"totalLoss\", vault=~\"$vaults\", experimental=\"$exp\"})",
+          "hide": false,
+          "instant": true,
+          "interval": "",
+          "legendFormat": "TotalLossDepositToken",
+          "queryType": "randomWalk",
+          "refId": "A"
+        }
+      ],
+      "title": "totalLoss",
+      "transformations": [],
+      "type": "stat"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "DS_PROMETHEUS"
+      },
+      "description": "Sum of all losses actualized from all strategies in $",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "decimals": 2,
+          "mappings": [],
+          "min": 0,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "purple",
+                "value": null
+              }
+            ]
+          },
+          "unit": "currencyUSD"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 4,
+        "x": 20,
+        "y": 15
+      },
+      "id": 117,
+      "options": {
+        "colorMode": "value",
+        "graphMode": "none",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "text": {},
+        "textMode": "auto"
+      },
+      "pluginVersion": "8.3.1",
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "DS_PROMETHEUS"
+          },
+          "exemplar": false,
+          "expr": "sum(yearn_strategy{network=\"$networks\", param=\"totalLoss\", vault=~\"$vaults\", experimental=\"$exp\"})",
+          "hide": true,
+          "instant": true,
+          "interval": "",
+          "legendFormat": "TotalLossDepositToken",
+          "queryType": "randomWalk",
+          "refId": "A"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "DS_PROMETHEUS"
+          },
+          "exemplar": true,
+          "expr": "yearn_vault{network=\"$networks\", param=\"token price\", experimental=\"$exp\", vault=\"$vaults\"}",
+          "hide": true,
+          "interval": "",
+          "legendFormat": "Token Price",
+          "refId": "B"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "DS_PROMETHEUS"
+          },
+          "exemplar": true,
+          "expr": "sum(yearn_strategy{network=\"$networks\", param=\"totalLoss\", vault=~\"$vaults\", experimental=\"$exp\"}) * yearn_vault{network=\"$networks\", param=\"token price\", experimental=\"$exp\", vault=\"$vaults\"}",
+          "hide": false,
+          "interval": "",
+          "legendFormat": "TotalLoss$",
+          "refId": "C"
+        }
+      ],
+      "title": "totalLoss $",
       "transformations": [],
       "type": "stat"
     },
@@ -932,9 +1310,9 @@
       },
       "gridPos": {
         "h": 4,
-        "w": 4,
-        "x": 14,
-        "y": 15
+        "w": 5,
+        "x": 0,
+        "y": 19
       },
       "id": 109,
       "options": {
@@ -943,7 +1321,9 @@
         "justifyMode": "auto",
         "orientation": "auto",
         "reduceOptions": {
-          "calcs": ["lastNotNull"],
+          "calcs": [
+            "lastNotNull"
+          ],
           "fields": "",
           "values": false
         },
@@ -958,15 +1338,15 @@
             "uid": "DS_PROMETHEUS"
           },
           "exemplar": false,
-          "expr": "sum(yearn_vault{network=\"$networks\", param=\"totalAssets\", vault=~\"$vaults\"}) - on(vault, version) sum(yearn_strategy{network=\"$networks\", param=\"totalDebt\", vault=~\"$vaults\"})",
+          "expr": "sum(yearn_vault{network=\"$networks\", param=\"totalAssets\", vault=~\"$vaults\", experimental=\"$exp\"}) - on(vault, version) sum(yearn_strategy{network=\"$networks\", param=\"totalDebt\", vault=~\"$vaults\", experimental=\"$exp\"})",
           "instant": true,
           "interval": "",
-          "legendFormat": "",
+          "legendFormat": "Free Funds",
           "queryType": "randomWalk",
           "refId": "A"
         }
       ],
-      "title": "Amount of Free Funds",
+      "title": "Free Funds",
       "transformations": [],
       "type": "stat"
     },
@@ -975,7 +1355,7 @@
         "type": "prometheus",
         "uid": "DS_PROMETHEUS"
       },
-      "description": "Sum of all losses actualized from all strategies in underlying token terms",
+      "description": "",
       "fieldConfig": {
         "defaults": {
           "color": {
@@ -992,15 +1372,15 @@
               }
             ]
           },
-          "unit": "short"
+          "unit": "percentunit"
         },
         "overrides": []
       },
       "gridPos": {
         "h": 4,
-        "w": 4,
-        "x": 18,
-        "y": 15
+        "w": 14,
+        "x": 5,
+        "y": 19
       },
       "id": 21,
       "options": {
@@ -1009,7 +1389,9 @@
         "justifyMode": "auto",
         "orientation": "auto",
         "reduceOptions": {
-          "calcs": ["lastNotNull"],
+          "calcs": [
+            "lastNotNull"
+          ],
           "fields": "",
           "values": false
         },
@@ -1019,8 +1401,12 @@
       "pluginVersion": "8.3.1",
       "targets": [
         {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "DS_PROMETHEUS"
+          },
           "exemplar": true,
-          "expr": "yearn_strategy{network=\"$networks\", param=\"totalLoss\", vault=~\"$vaults\"}",
+          "expr": "(((delta(yearn_vault{network=\"$networks\", param=\"pricePerShare\", experimental=\"$exp\", vault=\"$vaults\"}[7d]) + 1) ^ (1/7)) ^ 365 - 1)",
           "instant": false,
           "interval": "",
           "legendFormat": "{{param}}",
@@ -1028,7 +1414,7 @@
           "refId": "A"
         }
       ],
-      "title": "totalLoss",
+      "title": "APY",
       "transformations": [
         {
           "id": "calculateField",
@@ -1046,12 +1432,80 @@
       "type": "stat"
     },
     {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "DS_PROMETHEUS"
+      },
+      "description": "totalAssets - totalDebt. If you are looking to make a withdrawal this is how much the vault has free for lower fee withdrawals that wont pull from the funds of strategies that are currently deployed. Denominated in $.",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "mappings": [],
+          "min": 0,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "purple",
+                "value": null
+              }
+            ]
+          },
+          "unit": "currencyUSD"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 5,
+        "x": 19,
+        "y": 19
+      },
+      "id": 121,
+      "options": {
+        "colorMode": "value",
+        "graphMode": "none",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "text": {},
+        "textMode": "auto"
+      },
+      "pluginVersion": "8.3.1",
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "DS_PROMETHEUS"
+          },
+          "exemplar": false,
+          "expr": "(sum(yearn_vault{network=\"$networks\", param=\"totalAssets\", vault=~\"$vaults\", experimental=\"$exp\"}) - on(vault, version) sum(yearn_strategy{network=\"$networks\", param=\"totalDebt\", vault=~\"$vaults\", experimental=\"$exp\"})) * yearn_vault{network=\"$networks\", param=\"token price\", experimental=\"$exp\", vault=\"$vaults\"}",
+          "instant": true,
+          "interval": "",
+          "legendFormat": "Free Funds",
+          "queryType": "randomWalk",
+          "refId": "A"
+        }
+      ],
+      "title": "Free Funds ($)",
+      "transformations": [],
+      "type": "stat"
+    },
+    {
       "collapsed": true,
       "gridPos": {
         "h": 1,
         "w": 24,
         "x": 0,
-        "y": 19
+        "y": 23
       },
       "id": 79,
       "panels": [
@@ -1071,7 +1525,7 @@
             "h": 9,
             "w": 24,
             "x": 0,
-            "y": 20
+            "y": 24
           },
           "hiddenSeries": false,
           "id": 74,
@@ -1126,8 +1580,12 @@
           "steppedLine": true,
           "targets": [
             {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "DS_PROMETHEUS"
+              },
               "exemplar": true,
-              "expr": "yearn_vault{network=\"$networks\", param=\"totalAssets\", vault=~\"$vaults\"}",
+              "expr": "yearn_vault{network=\"$networks\", param=\"totalAssets\", vault=~\"$vaults\", experimental=\"$exp\"}",
               "hide": false,
               "instant": false,
               "interval": "",
@@ -1136,16 +1594,24 @@
               "refId": "A"
             },
             {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "DS_PROMETHEUS"
+              },
               "exemplar": true,
-              "expr": "yearn_vault{network=\"$networks\", param=\"depositLimit\", vault=~\"$vaults\"}",
+              "expr": "yearn_vault{network=\"$networks\", param=\"depositLimit\", vault=~\"$vaults\", experimental=\"$exp\"}",
               "hide": false,
               "interval": "",
               "legendFormat": "Deposit Limit",
               "refId": "B"
             },
             {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "DS_PROMETHEUS"
+              },
               "exemplar": true,
-              "expr": "yearn_vault{network=\"$networks\", param=\"totalAssets\", vault=\"$vaults\"} / on(vault,version) yearn_vault{network=\"$networks\", param=\"depositLimit\", vault=\"$vaults\"}",
+              "expr": "yearn_vault{network=\"$networks\", param=\"totalAssets\", vault=\"$vaults\", experimental=\"$exp\"} / on(vault,version) yearn_vault{network=\"$networks\", param=\"depositLimit\", vault=\"$vaults\", experimental=\"$exp\"}",
               "hide": false,
               "interval": "",
               "legendFormat": "% to Deposit Limit",
@@ -1197,7 +1663,7 @@
         "h": 1,
         "w": 24,
         "x": 0,
-        "y": 20
+        "y": 24
       },
       "id": 32,
       "panels": [
@@ -1235,7 +1701,7 @@
             "h": 9,
             "w": 24,
             "x": 0,
-            "y": 21
+            "y": 25
           },
           "hiddenSeries": false,
           "id": 18,
@@ -1288,7 +1754,7 @@
                 "uid": "DS_PROMETHEUS"
               },
               "exemplar": true,
-              "expr": "yearn_vault{network=\"$networks\", param=\"totalAssets\", vault=~\"$vaults\"}",
+              "expr": "yearn_vault{network=\"$networks\", param=\"totalAssets\", vault=~\"$vaults\", experimental=\"$exp\"}",
               "instant": false,
               "interval": "",
               "legendFormat": "{{param}}",
@@ -1301,7 +1767,7 @@
                 "uid": "DS_PROMETHEUS"
               },
               "exemplar": true,
-              "expr": "yearn_strategy{network=\"$networks\", param=\"totalDebt\", vault=~\"$vaults\"}",
+              "expr": "yearn_strategy{network=\"$networks\", param=\"totalDebt\", vault=~\"$vaults\", experimental=\"$exp\"}",
               "hide": true,
               "interval": "",
               "legendFormat": "{{strategy}}",
@@ -1313,7 +1779,7 @@
                 "uid": "DS_PROMETHEUS"
               },
               "exemplar": true,
-              "expr": "sum(yearn_strategy{network=\"$networks\", param=\"totalDebt\", vault=~\"$vaults\"})",
+              "expr": "sum(yearn_strategy{network=\"$networks\", param=\"totalDebt\", vault=~\"$vaults\", experimental=\"$exp\"})",
               "hide": false,
               "interval": "",
               "legendFormat": "TotalDebt",
@@ -1390,9 +1856,9 @@
           "fillGradient": 3,
           "gridPos": {
             "h": 9,
-            "w": 24,
+            "w": 16,
             "x": 0,
-            "y": 30
+            "y": 34
           },
           "hiddenSeries": false,
           "id": 111,
@@ -1447,7 +1913,7 @@
                 "uid": "DS_PROMETHEUS"
               },
               "exemplar": true,
-              "expr": "sum(yearn_vault{network=\"$networks\", param=\"totalAssets\", vault=~\"$vaults\"}) - on(vault, version) sum(yearn_strategy{network=\"$networks\", param=\"totalDebt\", vault=~\"$vaults\"})",
+              "expr": "sum(yearn_vault{network=\"$networks\", param=\"totalAssets\", vault=~\"$vaults\", experimental=\"$exp\"}) - on(vault, version) sum(yearn_strategy{network=\"$networks\", param=\"totalDebt\", vault=~\"$vaults\", experimental=\"$exp\"})",
               "instant": false,
               "interval": "",
               "legendFormat": "Assets Free",
@@ -1460,7 +1926,7 @@
                 "uid": "DS_PROMETHEUS"
               },
               "exemplar": true,
-              "expr": "(sum(yearn_vault{network=\"$networks\", param=\"totalAssets\", vault=~\"$vaults\"}) - on(vault, version) sum(yearn_strategy{network=\"$networks\", param=\"totalDebt\", vault=~\"$vaults\"})) / (yearn_vault{network=\"$networks\", param=\"totalAssets\", vault=~\"$vaults\"}) ",
+              "expr": "(sum(yearn_vault{network=\"$networks\", param=\"totalAssets\", vault=~\"$vaults\", experimental=\"$exp\"}) - on(vault, version) sum(yearn_strategy{network=\"$networks\", param=\"totalDebt\", vault=~\"$vaults\", experimental=\"$exp\"})) / (yearn_vault{network=\"$networks\", param=\"totalAssets\", vault=~\"$vaults\", experimental=\"$exp\"}) ",
               "hide": false,
               "interval": "",
               "legendFormat": "% of Assets Free",
@@ -1506,6 +1972,81 @@
           }
         },
         {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "DS_PROMETHEUS"
+          },
+          "description": "Breakdown of assets in vault",
+          "fieldConfig": {
+            "defaults": {
+              "color": {
+                "mode": "palette-classic"
+              },
+              "custom": {
+                "hideFrom": {
+                  "legend": false,
+                  "tooltip": false,
+                  "viz": false
+                }
+              },
+              "decimals": 2,
+              "mappings": [],
+              "unit": "short"
+            },
+            "overrides": []
+          },
+          "gridPos": {
+            "h": 9,
+            "w": 8,
+            "x": 16,
+            "y": 34
+          },
+          "id": 81,
+          "options": {
+            "displayLabels": [
+              "percent"
+            ],
+            "legend": {
+              "displayMode": "list",
+              "placement": "right",
+              "values": [
+                "percent"
+              ]
+            },
+            "pieType": "pie",
+            "reduceOptions": {
+              "calcs": [
+                "lastNotNull"
+              ],
+              "fields": "",
+              "values": false
+            },
+            "text": {},
+            "tooltip": {
+              "mode": "single"
+            }
+          },
+          "pluginVersion": "7.5.7",
+          "targets": [
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "DS_PROMETHEUS"
+              },
+              "exemplar": false,
+              "expr": "sort_desc(yearn_strategy{network=\"$networks\", param=\"totalDebt\", vault=~\"$vaults\", experimental=\"$exp\"} > 0)",
+              "hide": false,
+              "instant": true,
+              "interval": "",
+              "legendFormat": "{{strategy}}",
+              "refId": "B"
+            }
+          ],
+          "title": "Strategy Allocations Overview",
+          "transformations": [],
+          "type": "piechart"
+        },
+        {
           "aliasColors": {},
           "bars": false,
           "dashLength": 10,
@@ -1520,9 +2061,9 @@
           "fillGradient": 0,
           "gridPos": {
             "h": 9,
-            "w": 16,
+            "w": 24,
             "x": 0,
-            "y": 39
+            "y": 43
           },
           "hiddenSeries": false,
           "id": 13,
@@ -1563,7 +2104,7 @@
                 "uid": "DS_PROMETHEUS"
               },
               "exemplar": true,
-              "expr": "yearn_strategy{network=\"$networks\", param=\"totalDebt\", vault=~\"$vaults\"}",
+              "expr": "yearn_strategy{network=\"$networks\", param=\"totalDebt\", vault=~\"$vaults\", experimental=\"$exp\"}",
               "instant": false,
               "interval": "",
               "legendFormat": "{{strategy}}",
@@ -1606,69 +2147,320 @@
           }
         },
         {
+          "aliasColors": {},
+          "bars": false,
+          "dashLength": 10,
+          "dashes": false,
           "datasource": {
             "type": "prometheus",
             "uid": "DS_PROMETHEUS"
           },
-          "description": "Breakdown of assets in vault",
+          "decimals": 2,
+          "description": "Total amount of assets in native token denomination delegated to other vaults",
           "fieldConfig": {
             "defaults": {
-              "color": {
-                "mode": "palette-classic"
-              },
-              "custom": {
-                "hideFrom": {
-                  "legend": false,
-                  "tooltip": false,
-                  "viz": false
-                }
-              },
-              "decimals": 2,
-              "mappings": [],
               "unit": "short"
             },
             "overrides": []
           },
+          "fill": 4,
+          "fillGradient": 0,
           "gridPos": {
             "h": 9,
-            "w": 8,
-            "x": 16,
-            "y": 39
+            "w": 13,
+            "x": 0,
+            "y": 52
           },
-          "id": 81,
+          "hiddenSeries": false,
+          "id": 112,
+          "legend": {
+            "alignAsTable": false,
+            "avg": false,
+            "current": true,
+            "hideEmpty": false,
+            "hideZero": false,
+            "max": false,
+            "min": false,
+            "rightSide": false,
+            "show": true,
+            "sort": "current",
+            "sortDesc": true,
+            "total": false,
+            "values": true
+          },
+          "lines": true,
+          "linewidth": 2,
+          "nullPointMode": "null as zero",
           "options": {
-            "displayLabels": ["percent"],
-            "legend": {
-              "displayMode": "list",
-              "placement": "right",
-              "values": ["percent"]
-            },
-            "pieType": "pie",
-            "reduceOptions": {
-              "calcs": ["lastNotNull"],
-              "fields": "",
-              "values": false
-            },
-            "text": {},
-            "tooltip": {
-              "mode": "single"
-            }
+            "alertThreshold": false
           },
-          "pluginVersion": "7.5.7",
+          "percentage": false,
+          "pluginVersion": "8.3.1",
+          "pointradius": 2,
+          "points": false,
+          "renderer": "flot",
+          "seriesOverrides": [],
+          "spaceLength": 10,
+          "stack": false,
+          "steppedLine": true,
           "targets": [
             {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "DS_PROMETHEUS"
+              },
               "exemplar": true,
-              "expr": "sort_desc(yearn_strategy{network=\"$networks\", param=\"totalDebt\", vault=~\"$vaults\"} > 0)",
-              "hide": false,
-              "instant": true,
+              "expr": "(yearn_strategy{network=\"$networks\", param=\"delegatedAssets\", experimental=\"$exp\", vault=\"$vaults\"} / 1000000000000000000 > 0)",
+              "instant": false,
               "interval": "",
               "legendFormat": "{{strategy}}",
-              "refId": "B"
+              "queryType": "randomWalk",
+              "refId": "A"
             }
           ],
-          "title": "Strategy Allocations Overview",
-          "transformations": [],
-          "type": "piechart"
+          "thresholds": [],
+          "timeRegions": [],
+          "title": "Delegated Assets",
+          "tooltip": {
+            "shared": true,
+            "sort": 2,
+            "value_type": "individual"
+          },
+          "type": "graph",
+          "xaxis": {
+            "mode": "time",
+            "show": true,
+            "values": []
+          },
+          "yaxes": [
+            {
+              "$$hashKey": "object:585",
+              "decimals": 2,
+              "format": "short",
+              "label": "",
+              "logBase": 1,
+              "show": true
+            },
+            {
+              "$$hashKey": "object:586",
+              "format": "short",
+              "logBase": 1,
+              "show": false
+            }
+          ],
+          "yaxis": {
+            "align": false
+          }
+        },
+        {
+          "aliasColors": {},
+          "bars": false,
+          "dashLength": 10,
+          "dashes": false,
+          "datasource": {
+            "type": "prometheus",
+            "uid": "DS_PROMETHEUS"
+          },
+          "decimals": 2,
+          "description": "Total amount of assets in $ delegated to other vaults.",
+          "fieldConfig": {
+            "defaults": {},
+            "overrides": []
+          },
+          "fill": 4,
+          "fillGradient": 0,
+          "gridPos": {
+            "h": 9,
+            "w": 11,
+            "x": 13,
+            "y": 52
+          },
+          "hiddenSeries": false,
+          "id": 113,
+          "legend": {
+            "alignAsTable": false,
+            "avg": false,
+            "current": true,
+            "hideEmpty": false,
+            "hideZero": false,
+            "max": false,
+            "min": false,
+            "rightSide": false,
+            "show": true,
+            "sort": "current",
+            "sortDesc": true,
+            "total": false,
+            "values": true
+          },
+          "lines": true,
+          "linewidth": 2,
+          "nullPointMode": "null as zero",
+          "options": {
+            "alertThreshold": false
+          },
+          "percentage": false,
+          "pluginVersion": "8.3.1",
+          "pointradius": 2,
+          "points": false,
+          "renderer": "flot",
+          "seriesOverrides": [],
+          "spaceLength": 10,
+          "stack": false,
+          "steppedLine": true,
+          "targets": [
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "DS_PROMETHEUS"
+              },
+              "exemplar": true,
+              "expr": "(yearn_strategy{network=\"$networks\", param=\"delegatedAssets\", experimental=\"$exp\",vault=\"$vaults\"} / 1000000000000000000 > 0) * on(vault, version) group_left yearn_vault{network=\"$networks\", param=\"token price\", experimental=\"$exp\", vault=\"$vaults\"}",
+              "instant": false,
+              "interval": "",
+              "legendFormat": "{{strategy}}",
+              "queryType": "randomWalk",
+              "refId": "A"
+            }
+          ],
+          "thresholds": [],
+          "timeRegions": [],
+          "title": "Delegated Assets $",
+          "tooltip": {
+            "shared": true,
+            "sort": 2,
+            "value_type": "individual"
+          },
+          "type": "graph",
+          "xaxis": {
+            "mode": "time",
+            "show": true,
+            "values": []
+          },
+          "yaxes": [
+            {
+              "$$hashKey": "object:585",
+              "decimals": 2,
+              "format": "currencyUSD",
+              "label": "",
+              "logBase": 1,
+              "show": true
+            },
+            {
+              "$$hashKey": "object:586",
+              "format": "short",
+              "logBase": 1,
+              "show": false
+            }
+          ],
+          "yaxis": {
+            "align": false
+          }
+        },
+        {
+          "aliasColors": {},
+          "bars": false,
+          "dashLength": 10,
+          "dashes": false,
+          "datasource": {
+            "type": "prometheus",
+            "uid": "DS_PROMETHEUS"
+          },
+          "decimals": 2,
+          "description": "Price of deposit token",
+          "fieldConfig": {
+            "defaults": {
+              "unit": "currencyUSD"
+            },
+            "overrides": []
+          },
+          "fill": 3,
+          "fillGradient": 6,
+          "gridPos": {
+            "h": 9,
+            "w": 24,
+            "x": 0,
+            "y": 61
+          },
+          "hiddenSeries": false,
+          "id": 114,
+          "legend": {
+            "alignAsTable": false,
+            "avg": false,
+            "current": true,
+            "hideEmpty": false,
+            "hideZero": false,
+            "max": false,
+            "min": false,
+            "rightSide": false,
+            "show": true,
+            "sort": "current",
+            "sortDesc": true,
+            "total": false,
+            "values": true
+          },
+          "lines": true,
+          "linewidth": 1,
+          "nullPointMode": "null as zero",
+          "options": {
+            "alertThreshold": false
+          },
+          "percentage": false,
+          "pluginVersion": "8.3.1",
+          "pointradius": 2,
+          "points": false,
+          "renderer": "flot",
+          "seriesOverrides": [],
+          "spaceLength": 10,
+          "stack": false,
+          "steppedLine": true,
+          "targets": [
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "DS_PROMETHEUS"
+              },
+              "exemplar": true,
+              "expr": "yearn_vault{network=\"$networks\", param=\"token price\", experimental=\"$exp\", vault=\"$vaults\"}",
+              "instant": false,
+              "interval": "",
+              "legendFormat": "{{vault}} - {{param}}",
+              "queryType": "randomWalk",
+              "refId": "A"
+            }
+          ],
+          "thresholds": [],
+          "timeRegions": [],
+          "title": "Deposit Token Price",
+          "tooltip": {
+            "shared": true,
+            "sort": 2,
+            "value_type": "individual"
+          },
+          "type": "graph",
+          "xaxis": {
+            "mode": "time",
+            "show": true,
+            "values": []
+          },
+          "yaxes": [
+            {
+              "$$hashKey": "object:585",
+              "decimals": 5,
+              "format": "currencyUSD",
+              "label": "Token Price",
+              "logBase": 1,
+              "show": true
+            },
+            {
+              "$$hashKey": "object:586",
+              "format": "short",
+              "logBase": 1,
+              "show": false
+            }
+          ],
+          "yaxis": {
+            "align": false
+          }
         }
       ],
       "title": "Assets Graphs",
@@ -1680,7 +2472,7 @@
         "h": 1,
         "w": 24,
         "x": 0,
-        "y": 21
+        "y": 25
       },
       "id": 34,
       "panels": [
@@ -1701,7 +2493,8 @@
                 "mode": "absolute",
                 "steps": [
                   {
-                    "color": "green"
+                    "color": "green",
+                    "value": null
                   }
                 ]
               },
@@ -1713,7 +2506,7 @@
             "h": 3,
             "w": 4,
             "x": 0,
-            "y": 32
+            "y": 26
           },
           "id": 28,
           "options": {
@@ -1722,7 +2515,9 @@
             "justifyMode": "auto",
             "orientation": "auto",
             "reduceOptions": {
-              "calcs": ["lastNotNull"],
+              "calcs": [
+                "lastNotNull"
+              ],
               "fields": "",
               "values": false
             },
@@ -1732,8 +2527,12 @@
           "pluginVersion": "8.3.1",
           "targets": [
             {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "DS_PROMETHEUS"
+              },
               "exemplar": true,
-              "expr": "yearn_vault{network=\"$networks\", param=\"tvl\", vault=~\"$vaults\"} - yearn_vault{network=\"$networks\", param=\"tvl\", vault=~\"$vaults\"} offset 1d",
+              "expr": "yearn_vault{network=\"$networks\", param=\"tvl\", vault=~\"$vaults\", experimental=\"$exp\"} - yearn_vault{network=\"$networks\", param=\"tvl\", vault=~\"$vaults\", experimental=\"$exp\"} offset 1d",
               "instant": false,
               "interval": "",
               "legendFormat": "{{vault}}",
@@ -1763,7 +2562,8 @@
                 "mode": "absolute",
                 "steps": [
                   {
-                    "color": "green"
+                    "color": "green",
+                    "value": null
                   }
                 ]
               },
@@ -1775,7 +2575,7 @@
             "h": 3,
             "w": 4,
             "x": 4,
-            "y": 32
+            "y": 26
           },
           "id": 29,
           "options": {
@@ -1784,7 +2584,9 @@
             "justifyMode": "auto",
             "orientation": "auto",
             "reduceOptions": {
-              "calcs": ["lastNotNull"],
+              "calcs": [
+                "lastNotNull"
+              ],
               "fields": "",
               "values": false
             },
@@ -1794,8 +2596,12 @@
           "pluginVersion": "8.3.1",
           "targets": [
             {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "DS_PROMETHEUS"
+              },
               "exemplar": true,
-              "expr": "(yearn_vault{network=\"$networks\", param=\"tvl\", vault=~\"$vaults\"} / yearn_vault{network=\"$networks\", param=\"tvl\", vault=~\"$vaults\"} offset 1d ) - 1",
+              "expr": "(yearn_vault{network=\"$networks\", param=\"tvl\", vault=~\"$vaults\", experimental=\"$exp\"} / yearn_vault{network=\"$networks\", param=\"tvl\", vault=~\"$vaults\", experimental=\"$exp\"} offset 1d ) - 1",
               "instant": false,
               "interval": "",
               "legendFormat": "{{vault}}",
@@ -1824,7 +2630,8 @@
                 "mode": "absolute",
                 "steps": [
                   {
-                    "color": "green"
+                    "color": "green",
+                    "value": null
                   }
                 ]
               },
@@ -1836,7 +2643,7 @@
             "h": 3,
             "w": 4,
             "x": 8,
-            "y": 32
+            "y": 26
           },
           "id": 48,
           "options": {
@@ -1845,7 +2652,9 @@
             "justifyMode": "auto",
             "orientation": "auto",
             "reduceOptions": {
-              "calcs": ["lastNotNull"],
+              "calcs": [
+                "lastNotNull"
+              ],
               "fields": "",
               "values": false
             },
@@ -1855,8 +2664,12 @@
           "pluginVersion": "8.3.1",
           "targets": [
             {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "DS_PROMETHEUS"
+              },
               "exemplar": true,
-              "expr": "sum(yearn_strategy{network=\"$networks\", param=\"totalDebt\", vault=~\"$vaults\"}) - sum(yearn_strategy{network=\"$networks\", param=\"totalDebt\", vault=~\"$vaults\"} offset 1d)",
+              "expr": "sum(yearn_strategy{network=\"$networks\", param=\"totalDebt\", vault=~\"$vaults\", experimental=\"$exp\"}) - sum(yearn_strategy{network=\"$networks\", param=\"totalDebt\", vault=~\"$vaults\", experimental=\"$exp\"} offset 1d)",
               "instant": false,
               "interval": "",
               "legendFormat": "{{strategy}}",
@@ -1886,7 +2699,8 @@
                 "mode": "absolute",
                 "steps": [
                   {
-                    "color": "green"
+                    "color": "green",
+                    "value": null
                   }
                 ]
               },
@@ -1898,7 +2712,7 @@
             "h": 3,
             "w": 4,
             "x": 12,
-            "y": 32
+            "y": 26
           },
           "id": 49,
           "options": {
@@ -1907,7 +2721,9 @@
             "justifyMode": "auto",
             "orientation": "auto",
             "reduceOptions": {
-              "calcs": ["lastNotNull"],
+              "calcs": [
+                "lastNotNull"
+              ],
               "fields": "",
               "values": false
             },
@@ -1917,8 +2733,12 @@
           "pluginVersion": "8.3.1",
           "targets": [
             {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "DS_PROMETHEUS"
+              },
               "exemplar": true,
-              "expr": "(sum(yearn_strategy{network=\"$networks\", param=\"totalDebt\", vault=~\"$vaults\"}) / sum(yearn_strategy{network=\"$networks\", param=\"totalDebt\", vault=~\"$vaults\"} offset 1d)) - 1",
+              "expr": "(sum(yearn_strategy{network=\"$networks\", param=\"totalDebt\", vault=~\"$vaults\", experimental=\"$exp\"}) / sum(yearn_strategy{network=\"$networks\", param=\"totalDebt\", vault=~\"$vaults\", experimental=\"$exp\"} offset 1d)) - 1",
               "instant": false,
               "interval": "",
               "legendFormat": "{{vault}}",
@@ -1947,7 +2767,8 @@
                 "mode": "absolute",
                 "steps": [
                   {
-                    "color": "green"
+                    "color": "green",
+                    "value": null
                   }
                 ]
               },
@@ -1959,7 +2780,7 @@
             "h": 3,
             "w": 4,
             "x": 16,
-            "y": 32
+            "y": 26
           },
           "id": 50,
           "options": {
@@ -1968,7 +2789,9 @@
             "justifyMode": "auto",
             "orientation": "auto",
             "reduceOptions": {
-              "calcs": ["lastNotNull"],
+              "calcs": [
+                "lastNotNull"
+              ],
               "fields": "",
               "values": false
             },
@@ -1978,8 +2801,12 @@
           "pluginVersion": "8.3.1",
           "targets": [
             {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "DS_PROMETHEUS"
+              },
               "exemplar": true,
-              "expr": "sum(yearn_strategy{network=\"$networks\", param=\"totalLoss\", vault=~\"$vaults\"}) - sum(yearn_strategy{network=\"$networks\", param=\"totalLoss\", vault=~\"$vaults\"} offset 1d)",
+              "expr": "sum(yearn_strategy{network=\"$networks\", param=\"totalLoss\", vault=~\"$vaults\", experimental=\"$exp\"}) - sum(yearn_strategy{network=\"$networks\", param=\"totalLoss\", vault=~\"$vaults\", experimental=\"$exp\"} offset 1d)",
               "instant": false,
               "interval": "",
               "legendFormat": "{{strategy}}",
@@ -2010,7 +2837,8 @@
                 "mode": "absolute",
                 "steps": [
                   {
-                    "color": "green"
+                    "color": "green",
+                    "value": null
                   }
                 ]
               },
@@ -2022,7 +2850,7 @@
             "h": 3,
             "w": 4,
             "x": 20,
-            "y": 32
+            "y": 26
           },
           "id": 51,
           "options": {
@@ -2031,7 +2859,9 @@
             "justifyMode": "auto",
             "orientation": "auto",
             "reduceOptions": {
-              "calcs": ["lastNotNull"],
+              "calcs": [
+                "lastNotNull"
+              ],
               "fields": "",
               "values": false
             },
@@ -2041,8 +2871,12 @@
           "pluginVersion": "8.3.1",
           "targets": [
             {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "DS_PROMETHEUS"
+              },
               "exemplar": true,
-              "expr": "(sum(yearn_strategy{network=\"$networks\", param=\"totalLoss\", vault=~\"$vaults\"}) / sum(yearn_strategy{network=\"$networks\", param=\"totalLoss\", vault=~\"$vaults\"} offset 1d)) - 1",
+              "expr": "(sum(yearn_strategy{network=\"$networks\", param=\"totalLoss\", vault=~\"$vaults\", experimental=\"$exp\"}) / sum(yearn_strategy{network=\"$networks\", param=\"totalLoss\", vault=~\"$vaults\", experimental=\"$exp\"} offset 1d)) - 1",
               "instant": false,
               "interval": "",
               "legendFormat": "{{vault}}",
@@ -2071,7 +2905,8 @@
                 "mode": "absolute",
                 "steps": [
                   {
-                    "color": "green"
+                    "color": "green",
+                    "value": null
                   }
                 ]
               },
@@ -2083,7 +2918,7 @@
             "h": 3,
             "w": 4,
             "x": 0,
-            "y": 35
+            "y": 29
           },
           "id": 82,
           "options": {
@@ -2092,7 +2927,9 @@
             "justifyMode": "auto",
             "orientation": "auto",
             "reduceOptions": {
-              "calcs": ["lastNotNull"],
+              "calcs": [
+                "lastNotNull"
+              ],
               "fields": "",
               "values": false
             },
@@ -2102,8 +2939,12 @@
           "pluginVersion": "8.3.1",
           "targets": [
             {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "DS_PROMETHEUS"
+              },
               "exemplar": true,
-              "expr": "yearn_vault{network=\"$networks\", param=\"tvl\", vault=~\"$vaults\"} - yearn_vault{network=\"$networks\", param=\"tvl\", vault=~\"$vaults\"} offset 7d",
+              "expr": "yearn_vault{network=\"$networks\", param=\"tvl\", vault=~\"$vaults\", experimental=\"$exp\"} - yearn_vault{network=\"$networks\", param=\"tvl\", vault=~\"$vaults\", experimental=\"$exp\"} offset 7d",
               "instant": false,
               "interval": "",
               "legendFormat": "{{vault}}",
@@ -2133,7 +2974,8 @@
                 "mode": "absolute",
                 "steps": [
                   {
-                    "color": "green"
+                    "color": "green",
+                    "value": null
                   }
                 ]
               },
@@ -2145,7 +2987,7 @@
             "h": 3,
             "w": 4,
             "x": 4,
-            "y": 35
+            "y": 29
           },
           "id": 83,
           "options": {
@@ -2154,7 +2996,9 @@
             "justifyMode": "auto",
             "orientation": "auto",
             "reduceOptions": {
-              "calcs": ["lastNotNull"],
+              "calcs": [
+                "lastNotNull"
+              ],
               "fields": "",
               "values": false
             },
@@ -2164,8 +3008,12 @@
           "pluginVersion": "8.3.1",
           "targets": [
             {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "DS_PROMETHEUS"
+              },
               "exemplar": true,
-              "expr": "(yearn_vault{network=\"$networks\", param=\"tvl\", vault=~\"$vaults\"} / yearn_vault{network=\"$networks\", param=\"tvl\", vault=~\"$vaults\"} offset 7d ) - 1",
+              "expr": "(yearn_vault{network=\"$networks\", param=\"tvl\", vault=~\"$vaults\", experimental=\"$exp\"} / yearn_vault{network=\"$networks\", param=\"tvl\", vault=~\"$vaults\", experimental=\"$exp\"} offset 7d ) - 1",
               "instant": false,
               "interval": "",
               "legendFormat": "{{vault}}",
@@ -2194,7 +3042,8 @@
                 "mode": "absolute",
                 "steps": [
                   {
-                    "color": "green"
+                    "color": "green",
+                    "value": null
                   }
                 ]
               },
@@ -2206,7 +3055,7 @@
             "h": 3,
             "w": 4,
             "x": 8,
-            "y": 35
+            "y": 29
           },
           "id": 84,
           "options": {
@@ -2215,7 +3064,9 @@
             "justifyMode": "auto",
             "orientation": "auto",
             "reduceOptions": {
-              "calcs": ["lastNotNull"],
+              "calcs": [
+                "lastNotNull"
+              ],
               "fields": "",
               "values": false
             },
@@ -2225,8 +3076,12 @@
           "pluginVersion": "8.3.1",
           "targets": [
             {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "DS_PROMETHEUS"
+              },
               "exemplar": true,
-              "expr": "sum(yearn_strategy{network=\"$networks\", param=\"totalDebt\", vault=~\"$vaults\"}) - sum(yearn_strategy{network=\"$networks\", param=\"totalDebt\", vault=~\"$vaults\"} offset 7d)",
+              "expr": "sum(yearn_strategy{network=\"$networks\", param=\"totalDebt\", vault=~\"$vaults\", experimental=\"$exp\"}) - sum(yearn_strategy{network=\"$networks\", param=\"totalDebt\", vault=~\"$vaults\", experimental=\"$exp\"} offset 7d)",
               "instant": false,
               "interval": "",
               "legendFormat": "{{strategy}}",
@@ -2256,7 +3111,8 @@
                 "mode": "absolute",
                 "steps": [
                   {
-                    "color": "green"
+                    "color": "green",
+                    "value": null
                   }
                 ]
               },
@@ -2268,7 +3124,7 @@
             "h": 3,
             "w": 4,
             "x": 12,
-            "y": 35
+            "y": 29
           },
           "id": 85,
           "options": {
@@ -2277,7 +3133,9 @@
             "justifyMode": "auto",
             "orientation": "auto",
             "reduceOptions": {
-              "calcs": ["lastNotNull"],
+              "calcs": [
+                "lastNotNull"
+              ],
               "fields": "",
               "values": false
             },
@@ -2287,8 +3145,12 @@
           "pluginVersion": "8.3.1",
           "targets": [
             {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "DS_PROMETHEUS"
+              },
               "exemplar": true,
-              "expr": "(sum(yearn_strategy{network=\"$networks\", param=\"totalDebt\", vault=~\"$vaults\"}) / sum(yearn_strategy{network=\"$networks\", param=\"totalDebt\", vault=~\"$vaults\"} offset 7d)) - 1",
+              "expr": "(sum(yearn_strategy{network=\"$networks\", param=\"totalDebt\", vault=~\"$vaults\", experimental=\"$exp\"}) / sum(yearn_strategy{network=\"$networks\", param=\"totalDebt\", vault=~\"$vaults\", experimental=\"$exp\"} offset 7d)) - 1",
               "instant": false,
               "interval": "",
               "legendFormat": "{{vault}}",
@@ -2317,7 +3179,8 @@
                 "mode": "absolute",
                 "steps": [
                   {
-                    "color": "green"
+                    "color": "green",
+                    "value": null
                   }
                 ]
               },
@@ -2329,7 +3192,7 @@
             "h": 3,
             "w": 4,
             "x": 16,
-            "y": 35
+            "y": 29
           },
           "id": 86,
           "options": {
@@ -2338,7 +3201,9 @@
             "justifyMode": "auto",
             "orientation": "auto",
             "reduceOptions": {
-              "calcs": ["lastNotNull"],
+              "calcs": [
+                "lastNotNull"
+              ],
               "fields": "",
               "values": false
             },
@@ -2348,8 +3213,12 @@
           "pluginVersion": "8.3.1",
           "targets": [
             {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "DS_PROMETHEUS"
+              },
               "exemplar": true,
-              "expr": "sum(yearn_strategy{network=\"$networks\", param=\"totalLoss\", vault=~\"$vaults\"}) - sum(yearn_strategy{network=\"$networks\", param=\"totalLoss\", vault=~\"$vaults\"} offset 7d)",
+              "expr": "sum(yearn_strategy{network=\"$networks\", param=\"totalLoss\", vault=~\"$vaults\", experimental=\"$exp\"}) - sum(yearn_strategy{network=\"$networks\", param=\"totalLoss\", vault=~\"$vaults\", experimental=\"$exp\"} offset 7d)",
               "instant": false,
               "interval": "",
               "legendFormat": "{{strategy}}",
@@ -2380,7 +3249,8 @@
                 "mode": "absolute",
                 "steps": [
                   {
-                    "color": "green"
+                    "color": "green",
+                    "value": null
                   }
                 ]
               },
@@ -2392,7 +3262,7 @@
             "h": 3,
             "w": 4,
             "x": 20,
-            "y": 35
+            "y": 29
           },
           "id": 87,
           "options": {
@@ -2401,7 +3271,9 @@
             "justifyMode": "auto",
             "orientation": "auto",
             "reduceOptions": {
-              "calcs": ["lastNotNull"],
+              "calcs": [
+                "lastNotNull"
+              ],
               "fields": "",
               "values": false
             },
@@ -2411,8 +3283,12 @@
           "pluginVersion": "8.3.1",
           "targets": [
             {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "DS_PROMETHEUS"
+              },
               "exemplar": true,
-              "expr": "(sum(yearn_strategy{network=\"$networks\", param=\"totalLoss\", vault=~\"$vaults\"}) / sum(yearn_strategy{network=\"$networks\", param=\"totalLoss\", vault=~\"$vaults\"} offset 7d)) - 1",
+              "expr": "(sum(yearn_strategy{network=\"$networks\", param=\"totalLoss\", vault=~\"$vaults\", experimental=\"$exp\"}) / sum(yearn_strategy{network=\"$networks\", param=\"totalLoss\", vault=~\"$vaults\", experimental=\"$exp\"} offset 7d)) - 1",
               "instant": false,
               "interval": "",
               "legendFormat": "{{vault}}",
@@ -2440,7 +3316,7 @@
             "h": 9,
             "w": 12,
             "x": 0,
-            "y": 38
+            "y": 32
           },
           "hiddenSeries": false,
           "id": 14,
@@ -2480,8 +3356,12 @@
           "steppedLine": true,
           "targets": [
             {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "DS_PROMETHEUS"
+              },
               "exemplar": true,
-              "expr": "yearn_strategy{network=\"$networks\", param=\"totalGain\", vault=~\"$vaults\"}",
+              "expr": "yearn_strategy{network=\"$networks\", param=\"totalGain\", vault=~\"$vaults\", experimental=\"$exp\"}",
               "instant": false,
               "interval": "",
               "legendFormat": "{{strategy}}",
@@ -2489,6 +3369,10 @@
               "refId": "A"
             },
             {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "DS_PROMETHEUS"
+              },
               "exemplar": true,
               "expr": "sum(yearn_strategy{network=\"$networks\", param=\"totalGain\", vault=~\"$vaults\"})",
               "hide": false,
@@ -2546,7 +3430,7 @@
             "h": 9,
             "w": 12,
             "x": 12,
-            "y": 38
+            "y": 32
           },
           "hiddenSeries": false,
           "id": 17,
@@ -2580,8 +3464,12 @@
           "steppedLine": false,
           "targets": [
             {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "DS_PROMETHEUS"
+              },
               "exemplar": true,
-              "expr": "delta(yearn_strategy{network=\"$networks\", param=\"totalGain\", vault=~\"$vaults\"}[5m])",
+              "expr": "delta(yearn_strategy{network=\"$networks\", param=\"totalGain\", vault=~\"$vaults\", experimental=\"$exp\"}[5m])",
               "instant": false,
               "interval": "",
               "legendFormat": "{{strategy}}",
@@ -2639,7 +3527,7 @@
             "h": 9,
             "w": 12,
             "x": 0,
-            "y": 47
+            "y": 41
           },
           "hiddenSeries": false,
           "id": 15,
@@ -2681,8 +3569,12 @@
           "steppedLine": true,
           "targets": [
             {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "DS_PROMETHEUS"
+              },
               "exemplar": true,
-              "expr": "yearn_strategy{network=\"$networks\", param=\"totalLoss\", vault=~\"$vaults\"}",
+              "expr": "yearn_strategy{network=\"$networks\", param=\"totalLoss\", vault=~\"$vaults\", experimental=\"$exp\"}",
               "instant": false,
               "interval": "",
               "legendFormat": "{{strategy}}",
@@ -2690,8 +3582,12 @@
               "refId": "A"
             },
             {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "DS_PROMETHEUS"
+              },
               "exemplar": true,
-              "expr": "sum(yearn_strategy{network=\"$networks\", param=\"totalLoss\", vault=~\"$vaults\"})",
+              "expr": "sum(yearn_strategy{network=\"$networks\", param=\"totalLoss\", vault=~\"$vaults\", experimental=\"$exp\"})",
               "hide": false,
               "interval": "",
               "legendFormat": "totalLoss",
@@ -2749,7 +3645,7 @@
             "h": 9,
             "w": 12,
             "x": 12,
-            "y": 47
+            "y": 41
           },
           "hiddenSeries": false,
           "id": 30,
@@ -2783,8 +3679,12 @@
           "steppedLine": false,
           "targets": [
             {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "DS_PROMETHEUS"
+              },
               "exemplar": true,
-              "expr": "delta(yearn_strategy{network=\"$networks\", param=\"totalLoss\", vault=~\"$vaults\"}[5m])",
+              "expr": "delta(yearn_strategy{network=\"$networks\", param=\"totalLoss\", vault=~\"$vaults\", experimental=\"$exp\"}[5m])",
               "instant": false,
               "interval": "",
               "legendFormat": "{{strategy}}",
@@ -2835,7 +3735,7 @@
         "h": 1,
         "w": 24,
         "x": 0,
-        "y": 22
+        "y": 26
       },
       "id": 70,
       "panels": [
@@ -2856,7 +3756,7 @@
             "h": 9,
             "w": 12,
             "x": 0,
-            "y": 41
+            "y": 27
           },
           "hiddenSeries": false,
           "id": 52,
@@ -2892,8 +3792,12 @@
           "steppedLine": true,
           "targets": [
             {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "DS_PROMETHEUS"
+              },
               "exemplar": true,
-              "expr": "sum by (strategy) (yearn_strategy{network=\"$networks\", param=~\"totalGain\", vault=~\"$vaults\"}) - sum by (strategy) (yearn_strategy{network=\"$networks\", param=\"totalLoss\", vault=~\"$vaults\"})",
+              "expr": "sum by (strategy) (yearn_strategy{network=\"$networks\", param=~\"totalGain\", vault=~\"$vaults\", experimental=\"$exp\"}) - sum by (strategy) (yearn_strategy{network=\"$networks\", param=\"totalLoss\", vault=~\"$vaults\", experimental=\"$exp\"})",
               "instant": false,
               "interval": "",
               "legendFormat": "{{strategy}}",
@@ -2952,7 +3856,7 @@
             "h": 9,
             "w": 12,
             "x": 12,
-            "y": 41
+            "y": 27
           },
           "hiddenSeries": false,
           "id": 53,
@@ -2986,8 +3890,12 @@
           "steppedLine": false,
           "targets": [
             {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "DS_PROMETHEUS"
+              },
               "exemplar": true,
-              "expr": "sum by (strategy) (delta(yearn_strategy{network=\"$networks\", param=~\"totalGain\", vault=~\"$vaults\"}[5m])) - sum by (strategy) (delta(yearn_strategy{network=\"$networks\", param=\"totalLoss\", vault=~\"$vaults\"}[5m]))",
+              "expr": "sum by (strategy) (delta(yearn_strategy{network=\"$networks\", param=~\"totalGain\", vault=~\"$vaults\", experimental=\"$exp\"}[5m])) - sum by (strategy) (delta(yearn_strategy{network=\"$networks\", param=\"totalLoss\", vault=~\"$vaults\", experimental=\"$exp\"}[5m]))",
               "instant": false,
               "interval": "",
               "legendFormat": "{{strategy}}",
@@ -3038,7 +3946,7 @@
         "h": 1,
         "w": 24,
         "x": 0,
-        "y": 23
+        "y": 27
       },
       "id": 23,
       "panels": [
@@ -3058,7 +3966,8 @@
                 "mode": "absolute",
                 "steps": [
                   {
-                    "color": "light-blue"
+                    "color": "light-blue",
+                    "value": null
                   }
                 ]
               },
@@ -3070,7 +3979,7 @@
             "h": 14,
             "w": 11,
             "x": 0,
-            "y": 24
+            "y": 28
           },
           "id": 12,
           "options": {
@@ -3079,7 +3988,9 @@
             "justifyMode": "auto",
             "orientation": "horizontal",
             "reduceOptions": {
-              "calcs": ["lastNotNull"],
+              "calcs": [
+                "lastNotNull"
+              ],
               "fields": "",
               "values": false
             },
@@ -3094,7 +4005,7 @@
                 "uid": "DS_PROMETHEUS"
               },
               "exemplar": true,
-              "expr": "sort(time() - (yearn_strategy{network=\"$networks\", param=\"lastReport\", vault=~\"$vaults\"}))",
+              "expr": "sort(time() - (yearn_strategy{network=\"$networks\", param=\"lastReport\", vault=~\"$vaults\", experimental=\"$exp\"}))",
               "hide": false,
               "interval": "",
               "legendFormat": "{{strategy}}",
@@ -3123,7 +4034,8 @@
                 "mode": "absolute",
                 "steps": [
                   {
-                    "color": "light-purple"
+                    "color": "light-purple",
+                    "value": null
                   }
                 ]
               },
@@ -3135,7 +4047,7 @@
             "h": 14,
             "w": 7,
             "x": 11,
-            "y": 24
+            "y": 28
           },
           "id": 105,
           "options": {
@@ -3144,7 +4056,9 @@
             "justifyMode": "auto",
             "orientation": "horizontal",
             "reduceOptions": {
-              "calcs": ["last"],
+              "calcs": [
+                "last"
+              ],
               "fields": "",
               "values": false
             },
@@ -3159,7 +4073,7 @@
                 "uid": "DS_PROMETHEUS"
               },
               "exemplar": true,
-              "expr": "sort(yearn_strategy{network=\"$networks\", param=\"maxReportDelay\", vault=~\"$vaults\"})",
+              "expr": "sort(yearn_strategy{network=\"$networks\", param=\"maxReportDelay\", vault=~\"$vaults\", experimental=\"$exp\"})",
               "instant": false,
               "interval": "",
               "legendFormat": "{{strategy}}",
@@ -3189,7 +4103,8 @@
                 "mode": "percentage",
                 "steps": [
                   {
-                    "color": "purple"
+                    "color": "purple",
+                    "value": null
                   }
                 ]
               },
@@ -3201,7 +4116,7 @@
             "h": 14,
             "w": 6,
             "x": 18,
-            "y": 24
+            "y": 28
           },
           "id": 104,
           "options": {
@@ -3210,7 +4125,9 @@
             "justifyMode": "auto",
             "orientation": "horizontal",
             "reduceOptions": {
-              "calcs": ["last"],
+              "calcs": [
+                "last"
+              ],
               "fields": "",
               "values": false
             },
@@ -3225,7 +4142,7 @@
                 "uid": "DS_PROMETHEUS"
               },
               "exemplar": true,
-              "expr": "sort(yearn_strategy{network=\"$networks\", param=\"minReportDelay\", vault=~\"$vaults\"})",
+              "expr": "sort(yearn_strategy{network=\"$networks\", param=\"minReportDelay\", vault=~\"$vaults\", experimental=\"$exp\"})",
               "instant": false,
               "interval": "",
               "legendFormat": "{{strategy}}",
@@ -3254,7 +4171,8 @@
                 "mode": "absolute",
                 "steps": [
                   {
-                    "color": "green"
+                    "color": "green",
+                    "value": null
                   },
                   {
                     "color": "red",
@@ -3270,7 +4188,7 @@
             "h": 3,
             "w": 8,
             "x": 0,
-            "y": 38
+            "y": 42
           },
           "id": 5,
           "options": {
@@ -3279,7 +4197,9 @@
             "justifyMode": "auto",
             "orientation": "auto",
             "reduceOptions": {
-              "calcs": ["last"],
+              "calcs": [
+                "last"
+              ],
               "fields": "",
               "values": false
             },
@@ -3289,8 +4209,12 @@
           "pluginVersion": "8.3.1",
           "targets": [
             {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "DS_PROMETHEUS"
+              },
               "exemplar": true,
-              "expr": "yearn_vault{network=\"$networks\", param=\"pricePerShare\", vault=~\"$vaults\"}",
+              "expr": "yearn_vault{network=\"$networks\", param=\"pricePerShare\", vault=~\"$vaults\", experimental=\"$exp\"}",
               "instant": false,
               "interval": "",
               "legendFormat": "{{vault}}",
@@ -3320,7 +4244,8 @@
                 "mode": "absolute",
                 "steps": [
                   {
-                    "color": "green"
+                    "color": "green",
+                    "value": null
                   },
                   {
                     "color": "red",
@@ -3336,7 +4261,7 @@
             "h": 3,
             "w": 8,
             "x": 8,
-            "y": 38
+            "y": 42
           },
           "id": 6,
           "options": {
@@ -3345,7 +4270,9 @@
             "justifyMode": "auto",
             "orientation": "auto",
             "reduceOptions": {
-              "calcs": ["last"],
+              "calcs": [
+                "last"
+              ],
               "fields": "",
               "values": false
             },
@@ -3360,7 +4287,7 @@
                 "uid": "DS_PROMETHEUS"
               },
               "exemplar": true,
-              "expr": "yearn_vault{network=\"$networks\", param=\"pricePerShare\", vault=~\"$vaults\"} - yearn_vault{network=\"$networks\", param=\"pricePerShare\", vault=~\"$vaults\"} offset $__range",
+              "expr": "yearn_vault{network=\"$networks\", param=\"pricePerShare\", vault=~\"$vaults\", experimental=\"$exp\"} - yearn_vault{network=\"$networks\", param=\"pricePerShare\", vault=~\"$vaults\", experimental=\"$exp\"} offset $__range",
               "instant": false,
               "interval": "",
               "legendFormat": "{{vault}}",
@@ -3392,7 +4319,8 @@
                 "mode": "absolute",
                 "steps": [
                   {
-                    "color": "green"
+                    "color": "green",
+                    "value": null
                   },
                   {
                     "color": "red",
@@ -3408,7 +4336,7 @@
             "h": 3,
             "w": 8,
             "x": 16,
-            "y": 38
+            "y": 42
           },
           "id": 24,
           "options": {
@@ -3417,7 +4345,9 @@
             "justifyMode": "auto",
             "orientation": "auto",
             "reduceOptions": {
-              "calcs": ["last"],
+              "calcs": [
+                "last"
+              ],
               "fields": "",
               "values": false
             },
@@ -3432,7 +4362,7 @@
                 "uid": "DS_PROMETHEUS"
               },
               "exemplar": true,
-              "expr": "(yearn_vault{network=\"$networks\", param=\"pricePerShare\", vault=~\"$vaults\"} / yearn_vault{network=\"$networks\", param=\"pricePerShare\", vault=~\"$vaults\"} offset $__range) - 1",
+              "expr": "(yearn_vault{network=\"$networks\", param=\"pricePerShare\", vault=~\"$vaults\", experimental=\"$exp\"} / yearn_vault{network=\"$networks\", param=\"pricePerShare\", vault=~\"$vaults\", experimental=\"$exp\"} offset $__range) - 1",
               "instant": false,
               "interval": "",
               "legendFormat": "{{vault}}",
@@ -3441,6 +4371,78 @@
             }
           ],
           "title": "Share Price - % Share Price Change over Time Range Selected",
+          "transparent": true,
+          "type": "stat"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "DS_PROMETHEUS"
+          },
+          "description": "",
+          "fieldConfig": {
+            "defaults": {
+              "color": {
+                "mode": "thresholds"
+              },
+              "decimals": 3,
+              "mappings": [],
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {
+                    "color": "green",
+                    "value": null
+                  },
+                  {
+                    "color": "red",
+                    "value": 80
+                  }
+                ]
+              },
+              "unit": "percentunit"
+            },
+            "overrides": []
+          },
+          "gridPos": {
+            "h": 3,
+            "w": 24,
+            "x": 0,
+            "y": 45
+          },
+          "id": 115,
+          "options": {
+            "colorMode": "value",
+            "graphMode": "none",
+            "justifyMode": "auto",
+            "orientation": "auto",
+            "reduceOptions": {
+              "calcs": [
+                "last"
+              ],
+              "fields": "",
+              "values": false
+            },
+            "text": {},
+            "textMode": "auto"
+          },
+          "pluginVersion": "8.3.1",
+          "targets": [
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "DS_PROMETHEUS"
+              },
+              "exemplar": true,
+              "expr": "(((delta(yearn_vault{network=\"$networks\", param=\"pricePerShare\", experimental=\"$exp\", vault=\"$vaults\"}[7d]) + 1) ^ (1/7)) ^ 365 - 1)",
+              "instant": false,
+              "interval": "",
+              "legendFormat": "{{vault}}",
+              "queryType": "randomWalk",
+              "refId": "A"
+            }
+          ],
+          "title": "APY",
           "transparent": true,
           "type": "stat"
         },
@@ -3489,7 +4491,8 @@
                 "mode": "absolute",
                 "steps": [
                   {
-                    "color": "green"
+                    "color": "green",
+                    "value": null
                   }
                 ]
               },
@@ -3501,12 +4504,14 @@
             "h": 10,
             "w": 24,
             "x": 0,
-            "y": 41
+            "y": 48
           },
           "id": 106,
           "options": {
             "legend": {
-              "calcs": ["last"],
+              "calcs": [
+                "last"
+              ],
               "displayMode": "list",
               "placement": "bottom"
             },
@@ -3517,8 +4522,12 @@
           "pluginVersion": "8.3.1",
           "targets": [
             {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "DS_PROMETHEUS"
+              },
               "exemplar": true,
-              "expr": "yearn_vault{network=\"$networks\", param=\"pricePerShare\", vault=~\"$vaults\"}",
+              "expr": "yearn_vault{network=\"$networks\", param=\"pricePerShare\", vault=~\"$vaults\", experimental=\"$exp\"}",
               "instant": false,
               "interval": "",
               "legendFormat": "{{vault}}",
@@ -3527,6 +4536,104 @@
             }
           ],
           "title": "share price",
+          "type": "timeseries"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "DS_PROMETHEUS"
+          },
+          "description": "APY Taking the Weekly Difference of Share Price\nWith Weekly Compounding",
+          "fieldConfig": {
+            "defaults": {
+              "color": {
+                "mode": "palette-classic"
+              },
+              "custom": {
+                "axisLabel": "",
+                "axisPlacement": "auto",
+                "barAlignment": 0,
+                "drawStyle": "line",
+                "fillOpacity": 60,
+                "gradientMode": "opacity",
+                "hideFrom": {
+                  "legend": false,
+                  "tooltip": false,
+                  "viz": false
+                },
+                "lineInterpolation": "linear",
+                "lineWidth": 1,
+                "pointSize": 5,
+                "scaleDistribution": {
+                  "type": "linear"
+                },
+                "showPoints": "never",
+                "spanNulls": true,
+                "stacking": {
+                  "group": "A",
+                  "mode": "none"
+                },
+                "thresholdsStyle": {
+                  "mode": "line+area"
+                }
+              },
+              "mappings": [],
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {
+                    "color": "red",
+                    "value": null
+                  },
+                  {
+                    "color": "transparent",
+                    "value": -0.00001
+                  }
+                ]
+              },
+              "unit": "percentunit"
+            },
+            "overrides": []
+          },
+          "gridPos": {
+            "h": 10,
+            "w": 24,
+            "x": 0,
+            "y": 58
+          },
+          "id": 116,
+          "options": {
+            "legend": {
+              "calcs": [
+                "firstNotNull",
+                "lastNotNull",
+                "mean",
+                "diffperc"
+              ],
+              "displayMode": "list",
+              "placement": "bottom"
+            },
+            "tooltip": {
+              "mode": "single"
+            }
+          },
+          "pluginVersion": "8.3.1",
+          "targets": [
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "DS_PROMETHEUS"
+              },
+              "exemplar": true,
+              "expr": "(((delta(yearn_vault{network=\"$networks\", param=\"pricePerShare\", experimental=\"$exp\", vault=\"$vaults\"}[7d]) + 1) ^ (1/7)) ^ 365 - 1) < 15000",
+              "instant": false,
+              "interval": "",
+              "legendFormat": "{{vault}}",
+              "queryType": "randomWalk",
+              "refId": "A"
+            }
+          ],
+          "title": "APY",
           "type": "timeseries"
         }
       ],
@@ -3539,7 +4646,7 @@
         "h": 1,
         "w": 24,
         "x": 0,
-        "y": 24
+        "y": 28
       },
       "id": 36,
       "panels": [
@@ -3562,7 +4669,8 @@
                 "mode": "absolute",
                 "steps": [
                   {
-                    "color": "green"
+                    "color": "green",
+                    "value": null
                   }
                 ]
               },
@@ -3574,7 +4682,7 @@
             "h": 20,
             "w": 4,
             "x": 0,
-            "y": 25
+            "y": 29
           },
           "id": 42,
           "options": {
@@ -3583,7 +4691,9 @@
             "justifyMode": "auto",
             "orientation": "horizontal",
             "reduceOptions": {
-              "calcs": ["lastNotNull"],
+              "calcs": [
+                "lastNotNull"
+              ],
               "fields": "",
               "values": false
             },
@@ -3598,7 +4708,7 @@
                 "uid": "DS_PROMETHEUS"
               },
               "exemplar": true,
-              "expr": "sort_desc((yearn_strategy{network=\"$networks\", param=\"debtRatio\", vault=~\"$vaults\"}/100 > 0))",
+              "expr": "sort_desc((yearn_strategy{network=\"$networks\", param=\"debtRatio\", vault=~\"$vaults\", experimental=\"$exp\"}/100 > 0))",
               "instant": false,
               "interval": "",
               "legendFormat": "{{strategy}}",
@@ -3627,7 +4737,8 @@
                 "mode": "absolute",
                 "steps": [
                   {
-                    "color": "green"
+                    "color": "green",
+                    "value": null
                   }
                 ]
               },
@@ -3639,7 +4750,7 @@
             "h": 20,
             "w": 4,
             "x": 4,
-            "y": 25
+            "y": 29
           },
           "id": 65,
           "options": {
@@ -3648,7 +4759,9 @@
             "justifyMode": "auto",
             "orientation": "horizontal",
             "reduceOptions": {
-              "calcs": ["lastNotNull"],
+              "calcs": [
+                "lastNotNull"
+              ],
               "fields": "",
               "values": false
             },
@@ -3663,7 +4776,7 @@
                 "uid": "DS_PROMETHEUS"
               },
               "exemplar": true,
-              "expr": "sort_desc(yearn_strategy{network=\"$networks\", param=\"debtThreshold\", vault=~\"$vaults\"}/1000000000000000)",
+              "expr": "sort_desc(yearn_strategy{network=\"$networks\", param=\"debtThreshold\", vault=~\"$vaults\", experimental=\"$exp\"}/1000000000000000)",
               "interval": "",
               "legendFormat": "{{strategy}}",
               "queryType": "randomWalk",
@@ -3702,7 +4815,8 @@
                 "mode": "absolute",
                 "steps": [
                   {
-                    "color": "light-blue"
+                    "color": "light-blue",
+                    "value": null
                   }
                 ]
               },
@@ -3714,7 +4828,7 @@
             "h": 20,
             "w": 4,
             "x": 8,
-            "y": 25
+            "y": 29
           },
           "id": 45,
           "options": {
@@ -3723,7 +4837,9 @@
             "justifyMode": "auto",
             "orientation": "horizontal",
             "reduceOptions": {
-              "calcs": ["last"],
+              "calcs": [
+                "last"
+              ],
               "fields": "",
               "values": false
             },
@@ -3738,7 +4854,7 @@
                 "uid": "DS_PROMETHEUS"
               },
               "exemplar": false,
-              "expr": "sort_desc(yearn_strategy{network=\"$networks\", param=\"maxDebtPerHarvest\", vault=~\"$vaults\"})",
+              "expr": "sort_desc(yearn_strategy{network=\"$networks\", param=\"maxDebtPerHarvest\", vault=~\"$vaults\", experimental=\"$exp\"})",
               "instant": true,
               "interval": "",
               "legendFormat": "{{strategy}}",
@@ -3768,7 +4884,8 @@
                 "mode": "absolute",
                 "steps": [
                   {
-                    "color": "purple"
+                    "color": "purple",
+                    "value": null
                   }
                 ]
               },
@@ -3780,7 +4897,7 @@
             "h": 4,
             "w": 2,
             "x": 12,
-            "y": 25
+            "y": 29
           },
           "id": 41,
           "options": {
@@ -3789,7 +4906,9 @@
             "justifyMode": "auto",
             "orientation": "auto",
             "reduceOptions": {
-              "calcs": ["lastNotNull"],
+              "calcs": [
+                "lastNotNull"
+              ],
               "fields": "",
               "values": false
             },
@@ -3804,7 +4923,7 @@
                 "uid": "DS_PROMETHEUS"
               },
               "exemplar": true,
-              "expr": "yearn_vault{network=\"$networks\", param=\"debtRatio\", vault=~\"$vaults\"}/100",
+              "expr": "yearn_vault{network=\"$networks\", param=\"debtRatio\", vault=~\"$vaults\", experimental=\"$exp\"}/100",
               "instant": false,
               "interval": "",
               "legendFormat": "{{param}}",
@@ -3834,7 +4953,8 @@
                 "mode": "absolute",
                 "steps": [
                   {
-                    "color": "purple"
+                    "color": "purple",
+                    "value": null
                   }
                 ]
               },
@@ -3846,7 +4966,7 @@
             "h": 4,
             "w": 2,
             "x": 14,
-            "y": 25
+            "y": 29
           },
           "id": 43,
           "options": {
@@ -3855,7 +4975,9 @@
             "justifyMode": "auto",
             "orientation": "auto",
             "reduceOptions": {
-              "calcs": ["lastNotNull"],
+              "calcs": [
+                "lastNotNull"
+              ],
               "fields": "",
               "values": false
             },
@@ -3870,7 +4992,7 @@
                 "uid": "DS_PROMETHEUS"
               },
               "exemplar": false,
-              "expr": "sum(yearn_strategy{network=\"$networks\", param=\"debtRatio\", vault=~\"$vaults\"}/100)",
+              "expr": "sum(yearn_strategy{network=\"$networks\", param=\"debtRatio\", vault=~\"$vaults\", experimental=\"$exp\"}/100)",
               "instant": true,
               "interval": "",
               "legendFormat": "{{strategy}}",
@@ -3900,7 +5022,8 @@
                 "mode": "absolute",
                 "steps": [
                   {
-                    "color": "green"
+                    "color": "green",
+                    "value": null
                   }
                 ]
               },
@@ -3912,7 +5035,7 @@
             "h": 20,
             "w": 4,
             "x": 16,
-            "y": 25
+            "y": 29
           },
           "id": 44,
           "options": {
@@ -3921,7 +5044,9 @@
             "justifyMode": "auto",
             "orientation": "horizontal",
             "reduceOptions": {
-              "calcs": ["last"],
+              "calcs": [
+                "last"
+              ],
               "fields": "",
               "values": false
             },
@@ -3936,7 +5061,7 @@
                 "uid": "DS_PROMETHEUS"
               },
               "exemplar": true,
-              "expr": "sort_desc(yearn_strategy{network=\"$networks\", param=\"minDebtPerHarvest\", vault=~\"$vaults\"})",
+              "expr": "sort_desc(yearn_strategy{network=\"$networks\", param=\"minDebtPerHarvest\", vault=~\"$vaults\", experimental=\"$exp\"})",
               "instant": false,
               "interval": "",
               "legendFormat": "{{strategy}}",
@@ -3964,7 +5089,8 @@
                 "mode": "absolute",
                 "steps": [
                   {
-                    "color": "blue"
+                    "color": "blue",
+                    "value": null
                   }
                 ]
               },
@@ -3976,7 +5102,7 @@
             "h": 19,
             "w": 4,
             "x": 20,
-            "y": 25
+            "y": 29
           },
           "id": 40,
           "options": {
@@ -3985,7 +5111,9 @@
             "justifyMode": "auto",
             "orientation": "horizontal",
             "reduceOptions": {
-              "calcs": ["lastNotNull"],
+              "calcs": [
+                "lastNotNull"
+              ],
               "fields": "",
               "values": false
             },
@@ -4000,7 +5128,7 @@
                 "uid": "DS_PROMETHEUS"
               },
               "exemplar": true,
-              "expr": "sort(time() - yearn_strategy{network=\"$networks\", param=\"activation\", vault=~\"$vaults\"})",
+              "expr": "sort(time() - yearn_strategy{network=\"$networks\", param=\"activation\", vault=~\"$vaults\", experimental=\"$exp\"})",
               "hide": false,
               "interval": "",
               "legendFormat": "{{strategy}}",
@@ -4030,7 +5158,8 @@
                 "mode": "absolute",
                 "steps": [
                   {
-                    "color": "purple"
+                    "color": "purple",
+                    "value": null
                   }
                 ]
               },
@@ -4042,7 +5171,7 @@
             "h": 4,
             "w": 4,
             "x": 12,
-            "y": 29
+            "y": 33
           },
           "id": 61,
           "options": {
@@ -4051,7 +5180,9 @@
             "justifyMode": "auto",
             "orientation": "auto",
             "reduceOptions": {
-              "calcs": ["lastNotNull"],
+              "calcs": [
+                "lastNotNull"
+              ],
               "fields": "",
               "values": false
             },
@@ -4061,8 +5192,12 @@
           "pluginVersion": "8.3.1",
           "targets": [
             {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "DS_PROMETHEUS"
+              },
               "exemplar": true,
-              "expr": "yearn_strategy{network=\"$networks\", param=\"buffer\", vault=~\"$vaults\"}/1000",
+              "expr": "yearn_strategy{network=\"$networks\", param=\"buffer\", vault=~\"$vaults\", experimental=\"$exp\"}/1000",
               "instant": false,
               "interval": "",
               "legendFormat": "{{param}}",
@@ -4090,7 +5225,8 @@
                 "mode": "absolute",
                 "steps": [
                   {
-                    "color": "purple"
+                    "color": "purple",
+                    "value": null
                   }
                 ]
               },
@@ -4102,7 +5238,7 @@
             "h": 4,
             "w": 4,
             "x": 12,
-            "y": 33
+            "y": 37
           },
           "id": 39,
           "options": {
@@ -4111,7 +5247,9 @@
             "justifyMode": "auto",
             "orientation": "auto",
             "reduceOptions": {
-              "calcs": ["lastNotNull"],
+              "calcs": [
+                "lastNotNull"
+              ],
               "fields": "",
               "values": false
             },
@@ -4121,8 +5259,12 @@
           "pluginVersion": "8.3.1",
           "targets": [
             {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "DS_PROMETHEUS"
+              },
               "exemplar": true,
-              "expr": "yearn_vault{network=\"$networks\", param=\"availableDepositLimit\", vault=~\"$vaults\"}",
+              "expr": "yearn_vault{network=\"$networks\", param=\"availableDepositLimit\", vault=~\"$vaults\", experimental=\"$exp\"}",
               "instant": false,
               "interval": "",
               "legendFormat": "{{param}}",
@@ -4150,7 +5292,8 @@
                 "mode": "absolute",
                 "steps": [
                   {
-                    "color": "purple"
+                    "color": "purple",
+                    "value": null
                   }
                 ]
               },
@@ -4162,7 +5305,7 @@
             "h": 4,
             "w": 4,
             "x": 12,
-            "y": 37
+            "y": 41
           },
           "id": 107,
           "options": {
@@ -4171,7 +5314,9 @@
             "justifyMode": "auto",
             "orientation": "auto",
             "reduceOptions": {
-              "calcs": ["lastNotNull"],
+              "calcs": [
+                "lastNotNull"
+              ],
               "fields": "",
               "values": false
             },
@@ -4186,7 +5331,7 @@
                 "uid": "DS_PROMETHEUS"
               },
               "exemplar": true,
-              "expr": "yearn_vault{network=\"$networks\", param=\"lockedProfit\", vault=~\"$vaults\"}",
+              "expr": "yearn_vault{network=\"$networks\", param=\"lockedProfit\", vault=~\"$vaults\", experimental=\"$exp\"}",
               "instant": false,
               "interval": "",
               "legendFormat": "",
@@ -4214,7 +5359,8 @@
                 "mode": "absolute",
                 "steps": [
                   {
-                    "color": "purple"
+                    "color": "purple",
+                    "value": null
                   }
                 ]
               },
@@ -4226,7 +5372,7 @@
             "h": 4,
             "w": 4,
             "x": 12,
-            "y": 41
+            "y": 45
           },
           "id": 108,
           "options": {
@@ -4235,7 +5381,9 @@
             "justifyMode": "auto",
             "orientation": "auto",
             "reduceOptions": {
-              "calcs": ["lastNotNull"],
+              "calcs": [
+                "lastNotNull"
+              ],
               "fields": "",
               "values": false
             },
@@ -4250,7 +5398,7 @@
                 "uid": "DS_PROMETHEUS"
               },
               "exemplar": true,
-              "expr": "yearn_vault{network=\"$networks\", param=\"lockedProfitDegradation\", vault=~\"$vaults\"}",
+              "expr": "yearn_vault{network=\"$networks\", param=\"lockedProfitDegradation\", vault=~\"$vaults\", experimental=\"$exp\"}",
               "instant": false,
               "interval": "",
               "legendFormat": "",
@@ -4270,7 +5418,10 @@
   "refresh": false,
   "schemaVersion": 33,
   "style": "dark",
-  "tags": ["yVault", "Version 2", "Production"],
+  "tags": [
+    "yVault",
+    "Version 2"
+  ],
   "templating": {
     "list": [
       {
@@ -4279,7 +5430,7 @@
           "type": "prometheus",
           "uid": "DS_PROMETHEUS"
         },
-        "definition": "yearn_strategy{experimental=\"false\", param=\"totalLoss\"}",
+        "definition": "yearn_strategy{param=\"totalLoss\"}",
         "hide": 0,
         "includeAll": false,
         "label": "network",
@@ -4287,7 +5438,7 @@
         "name": "networks",
         "options": [],
         "query": {
-          "query": "yearn_strategy{experimental=\"false\", param=\"totalLoss\"}",
+          "query": "yearn_strategy{param=\"totalLoss\"}",
           "refId": "StandardVariableQuery"
         },
         "refresh": 1,
@@ -4302,7 +5453,30 @@
           "type": "prometheus",
           "uid": "DS_PROMETHEUS"
         },
-        "definition": "yearn_strategy{network=\"$networks\", experimental=\"false\"}",
+        "definition": "yearn_vault{param=\"totalAssets\", network=\"$networks\"}",
+        "hide": 0,
+        "includeAll": false,
+        "label": "experimental",
+        "multi": false,
+        "name": "exp",
+        "options": [],
+        "query": {
+          "query": "yearn_vault{param=\"totalAssets\", network=\"$networks\"}",
+          "refId": "StandardVariableQuery"
+        },
+        "refresh": 1,
+        "regex": "/.*experimental=\"([^\"]*).*/",
+        "skipUrlSync": false,
+        "sort": 1,
+        "type": "query"
+      },
+      {
+        "current": {},
+        "datasource": {
+          "type": "prometheus",
+          "uid": "DS_PROMETHEUS"
+        },
+        "definition": "yearn_strategy{network=\"$networks\", experimental=\"$exp\"}",
         "hide": 0,
         "includeAll": false,
         "label": "vaults",
@@ -4310,7 +5484,7 @@
         "name": "vaults",
         "options": [],
         "query": {
-          "query": "yearn_strategy{network=\"$networks\", experimental=\"false\"}",
+          "query": "yearn_strategy{network=\"$networks\", experimental=\"$exp\"}",
           "refId": "StandardVariableQuery"
         },
         "refresh": 1,
@@ -4325,13 +5499,13 @@
     ]
   },
   "time": {
-    "from": "now-24h",
+    "from": "now-30d",
     "to": "now"
   },
   "timepicker": {},
   "timezone": "",
   "title": "Vault Overview",
-  "uid": "ibsIoEknkdffd",
-  "version": 2,
+  "uid": "4YCbcel7k",
+  "version": 40,
   "weekStart": ""
 }
