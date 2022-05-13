@@ -364,6 +364,16 @@ partners = {
                     name='cofi-usdc-v1',
                     vault='0xa354F35829Ae975e850e23e9615b11Da1B3dC4DE',
                     wrapper='0x39936db69a547f617E96C42C241f4C574Fa81eE6',
+                 ),
+            ],
+        ),
+        Partner(
+            name='element',
+            treasury='0x82eF450FB7f06E3294F2f19ed1713b255Af0f541',
+            wrappers=[
+                ElementWrapper(
+                    name='WrapperRegistry',
+                    wrapper='0x149f615057F905988fFC97994E29c0Cc7DaB5337',
                 ),
             ],
         ),
@@ -470,16 +480,6 @@ partners = {
                 WildcardWrapper(
                     name='Vault',
                     wrapper='0x20dd72Ed959b6147912C2e529F0a0C651c33c9ce',
-                ),
-            ],
-        ),
-        Partner(
-            name='element',
-            treasury='0x82eF450FB7f06E3294F2f19ed1713b255Af0f541',
-            wrappers=[
-                ElementWrapper(
-                    name='WrapperRegistry',
-                    wrapper='0x149f615057F905988fFC97994E29c0Cc7DaB5337',
                 ),
             ],
         ),
