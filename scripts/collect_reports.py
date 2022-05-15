@@ -499,7 +499,8 @@ def format_public_telegram(r, t):
     message += f'📅 {r.date_string} UTC \n\n'
     net_profit_want = "{:,.2f}".format(r.gain - r.loss)
     net_profit_usd = "{:,.2f}".format((r.gain - r.loss) * r.want_price_at_block)
-    message += f'💰 Net profit: {net_profit_want} {r.token_symbol} (${net_profit_usd})\n\n'
+    sym = r.token_symbol.replace('_','-')
+    message += f'💰 Net profit: {net_profit_want} {sym} (${net_profit_usd})\n\n'
     txn_cost_str = "${:,.2f}".format(t.call_cost_usd)
     message += f'💸 Transaction Cost: {txn_cost_str} \n\n'
     message += f'🔗 [View on Explorer]({explorer}tx/{r.txn_hash})'
@@ -519,7 +520,8 @@ def format_public_telegram_inv(r, t):
     message += f'{r.date_string} UTC \n'
     net_profit_want = "{:,.2f}".format(r.gain - r.loss)
     net_profit_usd = "{:,.2f}".format((r.gain - r.loss) * r.want_price_at_block)
-    message += f'Net profit: {net_profit_want} {r.token_symbol} (${net_profit_usd})\n'
+    sym = r.token_symbol.replace('_','-')
+    message += f'Net profit: {net_profit_want} {sym} (${net_profit_usd})\n'
     txn_cost_str = "${:,.2f}".format(t.call_cost_usd)
     message += f'Transaction Cost: {txn_cost_str} \n'
     message += f'[View on Explorer]({explorer}tx/{r.txn_hash})'
