@@ -209,7 +209,7 @@ def average(vault, samples: ApySamples) -> Apy:
     # calculate our pre-fee APR
     performance_fee_denominator = 1 - performance 
     if performance_fee_denominator == 0:
-        gross_apr = 0
+        gross_apr = apr_after_fees + management
     else: 
         gross_apr = apr_after_fees / performance_fee_denominator + management
 
