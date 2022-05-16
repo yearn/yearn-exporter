@@ -229,6 +229,9 @@ class Vault:
     def _needs_curve_simple(self):
         # not able to calculate gauge weighting on chains other than mainnet
         curve_simple_excludes = {
+            Network.Mainnet: [
+                "0x3D27705c64213A5DcD9D26880c1BcFa72d5b6B0E"
+            ],
             Network.Fantom: [
                 "0xCbCaF8cB8cbeAFA927ECEE0c5C56560F83E9B7D9",
                 "0xA97E7dA01C7047D6a65f894c99bE8c832227a8BC"
