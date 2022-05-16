@@ -207,7 +207,11 @@ def average(vault, samples: ApySamples) -> Apy:
     apr_after_fees = compounding * ((net_apy + 1) ** (1 / compounding)) - compounding if net_apy > 0 else net_apy
 
     # calculate our pre-fee APR
-    gross_apr = apr_after_fees / (1 - performance) + management
+    performance_fee_denominator = 1 - performance 
+    if performance_fee_denominator == 0:
+        gross_apr = apr_after_fees + management
+    else: 
+        gross_apr = apr_after_fees / performance_fee_denominator + management
 
     # 0.3.5+ should never be < 0% because of management
     if net_apy < 0 and Version(vault.api_version) >= Version("0.3.5"):
