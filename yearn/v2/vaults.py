@@ -234,7 +234,8 @@ class Vault:
                 "0xA97E7dA01C7047D6a65f894c99bE8c832227a8BC"
             ],
             Network.Arbitrum: [
-                "0x239e14A19DFF93a17339DCC444f74406C17f8E67"
+                "0x239e14A19DFF93a17339DCC444f74406C17f8E67",
+                "0x1dBa7641dc69188D6086a73B972aC4bda29Ec35d"
             ]
         }
         needs_simple = True
