@@ -64,6 +64,10 @@ def find_price(
 
     price = None
     if token in constants.stablecoins:
+        if chainlink and token in chainlink:
+            price = chainlink.get_price(token, block=block)
+            logger.debug("stablecoin chainlink -> %s", price)
+            return price
         logger.debug("stablecoin -> %s", 1)
         return 1
 
