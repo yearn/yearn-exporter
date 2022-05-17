@@ -479,7 +479,8 @@
                 "mode": "absolute",
                 "steps": [
                   {
-                    "color": "green"
+                    "color": "green",
+                    "value": null
                   }
                 ]
               },
@@ -545,7 +546,8 @@
                 "mode": "absolute",
                 "steps": [
                   {
-                    "color": "green"
+                    "color": "green",
+                    "value": null
                   }
                 ]
               },
@@ -610,7 +612,8 @@
                 "mode": "absolute",
                 "steps": [
                   {
-                    "color": "green"
+                    "color": "green",
+                    "value": null
                   },
                   {
                     "color": "#EAB839",
@@ -698,7 +701,8 @@
                 "mode": "absolute",
                 "steps": [
                   {
-                    "color": "green"
+                    "color": "green",
+                    "value": null
                   },
                   {
                     "color": "red",
@@ -765,7 +769,8 @@
                 "mode": "absolute",
                 "steps": [
                   {
-                    "color": "green"
+                    "color": "green",
+                    "value": null
                   },
                   {
                     "color": "red",
@@ -845,7 +850,8 @@
                 "mode": "absolute",
                 "steps": [
                   {
-                    "color": "green"
+                    "color": "green",
+                    "value": null
                   },
                   {
                     "color": "#E24D42",
@@ -992,7 +998,8 @@
                 "mode": "absolute",
                 "steps": [
                   {
-                    "color": "green"
+                    "color": "green",
+                    "value": null
                   },
                   {
                     "color": "dark-green",
@@ -1126,7 +1133,8 @@
                 "mode": "absolute",
                 "steps": [
                   {
-                    "color": "green"
+                    "color": "green",
+                    "value": null
                   },
                   {
                     "color": "dark-green",
@@ -1259,7 +1267,8 @@
                 "mode": "absolute",
                 "steps": [
                   {
-                    "color": "green"
+                    "color": "green",
+                    "value": null
                   },
                   {
                     "color": "#E24D42",
@@ -1391,7 +1400,8 @@
                 "mode": "absolute",
                 "steps": [
                   {
-                    "color": "green"
+                    "color": "green",
+                    "value": null
                   },
                   {
                     "color": "dark-green",
@@ -1536,7 +1546,8 @@
                 "mode": "absolute",
                 "steps": [
                   {
-                    "color": "green"
+                    "color": "green",
+                    "value": null
                   }
                 ]
               },
@@ -1602,7 +1613,8 @@
                 "mode": "absolute",
                 "steps": [
                   {
-                    "color": "green"
+                    "color": "green",
+                    "value": null
                   }
                 ]
               },
@@ -1667,7 +1679,8 @@
                 "mode": "absolute",
                 "steps": [
                   {
-                    "color": "green"
+                    "color": "green",
+                    "value": null
                   },
                   {
                     "color": "#EAB839",
@@ -1755,7 +1768,8 @@
                 "mode": "absolute",
                 "steps": [
                   {
-                    "color": "green"
+                    "color": "green",
+                    "value": null
                   },
                   {
                     "color": "red",
@@ -1822,7 +1836,8 @@
                 "mode": "absolute",
                 "steps": [
                   {
-                    "color": "green"
+                    "color": "green",
+                    "value": null
                   },
                   {
                     "color": "red",
@@ -1902,7 +1917,8 @@
                 "mode": "absolute",
                 "steps": [
                   {
-                    "color": "green"
+                    "color": "green",
+                    "value": null
                   },
                   {
                     "color": "#E24D42",
@@ -2049,7 +2065,8 @@
                 "mode": "absolute",
                 "steps": [
                   {
-                    "color": "green"
+                    "color": "green",
+                    "value": null
                   },
                   {
                     "color": "dark-green",
@@ -2183,7 +2200,8 @@
                 "mode": "absolute",
                 "steps": [
                   {
-                    "color": "green"
+                    "color": "green",
+                    "value": null
                   },
                   {
                     "color": "dark-green",
@@ -2316,7 +2334,8 @@
                 "mode": "absolute",
                 "steps": [
                   {
-                    "color": "green"
+                    "color": "green",
+                    "value": null
                   },
                   {
                     "color": "#E24D42",
@@ -2448,7 +2467,8 @@
                 "mode": "absolute",
                 "steps": [
                   {
-                    "color": "green"
+                    "color": "green",
+                    "value": null
                   },
                   {
                     "color": "dark-green",
@@ -3045,6 +3065,7 @@
                 "axisLabel": "",
                 "axisPlacement": "auto",
                 "axisSoftMax": 1.001,
+                "axisSoftMin": 0,
                 "barAlignment": 0,
                 "drawStyle": "line",
                 "fillOpacity": 0,
@@ -3070,12 +3091,14 @@
                   "mode": "area"
                 }
               },
+              "decimals": 2,
               "mappings": [],
               "thresholds": {
                 "mode": "percentage",
                 "steps": [
                   {
-                    "color": "red"
+                    "color": "red",
+                    "value": null
                   },
                   {
                     "color": "dark-red",
@@ -3127,120 +3150,14 @@
                 "uid": "DS_PROMETHEUS"
               },
               "exemplar": true,
-              "expr": "(avg by (vault) (yearn_vault{param=\"totalDebt\", experimental=\"false\", vault!~\"yvUSDC 0.2.2|yvDAI 0.2.2|yvWBTC 0.3.1|yvHEGIC 0.3.0\", network=\"ETH\"}) / avg by (vault) (yearn_vault{param=\"totalAssets\", experimental=\"false\", vault!~\"yvUSDC 0.2.2|yvDAI 0.2.2|yvWBTC 0.3.1|yvHEGIC 0.3.0\", network=\"ETH\"}) )",
+              "expr": "(avg by (vault, network) (yearn_vault{param=\"totalDebt\", experimental=\"false\", vault!~\"yvUSDC 0.2.2|yvDAI 0.2.2|yvWBTC 0.3.1|yvHEGIC 0.3.0|yvAVAX 0.4.3\"}) / avg by (vault, network) (yearn_vault{param=\"totalAssets\", experimental=\"false\", vault!~\"yvUSDC 0.2.2|yvDAI 0.2.2|yvWBTC 0.3.1|yvHEGIC 0.3.0|yvAVAX 0.4.3\"}) )",
               "interval": "",
-              "legendFormat": "{{vault}}",
+              "legendFormat": "{{vault}} - {{network}}",
               "refId": "A"
             }
           ],
-          "title": "Total Debt Allocation - ETH",
-          "type": "timeseries"
-        },
-        {
-          "datasource": {
-            "type": "prometheus",
-            "uid": "DS_PROMETHEUS"
-          },
-          "description": "",
-          "fieldConfig": {
-            "defaults": {
-              "color": {
-                "mode": "palette-classic"
-              },
-              "custom": {
-                "axisGridShow": false,
-                "axisLabel": "",
-                "axisPlacement": "auto",
-                "axisSoftMax": 1.001,
-                "barAlignment": 0,
-                "drawStyle": "line",
-                "fillOpacity": 0,
-                "gradientMode": "none",
-                "hideFrom": {
-                  "legend": false,
-                  "tooltip": false,
-                  "viz": false
-                },
-                "lineInterpolation": "linear",
-                "lineWidth": 1,
-                "pointSize": 5,
-                "scaleDistribution": {
-                  "type": "linear"
-                },
-                "showPoints": "auto",
-                "spanNulls": false,
-                "stacking": {
-                  "group": "A",
-                  "mode": "none"
-                },
-                "thresholdsStyle": {
-                  "mode": "area"
-                }
-              },
-              "mappings": [],
-              "thresholds": {
-                "mode": "percentage",
-                "steps": [
-                  {
-                    "color": "red"
-                  },
-                  {
-                    "color": "dark-red",
-                    "value": 45
-                  },
-                  {
-                    "color": "super-light-yellow",
-                    "value": 46
-                  },
-                  {
-                    "color": "super-light-green",
-                    "value": 60
-                  },
-                  {
-                    "color": "dark-green",
-                    "value": 80
-                  }
-                ]
-              },
-              "unit": "percentunit"
-            },
-            "overrides": []
-          },
-          "gridPos": {
-            "h": 17,
-            "w": 24,
-            "x": 0,
-            "y": 43
-          },
-          "id": 49,
-          "options": {
-            "legend": {
-              "calcs": [
-                "last"
-              ],
-              "displayMode": "table",
-              "placement": "right",
-              "sortBy": "Last",
-              "sortDesc": true
-            },
-            "tooltip": {
-              "mode": "single"
-            }
-          },
-          "targets": [
-            {
-              "datasource": {
-                "type": "prometheus",
-                "uid": "DS_PROMETHEUS"
-              },
-              "exemplar": true,
-              "expr": "(avg by (vault) (yearn_vault{param=\"totalDebt\", experimental=\"false\", vault!~\"yvAVAX 0.4.3\", network=\"FTM\"}) / avg by (vault) (yearn_vault{param=\"totalAssets\", experimental=\"false\", vault!~\"yvAVAX 0.4.3\", network=\"FTM\"}) )",
-              "interval": "",
-              "legendFormat": "{{vault}}",
-              "refId": "A"
-            }
-          ],
-          "title": "Total Debt Allocation - FTM",
+          "title": "Total Debt Allocation",
+          "transparent": true,
           "type": "timeseries"
         }
       ],
@@ -3263,6 +3180,6 @@
   "timezone": "",
   "title": "Vault Management",
   "uid": "Glf5haw7k",
-  "version": 194,
+  "version": 197,
   "weekStart": ""
 }
