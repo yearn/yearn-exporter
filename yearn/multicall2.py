@@ -2,6 +2,7 @@ from collections import defaultdict
 from itertools import count, product
 from operator import itemgetter
 from typing import Any, List, Optional
+from urllib.error import HTTPError
 
 import requests
 from brownie import chain, web3
@@ -58,8 +59,8 @@ def fetch_multicall(*calls, block: Optional[Block] = None, require_success: bool
             result = multicall2.tryAggregate.call(
                 False, multicall_input, block_identifier=block or 'latest'
             )
-    except ValueError as e:
-        if 'out of gas' in str(e):
+    except (HTTPError, ValueError) as e:
+        if 'out of gas' in str(e) or "Request Entity Too Large for url" in str(e):
             halfpoint = len(calls) // 2
             batch0 = fetch_multicall(*calls[:halfpoint],block=block,require_success=require_success)
             batch1 = fetch_multicall(*calls[halfpoint:],block=block,require_success=require_success)
