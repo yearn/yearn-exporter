@@ -67,9 +67,11 @@ def find_price(
         if chainlink and token in chainlink:
             price = chainlink.get_price(token, block=block)
             logger.debug("stablecoin chainlink -> %s", price)
-            return price
-        logger.debug("stablecoin -> %s", 1)
-        return 1
+            if price is not None:
+                return price
+        else:
+            logger.debug("stablecoin -> %s", 1)
+            return 1
 
     elif uniswap_v2 and uniswap_v2.is_uniswap_pool(token):
         price = uniswap_v2.lp_price(token, block=block)
