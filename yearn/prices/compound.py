@@ -23,6 +23,12 @@ def get_fantom_ironbank() -> Contract:
     implementation = contract(unitroller.comptrollerImplementation())
     return Contract.from_abi(unitroller._name, str(unitroller), abi=implementation.abi)
 
+def get_fantom_scream() -> Contract:
+    # HACK ironbank on fantom uses a non-standard proxy pattern
+    unitroller = contract('0x260e596dabe3afc463e75b6cc05d8c46acacfb09')
+    implementation = contract(unitroller.comptrollerImplementation())
+    return Contract.from_abi(unitroller._name, str(unitroller), abi=implementation.abi)
+
 
 @dataclass
 class CompoundConfig:
@@ -52,6 +58,10 @@ addresses = {
             name='ironbank',
             address=get_fantom_ironbank,
         ),
+        CompoundConfig(
+            name='scream',
+            address=get_fantom_scream,
+        )
     ],
     Network.Arbitrum: [
         CompoundConfig(
