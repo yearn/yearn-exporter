@@ -107,7 +107,10 @@ class Chainlink(metaclass=Singleton):
         if asset == ZERO_ADDRESS:
             return None
         try:
-            return self.get_feed(convert.to_address(asset)).latestAnswer(block_identifier=block) / 1e8
+            price = self.get_feed(convert.to_address(asset)).latestAnswer(block_identifier=block) / 1e8
+            # latestAnswer can return 0 before the feed is in use
+            if price:
+                return price
         except ValueError:
             return None
 
