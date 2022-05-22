@@ -181,6 +181,24 @@ class WildcardWrapper:
         ]
 
 
+class ElementWrapper(WildcardWrapper):
+    """
+    Use Element deposits by wrapper
+    """
+
+    name: str
+    wrapper: str
+
+    def unwrap(self) -> List[Wrapper]:
+        registry = contract(self.wrapper)
+        wrappers = registry.viewRegistry()
+
+        return [
+            Wrapper(name=contract(wrapper).name(), vault=contract(wrapper).vault(), wrapper=wrapper)
+            for wrapper in wrappers
+        ]
+
+
 @dataclass
 class YApeSwapFactoryWrapper(WildcardWrapper):
     name: str
