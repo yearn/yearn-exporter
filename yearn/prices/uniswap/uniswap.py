@@ -1,7 +1,9 @@
 
 from typing import Any, Dict, Optional, Union
 
-from brownie import convert
+from brownie import chain, convert
+from yearn.constants import WRAPPED_GAS_COIN
+from yearn.networks import Network
 from yearn.prices import constants
 from yearn.prices.chainlink import chainlink
 from yearn.prices.uniswap.v1 import UniswapV1, uniswap_v1
@@ -29,8 +31,8 @@ class UniswapVersionMultiplexer:
         token = convert.to_address(token)
 
         # NOTE Following our usual logic with WETH is a big no-no. Too many calls.
-        if token == constants.weth and block <= contract_creation_block(chainlink.get_feed(token)):
-            return self._early_exit_for_eth(block=block)
+        if token in [constants.weth, WRAPPED_GAS_COIN] and block <= contract_creation_block(chainlink.get_feed(token)):
+            return self._early_exit_for_gas_coin(token, block=block)
 
         deepest_uniswap = self.deepest_uniswap(token, block)
         if deepest_uniswap:
@@ -47,12 +49,17 @@ class UniswapVersionMultiplexer:
                 deepest_uniswap_balance = deepest_pool_balance
         return deepest_uniswap
     
-    def _early_exit_for_eth(self, block: Optional[Block] = None) -> Optional[float]:
+    def _early_exit_for_gas_coin(self, token: Address, block: Optional[Block] = None) -> Optional[float]:
         ''' We use this to bypass the liquidity checker for ETH prior to deployment of the chainlink feed. '''
         amount_in = 1e18
-        path = [constants.weth, constants.usdc]
+        path = [token, constants.usdc]
+        best_market = {
+            Network.Mainnet: "uniswap",
+            Network.Fantom: "spookyswap",
+            Network.Gnosis: "sushiswap",
+        }[chain.id]
         for uni in self.uniswaps['v2'].uniswaps:
-            if uni.name != "uniswap":
+            if uni.name != best_market:
                 continue
             quote = uni.router.getAmountsOut(amount_in, path, block_identifier=block)[-1]
             quote /= 10 ** contract(constants.usdc).decimals()
