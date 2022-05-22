@@ -57,6 +57,7 @@ def get_protocol_fees(address: str, start_block: int = None) -> Dict[int,Decimal
     vault = Vault.from_address(address)
     rewards = vault.vault.rewards()
 
+    start_block = start_block if start_block else None
     topics = construct_event_topic_set(
         filter_by_name('Transfer', vault.vault.abi)[0],
         web3.codec,
@@ -231,6 +232,7 @@ class GearboxWrapper(Wrapper):
 @dataclass
 class Partner:
     name: str
+    start_block: int
     wrappers: List[Wrapper]
     treasury: str = None
 
@@ -253,14 +255,14 @@ class Partner:
                 cache = wrapper.read_cache()
                 try:
                     max_cached_block = int(cache['block'].max())
-                    start_block = max_cached_block + 1
                     logger.debug(f'{self.name} {wrapper.name} is cached thru block {max_cached_block}')
+                    start_block = max(self.start_block, max_cached_block + 1)
                 except KeyError:
-                    start_block = None
+                    start_block = self.start_block
                     logger.debug(f'no harvests cached for {self.name} {wrapper.name}')
                 logger.debug(f'start block: {start_block}')
             else:
-                start_block = None
+                start_block = self.start_block
             
             protocol_fees = wrapper.protocol_fees(start_block=start_block)
             

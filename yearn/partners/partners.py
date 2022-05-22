@@ -7,6 +7,7 @@ partners = {
     Network.Mainnet: [
         Partner(
             name='popcorndao',
+            start_block=0,
             treasury='0x403d41e72308b5D89a383C3F6789EDD7D3576Ee0',
             wrappers=[
                 WildcardWrapper(
@@ -17,6 +18,7 @@ partners = {
         ),
         Partner(
             name='tempus',
+            start_block=0,
             treasury='0xab40a7e3cef4afb323ce23b6565012ac7c76bfef',
             wrappers=[
                 Wrapper(
@@ -33,6 +35,7 @@ partners = {
         ),
         Partner(
             name='coinomo',
+            start_block=0,
             treasury='0xd3877d9df3cb52006b7d932e8db4b36e22e89242',
             wrappers=[
                 Wrapper(
@@ -44,6 +47,7 @@ partners = {
         ),
         Partner(
             name='alchemix',
+            start_block=0,
             treasury='0x8392F6669292fA56123F71949B52d883aE57e225',
             wrappers=[
                 Wrapper(
@@ -80,6 +84,7 @@ partners = {
         ),
         Partner(
             name='inverse',
+            start_block=0,
             treasury='0x926dF14a23BE491164dCF93f4c468A50ef659D5B',
             wrappers=[
                 Wrapper(
@@ -111,6 +116,7 @@ partners = {
         ),
         Partner(
             name='frax',
+            start_block=0,
             treasury='0x8d0C5D009b128315715388844196B85b41D9Ea30',
             wrappers=[
                 Wrapper(
@@ -122,6 +128,7 @@ partners = {
         ),
         Partner(
             name='pickle',
+            start_block=0,
             treasury='0x066419EaEf5DE53cc5da0d8702b990c5bc7D1AB3',
             wrappers=[
                 Wrapper(
@@ -138,6 +145,7 @@ partners = {
         ),
         Partner(
             name='badger',
+            start_block=0,
             treasury='0xB65cef03b9B89f99517643226d76e286ee999e77',
             wrappers=[
                 Wrapper(
@@ -149,6 +157,7 @@ partners = {
         ),
         Partner(
             name='deus',
+            start_block=0,
             treasury='0x4e8a7c429192bfda8c9a1ef0f3b749d0f66657aa',
             wrappers=[
                 Wrapper(
@@ -160,6 +169,7 @@ partners = {
         ),
         Partner(
             name='basketdao',
+            start_block=0,
             treasury='0x7301C46be73bB04847576b6Af107172bF5e8388e',
             wrappers=[
                 WildcardWrapper(
@@ -174,6 +184,7 @@ partners = {
         ),
         Partner(
             name='gb',
+            start_block=0,
             treasury='0x6965292e29514e527df092659FB4638dc39e7248',
             wrappers=[
                 WildcardWrapper(
@@ -184,6 +195,7 @@ partners = {
         ),
         Partner(
             name='donutapp',
+            start_block=0,
             treasury='0x9eaCFF404BAC19195CbD131a4BeA880Abd09B35e',
             wrappers=[
                 Wrapper(
@@ -195,6 +207,7 @@ partners = {
         ),
         Partner(
             name="yieldster",
+            start_block=0,
             treasury='0x2955278aBCE187315D6d72B0d626f1217786DF60',
             wrappers=[
                 WildcardWrapper(
@@ -205,6 +218,7 @@ partners = {
         ),
         Partner(
             name="akropolis",
+            start_block=0,
             treasury='0xC5aF91F7D10dDe118992ecf536Ed227f276EC60D',
             wrappers=[
                 WildcardWrapper(
@@ -215,6 +229,7 @@ partners = {
         ),
         Partner(
             name="Mover",
+            start_block=0,
             treasury='0xf6A0307cb6aA05D7C19d080A0DA9B14eAB1050b7',
             wrappers=[
                 Wrapper(
@@ -226,6 +241,7 @@ partners = {
         ),
         Partner(
             name='yapeswap',
+            start_block=0,
             treasury='0x10DE513EE154BfA97f1c2841Cab91E8C389c7c72',
             wrappers=[
                 YApeSwapFactoryWrapper(
@@ -235,6 +251,7 @@ partners = {
         ),
         Partner(
             name='abracadabra',
+            start_block=0,
             treasury='0xDF2C270f610Dc35d8fFDA5B453E74db5471E126B',
             # brownie run abracadabra_wrappers
             wrappers=[
@@ -286,28 +303,30 @@ partners = {
             ],
         ),
         Partner(
-                name='chfry',
-                treasury='0x3400985be0b41Ce9778823E9618074115f830799',
-                wrappers=[
-                    Wrapper(
-                        name='USDT yVault',
-                        vault='0x7Da96a3891Add058AdA2E826306D812C638D87a7',
-                        wrapper='0x87e51ebF96eEB023eCc28536Ad0DBca83dEE0203',
-                    ),
-                    Wrapper(
-                        name='DAI yVault',
-                        vault='0xdA816459F1AB5631232FE5e97a05BBBb94970c95',
-                        wrapper='0xd5F38f4F1e0c157dd1AE8Fd66EE2761A14eF7324',
-                    ),
-                    Wrapper(
-                        name='USDC yVault',
-                        vault='0x5f18C75AbDAe578b483E5F43f12a39cF75b973a9',
-                        wrapper='0x782bc9B1F11cDBa13aCb030cDab04f04FB667846',
-                    ),
-                ],
-            ),
+            name='chfry',
+            start_block=0,
+            treasury='0x3400985be0b41Ce9778823E9618074115f830799',
+            wrappers=[
+                Wrapper(
+                    name='USDT yVault',
+                    vault='0x7Da96a3891Add058AdA2E826306D812C638D87a7',
+                    wrapper='0x87e51ebF96eEB023eCc28536Ad0DBca83dEE0203',
+                ),
+                Wrapper(
+                    name='DAI yVault',
+                    vault='0xdA816459F1AB5631232FE5e97a05BBBb94970c95',
+                    wrapper='0xd5F38f4F1e0c157dd1AE8Fd66EE2761A14eF7324',
+                ),
+                Wrapper(
+                    name='USDC yVault',
+                    vault='0x5f18C75AbDAe578b483E5F43f12a39cF75b973a9',
+                    wrapper='0x782bc9B1F11cDBa13aCb030cDab04f04FB667846',
+                ),
+            ],
+        ),
         Partner(
             name='ambire',
+            start_block=0,
             treasury='0xa07D75aacEFd11b425AF7181958F0F85c312f143',
             wrappers=[
                 WildcardWrapper(
@@ -318,6 +337,7 @@ partners = {
         ),
         Partner(
             name='shapeshiftdao',
+            start_block=0,
             treasury='0x90A48D5CF7343B08dA12E067680B4C6dbfE551Be',
             wrappers=[
                 WildcardWrapper(
@@ -328,6 +348,7 @@ partners = {
         ),
         Partner(
             name='gearbox',
+            start_block=0,
             treasury='0x7b065Fcb0760dF0CEA8CFd144e08554F3CeA73D1',
             wrappers=[            
                 GearboxWrapper(
@@ -344,6 +365,7 @@ partners = {
         ),         
         Partner(
             name='wido',
+            start_block=0,
             treasury='0x5EF7F250f74d4F11A68054AE4e150705474a6D4a',
             wrappers=[
                 WildcardWrapper(
@@ -358,6 +380,7 @@ partners = {
         ),
         Partner(
             name='cofi',
+            start_block=0,
             treasury='0x982646BA80a706B402Bf6e286A815c06f5b71129',
             wrappers=[
                 Wrapper(
@@ -371,6 +394,7 @@ partners = {
     Network.Fantom: [
         Partner(
             name='abracadabra',
+            start_block=0,
             treasury='0xb4ad8B57Bd6963912c80FCbb6Baea99988543c1c',
             wrappers=[
                 BentoboxWrapper(
@@ -382,6 +406,7 @@ partners = {
         ),
         Partner(
             name='qidao',
+            start_block=0,
             treasury='0x679016B3F8E98673f85c6F72567f22b58Aa15A54',
             wrappers=[
                 Wrapper(
@@ -398,6 +423,7 @@ partners = {
         ),
         Partner(
             name='tempus',
+            start_block=0,
             treasury='0x51252c520375C6A236Bb56DdF0C407A099B2EC0e',
             wrappers=[
                 Wrapper(
@@ -429,6 +455,7 @@ partners = {
         ),
         Partner(
             name='Sturdy',
+            start_block=0,
             treasury='0xFd1D36995d76c0F75bbe4637C84C06E4A68bBB3a',
             wrappers=[
                 Wrapper(
@@ -455,6 +482,7 @@ partners = {
         ),
         Partner(
             name='wido',
+            start_block=0,
             treasury='0x5EF7F250f74d4F11A68054AE4e150705474a6D4a',
             wrappers=[
                 WildcardWrapper(
@@ -465,6 +493,7 @@ partners = {
         ),
         Partner(
             name='beethovenx',
+            start_block=0,
             treasury='0xa1E849B1d6c2Fd31c63EEf7822e9E0632411ada7',
             wrappers=[
                 WildcardWrapper(
