@@ -1,6 +1,13 @@
 from brownie import interface, chain
 from yearn.networks import Network
 
+WRAPPED_GAS_COIN = {
+    Network.Mainnet:            "0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2",
+    Network.Fantom:             "0x21be370D5312f44cB42ce377BC9b8a0cEF1A4C83",
+    Network.Arbitrum:           "0x82aF49447D8a07e3bd95BD0d56f35241523fBab1",
+    Network.Gnosis:             "0xe91d153e0b41518a2ce8dd3d7944fa863463a97d",
+}.get(chain.id, None)
+
 CONTROLLER_INTERFACES = {
     "0x2be5D998C95DE70D9A38b3d78e49751F10F9E88b": interface.ControllerV1,
     "0x9E65Ad11b299CA0Abefc2799dDB6314Ef2d91080": interface.ControllerV2,
