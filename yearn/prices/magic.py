@@ -22,7 +22,7 @@ from yearn.prices.uniswap.v2 import uniswap_v2
 from yearn.prices.yearn import yearn_lens
 from yearn.special import Backscratcher
 from yearn.typing import Address, AddressOrContract, AddressString, Block
-from yearn.utils import contract
+from yearn.utils import contract, contract_creation_block
 
 logger = logging.getLogger(__name__)
 
@@ -64,14 +64,16 @@ def find_price(
 
     price = None
     if token in constants.stablecoins:
-        if chainlink and token in chainlink:
+        if chainlink and token in chainlink and block >= contract_creation_block(chainlink.get_feed(token).address):
             price = chainlink.get_price(token, block=block)
             logger.debug("stablecoin chainlink -> %s", price)
+            # If we can't get price from chainlink but `block` is after feed
+            # deploy block,feed is probably dead and coin is possibly dead.
             if price is not None:
                 return price
-        else:
-            logger.debug("stablecoin -> %s", 1)
-            return 1
+        # TODO Code better handling for stablecoin pricing
+        logger.debug("stablecoin -> %s", 1)
+        return 1
 
     elif uniswap_v2 and uniswap_v2.is_uniswap_pool(token):
         price = uniswap_v2.lp_price(token, block=block)
