@@ -5,7 +5,7 @@ datasources:
   type: 'prometheus'
   access: 'proxy'
   org_id: 1
-  url: 'http://victoria-metrics:8428'
+  url: 'http://promscale:9201'
   is_default: true
   version: 1
   editable: false
