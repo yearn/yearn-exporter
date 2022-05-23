@@ -392,6 +392,7 @@ partners = {
         ),
         Partner(
             name='element',
+            start_block=0,
             treasury='0x82eF450FB7f06E3294F2f19ed1713b255Af0f541',
             wrappers=[
                 ElementWrapper(
