@@ -2,6 +2,7 @@ import logging
 from typing import Optional
 
 from brownie import ZERO_ADDRESS, Contract, chain, convert
+from brownie.exceptions import VirtualMachineError
 from cachetools.func import ttl_cache
 
 from yearn.events import decode_logs, get_logs_asap
@@ -111,7 +112,7 @@ class Chainlink(metaclass=Singleton):
             # latestAnswer can return 0 before the feed is in use
             if price:
                 return price
-        except ValueError:
+        except (ValueError, VirtualMachineError):
             return None
 
 
