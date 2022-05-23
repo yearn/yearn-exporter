@@ -12,7 +12,7 @@ from web3.middleware import filter
 from yearn.cache import memory
 from yearn.middleware import yearn_filter
 from yearn.networks import Network
-from yearn.rpc_utils import HashBrownieClient, cached_logs
+from yearn.rpc_utils import HashBrownieClient
 
 logger = logging.getLogger(__name__)
 
@@ -55,6 +55,7 @@ def cache_middleware(make_request, w3):
         else:
             response = make_request(method, params)
 
+        logger.debug(response)
         return response
 
     return middleware

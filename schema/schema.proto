@@ -28,6 +28,7 @@ message GetLogsRequest {
 
 message Code {
   bytes results = 1;
+  string key = 2;
 }
 
 message Abi {
@@ -52,6 +53,7 @@ message Abi {
 
   repeated AbiEntry entries = 1;
   string contract_name = 2;
+  string key = 3;
 }
 
 message Logs {

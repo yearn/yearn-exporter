@@ -1,14 +1,17 @@
 import os
 import grpc
+import logging
 from hexbytes import HexBytes
-from web3.datastructures import AttributeDict
 from google.protobuf.json_format import MessageToDict
+from web3.types import LogReceipt
 from brownie import Contract
 from brownie.network.contract import _ContractBase, _DeployedContractBase
 from schema.schema_pb2 import Abi, GetAbiRequest, GetLogsRequest, GetCodeRequest
 from schema.schema_pb2_grpc import HashBrownieStub
 
 from yearn.singleton import Singleton
+
+logger = logging.getLogger(__name__)
 
 class CachedContract(Contract):
     def __init__(self, address, block_identifier=None):
@@ -62,15 +65,21 @@ class HashBrownieClient(metaclass=Singleton):
 
     def get_rpc_processor(self, method, params):
         if method == "eth_getCode":
-            return _get_code(params)
+            return self._get_code(params)
         elif method == "eth_getLogs":
-            return _get_logs(params)
+            return self._get_logs(params)
 
 
     def _get_code(self, params):
-        request = GetCodeRequest(address=params[0], block=int(params[1]))
+        block = params[1]
+        if params[1] == "latest":
+            block = None
+        else:
+            block = int(block)
+
+        request = GetCodeRequest(address=params[0], block=block)
         code = self.get_client().GetCode(request)
-        response = MessageToDict(code.results)
+        response = HexBytes(code.results)
         return self._json_rpc_response(response)
 
 
@@ -78,13 +87,13 @@ class HashBrownieClient(metaclass=Singleton):
         param = params[0]
         from_block = 0
         if "fromBlock" in param:
-            from_block = param["from_block"]
+            from_block = param["fromBlock"]
 
-        request = GetLogsRequest(from_block=from_block)
+        request = GetLogsRequest(from_block=int(from_block, 16))
         if "toBlock" in param:
-            request.to_block = param["toBlock"]
+            request.to_block = int(param["toBlock"], 16)
 
-        addresses = param["addresses"]
+        addresses = param["address"]
         if isinstance(addresses, list):
             request.addresses[:] = addresses
         else:
@@ -96,8 +105,22 @@ class HashBrownieClient(metaclass=Singleton):
                 topic_entry.topics[:] = t
 
         logs = self.get_client().GetLogs(request)
-        response = MessageToDict(logs.entries)
+        response = [ self._format_log(log) for log in logs.entries ]
         return self._json_rpc_response(response)
+
+
+    def _format_log(self, log):
+        return LogReceipt({
+            "address": log.address,
+            "blockHash": HexBytes(log.blockHash),
+            "blockNumber": int(log.blockNumber),
+            "data": log.data,
+            "logIndex": int(log.logIndex),
+            "removed": log.removed,
+            "topics": [HexBytes(b) for b in log.topics],
+            "transactionHash": HexBytes(log.transactionHash),
+            "transactionIndex": int(log.transactionIndex)
+        })
 
 
     def _json_rpc_response(self, response):
