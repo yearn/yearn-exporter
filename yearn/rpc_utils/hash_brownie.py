@@ -2,39 +2,18 @@ import os
 import grpc
 import logging
 from hexbytes import HexBytes
-from google.protobuf.json_format import MessageToDict
 from web3.types import LogReceipt
-from brownie import Contract
-from brownie.network.contract import _ContractBase, _DeployedContractBase
-from schema.schema_pb2 import Abi, GetAbiRequest, GetLogsRequest, GetCodeRequest
+from schema.schema_pb2 import GetLogsRequest, GetCodeRequest
 from schema.schema_pb2_grpc import HashBrownieStub
 
 from yearn.singleton import Singleton
 
 logger = logging.getLogger(__name__)
 
-class CachedContract(Contract):
-    def __init__(self, address, block_identifier=None):
-        request = GetAbiRequest(address=address)
-        if block_identifier:
-            request.block = block_identifier
-        client = HashBrownieClient().get_client()
-        abi = client.GetAbi(request)
-
-        build = {
-            "abi": _format_abi(abi),
-            "address": address,
-            "contractName": abi.contract_name,
-            "type": "contract"
-        }
-        _ContractBase.__init__(self, None, build, {})  # type: ignore
-        _DeployedContractBase.__init__(self, address, None, None)
-
-
-class HashBrownieClient(metaclass=Singleton):
+class HashBrownie(metaclass=Singleton):
     SUPPORTED_METHODS = ["eth_getCode", "eth_getLogs"]
 
-    def __init__(self, host=os.getenv("HASH_BROWNIE_HOST"), port=1337):
+    def __init__(self, host=os.getenv("HASH_BROWNIE_HOST"), port=os.getenv("HASH_BROWNIE_PORT", 1337)):
         if host and port:
             self._channel = self._open_channel(host, port)
             self._client = HashBrownieStub(self._channel)
@@ -129,29 +108,3 @@ class HashBrownieClient(metaclass=Singleton):
             "id": 1, #TODO pass id
             "result": response
         }
-
-
-def _format_abi(abi_message):
-    asDict = MessageToDict(abi_message)
-    for entry in asDict["entries"]:
-        # fill inputs with empty defaults
-        if "inputs" not in entry:
-            entry["inputs"] = []
-        # cast gas to int
-        if "gas" in entry:
-            entry["gas"] = int(entry["gas"])
-
-        # fill outputs with empty defaults
-        if "outputs" not in entry:
-            entry["outputs"] = []
-
-        for input_entry in entry["inputs"]:
-            if "name" in input_entry:
-                if input_entry["name"] == "\0":
-                    input_entry["name"] = ""
-        for output_entry in entry["outputs"]:
-            if "name" in output_entry:
-                if output_entry["name"] == "\0":
-                    output_entry["name"] = ""
-
-    return asDict["entries"]

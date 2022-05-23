@@ -12,7 +12,7 @@ from web3.middleware import filter
 from yearn.cache import memory
 from yearn.middleware import yearn_filter
 from yearn.networks import Network
-from yearn.rpc_utils import HashBrownieClient
+from yearn.rpc_utils.hash_brownie import HashBrownie
 
 logger = logging.getLogger(__name__)
 
@@ -31,7 +31,7 @@ CACHED_CALLS = [encode_hex(fourbyte(data)) for data in CACHED_CALLS]
 
 
 def get_cache_processor(make_request, method, params):
-    hb = HashBrownieClient()
+    hb = HashBrownie()
     if hb.get_client() and hb.supports_method(method):
         return hb.get_rpc_processor
 

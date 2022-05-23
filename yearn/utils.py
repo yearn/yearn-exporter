@@ -12,7 +12,7 @@ from yearn.cache import memory
 from yearn.exceptions import ArchiveNodeRequired, NodeNotSynced
 from yearn.networks import Network
 from yearn.typing import Address, AddressOrContract
-from yearn.rpc_utils import CachedContract
+from yearn.rpc_utils.cached_contract import CachedContract
 
 logger = logging.getLogger(__name__)
 

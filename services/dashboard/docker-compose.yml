@@ -38,6 +38,7 @@ x-common-postgres-envs: &common-postgres-envs
 x-common-eth-envs: &common-eth-envs
   - NETWORK: mainnet
   - HASH_BROWNIE_HOST: hash-brownie-eth
+  - HASH_BROWNIE_PORT: 1337
   - ETHERSCAN_TOKEN:
 
 x-common-gnosis-envs: &common-gnosis-envs
@@ -49,6 +50,7 @@ x-common-gnosis-envs: &common-gnosis-envs
 x-common-ftm-envs: &common-ftm-envs
   - NETWORK: ftm-main
   - HASH_BROWNIE_HOST: hash-brownie-ftm
+  - HASH_BROWNIE_PORT: 1338
   - WEB3_PROVIDER: $FTM_WEB3_PROVIDER
   - EXPLORER: $FTM_EXPLORER
   - FTMSCAN_TOKEN:
