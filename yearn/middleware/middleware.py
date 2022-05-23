@@ -12,6 +12,7 @@ from web3.middleware import filter
 from yearn.cache import memory
 from yearn.middleware import yearn_filter
 from yearn.networks import Network
+from yearn.rpc_utils import HashBrownieClient, cached_logs
 
 logger = logging.getLogger(__name__)
 
@@ -29,22 +30,28 @@ CACHED_CALLS = [
 CACHED_CALLS = [encode_hex(fourbyte(data)) for data in CACHED_CALLS]
 
 
-def should_cache(method, params):
+def get_cache_processor(make_request, method, params):
+    hb = HashBrownieClient()
+    if hb.get_client() and hb.supports_method(method):
+        return hb.get_rpc_processor
+
+    # do the previous disk-based caching
     if method == "eth_call" and params[0]["data"] in CACHED_CALLS:
-        return True
-    if method == "eth_getCode" and params[1] == "latest":
-        return True
-    if method == "eth_getLogs":
-        return int(params[0]["toBlock"], 16) - int(params[0]["fromBlock"], 16) == BATCH_SIZE[chain.id] - 1
-    return False
+        return memory.cache(make_request)
+    elif method == "eth_getCode" and params[1] == "latest":
+        return memory.cache(make_request)
+    elif method == "eth_getLogs" and int(params[0]["toBlock"], 16) - int(params[0]["fromBlock"], 16) == BATCH_SIZE[chain.id] - 1:
+        return memory.cache(make_request)
+    return None
 
 
 def cache_middleware(make_request, w3):
     def middleware(method, params):
         logger.debug("%s %s", method, params)
 
-        if should_cache(method, params):
-            response = memory.cache(make_request)(method, params)
+        cache_processor = get_cache_processor(make_request, method, params)
+        if cache_processor:
+            response = cache_processor(method, params)
         else:
             response = make_request(method, params)
 

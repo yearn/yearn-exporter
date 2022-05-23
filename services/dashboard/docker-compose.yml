@@ -8,6 +8,7 @@ volumes:
   cache: {}
   victoria_metrics_data: {}
   postgres_data: {}
+  hash_brownie_data: {}
 
 networks:
   yearn-exporter:
@@ -20,6 +21,8 @@ x-common-envs: &common-envs
   - SENTRY_ENVIRONMENT: ${SENTRY_ENVIRONMENT:-development}
   - SENTRY_RELEASE:
   - SENTRY_DSN:
+  - USE_TLS: "False"
+  - GRPC_POLL_STRATEGY: "poll"
 
 x-common-historical-envs: &common-historical-envs
   - POOL_SIZE:
@@ -34,6 +37,7 @@ x-common-postgres-envs: &common-postgres-envs
 
 x-common-eth-envs: &common-eth-envs
   - NETWORK: mainnet
+  - HASH_BROWNIE_HOST: hash-brownie-eth
   - ETHERSCAN_TOKEN:
 
 x-common-gnosis-envs: &common-gnosis-envs
@@ -44,9 +48,16 @@ x-common-gnosis-envs: &common-gnosis-envs
 
 x-common-ftm-envs: &common-ftm-envs
   - NETWORK: ftm-main
+  - HASH_BROWNIE_HOST: hash-brownie-ftm
   - WEB3_PROVIDER: $FTM_WEB3_PROVIDER
   - EXPLORER: $FTM_EXPLORER
   - FTMSCAN_TOKEN:
+
+x-common-hb-envs: &common-hb-envs
+  - USE_TLS: "False"
+  - GRPC_POLL_STRATEGY: "epoll1"
+  - GRPC_ENABLE_FORK_SUPPORT: "1"
+  - DATA_DIR: /app/hash-brownie/data
 
 x-common-volumes: &common-volumes
   - solidity_compilers:/root/.solcx
@@ -54,6 +65,12 @@ x-common-volumes: &common-volumes
   - brownie:/root/.brownie
   - cache:/app/yearn-exporter/cache
 
+x-common-hb-volumes: &common-hb-volumes
+  - solidity_compilers:/root/.solcx
+  - vyper_compilers:/root/.vvm
+  - brownie:/root/.brownie
+  - cache:/app/yearn-exporter/cache
+  - hash_brownie_data:/app/hash-brownie/data
 
 services:
   eth-exporter:
@@ -383,7 +400,7 @@ services:
       - postgres
 
   vmagent:
-    image: victoriametrics/vmagent:heads-public-single-node-0-g52eb9c99e
+    image: victoriametrics/vmagent
     volumes:
       - ./prometheus/:/etc/prometheus/
     command:
@@ -469,3 +486,31 @@ services:
     volumes:
       - postgres_data:/var/lib/postgresql/data
     restart: always
+
+  hash-brownie-eth:
+    image: ghcr.io/mariuspod/hash-brownie
+    pull_policy: always
+    ports:
+      - 127.0.0.1:1337:1337
+    volumes: *common-hb-volumes
+    environment:
+      <<: *common-envs
+      <<: *common-eth-envs
+      <<: *common-hb-envs
+    networks:
+      - yearn-exporter
+    restart: on-failure
+
+  hash-brownie-ftm:
+    image: ghcr.io/mariuspod/hash-brownie
+    pull_policy: always
+    ports:
+      - 127.0.0.1:1338:1337
+    volumes: *common-hb-volumes
+    environment:
+      <<: *common-envs
+      <<: *common-ftm-envs
+      <<: *common-hb-envs
+    networks:
+      - yearn-exporter
+    restart: on-failure

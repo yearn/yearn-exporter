@@ -1,3 +1,4 @@
+import os
 import logging
 import threading
 from functools import lru_cache
@@ -6,11 +7,12 @@ from typing import List
 import eth_retry
 from brownie import Contract, chain, convert, interface, web3
 from brownie.exceptions import CompilerError
-
+from time import time
 from yearn.cache import memory
 from yearn.exceptions import ArchiveNodeRequired, NodeNotSynced
 from yearn.networks import Network
 from yearn.typing import Address, AddressOrContract
+from yearn.rpc_utils import CachedContract
 
 logger = logging.getLogger(__name__)
 
@@ -140,6 +142,7 @@ class Singleton(type):
 # cached Contract instance, saves about 20ms of init time
 _contract_lock = threading.Lock()
 _contract = lru_cache(maxsize=None)(Contract)
+_cached_contract = lru_cache(maxsize=None)(CachedContract)
 
 @eth_retry.auto_retry
 def contract(address: Address) -> Contract:
@@ -152,15 +155,23 @@ def contract(address: Address) -> Contract:
 
         failed_attempts = 0
         while True:
+            start = time()
             try:
-                c = _contract(address)
+                if os.getenv("HASH_BROWNIE_HOST"):
+                    c = _cached_contract(address)
+                else:
+                    c = _contract(address)
+
+                logger.debug("loaded contract %s in %.3fms", address, (time()-start)*1E3)
                 return _squeeze(c)
+
             except (AssertionError, CompilerError) as e:
-                if failed_attempts == 10:
+                if failed_attempts == 3:
                     raise
                 logger.warning(e)
                 Contract.remove_deployment(address)
                 failed_attempts += 1
+
 
 @lru_cache(maxsize=None)
 def is_contract(address: str) -> bool:
