@@ -126,19 +126,6 @@ def contract_creation_block(address: AddressOrContract) -> int:
     return hi if hi != end else None
 
 
-class Singleton(type):
-    def __init__(self, *args, **kwargs):
-        self.__instance = None
-        super().__init__(*args, **kwargs)
-
-    def __call__(self, *args, **kwargs):
-        if self.__instance is None:
-            self.__instance = super().__call__(*args, **kwargs)
-            return self.__instance
-        else:
-            return self.__instance
-
-
 # cached Contract instance, saves about 20ms of init time
 _contract_lock = threading.Lock()
 _contract = lru_cache(maxsize=None)(Contract)

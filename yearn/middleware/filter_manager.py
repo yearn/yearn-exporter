@@ -1,4 +1,4 @@
-from yearn.utils import Singleton
+from yearn.singleton import Singleton
 import itertools
 from eth_utils import to_hex
 

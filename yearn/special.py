@@ -10,7 +10,8 @@ from yearn.common import Tvl
 from yearn.exceptions import PriceError
 from yearn.prices import magic
 from yearn.prices.curve import curve
-from yearn.utils import Singleton, contract, contract_creation_block
+from yearn.utils import contract, contract_creation_block
+from yearn.singleton import Singleton
 
 
 class YveCRVJar(metaclass = Singleton):

@@ -8,7 +8,8 @@ from cachetools.func import ttl_cache
 from yearn.exceptions import UnsupportedNetwork
 from yearn.networks import Network
 from yearn.typing import AddressOrContract, Block
-from yearn.utils import Singleton, contract, contract_creation_block
+from yearn.utils import contract, contract_creation_block
+from yearn.singleton import Singleton
 
 logger = logging.getLogger(__name__)
 

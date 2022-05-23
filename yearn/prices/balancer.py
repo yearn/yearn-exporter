@@ -5,7 +5,8 @@ from cachetools.func import ttl_cache
 from yearn.cache import memory
 from yearn.multicall2 import fetch_multicall
 from yearn.prices import magic
-from yearn.utils import contract, Singleton
+from yearn.utils import contract
+from yearn.singleton import Singleton
 from yearn.networks import Network
 from yearn.typing import Address, Block
 from yearn.exceptions import UnsupportedNetwork
