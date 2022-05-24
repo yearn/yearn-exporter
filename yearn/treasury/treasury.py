@@ -64,6 +64,7 @@ SKIP_LOGS = {
         '0x2B000332CD291eF558aF76298A4d6F6001E4e015', # XAR spam
         '0x6A007E207E50B4C6B2ADCFc6a873F6e698645fE3', # LENS spam
         '0x4ab16CDc82a4eA4727Ab40caee1bb46622C13641', # fake SABLIER clone spam
+        '0x9D79d5B61De59D882ce90125b18F74af650acB93', # NBST token with erroneous price
         # Other:
         '0x1BA4b447d0dF64DA64024e5Ec47dA94458C1e97f', # Hegic Option Token from strategist testing, expired and worthless
     ],
