@@ -60,6 +60,7 @@ x-common-hb-envs: &common-hb-envs
   - GRPC_POLL_STRATEGY: "epoll1"
   - GRPC_ENABLE_FORK_SUPPORT: "1"
   - DATA_DIR: /app/hash-brownie/data
+  - BOOTSTRAP_URL:
 
 x-common-volumes: &common-volumes
   - solidity_compilers:/root/.solcx
