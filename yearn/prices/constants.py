@@ -86,5 +86,5 @@ ib_snapshot_block_by_network = {
 weth = convert.to_address(tokens_by_network[chain.id]['weth'])
 usdc = convert.to_address(tokens_by_network[chain.id]['usdc'])
 dai  = convert.to_address(tokens_by_network[chain.id]['dai'])
-stablecoins = {convert.to_address(coin) for coin in stablecoins_by_network[chain.id]}
+stablecoins = {convert.to_address(coin): symbol for coin, symbol in stablecoins_by_network[chain.id].items()}
 ib_snapshot_block = ib_snapshot_block_by_network[chain.id]
