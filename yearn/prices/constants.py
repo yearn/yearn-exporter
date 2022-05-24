@@ -49,6 +49,7 @@ stablecoins_by_network = {
         "0xe2f2a5C287993345a840Db3B0845fbC70f5935a5": "musd",
         "0x739ca6D71365a08f584c8FC4e1029045Fa8ABC4B": "anydai",
         "0xbbc4A8d076F4B1888fec42581B6fc58d242CF2D5": "anymim",
+        "0x865377367054516e17014CcdED1e7d814EDC9ce4": "dola",
     },
     Network.Gnosis: {
         "0xDDAfbb505ad214D7b80b1f830fcCc89B60fb7A83": "usdc",
