@@ -81,8 +81,10 @@ class HashBrownie(metaclass=Singleton):
         if "topics" in param:
             for t in param["topics"]:
                 topic_entry = request.topics.add()
-                topic_entry.topics[:] = t
-
+                if isinstance(t, str):
+                    topic_entry.topics[:] = [t]
+                elif isinstance(t, list):
+                    topic_entry.topics[:] = t
         logs = self.get_client().GetLogs(request)
         response = [ self._format_log(log) for log in logs.entries ]
         return self._json_rpc_response(response)
