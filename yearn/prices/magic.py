@@ -62,6 +62,16 @@ def find_price(
     return_price_during_vault_downtime: bool = False
     ) -> float:
 
+    try:
+        # check if the token has verified sources first
+        contract(token)
+    except ValueError as e:
+        for message in ["Contract source code not verified", "has not been verified"]:
+            if message in str(e):
+                logger.error(f"contract source code not verified for {token, block}")
+                raise PriceError(f'could not fetch price for {_describe_err(token, block)}')
+        raise
+
     price = None
     if token in constants.stablecoins:
         if chainlink and token in chainlink and block >= contract_creation_block(chainlink.get_feed(token).address):
@@ -150,6 +160,11 @@ def _describe_err(token: Address, block: Optional[Block]) -> str:
         symbol = contract(token).symbol()
     except AttributeError:
         symbol = None
+    except ValueError as e:
+        if "has not been verified" in str(e):
+            symbol = None
+        else:
+            raise
 
     if block is None:
         if symbol:

@@ -63,7 +63,7 @@ def _uni_pool(address: Address) -> Contract:
     try:
         return contract(address)
     except ValueError as e:
-        if "not verified" in str(e):
+        if "Contract source code not verified" in str(e):
             return Contract.from_abi("UniswapV2Pair [from abi]", address, UNI_LP_V2_ABI)
         raise
 
