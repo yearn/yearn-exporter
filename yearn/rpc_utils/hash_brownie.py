@@ -54,7 +54,7 @@ class HashBrownie(metaclass=Singleton):
         if params[1] == "latest":
             block = None
         else:
-            block = int(block)
+            block = int(block, 16)
 
         request = GetCodeRequest(address=params[0], block=block)
         code = self.get_client().GetCode(request)
