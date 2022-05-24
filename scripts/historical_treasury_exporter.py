@@ -13,7 +13,7 @@ sentry_sdk.set_tag('script','historical_treasury_exporter')
 logger = logging.getLogger('yearn.historical_treasury_exporter')
 
 def main():
-    data_query = 'sms_assets{network="' + Network.label() + '"}'
+    data_query = 'treasury_assets{network="' + Network.label() + '"}'
     start = datetime.now(tz=timezone.utc)
     
     end = {
