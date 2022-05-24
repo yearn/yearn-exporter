@@ -204,7 +204,7 @@ class UniswapV2:
         if token_address == weth or token_address in stablecoins:
             return self.deepest_stable_pool(token_address)
         pools = self.pools_for_token(token_address)
-        reserves = fetch_multicall(*[[contract(pool),'getReserves'] for pool in pools], block=block, require_success=False)
+        reserves = fetch_multicall(*[[_uni_pool(pool),'getReserves'] for pool in pools], block=block, require_success=False)
 
         deepest_pool = None
         deepest_pool_balance = 0
@@ -223,7 +223,7 @@ class UniswapV2:
     def deepest_stable_pool(self, token_address: AddressOrContract, block: Optional[Block] = None) -> Optional[EthAddress]:
         token_address = convert.to_address(token_address)
         pools = {pool: paired_with for pool, paired_with in self.pools_for_token(token_address).items() if paired_with in stablecoins}
-        reserves = fetch_multicall(*[[contract(pool), 'getReserves'] for pool in pools], block=block, require_success=False)
+        reserves = fetch_multicall(*[[_uni_pool(pool), 'getReserves'] for pool in pools], block=block, require_success=False)
 
         deepest_stable_pool = None
         deepest_stable_pool_balance = 0
