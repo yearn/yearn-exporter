@@ -26,7 +26,6 @@ from yearn.utils import contract, contract_creation_block
 
 logger = logging.getLogger(__name__)
 
-@ttl_cache(10000)
 def get_price(
     token: AddressOrContract,
     block: Optional[Block] = None,
@@ -34,6 +33,7 @@ def get_price(
     ) -> float:
 
     token = unwrap_token(token)
+    block = chain.height if block is None else block
     return find_price(token, block, return_price_during_vault_downtime=return_price_during_vault_downtime)
 
 def unwrap_token(token: AddressOrContract) -> AddressString:
@@ -55,13 +55,13 @@ def unwrap_token(token: AddressOrContract) -> AddressString:
 
     return token
 
-
+@ttl_cache(10000)
 def find_price(
     token: Address,
-    block: Optional[Block],
+    block: Block,
     return_price_during_vault_downtime: bool = False
     ) -> float:
-
+    assert block is not None, "You must pass a valid block number as this function is cached."
     price = None
     if token in constants.stablecoins:
         if chainlink and token in chainlink and block >= contract_creation_block(chainlink.get_feed(token).address):
