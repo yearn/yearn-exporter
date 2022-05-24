@@ -1,6 +1,6 @@
 from brownie import chain
 from yearn.cache import memory
-from yearn.constants import BTC_LIKE
+from yearn.constants import BTC_LIKE, WRAPPED_GAS_COIN
 from yearn.constants import ETH_LIKE as _ETH_LIKE
 from yearn.networks import Network
 from yearn.prices import balancer as bal
@@ -103,7 +103,7 @@ def _unwrap_token(token) -> str:
         try:
             return contract(token).underlying()
         except AttributeError:
-            return weth
+            return WRAPPED_GAS_COIN
     return token
 
 
