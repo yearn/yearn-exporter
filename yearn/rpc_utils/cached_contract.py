@@ -63,7 +63,7 @@ class CachedContract(Contract):
 
     def _construct_abi_message(self, address):
         abi = Abi()
-        logger.info("constructing abi for %s", address)
+        logger.debug("constructing abi for %s", address)
         try:
             c = Contract(address)
         except:
