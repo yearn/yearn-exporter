@@ -133,6 +133,7 @@ _cached_contract = lru_cache(maxsize=None)(CachedContract)
 
 @eth_retry.auto_retry
 def contract(address: Address) -> Contract:
+    address = str(address)
     with _contract_lock:
         if chain.id in PREFER_INTERFACE:
             if address in PREFER_INTERFACE[chain.id]:
