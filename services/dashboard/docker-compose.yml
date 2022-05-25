@@ -38,7 +38,7 @@ x-common-postgres-envs: &common-postgres-envs
 
 x-common-eth-envs: &common-eth-envs
   - NETWORK: mainnet
-  - HASH_BROWNIE_HOST: hash-brownie-eth
+  - HASH_BROWNIE_HOST: hash-brownie-lb
   - HASH_BROWNIE_PORT: 1337
   - ETHERSCAN_TOKEN:
 
@@ -50,8 +50,8 @@ x-common-gnosis-envs: &common-gnosis-envs
 
 x-common-ftm-envs: &common-ftm-envs
   - NETWORK: ftm-main
-  - HASH_BROWNIE_HOST: hash-brownie-ftm
-  - HASH_BROWNIE_PORT: 1337
+  - HASH_BROWNIE_HOST: hash-brownie-lb
+  - HASH_BROWNIE_PORT: 1338
   - WEB3_PROVIDER: $FTM_WEB3_PROVIDER
   - EXPLORER: $FTM_EXPLORER
   - FTMSCAN_TOKEN:
@@ -75,6 +75,7 @@ x-common-hb-volumes: &common-hb-volumes
   - brownie:/root/.brownie
   - cache:/app/yearn-exporter/cache
   - hash_brownie_data:/app/hash-brownie/data
+  - $PWD/nginx/nginx.conf:/etc/nginx/nginx.conf:ro
 
 services:
   eth-exporter:
@@ -493,9 +494,11 @@ services:
 
   hash-brownie-eth:
     image: ghcr.io/mariuspod/hash-brownie
+    deploy:
+      replicas: 2
     pull_policy: always
-    ports:
-      - 127.0.0.1:1337:1337
+    expose:
+      - 1337
     volumes: *common-hb-volumes
     environment:
       <<: *common-envs
@@ -507,14 +510,26 @@ services:
 
   hash-brownie-ftm:
     image: ghcr.io/mariuspod/hash-brownie
+    deploy:
+      replicas: 2
     pull_policy: always
-    ports:
-      - 127.0.0.1:1338:1337
+    expose:
+      - 1337
     volumes: *common-hb-volumes
     environment:
       <<: *common-envs
       <<: *common-ftm-envs
       <<: *common-hb-envs
+    networks:
+      - yearn-exporter
+    restart: on-failure
+
+  hash-brownie-lb:
+    image: nginx:latest
+    volumes: *common-hb-volumes
+    depends_on:
+      - hash-brownie-eth
+      - hash-brownie-ftm
     networks:
       - yearn-exporter
     restart: on-failure
