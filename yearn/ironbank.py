@@ -53,9 +53,9 @@ class Registry:
     @property
     @ttl_cache(ttl=3600)
     def vaults(self):
-        markets = [Contract(market) for market in self.ironbank.getAllMarkets()]
+        markets = [contract(market) for market in self.ironbank.getAllMarkets()]
         cdata = multicall_matrix(markets, ["symbol", "underlying", "decimals"])
-        underlying = [Contract(cdata[x]["underlying"]) for x in markets]
+        underlying = [contract(cdata[x]["underlying"]) for x in markets]
         data = multicall_matrix(underlying, ["symbol", "decimals"])
         vaults = [
             IronbankMarket(

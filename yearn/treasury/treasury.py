@@ -360,7 +360,7 @@ class Treasury:
                 markets.append(contract)
                 underlyings.append(underlying)
         
-        underlying_contracts = [Contract(underlying) for underlying in underlyings]
+        underlying_contracts = [contract(underlying) for underlying in underlyings]
         underlying_decimals = fetch_multicall(*[[underlying,'decimals'] for underlying in underlying_contracts])
 
         compound_debt = {}

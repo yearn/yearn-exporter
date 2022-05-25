@@ -209,7 +209,7 @@ class YApeSwapFactoryWrapper(WildcardWrapper):
         factory = contract(self.wrapper)
         with multicall:
             pairs = [factory.allPairs(i) for i in range(factory.allPairsLength())]
-            ratios = [Contract(pair).farmingRatio() for pair in pairs]
+            ratios = [contract(pair).farmingRatio() for pair in pairs]
 
         # pools with ratio.min > 0 deploy to yearn vaults
         farming = [str(pair) for pair, ratio in zip(pairs, ratios) if ratio['min'] > 0]
