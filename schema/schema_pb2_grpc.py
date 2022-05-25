@@ -24,6 +24,11 @@ class HashBrownieStub(object):
                 request_serializer=schema__pb2.GetAbiRequest.SerializeToString,
                 response_deserializer=schema__pb2.Abi.FromString,
                 )
+        self.PutAbi = channel.unary_unary(
+                '/HashBrownie/PutAbi',
+                request_serializer=schema__pb2.PutAbiRequest.SerializeToString,
+                response_deserializer=schema__pb2.Empty.FromString,
+                )
         self.GetLogs = channel.unary_unary(
                 '/HashBrownie/GetLogs',
                 request_serializer=schema__pb2.GetLogsRequest.SerializeToString,
@@ -41,6 +46,12 @@ class HashBrownieServicer(object):
         raise NotImplementedError('Method not implemented!')
 
     def GetAbi(self, request, context):
+        """Missing associated documentation comment in .proto file."""
+        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+        context.set_details('Method not implemented!')
+        raise NotImplementedError('Method not implemented!')
+
+    def PutAbi(self, request, context):
         """Missing associated documentation comment in .proto file."""
         context.set_code(grpc.StatusCode.UNIMPLEMENTED)
         context.set_details('Method not implemented!')
@@ -64,6 +75,11 @@ def add_HashBrownieServicer_to_server(servicer, server):
                     servicer.GetAbi,
                     request_deserializer=schema__pb2.GetAbiRequest.FromString,
                     response_serializer=schema__pb2.Abi.SerializeToString,
+            ),
+            'PutAbi': grpc.unary_unary_rpc_method_handler(
+                    servicer.PutAbi,
+                    request_deserializer=schema__pb2.PutAbiRequest.FromString,
+                    response_serializer=schema__pb2.Empty.SerializeToString,
             ),
             'GetLogs': grpc.unary_unary_rpc_method_handler(
                     servicer.GetLogs,
@@ -111,6 +127,23 @@ class HashBrownie(object):
         return grpc.experimental.unary_unary(request, target, '/HashBrownie/GetAbi',
             schema__pb2.GetAbiRequest.SerializeToString,
             schema__pb2.Abi.FromString,
+            options, channel_credentials,
+            insecure, call_credentials, compression, wait_for_ready, timeout, metadata)
+
+    @staticmethod
+    def PutAbi(request,
+            target,
+            options=(),
+            channel_credentials=None,
+            call_credentials=None,
+            insecure=False,
+            compression=None,
+            wait_for_ready=None,
+            timeout=None,
+            metadata=None):
+        return grpc.experimental.unary_unary(request, target, '/HashBrownie/PutAbi',
+            schema__pb2.PutAbiRequest.SerializeToString,
+            schema__pb2.Empty.FromString,
             options, channel_credentials,
             insecure, call_credentials, compression, wait_for_ready, timeout, metadata)
 

@@ -3,8 +3,11 @@ syntax = "proto3";
 service HashBrownie {
   rpc GetCode(GetCodeRequest) returns (Code) {}
   rpc GetAbi(GetAbiRequest) returns (Abi) {}
+  rpc PutAbi(PutAbiRequest) returns (Empty) {}
   rpc GetLogs(GetLogsRequest) returns (Logs) {}
 }
+
+message Empty {}
 
 message GetCodeRequest {
   string address = 1;
@@ -13,7 +16,11 @@ message GetCodeRequest {
 
 message GetAbiRequest {
   string address = 1;
-  optional int64 block = 2;
+}
+
+message PutAbiRequest {
+  string address = 1;
+  Abi abi = 2;
 }
 
 message GetLogsRequest {

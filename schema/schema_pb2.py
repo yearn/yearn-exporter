@@ -19,10 +19,35 @@ DESCRIPTOR = _descriptor.FileDescriptor(
   syntax='proto3',
   serialized_options=None,
   create_key=_descriptor._internal_create_key,
-  serialized_pb=b'\n\x0cschema.proto\"?\n\x0eGetCodeRequest\x12\x0f\n\x07\x61\x64\x64ress\x18\x01 \x01(\t\x12\x12\n\x05\x62lock\x18\x02 \x01(\x03H\x00\x88\x01\x01\x42\x08\n\x06_block\">\n\rGetAbiRequest\x12\x0f\n\x07\x61\x64\x64ress\x18\x01 \x01(\t\x12\x12\n\x05\x62lock\x18\x02 \x01(\x03H\x00\x88\x01\x01\x42\x08\n\x06_block\"\x9b\x01\n\x0eGetLogsRequest\x12\x11\n\taddresses\x18\x01 \x03(\t\x12%\n\x06topics\x18\x02 \x03(\x0b\x32\x15.GetLogsRequest.Topic\x12\x12\n\nfrom_block\x18\x03 \x01(\x03\x12\x15\n\x08to_block\x18\x04 \x01(\x03H\x00\x88\x01\x01\x1a\x17\n\x05Topic\x12\x0e\n\x06topics\x18\x01 \x03(\tB\x0b\n\t_to_block\"$\n\x04\x43ode\x12\x0f\n\x07results\x18\x01 \x01(\x0c\x12\x0b\n\x03key\x18\x02 \x01(\t\"\xfd\x03\n\x03\x41\x62i\x12\x1e\n\x07\x65ntries\x18\x01 \x03(\x0b\x32\r.Abi.AbiEntry\x12\x15\n\rcontract_name\x18\x02 \x01(\t\x12\x0b\n\x03key\x18\x03 \x01(\t\x1a\xb1\x03\n\x08\x41\x62iEntry\x12\x0c\n\x04type\x18\x01 \x01(\t\x12\x11\n\x04name\x18\x02 \x01(\tH\x00\x88\x01\x01\x12\x16\n\tanonymous\x18\x03 \x01(\x08H\x01\x88\x01\x01\x12\x10\n\x03gas\x18\x04 \x01(\x03H\x02\x88\x01\x01\x12\x1c\n\x0fstateMutability\x18\x05 \x01(\tH\x03\x88\x01\x01\x12\x15\n\x08\x63onstant\x18\x06 \x01(\x08H\x04\x88\x01\x01\x12\x14\n\x07payable\x18\x07 \x01(\x08H\x05\x88\x01\x01\x12 \n\x06inputs\x18\x08 \x03(\x0b\x32\x10.Abi.AbiEntry.IO\x12!\n\x07outputs\x18\t \x03(\x0b\x32\x10.Abi.AbiEntry.IO\x1a~\n\x02IO\x12\x0c\n\x04name\x18\x01 \x01(\t\x12\x0c\n\x04type\x18\x02 \x01(\t\x12\x14\n\x0cinternalType\x18\x03 \x01(\t\x12\x14\n\x07indexed\x18\x04 \x01(\x08H\x00\x88\x01\x01\x12$\n\ncomponents\x18\x05 \x03(\x0b\x32\x10.Abi.AbiEntry.IOB\n\n\x08_indexedB\x07\n\x05_nameB\x0c\n\n_anonymousB\x06\n\x04_gasB\x12\n\x10_stateMutabilityB\x0b\n\t_constantB\n\n\x08_payable\"\xee\x01\n\x04Logs\x12\x1f\n\x07\x65ntries\x18\x01 \x03(\x0b\x32\x0e.Logs.LogEntry\x12\x0b\n\x03key\x18\x02 \x01(\t\x1a\xb7\x01\n\x08LogEntry\x12\x0f\n\x07\x61\x64\x64ress\x18\x01 \x01(\t\x12\x0e\n\x06topics\x18\x02 \x03(\x0c\x12\x0c\n\x04\x64\x61ta\x18\x03 \x01(\t\x12\x13\n\x0b\x62lockNumber\x18\x04 \x01(\x03\x12\x17\n\x0ftransactionHash\x18\x05 \x01(\x0c\x12\x18\n\x10transactionIndex\x18\x06 \x01(\x03\x12\x11\n\tblockHash\x18\x07 \x01(\x0c\x12\x10\n\x08logIndex\x18\x08 \x01(\x03\x12\x0f\n\x07removed\x18\t \x01(\x08\x32y\n\x0bHashBrownie\x12#\n\x07GetCode\x12\x0f.GetCodeRequest\x1a\x05.Code\"\x00\x12 \n\x06GetAbi\x12\x0e.GetAbiRequest\x1a\x04.Abi\"\x00\x12#\n\x07GetLogs\x12\x0f.GetLogsRequest\x1a\x05.Logs\"\x00\x62\x06proto3'
+  serialized_pb=b'\n\x0cschema.proto\"\x07\n\x05\x45mpty\"?\n\x0eGetCodeRequest\x12\x0f\n\x07\x61\x64\x64ress\x18\x01 \x01(\t\x12\x12\n\x05\x62lock\x18\x02 \x01(\x03H\x00\x88\x01\x01\x42\x08\n\x06_block\" \n\rGetAbiRequest\x12\x0f\n\x07\x61\x64\x64ress\x18\x01 \x01(\t\"3\n\rPutAbiRequest\x12\x0f\n\x07\x61\x64\x64ress\x18\x01 \x01(\t\x12\x11\n\x03\x61\x62i\x18\x02 \x01(\x0b\x32\x04.Abi\"\x9b\x01\n\x0eGetLogsRequest\x12\x11\n\taddresses\x18\x01 \x03(\t\x12%\n\x06topics\x18\x02 \x03(\x0b\x32\x15.GetLogsRequest.Topic\x12\x12\n\nfrom_block\x18\x03 \x01(\x03\x12\x15\n\x08to_block\x18\x04 \x01(\x03H\x00\x88\x01\x01\x1a\x17\n\x05Topic\x12\x0e\n\x06topics\x18\x01 \x03(\tB\x0b\n\t_to_block\"$\n\x04\x43ode\x12\x0f\n\x07results\x18\x01 \x01(\x0c\x12\x0b\n\x03key\x18\x02 \x01(\t\"\xfd\x03\n\x03\x41\x62i\x12\x1e\n\x07\x65ntries\x18\x01 \x03(\x0b\x32\r.Abi.AbiEntry\x12\x15\n\rcontract_name\x18\x02 \x01(\t\x12\x0b\n\x03key\x18\x03 \x01(\t\x1a\xb1\x03\n\x08\x41\x62iEntry\x12\x0c\n\x04type\x18\x01 \x01(\t\x12\x11\n\x04name\x18\x02 \x01(\tH\x00\x88\x01\x01\x12\x16\n\tanonymous\x18\x03 \x01(\x08H\x01\x88\x01\x01\x12\x10\n\x03gas\x18\x04 \x01(\x03H\x02\x88\x01\x01\x12\x1c\n\x0fstateMutability\x18\x05 \x01(\tH\x03\x88\x01\x01\x12\x15\n\x08\x63onstant\x18\x06 \x01(\x08H\x04\x88\x01\x01\x12\x14\n\x07payable\x18\x07 \x01(\x08H\x05\x88\x01\x01\x12 \n\x06inputs\x18\x08 \x03(\x0b\x32\x10.Abi.AbiEntry.IO\x12!\n\x07outputs\x18\t \x03(\x0b\x32\x10.Abi.AbiEntry.IO\x1a~\n\x02IO\x12\x0c\n\x04name\x18\x01 \x01(\t\x12\x0c\n\x04type\x18\x02 \x01(\t\x12\x14\n\x0cinternalType\x18\x03 \x01(\t\x12\x14\n\x07indexed\x18\x04 \x01(\x08H\x00\x88\x01\x01\x12$\n\ncomponents\x18\x05 \x03(\x0b\x32\x10.Abi.AbiEntry.IOB\n\n\x08_indexedB\x07\n\x05_nameB\x0c\n\n_anonymousB\x06\n\x04_gasB\x12\n\x10_stateMutabilityB\x0b\n\t_constantB\n\n\x08_payable\"\xee\x01\n\x04Logs\x12\x1f\n\x07\x65ntries\x18\x01 \x03(\x0b\x32\x0e.Logs.LogEntry\x12\x0b\n\x03key\x18\x02 \x01(\t\x1a\xb7\x01\n\x08LogEntry\x12\x0f\n\x07\x61\x64\x64ress\x18\x01 \x01(\t\x12\x0e\n\x06topics\x18\x02 \x03(\x0c\x12\x0c\n\x04\x64\x61ta\x18\x03 \x01(\t\x12\x13\n\x0b\x62lockNumber\x18\x04 \x01(\x03\x12\x17\n\x0ftransactionHash\x18\x05 \x01(\x0c\x12\x18\n\x10transactionIndex\x18\x06 \x01(\x03\x12\x11\n\tblockHash\x18\x07 \x01(\x0c\x12\x10\n\x08logIndex\x18\x08 \x01(\x03\x12\x0f\n\x07removed\x18\t \x01(\x08\x32\x9d\x01\n\x0bHashBrownie\x12#\n\x07GetCode\x12\x0f.GetCodeRequest\x1a\x05.Code\"\x00\x12 \n\x06GetAbi\x12\x0e.GetAbiRequest\x1a\x04.Abi\"\x00\x12\"\n\x06PutAbi\x12\x0e.PutAbiRequest\x1a\x06.Empty\"\x00\x12#\n\x07GetLogs\x12\x0f.GetLogsRequest\x1a\x05.Logs\"\x00\x62\x06proto3'
 )
 
 
+
+
+_EMPTY = _descriptor.Descriptor(
+  name='Empty',
+  full_name='Empty',
+  filename=None,
+  file=DESCRIPTOR,
+  containing_type=None,
+  create_key=_descriptor._internal_create_key,
+  fields=[
+  ],
+  extensions=[
+  ],
+  nested_types=[],
+  enum_types=[
+  ],
+  serialized_options=None,
+  is_extendable=False,
+  syntax='proto3',
+  extension_ranges=[],
+  oneofs=[
+  ],
+  serialized_start=16,
+  serialized_end=23,
+)
 
 
 _GETCODEREQUEST = _descriptor.Descriptor(
@@ -64,8 +89,8 @@ _GETCODEREQUEST = _descriptor.Descriptor(
       create_key=_descriptor._internal_create_key,
     fields=[]),
   ],
-  serialized_start=16,
-  serialized_end=79,
+  serialized_start=25,
+  serialized_end=88,
 )
 
 
@@ -84,10 +109,42 @@ _GETABIREQUEST = _descriptor.Descriptor(
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
       serialized_options=None, file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
+  ],
+  extensions=[
+  ],
+  nested_types=[],
+  enum_types=[
+  ],
+  serialized_options=None,
+  is_extendable=False,
+  syntax='proto3',
+  extension_ranges=[],
+  oneofs=[
+  ],
+  serialized_start=90,
+  serialized_end=122,
+)
+
+
+_PUTABIREQUEST = _descriptor.Descriptor(
+  name='PutAbiRequest',
+  full_name='PutAbiRequest',
+  filename=None,
+  file=DESCRIPTOR,
+  containing_type=None,
+  create_key=_descriptor._internal_create_key,
+  fields=[
     _descriptor.FieldDescriptor(
-      name='block', full_name='GetAbiRequest.block', index=1,
-      number=2, type=3, cpp_type=2, label=1,
-      has_default_value=False, default_value=0,
+      name='address', full_name='PutAbiRequest.address', index=0,
+      number=1, type=9, cpp_type=9, label=1,
+      has_default_value=False, default_value=b"".decode('utf-8'),
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      serialized_options=None, file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
+    _descriptor.FieldDescriptor(
+      name='abi', full_name='PutAbiRequest.abi', index=1,
+      number=2, type=11, cpp_type=10, label=1,
+      has_default_value=False, default_value=None,
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
       serialized_options=None, file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
@@ -102,14 +159,9 @@ _GETABIREQUEST = _descriptor.Descriptor(
   syntax='proto3',
   extension_ranges=[],
   oneofs=[
-    _descriptor.OneofDescriptor(
-      name='_block', full_name='GetAbiRequest._block',
-      index=0, containing_type=None,
-      create_key=_descriptor._internal_create_key,
-    fields=[]),
   ],
-  serialized_start=81,
-  serialized_end=143,
+  serialized_start=124,
+  serialized_end=175,
 )
 
 
@@ -140,8 +192,8 @@ _GETLOGSREQUEST_TOPIC = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=265,
-  serialized_end=288,
+  serialized_start=297,
+  serialized_end=320,
 )
 
 _GETLOGSREQUEST = _descriptor.Descriptor(
@@ -197,8 +249,8 @@ _GETLOGSREQUEST = _descriptor.Descriptor(
       create_key=_descriptor._internal_create_key,
     fields=[]),
   ],
-  serialized_start=146,
-  serialized_end=301,
+  serialized_start=178,
+  serialized_end=333,
 )
 
 
@@ -236,8 +288,8 @@ _CODE = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=303,
-  serialized_end=339,
+  serialized_start=335,
+  serialized_end=371,
 )
 
 
@@ -301,8 +353,8 @@ _ABI_ABIENTRY_IO = _descriptor.Descriptor(
       create_key=_descriptor._internal_create_key,
     fields=[]),
   ],
-  serialized_start=649,
-  serialized_end=775,
+  serialized_start=681,
+  serialized_end=807,
 )
 
 _ABI_ABIENTRY = _descriptor.Descriptor(
@@ -418,8 +470,8 @@ _ABI_ABIENTRY = _descriptor.Descriptor(
       create_key=_descriptor._internal_create_key,
     fields=[]),
   ],
-  serialized_start=418,
-  serialized_end=851,
+  serialized_start=450,
+  serialized_end=883,
 )
 
 _ABI = _descriptor.Descriptor(
@@ -463,8 +515,8 @@ _ABI = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=342,
-  serialized_end=851,
+  serialized_start=374,
+  serialized_end=883,
 )
 
 
@@ -551,8 +603,8 @@ _LOGS_LOGENTRY = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=909,
-  serialized_end=1092,
+  serialized_start=941,
+  serialized_end=1124,
 )
 
 _LOGS = _descriptor.Descriptor(
@@ -589,16 +641,14 @@ _LOGS = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=854,
-  serialized_end=1092,
+  serialized_start=886,
+  serialized_end=1124,
 )
 
 _GETCODEREQUEST.oneofs_by_name['_block'].fields.append(
   _GETCODEREQUEST.fields_by_name['block'])
 _GETCODEREQUEST.fields_by_name['block'].containing_oneof = _GETCODEREQUEST.oneofs_by_name['_block']
-_GETABIREQUEST.oneofs_by_name['_block'].fields.append(
-  _GETABIREQUEST.fields_by_name['block'])
-_GETABIREQUEST.fields_by_name['block'].containing_oneof = _GETABIREQUEST.oneofs_by_name['_block']
+_PUTABIREQUEST.fields_by_name['abi'].message_type = _ABI
 _GETLOGSREQUEST_TOPIC.containing_type = _GETLOGSREQUEST
 _GETLOGSREQUEST.fields_by_name['topics'].message_type = _GETLOGSREQUEST_TOPIC
 _GETLOGSREQUEST.oneofs_by_name['_to_block'].fields.append(
@@ -633,13 +683,22 @@ _ABI_ABIENTRY.fields_by_name['payable'].containing_oneof = _ABI_ABIENTRY.oneofs_
 _ABI.fields_by_name['entries'].message_type = _ABI_ABIENTRY
 _LOGS_LOGENTRY.containing_type = _LOGS
 _LOGS.fields_by_name['entries'].message_type = _LOGS_LOGENTRY
+DESCRIPTOR.message_types_by_name['Empty'] = _EMPTY
 DESCRIPTOR.message_types_by_name['GetCodeRequest'] = _GETCODEREQUEST
 DESCRIPTOR.message_types_by_name['GetAbiRequest'] = _GETABIREQUEST
+DESCRIPTOR.message_types_by_name['PutAbiRequest'] = _PUTABIREQUEST
 DESCRIPTOR.message_types_by_name['GetLogsRequest'] = _GETLOGSREQUEST
 DESCRIPTOR.message_types_by_name['Code'] = _CODE
 DESCRIPTOR.message_types_by_name['Abi'] = _ABI
 DESCRIPTOR.message_types_by_name['Logs'] = _LOGS
 _sym_db.RegisterFileDescriptor(DESCRIPTOR)
+
+Empty = _reflection.GeneratedProtocolMessageType('Empty', (_message.Message,), {
+  'DESCRIPTOR' : _EMPTY,
+  '__module__' : 'schema_pb2'
+  # @@protoc_insertion_point(class_scope:Empty)
+  })
+_sym_db.RegisterMessage(Empty)
 
 GetCodeRequest = _reflection.GeneratedProtocolMessageType('GetCodeRequest', (_message.Message,), {
   'DESCRIPTOR' : _GETCODEREQUEST,
@@ -654,6 +713,13 @@ GetAbiRequest = _reflection.GeneratedProtocolMessageType('GetAbiRequest', (_mess
   # @@protoc_insertion_point(class_scope:GetAbiRequest)
   })
 _sym_db.RegisterMessage(GetAbiRequest)
+
+PutAbiRequest = _reflection.GeneratedProtocolMessageType('PutAbiRequest', (_message.Message,), {
+  'DESCRIPTOR' : _PUTABIREQUEST,
+  '__module__' : 'schema_pb2'
+  # @@protoc_insertion_point(class_scope:PutAbiRequest)
+  })
+_sym_db.RegisterMessage(PutAbiRequest)
 
 GetLogsRequest = _reflection.GeneratedProtocolMessageType('GetLogsRequest', (_message.Message,), {
 
@@ -724,8 +790,8 @@ _HASHBROWNIE = _descriptor.ServiceDescriptor(
   index=0,
   serialized_options=None,
   create_key=_descriptor._internal_create_key,
-  serialized_start=1094,
-  serialized_end=1215,
+  serialized_start=1127,
+  serialized_end=1284,
   methods=[
   _descriptor.MethodDescriptor(
     name='GetCode',
@@ -748,9 +814,19 @@ _HASHBROWNIE = _descriptor.ServiceDescriptor(
     create_key=_descriptor._internal_create_key,
   ),
   _descriptor.MethodDescriptor(
+    name='PutAbi',
+    full_name='HashBrownie.PutAbi',
+    index=2,
+    containing_service=None,
+    input_type=_PUTABIREQUEST,
+    output_type=_EMPTY,
+    serialized_options=None,
+    create_key=_descriptor._internal_create_key,
+  ),
+  _descriptor.MethodDescriptor(
     name='GetLogs',
     full_name='HashBrownie.GetLogs',
-    index=2,
+    index=3,
     containing_service=None,
     input_type=_GETLOGSREQUEST,
     output_type=_LOGS,
