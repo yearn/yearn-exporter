@@ -14,6 +14,7 @@ class HashBrownie(metaclass=Singleton):
     SUPPORTED_METHODS = ["eth_getCode", "eth_getLogs"]
 
     def __init__(self, host=os.getenv("HASH_BROWNIE_HOST"), port=os.getenv("HASH_BROWNIE_PORT", 1337)):
+        self._client = None
         if host and port:
             self._channel = self._open_channel(host, port)
             self._client = HashBrownieStub(self._channel)
