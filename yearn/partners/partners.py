@@ -146,7 +146,7 @@ partners = {
         Partner(
             name='badger',
             start_block=0,
-            treasury='0xB65cef03b9B89f99517643226d76e286ee999e77',
+            treasury='0xD0A7A8B98957b9CD3cFB9c0425AbE44551158e9e',
             wrappers=[
                 Wrapper(
                     name='wbtc',
