@@ -73,11 +73,12 @@ class HashBrownie(metaclass=Singleton):
         if "toBlock" in param:
             request.to_block = int(param["toBlock"], 16)
 
-        addresses = param["address"]
-        if isinstance(addresses, list):
-            request.addresses[:] = addresses
-        else:
-            request.addresses[:] = [addresses]
+        if "address" in param:
+            addresses = param["address"]
+            if isinstance(addresses, list):
+                request.addresses[:] = addresses
+            else:
+                request.addresses[:] = [addresses]
 
         if "topics" in param:
             for t in param["topics"]:
