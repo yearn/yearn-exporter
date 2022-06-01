@@ -70,7 +70,7 @@ def _post(metrics_to_export: List[Dict]):
     with requests.Session() as session:
         r = session.post(
             url = url,
-            data = "".join(metrics_new), # remove list bracket and commas
+            data = "".join(metrics_new),
             headers = headers
         )
         logger.info(r)
