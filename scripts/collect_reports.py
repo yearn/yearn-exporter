@@ -230,7 +230,7 @@ def handle_event(event, multi_harvest):
     r.strategy_address, r.gain, r.loss, r.debt_paid, r.total_gain, r.total_loss, r.total_debt, r.debt_added, r.debt_ratio = normalize_event_values(event.values(), r.vault_decimals)
     
     txn_record_exists = False
-    t = transaction_record_exists(txn_hash)
+    t = transaction_record_exists(txn_hash, r.vault_address)
     if not t:
         t = Transactions()
         t.chain_id = chain.id
@@ -309,12 +309,16 @@ def handle_event(event, multi_harvest):
         if insert_success:
             prepare_alerts(r, t)
 
-def transaction_record_exists(txn_hash):
+def transaction_record_exists(txn_hash, vault_address):
     with Session(engine) as session:
         query = select(Transactions).where(
             Transactions.txn_hash == txn_hash
         )
-        result = session.exec(query).first()
+        result1 = session.exec(query).first()
+        query = select(Reports).where(
+            Reports.txn_hash == txn_hash and Reports.vault_address == vault_address
+        )
+        result2 = session.exec(query)
         if result == None:
             return False
         return result
@@ -548,8 +552,15 @@ def format_dev_telegram(r, t):
     df["Debt Added"] = "{:,.2f}".format(r.debt_added) + " (" + "${:,.2f}".format(r.debt_added * r.want_price_at_block) + ")"
     df["Total Debt"] = "{:,.2f}".format(r.total_debt) + " (" + "${:,.2f}".format(r.total_debt * r.want_price_at_block) + ")"
     df["Debt Ratio"] = r.debt_ratio
-    df["Treasury Fee"] = "{:,.2f}".format(r.gov_fee_in_want) + " (" + "${:,.2f}".format(r.gov_fee_in_want * r.want_price_at_block) + ")"
-    #df["Strategist Fee"] = "{:,.2f}".format(r.strategist_fee_in_want) + " (" + "${:,.2f}".format(r.strategist_fee_in_want * r.want_price_at_block) + ")"
+    if r.vault_address in INVERSE_PRIVATE_VAULTS:
+        fees = r.gov_fee_in_want + r.strategist_fee_in_want
+        inverse_profit = r.gain - fees
+        df["Yearn Treasury Profit"] = "{:,.2f}".format(fees) + " (" + "${:,.2f}".format(fees * r.want_price_at_block) + ")"
+        df["Inverse Profit"] = "{:,.2f}".format(inverse_profit) + " (" + "${:,.2f}".format(inverse_profit * r.want_price_at_block) + ")"
+    else:
+        df["Treasury Fee"] = "{:,.2f}".format(r.gov_fee_in_want) + " (" + "${:,.2f}".format(r.gov_fee_in_want * r.want_price_at_block) + ")"
+    if r.strategy_address == "0xd025b85db175EF1b175Af223BD37f330dB277786":
+        df["Strategist Fee"] = "{:,.2f}".format(r.strategist_fee_in_want) + " (" + "${:,.2f}".format(r.strategist_fee_in_want * r.want_price_at_block) + ")"
     prefee = "n/a"
     postfee = "n/a"
     if r.rough_apr_pre_fee is not None:
