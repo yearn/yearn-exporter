@@ -46,10 +46,12 @@ def get_block_timestamp(height):
     An optimized variant of `chain[height].timestamp`
     """
     if chain.id == Network.Mainnet:
-        header = web3.manager.request_blocking(f"erigon_getHeaderByNumber", [height])
-        return int(header.timestamp, 16)
-    else:
-        return chain[height].timestamp
+        try:
+            header = web3.manager.request_blocking(f"erigon_getHeaderByNumber", [height])
+            return int(header.timestamp, 16)
+        except:
+            pass
+    return chain[height].timestamp
 
 
 @memory.cache()
