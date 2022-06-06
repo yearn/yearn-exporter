@@ -7,6 +7,21 @@ from pony.orm import *
 db = Database()
 
 
+class Chain(db.Entity):
+    _table_ = "chains"
+    chain_dbid = PrimaryKey(int, auto=True)
+
+    chain_name = Required(str, unique=True)
+    chainid = Required(int, unique=True)
+    victoria_metrics_label = Required(str, unique=True)
+
+    addresses = Set("Address", reverse="chain")
+    tokens = Set("Token", reverse="chain")
+    user_txs = Set("UserTx")
+    treasury_txs = Set("TreasuryTx")
+    partners_txs = Set("PartnerHarvestEvent")
+
+
 class Block(db.Entity):
     _table_ = "blocks"
     block_id = PrimaryKey(int, auto=True)
@@ -32,43 +47,57 @@ class Snapshot(db.Entity):
 class Address(db.Entity):
     _table_ = "addresses"
     address_id = PrimaryKey(int, auto=True)
+    chain = Required(Chain, reverse="addresses")
 
-    chainid = Required(int)
-    address = Required(str)
-    composite_key(chainid, address)
-
-    is_contract = Required(bool)
+    address = Required(str, index=True)
     nickname = Optional(str)
+    is_contract = Required(bool, index=True)
+    composite_key(address, chain)
+    composite_index(is_contract, chain)
 
-    token = Optional('Token')
+    token = Optional('Token', index=True)
     partners_tx = Set('PartnerHarvestEvent', reverse='wrapper')
+
+    user_tx_from = Set("UserTx", reverse="from_address")
+    user_tx_to = Set("UserTx", reverse="to_address")
+    treasury_tx_from = Set("TreasuryTx", reverse="from_address")
+    treasury_tx_to = Set("TreasuryTx", reverse="to_address")
 
 
 class Token(db.Entity):
     _table_ = "tokens"
     token_id = PrimaryKey(int, auto=True)
+    chain = Required(Chain, index=True)
 
-    symbol = Required(str)
+    symbol = Required(str, index=True)
     name = Required(str)
     decimals = Required(int)
 
     user_tx = Set('UserTx', reverse="vault")
+    treasury_tx = Set('TreasuryTx', reverse="token")
+    partner_harvest_event = Set('PartnerHarvestEvent', reverse="vault")
     address = Required(Address, column="address_id")
 
+    @property
+    def scale(self) -> int:
+        return 10 ** self.decimals
 
+
+# Used for wallet exporter and other analysis
 class UserTx(db.Entity):
     _table_ = "user_txs"
     user_tx_id = PrimaryKey(int, auto=True)
+    chain = Required(Chain, index=True)
 
-    timestamp = Required(int)
-    block = Required(int)
-    hash = Required(str)
+    timestamp = Required(int, index=True)
+    block = Required(int, index=True)
+    hash = Required(str, index=True)
     log_index = Required(int)
     composite_key(hash, log_index)
-    vault = Required(Token, reverse="user_tx", column="token_id")
-    type = Required(str)
-    from_address = Required(str, column="from")
-    to_address = Required(str, column="to")
+    vault = Required(Token, reverse="user_tx", column="token_id", index=True)
+    type = Required(str, index=True)
+    from_address = Required(Address, reverse="user_tx_from", column="from", index=True)
+    to_address = Required(Address, reverse="user_tx_to", column="to", index=True)
     amount = Required(Decimal,38,18)
     price = Required(Decimal,38,18)
     value_usd = Required(Decimal,38,18)
@@ -77,6 +106,47 @@ class UserTx(db.Entity):
 
 
 
+# Treasury tx exporter
+class TxGroup(db.Entity):
+    _table_ = 'txgroups'
+    txgroup_id = PrimaryKey(int, auto=True)
+
+    name = Required(str, unique=True)
+
+    treasury_tx = Set('TreasuryTx', reverse="txgroup")
+    parent_txgroup = Optional("TxGroup", reverse="child_txgroups")
+    child_txgroups = Set("TxGroup", reverse="parent_txgroup")
+
+    @property
+    def top_txgroup(self):
+        if self.parent_txgroup is None:
+            return self
+        return self.parent_txgroup.top_txgroup
+
+
+class TreasuryTx(db.Entity):
+    _table_ = "treasury_txs"
+    treasury_tx_id = PrimaryKey(int, auto=True)
+    chain = Required(Chain, index=True)
+
+    timestamp = Required(int, index=True)
+    block = Required(int, index=True)
+    hash = Required(str, index=True)
+    log_index = Optional(int)
+    composite_key(hash, log_index)
+    token = Required(Token, reverse="treasury_tx", column="token_id", index=True)
+    from_address = Required(Address, reverse="treasury_tx_from", column="from", index=True)
+    to_address = Optional(Address, reverse="treasury_tx_to", column="to", index=True)
+    amount = Required(Decimal,38,18)
+    price = Optional(Decimal,38,18)
+    value_usd = Optional(Decimal,38,18)
+    gas_used = Optional(Decimal,38,1)
+    gas_price = Optional(Decimal,38,1)
+    txgroup = Required(TxGroup, reverse="treasury_tx", column="txgroup_id", index=True)
+    composite_index(chain,txgroup)
+
+
+# Caching for partners.py
 class PartnerHarvestEvent(db.Entity):
     _table_ = 'partners_txs'
     partner_id = PrimaryKey(int, auto=True)
@@ -90,8 +160,11 @@ class PartnerHarvestEvent(db.Entity):
     share = Required(Decimal,38,18)
     payout_base = Required(Decimal,38,18)
     protocol_fee = Required(Decimal,38,18)
-    wrapper = Required(Address, reverse='partners_tx') # we use `Address` instead of `Token` because some partner wrappers are unverified
-    vault = Required(str)
+    wrapper = Required(Address, reverse='partners_tx', index=True) # we use `Address` instead of `Token` because some partner wrappers are unverified
+    vault = Required(Token, index=True)
+
+    chain = Required(Chain, index=True)
+    composite_index(chain, vault, wrapper)
     
 
 db.bind(
