@@ -1,8 +1,8 @@
 import logging
 import time
-from typing import Optional
 import warnings
 from decimal import Decimal
+from typing import Optional
 
 import pandas as pd
 import sentry_sdk
@@ -11,7 +11,7 @@ from brownie.exceptions import BrownieEnvironmentWarning
 from pony.orm import db_session
 from web3._utils.abi import filter_by_name
 from web3._utils.events import construct_event_topic_set
-from yearn.entities import UserTx  # , TreasuryTx
+from yearn.entities import UserTx
 from yearn.events import decode_logs, get_logs_asap
 from yearn.exceptions import BatchSizeError
 from yearn.networks import Network
