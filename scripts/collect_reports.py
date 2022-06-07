@@ -230,7 +230,7 @@ def handle_event(event, multi_harvest):
     r.strategy_address, r.gain, r.loss, r.debt_paid, r.total_gain, r.total_loss, r.total_debt, r.debt_added, r.debt_ratio = normalize_event_values(event.values(), r.vault_decimals)
     
     txn_record_exists = False
-    t = transaction_record_exists(txn_hash, r.vault_address)
+    t = transaction_record_exists(txn_hash)
     if not t:
         t = Transactions()
         t.chain_id = chain.id
