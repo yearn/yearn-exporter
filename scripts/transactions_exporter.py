@@ -1,8 +1,8 @@
 import logging
 import time
-from typing import Optional
 import warnings
 from decimal import Decimal
+from typing import Optional
 
 import pandas as pd
 import sentry_sdk
@@ -11,11 +11,11 @@ from brownie.exceptions import BrownieEnvironmentWarning
 from pony.orm import db_session
 from web3._utils.abi import filter_by_name
 from web3._utils.events import construct_event_topic_set
-from yearn.entities import UserTx  # , TreasuryTx
+from yearn.entities import UserTx
 from yearn.events import decode_logs, get_logs_asap
 from yearn.exceptions import BatchSizeError
 from yearn.networks import Network
-from yearn.outputs.postgres.utils import (cache_address, cache_token,
+from yearn.outputs.postgres.utils import (cache_address, cache_chain, cache_token,
                                           last_recorded_block)
 from yearn.prices import magic
 from yearn.typing import Block
@@ -77,14 +77,15 @@ def process_and_cache_user_txs(last_saved_block=None):
             usd = row.value_usd if len(str(round(row.value_usd))) <= 20 else 99999999999999999999
             
             UserTx(
+                chain=cache_chain(),
                 vault=cache_token(row.token),
                 timestamp=row.timestamp,
                 block=row.block,
                 hash=row.hash,
                 log_index=row.log_index,
                 type=row.type,
-                from_address=row['from'],
-                to_address=row['to'],
+                from_address=cache_address(row['from']),
+                to_address=cache_address(row['to']),
                 amount = row.amount,
                 price = price,
                 value_usd = usd,

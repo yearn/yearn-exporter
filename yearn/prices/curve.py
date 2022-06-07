@@ -19,7 +19,7 @@ from collections import defaultdict
 from enum import IntEnum
 from typing import Dict, List, Optional
 
-from brownie import ZERO_ADDRESS, Contract, chain, convert
+from brownie import ZERO_ADDRESS, Contract, chain, convert, interface
 from brownie.convert import to_address
 from brownie.convert.datatypes import EthAddress
 from cachetools.func import lru_cache, ttl_cache
@@ -165,7 +165,7 @@ class CurveRegistry(metaclass=Singleton):
                 registry_logs = registries_filter.get_new_entries()
 
     def read_pools(self, registry: Address) -> List[EthAddress]:
-        registry = contract(registry)
+        registry = interface.CurveRegistry(registry)
         return fetch_multicall(
             *[[registry, 'pool_list', i] for i in range(registry.pool_count())]
         )

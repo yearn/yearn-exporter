@@ -30,7 +30,8 @@ from yearn.v2.vaults import Vault
 
 try:
     from yearn.entities import PartnerHarvestEvent
-    from yearn.outputs.postgres.utils import cache_address
+    from yearn.outputs.postgres.utils import (cache_address, cache_chain,
+                                              cache_token)
     USE_POSTGRES_CACHE = True
 except OperationalError as e:
     if "Is the server running on that host and accepting TCP/IP connections?" in str(e):
@@ -76,7 +77,7 @@ class Wrapper:
     
     @db_session
     def read_cache(self) -> DataFrame:
-        entities = PartnerHarvestEvent.select(lambda e: e.vault == self.vault and e.wrapper.address == self.wrapper and e.wrapper.chainid == chain.id)[:]
+        entities = PartnerHarvestEvent.select(lambda e: e.vault.address.address == self.vault and e.wrapper.address == self.wrapper and e.chain.chainid == chain.id)[:]
         cache = [
             {
                 'block': e.block,
@@ -435,6 +436,7 @@ def cache_data(wrap: DataFrame) -> None:
     '''
     for i, row in wrap.iterrows():
         PartnerHarvestEvent(
+            chain=cache_chain(),
             block=row.block,
             timestamp=int(row.timestamp.timestamp()),
             balance=row.balance,
@@ -444,6 +446,7 @@ def cache_data(wrap: DataFrame) -> None:
             share=row.share,
             payout_base=row.payout_base,
             protocol_fee=row.protocol_fee,
+            # Use cache_address instead of cache_token because some wrappers aren't verified
             wrapper=cache_address(row.wrapper),
-            vault=row.vault,
+            vault=cache_token(row.vault),
         )

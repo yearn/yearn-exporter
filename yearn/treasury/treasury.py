@@ -5,8 +5,7 @@ from typing import Dict, List, Optional, Set
 
 from brownie import ZERO_ADDRESS, Contract, chain, web3
 from brownie.convert.datatypes import EthAddress
-from yearn.typing import Block
-from brownie.network.event import EventLookupError, _EventItem
+from brownie.network.event import EventDict, EventLookupError, _EventItem
 from eth_abi import encode_single
 from eth_utils import encode_hex
 from joblib import Parallel, delayed
@@ -25,6 +24,7 @@ from yearn.prices import compound
 from yearn.prices.constants import weth
 from yearn.prices.magic import _describe_err, get_price
 from yearn.prices.magic import logger as logger_price_magic
+from yearn.typing import Block
 from yearn.utils import contract
 
 logger = logging.getLogger(__name__)
@@ -161,6 +161,11 @@ class Treasury:
         self._done = threading.Event()
         self._has_exception = False
         self._thread = threading.Thread(target=self.watch_transfers, daemon=True)
+    
+    @property
+    def transfers(self) -> List[EventDict]:
+        self.load_transfers()
+        return self._transfers
 
     # descriptive functions
     # assets
@@ -171,9 +176,8 @@ class Treasury:
         return assets
 
     def token_list(self, address: EthAddress, block: int = None) -> List[EthAddress]:
-        self.load_transfers()
         tokens = set()
-        for event in self._transfers:
+        for event in self.transfers:
             token = get_token_from_event(event)
             if token is None:
                 continue
