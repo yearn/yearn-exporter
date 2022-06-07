@@ -309,16 +309,12 @@ def handle_event(event, multi_harvest):
         if insert_success:
             prepare_alerts(r, t)
 
-def transaction_record_exists(txn_hash, vault_address):
+def transaction_record_exists(txn_hash):
     with Session(engine) as session:
         query = select(Transactions).where(
             Transactions.txn_hash == txn_hash
         )
-        result1 = session.exec(query).first()
-        query = select(Reports).where(
-            Reports.txn_hash == txn_hash and Reports.vault_address == vault_address
-        )
-        result2 = session.exec(query)
+        result = session.exec(query).first()
         if result == None:
             return False
         return result
