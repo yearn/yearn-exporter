@@ -53,16 +53,19 @@ def main():
     DAY_IN_SECONDS = 60 * 60 * 24
     current_time = int(time.time())
     yesterday = current_time - DAY_IN_SECONDS
+    txn_list = []
     with Session(engine) as session:
         query = select(Reports, Transactions).join(Transactions).where(
             Reports.timestamp > yesterday
         ).order_by(desc(Reports.block))
         results = session.exec(query)
-        for report, txn in results:
+        for report, txn in results: 
             RESULTS[txn.chain_id]["profit_usd"] = RESULTS[txn.chain_id]["profit_usd"] + report.want_gain_usd
             RESULTS[txn.chain_id]["num_harvests"] = RESULTS[txn.chain_id]["num_harvests"] + 1
-            RESULTS[txn.chain_id]["txn_cost_eth"] = RESULTS[txn.chain_id]["txn_cost_eth"] + txn.call_cost_eth
-            RESULTS[txn.chain_id]["txn_cost_usd"] = RESULTS[txn.chain_id]["txn_cost_usd"] + txn.call_cost_usd
+            if txn.txn_hash not in txn_list:
+                txn_list.append(txn.txn_hash)
+                RESULTS[txn.chain_id]["txn_cost_eth"] = RESULTS[txn.chain_id]["txn_cost_eth"] + txn.call_cost_eth
+                RESULTS[txn.chain_id]["txn_cost_usd"] = RESULTS[txn.chain_id]["txn_cost_usd"] + txn.call_cost_usd
     # Build Messages
     cumulative_message = ""
     for chain in RESULTS.keys():
