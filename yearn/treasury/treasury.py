@@ -1,9 +1,12 @@
 import logging
 import threading
 import time
-from typing import Dict, List, Optional, Set
+from typing import Dict, List, Optional, Set, Union, Literal
+from bisect import bisect_left
+from decimal import Decimal
 
-from brownie import ZERO_ADDRESS, Contract, chain, web3
+import pandas as pd
+from brownie import ZERO_ADDRESS, Contract, chain, web3, convert
 from brownie.convert.datatypes import EthAddress
 from brownie.network.event import EventDict, EventLookupError, _EventItem
 from eth_abi import encode_single
@@ -11,7 +14,7 @@ from eth_utils import encode_hex
 from joblib import Parallel, delayed
 from yearn.constants import (ERC20_TRANSFER_EVENT_HASH,
                              ERC677_TRANSFER_EVENT_HASH, STRATEGIST_MULTISIG,
-                             TREASURY_WALLETS)
+                             TREASURY_WALLETS, YCHAD_MULTISIG)
 from yearn.decorators import sentry_catch_all, wait_or_exit_after
 from yearn.events import decode_logs
 from yearn.exceptions import PriceError
@@ -19,13 +22,15 @@ from yearn.multicall2 import fetch_multicall
 from yearn.networks import Network
 from yearn.outputs.victoria import output_treasury
 from yearn.partners.partners import partners
-from yearn.partners.snapshot import WildcardWrapper, Wrapper
+from yearn.partners.snapshot import USE_POSTGRES_CACHE, WildcardWrapper, Wrapper, get_protocol_fees, process_partners
 from yearn.prices import compound
 from yearn.prices.constants import weth
 from yearn.prices.magic import _describe_err, get_price
 from yearn.prices.magic import logger as logger_price_magic
 from yearn.typing import Block
-from yearn.utils import contract
+from yearn.utils import contract, get_block_timestamp
+from yearn.v2.vaults import Vault
+
 
 logger = logging.getLogger(__name__)
 logger_price_magic.setLevel(logging.CRITICAL)
@@ -450,17 +455,127 @@ class YearnTreasury(Treasury):
         }[chain.id]
         super().__init__('treasury',TREASURY_WALLETS,watch_events_forever=watch_events_forever,start_block=start_block)
 
-    def partners_debt(self, block: int = None) -> dict:
-        for i, partner in enumerate(partners):
-            if i == 1:
-                flat_wrappers = []
-                for wrapper in partner.wrappers:
-                    if isinstance(wrapper, Wrapper):
-                        flat_wrappers.append(wrapper)
-                    elif isinstance(wrapper, WildcardWrapper):
-                        flat_wrappers.extend(wrapper.unwrap())
-                for wrapper in flat_wrappers:
-                    print(wrapper.protocol_fees(block=block))
+    def partners_debt(self, block: int = None) -> Dict[str, Dict[EthAddress, Dict[str, float]]]:
+        assert USE_POSTGRES_CACHE, "sorry i needed the db open to cheat hehe"
+
+        partners_debt = {}
+        for partner in partners:
+            partners_debt[partner.name] = {}
+
+            # collect payout data
+            data, _ = partner.process()
+            if len(data) == 0:
+                continue
+            data = data.loc[data.index <= block]
+
+            # collect transfer events to partner treasury
+            payments = {}
+            for event in self.transfers:
+                transfer = event['Transfer'][0]
+                if transfer.block_number > block:
+                    continue
+
+                # check if transferred to the treasury address
+                sender = transfer.keys()[0]
+                receiver = transfer.keys()[1]
+                treasury_address = convert.to_address(partner.treasury)
+                if transfer[sender] == YCHAD_MULTISIG and transfer[receiver] == treasury_address:
+                    vault_address = transfer.address
+                    vault = Vault.from_address(vault_address)
+                    value = Decimal(transfer['value']) / Decimal(vault.scale)
+                    if value == 0:
+                        continue
+                    usd_price = Decimal(get_price(vault_address, block=transfer.block_number))
+                    key = str(transfer.block_number) + vault_address
+                    payments[key] = (
+                        transfer.block_number,
+                        get_block_timestamp(transfer.block_number),
+                        vault_address,
+                        value,
+                        value * usd_price
+                    )
+            payments = pd.DataFrame(
+                payments.values(),
+                columns=['block', 'timestamp', 'vault', 'value', 'value_usd']
+            )
+            payments.timestamp = pd.to_datetime(payments.timestamp * 1e9)
+
+            # monthly payouts and transfers
+            debts = (
+                pd.pivot_table(
+                    data,
+                    ['payout', 'payout_usd'],
+                    'timestamp', 
+                    'vault',
+                    'sum'
+                )
+                .resample('1M')
+                .sum()
+            )
+            payments = (
+                pd.pivot_table(
+                    payments,
+                    ['value', 'value_usd'],
+                    'timestamp',
+                    'vault',
+                    'sum'
+                )
+                .resample('1M')
+                .sum()
+            )
+            # slice from Apr 2022
+            import pdb; pdb.set_trace()
+            debts = debts['2022-04-01':].sum().unstack().T
+            payments = payments['2022-05-01':].sum().unstack().T
+            df = pd.concat([debts, payments], axis=1).fillna(0.0)
+
+            # format outputs
+            for token_address in df.index:
+                partners_debt[partner.name][token_address] = {}
+                token = partners_debt[partner.name][token_address]
+                if 'payout' in df:
+                    token['debt'] = float(df.loc[token_address]['payout'])
+                    token['debt_usd'] = float(df.loc[token_address]['payout_usd'])
+                else:
+                    token['debt'] = 0.0
+                    token['debt_usd'] = 0.0
+                if 'value' in df:
+                    token['payment'] = float(df.loc[token_address]['value'])
+                    token['payment_usd'] = float(df.loc[token_address]['value_usd'])
+                else:
+                    token['payment'] = 0.0
+                    token['payment_usd'] = 0.0
+                token['net_debt'] = token['debt'] - token['payment']
+                token['net_debt_usd'] = token['debt_usd'] - token['payment_usd']
+
+                if token['net_debt'] < 0:
+                    import pdb; pdb.set_trace()
+
+        return partners_debt
+
+    def describe(self, block: int) -> dict:
+        return {
+            'assets': self.assets(block),
+            'debt': self.debt(block),
+            'partners': self.partners_debt(block)
+        }
+
+    def export(self, block: int, ts: int) -> None:
+        start = time.time()
+        data = self.describe(block)
+        output_treasury.export(ts, data, self.label)
+        logger.info('exported block=%d took=%.3fs', block, time.time() - start)
+
+        # for i, partner in enumerate(partners):
+        #     if i == 1:
+        #         flat_wrappers = []
+        #         for wrapper in partner.wrappers:
+        #             if isinstance(wrapper, Wrapper):
+        #                 flat_wrappers.append(wrapper)
+        #             elif isinstance(wrapper, WildcardWrapper):
+        #                 flat_wrappers.extend(wrapper.unwrap())
+        #         for wrapper in flat_wrappers:
+        #             print(wrapper.protocol_fees(block=block))
 
     # def bonded_kp3r(self, block=None) -> dict:
 
