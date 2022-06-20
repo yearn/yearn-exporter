@@ -3,7 +3,7 @@ from yearn.cache import memory
 from yearn.constants import BTC_LIKE
 from yearn.constants import ETH_LIKE as _ETH_LIKE
 from yearn.networks import Network
-from yearn.prices import balancer as bal
+from yearn.prices.balancer import balancer as bal
 from yearn.prices.aave import aave
 from yearn.prices.compound import compound
 from yearn.prices.constants import stablecoins, weth
@@ -94,11 +94,14 @@ def _unwrap_token(token) -> str:
             str(_unwrap_token(coin)) for coin in curve.get_underlying_coins(pool)
         )
         return _pool_bucket(pool_tokens)
-    if bal.balancer and bal.balancer.is_balancer_pool(token):  # should only be YLA # TODO figure this out
-        pool_tokens = set(
-            str(_unwrap_token(coin)) for coin in contract(token).getCurrentTokens()
-        )
-        return _pool_bucket(pool_tokens)
+    if bal.selector.has_balancers():
+        # should only be YLA # TODO figure this out
+        bal_for_pool = bal.selector.get_balancer_for_pool(token)
+        if bal_for_pool:
+            pool_tokens = set(
+                str(_unwrap_token(coin)) for coin in bal_for_pool.get_tokens()
+            )
+            return _pool_bucket(pool_tokens)
     if aave and token in aave:
         return aave.atoken_underlying(token)
     if compound and token in compound:

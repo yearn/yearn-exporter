@@ -1,4 +1,4 @@
-from typing import Any, Literal, Optional
+from typing import Any, Literal, Optional, List
 from brownie import chain
 from cachetools.func import ttl_cache
 
@@ -33,6 +33,10 @@ class BalancerV1(metaclass=Singleton):
 
     def get_version(self) -> str:
         return "v1"
+
+    def get_tokens(self, token: Address) -> List:
+        pool = contract(token)
+        return pool.getCurrentTokens()
 
     @ttl_cache(ttl=600)
     def get_price(self, token: Address, block: Optional[Block] = None) -> float:
