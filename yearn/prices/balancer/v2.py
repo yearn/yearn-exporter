@@ -16,9 +16,7 @@ networks = [ Network.Mainnet ]
 def is_balancer_pool_cached(address: Address) -> bool:
     pool = contract(address)
     required = {"getVault", "getPoolId", "totalSupply"}
-    if set(pool.__dict__) & required == required:
-        return True
-    return False
+    return required.issubset(set(pool.__dict__))
 
 class BalancerV2(metaclass=Singleton):
     def __init__(self) -> None:
