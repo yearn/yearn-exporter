@@ -7,7 +7,7 @@ from cachetools.func import ttl_cache
 
 from yearn.exceptions import PriceError
 from yearn.networks import Network
-from yearn.prices import balancer as bal
+from yearn.prices.balancer import balancer as bal
 from yearn.prices import constants, curve
 from yearn.prices.aave import aave
 from yearn.prices.band import band
@@ -79,9 +79,11 @@ def find_price(
         price = uniswap_v2.lp_price(token, block=block)
         logger.debug("uniswap pool -> %s", price)
 
-    elif bal.balancer and bal.balancer.is_balancer_pool(token):
-        price = bal.balancer.get_price(token, block=block)
-        logger.debug("balancer pool -> %s", price)
+    elif bal.selector.has_balancers():
+        bal_for_pool = bal.balancers.get_balancer_for_pool(token)
+        if bal_for_pool:
+            price = bal_for_pool.get_price(token, block=block)
+            logger.debug("balancer %s pool -> %s", bal_for_pool.get_version(), price)
 
     elif yearn_lens and yearn_lens.is_yearn_vault(token):
         price = yearn_lens.get_price(token, block=block)

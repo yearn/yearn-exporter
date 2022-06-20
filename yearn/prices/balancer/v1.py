@@ -20,7 +20,7 @@ def is_balancer_pool_cached(address: Address) -> bool:
         return True
     return False
 
-class Balancer(metaclass=Singleton):
+class BalancerV1(metaclass=Singleton):
     def __init__(self) -> None:
         if chain.id not in networks:
             raise UnsupportedNetwork('Balancer is not supported on this network')
@@ -30,6 +30,9 @@ class Balancer(metaclass=Singleton):
 
     def is_balancer_pool(self, address: Address) -> bool:
         return is_balancer_pool_cached(address)
+
+    def get_version(self) -> str:
+        return "v1"
 
     @ttl_cache(ttl=600)
     def get_price(self, token: Address, block: Optional[Block] = None) -> float:
@@ -41,8 +44,8 @@ class Balancer(metaclass=Singleton):
         total = sum(balance * magic.get_price(token, block=block) for balance, token in zip(balances, tokens))
         return total / supply
 
-balancer = None
+balancer_v1 = None
 try:
-    balancer = Balancer()
+    balancer_v1 = BalancerV1()
 except UnsupportedNetwork:
     pass
