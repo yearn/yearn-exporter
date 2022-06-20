@@ -17,7 +17,7 @@ class BalancerSelector:
         }
 
 
-    def has_balancers() -> bool:
+    def has_balancers(self) -> bool:
         return len(self.balancers) > 0
 
 

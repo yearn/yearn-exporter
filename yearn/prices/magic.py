@@ -80,7 +80,7 @@ def find_price(
         logger.debug("uniswap pool -> %s", price)
 
     elif bal.selector.has_balancers():
-        bal_for_pool = bal.balancers.get_balancer_for_pool(token)
+        bal_for_pool = bal.selector.get_balancer_for_pool(token)
         if bal_for_pool:
             price = bal_for_pool.get_price(token, block=block)
             logger.debug("balancer %s pool -> %s", bal_for_pool.get_version(), price)
