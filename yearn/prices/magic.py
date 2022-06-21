@@ -49,9 +49,15 @@ def unwrap_token(token: AddressOrContract) -> AddressString:
             return "0x0cec1a9154ff802e7934fc916ed7ca50bde6844e"  # PPOOL -> POOL
 
     if chain.id in [ Network.Mainnet, Network.Fantom ]:
-        if aave and token in aave:
-            token = aave.atoken_underlying(token)
-            logger.debug("aave -> %s", token)
+        if aave:
+            asset = contract(token)
+            # wrapped aDAI -> aDAI
+            if "ATOKEN" in asset.__dict__:
+                token = asset.ATOKEN()
+
+            if token in aave:
+                token = aave.atoken_underlying(token)
+                logger.debug("aave -> %s", token)
 
     return token
 
