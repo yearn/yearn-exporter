@@ -18,7 +18,7 @@ class BalancerSelector:
 
     def get_balancer_for_pool(self, address: Address) -> Optional[Union[BalancerV1, BalancerV2]]:
         for b in BALANCERS.values():
-            if b.is_balancer_pool(address):
+            if b and b.is_balancer_pool(address):
                 return b
 
         return None
