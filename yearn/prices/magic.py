@@ -104,7 +104,11 @@ def find_price(
 
     elif chain.id == Network.Mainnet:
         # no liquid market for yveCRV-DAO -> return CRV token price
-        if token == Backscratcher().vault.address and block and block < 11786563:
+        if token == Backscratcher().vault.address and block < 11786563:
+            if curve.curve and curve.curve.crv:
+                return get_price(curve.curve.crv, block=block)
+        # no liquid market for yveCRV (yvecrv-f) -> return CRV token price
+        elif token == "0x7E46fd8a30869aa9ed55af031067Df666EfE87da" and block < 14987514:
             if curve.curve and curve.curve.crv:
                 return get_price(curve.curve.crv, block=block)
 
