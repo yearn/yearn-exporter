@@ -16,11 +16,6 @@ class BalancerSelector:
             version: balancer for version, balancer in BALANCERS.items() if balancer
         }
 
-
-    def has_balancers(self) -> bool:
-        return len(self.balancers) > 0
-
-
     def get_balancer_for_pool(self, address: Address) -> Optional[Union[BalancerV1, BalancerV2]]:
         for b in BALANCERS.values():
             if b.is_balancer_pool(address):

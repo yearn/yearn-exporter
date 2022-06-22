@@ -94,14 +94,13 @@ def _unwrap_token(token) -> str:
             str(_unwrap_token(coin)) for coin in curve.get_underlying_coins(pool)
         )
         return _pool_bucket(pool_tokens)
-    if bal.selector.has_balancers():
+    if bal.selector.get_balancer_for_pool(token):
         # should only be YLA # TODO figure this out
         bal_for_pool = bal.selector.get_balancer_for_pool(token)
-        if bal_for_pool:
-            pool_tokens = set(
-                str(_unwrap_token(coin)) for coin in bal_for_pool.get_tokens()
-            )
-            return _pool_bucket(pool_tokens)
+        pool_tokens = set(
+            str(_unwrap_token(coin)) for coin in bal_for_pool.get_tokens()
+        )
+        return _pool_bucket(pool_tokens)
     if aave and token in aave:
         return aave.atoken_underlying(token)
     if compound and token in compound:

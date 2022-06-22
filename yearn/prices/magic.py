@@ -85,11 +85,10 @@ def find_price(
         price = uniswap_v2.lp_price(token, block=block)
         logger.debug("uniswap pool -> %s", price)
 
-    elif bal.selector.has_balancers():
+    elif bal.selector.get_balancer_for_pool(token):
         bal_for_pool = bal.selector.get_balancer_for_pool(token)
-        if bal_for_pool:
-            price = bal_for_pool.get_price(token, block=block)
-            logger.debug("balancer %s pool -> %s", bal_for_pool.get_version(), price)
+        price = bal_for_pool.get_price(token, block=block)
+        logger.debug("balancer %s pool -> %s", bal_for_pool.get_version(), price)
 
     elif yearn_lens and yearn_lens.is_yearn_vault(token):
         price = yearn_lens.get_price(token, block=block)
