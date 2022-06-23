@@ -107,10 +107,9 @@ def find_price(
         if token == Backscratcher().vault.address and block < 11786563:
             if curve.curve and curve.curve.crv:
                 return get_price(curve.curve.crv, block=block)
-        # no liquid market for yveCRV (yvecrv-f) -> return CRV token price
+        # no liquidity for curve pool (yvecrv-f) -> return 0
         elif token == "0x7E46fd8a30869aa9ed55af031067Df666EfE87da" and block < 14987514:
-            if curve.curve and curve.curve.crv:
-                return get_price(curve.curve.crv, block=block)
+            return 0
 
     markets = [
         chainlink,
