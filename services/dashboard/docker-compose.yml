@@ -20,6 +20,7 @@ x-common-envs: &common-envs
   - SENTRY_ENVIRONMENT: ${SENTRY_ENVIRONMENT:-development}
   - SENTRY_RELEASE:
   - SENTRY_DSN:
+  - LOG_LEVEL:
 
 x-common-historical-envs: &common-historical-envs
   - POOL_SIZE:

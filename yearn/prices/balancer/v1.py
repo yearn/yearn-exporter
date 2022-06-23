@@ -1,4 +1,4 @@
-from typing import Any, Literal, Optional
+from typing import Any, Literal, Optional, List
 from brownie import chain
 from cachetools.func import ttl_cache
 
@@ -16,11 +16,9 @@ networks = [ Network.Mainnet ]
 def is_balancer_pool_cached(address: Address) -> bool:
     pool = contract(address)
     required = {"getCurrentTokens", "getBalance", "totalSupply"}
-    if set(pool.__dict__) & required == required:
-        return True
-    return False
+    return required.issubset(set(pool.__dict__))
 
-class Balancer(metaclass=Singleton):
+class BalancerV1(metaclass=Singleton):
     def __init__(self) -> None:
         if chain.id not in networks:
             raise UnsupportedNetwork('Balancer is not supported on this network')
@@ -30,6 +28,13 @@ class Balancer(metaclass=Singleton):
 
     def is_balancer_pool(self, address: Address) -> bool:
         return is_balancer_pool_cached(address)
+
+    def get_version(self) -> str:
+        return "v1"
+
+    def get_tokens(self, token: Address) -> List:
+        pool = contract(token)
+        return pool.getCurrentTokens()
 
     @ttl_cache(ttl=600)
     def get_price(self, token: Address, block: Optional[Block] = None) -> float:
@@ -41,8 +46,8 @@ class Balancer(metaclass=Singleton):
         total = sum(balance * magic.get_price(token, block=block) for balance, token in zip(balances, tokens))
         return total / supply
 
-balancer = None
+balancer_v1 = None
 try:
-    balancer = Balancer()
+    balancer_v1 = BalancerV1()
 except UnsupportedNetwork:
     pass

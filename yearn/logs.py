@@ -1,11 +1,12 @@
 import logging
 import warnings
+import os
 from brownie.exceptions import BrownieEnvironmentWarning
 
 
 def setup_logging():
     logging.basicConfig(
-        level=logging.INFO,
+        level=os.getenv("LOG_LEVEL", "INFO"),
         format="%(levelname)s %(name)s:%(lineno)d %(message)s",
         datefmt="%Y-%m-%d %H:%M:%S",
     )

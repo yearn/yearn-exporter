@@ -7,7 +7,7 @@ from cachetools.func import ttl_cache
 
 from yearn.exceptions import PriceError
 from yearn.networks import Network
-from yearn.prices import balancer as bal
+from yearn.prices.balancer import balancer as bal
 from yearn.prices import constants, curve
 from yearn.prices.aave import aave
 from yearn.prices.band import band
@@ -49,9 +49,15 @@ def unwrap_token(token: AddressOrContract) -> AddressString:
             return "0x0cec1a9154ff802e7934fc916ed7ca50bde6844e"  # PPOOL -> POOL
 
     if chain.id in [ Network.Mainnet, Network.Fantom ]:
-        if aave and token in aave:
-            token = aave.atoken_underlying(token)
-            logger.debug("aave -> %s", token)
+        if aave:
+            asset = contract(token)
+            # wrapped aDAI -> aDAI
+            if "ATOKEN" in asset.__dict__:
+                token = asset.ATOKEN()
+
+            if token in aave:
+                token = aave.atoken_underlying(token)
+                logger.debug("aave -> %s", token)
 
     return token
 
@@ -79,9 +85,10 @@ def find_price(
         price = uniswap_v2.lp_price(token, block=block)
         logger.debug("uniswap pool -> %s", price)
 
-    elif bal.balancer and bal.balancer.is_balancer_pool(token):
-        price = bal.balancer.get_price(token, block=block)
-        logger.debug("balancer pool -> %s", price)
+    elif bal.selector.get_balancer_for_pool(token):
+        bal_for_pool = bal.selector.get_balancer_for_pool(token)
+        price = bal_for_pool.get_price(token, block=block)
+        logger.debug("balancer %s pool -> %s", bal_for_pool.get_version(), price)
 
     elif yearn_lens and yearn_lens.is_yearn_vault(token):
         price = yearn_lens.get_price(token, block=block)
@@ -97,9 +104,12 @@ def find_price(
 
     elif chain.id == Network.Mainnet:
         # no liquid market for yveCRV-DAO -> return CRV token price
-        if token == Backscratcher().vault.address and block and block < 11786563:
+        if token == Backscratcher().vault.address and block < 11786563:
             if curve.curve and curve.curve.crv:
                 return get_price(curve.curve.crv, block=block)
+        # no liquidity for curve pool (yvecrv-f) -> return 0
+        elif token == "0x7E46fd8a30869aa9ed55af031067Df666EfE87da" and block < 14987514:
+            return 0
 
     markets = [
         chainlink,
