@@ -19,7 +19,7 @@ x-common-envs: &common-envs
   - SKIP_WALLET_STATS:
   - SENTRY_ENVIRONMENT: ${SENTRY_ENVIRONMENT:-development}
   - SENTRY_RELEASE:
-  - SENTRY_DSN:
+  - SENTRY_DSN: https://88d44e0ac1f845bba5223cdd9e6c54f5@o1296276.ingest.sentry.io/6522809
   - LOG_LEVEL:
   - PROMSCALE_URL: http://promscale:9201
 
@@ -72,6 +72,9 @@ services:
     networks:
       - yearn-exporter
     restart: on-failure
+    depends_on:
+      - promscale
+      - timescale
 
   historical-eth-exporter:
     image: yearn-exporter
@@ -84,6 +87,9 @@ services:
     networks:
       - yearn-exporter
     restart: on-failure
+    depends_on:
+      - promscale
+      - timescale
 
   gnosis-exporter:
     image: yearn-exporter
@@ -397,10 +403,10 @@ services:
     networks:
       - yearn-exporter
     volumes:
-      - postgres_data:/var/lib/postgresql/data
+      - postgres_data:/home/postgres/pgdata/data
 
   promscale:
-    image: timescale/promscale:latest
+    image: timescale/promscale:0.11
     ports:
       - 9201:9201
       - 9202:9202

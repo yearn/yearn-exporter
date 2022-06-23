@@ -32,6 +32,9 @@ def get_price(
     return_price_during_vault_downtime: bool = False
     ) -> float:
 
+    # TODO remoev this
+    if token == "0x7B50775383d3D6f0215A8F290f2C9e2eEBBEceb2":
+        return 0
     token = unwrap_token(token)
     block = chain.height if block is None else block
     return find_price(token, block, return_price_during_vault_downtime=return_price_during_vault_downtime)
