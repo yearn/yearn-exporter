@@ -288,6 +288,9 @@ partners = {
             name='abracadabra',
             start_block=0,
             treasury='0xDF2C270f610Dc35d8fFDA5B453E74db5471E126B',
+            retired_treasuries=[
+                '0x5A7C5505f3CFB9a0D9A8493EC41bf27EE48c406D',
+            ],
             # brownie run abracadabra_wrappers
             wrappers=[
                 BentoboxWrapper(

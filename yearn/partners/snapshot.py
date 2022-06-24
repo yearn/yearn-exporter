@@ -1,7 +1,7 @@
 import logging
 from collections import defaultdict
 from concurrent.futures import ThreadPoolExecutor
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from decimal import Decimal
 from functools import cached_property
 from pathlib import Path
@@ -254,6 +254,7 @@ class Partner:
     start_block: int
     wrappers: List[Wrapper]
     treasury: str = None
+    retired_treasuries: List[str] = field(default_factory=list)
 
     @cached_property
     def flat_wrappers(self) -> List[Wrapper]:
