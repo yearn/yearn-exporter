@@ -8,8 +8,6 @@ from yearn.prices import constants
 
 
 def export(block, timestamp, data):
-    print("?????????????")
-    print(data)
     metrics_to_export = []
 
     if chain.id == Network.Mainnet:
