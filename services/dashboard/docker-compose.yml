@@ -352,7 +352,7 @@ services:
       - yearn-exporter
     restart: on-failure
     depends_on:
-      - timescale
+      - promscale
 
   ftm-wallet-exporter:
     image: yearn-exporter
