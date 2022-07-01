@@ -372,8 +372,6 @@ class CurveRegistry(metaclass=Singleton):
         token = to_address(token)
         pool = self.get_pool(token)
         # crypto pools can have different tokens, use slow method
-        # logger.info("POOOL!!!!!!!!!!!!!")
-        # logger.info(pool)
         if hasattr(contract(pool), 'price_oracle'):
             try:
                 tvl = self.get_tvl(pool, block=block)

@@ -18,7 +18,7 @@ logger = logging.getLogger(__name__)
 BATCH_SIZE = {
     Network.Mainnet: 10_000,  # 1.58 days
     Network.Gnosis: 20_000,  # 1.15 days
-    Network.Fantom: 3_000,  # 1.03 days
+    Network.Fantom: 100_000,  # 1.03 days
     Network.Arbitrum: 20_000, # 0.34 days
 }
 CACHED_CALLS = [

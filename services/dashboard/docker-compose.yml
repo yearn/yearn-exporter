@@ -18,7 +18,7 @@ x-common-envs: &common-envs
   - SKIP_WALLET_STATS:
   - SENTRY_ENVIRONMENT: ${SENTRY_ENVIRONMENT:-development}
   - SENTRY_RELEASE:
-  - SENTRY_DSN: https://88d44e0ac1f845bba5223cdd9e6c54f5@o1296276.ingest.sentry.io/6522809
+  - SENTRY_DSN:
   - LOG_LEVEL:
   - PROMSCALE_URL: http://promscale:9201
 

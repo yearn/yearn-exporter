@@ -155,21 +155,15 @@ def contract(address: Address) -> Contract:
         failed_attempts = 0
         while True:
             try:
-                # logger.info("ADDRESS!!!!!!!!!!!!!!!!!!!!!!!!!!!")
-                # logger.info(address)
                 c = _contract(address)
                 return _squeeze(c)
             except (AssertionError, CompilerError) as e:
                 if failed_attempts == 10:
                     raise
                 logger.warning(e)
-                # logger.info("REMOVE ADDRESS!!!!!!!!!!!!!!!!!!!!!!!!!!!")
-                # logger.info(address)
                 Contract.remove_deployment(address)
                 failed_attempts += 1
             except AttributeError as e:
-                logger.info("ATTRIBUTE ERROR!!!!!!!!!!!!")
-                logger.info(address)
                 raise e
 
 @lru_cache(maxsize=None)
