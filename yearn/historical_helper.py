@@ -9,7 +9,7 @@ import functools
 import requests
 from joblib import Parallel, delayed
 from toolz import partition_all
-from yearn.outputs.victoria import output_duration
+from yearn.outputs.timescale import output_duration
 from yearn.yearn import Yearn
 from datetime import timedelta
 

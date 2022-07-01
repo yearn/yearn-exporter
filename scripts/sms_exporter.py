@@ -4,7 +4,7 @@ import time
 
 import sentry_sdk
 from brownie import chain
-from yearn.outputs.victoria import output_duration
+from yearn.outputs.timescale import output_duration
 from yearn.treasury.treasury import StrategistMultisig
 
 sentry_sdk.set_tag('script','sms_exporter')
