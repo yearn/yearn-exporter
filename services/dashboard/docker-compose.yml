@@ -431,20 +431,20 @@ services:
     networks:
       - yearn-exporter
 
-  # vmagent:
-  #   image: victoriametrics/vmagent:heads-public-single-node-0-g52eb9c99e
-  #   volumes:
-  #     - ./prometheus/:/etc/prometheus/
-  #   command:
-  #     - '-promscrape.config=/etc/prometheus/prometheus.yml'
-  #     - '-remoteWrite.url=http://victoria-metrics:8428/api/v1/write'
-  #   links:
-  #     - victoria-metrics:victoria-metrics
-  #   depends_on:
-  #     - eth-exporter
-  #     - victoria-metrics
-  #   networks:
-  #     - yearn-exporter
+  vmagent:
+    image: victoriametrics/vmagent:heads-public-single-node-0-g52eb9c99e
+    ports:
+      - 8429:8429
+    volumes:
+      - ./prometheus/:/etc/prometheus/
+    command:
+      - '-promscrape.config=/etc/prometheus/prometheus.yml'
+      - '-remoteWrite.url=http://promscale:9201/write'
+    depends_on:
+      - eth-exporter
+      - promscale
+    networks:
+      - yearn-exporter
 
 
   grafana:
