@@ -1,12 +1,9 @@
 import logging
 import threading
 import time
-from typing import Dict, List, Optional, Set, Union, Literal
-from bisect import bisect_left
-from decimal import Decimal
+from typing import Dict, List, Optional, Set
 
-import pandas as pd
-from brownie import ZERO_ADDRESS, Contract, chain, web3, convert
+from brownie import ZERO_ADDRESS, Contract, chain, web3
 from brownie.convert.datatypes import EthAddress
 from brownie.network.event import EventDict, EventLookupError, _EventItem
 from eth_abi import encode_single
@@ -14,7 +11,7 @@ from eth_utils import encode_hex
 from joblib import Parallel, delayed
 from yearn.constants import (ERC20_TRANSFER_EVENT_HASH,
                              ERC677_TRANSFER_EVENT_HASH, STRATEGIST_MULTISIG,
-                             TREASURY_WALLETS, YCHAD_MULTISIG)
+                             TREASURY_WALLETS)
 from yearn.decorators import sentry_catch_all, wait_or_exit_after
 from yearn.events import decode_logs
 from yearn.exceptions import PriceError
@@ -22,14 +19,12 @@ from yearn.multicall2 import fetch_multicall
 from yearn.networks import Network
 from yearn.outputs.victoria import output_treasury
 from yearn.partners.partners import partners
-from yearn.partners.snapshot import USE_POSTGRES_CACHE, WildcardWrapper, Wrapper, get_protocol_fees, process_partners
 from yearn.prices import compound
 from yearn.prices.constants import weth
 from yearn.prices.magic import _describe_err, get_price
 from yearn.prices.magic import logger as logger_price_magic
 from yearn.typing import Block
-from yearn.utils import contract, get_block_timestamp
-from yearn.v2.vaults import Vault
+from yearn.utils import contract
 
 
 logger = logging.getLogger(__name__)
