@@ -124,7 +124,7 @@ def batch_call(calls):
         )
 
     response = requests.post(web3.provider.endpoint_uri, json=jsonrpc_batch).json()
-    if isinstance(response, dict) and 'message' in response['result']:
+    if isinstance(response, dict) and isinstance(response['result'], dict) and 'message' in response['result']:
         raise ValueError(response['result']['message'])
 
     return [
