@@ -90,7 +90,7 @@ class Wrapper:
                 'payout_base': e.payout_base,
                 'protocol_fee': e.protocol_fee,
                 'wrapper': e.wrapper.address,
-                'vault': e.vault,
+                'vault': e.vault.address.address,
             } for e in entities
         ]
         return DataFrame(cache)
