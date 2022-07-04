@@ -455,12 +455,11 @@ class YearnTreasury(Treasury):
         }[chain.id]
         super().__init__('treasury',TREASURY_WALLETS,watch_events_forever=watch_events_forever,start_block=start_block)
 
-    def partners_debt(self, block: int = None) -> Dict[str, Dict[EthAddress, Dict[str, float]]]:
-        assert USE_POSTGRES_CACHE, "sorry i needed the db open to cheat hehe"
+    def process_partners(self, block: int = None) -> Dict[str, Dict[EthAddress, Dict[str, float]]]:
+        partners_info = {}
 
-        partners_debt = {}
         for partner in partners:
-            partners_debt[partner.name] = {}
+            wrappers = partners_info[partner.name] = {}
 
             # collect payout data
             data, _ = partner.process()
@@ -468,96 +467,35 @@ class YearnTreasury(Treasury):
                 continue
             data = data.loc[data.index <= block]
 
-            # collect transfer events to partner treasury
-            payments = {}
-            for event in self.transfers:
-                transfer = event['Transfer'][0]
-                if transfer.block_number > block:
-                    continue
+            # wrapper balance
+            for wrapper in set(data.wrapper):
+                wrapper_info = wrappers[wrapper] = {}
 
-                # check if transferred to the treasury address
-                sender = transfer.keys()[0]
-                receiver = transfer.keys()[1]
-                treasury_address = convert.to_address(partner.treasury)
-                if transfer[sender] == YCHAD_MULTISIG and transfer[receiver] == treasury_address:
-                    vault_address = transfer.address
-                    vault = Vault.from_address(vault_address)
-                    value = Decimal(transfer['value']) / Decimal(vault.scale)
-                    if value == 0:
-                        continue
-                    usd_price = Decimal(get_price(vault_address, block=transfer.block_number))
-                    key = str(transfer.block_number) + vault_address
-                    payments[key] = (
-                        transfer.block_number,
-                        get_block_timestamp(transfer.block_number),
-                        vault_address,
-                        value,
-                        value * usd_price
-                    )
-            payments = pd.DataFrame(
-                payments.values(),
-                columns=['block', 'timestamp', 'vault', 'value', 'value_usd']
-            )
-            payments.timestamp = pd.to_datetime(payments.timestamp * 1e9)
+                wrapper_data = data[data.wrapper == wrapper]
+                wrapper_info['vault'] = wrapper_data.vault.iloc[-1]
+                wrapper_info['balance'] = float(wrapper_data.balance.iloc[-1])
+                wrapper_info['balance_usd'] = float(wrapper_data.balance_usd.iloc[-1])
 
-            # monthly payouts and transfers
-            debts = (
-                pd.pivot_table(
-                    data,
-                    ['payout', 'payout_usd'],
-                    'timestamp', 
-                    'vault',
-                    'sum'
-                )
-                .resample('1M')
-                .sum()
-            )
-            payments = (
-                pd.pivot_table(
-                    payments,
-                    ['value', 'value_usd'],
-                    'timestamp',
-                    'vault',
-                    'sum'
-                )
-                .resample('1M')
-                .sum()
-            )
-            # slice from Apr 2022
-            import pdb; pdb.set_trace()
-            debts = debts['2022-04-01':].sum().unstack().T
-            payments = payments['2022-05-01':].sum().unstack().T
-            df = pd.concat([debts, payments], axis=1).fillna(0.0)
-
-            # format outputs
-            for token_address in df.index:
-                partners_debt[partner.name][token_address] = {}
-                token = partners_debt[partner.name][token_address]
-                if 'payout' in df:
-                    token['debt'] = float(df.loc[token_address]['payout'])
-                    token['debt_usd'] = float(df.loc[token_address]['payout_usd'])
-                else:
-                    token['debt'] = 0.0
-                    token['debt_usd'] = 0.0
-                if 'value' in df:
-                    token['payment'] = float(df.loc[token_address]['value'])
-                    token['payment_usd'] = float(df.loc[token_address]['value_usd'])
-                else:
-                    token['payment'] = 0.0
-                    token['payment_usd'] = 0.0
-                token['net_debt'] = token['debt'] - token['payment']
-                token['net_debt_usd'] = token['debt_usd'] - token['payment_usd']
-
-                if token['net_debt'] < 0:
-                    import pdb; pdb.set_trace()
-
-        return partners_debt
+                wrapper_daily_data = wrapper_data.set_index('timestamp').resample('1D').sum()
+                wrapper_info['payout'] = {
+                    "daily": float(wrapper_daily_data.payout.iloc[-1]),
+                    "weekly": float(wrapper_daily_data.payout.iloc[-7:].sum()),
+                    "monthly": float(wrapper_daily_data.payout.iloc[-30:].sum()),
+                    "total": float(wrapper_daily_data.payout.sum()),
+                }
+                wrapper_info['payout_usd'] = {
+                    "daily": float(wrapper_daily_data.payout_usd.iloc[-1]),
+                    "weekly": float(wrapper_daily_data.payout_usd.iloc[-7:].sum()),
+                    "monthly": float(wrapper_daily_data.payout_usd.iloc[-30:].sum()),
+                    "total": float(wrapper_daily_data.payout_usd.sum()),
+                }
+        return partners_info
 
     def describe(self, block: int) -> dict:
         return {
             'assets': self.assets(block),
             'debt': self.debt(block),
-            'partners': self.partners_debt(block)
+            'partners': self.process_partners(block)
         }
 
     def export(self, block: int, ts: int) -> None:
