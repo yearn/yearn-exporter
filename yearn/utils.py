@@ -10,7 +10,7 @@ from brownie import Contract, chain, convert, interface, web3
 from web3 import Web3
 from brownie.network.contract import _resolve_address, _fetch_from_explorer
 from brownie.exceptions import CompilerError
-from brownie.network.contract import _fetch_from_explorer
+from brownie.network.contract import _fetch_from_explorer, _resolve_address
 
 from yearn.cache import memory
 from yearn.exceptions import ArchiveNodeRequired, NodeNotSynced
@@ -174,6 +174,38 @@ def contract(address: Address) -> Contract:
                 raise ValueError(f"Contract source code not verified: {address}")
             name = data["result"][0]["ContractName"]
             abi = json.loads(data["result"][0]["ABI"])
+
+            # always check for an EIP1967 proxy - https://eips.ethereum.org/EIPS/eip-1967
+            implementation_eip1967 = web3.eth.get_storage_at(
+                address, int(web3.keccak(text="eip1967.proxy.implementation").hex(), 16) - 1
+            )
+            # always check for an EIP1822 proxy - https://eips.ethereum.org/EIPS/eip-1822
+            implementation_eip1822 = web3.eth.get_storage_at(address, web3.keccak(text="PROXIABLE"))
+            if len(implementation_eip1967) > 0 and int(implementation_eip1967.hex(), 16):
+                as_proxy_for = _resolve_address(implementation_eip1967[-20:])
+            elif len(implementation_eip1822) > 0 and int(implementation_eip1822.hex(), 16):
+                as_proxy_for = _resolve_address(implementation_eip1822[-20:])
+            elif data["result"][0].get("Implementation"):
+                # for other proxy patterns, we only check if etherscan indicates
+                # the contract is a proxy. otherwise we could have a false positive
+                # if there is an `implementation` method on a regular contract.
+                try:
+                    # first try to call `implementation` per EIP897
+                    # https://eips.ethereum.org/EIPS/eip-897
+                    contract = Contract.from_abi(name, address, abi)
+                    as_proxy_for = contract.implementation.call()
+                except Exception:
+                    # if that fails, fall back to the address provided by etherscan
+                    as_proxy_for = _resolve_address(data["result"][0]["Implementation"])
+
+            if as_proxy_for == address:
+                as_proxy_for = None
+
+            # if this is a proxy, fetch information for the implementation contract
+            if as_proxy_for is not None:
+                implementation_contract = Contract.from_explorer(as_proxy_for)
+                abi = implementation_contract._build["abi"]
+
             c = Contract.from_abi(name, address, abi)
         # Lastly, get rid of unnecessary memory-hog properties
         return _squeeze(c)
