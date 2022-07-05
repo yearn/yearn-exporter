@@ -1,9 +1,8 @@
 from collections import defaultdict
 from dataclasses import dataclass
 from functools import cached_property
-from datetime import datetime
 
-from brownie import Contract, chain
+from brownie import chain
 from brownie.network.contract import InterfaceContainer
 from cachetools.func import ttl_cache
 from joblib import Parallel, delayed
@@ -13,7 +12,6 @@ from yearn.multicall2 import multicall_matrix
 from yearn.prices import magic
 from yearn.networks import Network
 from yearn.prices.compound import get_fantom_ironbank
-from yearn.prices.compound import compound
 from yearn.utils import contract
 import logging
 
@@ -53,9 +51,9 @@ class Registry:
     @property
     @ttl_cache(ttl=3600)
     def vaults(self):
-        markets = [Contract(market) for market in self.ironbank.getAllMarkets()]
+        markets = [contract(market) for market in self.ironbank.getAllMarkets()]
         cdata = multicall_matrix(markets, ["symbol", "underlying", "decimals"])
-        underlying = [Contract(cdata[x]["underlying"]) for x in markets]
+        underlying = [contract(cdata[x]["underlying"]) for x in markets]
         data = multicall_matrix(underlying, ["symbol", "decimals"])
         vaults = [
             IronbankMarket(

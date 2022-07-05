@@ -39,7 +39,7 @@ def main():
             continue
         wrappers.append(
             BentoboxWrapper(
-                name=Contract(collateral).symbol(),
+                name=contract(collateral).symbol(),
                 vault=collateral,
                 wrapper=cauldron,
             )

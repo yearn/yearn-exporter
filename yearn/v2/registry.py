@@ -57,7 +57,7 @@ class Registry(metaclass=Singleton):
         )
         events = decode_logs(get_logs_asap(str(resolver), topics))
         logger.info('loaded %d registry versions', len(events))
-        return [Contract(event['newAddress']) for event in events]
+        return [contract(event['newAddress']) for event in events]
 
     @property
     @wait_or_exit_before
