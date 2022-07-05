@@ -51,7 +51,15 @@ def __validate_unitroller_abis() -> None:
     good: List[Contract] = []
     bad: List[Contract] = []
     for address in unitrollers:
-        unitroller = contract(address)
+        # We use `Contract` instead of `contract` here so
+        #  we don't cache any incorrect ABIs into memory.
+        try:
+            unitroller = Contract(address)
+        except ValueError as e:
+            if not str(e).startswith("Unknown contract address: "):
+                raise e
+            unitroller = Contract.from_explorer(address)
+
         if hasattr(unitroller,'getAllMarkets'):
             good.append(unitroller)
         else:
