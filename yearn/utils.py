@@ -165,6 +165,7 @@ def contract(address: Address) -> Contract:
             c = _contract(address)
         # If we don't already have the contract in the db, we'll try to fetch it from the explorer.
         except ValueError as e:
+            address = convert.to_address(address)
             if not str(e).startswith("Unknown contract address: "):
                 raise e
             data = _fetch_from_explorer(address, "getsourcecode", False)
