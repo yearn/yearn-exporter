@@ -19,7 +19,6 @@ jobs:
           provider: FTM_WEB3_PROVIDER
       fail-fast: false
 
-    environment: production
     steps:
       - name: Check out repository code
         uses: actions/checkout@v2
