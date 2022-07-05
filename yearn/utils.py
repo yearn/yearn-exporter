@@ -1,3 +1,4 @@
+import json
 import logging
 import threading
 import json
@@ -9,6 +10,7 @@ from brownie import Contract, chain, convert, interface, web3
 from web3 import Web3
 from brownie.network.contract import _resolve_address, _fetch_from_explorer
 from brownie.exceptions import CompilerError
+from brownie.network.contract import _fetch_from_explorer
 
 from yearn.cache import memory
 from yearn.exceptions import ArchiveNodeRequired, NodeNotSynced
@@ -157,17 +159,23 @@ def contract(address: Address) -> Contract:
                 i = _interface(address)
                 return _squeeze(i)
 
-        failed_attempts = 0
-        while True:
-            try:
-                c = _contract(address)
-                return _squeeze(c)
-            except (AssertionError, CompilerError) as e:
-                if failed_attempts == 10:
-                    raise
-                logger.warning(e)
-                Contract.remove_deployment(address)
-                failed_attempts += 1
+        # autofetch-sources: false
+        # Try to fetch the contract from the local sqlite db.
+        try:
+            c = _contract(address)
+        # If we don't already have the contract in the db, we'll try to fetch it from the explorer.
+        except ValueError as e:
+            if not str(e).startswith("Unknown contract address: "):
+                raise e
+            data = _fetch_from_explorer(address, "getsourcecode", False)
+            is_verified = bool(data["result"][0].get("SourceCode"))
+            if not is_verified:
+                raise ValueError(f"Contract source code not verified: {address}")
+            name = data["result"][0]["ContractName"]
+            abi = json.loads(data["result"][0]["ABI"])
+            c = Contract.from_abi(name, address, abi)
+        # Lastly, get rid of unnecessary memory-hog properties
+        return _squeeze(c)
 
 
 @eth_retry.auto_retry

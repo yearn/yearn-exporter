@@ -1,7 +1,7 @@
 networks:
     default: mainnet
 
-autofetch_sources: true
+autofetch_sources: false
 
 compiler:
     solc:
