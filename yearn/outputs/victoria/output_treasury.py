@@ -48,7 +48,7 @@ def export_partners(timestamp, data, label):
             # wrapper balance
             for key in ['balance', 'balance_usd']:
                 item = _build_item(
-                    f"{label}_partners",
+                    "partners",
                     label_names,
                     [partner, key, token, symbol, bucket],
                     wrapper_data.get(key, 0.0),
@@ -61,7 +61,7 @@ def export_partners(timestamp, data, label):
             for interval, value in payout.items():
                 key = f"payout_{interval}"
                 item = _build_item(
-                    f"{label}_partners",
+                    "partners",
                     label_names,
                     [partner, key, token, symbol, bucket],
                     value,
@@ -72,7 +72,7 @@ def export_partners(timestamp, data, label):
             for interval, value in payout_usd.items():
                 key = f"payout_usd_{interval}"
                 item = _build_item(
-                    f"{label}_partners",
+                    "partners",
                     label_names,
                     [partner, key, token, symbol, bucket],
                     value,
