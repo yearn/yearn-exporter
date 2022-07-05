@@ -192,8 +192,8 @@ def contract(address: Address) -> Contract:
                 try:
                     # first try to call `implementation` per EIP897
                     # https://eips.ethereum.org/EIPS/eip-897
-                    contract = Contract.from_abi(name, address, abi)
-                    as_proxy_for = contract.implementation.call()
+                    c = Contract.from_abi(name, address, abi)
+                    as_proxy_for = c.implementation.call()
                 except Exception:
                     # if that fails, fall back to the address provided by etherscan
                     as_proxy_for = _resolve_address(data["result"][0]["Implementation"])
@@ -203,7 +203,7 @@ def contract(address: Address) -> Contract:
 
             # if this is a proxy, fetch information for the implementation contract
             if as_proxy_for is not None:
-                implementation_contract = Contract.from_explorer(as_proxy_for)
+                implementation_contract = contract(as_proxy_for)
                 abi = implementation_contract._build["abi"]
 
             c = Contract.from_abi(name, address, abi)
