@@ -175,6 +175,8 @@ def contract(address: Address) -> Contract:
             name = data["result"][0]["ContractName"]
             abi = json.loads(data["result"][0]["ABI"])
 
+            # If the contract is a proxy, get the implementation abi.
+            as_proxy_for = None
             # always check for an EIP1967 proxy - https://eips.ethereum.org/EIPS/eip-1967
             implementation_eip1967 = web3.eth.get_storage_at(
                 address, int(web3.keccak(text="eip1967.proxy.implementation").hex(), 16) - 1
