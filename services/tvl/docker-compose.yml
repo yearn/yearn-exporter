@@ -40,9 +40,7 @@ services:
       - SENTRY_RELEASE
       - SENTRY_ENVIRONMENT=${SENTRY_ENVIRONMENT:-development}
       - SENTRY_DSN
-    volumes: 
-      - solidity_compilers:/root/.solcx
-      - vyper_compilers:/root/.vvm
+    volumes:
       - brownie:/root/.brownie
       - cache:/app/yearn-exporter/cache
     restart: always
