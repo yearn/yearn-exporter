@@ -467,6 +467,8 @@ class YearnTreasury(Treasury):
                 wrapper_info = wrappers[wrapper] = {}
 
                 wrapper_data = data[data.wrapper == wrapper]
+                if len(wrapper_data) == 0:
+                    continue
                 wrapper_info['vault'] = wrapper_data.vault.iloc[-1]
                 wrapper_info['balance'] = float(wrapper_data.balance.iloc[-1])
                 wrapper_info['balance_usd'] = float(wrapper_data.balance_usd.iloc[-1])
