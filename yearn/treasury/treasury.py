@@ -457,7 +457,7 @@ class YearnTreasury(Treasury):
             wrappers = partners_info[partner.name] = {}
 
             # collect payout data
-            data, _ = partner.process()
+            data, _ = partner.process(use_postgres_cache=False)
             if len(data) == 0:
                 continue
             data = data.loc[data.index <= block]
