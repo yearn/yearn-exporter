@@ -21,6 +21,7 @@ x-common-envs: &common-envs
   - SENTRY_RELEASE:
   - SENTRY_DSN:
   - LOG_LEVEL:
+  - PROMSCALE_URL: http://promscale:9201
 
 x-common-historical-envs: &common-historical-envs
   - POOL_SIZE:
@@ -28,10 +29,13 @@ x-common-historical-envs: &common-historical-envs
   - RESOLUTION:
 
 x-common-postgres-envs: &common-postgres-envs
-  - PGHOST: postgres
+  - PGHOST: timescale
   - PGDATABASE: postgres
   - PGUSER: postgres
   - PGPASSWORD: yearn-exporter
+
+x-common-timescale-envs: &common-timescale-envs
+  - POSTGRES_PASSWORD: yearn-exporter
 
 x-common-eth-envs: &common-eth-envs
   - NETWORK: mainnet
@@ -141,7 +145,7 @@ services:
     restart: on-failure
     depends_on:
       - victoria-metrics
-      - postgres
+      - timescale
 
   historical-treasury-exporter:
     image: yearn-exporter
@@ -156,8 +160,8 @@ services:
       - yearn-exporter
     restart: on-failure
     depends_on:
-      - victoria-metrics
-      - postgres
+      - promscale
+      - timescale
 
   gnosis-treasury-exporter:
     image: yearn-exporter
@@ -172,7 +176,7 @@ services:
     restart: on-failure
     depends_on:
       - victoria-metrics
-      - postgres
+      - timescale
 
   historical-gnosis-treasury-exporter:
     image: yearn-exporter
@@ -188,7 +192,7 @@ services:
     restart: on-failure
     depends_on:
       - victoria-metrics
-      - postgres
+      - timescale
 
   ftm-treasury-exporter:
     image: yearn-exporter
@@ -203,7 +207,7 @@ services:
     restart: on-failure
     depends_on:
       - victoria-metrics
-      - postgres
+      - timescale
 
   historical-ftm-treasury-exporter:
     image: yearn-exporter
@@ -219,7 +223,7 @@ services:
     restart: on-failure
     depends_on:
       - victoria-metrics
-      - postgres
+      - timescale
 
   sms-exporter:
     image: yearn-exporter
@@ -303,7 +307,7 @@ services:
       - yearn-exporter
     restart: on-failure
     depends_on:
-      - postgres
+      - timescale
 
   wallet-exporter:
     image: yearn-exporter
@@ -319,7 +323,7 @@ services:
     restart: always
     depends_on:
       - victoria-metrics
-      - postgres
+      - timescale
 
   ftm-transactions-exporter:
     image: yearn-exporter
@@ -334,7 +338,7 @@ services:
       - yearn-exporter
     restart: on-failure
     depends_on:
-      - postgres
+      - timescale
 
   ftm-wallet-exporter:
     image: yearn-exporter
@@ -350,7 +354,7 @@ services:
     restart: always
     depends_on:
       - victoria-metrics
-      - postgres
+      - timescale
 
   gnosis-transactions-exporter:
     image: yearn-exporter
@@ -365,7 +369,7 @@ services:
       - yearn-exporter
     restart: on-failure
     depends_on:
-      - postgres
+      - timescale
 
   gnosis-wallet-exporter:
     image: yearn-exporter
@@ -381,7 +385,36 @@ services:
     restart: always
     depends_on:
       - victoria-metrics
-      - postgres
+      - timescale
+
+  timescale:
+    image: timescale/timescaledb-ha:pg13-latest
+    environment:
+      <<: *common-timescale-envs # common-timescale-envs?
+    ports: 
+      - 5432:5432
+    networks:
+      - yearn-exporter
+
+  promscale:
+    image: timescale/promscale:latest
+    ports:
+      - 9201:9201
+      - 9202:9202
+    restart: on-failure
+    depends_on:
+      - timescale
+    # volumes:
+    #   - ./prometheus/promscale-prometheus.yml:/prometheus.yml
+    environment:
+      # PROMSCALE_WEB_TELEMETRY_PATH: /metrics-text
+      PROMSCALE_DB_URI: postgres://postgres:yearn-exporter@timescale:5432/postgres?sslmode=allow
+      PROMSCALE_TRACING_OTLP_SERVER_ADDRESS: ":9202"
+      # PROMSCALE_TELEMETRY_TRACE_JAEGER_ENDPOINT: "http://otel-collector:14268/api/traces"
+      # PROMSCALE_TELEMETRY_TRACE_SAMPLING_RATIO: "0.1"
+      # PROMSCALE_METRICS_RULES_CONFIG_FILE: /prometheus.yml
+    networks:
+      - yearn-exporter
 
   vmagent:
     image: victoriametrics/vmagent:heads-public-single-node-0-g52eb9c99e
@@ -414,8 +447,7 @@ services:
   grafana:
     image: grafana/grafana:8.3.1
     depends_on:
-      - victoria-metrics
-      - postgres
+      - promscale
     ports:
       - 3000:3000
     environment:
