@@ -47,7 +47,6 @@ def _build_item(metric, label_names, label_values, value, timestamp):
     label_values.append(Network.label(chain.id))
     meta = dict(zip(map(_sanitize, label_names), map(str, label_values)))
     meta["__name__"] = metric
-    # "values": [_sanitize(value)], "timestamps": [ts_millis]
     return {"labels": meta, "samples": [[ts_millis, _sanitize(value)]]}
 
 
@@ -64,16 +63,12 @@ def _to_jsonl_gz(metrics_to_export: List[Dict]):
 
 
 def _post(metrics_to_export: List[Dict]):
-    # data = _to_jsonl_gz(metrics_to_export)
-    # TODO 
-    base_url = os.environ.get('PROMSCALE_URL', 'http://victoria-metrics:8428')
+    base_url = os.environ.get('PROMSCALE_URL', 'http://promscale:9201')
     url = f'{base_url}/write'
     headers = {
         'Content-Type': 'application/json'
     }
     metrics_new = [json.dumps(metric) for metric in metrics_to_export]
-    logger.info("_post ---------------------------")
-    logger.info("".join(metrics_new))
     with requests.Session() as session:
         r = session.post(
             url = url,

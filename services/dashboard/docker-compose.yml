@@ -175,7 +175,7 @@ services:
       - yearn-exporter
     restart: on-failure
     depends_on:
-      - victoria-metrics
+      - promscale
       - timescale
 
   historical-gnosis-treasury-exporter:
@@ -191,7 +191,7 @@ services:
       - yearn-exporter
     restart: on-failure
     depends_on:
-      - victoria-metrics
+      - promscale
       - timescale
 
   ftm-treasury-exporter:
@@ -206,7 +206,7 @@ services:
       - yearn-exporter
     restart: on-failure
     depends_on:
-      - victoria-metrics
+      - promscale
       - timescale
 
   historical-ftm-treasury-exporter:
@@ -222,7 +222,7 @@ services:
       - yearn-exporter
     restart: on-failure
     depends_on:
-      - victoria-metrics
+      - promscale
       - timescale
 
   sms-exporter:
@@ -307,6 +307,7 @@ services:
       - yearn-exporter
     restart: on-failure
     depends_on:
+      - promscale
       - timescale
 
   wallet-exporter:
@@ -322,7 +323,7 @@ services:
       - yearn-exporter
     restart: always
     depends_on:
-      - victoria-metrics
+      - promscale
       - timescale
 
   ftm-transactions-exporter:
@@ -353,7 +354,7 @@ services:
       - yearn-exporter
     restart: always
     depends_on:
-      - victoria-metrics
+      - promscale
       - timescale
 
   gnosis-transactions-exporter:
@@ -384,17 +385,19 @@ services:
       - yearn-exporter
     restart: always
     depends_on:
-      - victoria-metrics
+      - promscale
       - timescale
 
   timescale:
-    image: timescale/timescaledb-ha:pg13-latest
+    image: timescale/timescaledb-ha:pg14-latest
     environment:
       <<: *common-timescale-envs # common-timescale-envs?
     ports: 
       - 5432:5432
     networks:
       - yearn-exporter
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
 
   promscale:
     image: timescale/promscale:latest
