@@ -10,6 +10,7 @@ from yearn.yearn import Yearn
 
 sentry_sdk.set_tag('script','exporter')
 
+logger = logging.getLogger('yearn.exporter')
 sleep_interval = int(os.environ.get('SLEEP_SECONDS', '0'))
 
 def main():
