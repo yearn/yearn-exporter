@@ -19,13 +19,13 @@ from yearn.multicall2 import fetch_multicall
 from yearn.networks import Network
 from yearn.outputs.victoria import output_treasury
 from yearn.partners.partners import partners
+from yearn.partners.snapshot import WildcardWrapper, Wrapper
 from yearn.prices import compound
 from yearn.prices.constants import weth
 from yearn.prices.magic import _describe_err, get_price
 from yearn.prices.magic import logger as logger_price_magic
 from yearn.typing import Block
 from yearn.utils import contract
-
 
 logger = logging.getLogger(__name__)
 logger_price_magic.setLevel(logging.CRITICAL)
@@ -450,67 +450,17 @@ class YearnTreasury(Treasury):
         }[chain.id]
         super().__init__('treasury',TREASURY_WALLETS,watch_events_forever=watch_events_forever,start_block=start_block)
 
-    def process_partners(self, block: int = None) -> Dict[str, Dict[EthAddress, Dict[str, float]]]:
-        partners_info = {}
-
-        for partner in partners:
-            wrappers = partners_info[partner.name] = {}
-
-            # collect payout data
-            data, _ = partner.process(use_postgres_cache=False)
-            if len(data) == 0:
-                continue
-            data = data.loc[data.index <= block]
-
-            # wrapper balance
-            for wrapper in set(data.wrapper):
-                wrapper_info = wrappers[wrapper] = {}
-
-                wrapper_data = data[data.wrapper == wrapper]
-                if len(wrapper_data) == 0:
-                    continue
-                wrapper_info['vault'] = wrapper_data.vault.iloc[-1]
-                wrapper_info['balance'] = float(wrapper_data.balance.iloc[-1])
-                wrapper_info['balance_usd'] = float(wrapper_data.balance_usd.iloc[-1])
-
-                wrapper_daily_data = wrapper_data.set_index('timestamp').resample('1D').sum()
-                wrapper_info['payout'] = {
-                    "daily": float(wrapper_daily_data.payout.iloc[-1]),
-                    "weekly": float(wrapper_daily_data.payout.iloc[-7:].sum()),
-                    "monthly": float(wrapper_daily_data.payout.iloc[-30:].sum()),
-                    "total": float(wrapper_daily_data.payout.sum()),
-                }
-                wrapper_info['payout_usd'] = {
-                    "daily": float(wrapper_daily_data.payout_usd.iloc[-1]),
-                    "weekly": float(wrapper_daily_data.payout_usd.iloc[-7:].sum()),
-                    "monthly": float(wrapper_daily_data.payout_usd.iloc[-30:].sum()),
-                    "total": float(wrapper_daily_data.payout_usd.sum()),
-                }
-        return partners_info
-
-    def describe(self, block: int) -> dict:
-        return {
-            'assets': self.assets(block),
-            'debt': self.debt(block),
-            'partners': self.process_partners(block)
-        }
-
-    def export(self, block: int, ts: int) -> None:
-        start = time.time()
-        data = self.describe(block)
-        output_treasury.export(ts, data, self.label)
-        logger.info('exported block=%d took=%.3fs', block, time.time() - start)
-
-        # for i, partner in enumerate(partners):
-        #     if i == 1:
-        #         flat_wrappers = []
-        #         for wrapper in partner.wrappers:
-        #             if isinstance(wrapper, Wrapper):
-        #                 flat_wrappers.append(wrapper)
-        #             elif isinstance(wrapper, WildcardWrapper):
-        #                 flat_wrappers.extend(wrapper.unwrap())
-        #         for wrapper in flat_wrappers:
-        #             print(wrapper.protocol_fees(block=block))
+    def partners_debt(self, block: int = None) -> dict:
+        for i, partner in enumerate(partners):
+            if i == 1:
+                flat_wrappers = []
+                for wrapper in partner.wrappers:
+                    if isinstance(wrapper, Wrapper):
+                        flat_wrappers.append(wrapper)
+                    elif isinstance(wrapper, WildcardWrapper):
+                        flat_wrappers.extend(wrapper.unwrap())
+                for wrapper in flat_wrappers:
+                    print(wrapper.protocol_fees(block=block))
 
     # def bonded_kp3r(self, block=None) -> dict:
 

@@ -60,17 +60,17 @@ all:
 	$(all_command) down && $(all_command) build --no-cache && $(all_command) up $(flags)
 
 logs-all:
-	$(dashboards_command) logs -f -t eth-exporter historical-eth-exporter ftm-exporter historical-ftm-exporter treasury-exporter historical-treasury-exporter ftm-treasury-exporter historical-ftm-treasury-exporter sms-exporter historical-sms-exporter ftm-sms-exporter historical-ftm-sms-exporter transactions-exporter wallet-exporter ftm-transactions-exporter ftm-wallet-exporter
+	$(dashboards_command) logs -f -t eth-exporter historical-eth-exporter ftm-exporter historical-ftm-exporter treasury-exporter historical-treasury-exporter ftm-treasury-exporter historical-ftm-treasury-exporter sms-exporter historical-sms-exporter ftm-sms-exporter historical-ftm-sms-exporter transactions-exporter wallet-exporter ftm-transactions-exporter ftm-wallet-exporter partners-exporter ftm-partners-exporter
 
 postgres:
 	$(dashboards_command) up -d --build postgres
 
 # Mainnet:
 mainnet:
-	$(all_command) up -d --build eth-exporter historical-eth-exporter treasury-exporter historical-treasury-exporter sms-exporter historical-sms-exporter transactions-exporter wallet-exporter
+	$(all_command) up -d --build eth-exporter historical-eth-exporter treasury-exporter historical-treasury-exporter sms-exporter historical-sms-exporter transactions-exporter wallet-exporter partners-exporter
 
 logs-mainnet:
-	$(all_command) logs -ft eth-exporter historical-eth-exporter treasury-exporter historical-treasury-exporter sms-exporter historical-sms-exporter transactions-exporter wallet-exporter
+	$(all_command) logs -ft eth-exporter historical-eth-exporter treasury-exporter historical-treasury-exporter sms-exporter historical-sms-exporter transactions-exporter wallet-exporter partners-exporter
 
 eth:
 	make mainnet
@@ -80,10 +80,10 @@ logs-eth:
 
 # Fantom:
 fantom:
-	$(all_command) up -d --build ftm-exporter historical-ftm-exporter ftm-treasury-exporter historical-ftm-treasury-exporter ftm-sms-exporter historical-ftm-sms-exporter ftm-transactions-exporter ftm-wallet-exporter
+	$(all_command) up -d --build ftm-exporter historical-ftm-exporter ftm-treasury-exporter historical-ftm-treasury-exporter ftm-sms-exporter historical-ftm-sms-exporter ftm-transactions-exporter ftm-wallet-exporter ftm-partners-exporter
 
 logs-fantom:
-	$(all_command) logs -ft ftm-exporter historical-ftm-exporter ftm-treasury-exporter historical-ftm-treasury-exporter ftm-sms-exporter historical-ftm-sms-exporter ftm-transactions-exporter ftm-wallet-exporter
+	$(all_command) logs -ft ftm-exporter historical-ftm-exporter ftm-treasury-exporter historical-ftm-treasury-exporter ftm-sms-exporter historical-ftm-sms-exporter ftm-transactions-exporter ftm-wallet-exporter ftm-partners-exporter
 	
 
 # Gnosis chain:

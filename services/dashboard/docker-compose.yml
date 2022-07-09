@@ -383,6 +383,37 @@ services:
       - victoria-metrics
       - postgres
 
+  partners-exporter:
+    image: yearn-exporter
+    command: partners_exporter
+    volumes: *common-volumes
+    environment:
+      <<: *common-envs
+      <<: *common-eth-envs
+      <<: *common-historical-envs
+      <<: *common-postgres-envs
+    networks:
+      - yearn-exporter
+    restart: on-failure
+    depends_on:
+      - victoria-metrics
+      - postgres
+
+  ftm-partners-exporter:
+    image: yearn-exporter
+    command: partners_exporter
+    volumes: *common-volumes
+    environment:
+      <<: *common-envs
+      <<: *common-ftm-envs
+      <<: *common-postgres-envs
+    networks:
+      - yearn-exporter
+    restart: on-failure
+    depends_on:
+      - victoria-metrics
+      - postgres
+
   vmagent:
     image: victoriametrics/vmagent:heads-public-single-node-0-g52eb9c99e
     volumes:
