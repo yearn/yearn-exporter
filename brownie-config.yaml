@@ -1,5 +1,5 @@
 networks:
-    default: ftm-main
+    default: mainnet
 
 autofetch_sources: true
 
