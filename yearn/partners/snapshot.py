@@ -12,7 +12,7 @@ from brownie import Contract, chain, convert, multicall, web3
 from joblib.parallel import Parallel, delayed
 from pandas import DataFrame
 from pandas.core.tools.datetimes import DatetimeScalar
-from pony.orm import OperationalError, db_session
+from pony.orm import OperationalError, db_session, commit
 from rich import print
 from rich.progress import track
 from web3._utils.abi import filter_by_name
@@ -451,3 +451,4 @@ def cache_data(wrap: DataFrame) -> None:
             wrapper=cache_address(row.wrapper),
             vault=cache_token(row.vault),
         )
+        commit()
