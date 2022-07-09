@@ -81,8 +81,6 @@ class Yearn:
             delayed(self.registries[key].describe)(block=block)
             for key in self.registries
         )
-        print("!!!!!!!!!!!")
-        print(dict(zip(self.registries, desc)))
         return dict(zip(self.registries, desc))
 
 

@@ -73,46 +73,46 @@ def time_tracking(export_snapshot_func):
 
 def _get_interval_map(start):
     return [
-        # {
-        #     'resolution': '1d',
-        #     'start': start.replace(hour=0, minute=0, second=0, microsecond=0),
-        #     'interval': timedelta(days=1),
-        # },
+        {
+            'resolution': '1d',
+            'start': start.replace(hour=0, minute=0, second=0, microsecond=0),
+            'interval': timedelta(days=1),
+        },
         {
             'resolution': '1h',
             'start': start.replace(minute=0, second=0, microsecond=0),
             'interval': timedelta(hours=1),
         },
-        # {
-        #     'resolution': '30m',
-        #     'start': start.replace(minute=0, second=0, microsecond=0),
-        #     'interval': timedelta(minutes=30),
-        # },
-        # {
-        #     'resolution': '15m',
-        #     'start': start.replace(minute=0, second=0, microsecond=0),
-        #     'interval': timedelta(minutes=15),
-        # },
-        # {
-        #     'resolution': '5m',
-        #     'start': start.replace(minute=0, second=0, microsecond=0),
-        #     'interval': timedelta(minutes=5),
-        # },
-        # {
-        #     'resolution': '1m',
-        #     'start': start.replace(second=0, microsecond=0),
-        #     'interval': timedelta(minutes=1),
-        # },
-        # {
-        #     'resolution': '30s',
-        #     'start': start.replace(second=0, microsecond=0),
-        #     'interval': timedelta(seconds=30),
-        # },
-        # {
-        #     'resolution': '15s',
-        #     'start': start.replace(second=0, microsecond=0),
-        #     'interval': timedelta(seconds=15),
-        # },
+        {
+            'resolution': '30m',
+            'start': start.replace(minute=0, second=0, microsecond=0),
+            'interval': timedelta(minutes=30),
+        },
+        {
+            'resolution': '15m',
+            'start': start.replace(minute=0, second=0, microsecond=0),
+            'interval': timedelta(minutes=15),
+        },
+        {
+            'resolution': '5m',
+            'start': start.replace(minute=0, second=0, microsecond=0),
+            'interval': timedelta(minutes=5),
+        },
+        {
+            'resolution': '1m',
+            'start': start.replace(second=0, microsecond=0),
+            'interval': timedelta(minutes=1),
+        },
+        {
+            'resolution': '30s',
+            'start': start.replace(second=0, microsecond=0),
+            'interval': timedelta(seconds=30),
+        },
+        {
+            'resolution': '15s',
+            'start': start.replace(second=0, microsecond=0),
+            'interval': timedelta(seconds=15),
+        },
     ]
 
 
