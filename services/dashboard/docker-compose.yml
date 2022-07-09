@@ -402,7 +402,7 @@ services:
   timescale:
     image: timescale/timescaledb-ha:pg14-latest
     environment:
-      <<: *common-timescale-envs # common-timescale-envs?
+      <<: *common-timescale-envs
     ports: 
       - 5432:5432
     networks:
