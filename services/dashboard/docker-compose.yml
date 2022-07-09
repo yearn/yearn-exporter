@@ -6,8 +6,8 @@ volumes:
   vyper_compilers: {}
   brownie: {}
   cache: {}
-  victoria_metrics_data: {}
   postgres_data: {}
+  timescale_data: {}
 
 networks:
   yearn-exporter:
@@ -21,6 +21,7 @@ x-common-envs: &common-envs
   - SENTRY_RELEASE:
   - SENTRY_DSN:
   - LOG_LEVEL:
+  - PROMSCALE_URL: http://promscale:9201
 
 x-common-historical-envs: &common-historical-envs
   - POOL_SIZE:
@@ -28,10 +29,13 @@ x-common-historical-envs: &common-historical-envs
   - RESOLUTION:
 
 x-common-postgres-envs: &common-postgres-envs
-  - PGHOST: postgres
+  - PGHOST: timescale
   - PGDATABASE: postgres
   - PGUSER: postgres
   - PGPASSWORD: yearn-exporter
+
+x-common-timescale-envs: &common-timescale-envs
+  - POSTGRES_PASSWORD: yearn-exporter
 
 x-common-eth-envs: &common-eth-envs
   - NETWORK: mainnet
@@ -68,6 +72,8 @@ services:
     networks:
       - yearn-exporter
     restart: on-failure
+    depends_on:
+      - promscale
 
   historical-eth-exporter:
     image: yearn-exporter
@@ -80,6 +86,8 @@ services:
     networks:
       - yearn-exporter
     restart: on-failure
+    depends_on:
+      - promscale
 
   gnosis-exporter:
     image: yearn-exporter
@@ -91,6 +99,8 @@ services:
     networks:
       - yearn-exporter
     restart: on-failure
+    depends_on:
+      - promscale
 
   historical-gnosis-exporter:
     image: yearn-exporter
@@ -103,6 +113,8 @@ services:
     networks:
       - yearn-exporter
     restart: on-failure
+    depends_on:
+      - promscale
 
   ftm-exporter:
     image: yearn-exporter
@@ -114,6 +126,8 @@ services:
     networks:
       - yearn-exporter
     restart: on-failure
+    depends_on:
+      - promscale
 
   historical-ftm-exporter:
     image: yearn-exporter
@@ -140,8 +154,7 @@ services:
       - yearn-exporter
     restart: on-failure
     depends_on:
-      - victoria-metrics
-      - postgres
+      - promscale
 
   historical-treasury-exporter:
     image: yearn-exporter
@@ -156,8 +169,7 @@ services:
       - yearn-exporter
     restart: on-failure
     depends_on:
-      - victoria-metrics
-      - postgres
+      - promscale
 
   gnosis-treasury-exporter:
     image: yearn-exporter
@@ -171,8 +183,7 @@ services:
       - yearn-exporter
     restart: on-failure
     depends_on:
-      - victoria-metrics
-      - postgres
+      - promscale
 
   historical-gnosis-treasury-exporter:
     image: yearn-exporter
@@ -187,8 +198,7 @@ services:
       - yearn-exporter
     restart: on-failure
     depends_on:
-      - victoria-metrics
-      - postgres
+      - promscale
 
   ftm-treasury-exporter:
     image: yearn-exporter
@@ -202,8 +212,7 @@ services:
       - yearn-exporter
     restart: on-failure
     depends_on:
-      - victoria-metrics
-      - postgres
+      - promscale
 
   historical-ftm-treasury-exporter:
     image: yearn-exporter
@@ -218,8 +227,7 @@ services:
       - yearn-exporter
     restart: on-failure
     depends_on:
-      - victoria-metrics
-      - postgres
+      - promscale
 
   sms-exporter:
     image: yearn-exporter
@@ -231,6 +239,8 @@ services:
     networks:
       - yearn-exporter
     restart: on-failure
+    depends_on:
+      - promscale
 
   historical-sms-exporter:
     image: yearn-exporter
@@ -243,6 +253,8 @@ services:
     networks:
       - yearn-exporter
     restart: on-failure
+    depends_on:
+      - promscale
 
   gnosis-sms-exporter:
     image: yearn-exporter
@@ -254,6 +266,8 @@ services:
     networks:
       - yearn-exporter
     restart: on-failure
+    depends_on:
+      - promscale
 
   historical-gnosis-sms-exporter:
     image: yearn-exporter
@@ -266,6 +280,8 @@ services:
     networks:
       - yearn-exporter
     restart: on-failure
+    depends_on:
+      - promscale
 
   ftm-sms-exporter:
     image: yearn-exporter
@@ -277,6 +293,8 @@ services:
     networks:
       - yearn-exporter
     restart: on-failure
+    depends_on:
+      - promscale
 
   historical-ftm-sms-exporter:
     image: yearn-exporter
@@ -289,6 +307,8 @@ services:
     networks:
       - yearn-exporter
     restart: on-failure
+    depends_on:
+      - promscale
 
   transactions-exporter:
     image: yearn-exporter
@@ -303,7 +323,7 @@ services:
       - yearn-exporter
     restart: on-failure
     depends_on:
-      - postgres
+      - promscale
 
   wallet-exporter:
     image: yearn-exporter
@@ -318,8 +338,7 @@ services:
       - yearn-exporter
     restart: always
     depends_on:
-      - victoria-metrics
-      - postgres
+      - promscale
 
   ftm-transactions-exporter:
     image: yearn-exporter
@@ -334,7 +353,7 @@ services:
       - yearn-exporter
     restart: on-failure
     depends_on:
-      - postgres
+      - promscale
 
   ftm-wallet-exporter:
     image: yearn-exporter
@@ -349,8 +368,7 @@ services:
       - yearn-exporter
     restart: always
     depends_on:
-      - victoria-metrics
-      - postgres
+      - promscale
 
   gnosis-transactions-exporter:
     image: yearn-exporter
@@ -365,7 +383,7 @@ services:
       - yearn-exporter
     restart: on-failure
     depends_on:
-      - postgres
+      - promscale
 
   gnosis-wallet-exporter:
     image: yearn-exporter
@@ -380,8 +398,38 @@ services:
       - yearn-exporter
     restart: always
     depends_on:
-      - victoria-metrics
-      - postgres
+      - promscale
+
+  timescale:
+    image: timescale/timescaledb-ha:pg14-latest
+    environment:
+      <<: *common-timescale-envs
+    ports: 
+      - 5432:5432
+    networks:
+      - yearn-exporter
+    volumes:
+      - timescale_data:/home/postgres/pgdata/data
+
+  promscale:
+    image: timescale/promscale:0.11
+    ports:
+      - 9201:9201
+      - 9202:9202
+    restart: on-failure
+    depends_on:
+      - timescale
+    volumes:
+      - ./prometheus/prometheus.yml:/prometheus.yml
+    environment:
+      # PROMSCALE_WEB_TELEMETRY_PATH: /metrics-text
+      PROMSCALE_DB_URI: postgres://postgres:yearn-exporter@timescale:5432/postgres?sslmode=allow
+      PROMSCALE_TRACING_OTLP_SERVER_ADDRESS: ":9202"
+      # PROMSCALE_TELEMETRY_TRACE_JAEGER_ENDPOINT: "http://otel-collector:14268/api/traces"
+      # PROMSCALE_TELEMETRY_TRACE_SAMPLING_RATIO: "0.1"
+      PROMSCALE_METRICS_RULES_CONFIG_FILE: /prometheus.yml
+    networks:
+      - yearn-exporter
 
   partners-exporter:
     image: yearn-exporter
@@ -396,8 +444,7 @@ services:
       - yearn-exporter
     restart: on-failure
     depends_on:
-      - victoria-metrics
-      - postgres
+      - promscale
 
   ftm-partners-exporter:
     image: yearn-exporter
@@ -411,42 +458,28 @@ services:
       - yearn-exporter
     restart: on-failure
     depends_on:
-      - victoria-metrics
-      - postgres
+      - promscale
 
   vmagent:
     image: victoriametrics/vmagent:heads-public-single-node-0-g52eb9c99e
+    ports:
+      - 8429:8429
     volumes:
       - ./prometheus/:/etc/prometheus/
     command:
       - '-promscrape.config=/etc/prometheus/prometheus.yml'
-      - '-remoteWrite.url=http://victoria-metrics:8428/api/v1/write'
-    links:
-      - victoria-metrics:victoria-metrics
+      - '-remoteWrite.url=http://promscale:9201/write'
     depends_on:
       - eth-exporter
-      - victoria-metrics
+      - promscale
     networks:
       - yearn-exporter
-    restart: always
 
-  victoria-metrics:
-    image: victoriametrics/victoria-metrics
-    volumes:
-      - victoria_metrics_data:/victoria-metrics-data
-    command:
-      - '-retentionPeriod=10y'
-    ports:
-      - 127.0.0.1:8428:8428
-    networks:
-      - yearn-exporter
-    restart: always
 
   grafana:
     image: grafana/grafana:8.3.1
     depends_on:
-      - victoria-metrics
-      - postgres
+      - promscale
     ports:
       - 3000:3000
     environment:
@@ -486,18 +519,4 @@ services:
       - yearn-exporter
     volumes:
       - '/:/host:ro,rslave'
-    restart: always
-
-  postgres:
-    image: postgres
-    ports:
-      - 127.0.0.1:5432:5432
-    environment:
-      - POSTGRES_USER=${PGUSER:-postgres}
-      - POSTGRES_PASSWORD=${PGPASSWORD:-yearn-exporter}
-      - POSTGRES_DB=${PGDATABASE:-postgres}
-    networks:
-      - yearn-exporter
-    volumes:
-      - postgres_data:/var/lib/postgresql/data
     restart: always

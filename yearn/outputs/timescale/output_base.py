@@ -1,7 +1,7 @@
 from brownie import chain
 from yearn.ironbank import addresses as ironbank_registries
 from yearn.networks import Network
-from yearn.outputs.victoria.output_helper import (_build_item, _flatten_dict,
+from yearn.outputs.timescale.output_helper import (_build_item, _flatten_dict,
                                                   _get_label_values, _post,
                                                   mapping)
 from yearn.prices import constants

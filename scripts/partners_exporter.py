@@ -5,9 +5,9 @@ import time
 import sentry_sdk
 from brownie import chain
 
-from yearn.outputs.victoria import output_duration
-from yearn.outputs.victoria.output_treasury import _get_symbol
-from yearn.outputs.victoria.output_helper import _build_item, _post
+from yearn.outputs.timescale import output_duration
+from yearn.outputs.timescale.output_treasury import _get_symbol
+from yearn.outputs.timescale.output_helper import _build_item, _post
 from yearn.treasury.buckets import get_token_bucket
 from yearn.partners.partners import partners
 

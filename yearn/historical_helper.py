@@ -9,7 +9,7 @@ import functools
 import requests
 from joblib import Parallel, delayed
 from toolz import partition_all
-from yearn.outputs.victoria import output_duration
+from yearn.outputs.timescale import output_duration
 from yearn.yearn import Yearn
 from datetime import timedelta
 
@@ -117,7 +117,7 @@ def _get_interval_map(start):
 
 
 def has_data(ts, data_query):
-    base_url = os.environ.get('VM_URL', 'http://victoria-metrics:8428')
+    base_url = os.environ.get('PROMSCALE_URL', 'http://promscale:9201')
     # query for a metric which should be present
     url = f'{base_url}/api/v1/query?query={data_query}&time={int(ts)}'
     headers = {

@@ -1,4 +1,4 @@
-from yearn.outputs.victoria.output_helper import mapping, _get_label_values, _build_item, _post
+from yearn.outputs.timescale.output_helper import mapping, _get_label_values, _build_item, _post
 
 def export(timestamp, data):
     metrics_to_export = []

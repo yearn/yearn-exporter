@@ -63,7 +63,7 @@ logs-all:
 	$(dashboards_command) logs -f -t eth-exporter historical-eth-exporter ftm-exporter historical-ftm-exporter treasury-exporter historical-treasury-exporter ftm-treasury-exporter historical-ftm-treasury-exporter sms-exporter historical-sms-exporter ftm-sms-exporter historical-ftm-sms-exporter transactions-exporter wallet-exporter ftm-transactions-exporter ftm-wallet-exporter partners-exporter ftm-partners-exporter
 
 postgres:
-	$(dashboards_command) up -d --build postgres
+	$(dashboards_command) up -d --build timescale
 
 # Mainnet:
 mainnet:
