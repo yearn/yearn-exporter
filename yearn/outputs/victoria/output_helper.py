@@ -57,8 +57,6 @@ def _to_jsonl_gz(metrics_to_export: List[Dict]):
         lines.append(json.dumps(item))
 
     jsonlines = "\n".join(lines)
-    logger.info("JSONJSONJSON")
-    logger.info(jsonlines)
     return gzip.compress(bytes(jsonlines, "utf-8"))
 
 
