@@ -163,8 +163,6 @@ def contract(address: Address) -> Contract:
                 logger.warning(e)
                 Contract.remove_deployment(address)
                 failed_attempts += 1
-            except AttributeError as e:
-                raise e
 
 @lru_cache(maxsize=None)
 def is_contract(address: str) -> bool:
