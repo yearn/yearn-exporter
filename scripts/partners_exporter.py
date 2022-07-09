@@ -16,20 +16,6 @@ sentry_sdk.set_tag('script','partners_exporter')
 logger = logging.getLogger('yearn.partners_exporter')
 sleep_interval = int(os.environ.get('SLEEP_SECONDS', '0'))
 
-label_names = ['partner', 'param', 'token_address', 'token', 'bucket']
-
-
-def build_item(partner, token, key, value, timestamp):
-    symbol = _get_symbol(token)
-    bucket = get_token_bucket(token)
-    return _build_item(
-        "partners",
-        label_names,
-        [partner, key, token, symbol, bucket],
-        value,
-        timestamp
-    )
-
 
 def export_partners(block):
     metrics_to_export = []
@@ -48,6 +34,8 @@ def export_partners(block):
             if len(wrapper_data) == 0:
                 continue
             token = wrapper_data.vault.iloc[-1]
+            symbol = _get_symbol(token)
+            bucket = get_token_bucket(token)
 
             # wrapper balance
             wrapper_info["balance"] = float(wrapper_data.balance.iloc[-1])
@@ -65,9 +53,14 @@ def export_partners(block):
             wrapper_info["payout_usd_total"] = float(wrapper_daily_data.payout_usd.sum())
 
             for key, value in wrapper_info.items():
-                metrics_to_export.append(
-                    build_item(partner.name, token, key, value, block.timestamp)
+                item = _build_item(
+                    "partners",
+                    ['partner', 'param', 'token_address', 'token', 'bucket'],
+                    [partner.name, key, token, symbol, bucket],
+                    value,
+                    block.timestamp
                 )
+                metrics_to_export.append(item)
     _post(metrics_to_export)
 
 
