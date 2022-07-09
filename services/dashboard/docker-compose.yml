@@ -491,17 +491,3 @@ services:
     volumes:
       - '/:/host:ro,rslave'
     restart: always
-
-  postgres:
-    image: postgres
-    ports:
-      - 127.0.0.1:5432:5432
-    environment:
-      - POSTGRES_USER=${PGUSER:-postgres}
-      - POSTGRES_PASSWORD=${PGPASSWORD:-yearn-exporter}
-      - POSTGRES_DB=${PGDATABASE:-postgres}
-    networks:
-      - yearn-exporter
-    volumes:
-      - postgres_data:/var/lib/postgresql/data
-    restart: always
