@@ -17,7 +17,7 @@ from yearn.events import decode_logs
 from yearn.exceptions import PriceError
 from yearn.multicall2 import fetch_multicall
 from yearn.networks import Network
-from yearn.outputs.victoria import output_treasury
+from yearn.outputs.timescale import output_treasury
 from yearn.partners.partners import partners
 from yearn.prices import compound
 from yearn.prices.constants import weth

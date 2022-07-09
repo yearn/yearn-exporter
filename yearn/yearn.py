@@ -12,7 +12,7 @@ import yearn.v1.registry
 import yearn.v2.registry
 from yearn.exceptions import UnsupportedNetwork
 from yearn.networks import Network
-from yearn.outputs.victoria import output_base, output_wallets
+from yearn.outputs.timescale import output_base, output_wallets
 from yearn.prices import constants
 from yearn.utils import contract_creation_block
 
