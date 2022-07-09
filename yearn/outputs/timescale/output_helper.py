@@ -1,4 +1,3 @@
-from asyncio.log import logger
 import requests
 import os
 import gzip
@@ -73,7 +72,6 @@ def _post(metrics_to_export: List[Dict]):
             data = "".join(metrics_new),
             headers = headers
         )
-        logger.info(r)
 
 
 def _sanitize(value):
