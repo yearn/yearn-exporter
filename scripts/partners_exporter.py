@@ -18,7 +18,6 @@ sleep_interval = int(os.environ.get('SLEEP_SECONDS', '0'))
 
 
 def export_partners(block):
-    metrics_to_export = []
     for partner in partners:
         # collect payout data
         data, _ = partner.process()
@@ -27,6 +26,7 @@ def export_partners(block):
         data = data.loc[data.index <= block.number]
 
         # export wrapper data
+        metrics_to_export = []
         for wrapper in set(data.wrapper):
             wrapper_info = {}
 
@@ -61,7 +61,7 @@ def export_partners(block):
                     block.timestamp
                 )
                 metrics_to_export.append(item)
-    _post(metrics_to_export)
+        _post(metrics_to_export)
 
 
 def main():
