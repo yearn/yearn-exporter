@@ -16,7 +16,7 @@ from yearn.networks import Network
 logger = logging.getLogger(__name__)
 
 PROVIDER_MAX_BATCH_SIZE = {
-    "ankr":     1_000,
+    "ankr":     500,
     "moralis":  2_000,
 }
 
