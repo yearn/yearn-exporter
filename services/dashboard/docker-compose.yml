@@ -50,7 +50,7 @@ x-common-ftm-envs: &common-ftm-envs
   - FTMSCAN_TOKEN:
 
 x-common-arbi-envs: &common-arbi-envs
-  - NETWORK: arbi-main
+  - NETWORK: arb-main
   - WEB3_PROVIDER: $ARBI_WEB3_PROVIDER
   - EXPLORER: $ARBI_EXPLORER
   - ARBISCAN_TOKEN:
