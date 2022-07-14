@@ -53,7 +53,7 @@ x-common-arbi-envs: &common-arbi-envs
   - NETWORK: arbitrum-main
   - WEB3_PROVIDER: $ARBI_WEB3_PROVIDER
   - EXPLORER: $ARBI_EXPLORER
-  - ARBISCAN_TOKEN:
+  - ARBISCAN_TOKEN: $ARBI_TOKEN
 
 x-common-volumes: &common-volumes
   - solidity_compilers:/root/.solcx
