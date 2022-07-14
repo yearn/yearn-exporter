@@ -49,6 +49,12 @@ x-common-ftm-envs: &common-ftm-envs
   - EXPLORER: $FTM_EXPLORER
   - FTMSCAN_TOKEN:
 
+x-common-arbi-envs: &common-arbi-envs
+  - NETWORK: arbi-main
+  - WEB3_PROVIDER: $ARBI_WEB3_PROVIDER
+  - EXPLORER: $ARBI_EXPLORER
+  - ARBISCAN_TOKEN:
+
 x-common-volumes: &common-volumes
   - solidity_compilers:/root/.solcx
   - vyper_compilers:/root/.vvm
@@ -111,6 +117,17 @@ services:
     environment:
       <<: *common-envs
       <<: *common-ftm-envs
+    networks:
+      - yearn-exporter
+    restart: on-failure
+
+  arbi-exporter:
+    image: yearn-exporter
+    command: exporter
+    volumes: *common-volumes
+    environment:
+      <<: *common-envs
+      <<: *common-arbi-envs
     networks:
       - yearn-exporter
     restart: on-failure
