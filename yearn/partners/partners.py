@@ -80,6 +80,26 @@ partners = {
                     vault='0xa258C4606Ca8206D8aA700cE2143D7db854D168c',
                     wrapper='0x6d75657771256C7a8CB4d475fDf5047B70160132',
                 ),
+                Wrapper(
+                    name='V2 ydai',
+                    vault='0xdA816459F1AB5631232FE5e97a05BBBb94970c95',
+                    wrapper='0x5C6374a2ac4EBC38DeA0Fc1F8716e5Ea1AdD94dd',
+                ),
+                Wrapper(
+                    name='V2 yusdc',
+                    vault='0xa354F35829Ae975e850e23e9615b11Da1B3dC4DE',
+                    wrapper='0x5C6374a2ac4EBC38DeA0Fc1F8716e5Ea1AdD94dd',
+                ),
+                Wrapper(
+                    name='V2 yusdt',
+                    vault='0x7Da96a3891Add058AdA2E826306D812C638D87a7',
+                    wrapper='0x5C6374a2ac4EBC38DeA0Fc1F8716e5Ea1AdD94dd',
+                ),
+                Wrapper(
+                    name='V2 yweth',
+                    vault='0xa258C4606Ca8206D8aA700cE2143D7db854D168c',
+                    wrapper='0x062Bf725dC4cDF947aa79Ca2aaCCD4F385b13b5c',
+                ),
             ],
         ),
         Partner(
@@ -548,6 +568,28 @@ partners = {
                 WildcardWrapper(
                     name='Vault',
                     wrapper='0x20dd72Ed959b6147912C2e529F0a0C651c33c9ce',
+                ),
+            ],
+        ),
+        Partner(
+            name='alchemix',
+            start_block=0,
+            treasury='0x6b291CF19370A14bbb4491B01091e1E29335e605',
+            wrappers=[
+                Wrapper(
+                    name='V2 ydai',
+                    vault='0x637eC617c86D24E421328e6CAEa1d92114892439',
+                    wrapper='0x76b2E3c5a183970AAAD2A48cF6Ae79E3e16D3A0E',
+                ),
+                Wrapper(
+                    name='V2 yusdc',
+                    vault='0xEF0210eB96c7EB36AF8ed1c20306462764935607',
+                    wrapper='0x76b2E3c5a183970AAAD2A48cF6Ae79E3e16D3A0E',
+                ),
+                Wrapper(
+                    name='V2 yusdt',
+                    vault='0x148c05caf1Bb09B5670f00D511718f733C54bC4c',
+                    wrapper='0x76b2E3c5a183970AAAD2A48cF6Ae79E3e16D3A0E',
                 ),
             ],
         ),
