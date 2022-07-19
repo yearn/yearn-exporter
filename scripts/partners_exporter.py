@@ -70,4 +70,5 @@ def main():
         export_partners(block)
         duration = time.time() - start_time
         output_duration.export(duration, 1, "partners_forwards", block.timestamp)
+        logger.info('exported block=%d took=%.3fs', block.number, time.time() - start_time)
         time.sleep(sleep_interval)
