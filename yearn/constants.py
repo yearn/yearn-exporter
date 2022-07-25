@@ -178,5 +178,6 @@ TREASURY_WALLETS = {
     Network.Arbitrum: {
         YCHAD_MULTISIG,
         TREASURY_MULTISIG,
+        "0xf4a3f5e4c523081dB2806d3E2B159A8f0D1D35c6", # Treasury address on the first arb yearn vault deployed (EOA?)
     }
 }.get(chain.id,set())
