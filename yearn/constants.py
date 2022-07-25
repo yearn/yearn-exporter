@@ -146,6 +146,7 @@ YCHAD_MULTISIG = {
     Network.Mainnet:    "0xFEB4acf3df3cDEA7399794D0869ef76A6EfAff52",
     Network.Fantom:     "0xC0E2830724C946a6748dDFE09753613cd38f6767",
     Network.Gnosis:     "0x22eAe41c7Da367b9a15e942EB6227DF849Bb498C",
+    Network.Arbitrum:   "0xb6bc033d34733329971b938fef32fad7e98e56ad",
 }.get(chain.id, None)
 
 TREASURY_MULTISIG = {
