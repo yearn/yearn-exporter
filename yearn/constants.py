@@ -138,7 +138,10 @@ STRATEGIST_MULTISIG = {
         "0x72a34AbafAB09b15E7191822A679f28E067C4a16",
     },
     Network.Gnosis: {
-        "0xFB4464a18d18f3FF439680BBbCE659dB2806A187"
+        "0xFB4464a18d18f3FF439680BBbCE659dB2806A187",
+    },
+    Network.Arbitrum: {
+        "0x6346282db8323a54e840c6c772b4399c9c655c0d",
     }
 }.get(chain.id,set())
 
