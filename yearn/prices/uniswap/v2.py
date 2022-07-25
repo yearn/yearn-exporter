@@ -56,6 +56,11 @@ addresses: List[Dict[str,str]] = {
             'factory': '0xc35DADB65012eC5796536bD9864eD8773aBc74C4',
             'router': '0x1b02dA8Cb0d097eB8D57A175b88c7D8b47997506',
         },
+        {
+            'name': 'fraxswap',
+            'factory': '0x5Ca135cB8527d76e932f34B5145575F9d8cbE08E',
+            'router': '0xc2544A32872A91F4A553b404C6950e89De901fdb',
+        }
     ]
 }
 
