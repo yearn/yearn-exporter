@@ -175,4 +175,8 @@ TREASURY_WALLETS = {
         YCHAD_MULTISIG,
         "0x5FcdC32DfC361a32e9d5AB9A384b890C62D0b8AC", # Yearn Treasury (EOA?)
     },
+    Network.Arbitrum: {
+        YCHAD_MULTISIG,
+        TREASURY_MULTISIG,
+    }
 }.get(chain.id,set())
