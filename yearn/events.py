@@ -120,7 +120,6 @@ def _get_logs_params(
     end: Block
     ) -> Dict[str,Any]:
     params = {"fromBlock": start, "toBlock": end}
-    logger.info(params)
     if addresses:
         # pass in a list of addresses
         params["address"] = addresses

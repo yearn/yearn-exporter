@@ -23,7 +23,7 @@ class Network(IntEnum):
         elif chain_id == Network.Fantom:
             return "FTM"
         elif chain_id == Network.Arbitrum:
-            return "ARRB"
+            return "ARBB"
         else:
             raise UnsupportedNetwork(
                 f'chainid {chain_id} is not currently supported. Please add network details to yearn-exporter/yearn/networks.py'
