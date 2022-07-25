@@ -85,10 +85,16 @@ fantom:
 logs-fantom:
 	$(all_command) logs -ft ftm-exporter historical-ftm-exporter ftm-treasury-exporter historical-ftm-treasury-exporter ftm-sms-exporter historical-ftm-sms-exporter ftm-transactions-exporter ftm-wallet-exporter
 	
-
 # Gnosis chain:
 gnosis:
 	$(all_command) up -d --build gnosis-exporter historical-gnosis-exporter gnosis-treasury-exporter historical-gnosis-treasury-exporter gnosis-sms-exporter historical-gnosis-sms-exporter gnosis-transactions-exporter gnosis-wallet-exporter
 
 logs-gnosis:
 	$(all_command) logs -ft gnosis-exporter historical-gnosis-exporter gnosis-treasury-exporter historical-gnosis-treasury-exporter gnosis-sms-exporter historical-gnosis-sms-exporter gnosis-transactions-exporter gnosis-wallet-exporter
+
+# Arbitrum Chain
+arbitrum:
+	$(all_command) up -d --build arbi-exporter historical-arbi-exporter arbi-treasury-exporter historical-arbi-treasury-exporter arbi-sms-exporter historical-arbi-sms-exporter arbi-transactions-exporter arbi-wallet-exporter
+
+logs-arbitrum:
+	$(all_command) logs -ft arbi-exporter historical-arbi-exporter arbi-treasury-exporter historical-arbi-treasury-exporter arbi-sms-exporter historical-arbi-sms-exporter arbi-transactions-exporter arbi-wallet-exporter
