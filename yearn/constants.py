@@ -139,6 +139,9 @@ STRATEGIST_MULTISIG = {
     },
     Network.Gnosis: {
         "0xFB4464a18d18f3FF439680BBbCE659dB2806A187"
+    },
+    Network.Arbitrum: {
+        "0x6346282DB8323A54E840c6C772B4399C9c655C0d",
     }
 }.get(chain.id,set())
 
@@ -146,11 +149,13 @@ YCHAD_MULTISIG = {
     Network.Mainnet:    "0xFEB4acf3df3cDEA7399794D0869ef76A6EfAff52",
     Network.Fantom:     "0xC0E2830724C946a6748dDFE09753613cd38f6767",
     Network.Gnosis:     "0x22eAe41c7Da367b9a15e942EB6227DF849Bb498C",
+    Network.Arbitrum:   "0xb6bc033D34733329971B938fEf32faD7e98E56aD",
 }.get(chain.id, None)
 
 TREASURY_MULTISIG = {
     Network.Mainnet:    "0x93A62dA5a14C80f265DAbC077fCEE437B1a0Efde",
     Network.Fantom:     "0x89716Ad7EDC3be3B35695789C475F3e7A3Deb12a",
+    Network.Arbitrum:   "0x1DEb47dCC9a35AD454Bf7f0fCDb03c09792C08c1",
 }.get(chain.id, None)
 
 TREASURY_WALLETS = {

@@ -50,7 +50,6 @@ ADDITIONAL_FEEDS = {
         "0xe105621721D1293c27be7718e041a4Ce0EbB227E": "0x3E68e68ea2c3698400465e3104843597690ae0f7",  # feur
         "0x29b0Da86e484E1C0029B56e817912d778aC0EC69": "0x9B25eC3d6acfF665DfbbFD68B3C1D896E067F0ae",  # yfi
     },
-
     Network.Gnosis: {
         "0x8e5bBbb09Ed1ebdE8674Cda39A0c169401db4252" : "0x6c1d7e76ef7304a40e8456ce883bc56d3dea3f7d", # wbtc
         "0x6A023CCd1ff6F2045C3309768eAd9E68F978f6e1" : "0xa767f745331d267c7751297d982b050c93985627", # weth
@@ -64,6 +63,10 @@ ADDITIONAL_FEEDS = {
         "0xbf65bfcb5da067446CeE6A706ba3Fe2fB1a9fdFd" : "0x14030d5a0c9e63d9606c6f2c8771fc95b34b07e0", # yfi
         "0x7f7440C5098462f833E123B44B8A03E1d9785BAb" : "0xfdf9eb5fafc11efa65f6fd144898da39a7920ae8", # 1inch
         "0xDf6FF92bfDC1e8bE45177DC1f4845d391D3ad8fD" : "0xba95bc8418ebcdf8a690924e1d4ad5292139f2ea", # comp
+    },
+    # https://data.chain.link/arbitrum/mainnet
+    Network.Arbitrum: {
+        # TODO: add data
     }
 }
 registries = {
@@ -71,6 +74,7 @@ registries = {
     Network.Mainnet: '0x47Fb2585D2C56Fe188D0E6ec628a38b74fCeeeDf',
     Network.Fantom: None,
     Network.Gnosis: None,
+    Network.Arbitrum: None,
 }
 
 

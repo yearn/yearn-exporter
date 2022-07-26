@@ -20,6 +20,7 @@ def main():
         Network.Mainnet: datetime(2020, 7, 21, 10, 1, tzinfo=timezone.utc), # first treasury tx
         Network.Fantom: datetime(2021, 10, 12, tzinfo=timezone.utc), # Fantom Multisig deployed
         Network.Gnosis: datetime(2022, 1, 8, 2, 20, 50, tzinfo=timezone.utc), # Block 20_000_000, some time near the first tx in the Gnosis treasury EOA. Further testing is needed to confirm as first tx was not fully apparent on block explorer. 
+        Network.Arbitrum: datetime(2022, 1, 20, 11, 14, 1, tzinfo=timezone.utc) # https://arbiscan.io/tx/0x69411870b77b9539ca48b6d0b291a05ac399acdf1639b573ff57c1b2ba0987cd
     }[chain.id]
 
     export_historical(

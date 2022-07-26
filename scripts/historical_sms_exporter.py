@@ -21,6 +21,7 @@ def main():
         Network.Mainnet: datetime(2021, 1, 28, 9, 10, tzinfo=timezone.utc), # first inbound sms tx
         Network.Fantom: datetime(2021, 6, 17, tzinfo=timezone.utc), # Fantom SMS deployed
         Network.Gnosis: datetime(2022, 2, 3, 23, 45, tzinfo=timezone.utc), # Block 20455212, first tx in SMS
+        Network.Arbitrum: datetime(2022, 10, 21, 9, 20, 38, tzinfo=timezone.utc) # https://arbiscan.io/tx/0x9f8de852b7bfb3122469fbd846fd3367db77a9d6399d61ba65224958af101066
     }[chain.id]
 
     export_historical(

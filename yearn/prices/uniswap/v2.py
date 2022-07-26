@@ -50,6 +50,7 @@ addresses: List[Dict[str,str]] = {
             'router': '0x16327E3FbDaCA3bcF7E38F5Af2599D2DDc33aE52',
         },
     ],
+    Network.Arbitrum: [], #TODO: add data
 }
 
 

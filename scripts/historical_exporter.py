@@ -24,6 +24,10 @@ def main():
         # end: yvUSDC vault January-20-2022 06:10:45 AM +-6 UTC
         end = datetime(2022, 1, 20, tzinfo=timezone.utc)
         data_query = 'yearn_vault{network="GNO"}'
+    elif Network(chain.id) == Network.Arbitrum:
+        # end: Jan-21-2022 01:41:42 AM +UTC
+        end = datetime(2022, 1, 21, tzinfo=timezone.utc)
+        data_query = None #TODO: not sure what to add here yet
     else:
         # end: 2020-02-12 first iearn deployment
         end = datetime(2020, 2, 12, 0, 1, tzinfo=timezone.utc)

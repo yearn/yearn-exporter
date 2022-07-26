@@ -37,7 +37,6 @@ stablecoins_by_network = {
         "0x853d955aCEf822Db058eb8505911ED77F175b99e": "frax",
         "0x5f98805A4E8be255a32880FDeC7F6728C6568bA0": "lusd",
         "0xBC6DA0FE9aD5f3b0d58160288917AA56653660E9": "alusd",
-        "0x0000000000085d4780B73119b644AE5ecd22b376": "tusd",
         "0x1c48f86ae57291F7686349F12601910BD8D470bb": "usdk",
         "0x056Fd409E1d7A124BD7017459dFEa2F387b6d5Cd": "gusd",
         "0x0E2EC54fC0B509F445631Bf4b91AB8168230C752": "linkusd",
@@ -70,6 +69,8 @@ stablecoins_by_network = {
     Network.Arbitrum: {
         '0xFF970A61A04b1cA14834A43f5dE4533eBDDB5CC8': 'usdc',
         '0xDA10009cBd5D07dd0CeCc66161FC93D7c9000da1': 'dai',
+        '0xFd086bC7CD5C481DCC9C85ebE478A1C0b69FCbb9': 'usdt',
+        '0x4D15a3A2286D883AF0AA1B3f21367843FAc63E07': 'tusd',
     },
 }
 
@@ -77,7 +78,7 @@ ib_snapshot_block_by_network = {
     Network.Mainnet: 14051986,
     Network.Fantom: 28680044,
     Network.Gnosis: 1, # TODO revisit as IB is not deployed in gnosis
-    Network.Arbitrum: 1
+    Network.Arbitrum: 1 # TODO revisit as IB is not deployed in arbitrum
 }
 
 weth = tokens_by_network[chain.id]['weth']
