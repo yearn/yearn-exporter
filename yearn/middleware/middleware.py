@@ -27,12 +27,11 @@ CHAIN_MAX_BATCH_SIZE = {
     Network.Arbitrum: 20_000, # 0.34 days
 }
 
-def _get_batch_size():
-    if not any(provider in w3.provider.endpoint_uri for provider in PROVIDER_MAX_BATCH_SIZE):
-        return CHAIN_MAX_BATCH_SIZE[chain.id]
+def _get_batch_size() -> int:
     for provider, provider_max_batch_size in PROVIDER_MAX_BATCH_SIZE.items():
         if provider in w3.provider.endpoint_uri:
             return provider_max_batch_size
+    return CHAIN_MAX_BATCH_SIZE[chain.id]
 
 BATCH_SIZE = _get_batch_size()
 
