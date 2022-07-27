@@ -51,7 +51,7 @@ def should_cache(method, params):
     if method == "eth_getCode" and params[1] == "latest":
         return True
     if method == "eth_getLogs":
-        return int(params[0]["toBlock"], 16) - int(params[0]["fromBlock"], 16) == BATCH_SIZE[chain.id] - 1
+        return int(params[0]["toBlock"], 16) - int(params[0]["fromBlock"], 16) == BATCH_SIZE - 1
     return False
 
 
@@ -89,7 +89,7 @@ def setup_middleware():
         w3.provider = HTTPProvider(w3.provider.endpoint_uri, {"timeout": 600}, session)
 
         # patch and inject local filter middleware
-        filter.MAX_BLOCK_REQUEST = BATCH_SIZE[chain.id]
+        filter.MAX_BLOCK_REQUEST = BATCH_SIZE
         w3.middleware_onion.add(yearn_filter.local_filter_middleware)
         w3.middleware_onion.add(cache_middleware)
         w3.middleware_onion.add(catch_and_retry_middleware)
