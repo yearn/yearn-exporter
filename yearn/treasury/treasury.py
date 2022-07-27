@@ -522,5 +522,6 @@ class StrategistMultisig(Treasury):
             Network.Mainnet: 11_507_716,
             Network.Fantom: 10_836_306,
             Network.Gnosis: 20_455_212,
+            Network.Arbitrum: 4_837_859,
         }[chain.id]
         super().__init__('sms',STRATEGIST_MULTISIG,watch_events_forever=watch_events_forever,start_block=start_block)
