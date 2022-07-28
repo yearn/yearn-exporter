@@ -49,5 +49,6 @@ jobs:
       
       - name: Robowoofy Upload File
         env:
+          B2B_TELEGRAM_ID: ${{ secrets.B2B_TELEGRAM_ID }}
           TELEGRAM_TOKEN: ${{ secrets.TELEGRAM_TOKEN }}
         run: brownie run robowoofy/post_partners --network ${{ matrix.network }}
