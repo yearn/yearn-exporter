@@ -1,4 +1,5 @@
-from brownie import interface, chain
+from brownie import chain, convert, interface
+
 from yearn.networks import Network
 
 WRAPPED_GAS_COIN = {
@@ -145,6 +146,8 @@ STRATEGIST_MULTISIG = {
     }
 }.get(chain.id,set())
 
+STRATEGIST_MULTISIG = {convert.to_address(address) for address in STRATEGIST_MULTISIG}
+
 YCHAD_MULTISIG = {
     Network.Mainnet:    "0xFEB4acf3df3cDEA7399794D0869ef76A6EfAff52",
     Network.Fantom:     "0xC0E2830724C946a6748dDFE09753613cd38f6767",
@@ -152,11 +155,17 @@ YCHAD_MULTISIG = {
     Network.Arbitrum:   "0xb6bc033d34733329971b938fef32fad7e98e56ad",
 }.get(chain.id, None)
 
+if YCHAD_MULTISIG:
+    YCHAD_MULTISIG = convert.to_address(YCHAD_MULTISIG)
+
 TREASURY_MULTISIG = {
     Network.Mainnet:    "0x93A62dA5a14C80f265DAbC077fCEE437B1a0Efde",
     Network.Fantom:     "0x89716Ad7EDC3be3B35695789C475F3e7A3Deb12a",
     Network.Arbitrum:   "0x1deb47dcc9a35ad454bf7f0fcdb03c09792c08c1",
 }.get(chain.id, None)
+
+if TREASURY_MULTISIG:
+    TREASURY_MULTISIG = convert.to_address(TREASURY_MULTISIG)
 
 TREASURY_WALLETS = {
     Network.Mainnet: {
@@ -180,3 +189,5 @@ TREASURY_WALLETS = {
         TREASURY_MULTISIG,
     }
 }.get(chain.id,set())
+
+TREASURY_WALLETS = {convert.to_address(address) for address in TREASURY_WALLETS}
