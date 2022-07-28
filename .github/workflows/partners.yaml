@@ -45,10 +45,10 @@ jobs:
         run: git status
 
       - name: stage changed files
-        run: git add --force -- ./research/payouts_${{ matrix.label }}.csv
+        run: git add --force -- ./research/partners/payouts_${{ matrix.label }}.csv
 
       - name: commit changed files
-        run: git commit -m "push updated partners report"
+        run: git commit -m "push updated ${{ matrix.label }} partners report"
 
       - name: fetch from master
         run: git fetch origin master
