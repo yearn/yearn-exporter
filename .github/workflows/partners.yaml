@@ -35,33 +35,4 @@ jobs:
       - name: Setup brownie networks
         run: brownie networks modify ${{ matrix.network }} host=${{ secrets[matrix.provider] }}
 
-      - name: Partners
-        env:
-          # Explorer tokens for all chains:
-          ETHERSCAN_TOKEN: ${{ secrets.ETHERSCAN_TOKEN }}
-          FTMSCAN_TOKEN: ${{ secrets.FTMSCAN_TOKEN }}
-        run: brownie run partners --network ${{ matrix.network }}
-      
-      - name: Send email
-        uses: dawidd6/action-send-mail@v3.6.1
-        with:
-          # Required mail server address:
-          server_address: smtp.gmail.com
-          # Required mail server port:
-          server_port: 465
-          # Optional (recommended): mail server username:
-          username: ${{ secrets.MAIL_USERNAME }}
-          # Optional (recommended) mail server password:
-          password: ${{ secrets.MAIL_PASSWORD }}
-          # Required mail subject:
-          subject: Monthly ${{ matrix.label }} partner data
-          # Required recipients' addresses:
-          to: milkyklim@yearn.finance,saltyfacu@yearn.finance,corn@yearn.finance,dark.ghosty@yearn.finance
-          # Required sender full name (address can be skipped):
-          from: Yearn GH Actions Bot # <gh@yearn.finance>
-          # Optional plain body:
-          body: Monthly run of ${{ matrix.label }} partners report has completed successfully!
-          # Optional recipient of the email response:
-          reply_to: it-aint-much-but-its-honest-work@yearn.finance
-          # Optional attachments:
-          attachments: ./research/partners/payouts_${{ matrix.label }}.csv
+      # TODO add robowoofy step
