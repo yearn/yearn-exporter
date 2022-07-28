@@ -43,6 +43,9 @@ jobs:
 
       - name: check for changes
         run: git status
+      
+      - name: configure git user
+        run: git config user.name "I am a bot" && git config user.email "iamabotsfakeemail@yearn.finance"
 
       - name: stage changed files
         run: git add --force -- ./research/partners/payouts_${{ matrix.label }}.csv
