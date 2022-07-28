@@ -2,7 +2,7 @@ from yearn.networks import Network
 import telebot
 import os
 
-chat_id = '-637585930'
+chat_id = os.getenv('B2B_TELEGRAM_ID')
 token = os.getenv('TELEGRAM_TOKEN')
 
 """
