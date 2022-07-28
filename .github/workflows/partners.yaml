@@ -45,7 +45,7 @@ jobs:
         run: brownie run partners --network ${{ matrix.network }}
       
       - name: Install Telebot
-        run: pip install telebot==0.0.4
+        run: pip install pyTelegramBotAPI==4.6.0
       
       - name: Robowoofy Upload File
         env:
