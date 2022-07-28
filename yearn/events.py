@@ -72,7 +72,7 @@ def get_logs_asap(
     if to_block is None:
         to_block = chain.height
 
-    ranges = list(block_ranges(from_block, to_block, BATCH_SIZE[chain.id]))
+    ranges = list(block_ranges(from_block, to_block, BATCH_SIZE))
     if verbose > 0:
         logger.info('fetching %d batches', len(ranges))
 
