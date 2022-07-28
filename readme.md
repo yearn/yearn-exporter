@@ -11,10 +11,7 @@ You will need:
 - Erigon for querying historical data
 - Prometheus to pull the metrics, persist them and make them queryable
 - Grafana if you want to set up custom dashboards and alerts
-- Etherscan API key 
-
-To run treasury.py, you will need:
-- Environment variable `MORALIS_KEY` set to your Moralis API Key
+- Etherscan API key
 
 ## Usage
 
