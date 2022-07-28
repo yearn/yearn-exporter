@@ -35,4 +35,17 @@ jobs:
       - name: Setup brownie networks
         run: brownie networks modify ${{ matrix.network }} host=${{ secrets[matrix.provider] }}
 
-      # TODO add robowoofy step
+      - name: Partners
+        env:
+          # Explorer tokens for all chains:
+          ETHERSCAN_TOKEN: ${{ secrets.ETHERSCAN_TOKEN }}
+          FTMSCAN_TOKEN: ${{ secrets.FTMSCAN_TOKEN }}
+        run: brownie run partners --network ${{ matrix.network }}
+      
+      - name: Install Telebot
+        run: pip install telebot==0.0.4
+      
+      - name: Robowoofy Upload File
+        env:
+          TELEGRAM_TOKEN: ${{ secrets.TELEGRAM_TOKEN }}
+        run: brownie run robowoofy/post_partners --network ${{ matrix.network }}
