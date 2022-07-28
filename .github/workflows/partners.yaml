@@ -22,6 +22,9 @@ jobs:
     steps:
       - name: Check out repository code
         uses: actions/checkout@v2
+        # DEV: this line is for testing, remove for prod
+        ref: 'partner-gh-action'
+
 
       - name: Setup Python (faster than using Python container)
         uses: actions/setup-python@v2
@@ -40,9 +43,6 @@ jobs:
           ETHERSCAN_TOKEN: ${{ secrets.ETHERSCAN_TOKEN }}
           FTMSCAN_TOKEN: ${{ secrets.FTMSCAN_TOKEN }}
         run: brownie run partners --network ${{ matrix.network }}
-
-      - name: check for changes
-        run: git status
       
       - name: configure git user
         run: git config user.name "I am a bot" && git config user.email "iamabotsfakeemail@yearn.finance"
@@ -52,6 +52,9 @@ jobs:
 
       - name: commit changed files
         run: git commit -m "push updated ${{ matrix.label }} partners report"
+
+      - name: check for changes
+        run: git status
 
       - name: fetch from master
         run: git fetch origin master
