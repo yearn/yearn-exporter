@@ -447,6 +447,7 @@ class YearnTreasury(Treasury):
             Network.Mainnet: 10_502_337,
             Network.Fantom: 18_950_072,
             Network.Gnosis: 20_000_000,
+            Network.Arbitrum: 4_837_859
         }[chain.id]
         super().__init__('treasury',TREASURY_WALLETS,watch_events_forever=watch_events_forever,start_block=start_block)
 
@@ -522,6 +523,6 @@ class StrategistMultisig(Treasury):
             Network.Mainnet: 11_507_716,
             Network.Fantom: 10_836_306,
             Network.Gnosis: 20_455_212,
-            Network.Arbitrum: 4_837_859,
+            Network.Arbitrum: 2_434_174,
         }[chain.id]
         super().__init__('sms',STRATEGIST_MULTISIG,watch_events_forever=watch_events_forever,start_block=start_block)
