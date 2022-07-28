@@ -22,9 +22,6 @@ jobs:
     steps:
       - name: Check out repository code
         uses: actions/checkout@v3
-        with:
-          # DEV: this line is for testing, remove for prod
-          ref: 'partner-gh-action'
 
 
       - name: Setup Python (faster than using Python container)
@@ -45,20 +42,26 @@ jobs:
           FTMSCAN_TOKEN: ${{ secrets.FTMSCAN_TOKEN }}
         run: brownie run partners --network ${{ matrix.network }}
       
-      - name: configure git user
-        run: git config user.name "I am a bot" && git config user.email "iamabotsfakeemail@yearn.finance"
-
-      - name: stage changed files
-        run: git add --force -- ./research/partners/payouts_${{ matrix.label }}.csv
-
-      - name: commit changed files
-        run: git commit -m "push updated ${{ matrix.label }} partners report"
-
-      - name: check for changes
-        run: git status
-
-      - name: fetch from master
-        run: git fetch origin master
-
-      - name: push code to master
-        run: git push origin HEAD:master
+      - name: Send email
+        uses: dawidd6/action-send-mail@v3.6.1
+        with:
+          # Required mail server address:
+          server_address: smtp.gmail.com
+          # Required mail server port:
+          server_port: 465
+          # Optional (recommended): mail server username:
+          username: ${{ secrets.MAIL_USERNAME }}
+          # Optional (recommended) mail server password:
+          password: ${{ secrets.MAIL_PASSWORD }}
+          # Required mail subject:
+          subject: Monthly ${{ matrix.label }} partner data
+          # Required recipients' addresses:
+          to: milkyklim@yearn.finance,saltyfacu@yearn.finance,corn@yearn.finance,dark.ghosty@yearn.finance
+          # Required sender full name (address can be skipped):
+          from: Yearn GH Actions Bot # <gh@yearn.finance>
+          # Optional plain body:
+          body: Monthly run of ${{ matrix.label }} partners report has completed successfully!
+          # Optional recipient of the email response:
+          reply_to: it-aint-much-but-its-honest-work@yearn.finance
+          # Optional attachments:
+          attachments: ./research/partners/payouts_${{ matrix.label }}.csv
