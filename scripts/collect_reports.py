@@ -263,17 +263,17 @@ def handle_event(event, multi_harvest):
     r.txn_hash = txn_hash
     strategy = contract(r.strategy_address)
     
-
-    r.gov_fee_in_want, r.strategist_fee_in_want = parse_fees(tx, r.vault_address, r.strategy_address, r.vault_decimals)
+    r.vault_api = vault.apiVersion()
+    r.gov_fee_in_want, r.strategist_fee_in_want = parse_fees(tx, r.vault_address, r.strategy_address, r.vault_decimals, r.gain, r.vault_api)
     r.gain_post_fees = r.gain - r.loss - r.strategist_fee_in_want - r.gov_fee_in_want
     r.token_symbol = contract(strategy.want()).symbol()
     r.want_token = strategy.want()
     r.want_price_at_block = 0
     if r.want_token == "0x447Ddd4960d9fdBF6af9a790560d0AF76795CB08":
-        r.want_price_at_block = magic.get_price(constants.weth, r.block) * contract(strategy.want()).getExchangeRate() / 1e18
+        r.want_price_at_block = magic.get_price(constants.weth, r.block) * contract(contract(r.want_token).coins(0)).getExchangeRate() / 1e18
     else:
         r.want_price_at_block = magic.get_price(r.want_token, r.block)
-    r.vault_api = vault.apiVersion()
+    
     r.want_gain_usd = r.gain * r.want_price_at_block
     r.vault_name = vault.name()
     r.strategy_name = strategy.name()
@@ -367,12 +367,16 @@ def compute_apr(report, previous_report):
             post_fee_apr = report.gain_post_fees / int(previous_report.total_debt) * (SECONDS_IN_A_YEAR / seconds_between_reports)
     return pre_fee_apr, post_fee_apr
 
-def parse_fees(tx, vault_address, strategy_address, decimals):
+def parse_fees(tx, vault_address, strategy_address, decimals, gain, vault_version):
+    v = int(''.join(x for x in vault_version.split('.')))
+    if v < 35 and gain == 0:
+        return 0, 0
     denominator = 10 ** decimals
     treasury = CHAIN_VALUES[chain.id]["YEARN_TREASURY"]
     token = contract(vault_address)
     token = web3.eth.contract(str(vault_address), abi=token.abi)
-    decoded_events = token.events.Transfer().processReceipt(tx)
+    transfers = token.events.Transfer().processReceipt(tx)
+
     amount = 0
     gov_fee_in_underlying = 0
     strategist_fee_in_underlying = 0
@@ -384,7 +388,7 @@ def parse_fees(tx, vault_address, strategy_address, decimals):
       2. transfer to strategy
       3. transfer to treasury
     """
-    for e in decoded_events:
+    for e in transfers:
         if e.address == vault_address:
             sender, receiver, token_amount = e.args.values()
             token_amount = token_amount / denominator

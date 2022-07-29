@@ -83,7 +83,7 @@ def main():
         RESULTS[chain]["message"] = message
         channel = RESULTS[chain]["telegram_channel"]
         print()
-        if channel != 0:
+        if channel != 0 and alerts_enabled:
             bot.send_message(channel, message, parse_mode="markdown", disable_web_page_preview = True)
         print(message)
     date_banner = f'📃 End of Day Report --- {datetime.utcfromtimestamp(current_time - 1000).strftime("%m-%d-%Y")} \n\n'
