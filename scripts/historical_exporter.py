@@ -27,7 +27,7 @@ def main():
     elif Network(chain.id) == Network.Arbitrum:
         # end: yvUSDC 4.3 Sep-05-2021 09:05:50 PM +UTC
         end = datetime(2021, 9, 5, tzinfo=timezone.utc)
-        data_query = 'yearn_vault{network="ARRB"}'
+        data_query = 'yearn_vault{network="ARBB"}'
     else:
         # end: 2020-02-12 first iearn deployment
         end = datetime(2020, 2, 12, 0, 1, tzinfo=timezone.utc)
