@@ -394,7 +394,7 @@ class Partner:
                 'protocol_fee_usd',
             ]
         ]
-        payouts.to_csv(Path(f'research/partners/{self.name}/payouts.csv'), index=False)
+        payouts.to_csv(Path(f'research/partners/{self.name}/payouts_{Network.label()}.csv'), index=False)
         return payouts
 
 
@@ -418,7 +418,7 @@ def process_partners(partners: List[Partner], use_postgres_cache: bool = USE_POS
         total += usd
 
     print(round(total,2), 'total so far')
-    path = Path('research/partners/payouts.csv')
+    path = Path(f'research/partners/payouts_{Network.label()}.csv')
     df = pd.concat(payouts).sort_values(['timestamp','partner','token']).fillna(0)
     df.to_csv(path, index=False)
     print(f'saved to {path}')
