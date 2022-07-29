@@ -12,7 +12,7 @@ Fixes #
 
 >Fill out the following fields
 
-**Network**:
+**Network**:  
 **Chain ID**:
 
 >Make sure all points are addressed. This is a list for adding full network support to the exporter.
