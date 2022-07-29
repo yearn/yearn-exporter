@@ -2,6 +2,9 @@
 name: Partners Report
 on:
   workflow_dispatch:
+  schedule:
+    # Wait for 1 hour of block history in the new month before starting export.
+    - cron: 0 1 1 * *
 
 jobs:
   run_partners_dot_py:
