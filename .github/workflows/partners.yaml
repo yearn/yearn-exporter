@@ -22,9 +22,6 @@ jobs:
     steps:
       - name: Check out repository code
         uses: actions/checkout@v3
-        with:
-          # DEV: this line is for testing, remove for prod
-          ref: 'partner-gh-action'
 
       - name: Setup Python (faster than using Python container)
         uses: actions/setup-python@v2
