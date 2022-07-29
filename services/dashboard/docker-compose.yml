@@ -53,7 +53,7 @@ x-common-arbi-envs: &common-arbi-envs
   - NETWORK: arbitrum-main
   - WEB3_PROVIDER: $ARBI_WEB3_PROVIDER
   - EXPLORER: $ARBI_EXPLORER
-  - ARBISCAN_TOKEN: $ARBI_TOKEN
+  - ARBISCAN_TOKEN:
 
 x-common-volumes: &common-volumes
   - solidity_compilers:/root/.solcx
@@ -133,6 +133,30 @@ services:
     restart: on-failure
 
   historical-gnosis-exporter:
+    image: yearn-exporter
+    command: exporter
+    volumes: *common-volumes
+    environment:
+      <<: *common-envs
+      <<: *common-gnosis-envs
+      <<: *common-historical-envs
+    networks:
+      - yearn-exporter
+    restart: on-failure
+
+  historical-arbi-exporter:
+    image: yearn-exporter
+    command: exporter
+    volumes: *common-volumes
+    environment:
+      <<: *common-envs
+      <<: *common-arbi-envs
+      <<: *common-historical-envs
+    networks:
+      - yearn-exporter
+    restart: on-failure
+
+  historical-ftm-exporter:
     image: yearn-exporter
     command: historical_exporter
     volumes: *common-volumes
