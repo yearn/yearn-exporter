@@ -3,9 +3,10 @@ name:  Support new network
 title: 'feat: add support for ' 'network'
 labels: enhancement, network
 assignees: BobTheBuidler
-
 ---
+
 >Fill out the following fields
+
 **Network**:
 **Chain ID**:
 
