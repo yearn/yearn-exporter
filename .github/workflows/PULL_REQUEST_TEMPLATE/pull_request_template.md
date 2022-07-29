@@ -83,4 +83,6 @@ in ./Makefile: Set up network specific make command.
 
 There still may be some things I'm missing, so its important to test to make sure everything works!
 
-Once you've handled everything above, type `make <network> && make <logs-network>` into your terminal replacing network with your network name at the project root. The network specific exporters will start running in docker and any exceptions will show in your terminal. If there are no exceptions, and everything appears to be running smoothly, then it should be working correcy. 
+Once you've handled everything above, type `make <network> && make <logs-network>` into your terminal replacing network with your network name at the project root. The network specific exporters will start running in docker and any exceptions will show in your terminal. If there are no exceptions, and everything appears to be running smoothly then it should be working correctly.
+
+- [ ] yes I have tested it and it is running as expected
