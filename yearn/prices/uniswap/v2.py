@@ -58,8 +58,8 @@ addresses: List[Dict[str,str]] = {
         },
         {
             'name': 'fraxswap',
-            'factory': '0x5Ca135cB8527d76e932f34B5145575F9d8cbE08E',
-            'router': '0xc2544A32872A91F4A553b404C6950e89De901fdb',
+            'factory': '0xF55C563148cA0c0F1626834ec1B8651844D76792',
+            'router': '0xa007a9716dba05289df85A90d0Fd9D39BEE808dE',
         }
     ]
 }
