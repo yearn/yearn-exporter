@@ -1,10 +1,13 @@
 import logging
 import threading
+import json
 from functools import lru_cache
 from typing import List
 
 import eth_retry
 from brownie import Contract, chain, convert, interface, web3
+from web3 import Web3
+from brownie.network.contract import _resolve_address, _fetch_from_explorer
 from brownie.exceptions import CompilerError
 
 from yearn.cache import memory
@@ -146,6 +149,8 @@ _contract = lru_cache(maxsize=None)(Contract)
 @eth_retry.auto_retry
 def contract(address: Address) -> Contract:
     with _contract_lock:
+        address = web3.toChecksumAddress(address)
+
         if chain.id in PREFER_INTERFACE:
             if address in PREFER_INTERFACE[chain.id]:
                 _interface = PREFER_INTERFACE[chain.id][address]
@@ -163,6 +168,46 @@ def contract(address: Address) -> Contract:
                 logger.warning(e)
                 Contract.remove_deployment(address)
                 failed_attempts += 1
+
+
+def _resolve_proxy(address):
+    data = _fetch_from_explorer(address, "getsourcecode", False)
+    name = data["result"][0]["ContractName"]
+    abi = json.loads(data["result"][0]["ABI"])
+    as_proxy_for = None
+
+    # always check for an EIP1967 proxy - https://eips.ethereum.org/EIPS/eip-1967
+    implementation_eip1967 = web3.eth.get_storage_at(
+        address, int(web3.keccak(text="eip1967.proxy.implementation").hex(), 16) - 1
+    )
+    # always check for an EIP1822 proxy - https://eips.ethereum.org/EIPS/eip-1822
+    implementation_eip1822 = web3.eth.get_storage_at(address, web3.keccak(text="PROXIABLE"))
+    if len(implementation_eip1967) > 0 and int(implementation_eip1967.hex(), 16):
+        as_proxy_for = _resolve_address(implementation_eip1967[-20:])
+    elif len(implementation_eip1822) > 0 and int(implementation_eip1822.hex(), 16):
+        as_proxy_for = _resolve_address(implementation_eip1822[-20:])
+    elif data["result"][0].get("Implementation"):
+        # for other proxy patterns, we only check if etherscan indicates
+        # the contract is a proxy. otherwise we could have a false positive
+        # if there is an `implementation` method on a regular contract.
+        try:
+            # first try to call `implementation` per EIP897
+            # https://eips.ethereum.org/EIPS/eip-897
+            c = Contract.from_abi(name, address, abi)
+            as_proxy_for = c.implementation.call()
+        except Exception:
+            # if that fails, fall back to the address provided by etherscan
+            as_proxy_for = _resolve_address(data["result"][0]["Implementation"])
+
+    if as_proxy_for:
+        data = _fetch_from_explorer(as_proxy_for, "getsourcecode", False)
+        name = data["result"][0]["ContractName"]
+        abi = json.loads(data["result"][0]["ABI"])
+        return Contract.from_abi(name, as_proxy_for, abi)
+    else:
+        return _contract(address)
+
+
 
 @lru_cache(maxsize=None)
 def is_contract(address: str) -> bool:
