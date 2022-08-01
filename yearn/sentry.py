@@ -14,6 +14,7 @@ def set_custom_tags():
     set_tag("chain_id", chain.id)
     set_tag("network", Network(chain.id).name)
     set_tag("web3_client_version", web3.clientVersion)
+    set_tag("provider", _clean_creds_from_uri(web3.provider.endpoint_uri))
 
 
 def setup_sentry():
@@ -36,3 +37,10 @@ def setup_sentry():
             ]
         )
         set_custom_tags()
+
+def _clean_creds_from_uri(endpoint: str) -> str:
+    """
+    This will help us more easily debug provider-specific issues without revealing anybody's creds.
+    """
+    protocol = endpoint[:endpoint.find("://")]
+    return protocol + "://" + endpoint[endpoint.find("@") + 1:]
