@@ -49,8 +49,6 @@ addresses: List[Dict[str,str]] = {
             'factory': '0xEF45d134b73241eDa7703fa787148D9C9F4950b0',
             'router': '0x16327E3FbDaCA3bcF7E38F5Af2599D2DDc33aE52',
         },
-    ],
-    Network.Fantom: [
         {
             'name': 'sushiswap',
             'factory': '0xc35DADB65012eC5796536bD9864eD8773aBc74C4',
@@ -58,8 +56,8 @@ addresses: List[Dict[str,str]] = {
         },
         {
             'name': 'fraxswap',
-            'factory': '0x5Ca135cB8527d76e932f34B5145575F9d8cbE08E',
-            'router': '0xc2544A32872A91F4A553b404C6950e89De901fdb',
+            'factory': '0xF55C563148cA0c0F1626834ec1B8651844D76792',
+            'router': '0xa007a9716dba05289df85A90d0Fd9D39BEE808dE',
         }
     ]
 }

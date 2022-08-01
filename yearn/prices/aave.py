@@ -1,14 +1,14 @@
-from typing import Dict, Optional
+from typing import Dict, List, Literal, Optional
 
-from brownie import chain
+from brownie import Contract, chain, web3
 from brownie.convert.datatypes import EthAddress
 from cachetools.func import ttl_cache
 
 from yearn.exceptions import UnsupportedNetwork
 from yearn.multicall2 import fetch_multicall
 from yearn.networks import Network
-from yearn.typing import AddressOrContract
-from yearn.utils import Singleton, contract
+from yearn.typing import Address, AddressOrContract
+from yearn.utils import Singleton, contract, _resolve_proxy
 
 address_providers = {
     Network.Mainnet: {
@@ -40,13 +40,7 @@ class Aave(metaclass=Singleton):
     def markets(self) -> Dict[EthAddress,EthAddress]:
         atoken_to_token = {}
         for version, provider in address_providers[chain.id].items():
-            lending_pool = contract(contract(provider).getLendingPool())
-            if version == 'v1':
-                tokens = lending_pool.getReserves()
-            elif version == 'v2':
-                tokens = lending_pool.getReservesList()
-            else:
-                raise ValueError(f'unsupported aave version {version}')
+            lending_pool, tokens = self.get_tokens(contract(contract(provider).getLendingPool()), version)
 
             reserves = fetch_multicall(
                 *[[lending_pool, 'getReserveData', token] for token in tokens]
@@ -58,6 +52,16 @@ class Aave(metaclass=Singleton):
 
         return atoken_to_token
 
+
+    def get_tokens(self, lending_pool: Contract, version: Literal['v1','v2']) -> List[Address]:
+        fns_by_version = {"v1": "getReserves", "v2": "getReservesList"}
+        if version not in fns_by_version:
+            raise ValueError(f'unsupported aave version {version}')
+        fn = fns_by_version[version]
+        if not hasattr(lending_pool, fn):
+            lending_pool = _resolve_proxy(str(lending_pool))
+        tokens = getattr(lending_pool, fn)()
+        return lending_pool, tokens
 
 aave = None
 try:
