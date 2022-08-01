@@ -54,21 +54,13 @@ class Aave(metaclass=Singleton):
 
 
     def get_tokens(self, lending_pool, version):
-        if version == 'v1':
-            try:
-                tokens = lending_pool.Reserves()
-            except AttributeError:
-                lending_pool = _resolve_proxy(str(lending_pool))
-                tokens = lending_pool.Reserves()
-        elif version == 'v2':
-            try:
-                tokens = lending_pool.ReservesList()
-            except AttributeError:
-                lending_pool = _resolve_proxy(str(lending_pool))
-                tokens = lending_pool.getReservesList()
-        else:
+        fns_by_version = {"v1": "Reserves", "v2": "getReservesList"}
+        if version not in fns_by_version:
             raise ValueError(f'unsupported aave version {version}')
-
+        fn = fns_by_version[version]
+        if not hasattr(lending_pool, fn):
+            lending_pool = _resolve_proxy(str(lending_pool))
+        tokens = getattr(lending_pool, fn)()
         return lending_pool, tokens
 
 aave = None
