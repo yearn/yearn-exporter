@@ -1,13 +1,13 @@
-from typing import Dict, Optional
+from typing import Dict, List, Literal, Optional
 
-from brownie import chain, web3
+from brownie import Contract, chain, web3
 from brownie.convert.datatypes import EthAddress
 from cachetools.func import ttl_cache
 
 from yearn.exceptions import UnsupportedNetwork
 from yearn.multicall2 import fetch_multicall
 from yearn.networks import Network
-from yearn.typing import AddressOrContract
+from yearn.typing import Address, AddressOrContract
 from yearn.utils import Singleton, contract, _resolve_proxy
 
 address_providers = {
@@ -53,7 +53,7 @@ class Aave(metaclass=Singleton):
         return atoken_to_token
 
 
-    def get_tokens(self, lending_pool, version):
+    def get_tokens(self, lending_pool: Contract, version: Literal['v1','v2']) -> List[Address]:
         fns_by_version = {"v1": "Reserves", "v2": "getReservesList"}
         if version not in fns_by_version:
             raise ValueError(f'unsupported aave version {version}')
