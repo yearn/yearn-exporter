@@ -170,6 +170,7 @@ def contract(address: Address) -> Contract:
                 failed_attempts += 1
 
 
+@eth_retry.auto_retry
 def _resolve_proxy(address):
     data = _fetch_from_explorer(address, "getsourcecode", False)
     name = data["result"][0]["ContractName"]
