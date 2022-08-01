@@ -1,10 +1,12 @@
 import os
+import re
 
 from brownie import chain, web3
 from sentry_sdk import Hub, capture_message, init, set_tag, utils
 from sentry_sdk.integrations.threading import ThreadingIntegration
 
 from yearn.networks import Network
+
 
 def before_send(event, hint):
     # custom event parsing goes here
@@ -15,7 +17,6 @@ def set_custom_tags():
     set_tag("network", Network(chain.id).name)
     set_tag("web3_client_version", web3.clientVersion)
     set_tag("provider", _clean_creds_from_uri(web3.provider.endpoint_uri))
-
 
 def setup_sentry():
     sentry_dsn = os.getenv('SENTRY_DSN')
@@ -40,7 +41,6 @@ def setup_sentry():
 
 def _clean_creds_from_uri(endpoint: str) -> str:
     """
-    This will help us more easily debug provider-specific issues without revealing anybody's creds.
+    This will help devs more easily debug provider-specific issues without revealing anybody's creds.
     """
-    protocol = endpoint[:endpoint.find("://")]
-    return protocol + "://" + endpoint[endpoint.find("@") + 1:]
+    return re.sub(pattern=r"(https?:\/\/)[^@]+@(.+)", repl=r"\2", string=endpoint)
