@@ -54,7 +54,7 @@ class Aave(metaclass=Singleton):
 
 
     def get_tokens(self, lending_pool: Contract, version: Literal['v1','v2']) -> List[Address]:
-        fns_by_version = {"v1": "Reserves", "v2": "getReservesList"}
+        fns_by_version = {"v1": "getReserves", "v2": "getReservesList"}
         if version not in fns_by_version:
             raise ValueError(f'unsupported aave version {version}')
         fn = fns_by_version[version]
