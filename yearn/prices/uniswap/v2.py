@@ -48,6 +48,11 @@ addresses: List[Dict[str,str]] = {
             'name': 'spiritswap',
             'factory': '0xEF45d134b73241eDa7703fa787148D9C9F4950b0',
             'router': '0x16327E3FbDaCA3bcF7E38F5Af2599D2DDc33aE52',
+        },
+        {
+            'name': 'sushiswap',
+            'factory': '0xc35DADB65012eC5796536bD9864eD8773aBc74C4',
+            "router": '0x1b02dA8Cb0d097eB8D57A175b88c7D8b47997506',
         }
     ],
     Network.Arbitrum: [
