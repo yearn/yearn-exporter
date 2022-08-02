@@ -5,14 +5,15 @@ from typing import Optional
 
 from brownie import ZERO_ADDRESS, interface
 from brownie.network.contract import InterfaceContainer
-from yearn import apy, constants
+from yearn import apy
 from yearn.apy.common import ApySamples
 from yearn.common import Tvl
+from yearn.exceptions import PriceError
 from yearn.multicall2 import fetch_multicall
 from yearn.prices import magic
 from yearn.prices.curve import curve
 from yearn.utils import contract
-from yearn.exceptions import PriceError
+from yearn.v1 import constants
 
 logger = logging.getLogger(__name__)
 
