@@ -1,4 +1,4 @@
-from brownie import chain, convert, interface
+from brownie import chain, convert
 
 from yearn.networks import Network
 
@@ -9,74 +9,16 @@ WRAPPED_GAS_COIN = {
     Network.Gnosis:             "0xe91D153E0b41518A2Ce8Dd3D7944Fa863463a97d",
 }.get(chain.id, None)
 
-CONTROLLER_INTERFACES = {
-    "0x2be5D998C95DE70D9A38b3d78e49751F10F9E88b": interface.ControllerV1,
-    "0x9E65Ad11b299CA0Abefc2799dDB6314Ef2d91080": interface.ControllerV2,
-}
-
-VAULT_INTERFACES = {
-    "0x29E240CFD7946BA20895a7a02eDb25C210f9f324": interface.yDelegatedVault,
-    "0x881b06da56BB5675c54E4Ed311c21E54C5025298": interface.yWrappedVault,
-    "0xc5bDdf9843308380375a611c18B50Fb9341f502A": interface.yveCurveVault,
-}
-
-STRATEGY_INTERFACES = {
-    "0x25fAcA21dd2Ad7eDB3a027d543e617496820d8d6": interface.StrategyVaultUSDC,
-    "0xA30d1D98C502378ad61Fe71BcDc3a808CF60b897": interface.StrategyDForceUSDC,
-    "0x1d91E3F77271ed069618b4BA06d19821BC2ed8b0": interface.StrategyTUSDCurve,
-    "0xAa880345A3147a1fC6889080401C791813ed08Dc": interface.StrategyDAICurve,
-    "0x787C771035bDE631391ced5C083db424A4A64bD8": interface.StrategyDForceUSDT,
-    "0x932fc4fd0eEe66F22f1E23fBA74D7058391c0b15": interface.StrategyMKRVaultDAIDelegate,
-    "0xF147b8125d2ef93FB6965Db97D6746952a133934": interface.CurveYCRVVoter,
-    "0x112570655b32A8c747845E0215ad139661e66E7F": interface.StrategyCurveBUSDVoterProxy,
-    "0x6D6c1AD13A5000148Aa087E7CbFb53D402c81341": interface.StrategyCurveBTCVoterProxy,
-    "0x07DB4B9b3951094B9E278D336aDf46a036295DE7": interface.StrategyCurveYVoterProxy,
-    "0xC59601F0CC49baa266891b7fc63d2D5FE097A79D": interface.StrategyCurve3CrvVoterProxy,
-    "0x395F93350D5102B6139Abfc84a7D6ee70488797C": interface.StrategyYFIGovernance,
-    "0xc8327D8E1094a94466e05a2CC1f10fA70a1dF119": interface.StrategyCurveGUSDProxy,
-    "0x530da5aeF3c8f9CCbc75C97C182D6ee2284B643F": interface.StrategyCurveCompoundVoterProxy,
-    "0x4720515963A9d40ca10B1aDE806C1291E6c9A86d": interface.StrategyUSDC3pool,
-    "0xe3a711987612BFD1DAFa076506f3793c78D81558": interface.StrategyTUSDypool,
-    "0xc7e437033D849474074429Cbe8077c971Ea2a852": interface.StrategyUSDT3pool,
-    "0xBA0c07BBE9C22a1ee33FE988Ea3763f21D0909a0": interface.StrategyCurvemUSDVoterProxy,
-    "0xD42eC70A590C6bc11e9995314fdbA45B4f74FABb": interface.StrategyCurveGUSDVoterProxy,
-    "0xF4Fd9B4dAb557DD4C9cf386634d61231D54d03d6": interface.StrategyGUSDRescue,
-    "0x9c211BFa6DC329C5E757A223Fb72F5481D676DC1": interface.StrategyDAI3pool,
-    "0x39AFF7827B9D0de80D86De295FE62F7818320b76": interface.StrategyMKRVaultDAIDelegate,
-    "0x22422825e2dFf23f645b04A3f89190B69f174659": interface.StrategyCurveEURVoterProxy,
-    "0x6f1EbF5BBc5e32fffB6B3d237C3564C15134B8cF": interface.StrategymUSDCurve,
-    "0x76B29E824C183dBbE4b27fe5D8EdF0f926340750": interface.StrategyCurveRENVoterProxy,
-    "0x406813fF2143d178d1Ebccd2357C20A424208912": interface.StrategyCurveUSDNVoterProxy,
-    "0x3be2717DA725f43b7d6C598D8f76AeC43e231B99": interface.StrategyCurveUSTVoterProxy,
-    "0x15CfA851403aBFbbD6fDB1f6fe0d32F22ddc846a": interface.StrategyCurveOBTCVoterProxy,
-    "0xD96041c5EC05735D965966bF51faEC40F3888f6e": interface.StrategyCurvePBTCVoterProxy,
-    "0x61A01a704665b3C0E6898C1B4dA54447f561889d": interface.StrategyCurveTBTCVoterProxy,
-    "0x551F41aD4ebeCa4F5d025D2B3082b7AB2383B768": interface.StrategyCurveBBTCVoterProxy,
-    "0xE02363cB1e4E1B77a74fAf38F3Dbb7d0B70F26D7": interface.StrategyCurveHBTCVoterProxy,
-    "0xd7F641697ca4e0e19F6C9cF84989ABc293D24f84": interface.StrategyCurvesUSDVoterProxy,
-    "0xb21C4d2f7b2F29109FF6243309647A01bEB9950a": interface.StrategyCurveHUSDVoterProxy,
-    "0x33F3f002b8f812f3E087E9245921C8355E777231": interface.StrategyCurveDUSDVoterProxy,
-    "0x7A10bE29c4d9073E6B3B6b7D1fB5bCDBecA2AA1F": interface.StrategyCurvea3CRVVoterProxy,
-    "0xBdCeae91e10A80dbD7ad5e884c86EAe56b075Caa": interface.StrategyCurveAnkrVoterProxy,
-    "0x2F90c531857a2086669520e772E9d433BbfD5496": interface.StrategyDAI3pool,
-    "0xBcC6abd115a32fC27f7B49F9e17D0BcefDd278aC": interface.StrategyCurvemUSDVoterProxy,
-    "0x83e7399113561ae691c413ed334137D3839e2302": interface.StrategyCurveEURVoterProxy,
-    "0x4f2fdebE0dF5C92EEe77Ff902512d725F6dfE65c": interface.StrategyUSDC3pool,
-    "0xAa12d6c9d680EAfA48D8c1ECba3FCF1753940A12": interface.StrategyUSDT3pool,
-    "0x4BA03330338172fEbEb0050Be6940c6e7f9c91b0": interface.StrategyTUSDypool,
-    "0x8e2057b8fe8e680B48858cDD525EBc9510620621": interface.StrategyCurvesaCRVVoterProxy,
-}
-
 
 
 YEARN_ADDRESSES_PROVIDER = "0x9be19Ee7Bc4099D62737a7255f5c227fBcd6dB93"
 CURVE_ADDRESSES_PROVIDER = "0x0000000022D53366457F9d5E68Ec105046FC4383"
 
-
 # EVENTS
 ERC20_TRANSFER_EVENT_HASH  = '0xddf252ad1be2c89b69c2b068fc378daa952ba7f163c4a11628f55a4df523b3ef'
 ERC677_TRANSFER_EVENT_HASH = '0xe19260aff97b920c7df27010903aeb9c8d2be5d310a2c67824cf3f15396e4c16'
 
+# ADDRESSES
 STRATEGIST_MULTISIG = {
     Network.Mainnet: {
         "0x16388463d60FFE0661Cf7F1f31a7D658aC790ff7",
