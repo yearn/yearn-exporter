@@ -1,5 +1,5 @@
 from yearn.cache import memory
-from yearn.constants import BTC_LIKE, WRAPPED_GAS_COIN
+from yearn.constants import WRAPPED_GAS_COIN
 from yearn.prices.balancer import balancer as bal
 from yearn.prices.aave import aave
 from yearn.prices.compound import compound
