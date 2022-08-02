@@ -10,6 +10,7 @@ from yearn.prices.constants import stablecoins, weth
 from yearn.prices.curve import curve
 from yearn.prices.fixed_forex import fixed_forex
 from yearn.prices.yearn import yearn_lens
+from yearn.typing import Address
 from yearn.utils import contract
 
 YFI_LIKE = {
