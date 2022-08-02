@@ -63,9 +63,7 @@ def get_token_bucket(token) -> str:
             return 'Other short term assets'
         raise
     
-    if (
-        token in stablecoins or token in INTL_STABLECOINS or (fixed_forex and token in fixed_forex)
-    ):  # or token == '0x9ba60bA98413A60dB4C651D4afE5C937bbD8044B': # yla
+    if _is_stable(token):
         return 'Cash & cash equivalents'
     if token in ETH_LIKE:
         return 'ETH'
@@ -120,3 +118,10 @@ def _pool_bucket(pool_tokens: set) -> str:
         return list(stablecoins.keys())[0]
     if pool_tokens < INTL_STABLECOINS:
         return list(INTL_STABLECOINS)[0]
+
+def _is_stable(token: Address) -> bool:
+    return any([
+        token in stablecoins,
+        token in INTL_STABLECOINS,
+        (fixed_forex and token in fixed_forex),
+    ])
