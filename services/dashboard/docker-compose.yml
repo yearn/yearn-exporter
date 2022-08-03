@@ -61,7 +61,6 @@ x-common-volumes: &common-volumes
   - brownie:/root/.brownie
   - cache:/app/yearn-exporter/cache
 
-
 services:
   eth-exporter:
     build: .
@@ -74,7 +73,7 @@ services:
     networks:
       - yearn-exporter
     restart: on-failure
-  
+
   ftm-exporter:
     image: yearn-exporter
     command: exporter
@@ -96,7 +95,7 @@ services:
     networks:
       - yearn-exporter
     restart: on-failure
-  
+
   arbi-exporter:
     image: yearn-exporter
     command: exporter
@@ -107,7 +106,7 @@ services:
     networks:
       - yearn-exporter
     restart: on-failure
-  
+
   historical-eth-exporter:
     image: yearn-exporter
     command: historical_exporter
@@ -147,30 +146,6 @@ services:
   historical-arbi-exporter:
     image: yearn-exporter
     command: exporter
-    volumes: *common-volumes
-    environment:
-      <<: *common-envs
-      <<: *common-arbi-envs
-      <<: *common-historical-envs
-    networks:
-      - yearn-exporter
-    restart: on-failure
-
-  historical-ftm-exporter:
-    image: yearn-exporter
-    command: historical_exporter
-    volumes: *common-volumes
-    environment:
-      <<: *common-envs
-      <<: *common-gnosis-envs
-      <<: *common-historical-envs
-    networks:
-      - yearn-exporter
-    restart: on-failure
-
-  historical-arbi-exporter:
-    image: yearn-exporter
-    command: historical_exporter
     volumes: *common-volumes
     environment:
       <<: *common-envs
@@ -384,7 +359,7 @@ services:
     networks:
       - yearn-exporter
     restart: on-failure
-  
+
   historical-arbi-sms-exporter:
     image: yearn-exporter
     command: historical_sms_exporter
