@@ -379,6 +379,34 @@ services:
     restart: on-failure
     depends_on:
       - postgres
+  
+  gnosis-treasury-transactions-exporter:
+    image: yearn-exporter
+    command: treasury_transactions_exporter
+    volumes: *common-volumes
+    environment:
+      <<: *common-envs
+      <<: *common-gnosis-envs
+      <<: *common-postgres-envs
+    networks:
+      - yearn-exporter
+    restart: on-failure
+    depends_on:
+      - postgres
+    
+  arbi-treasury-transactions-exporter:
+    image: yearn-exporter
+    command: treasury_transactions_exporter
+    volumes: *common-volumes
+    environment:
+      <<: *common-envs
+      <<: *common-arbi-envs
+      <<: *common-postgres-envs
+    networks:
+      - yearn-exporter
+    restart: on-failure
+    depends_on:
+      - postgres
 
   sms-exporter:
     image: yearn-exporter
@@ -758,7 +786,7 @@ services:
   postgres:
     image: postgres
     ports:
-      - 127.0.0.1:5432:5432
+      - 5432:5432
     environment:
       - POSTGRES_USER=${PGUSER:-postgres}
       - POSTGRES_PASSWORD=${PGPASSWORD:-yearn-exporter}
