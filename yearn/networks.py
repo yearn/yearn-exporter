@@ -10,6 +10,7 @@ class Network(IntEnum):
     Gnosis = 100
     Fantom = 250
     Arbitrum = 42161
+    Optimism = 10
 
     @staticmethod
     def label(chain_id: int = None):
@@ -23,7 +24,9 @@ class Network(IntEnum):
         elif chain_id == Network.Fantom:
             return "FTM"
         elif chain_id == Network.Arbitrum:
-            return "ARBB"
+            return "ARRB"
+        elif chain_id == Network.Optimism:
+            return "OPT"
         else:
             raise UnsupportedNetwork(
                 f'chainid {chain_id} is not currently supported. Please add network details to yearn-exporter/yearn/networks.py'
