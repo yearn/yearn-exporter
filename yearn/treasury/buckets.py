@@ -1,57 +1,16 @@
-from brownie import chain
 from yearn.cache import memory
-from yearn.constants import BTC_LIKE
-from yearn.constants import ETH_LIKE as _ETH_LIKE
-from yearn.networks import Network
+from yearn.constants import WRAPPED_GAS_COIN
 from yearn.prices.balancer import balancer as bal
 from yearn.prices.aave import aave
 from yearn.prices.compound import compound
-from yearn.prices.constants import stablecoins, weth
+from yearn.prices.constants import stablecoins
 from yearn.prices.curve import curve
 from yearn.prices.fixed_forex import fixed_forex
 from yearn.prices.yearn import yearn_lens
+from yearn.treasury.constants import (BTC_LIKE, ETH_LIKE, INTL_STABLECOINS,
+                                      OTHER_LONG_TERM_ASSETS, YFI_LIKE)
+from yearn.typing import Address
 from yearn.utils import contract
-
-YFI_LIKE = {
-    Network.Mainnet: {
-        '0x0bc529c00C6401aEF6D220BE8C6Ea1667F6Ad93e',  # YFI
-        '0xD0660cD418a64a1d44E9214ad8e459324D8157f1',  # WOOFY
-    },
-    Network.Fantom: {
-        '0x29b0Da86e484E1C0029B56e817912d778aC0EC69',  # YFI
-        '0xD0660cD418a64a1d44E9214ad8e459324D8157f1',  # WOOFY
-    },
-}.get(chain.id, set())
-
-INTL_STABLECOINS = {
-    Network.Mainnet: {
-        '0xD71eCFF9342A5Ced620049e616c5035F1dB98620',  # sEUR
-        '0xC581b735A1688071A1746c968e0798D642EDE491',  # EURT
-        '0xdB25f211AB05b1c97D595516F45794528a807ad8',  # EURS
-        '0x96E61422b6A9bA0e068B6c5ADd4fFaBC6a4aae27',  # ibEUR
-    },
-    Network.Fantom: {
-        '',  #
-    },
-}.get(chain.id, set())
-
-OTHER_LONG_TERM_ASSETS = {
-    Network.Mainnet: {
-        '0x1cEB5cB57C4D4E2b2433641b95Dd330A33185A44',  # KP3R
-        '0xaf988afF99d3d0cb870812C325C588D8D8CB7De8',  # SLP (KP3R/ETH)
-    },
-    Network.Fantom: {
-        '',  # 
-    },
-}.get(chain.id, set())
-
-ETH_LIKE = _ETH_LIKE.union(
-    {
-        'ETH',
-        weth,
-        "0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE",
-    }
-)
 
 
 def get_token_bucket(token) -> str:
@@ -63,9 +22,7 @@ def get_token_bucket(token) -> str:
             return 'Other short term assets'
         raise
     
-    if (
-        token in stablecoins or token in INTL_STABLECOINS or (fixed_forex and token in fixed_forex)
-    ):  # or token == '0x9ba60bA98413A60dB4C651D4afE5C937bbD8044B': # yla
+    if _is_stable(token):
         return 'Cash & cash equivalents'
     if token in ETH_LIKE:
         return 'ETH'
@@ -107,7 +64,7 @@ def _unwrap_token(token) -> str:
         try:
             return contract(token).underlying()
         except AttributeError:
-            return weth
+            return WRAPPED_GAS_COIN
     return token
 
 
@@ -120,3 +77,10 @@ def _pool_bucket(pool_tokens: set) -> str:
         return list(stablecoins.keys())[0]
     if pool_tokens < INTL_STABLECOINS:
         return list(INTL_STABLECOINS)[0]
+
+def _is_stable(token: Address) -> bool:
+    return any([
+        token in stablecoins,
+        token in INTL_STABLECOINS,
+        (fixed_forex and token in fixed_forex),
+    ])

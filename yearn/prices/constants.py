@@ -1,4 +1,5 @@
-from brownie import chain
+from brownie import chain, convert
+
 from yearn.networks import Network
 
 tokens_by_network = {
@@ -49,6 +50,7 @@ stablecoins_by_network = {
         "0xe2f2a5C287993345a840Db3B0845fbC70f5935a5": "musd",
         "0x739ca6D71365a08f584c8FC4e1029045Fa8ABC4B": "anydai",
         "0xbbc4A8d076F4B1888fec42581B6fc58d242CF2D5": "anymim",
+        "0x865377367054516e17014CcdED1e7d814EDC9ce4": "dola",
     },
     Network.Gnosis: {
         "0xDDAfbb505ad214D7b80b1f830fcCc89B60fb7A83": "usdc",
@@ -83,8 +85,9 @@ ib_snapshot_block_by_network = {
     Network.Arbitrum: 1
 }
 
-weth = tokens_by_network[chain.id]['weth']
-usdc = tokens_by_network[chain.id]['usdc']
-dai = tokens_by_network[chain.id]['dai']
-stablecoins = stablecoins_by_network[chain.id]
+# We convert to checksum address here to prevent minor annoyances. It's worth it.
+weth = convert.to_address(tokens_by_network[chain.id]['weth'])
+usdc = convert.to_address(tokens_by_network[chain.id]['usdc'])
+dai  = convert.to_address(tokens_by_network[chain.id]['dai'])
+stablecoins = {convert.to_address(coin): symbol for coin, symbol in stablecoins_by_network[chain.id].items()}
 ib_snapshot_block = ib_snapshot_block_by_network[chain.id]
