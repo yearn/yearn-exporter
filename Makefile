@@ -3,11 +3,49 @@ ifdef FLAGS
 	flags += $(FLAGS)
 endif
 
-dashboards_command := docker-compose --file services/dashboard/docker-compose.yml --project-directory .
-tvl_command := docker-compose --file services/tvl/docker-compose.yml --project-directory .
-test_command := docker-compose --file services/dashboard/docker-compose.test.yml --project-directory .
-all_command := docker-compose --file services/dashboard/docker-compose.yml --project-directory .
+# docker-compose commands
+dashboards_command 	:= docker-compose --file services/dashboard/docker-compose.yml --project-directory .
+tvl_command 		:= docker-compose --file services/tvl/docker-compose.yml --project-directory .
+test_command 		:= docker-compose --file services/dashboard/docker-compose.test.yml --project-directory .
 
+# treasury exporter convenience vars
+ethereum_treasury_containers := treasury-exporter 			historical-treasury-exporter 			treasury-transactions-exporter
+fantom_treasury_containers   := ftm-treasury-exporter 		historical-ftm-treasury-exporter		ftm-treasury-transactions-exporter
+arbitrum_treasury_containers := arbi-treasury-exporter 		historical-arbi-treasury-exporter		arbi-treasury-transactions-exporter
+gnosis_treasury_containers 	 := gnosis-treasury-exporter 	historical-gnosis-treasury-exporter		gnosis-treasury-transactions-exporter
+optimism_treasury_contrainers:= opti-treasury-exporter 		historical-opti-treasury-exporter		opti-treasury-transactions-exporter
+
+# less spammy output convenience vars
+ethereum_containers_lite := eth-exporter 	historical-eth-exporter 		sms-exporter 			historical-sms-exporter 		transactions-exporter 			$(ethereum_treasury_containers)
+fantom_containers_lite   := ftm-exporter 	historical-ftm-exporter 	 	ftm-sms-exporter 		historical-ftm-sms-exporter 	ftm-transactions-exporter 		$(fantom_treasury_containers)
+arbitrum_containers_lite := arbi-exporter 	historical-arbi-exporter 	 	arbi-sms-exporter 		historical-arbi-sms-exporter 	arbi-transactions-exporter 		$(arbitrum_treasury_containers)
+gnosis_containers_lite   := gnosis-exporter historical-gnosis-exporter 	 	gnosis-sms-exporter 	historical-gnosis-sms-exporter 	gnosis-transactions-exporter 	$(gnosis_treasury_containers)
+optimism_containers_lite := opti-exporter 	historical-opti-exporter 	 	opti-sms-exporter 		historical-opti-sms-exporter 	opti-transactions-exporter 		$(optimism_treasury_contrainers)
+
+# container vars
+ethereum_containers := $(ethereum_containers_lite) 	wallet-exporter 		partners-exporter
+fantom_containers 	:= $(fantom_containers_lite) 	ftm-wallet-exporter 	ftm-partners-exporter
+arbitrum_containers := $(arbitrum_containers_lite) 	arbi-wallet-exporter	arbi-partners-exporter
+gnosis_containers 	:= $(gnosis_containers_lite) 	gnosis-wallet-exporter	gnosis-partners-exporter
+optimism_containers := $(optimism_containers_lite) 	opti-wallet-exporter	opti-partners-exporter
+
+treasury_containers := 	$(ethereum_treasury_containers) $(fantom_treasury_containers) 	$(arbitrum_treasury_containers) $(gnosis_treasury_containers) 	$(optimism_treasury_contrainers)
+all_containers := 		$(ethereum_containers) 			$(fantom_containers) 			$(arbitrum_containers) 			$(gnosis_containers) 			$(optimism_containers)
+
+# Basic Makefile commands
+dashboards: dashboards-up
+tvl: tvl-up
+
+logs:
+	$(dashboards_command) logs -f -t $(ethereum_containers_lite) $(fantom_containers_lite) $(arbitrum_containers_lite) $(gnosis_containers_lite) $(optimism_containers_lite)
+
+logs-all:
+	$(dashboards_command) logs -f -t $(ethereum_containers) $(fantom_containers) $(arbitrum_containers) $(gnosis_containers) $(optimism_containers)
+	
+all:
+	$(dashboards_command) down && $(dashboards_command) build --no-cache && $(dashboards_command) up $(flags)
+
+# More advanced control
 dashboards-up:
 	$(dashboards_command) up $(flags)
 
@@ -16,12 +54,6 @@ dashboards-down:
 
 dashboards-build:
 	$(dashboards_command) build $(BUILD_FLAGS)
-
-dashboards-clean-volumes:
-	$(dashboards_command) down -v
-
-dashboards-clean-cache:
-	docker volume rm yearn-exporter_cache
 
 tvl-up:
 	$(tvl_command) up $(flags)
@@ -32,45 +64,35 @@ tvl-down:
 tvl-build:
 	$(tvl_command) build $(BUILD_FLAGS)
 
-tvl-clean-volumes:
-	$(tvl_command) down -v
-
-clean-volumes: dashboards-clean-volumes tvl-clean-volumes
-
-dashboards: dashboards-up
-tvl: tvl-up
-
 up: dashboards-up
 build: dashboards-build
 down: dashboards-down
 
-clean-cache: dashboards-clean-cache
-clean-volumes: dashboards-clean-volumes
-
+# Maintenance
 rebuild: down build up
 scratch: clean-volumes build up
 
-logs:
-	$(dashboards_command) logs -f -t eth-exporter historical-eth-exporter ftm-exporter historical-ftm-exporter treasury-exporter historical-treasury-exporter ftm-treasury-exporter historical-ftm-treasury-exporter sms-exporter historical-sms-exporter ftm-sms-exporter historical-ftm-sms-exporter transactions-exporter ftm-transactions-exporter gnosis-exporter historical-gnosis-exporter gnosis-treasury-exporter historical-gnosis-treasury-exporter gnosis-sms-exporter historical-gnosis-sms-exporter gnosis-transactions-exporter treasury-transactions-exporter ftm-treasury-transactions-exporter gnosis-treasury-transactions-exporter
+dashboards-clean-volumes:
+	$(dashboards_command) down -v
+	
+tvl-clean-volumes:
+	$(tvl_command) down -v
 
-test:
-	$(test_command) up
-
-all:
-	$(all_command) down && $(all_command) build --no-cache && $(all_command) up $(flags)
-
-logs-all:
-	$(dashboards_command) logs -f -t eth-exporter historical-eth-exporter ftm-exporter historical-ftm-exporter treasury-exporter historical-treasury-exporter ftm-treasury-exporter historical-ftm-treasury-exporter sms-exporter historical-sms-exporter ftm-sms-exporter historical-ftm-sms-exporter transactions-exporter wallet-exporter ftm-transactions-exporter ftm-wallet-exporter treasury-transactions-exporter ftm-treasury-transactions-exporter gnosis-treasury-transactions-exporter partners-exporter ftm-partners-exporter gnosis-partners-exporter
+clean-cache: dashboards-clean-cache
 
 postgres:
 	$(dashboards_command) up -d --build postgres
 
+
 # Mainnet:
 mainnet:
-	$(all_command) up -d --build eth-exporter historical-eth-exporter treasury-exporter historical-treasury-exporter sms-exporter historical-sms-exporter transactions-exporter wallet-exporter partners-exporter
+	$(dashboards_command) up -d --build $(ethereum_containers) && make logs-mainnet
 
 logs-mainnet:
-	$(all_command) logs -ft eth-exporter historical-eth-exporter treasury-exporter historical-treasury-exporter sms-exporter historical-sms-exporter transactions-exporter wallet-exporter partners-exporter
+	$(dashboards_command) logs -ft $(ethereum_containers_lite)
+
+stop-mainnet:
+	$(dashboards_command) stop $(ethereum_containers) && $(dashboards_command) rm $(ethereum_containers)
 
 eth:
 	make mainnet
@@ -78,29 +100,57 @@ eth:
 logs-eth:
 	make logs-mainnet
 
+stop-eth:
+	make stop-mainnet
+
+
 # Fantom:
 fantom:
-	$(all_command) up -d --build ftm-exporter historical-ftm-exporter ftm-treasury-exporter historical-ftm-treasury-exporter ftm-sms-exporter historical-ftm-sms-exporter ftm-transactions-exporter ftm-wallet-exporter ftm-partners-exporter
+	$(dashboards_command) up -d --build $(fantom_containers) && make logs-fantom
 
 logs-fantom:
-	$(all_command) logs -ft ftm-exporter historical-ftm-exporter ftm-treasury-exporter historical-ftm-treasury-exporter ftm-sms-exporter historical-ftm-sms-exporter ftm-transactions-exporter ftm-wallet-exporter ftm-partners-exporter
-	
+	$(dashboards_command) logs -ft $(fantom_containers_lite)
+
+stop-fantom:
+	$(dashboards_command) down $(fantom_containers) && $(dashboards_command) rm $(fantom_containers)
+
+
 # Gnosis chain:
 gnosis:
-	$(all_command) up -d --build gnosis-exporter historical-gnosis-exporter gnosis-treasury-exporter historical-gnosis-treasury-exporter gnosis-sms-exporter historical-gnosis-sms-exporter gnosis-transactions-exporter gnosis-wallet-exporter
+	$(dashboards_command) up -d --build $(gnosis_containers) && make logs-gnosis
 
 logs-gnosis:
-	$(all_command) logs -ft gnosis-exporter historical-gnosis-exporter gnosis-treasury-exporter historical-gnosis-treasury-exporter gnosis-sms-exporter historical-gnosis-sms-exporter gnosis-transactions-exporter gnosis-wallet-exporter
+	$(dashboards_command) logs -ft $(gnosis_containers_lite)
+
+stop-gnosis:
+	$(dashboards_command) stop $(gnosis_containers) && $(dashboards_command) rm $(gnosis_containers)
+
 
 # Arbitrum Chain
 arbitrum:
-	$(all_command) up -d --build arbi-exporter historical-arbi-exporter arbi-treasury-exporter historical-arbi-treasury-exporter arbi-sms-exporter historical-arbi-sms-exporter arbi-transactions-exporter arbi-wallet-exporter
+	$(dashboards_command) up -d --build $(arbitrum_containers) && make logs-arbitrum
 
 logs-arbitrum:
-	$(all_command) logs -ft arbi-exporter historical-arbi-exporter arbi-treasury-exporter historical-arbi-treasury-exporter arbi-sms-exporter historical-arbi-sms-exporter arbi-transactions-exporter arbi-wallet-exporter
+	$(dashboards_command) logs -ft $(arbitrum_containers_lite)
+
+stop-arbitrum:
+	$(dashboards_command) stop $(arbitrum_containers) && $(dashboards_command) rm $(arbitrum_containers)
+
+
 # Optimism Chain
 optimism:
-	$(all_command) up -d --build opti-exporter historical-opti-exporter opti-treasury-exporter historical-opti-treasury-exporter opti-sms-exporter historical-opti-sms-exporter opti-transactions-exporter opti-wallet-exporter
+	$(dashboards_command) up -d --build $(optimism_containers) && make logs-optimism
 
 logs-optimism:
-	$(all_command) logs -ft opti-exporter historical-opti-exporter opti-treasury-exporter historical-opti-treasury-exporter opti-sms-exporter historical-opti-sms-exporter opti-transactions-exporter opti-wallet-exporter
+	$(dashboards_command) logs -ft $(optimism_containers_lite)
+
+stop-optimism:
+	$(dashboards_command) down $(optimism_containers) && $(all_command) rm $(optimism_containers)
+
+
+# Treasury Exporters
+treasury:
+	$(dashboards_command) up -d --build $(treasury_containers) && make logs-treasury
+
+logs-treasury:
+	$(dashboards_command) logs -ft $(treasury_containers)
