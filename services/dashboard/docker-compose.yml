@@ -321,6 +321,22 @@ services:
       - victoria-metrics
       - postgres
 
+  historical-opti-treasury-exporter:
+    image: yearn-exporter
+    command: historical_treasury_exporter
+    volumes: *common-volumes
+    environment:
+      <<: *common-envs
+      <<: *common-opti-envs
+      <<: *common-historical-envs
+      <<: *common-postgres-envs
+    networks:
+      - yearn-exporter
+    restart: on-failure
+    depends_on:
+      - victoria-metrics
+      - postgres
+
   sms-exporter:
     image: yearn-exporter
     command: sms_exporter
