@@ -169,6 +169,18 @@ services:
       - yearn-exporter
     restart: on-failure
 
+  historical-opti-exporter:
+    image: yearn-exporter
+    command: exporter
+    volumes: *common-volumes
+    environment:
+      <<: *common-envs
+      <<: *common-opti-envs
+      <<: *common-historical-envs
+    networks:
+      - yearn-exporter
+    restart: on-failure
+
   treasury-exporter:
     image: yearn-exporter
     command: treasury_exporter
