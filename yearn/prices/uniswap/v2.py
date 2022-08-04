@@ -67,7 +67,7 @@ addresses: List[Dict[str,str]] = {
             'router': '0xc2544A32872A91F4A553b404C6950e89De901fdb',
         },
         {
-            'name': 'zipswap'
+            'name': 'zipswap',
             'factory': '0x9e343Bea27a12B23523ad88333a1B0f68cc1F05E',
             "router": '0x4D70D768f5E1e6a7062973aFB0c7FBDa9bBb42b3',
         }
