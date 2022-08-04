@@ -98,3 +98,9 @@ arbitrum:
 
 logs-arbitrum:
 	$(all_command) logs -ft arbi-exporter historical-arbi-exporter arbi-treasury-exporter historical-arbi-treasury-exporter arbi-sms-exporter historical-arbi-sms-exporter arbi-transactions-exporter arbi-wallet-exporter
+# Optimism Chain
+optimism:
+	$(all_command) up -d --build opti-exporter historical-opti-exporter opti-treasury-exporter historical-opti-treasury-exporter opti-sms-exporter historical-opti-sms-exporter opti-transactions-exporter opti-wallet-exporter
+
+logs-optimism:
+	$(all_command) logs -ft opti-exporter historical-opti-exporter opti-treasury-exporter historical-opti-treasury-exporter opti-sms-exporter historical-opti-sms-exporter opti-transactions-exporter opti-wallet-exporter
