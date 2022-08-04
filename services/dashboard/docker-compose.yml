@@ -381,6 +381,17 @@ services:
       - yearn-exporter
     restart: on-failure
 
+  opti-sms-exporter:
+    image: yearn-exporter
+    command: sms_exporter
+    volumes: *common-volumes
+    environment:
+      <<: *common-envs
+      <<: *common-opti-envs
+    networks:
+      - yearn-exporter
+    restart: on-failure
+
   historical-sms-exporter:
     image: yearn-exporter
     command: historical_sms_exporter
