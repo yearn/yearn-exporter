@@ -110,6 +110,20 @@ services:
       - yearn-exporter
     restart: on-failure
 
+<<<<<<< HEAD
+=======
+  opti-exporter:
+    image: yearn-exporter
+    command: exporter
+    volumes: *common-volumes
+    environment:
+      <<: *common-envs
+      <<: *common-opti-envs
+    networks:
+      - yearn-exporter
+    restart: on-failure
+  
+>>>>>>> 6ac5257 (opti fwds exporter)
   historical-eth-exporter:
     image: yearn-exporter
     command: historical_exporter
