@@ -440,6 +440,18 @@ services:
       - yearn-exporter
     restart: on-failure
 
+  historical-opti-sms-exporter:
+    image: yearn-exporter
+    command: historical_sms_exporter
+    volumes: *common-volumes
+    environment:
+      <<: *common-envs
+      <<: *common-opti-envs
+      <<: *common-historical-envs
+    networks:
+      - yearn-exporter
+    restart: on-failure
+
   transactions-exporter:
     image: yearn-exporter
     command: transactions_exporter
