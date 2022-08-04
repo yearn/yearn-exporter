@@ -591,6 +591,22 @@ services:
       - victoria-metrics
       - postgres
 
+  opti-wallet-exporter:
+    image: yearn-exporter
+    command: wallet_exporter
+    volumes: *common-volumes
+    environment:
+      <<: *common-envs
+      <<: *common-opti-envs
+      <<: *common-historical-envs
+      <<: *common-postgres-envs
+    networks:
+      - yearn-exporter
+    restart: always
+    depends_on:
+      - victoria-metrics
+      - postgres
+
   partners-exporter:
     image: yearn-exporter
     command: partners_exporter
