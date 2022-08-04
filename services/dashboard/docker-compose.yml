@@ -54,6 +54,12 @@ x-common-arbi-envs: &common-arbi-envs
   - EXPLORER: $ARBI_EXPLORER
   - ARBISCAN_TOKEN:
 
+x-common-opti-envs: &common-opti-envs
+  - NETWORK: optimism-main
+  - WEB3_PROVIDER: $OPTI_WEB3_PROVIDER
+  - EXPLORER: $OPTI_EXPLORER
+  - OPTISCAN_TOKEN:
+
 x-common-volumes: &common-volumes
   - brownie:/root/.brownie
   - cache:/app/yearn-exporter/cache
