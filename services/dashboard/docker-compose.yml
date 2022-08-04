@@ -512,6 +512,21 @@ services:
     depends_on:
       - postgres
 
+  opti-transactions-exporter:
+    image: yearn-exporter
+    command: transactions_exporter
+    volumes: *common-volumes
+    environment:
+      <<: *common-envs
+      <<: *common-opti-envs
+      <<: *common-historical-envs
+      <<: *common-postgres-envs
+    networks:
+      - yearn-exporter
+    restart: on-failure
+    depends_on:
+      - postgres
+
   wallet-exporter:
     image: yearn-exporter
     command: wallet_exporter
