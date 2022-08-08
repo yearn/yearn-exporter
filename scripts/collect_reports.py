@@ -25,12 +25,21 @@ warnings.filterwarnings("ignore", ".*It has been discarded*")
 # discord_mainnet = os.environ.get('DISCORD_CHANNEL_1')
 # discord_ftm = os.environ.get('DISCORD_CHANNEL_250')
 
-telegram_key = os.environ.get('HARVEST_TRACKER_BOT_KEY')
-bot = telebot.TeleBot(telegram_key)
+
 inv_telegram_key = os.environ.get('WAVEY_ALERTS_BOT_KEY')
 invbot = telebot.TeleBot(inv_telegram_key)
-alerts_enabled = True if os.environ.get('ENVIRONMENT') == "PROD" else False
-dev_channel = os.environ.get('TELEGRAM_CHANNEL_DEV')
+env = os.environ.get('ENVIRONMENT')
+alerts_enabled = True if env == "PROD" or env == "TEST" else False
+
+test_channel = os.environ.get('TELEGRAM_CHANNEL_TEST')
+if env == "TEST":
+    telegram_key = os.environ.get('WAVEY_ALERTS_BOT_KEY')
+    dev_channel = test_channel
+    bot = telebot.TeleBot(telegram_key)
+else:
+    telegram_key = os.environ.get('HARVEST_TRACKER_BOT_KEY')
+    bot = telebot.TeleBot(telegram_key)
+    dev_channel = os.environ.get('TELEGRAM_CHANNEL_DEV')
 
 OLD_REGISTRY_ENDORSEMENT_BLOCKS = {
     "0xE14d13d8B3b85aF791b2AADD661cDBd5E6097Db1": 11999957,
@@ -73,8 +82,8 @@ CHAIN_VALUES = {
         "GOVERNANCE_MULTISIG": "0xFEB4acf3df3cDEA7399794D0869ef76A6EfAff52",
         "EXPLORER_URL": "https://etherscan.io/",
         "TENDERLY_CHAIN_IDENTIFIER": "mainnet",
-        "TELEGRAM_CHAT_ID": os.environ.get('TELEGRAM_CHANNEL_1_PUBLIC'),
-        "TELEGRAM_CHAT_ID_INVERSE_ALERTS": os.environ.get('TELEGRAM_CHAT_ID_INVERSE_ALERTS'),
+        "TELEGRAM_CHAT_ID": os.environ.get('TELEGRAM_CHANNEL_1_PUBLIC') if env == "PROD" else test_channel,
+        "TELEGRAM_CHAT_ID_INVERSE_ALERTS": os.environ.get('TELEGRAM_CHAT_ID_INVERSE_ALERTS') if env == "PROD" else test_channel,
         "DISCORD_CHAN": os.environ.get('DISCORD_CHANNEL_1'),
     },
     Network.Fantom: {
@@ -546,23 +555,37 @@ def format_dev_telegram(r, t):
     df[r.vault_name + " " + r.vault_api] = r.vault_address
     df["Strategy Address"] = r.strategy_address
     df["Last Report"] = time_since_last_report
-    df["Gain"] = "{:,.2f}".format(r.gain) + " (" + "${:,.2f}".format(r.gain * r.want_price_at_block) + ")"
-    df["Loss"] = "{:,.2f}".format(r.loss) + " (" + "${:,.2f}".format(r.loss * r.want_price_at_block) + ")"
-    df["Debt Paid"] = "{:,.2f}".format(r.debt_paid) + " (" + "${:,.2f}".format(r.debt_paid * r.want_price_at_block) + ")"
-    df["Debt Added"] = "{:,.2f}".format(r.debt_added) + " (" + "${:,.2f}".format(r.debt_added * r.want_price_at_block) + ")"
-    df["Total Debt"] = "{:,.2f}".format(r.total_debt) + " (" + "${:,.2f}".format(r.total_debt * r.want_price_at_block) + ")"
-    df["Debt Ratio"] = r.debt_ratio
+    df["Gain"] = "{:,.2f}".format(r.gain) + " | " + "${:,.2f}".format(r.gain * r.want_price_at_block)
+    df["Loss"] = "{:,.2f}".format(r.loss) + " | " + "${:,.2f}".format(r.loss * r.want_price_at_block)
     if r.vault_address in INVERSE_PRIVATE_VAULTS:
+        tx = web3.eth.getTransactionReceipt(r.txn_hash)
+        crv = '0xD533a949740bb3306d119CC777fa900bA034cd52'
+        voter = '0xF147b8125d2ef93FB6965Db97D6746952a133934'
         fees = r.gov_fee_in_want + r.strategist_fee_in_want
         inverse_profit = r.gain - fees
-        df["Yearn Treasury Profit"] = "{:,.2f}".format(fees) + " (" + "${:,.2f}".format(fees * r.want_price_at_block) + ")"
-        df["Inverse Profit"] = "{:,.2f}".format(inverse_profit) + " (" + "${:,.2f}".format(inverse_profit * r.want_price_at_block) + ")"
+        df["Yearn Treasury Profit"] = "{:,.2f}".format(fees) + " | " + "${:,.2f}".format(fees * r.want_price_at_block)
+        df["Inverse Profit"] = "{:,.2f}".format(inverse_profit) + " | " + "${:,.2f}".format(inverse_profit * r.want_price_at_block)
+        token = web3.eth.contract(crv, abi=Contract(crv).abi)
+        decoded_events = token.events.Transfer().processReceipt(tx)
+        for t in decoded_events:
+            _from, _to, _val = t.args.values()
+            if t.address == crv and _from == r.strategy_address and _to == voter:
+                crv_amount = _val/1e18
+                crv_value = magic.get_price(crv, r.block) * crv_amount
+                df["CRV Locked"] = "{:,.2f}".format(crv_amount) + " | " + "${:,.2f}".format(crv_value)
+
     else:
-        df["Treasury Fee"] = "{:,.2f}".format(r.gov_fee_in_want) + " (" + "${:,.2f}".format(r.gov_fee_in_want * r.want_price_at_block) + ")"
+        df["Treasury Fee"] = "{:,.2f}".format(r.gov_fee_in_want) + " | " + "${:,.2f}".format(r.gov_fee_in_want * r.want_price_at_block)
     if r.strategy_address == "0xd025b85db175EF1b175Af223BD37f330dB277786":
-        df["Strategist Fee"] = "{:,.2f}".format(r.strategist_fee_in_want) + " (" + "${:,.2f}".format(r.strategist_fee_in_want * r.want_price_at_block) + ")"
+        df["Strategist Fee"] = "{:,.2f}".format(r.strategist_fee_in_want) + " | " + "${:,.2f}".format(r.strategist_fee_in_want * r.want_price_at_block)
     prefee = "n/a"
     postfee = "n/a"
+    df["Debt Paid"] = "{:,.2f}".format(r.debt_paid) + " | " + "${:,.2f}".format(r.debt_paid * r.want_price_at_block)
+    df["Debt Added"] = "{:,.2f}".format(r.debt_added) + " | " + "${:,.2f}".format(r.debt_added * r.want_price_at_block)
+    df["Total Debt"] = "{:,.2f}".format(r.total_debt) + " | " + "${:,.2f}".format(r.total_debt * r.want_price_at_block)
+    df["Debt Ratio"] = r.debt_ratio
+    
+    
     if r.rough_apr_pre_fee is not None:
         prefee = "{:.2%}".format(r.rough_apr_pre_fee)
     if r.rough_apr_post_fee is not None:
