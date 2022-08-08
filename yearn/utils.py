@@ -165,50 +165,8 @@ def contract(address: Address) -> Contract:
             c = _contract(address)
         # If we don't already have the contract in the db, we'll try to fetch it from the explorer.
         except ValueError as e:
-            address = convert.to_address(address)
-            if not str(e).startswith("Unknown contract address: "):
-                raise e
-            data = _fetch_from_explorer(address, "getsourcecode", False)
-            is_verified = bool(data["result"][0].get("SourceCode"))
-            if not is_verified:
-                raise ValueError(f"Contract source code not verified: {address}")
-            name = data["result"][0]["ContractName"]
-            abi = json.loads(data["result"][0]["ABI"])
+            c = _resolve_proxy(address)
 
-            # If the contract is a proxy, get the implementation abi.
-            as_proxy_for = None
-            # always check for an EIP1967 proxy - https://eips.ethereum.org/EIPS/eip-1967
-            implementation_eip1967 = web3.eth.get_storage_at(
-                address, int(web3.keccak(text="eip1967.proxy.implementation").hex(), 16) - 1
-            )
-            # always check for an EIP1822 proxy - https://eips.ethereum.org/EIPS/eip-1822
-            implementation_eip1822 = web3.eth.get_storage_at(address, web3.keccak(text="PROXIABLE"))
-            if len(implementation_eip1967) > 0 and int(implementation_eip1967.hex(), 16):
-                as_proxy_for = _resolve_address(implementation_eip1967[-20:])
-            elif len(implementation_eip1822) > 0 and int(implementation_eip1822.hex(), 16):
-                as_proxy_for = _resolve_address(implementation_eip1822[-20:])
-            elif data["result"][0].get("Implementation"):
-                # for other proxy patterns, we only check if etherscan indicates
-                # the contract is a proxy. otherwise we could have a false positive
-                # if there is an `implementation` method on a regular contract.
-                try:
-                    # first try to call `implementation` per EIP897
-                    # https://eips.ethereum.org/EIPS/eip-897
-                    c = Contract.from_abi(name, address, abi)
-                    as_proxy_for = c.implementation.call()
-                except Exception:
-                    # if that fails, fall back to the address provided by etherscan
-                    as_proxy_for = _resolve_address(data["result"][0]["Implementation"])
-
-            if as_proxy_for == address:
-                as_proxy_for = None
-
-            # if this is a proxy, fetch information for the implementation contract
-            if as_proxy_for is not None:
-                implementation_contract = contract(as_proxy_for)
-                abi = implementation_contract._build["abi"]
-
-            c = Contract.from_abi(name, address, abi)
         # Lastly, get rid of unnecessary memory-hog properties
         return _squeeze(c)
 
@@ -216,8 +174,12 @@ def contract(address: Address) -> Contract:
 @eth_retry.auto_retry
 def _resolve_proxy(address):
     data = _fetch_from_explorer(address, "getsourcecode", False)
+    is_verified = bool(data["result"][0].get("SourceCode"))
+    if not is_verified:
+        raise ValueError(f"Contract source code not verified: {address}")
     name = data["result"][0]["ContractName"]
     abi = json.loads(data["result"][0]["ABI"])
+
     as_proxy_for = None
 
     # always check for an EIP1967 proxy - https://eips.ethereum.org/EIPS/eip-1967
@@ -249,8 +211,7 @@ def _resolve_proxy(address):
         abi = json.loads(data["result"][0]["ABI"])
         return Contract.from_abi(name, as_proxy_for, abi)
     else:
-        return _contract(address)
-
+        return Contract.from_abi(name, address, abi)
 
 
 @lru_cache(maxsize=None)
