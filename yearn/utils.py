@@ -173,13 +173,7 @@ def contract(address: Address) -> Contract:
 
 @eth_retry.auto_retry
 def _resolve_proxy(address):
-    data = _fetch_from_explorer(address, "getsourcecode", False)
-    is_verified = bool(data["result"][0].get("SourceCode"))
-    if not is_verified:
-        raise ValueError(f"Contract source code not verified: {address}")
-    name = data["result"][0]["ContractName"]
-    abi = json.loads(data["result"][0]["ABI"])
-
+    name, abi, implementation = _extract_abi_data(address)
     as_proxy_for = None
 
     # always check for an EIP1967 proxy - https://eips.ethereum.org/EIPS/eip-1967
@@ -192,7 +186,7 @@ def _resolve_proxy(address):
         as_proxy_for = _resolve_address(implementation_eip1967[-20:])
     elif len(implementation_eip1822) > 0 and int(implementation_eip1822.hex(), 16):
         as_proxy_for = _resolve_address(implementation_eip1822[-20:])
-    elif data["result"][0].get("Implementation"):
+    elif implementation:
         # for other proxy patterns, we only check if etherscan indicates
         # the contract is a proxy. otherwise we could have a false positive
         # if there is an `implementation` method on a regular contract.
@@ -203,15 +197,24 @@ def _resolve_proxy(address):
             as_proxy_for = c.implementation.call()
         except Exception:
             # if that fails, fall back to the address provided by etherscan
-            as_proxy_for = _resolve_address(data["result"][0]["Implementation"])
+            as_proxy_for = _resolve_address(implementation)
 
     if as_proxy_for:
-        data = _fetch_from_explorer(as_proxy_for, "getsourcecode", False)
-        name = data["result"][0]["ContractName"]
-        abi = json.loads(data["result"][0]["ABI"])
+        name, abi, _ = _extract_abi_data(as_proxy_for)
         return Contract.from_abi(name, as_proxy_for, abi)
     else:
         return Contract.from_abi(name, address, abi)
+
+
+def _extract_abi_data(address):
+    data = _fetch_from_explorer(address, "getsourcecode", False)
+    is_verified = bool(data["result"][0].get("SourceCode"))
+    if not is_verified:
+        raise ValueError(f"Contract source code not verified: {address}")
+    name = data["result"][0]["ContractName"]
+    abi = json.loads(data["result"][0]["ABI"])
+    implementation = data["result"][0].get("Implementation")
+    return name, abi, implementation
 
 
 @lru_cache(maxsize=None)
