@@ -48,6 +48,7 @@ TREASURY_MULTISIG = {
     Network.Mainnet:    "0x93A62dA5a14C80f265DAbC077fCEE437B1a0Efde",
     Network.Fantom:     "0x89716Ad7EDC3be3B35695789C475F3e7A3Deb12a",
     Network.Arbitrum:   "0x1deb47dcc9a35ad454bf7f0fcdb03c09792c08c1",
+    Network.Optimism:   "0x84654e35E504452769757AAe5a8C7C6599cBf954",
 }.get(chain.id, None)
 
 if TREASURY_MULTISIG:
