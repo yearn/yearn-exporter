@@ -74,7 +74,11 @@ TREASURY_WALLETS = {
     Network.Arbitrum: {
         YCHAD_MULTISIG,
         TREASURY_MULTISIG,
-    }
+    },
+    Network.Optimism: {
+        YCHAD_MULTISIG,
+        TREASURY_MULTISIG,
+    },
 }.get(chain.id,set())
 
 TREASURY_WALLETS = {convert.to_address(address) for address in TREASURY_WALLETS}
