@@ -147,7 +147,7 @@ _contract_lock = threading.Lock()
 # eth_retry must come second so lru_cache doesn't cache transient Exceptions.
 @lru_cache_with_exceptions(maxsize=None)
 @eth_retry.auto_retry
-def contract(address: Address) -> Union[Contract, Exception]:
+def contract(address: Address) -> Contract:
     with _contract_lock:
         address = web3.toChecksumAddress(address)
 
@@ -169,10 +169,22 @@ def contract(address: Address) -> Union[Contract, Exception]:
         return _squeeze(c)
 
 
+# These tokens have trouble when resolving the implementation via the chain.
+FORCE_IMPLEMENTATION = {
+    Network.Mainnet: {
+        "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48": "0xa2327a938Febf5FEC13baCFb16Ae10EcBc4cbDCF", # USDC as of 2022-08-10
+    },
+}.get(chain.id, {})
+
 @eth_retry.auto_retry
 def _resolve_proxy(address):
     name, abi, implementation = _extract_abi_data(address)
     as_proxy_for = None
+
+    if address in FORCE_IMPLEMENTATION:
+        implementation = FORCE_IMPLEMENTATION[address]
+        name, abi, _ = _extract_abi_data(implementation)
+        return Contract.from_abi(name, address, abi)
 
     # always check for an EIP1967 proxy - https://eips.ethereum.org/EIPS/eip-1967
     implementation_eip1967 = web3.eth.get_storage_at(
@@ -180,6 +192,14 @@ def _resolve_proxy(address):
     )
     # always check for an EIP1822 proxy - https://eips.ethereum.org/EIPS/eip-1822
     implementation_eip1822 = web3.eth.get_storage_at(address, web3.keccak(text="PROXIABLE"))
+
+    # Just leave this code where it is for a helpful debugger as needed.
+    if address == "":
+        raise Exception(
+            f"""implementation: {implementation}
+            implementation_eip1967: {len(implementation_eip1967)} {implementation_eip1967}
+            implementation_eip1822: {len(implementation_eip1822)} {implementation_eip1822}""")
+
     if len(implementation_eip1967) > 0 and int(implementation_eip1967.hex(), 16):
         as_proxy_for = _resolve_address(implementation_eip1967[-20:])
     elif len(implementation_eip1822) > 0 and int(implementation_eip1822.hex(), 16):
@@ -199,9 +219,7 @@ def _resolve_proxy(address):
 
     if as_proxy_for:
         name, abi, _ = _extract_abi_data(as_proxy_for)
-        return Contract.from_abi(name, as_proxy_for, abi)
-    else:
-        return Contract.from_abi(name, address, abi)
+    return Contract.from_abi(name, address, abi)
 
 
 def _extract_abi_data(address):
