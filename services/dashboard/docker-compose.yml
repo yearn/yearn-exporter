@@ -19,6 +19,7 @@ x-common-envs: &common-envs
   - SENTRY_RELEASE:
   - SENTRY_DSN:
   - LOG_LEVEL:
+  - ETH_HASH_BACKEND: ${ETH_HASH_BACKEND:-pysha3}
 
 x-common-historical-envs: &common-historical-envs
   - POOL_SIZE:
