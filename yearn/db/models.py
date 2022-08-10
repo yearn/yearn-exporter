@@ -112,6 +112,12 @@ class Reports(SQLModel, table=True):
     date_string: str
     timestamp: str
     updated_timestamp: datetime
+    # KeepCRV
+    keep_crv: int
+    keep_crv_percent: int
+    crv_price_usd: int
+    keep_crv_value_usd: int
+    yvecrv_minted: int
     
 
 

@@ -1,3 +1,4 @@
+from lib2to3.pgen2 import token
 import logging
 import time, os
 import telebot
@@ -294,6 +295,33 @@ def handle_event(event, multi_harvest):
     r.timestamp = ts
     r.updated_timestamp = datetime.now()
 
+    # KeepCRV stuff
+    crv = '0xD533a949740bb3306d119CC777fa900bA034cd52'
+    yvecrv = '0xc5bDdf9843308380375a611c18B50Fb9341f502A'
+    voter = '0xF147b8125d2ef93FB6965Db97D6746952a133934'
+    token_abi = Contract(crv).abi
+    crv_token = web3.eth.contract(crv, abi=token_abi)
+    decoded_events = crv_token.events.Transfer().processReceipt(tx)
+    r.keep_crv = 0
+    for tfr in decoded_events:
+        _from, _to, _val = tfr.args.values()
+        if tfr.address == crv and _from == r.strategy_address and _to == voter:
+            r.keep_crv = _val / 1e18
+            r.crv_price_usd = magic.get_price(crv, r.block)
+            r.keep_crv_value_usd = r.keep_crv * r.crv_price_usd
+    
+    if r.keep_crv > 0:
+        yvecrv_token = web3.eth.contract(yvecrv, abi=token_abi)
+        decoded_events = yvecrv_token.events.Transfer().processReceipt(tx)
+        try:
+            r.keep_crv_percent = strategy.keepCRV()
+        except:
+            pass
+        for tfr in decoded_events:
+            _from, _to, _val = tfr.args.values()
+            if tfr.address == yvecrv and _from == ZERO_ADDRESS:
+                r.yvecrv_minted = _val/1e18
+
     with Session(engine) as session:
         query = select(Reports).where(
             Reports.chain_id == chain.id, Reports.strategy_address == r.strategy_address
@@ -584,7 +612,8 @@ def format_dev_telegram(r, t):
     df["Debt Added"] = "{:,.2f}".format(r.debt_added) + " | " + "${:,.2f}".format(r.debt_added * r.want_price_at_block)
     df["Total Debt"] = "{:,.2f}".format(r.total_debt) + " | " + "${:,.2f}".format(r.total_debt * r.want_price_at_block)
     df["Debt Ratio"] = r.debt_ratio
-    
+    if r.keep_crv > 0:
+        df["CRV Locked"] = "{:,.2f}".format(r.keep_crv) + " | " + "${:,.2f}".format(r.keep_crv_value_usd)
     
     if r.rough_apr_pre_fee is not None:
         prefee = "{:.2%}".format(r.rough_apr_pre_fee)
