@@ -1,18 +1,15 @@
 import json
 import logging
 import threading
-import json
 from functools import lru_cache
-from typing import List
+from typing import List, Union
 
 import eth_retry
 from brownie import Contract, chain, convert, interface, web3
-from web3 import Web3
-from brownie.network.contract import _resolve_address, _fetch_from_explorer
-from brownie.exceptions import CompilerError
 from brownie.network.contract import _fetch_from_explorer, _resolve_address
 
 from yearn.cache import memory
+from yearn.decorators import lru_cache_with_exceptions
 from yearn.exceptions import ArchiveNodeRequired, NodeNotSynced
 from yearn.networks import Network
 from yearn.typing import Address, AddressOrContract
@@ -146,10 +143,11 @@ class Singleton(type):
 
 # cached Contract instance, saves about 20ms of init time
 _contract_lock = threading.Lock()
-_contract = lru_cache(maxsize=None)(Contract)
 
+# eth_retry must come second so lru_cache doesn't cache transient Exceptions.
+@lru_cache_with_exceptions(maxsize=None)
 @eth_retry.auto_retry
-def contract(address: Address) -> Contract:
+def contract(address: Address) -> Union[Contract, Exception]:
     with _contract_lock:
         address = web3.toChecksumAddress(address)
 
@@ -162,7 +160,7 @@ def contract(address: Address) -> Contract:
         # autofetch-sources: false
         # Try to fetch the contract from the local sqlite db.
         try:
-            c = _contract(address)
+            c = Contract(address)
         # If we don't already have the contract in the db, we'll try to fetch it from the explorer.
         except ValueError as e:
             c = _resolve_proxy(address)
