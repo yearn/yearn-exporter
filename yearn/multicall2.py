@@ -1,3 +1,4 @@
+import os
 from collections import defaultdict
 from itertools import count, product
 from operator import itemgetter
@@ -12,6 +13,7 @@ from yearn.networks import Network
 from yearn.typing import Block
 from yearn.utils import contract, contract_creation_block
 
+MULTICALL_MAX_SIZE = int(os.environ.get("MULTICALL_MAX_SIZE", 500)) # Currently set arbitrarily
 MULTICALL2 = {
     Network.Mainnet: '0x5BA1e12693Dc8F9c48aAD8770482f4739bEeD696',
     Network.Gnosis: '0xFAa296891cA6CECAF2D86eF5F7590316d0A17dA0', # maker has not yet deployed multicall2. This is from another deployment
@@ -22,6 +24,11 @@ multicall2 = contract(MULTICALL2[chain.id])
 
 
 def fetch_multicall(*calls, block: Optional[Block] = None, require_success: bool = False) -> List[Any]:
+    # Before doing anything, make sure the load is manageable and size down if necessary.
+    if (num_calls := len(calls)) > MULTICALL_MAX_SIZE:
+        batches = [calls[i:i + MULTICALL_MAX_SIZE] for i in range(0, num_calls, MULTICALL_MAX_SIZE)]
+        return [result for batch in batches for result in fetch_multicall(*batch, block=block, require_success=require_success)]
+    
     # https://github.com/makerdao/multicall
     multicall_input = []
     attribute_errors = []
