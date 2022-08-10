@@ -95,7 +95,7 @@ ib_snapshot_block_by_network = {
     Network.Fantom: 28680044,
     Network.Gnosis: 1, # TODO revisit as IB is not deployed in gnosis
     Network.Arbitrum: 1,
-    Network.Optimism: 1  
+    Network.Optimism: 12658427,
 }
 
 # We convert to checksum address here to prevent minor annoyances. It's worth it.
