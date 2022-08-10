@@ -29,7 +29,10 @@ STRATEGIST_MULTISIG = {
     },
     Network.Arbitrum: {
         "0x6346282db8323a54e840c6c772b4399c9c655c0d",
-    }
+    },
+    Network.Optimism: {
+        "0xea3a15df68fCdBE44Fdb0DB675B2b3A14a148b26",
+    },
 }.get(chain.id,set())
 
 STRATEGIST_MULTISIG = {convert.to_address(address) for address in STRATEGIST_MULTISIG}
