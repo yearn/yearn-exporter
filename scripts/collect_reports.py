@@ -296,31 +296,32 @@ def handle_event(event, multi_harvest):
     r.updated_timestamp = datetime.now()
 
     # KeepCRV stuff
-    crv = '0xD533a949740bb3306d119CC777fa900bA034cd52'
-    yvecrv = '0xc5bDdf9843308380375a611c18B50Fb9341f502A'
-    voter = '0xF147b8125d2ef93FB6965Db97D6746952a133934'
-    token_abi = Contract(crv).abi
-    crv_token = web3.eth.contract(crv, abi=token_abi)
-    decoded_events = crv_token.events.Transfer().processReceipt(tx)
-    r.keep_crv = 0
-    for tfr in decoded_events:
-        _from, _to, _val = tfr.args.values()
-        if tfr.address == crv and _from == r.strategy_address and _to == voter:
-            r.keep_crv = _val / 1e18
-            r.crv_price_usd = magic.get_price(crv, r.block)
-            r.keep_crv_value_usd = r.keep_crv * r.crv_price_usd
-    
-    if r.keep_crv > 0:
-        yvecrv_token = web3.eth.contract(yvecrv, abi=token_abi)
-        decoded_events = yvecrv_token.events.Transfer().processReceipt(tx)
-        try:
-            r.keep_crv_percent = strategy.keepCRV()
-        except:
-            pass
+    if chain.id == 1:
+        crv = '0xD533a949740bb3306d119CC777fa900bA034cd52'
+        yvecrv = '0xc5bDdf9843308380375a611c18B50Fb9341f502A'
+        voter = '0xF147b8125d2ef93FB6965Db97D6746952a133934'
+        token_abi = Contract(crv).abi
+        crv_token = web3.eth.contract(crv, abi=token_abi)
+        decoded_events = crv_token.events.Transfer().processReceipt(tx)
+        r.keep_crv = 0
         for tfr in decoded_events:
             _from, _to, _val = tfr.args.values()
-            if tfr.address == yvecrv and _from == ZERO_ADDRESS:
-                r.yvecrv_minted = _val/1e18
+            if tfr.address == crv and _from == r.strategy_address and _to == voter:
+                r.keep_crv = _val / 1e18
+                r.crv_price_usd = magic.get_price(crv, r.block)
+                r.keep_crv_value_usd = r.keep_crv * r.crv_price_usd
+        
+        if r.keep_crv > 0:
+            yvecrv_token = web3.eth.contract(yvecrv, abi=token_abi)
+            decoded_events = yvecrv_token.events.Transfer().processReceipt(tx)
+            try:
+                r.keep_crv_percent = strategy.keepCRV()
+            except:
+                pass
+            for tfr in decoded_events:
+                _from, _to, _val = tfr.args.values()
+                if tfr.address == yvecrv and _from == ZERO_ADDRESS:
+                    r.yvecrv_minted = _val/1e18
 
     with Session(engine) as session:
         query = select(Reports).where(
@@ -586,21 +587,10 @@ def format_dev_telegram(r, t):
     df["Gain"] = "{:,.2f}".format(r.gain) + " | " + "${:,.2f}".format(r.gain * r.want_price_at_block)
     df["Loss"] = "{:,.2f}".format(r.loss) + " | " + "${:,.2f}".format(r.loss * r.want_price_at_block)
     if r.vault_address in INVERSE_PRIVATE_VAULTS:
-        tx = web3.eth.getTransactionReceipt(r.txn_hash)
-        crv = '0xD533a949740bb3306d119CC777fa900bA034cd52'
-        voter = '0xF147b8125d2ef93FB6965Db97D6746952a133934'
         fees = r.gov_fee_in_want + r.strategist_fee_in_want
         inverse_profit = r.gain - fees
         df["Yearn Treasury Profit"] = "{:,.2f}".format(fees) + " | " + "${:,.2f}".format(fees * r.want_price_at_block)
         df["Inverse Profit"] = "{:,.2f}".format(inverse_profit) + " | " + "${:,.2f}".format(inverse_profit * r.want_price_at_block)
-        token = web3.eth.contract(crv, abi=Contract(crv).abi)
-        decoded_events = token.events.Transfer().processReceipt(tx)
-        for t in decoded_events:
-            _from, _to, _val = t.args.values()
-            if t.address == crv and _from == r.strategy_address and _to == voter:
-                crv_amount = _val/1e18
-                crv_value = magic.get_price(crv, r.block) * crv_amount
-                df["CRV Locked"] = "{:,.2f}".format(crv_amount) + " | " + "${:,.2f}".format(crv_value)
 
     else:
         df["Treasury Fee"] = "{:,.2f}".format(r.gov_fee_in_want) + " | " + "${:,.2f}".format(r.gov_fee_in_want * r.want_price_at_block)
