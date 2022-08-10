@@ -42,6 +42,7 @@ YCHAD_MULTISIG = {
     Network.Fantom:     "0xC0E2830724C946a6748dDFE09753613cd38f6767",
     Network.Gnosis:     "0x22eAe41c7Da367b9a15e942EB6227DF849Bb498C",
     Network.Arbitrum:   "0xb6bc033d34733329971b938fef32fad7e98e56ad",
+    Network.Optimism:   "0xc6387e937bcef8de3334f80edc623275d42457ff",
 }.get(chain.id, None)
 
 if YCHAD_MULTISIG:
