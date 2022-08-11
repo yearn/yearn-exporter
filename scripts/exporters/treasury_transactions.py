@@ -38,6 +38,8 @@ BATCH_SIZE = {
     Network.Mainnet: 25_000,
     Network.Fantom: 2_000_000,
     Network.Gnosis: 2_000_000,
+    Network.Arbitrum: 1_000_000,
+    Network.Optimism: 1_000_000,
 }[chain.id]
 
 treasury = YearnTreasury(watch_events_forever=True)

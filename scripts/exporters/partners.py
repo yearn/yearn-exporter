@@ -1,20 +1,36 @@
 import logging
-import os
-import time
+from datetime import datetime, timezone
+from time import time
 
 import sentry_sdk
-from brownie import chain
-
+from yearn.networks import Network
 from yearn.outputs.victoria import output_duration
-from yearn.outputs.victoria.output_treasury import _get_symbol
 from yearn.outputs.victoria.output_helper import _build_item, _post
-from yearn.treasury.buckets import get_token_bucket
+from yearn.outputs.victoria.output_treasury import _get_symbol
 from yearn.partners.partners import partners
+from yearn.snapshot_range_helper import (start_bidirectional_export,
+                                         time_tracking)
+from yearn.treasury.buckets import get_token_bucket
+from yearn.utils import closest_block_after_timestamp
 
 sentry_sdk.set_tag('script','partners_exporter')
 
 logger = logging.getLogger('yearn.partners_exporter')
-sleep_interval = int(os.environ.get('SLEEP_SECONDS', '0'))
+
+
+def main():
+    data_query = 'sms_assets{network="' + Network.label() + '"}'
+    start_bidirectional_export(datetime.now(tz=timezone.utc), export_snapshot, data_query)
+
+
+@time_tracking
+def export_snapshot(snapshot, ts):
+    start = time()
+    block = closest_block_after_timestamp(snapshot)
+    export_partners(block)
+    duration = time.time() - start
+    output_duration.export(duration, 1, "partners", block.timestamp)
+    logger.info("exported partners snapshot %s took %.3fs", snapshot, time() - start)
 
 
 def export_partners(block):
@@ -62,13 +78,3 @@ def export_partners(block):
                 )
                 metrics_to_export.append(item)
         _post(metrics_to_export)
-
-
-def main():
-    for block in chain.new_blocks(height_buffer=12):
-        start_time = time.time()
-        export_partners(block)
-        duration = time.time() - start_time
-        output_duration.export(duration, 1, "partners_forwards", block.timestamp)
-        logger.info('exported block=%d took=%.3fs', block.number, time.time() - start_time)
-        time.sleep(sleep_interval)

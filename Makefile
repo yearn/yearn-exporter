@@ -9,18 +9,18 @@ tvl_command 		:= docker-compose --file services/tvl/docker-compose.yml --project
 test_command 		:= docker-compose --file services/dashboard/docker-compose.test.yml --project-directory .
 
 # treasury exporter convenience vars
-ethereum_treasury_containers := treasury-exporter 			historical-treasury-exporter 			treasury-transactions-exporter
-fantom_treasury_containers   := ftm-treasury-exporter 		historical-ftm-treasury-exporter		ftm-treasury-transactions-exporter
-arbitrum_treasury_containers := arbi-treasury-exporter 		historical-arbi-treasury-exporter		arbi-treasury-transactions-exporter
-gnosis_treasury_containers 	 := gnosis-treasury-exporter 	historical-gnosis-treasury-exporter		gnosis-treasury-transactions-exporter
-optimism_treasury_contrainers:= opti-treasury-exporter 		historical-opti-treasury-exporter		opti-treasury-transactions-exporter
+ethereum_treasury_containers := treasury-exporter 			treasury-transactions-exporter
+fantom_treasury_containers   := ftm-treasury-exporter 		ftm-treasury-transactions-exporter
+arbitrum_treasury_containers := arbi-treasury-exporter 		arbi-treasury-transactions-exporter
+gnosis_treasury_containers 	 := gnosis-treasury-exporter 	gnosis-treasury-transactions-exporter
+optimism_treasury_contrainers:= opti-treasury-exporter 		opti-treasury-transactions-exporter
 
 # less spammy output convenience vars
-ethereum_containers_lite := eth-exporter 	historical-eth-exporter 		sms-exporter 			historical-sms-exporter 		transactions-exporter 			$(ethereum_treasury_containers)
-fantom_containers_lite   := ftm-exporter 	historical-ftm-exporter 	 	ftm-sms-exporter 		historical-ftm-sms-exporter 	ftm-transactions-exporter 		$(fantom_treasury_containers)
-arbitrum_containers_lite := arbi-exporter 	historical-arbi-exporter 	 	arbi-sms-exporter 		historical-arbi-sms-exporter 	arbi-transactions-exporter 		$(arbitrum_treasury_containers)
-gnosis_containers_lite   := gnosis-exporter historical-gnosis-exporter 	 	gnosis-sms-exporter 	historical-gnosis-sms-exporter 	gnosis-transactions-exporter 	$(gnosis_treasury_containers)
-optimism_containers_lite := opti-exporter 	historical-opti-exporter 	 	opti-sms-exporter 		historical-opti-sms-exporter 	opti-transactions-exporter 		$(optimism_treasury_contrainers)
+ethereum_containers_lite := eth-exporter  	sms-exporter 	 		transactions-exporter 			$(ethereum_treasury_containers)
+fantom_containers_lite   := ftm-exporter 	ftm-sms-exporter 		ftm-transactions-exporter 		$(fantom_treasury_containers)
+arbitrum_containers_lite := arbi-exporter 	arbi-sms-exporter 		arbi-transactions-exporter 		$(arbitrum_treasury_containers)
+gnosis_containers_lite   := gnosis-exporter gnosis-sms-exporter 	gnosis-transactions-exporter 	$(gnosis_treasury_containers)
+optimism_containers_lite := opti-exporter 	opti-sms-exporter 		opti-transactions-exporter 		$(optimism_treasury_contrainers)
 
 # container vars
 ethereum_containers := $(ethereum_containers_lite) 	wallet-exporter 		partners-exporter

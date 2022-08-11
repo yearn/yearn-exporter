@@ -1,3 +1,4 @@
+from functools import lru_cache
 import logging
 import threading
 import time
@@ -482,3 +483,11 @@ class StrategistMultisig(Treasury):
             Network.Optimism: 18_084_577,
         }[chain.id]
         super().__init__('sms',STRATEGIST_MULTISIG,watch_events_forever=watch_events_forever,start_block=start_block)
+
+@lru_cache(maxsize=1)
+def _treasury():
+    return YearnTreasury(watch_events_forever=True)
+
+@lru_cache(maxsize=1)
+def _sms():
+    return StrategistMultisig(watch_events_forever=True)
