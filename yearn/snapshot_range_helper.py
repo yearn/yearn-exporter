@@ -2,23 +2,26 @@ import functools
 import logging
 import os
 import time
-from concurrent.futures import Future, ProcessPoolExecutor
+from concurrent.futures import Future, ProcessPoolExecutor, ThreadPoolExecutor
 from datetime import datetime, timedelta, timezone
 from itertools import count
-from typing import Callable, Iterable, Iterator, List, NoReturn
+from typing import Callable, Iterable, Iterator, List, NoReturn, Union
 
 import requests
 
 from yearn.outputs.victoria import output_duration
-from yearn.yearn import _yearn
 
 POOL_SIZE = int(os.environ.get("POOL_SIZE", 4))
 CHUNK_SIZE = int(os.environ.get("CHUNK_SIZE", 50))
 REORG_BUFFER = timedelta(seconds=int(os.environ.get("REORG_BUFFER", "60")))
 
-logger = logging.getLogger('yearn.historical_helper')
+logger = logging.getLogger('yearn.snapshot_range_helper')
 
-executor = ProcessPoolExecutor(POOL_SIZE, initializer=_yearn)
+# This allows us to bypass multiprocessing by setting `POOL_SIZE` to `1`. Can be helpful for debugging.
+if POOL_SIZE == 1:
+    executor = ThreadPoolExecutor(1)
+else:
+    executor = ProcessPoolExecutor(POOL_SIZE)
 
 
 def _raise_any_exceptions(futures: Iterable[Future]):
@@ -94,7 +97,7 @@ def bidirectional_snapshot_generator(forward_snapshot_generator: Iterator[dateti
     historical_finished = False
     while True:
         # We'll leave 1 work item at a time for each process in the pool.
-        while POOL_SIZE <= len(executor._pending_work_items):
+        while POOL_SIZE <= _num_pending_work_items(executor):
             logger.debug("waiting for idle workers")
             time.sleep(1)
         if (next_forward := next(forward_snapshot_generator)):
@@ -204,3 +207,11 @@ def _generate_snapshot_range(start, end, interval, data_query):
                 continue
             else:
                 yield snapshot
+
+def _num_pending_work_items(executor: Union[ProcessPoolExecutor, ThreadPoolExecutor]) -> int:
+    if isinstance(executor, ProcessPoolExecutor):
+        return len(executor._pending_work_items)
+    elif isinstance(executor, ThreadPoolExecutor):
+        return executor._work_queue.qsize()
+    else:
+        raise NotImplementedError("executor type not supported, must be an instance of ProcessPoolExecutor or ThreadPoolExecutor")
