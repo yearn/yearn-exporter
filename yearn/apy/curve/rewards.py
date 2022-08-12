@@ -1,11 +1,10 @@
 from time import time
 from typing import Optional
-from brownie import Contract, ZERO_ADDRESS
 
+from brownie import ZERO_ADDRESS
 from yearn.apy.common import SECONDS_PER_YEAR
-from yearn.utils import get_block_timestamp, contract
-
-from yearn.prices.magic import get_price
+from yearn.prices import magic
+from yearn.utils import contract, get_block_timestamp
 
 
 def rewards(address: str, pool_price: int, base_asset_price: int, block: Optional[int]=None) -> float:
@@ -35,7 +34,7 @@ def staking(address: str, pool_price: int, base_asset_price: int, block: Optiona
 
     if token and rate:
         # Single reward token
-        token_price = get_price(token, block=block)
+        token_price = magic.get_price(token, block=block)
         return (SECONDS_PER_YEAR * (rate / 1e18) * token_price) / (
             (pool_price / 1e18) * (total_supply / 1e18) * base_asset_price
         )
@@ -56,7 +55,7 @@ def staking(address: str, pool_price: int, base_asset_price: int, block: Optiona
             except ValueError:
                 token = None
             rate = data.rewardRate / 1e18 if data else 0
-            token_price = get_price(token, block=block) or 0
+            token_price = magic.get_price(token, block=block) or 0
             apr += SECONDS_PER_YEAR * rate * token_price / ((pool_price / 1e18) * (total_supply / 1e18) * token_price)
             queue += 1
             try:
@@ -84,7 +83,7 @@ def multi(address: str, pool_price: int, base_asset_price: int, block: Optional[
             token = None
         if data.periodFinish >= time():
             rate = data.rewardRate / 1e18 if data else 0
-            token_price = get_price(token, block=block) or 0
+            token_price = magic.get_price(token, block=block) or 0
             apr += SECONDS_PER_YEAR * rate * token_price / ((pool_price / 1e18) * (total_supply / 1e18) * token_price)
         queue += 1
         try:

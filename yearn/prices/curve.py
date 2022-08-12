@@ -17,19 +17,21 @@ import threading
 import time
 from collections import defaultdict
 from enum import IntEnum
-from functools import lru_cache
+from typing import Dict, List, Optional
 
-from brownie import ZERO_ADDRESS, chain
+from brownie import ZERO_ADDRESS, Contract, chain, convert, interface
 from brownie.convert import to_address
+from brownie.convert.datatypes import EthAddress
 from cachetools.func import lru_cache, ttl_cache
+
+from yearn.decorators import sentry_catch_all, wait_or_exit_after
 from yearn.events import create_filter, decode_logs
 from yearn.exceptions import UnsupportedNetwork
 from yearn.multicall2 import fetch_multicall
 from yearn.networks import Network
-from yearn.utils import Singleton, contract
-from yearn.decorators import sentry_catch_all, wait_or_exit_after
-
 from yearn.prices import magic
+from yearn.typing import Address, AddressOrContract, Block
+from yearn.utils import Singleton, contract
 
 logger = logging.getLogger(__name__)
 
@@ -60,6 +62,11 @@ curve_contracts = {
         'voting_escrow': '0x5f3b5DfEb7B28CDbD7FAba78963EE202a494e2A2',
         'gauge_controller': '0x2F50D538606Fa9EDD2B11E2446BEb18C9D5846bB',
     },
+    Network.Gnosis: {
+        # Curve has not properly initialized the provider. contract(self.address_provider.get_address(5)) returns 0x0.
+        # CurveRegistry class has extra handling to fetch registry in this case.
+        'address_provider': ADDRESS_PROVIDER, 
+    },
     Network.Fantom: {
         'address_provider': ADDRESS_PROVIDER,
     },
@@ -82,7 +89,7 @@ class Ids(IntEnum):
 class CurveRegistry(metaclass=Singleton):
 
     @wait_or_exit_after
-    def __init__(self):
+    def __init__(self) -> None:
         if chain.id not in curve_contracts:
             raise UnsupportedNetwork("curve is not supported on this network")
 
@@ -104,34 +111,44 @@ class CurveRegistry(metaclass=Singleton):
         self._thread.start()
 
     @sentry_catch_all
-    def watch_events(self):
+    def watch_events(self) -> None:
         address_provider_filter = create_filter(str(self.address_provider))
         registries = []
         registries_filter = None
+        registry_logs = []
 
+        address_logs = address_provider_filter.get_all_entries()
         while True:
             # fetch all registries and factories from address provider
-            for event in decode_logs(address_provider_filter.get_new_entries()):
+            for event in decode_logs(address_logs):
                 if event.name == 'NewAddressIdentifier':
                     self.identifiers[Ids(event['id'])].append(event['addr'])
                 if event.name == 'AddressModified':
                     self.identifiers[Ids(event['id'])].append(event['new_address'])
-
+            
+            # NOTE: Gnosis chain's address provider fails to provide registry via events.
+            if not self.identifiers[Ids.Main_Registry]:
+                self.identifiers[Ids.Main_Registry] = self.address_provider.get_registry()
+            
             # if registries were updated, recreate the filter
             _registries = [
                 self.identifiers[i][-1]
                 for i in [Ids.Main_Registry, Ids.CryptoSwap_Registry]
+                if self.identifiers[i]
             ]
             if _registries != registries:
                 registries = _registries
                 registries_filter = create_filter(registries)
+                registry_logs = registries_filter.get_all_entries()
 
             # fetch pools from the latest registries
-            for event in decode_logs(registries_filter.get_new_entries()):
+            for event in decode_logs(registry_logs):
                 if event.name == 'PoolAdded':
                     self.registries[event.address].add(event['pool'])
                     lp_token = contract(event.address).get_lp_token(event['pool'])
                     self.token_to_pool[lp_token] = event['pool']
+                elif event.name == 'PoolRemoved':
+                    self.registries[event.address].discard(event['pool'])
 
             # load metapool and curve v5 factories
             self.load_factories()
@@ -142,13 +159,18 @@ class CurveRegistry(metaclass=Singleton):
 
             time.sleep(600)
 
-    def read_pools(self, registry):
-        registry = contract(registry)
+            # read new logs at end of loop
+            address_logs = address_provider_filter.get_new_entries()
+            if registries_filter:
+                registry_logs = registries_filter.get_new_entries()
+
+    def read_pools(self, registry: Address) -> List[EthAddress]:
+        registry = interface.CurveRegistry(registry)
         return fetch_multicall(
             *[[registry, 'pool_list', i] for i in range(registry.pool_count())]
         )
 
-    def load_factories(self):
+    def load_factories(self) -> None:
         # factory events are quite useless, so we use a different method
         for factory in self.identifiers[Ids.Metapool_Factory]:
             pool_list = self.read_pools(factory)
@@ -169,7 +191,7 @@ class CurveRegistry(metaclass=Singleton):
                 self.token_to_pool[lp_token] = pool
                 self.factories[factory].add(pool)
 
-    def get_factory(self, pool):
+    def get_factory(self, pool: AddressOrContract) -> EthAddress:
         """
         Get metapool factory that has spawned a pool.
         """
@@ -177,12 +199,12 @@ class CurveRegistry(metaclass=Singleton):
             return next(
                 factory
                 for factory, factory_pools in self.factories.items()
-                if str(pool) in factory_pools
+                if convert.to_address(pool) in factory_pools
             )
         except StopIteration:
             return None
 
-    def get_registry(self, pool):
+    def get_registry(self, pool: AddressOrContract) -> EthAddress:
         """
         Get registry containing a pool.
         """
@@ -190,16 +212,16 @@ class CurveRegistry(metaclass=Singleton):
             return next(
                 registry
                 for registry, pools in self.registries.items()
-                if str(pool) in pools
+                if convert.to_address(pool) in pools
             )
         except StopIteration:
             return None
 
-    def __contains__(self, token):
+    def __contains__(self, token: AddressOrContract) -> bool:
         return self.get_pool(token) is not None
 
     @lru_cache(maxsize=None)
-    def get_pool(self, token):
+    def get_pool(self, token: AddressOrContract) -> EthAddress:
         """
         Get Curve pool (swap) address by LP token address. Supports factory pools.
         """
@@ -208,7 +230,7 @@ class CurveRegistry(metaclass=Singleton):
             return self.token_to_pool[token]
 
     @lru_cache(maxsize=None)
-    def get_gauge(self, pool):
+    def get_gauge(self, pool: AddressOrContract) -> EthAddress:
         """
         Get liquidity gauge address by pool.
         """
@@ -219,13 +241,13 @@ class CurveRegistry(metaclass=Singleton):
             gauge = contract(factory).get_gauge(pool)
             if gauge != ZERO_ADDRESS:
                 return gauge
-        elif registry:
-            gauges, types = contract(registry).get_gauges(pool)
+        if registry:
+            gauges, _ = contract(registry).get_gauges(pool)
             if gauges[0] != ZERO_ADDRESS:
                 return gauges[0]
 
     @lru_cache(maxsize=None)
-    def get_coins(self, pool):
+    def get_coins(self, pool: AddressOrContract) -> List[EthAddress]:
         """
         Get coins of pool.
         """
@@ -244,7 +266,7 @@ class CurveRegistry(metaclass=Singleton):
         return [coin for coin in coins if coin not in {None, ZERO_ADDRESS}]
 
     @lru_cache(maxsize=None)
-    def get_underlying_coins(self, pool):
+    def get_underlying_coins(self, pool: AddressOrContract) -> List[EthAddress]:
         pool = to_address(pool)
         factory = self.get_factory(pool)
         registry = self.get_registry(pool)
@@ -275,7 +297,7 @@ class CurveRegistry(metaclass=Singleton):
         return [coin for coin in coins if coin != ZERO_ADDRESS]
 
     @lru_cache(maxsize=None)
-    def get_decimals(self, pool):
+    def get_decimals(self, pool: AddressOrContract) -> List[int]:
         pool = to_address(pool)
         factory = self.get_factory(pool)
         registry = self.get_registry(pool)
@@ -291,7 +313,7 @@ class CurveRegistry(metaclass=Singleton):
 
         return [dec for dec in decimals if dec != 0]
 
-    def get_balances(self, pool, block=None):
+    def get_balances(self, pool: AddressOrContract, block: Optional[Block] = None) -> Dict[EthAddress,float]:
         """
         Get {token: balance} of liquidity in the pool.
         """
@@ -305,9 +327,15 @@ class CurveRegistry(metaclass=Singleton):
             source = contract(factory or registry)
             balances = source.get_balances(pool, block_identifier=block)
         # fallback for historical queries
-        except ValueError:
+        except ValueError as e:
+            if str(e) not in [
+                'execution reverted',
+                'No data was returned - the call likely reverted'
+                ]: raise
+
             balances = fetch_multicall(
-                *[[contract(pool), 'balances', i] for i, _ in enumerate(coins)]
+                *[[contract(pool), 'balances', i] for i, _ in enumerate(coins)],
+                block=block
             )
 
         if not any(balances):
@@ -317,8 +345,17 @@ class CurveRegistry(metaclass=Singleton):
             coin: balance / 10 ** dec
             for coin, balance, dec in zip(coins, balances, decimals)
         }
+    
+    def get_virtual_price(self, pool: Address, block: Optional[Block] = None) -> Optional[float]:
+        pool = contract(pool)
+        try:
+            return pool.get_virtual_price(block_identifier=block) / 1e18
+        except ValueError as e:
+            if str(e) == "execution reverted":
+                return None
+            raise
 
-    def get_tvl(self, pool, block=None):
+    def get_tvl(self, pool: AddressOrContract, block: Optional[Block] = None) -> float:
         """
         Get total value in Curve pool.
         """
@@ -331,7 +368,7 @@ class CurveRegistry(metaclass=Singleton):
         )
 
     @ttl_cache(maxsize=None, ttl=600)
-    def get_price(self, token, block=None):
+    def get_price(self, token: AddressOrContract, block: Optional[Block] = None) -> Optional[float]:
         token = to_address(token)
         pool = self.get_pool(token)
         # crypto pools can have different tokens, use slow method
@@ -351,11 +388,13 @@ class CurveRegistry(metaclass=Singleton):
             coin = (set(coins) & BASIC_TOKENS).pop()
         except KeyError:
             coin = coins[0]
+        
+        virtual_price = self.get_virtual_price(pool, block)
+        
+        if virtual_price:
+            return virtual_price * magic.get_price(coin, block)
 
-        virtual_price = contract(pool).get_virtual_price(block_identifier=block) / 1e18
-        return virtual_price * magic.get_price(coin, block)
-
-    def calculate_boost(self, gauge, addr, block=None):
+    def calculate_boost(self, gauge: Contract, addr: Address, block: Optional[Block] = None) -> Dict[str,float]:
         results = fetch_multicall(
             [gauge, "balanceOf", addr],
             [gauge, "totalSupply"],
@@ -405,7 +444,7 @@ class CurveRegistry(metaclass=Singleton):
             "min vecrv": min_vecrv,
         }
 
-    def calculate_apy(self, gauge, lp_token, block=None):
+    def calculate_apy(self, gauge: Contract, lp_token: AddressOrContract, block: Optional[Block] = None) -> Dict[str,float]:
         crv_price = magic.get_price(self.crv)
         pool = contract(self.get_pool(lp_token))
         results = fetch_multicall(

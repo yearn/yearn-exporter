@@ -1,10 +1,14 @@
 import logging
+from typing import Optional
 
-from brownie import ZERO_ADDRESS, chain
+from brownie import ZERO_ADDRESS, Contract, chain, convert
+from brownie.exceptions import VirtualMachineError
 from cachetools.func import ttl_cache
+
 from yearn.events import decode_logs, get_logs_asap
 from yearn.exceptions import UnsupportedNetwork
 from yearn.networks import Network
+from yearn.typing import Address, AddressOrContract, Block
 from yearn.utils import Singleton, contract
 
 logger = logging.getLogger(__name__)
@@ -30,7 +34,9 @@ ADDITIONAL_FEEDS = {
     Network.Fantom: {
         "0x21be370D5312f44cB42ce377BC9b8a0cEF1A4C83": "0xf4766552D15AE4d256Ad41B6cf2933482B0680dc",  # wftm
         "0x321162Cd933E2Be498Cd2267a90534A804051b11": "0x8e94C22142F4A64b99022ccDd994f4e9EC86E4B4",  # wbtc
+        "0x2406dCe4dA5aB125A18295f4fB9FD36a0f7879A2": "0x8e94C22142F4A64b99022ccDd994f4e9EC86E4B4",  # anybtc
         "0x74b23882a30290451A17c44f4F05243b6b58C76d": "0x11DdD3d147E5b83D01cee7070027092397d63658",  # weth
+        "0xBDC8fd437C489Ca3c6DA3B5a336D11532a532303": "0x11DdD3d147E5b83D01cee7070027092397d63658",  # anyeth
         "0xd6070ae98b8069de6B494332d1A1a81B6179D960": "0x4F5Cc6a2291c964dEc4C7d6a50c0D89492d4D91B",  # bifi
         "0x1E4F97b9f9F913c46F1632781732927B9019C68b": "0xa141D7E3B44594cc65142AE5F2C7844Abea66D2B",  # crv
         "0x6a07A792ab2965C72a5B8088d3a069A7aC3a993B": "0xE6ecF7d2361B6459cBb3b4fb065E0eF4B175Fe74",  # aave
@@ -44,16 +50,43 @@ ADDITIONAL_FEEDS = {
         "0xe105621721D1293c27be7718e041a4Ce0EbB227E": "0x3E68e68ea2c3698400465e3104843597690ae0f7",  # feur
         "0x29b0Da86e484E1C0029B56e817912d778aC0EC69": "0x9B25eC3d6acfF665DfbbFD68B3C1D896E067F0ae",  # yfi
     },
+
+    Network.Gnosis: {
+        "0x8e5bBbb09Ed1ebdE8674Cda39A0c169401db4252" : "0x6c1d7e76ef7304a40e8456ce883bc56d3dea3f7d", # wbtc
+        "0x6A023CCd1ff6F2045C3309768eAd9E68F978f6e1" : "0xa767f745331d267c7751297d982b050c93985627", # weth
+        "0xDDAfbb505ad214D7b80b1f830fcCc89B60fb7A83" : "0x26c31ac71010af62e6b486d1132e266d6298857d", # usdc
+        "0x712b3d230F3C1c19db860d80619288b1F0BDd0Bd" : "0xc77b83ac3dd2a761073bd0f281f7b880b2ddde18", # crv
+        "0xDF613aF6B44a31299E48131e9347F034347E2F00" : "0x2b481dc923aa050e009113dca8dcb0dab4b68cdf", # aave
+        "0xE2e73A1c69ecF83F464EFCE6A5be353a37cA09b2" : "0xed322a5ac55bae091190dff9066760b86751947b", # link
+        "0x3A00E08544d589E19a8e7D97D0294331341cdBF6" : "0x3b84d6e6976d5826500572600eb44f9f1753827b", # snx
+        "0x2995D1317DcD4f0aB89f4AE60F3f020A4F17C7CE" : "0xc0a6bf8d5d408b091d022c3c0653d4056d4b9c01", # sushi
+        "0x44fA8E6f47987339850636F88629646662444217" : "0x678df3415fc31947da4324ec63212874be5a82f8", # dai
+        "0xbf65bfcb5da067446CeE6A706ba3Fe2fB1a9fdFd" : "0x14030d5a0c9e63d9606c6f2c8771fc95b34b07e0", # yfi
+        "0x7f7440C5098462f833E123B44B8A03E1d9785BAb" : "0xfdf9eb5fafc11efa65f6fd144898da39a7920ae8", # 1inch
+        "0xDf6FF92bfDC1e8bE45177DC1f4845d391D3ad8fD" : "0xba95bc8418ebcdf8a690924e1d4ad5292139f2ea", # comp
+    },
+
+    Network.Arbitrum: {
+        "0x2f2a2543B76A4166549F7aaB2e75Bef0aefC5B0f" : "0x6ce185860a4963106506C203335A2910413708e9", # wbtc
+        "0x82aF49447D8a07e3bd95BD0d56f35241523fBab1" : "0x639Fe6ab55C921f74e7fac1ee960C0B6293ba612", # weth
+        "0xDA10009cBd5D07dd0CeCc66161FC93D7c9000da1" : "0xc5C8E77B397E531B8EC06BFb0048328B30E9eCfB", # dai
+        "0xFd086bC7CD5C481DCC9C85ebE478A1C0b69FCbb9" : "0x3f3f5dF88dC9F13eac63DF89EC16ef6e7E25DdE7", # usdt
+        "0xFF970A61A04b1cA14834A43f5dE4533eBDDB5CC8" : "0x50834F3163758fcC1Df9973b6e91f0F0F0434aD3", # usdc
+        "0xFEa7a6a0B346362BF88A9e4A88416B77a57D6c2A" : "0x87121F6c9A9F6E90E59591E4Cf4804873f54A95b", # mim
+        "0x82e3A8F066a6989666b031d916c43672085b1582" : "0x745Ab5b69E01E2BE1104Ca84937Bb71f96f5fB21", # yfi
+    }
 }
 registries = {
     # https://docs.chain.link/docs/feed-registry/#contract-addresses
     Network.Mainnet: '0x47Fb2585D2C56Fe188D0E6ec628a38b74fCeeeDf',
     Network.Fantom: None,
+    Network.Gnosis: None,
+    Network.Arbitrum: None,
 }
 
 
 class Chainlink(metaclass=Singleton):
-    def __init__(self):
+    def __init__(self) -> None:
         if chain.id not in registries:
             raise UnsupportedNetwork('chainlink is not supported on this network')
 
@@ -63,7 +96,7 @@ class Chainlink(metaclass=Singleton):
         else:
             self.feeds = ADDITIONAL_FEEDS[chain.id]
 
-    def load_feeds(self):
+    def load_feeds(self) -> None:
         logs = decode_logs(
             get_logs_asap(str(self.registry), [self.registry.topics['FeedConfirmed']])
         )
@@ -75,19 +108,22 @@ class Chainlink(metaclass=Singleton):
         self.feeds.update(ADDITIONAL_FEEDS[chain.id])
         logger.info(f'loaded {len(self.feeds)} feeds')
 
-    def get_feed(self, asset):
-        return contract(self.feeds[asset])
+    def get_feed(self, asset: AddressOrContract) -> Contract:
+        return contract(self.feeds[convert.to_address(asset)])
 
-    def __contains__(self, asset):
-        return asset in self.feeds
+    def __contains__(self, asset: AddressOrContract) -> bool:
+        return convert.to_address(asset) in self.feeds
 
     @ttl_cache(maxsize=None, ttl=600)
-    def get_price(self, asset, block=None):
+    def get_price(self, asset: AddressOrContract, block: Optional[Block] = None) -> Optional[float]:
         if asset == ZERO_ADDRESS:
             return None
         try:
-            return self.get_feed(asset).latestAnswer(block_identifier=block) / 1e8
-        except ValueError:
+            price = self.get_feed(convert.to_address(asset)).latestAnswer(block_identifier=block) / 1e8
+            # latestAnswer can return 0 before the feed is in use
+            if price:
+                return price
+        except (ValueError, VirtualMachineError):
             return None
 
 

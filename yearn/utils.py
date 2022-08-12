@@ -1,17 +1,25 @@
 import logging
-from functools import lru_cache
 import threading
+import json
+from functools import lru_cache
+from typing import List
 
-from brownie import Contract, chain, web3, interface
+import eth_retry
+from brownie import Contract, chain, convert, interface, web3
+from web3 import Web3
+from brownie.network.contract import _resolve_address, _fetch_from_explorer
+from brownie.exceptions import CompilerError
 
 from yearn.cache import memory
-from yearn.exceptions import ArchiveNodeRequired
+from yearn.exceptions import ArchiveNodeRequired, NodeNotSynced
 from yearn.networks import Network
+from yearn.typing import Address, AddressOrContract
 
 logger = logging.getLogger(__name__)
 
 BINARY_SEARCH_BARRIER = {
     Network.Mainnet: 0,
+    Network.Gnosis: 15_659_482, # gnosis returns "No state available for block 0x3f9e020290502d1d41f4b5519e7d456f0935dea980ec310935206cac8239117e"
     Network.Fantom: 4_564_024,  # fantom returns "missing trie node" before that
     Network.Arbitrum: 0,
 }
@@ -24,7 +32,7 @@ PREFER_INTERFACE = {
     }
 }
 
-def safe_views(abi):
+def safe_views(abi: List) -> List[str]:
     return [
         item["name"]
         for item in abi
@@ -41,10 +49,12 @@ def get_block_timestamp(height):
     An optimized variant of `chain[height].timestamp`
     """
     if chain.id == Network.Mainnet:
-        header = web3.manager.request_blocking(f"erigon_getHeaderByNumber", [height])
-        return int(header.timestamp, 16)
-    else:
-        return chain[height].timestamp
+        try:
+            header = web3.manager.request_blocking(f"erigon_getHeaderByNumber", [height])
+            return int(header.timestamp, 16)
+        except:
+            pass
+    return chain[height].timestamp
 
 
 @memory.cache()
@@ -76,16 +86,22 @@ def get_code(address, block=None):
 
 
 @memory.cache()
-def contract_creation_block(address) -> int:
+def contract_creation_block(address: AddressOrContract) -> int:
     """
     Find contract creation block using binary search.
     NOTE Requires access to historical state. Doesn't account for CREATE2 or SELFDESTRUCT.
     """
     logger.info("contract creation block %s", address)
+    address = convert.to_address(address)
 
     barrier = BINARY_SEARCH_BARRIER[chain.id]
     lo = barrier
     hi = end = chain.height
+
+    if hi == 0:
+        raise NodeNotSynced(f'''
+            `chain.height` returns 0 on your node, which means it is not fully synced.
+            You can only use contract_creation_block on a fully synced node.''')
 
     while hi - lo > 1:
         mid = lo + (hi - lo) // 2
@@ -94,6 +110,11 @@ def contract_creation_block(address) -> int:
         except ArchiveNodeRequired as exc:
             logger.error(exc)
             # with no access to historical state, we'll have to scan logs from start
+            return 0
+        except ValueError as exc:
+            # ValueError occurs in gnosis when there is no state for a block
+            # with no access to historical state, we'll have to scan logs from start
+            logger.error(exc) 
             return 0
         if code:
             hi = mid
@@ -125,22 +146,85 @@ class Singleton(type):
 _contract_lock = threading.Lock()
 _contract = lru_cache(maxsize=None)(Contract)
 
-def contract(address):
+@eth_retry.auto_retry
+def contract(address: Address) -> Contract:
     with _contract_lock:
+        address = web3.toChecksumAddress(address)
+
         if chain.id in PREFER_INTERFACE:
             if address in PREFER_INTERFACE[chain.id]:
                 _interface = PREFER_INTERFACE[chain.id][address]
-                return _interface(address)
+                i = _interface(address)
+                return _squeeze(i)
 
+        failed_attempts = 0
+        while True:
+            try:
+                c = _contract(address)
+                return _squeeze(c)
+            except (AssertionError, CompilerError) as e:
+                if failed_attempts == 10:
+                    raise
+                logger.warning(e)
+                Contract.remove_deployment(address)
+                failed_attempts += 1
+
+
+@eth_retry.auto_retry
+def _resolve_proxy(address):
+    data = _fetch_from_explorer(address, "getsourcecode", False)
+    name = data["result"][0]["ContractName"]
+    abi = json.loads(data["result"][0]["ABI"])
+    as_proxy_for = None
+
+    # always check for an EIP1967 proxy - https://eips.ethereum.org/EIPS/eip-1967
+    implementation_eip1967 = web3.eth.get_storage_at(
+        address, int(web3.keccak(text="eip1967.proxy.implementation").hex(), 16) - 1
+    )
+    # always check for an EIP1822 proxy - https://eips.ethereum.org/EIPS/eip-1822
+    implementation_eip1822 = web3.eth.get_storage_at(address, web3.keccak(text="PROXIABLE"))
+    if len(implementation_eip1967) > 0 and int(implementation_eip1967.hex(), 16):
+        as_proxy_for = _resolve_address(implementation_eip1967[-20:])
+    elif len(implementation_eip1822) > 0 and int(implementation_eip1822.hex(), 16):
+        as_proxy_for = _resolve_address(implementation_eip1822[-20:])
+    elif data["result"][0].get("Implementation"):
+        # for other proxy patterns, we only check if etherscan indicates
+        # the contract is a proxy. otherwise we could have a false positive
+        # if there is an `implementation` method on a regular contract.
+        try:
+            # first try to call `implementation` per EIP897
+            # https://eips.ethereum.org/EIPS/eip-897
+            c = Contract.from_abi(name, address, abi)
+            as_proxy_for = c.implementation.call()
+        except Exception:
+            # if that fails, fall back to the address provided by etherscan
+            as_proxy_for = _resolve_address(data["result"][0]["Implementation"])
+
+    if as_proxy_for:
+        data = _fetch_from_explorer(as_proxy_for, "getsourcecode", False)
+        name = data["result"][0]["ContractName"]
+        abi = json.loads(data["result"][0]["ABI"])
+        return Contract.from_abi(name, as_proxy_for, abi)
+    else:
         return _contract(address)
 
 
+
+@lru_cache(maxsize=None)
 def is_contract(address: str) -> bool:
     '''checks to see if the input address is a contract'''
-    return web3.eth.get_code(address) != '0x'
+    return web3.eth.get_code(address) not in ['0x',b'']
 
 
 def chunks(lst, n):
     """Yield successive n-sized chunks from lst."""
     for i in range(0, len(lst), n):
         yield lst[i:i + n]
+
+
+def _squeeze(it):
+    """ Reduce the contract size in RAM significantly. """
+    for k in ["ast", "bytecode", "coverageMap", "deployedBytecode", "deployedSourceMap", "natspec", "opcodes", "pcMap"]:
+        if it._build and k in it._build.keys():
+            it._build[k] = {}
+    return it
