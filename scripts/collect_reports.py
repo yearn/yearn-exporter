@@ -602,7 +602,7 @@ def format_dev_telegram(r, t):
     df["Debt Added"] = "{:,.2f}".format(r.debt_added) + " | " + "${:,.2f}".format(r.debt_added * r.want_price_at_block)
     df["Total Debt"] = "{:,.2f}".format(r.total_debt) + " | " + "${:,.2f}".format(r.total_debt * r.want_price_at_block)
     df["Debt Ratio"] = r.debt_ratio
-    if r.keep_crv > 0:
+    if chain.id == 1 and r.keep_crv > 0:
         df["CRV Locked"] = "{:,.2f}".format(r.keep_crv) + " | " + "${:,.2f}".format(r.keep_crv_value_usd)
     
     if r.rough_apr_pre_fee is not None:
