@@ -28,7 +28,7 @@ def main():
 @time_tracking
 def export_snapshot(snapshot, ts):
     start = time()
-    from yearn.treasury import _sms
+    from yearn.treasury.treasury import _sms
     block = closest_block_after_timestamp(ts)
     assert block is not None, "no block after timestamp found"
     _sms().export(block, ts)
