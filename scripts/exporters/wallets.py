@@ -22,7 +22,6 @@ def main():
         end = datetime(2020, 2, 12, tzinfo=timezone.utc)
         start_bidirectional_export(
             start,
-            end,
             export_snapshot,
             'aggregate{param="total wallets"}',
             _generate_snapshot_range
