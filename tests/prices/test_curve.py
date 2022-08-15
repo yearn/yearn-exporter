@@ -28,7 +28,7 @@ registries = {
     },
 }.get(chain.id, {})
 
-# Contract(address_provider).get_address(3)
+# contract(address_provider).get_address(3)
 meta_factories = { 
     Network.Mainnet: {
         'v1': '0x0959158b6040D32d04c301A72CBFD6b39E21c9AE',

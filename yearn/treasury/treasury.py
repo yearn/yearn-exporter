@@ -3,7 +3,7 @@ import threading
 import time
 from typing import Dict, List, Optional, Set
 
-from brownie import ZERO_ADDRESS, Contract, chain, web3
+from brownie import ZERO_ADDRESS, chain, web3
 from brownie.convert.datatypes import EthAddress
 from brownie.network.event import EventDict, EventLookupError, _EventItem
 from eth_abi import encode_single
@@ -360,12 +360,12 @@ class Treasury:
         
         markets_zip = zip(markets,underlyings)
         markets, underlyings = [], []
-        for contract, underlying in markets_zip:
+        for ctoken, underlying in markets_zip:
             if underlying != ZERO_ADDRESS:
-                markets.append(contract)
+                markets.append(ctoken)
                 underlyings.append(underlying)
         
-        underlying_contracts = [Contract(underlying) for underlying in underlyings]
+        underlying_contracts = [contract(underlying) for underlying in underlyings]
         underlying_decimals = fetch_multicall(*[[underlying,'decimals'] for underlying in underlying_contracts])
 
         compound_debt = {}

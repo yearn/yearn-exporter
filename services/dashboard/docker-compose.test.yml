@@ -1,10 +1,8 @@
 version: '3.7'
 
 volumes:
-    solidity_compilers: {}
-    vyper_compilers: {}
-    brownie: {}
-    cache: {}
+  brownie: {}
+  cache: {}
 
 networks:
   yearn-exporter:
@@ -22,8 +20,6 @@ services:
       - TEST_CMD
     volumes:
       - .:/tests
-      - solidity_compilers:/root/.solcx
-      - vyper_compilers:/root/.vvm
       - brownie:/root/.brownie
       - cache:/app/yearn-exporter/cache
     networks:

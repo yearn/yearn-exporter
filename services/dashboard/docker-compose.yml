@@ -2,8 +2,6 @@ version: '3.7'
 
 volumes:
   grafana_data: {}
-  solidity_compilers: {}
-  vyper_compilers: {}
   brownie: {}
   cache: {}
   victoria_metrics_data: {}
@@ -21,6 +19,7 @@ x-common-envs: &common-envs
   - SENTRY_RELEASE:
   - SENTRY_DSN:
   - LOG_LEVEL:
+  - ETH_HASH_BACKEND: ${ETH_HASH_BACKEND:-pysha3}
 
 x-common-historical-envs: &common-historical-envs
   - POOL_SIZE:
@@ -56,8 +55,6 @@ x-common-arbi-envs: &common-arbi-envs
   - ARBISCAN_TOKEN:
 
 x-common-volumes: &common-volumes
-  - solidity_compilers:/root/.solcx
-  - vyper_compilers:/root/.vvm
   - brownie:/root/.brownie
   - cache:/app/yearn-exporter/cache
 

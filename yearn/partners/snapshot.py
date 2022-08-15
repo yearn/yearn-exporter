@@ -8,7 +8,7 @@ from pathlib import Path
 from typing import Dict, List, Tuple, Union
 
 import pandas as pd
-from brownie import Contract, chain, convert, multicall, web3
+from brownie import chain, convert, multicall, web3
 from joblib.parallel import Parallel, delayed
 from pandas import DataFrame
 from pandas.core.tools.datetimes import DatetimeScalar
@@ -210,7 +210,7 @@ class YApeSwapFactoryWrapper(WildcardWrapper):
         factory = contract(self.wrapper)
         with multicall:
             pairs = [factory.allPairs(i) for i in range(factory.allPairsLength())]
-            ratios = [Contract(pair).farmingRatio() for pair in pairs]
+            ratios = [contract(pair).farmingRatio() for pair in pairs]
 
         # pools with ratio.min > 0 deploy to yearn vaults
         farming = [str(pair) for pair, ratio in zip(pairs, ratios) if ratio['min'] > 0]

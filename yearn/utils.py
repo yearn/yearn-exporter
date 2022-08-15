@@ -1,3 +1,4 @@
+import json
 import logging
 import threading
 import json
@@ -9,6 +10,7 @@ from brownie import Contract, chain, convert, interface, web3
 from web3 import Web3
 from brownie.network.contract import _resolve_address, _fetch_from_explorer
 from brownie.exceptions import CompilerError
+from brownie.network.contract import _fetch_from_explorer, _resolve_address
 
 from yearn.cache import memory
 from yearn.exceptions import ArchiveNodeRequired, NodeNotSynced
@@ -157,25 +159,34 @@ def contract(address: Address) -> Contract:
                 i = _interface(address)
                 return _squeeze(i)
 
-        failed_attempts = 0
-        while True:
-            try:
-                c = _contract(address)
-                return _squeeze(c)
-            except (AssertionError, CompilerError) as e:
-                if failed_attempts == 10:
-                    raise
-                logger.warning(e)
-                Contract.remove_deployment(address)
-                failed_attempts += 1
+        # autofetch-sources: false
+        # Try to fetch the contract from the local sqlite db.
+        try:
+            c = _contract(address)
+        # If we don't already have the contract in the db, we'll try to fetch it from the explorer.
+        except ValueError as e:
+            c = _resolve_proxy(address)
 
+        # Lastly, get rid of unnecessary memory-hog properties
+        return _squeeze(c)
+
+
+# These tokens have trouble when resolving the implementation via the chain.
+FORCE_IMPLEMENTATION = {
+    Network.Mainnet: {
+        "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48": "0xa2327a938Febf5FEC13baCFb16Ae10EcBc4cbDCF", # USDC as of 2022-08-10
+    },
+}.get(chain.id, {})
 
 @eth_retry.auto_retry
 def _resolve_proxy(address):
-    data = _fetch_from_explorer(address, "getsourcecode", False)
-    name = data["result"][0]["ContractName"]
-    abi = json.loads(data["result"][0]["ABI"])
+    name, abi, implementation = _extract_abi_data(address)
     as_proxy_for = None
+
+    if address in FORCE_IMPLEMENTATION:
+        implementation = FORCE_IMPLEMENTATION[address]
+        name, abi, _ = _extract_abi_data(implementation)
+        return Contract.from_abi(name, address, abi)
 
     # always check for an EIP1967 proxy - https://eips.ethereum.org/EIPS/eip-1967
     implementation_eip1967 = web3.eth.get_storage_at(
@@ -183,11 +194,19 @@ def _resolve_proxy(address):
     )
     # always check for an EIP1822 proxy - https://eips.ethereum.org/EIPS/eip-1822
     implementation_eip1822 = web3.eth.get_storage_at(address, web3.keccak(text="PROXIABLE"))
+
+    # Just leave this code where it is for a helpful debugger as needed.
+    if address == "":
+        raise Exception(
+            f"""implementation: {implementation}
+            implementation_eip1967: {len(implementation_eip1967)} {implementation_eip1967}
+            implementation_eip1822: {len(implementation_eip1822)} {implementation_eip1822}""")
+
     if len(implementation_eip1967) > 0 and int(implementation_eip1967.hex(), 16):
         as_proxy_for = _resolve_address(implementation_eip1967[-20:])
     elif len(implementation_eip1822) > 0 and int(implementation_eip1822.hex(), 16):
         as_proxy_for = _resolve_address(implementation_eip1822[-20:])
-    elif data["result"][0].get("Implementation"):
+    elif implementation:
         # for other proxy patterns, we only check if etherscan indicates
         # the contract is a proxy. otherwise we could have a false positive
         # if there is an `implementation` method on a regular contract.
@@ -198,16 +217,22 @@ def _resolve_proxy(address):
             as_proxy_for = c.implementation.call()
         except Exception:
             # if that fails, fall back to the address provided by etherscan
-            as_proxy_for = _resolve_address(data["result"][0]["Implementation"])
+            as_proxy_for = _resolve_address(implementation)
 
     if as_proxy_for:
-        data = _fetch_from_explorer(as_proxy_for, "getsourcecode", False)
-        name = data["result"][0]["ContractName"]
-        abi = json.loads(data["result"][0]["ABI"])
-        return Contract.from_abi(name, as_proxy_for, abi)
-    else:
-        return _contract(address)
+        name, abi, _ = _extract_abi_data(as_proxy_for)
+    return Contract.from_abi(name, address, abi)
 
+
+def _extract_abi_data(address):
+    data = _fetch_from_explorer(address, "getsourcecode", False)
+    is_verified = bool(data["result"][0].get("SourceCode"))
+    if not is_verified:
+        raise ValueError(f"Contract source code not verified: {address}")
+    name = data["result"][0]["ContractName"]
+    abi = json.loads(data["result"][0]["ABI"])
+    implementation = data["result"][0].get("Implementation")
+    return name, abi, implementation
 
 
 @lru_cache(maxsize=None)
