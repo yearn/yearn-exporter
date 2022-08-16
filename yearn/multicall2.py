@@ -1,52 +1,77 @@
+import os
 from collections import defaultdict
 from itertools import count, product
 from operator import itemgetter
+from typing import Any, List, Optional
 
 import requests
-from brownie import Contract, chain, web3
+from brownie import chain, web3
 from eth_abi.exceptions import InsufficientDataBytes
 
-from yearn.networks import Network
-from yearn.utils import contract_creation_block, contract
 from yearn.exceptions import MulticallError
+from yearn.networks import Network
+from yearn.typing import Block
+from yearn.utils import contract, contract_creation_block
 
+MULTICALL_MAX_SIZE = int(os.environ.get("MULTICALL_MAX_SIZE", 500)) # Currently set arbitrarily
 MULTICALL2 = {
     Network.Mainnet: '0x5BA1e12693Dc8F9c48aAD8770482f4739bEeD696',
+    Network.Gnosis: '0xFAa296891cA6CECAF2D86eF5F7590316d0A17dA0', # maker has not yet deployed multicall2. This is from another deployment
     Network.Fantom: '0xD98e3dBE5950Ca8Ce5a4b59630a5652110403E5c',
     Network.Arbitrum: '0x5B5CFE992AdAC0C9D48E05854B2d91C73a003858',
 }
 multicall2 = contract(MULTICALL2[chain.id])
 
 
-def fetch_multicall(*calls, block=None, require_success=False):
+def fetch_multicall(*calls, block: Optional[Block] = None, require_success: bool = False) -> List[Any]:
+    # Before doing anything, make sure the load is manageable and size down if necessary.
+    if (num_calls := len(calls)) > MULTICALL_MAX_SIZE:
+        batches = [calls[i:i + MULTICALL_MAX_SIZE] for i in range(0, num_calls, MULTICALL_MAX_SIZE)]
+        return [result for batch in batches for result in fetch_multicall(*batch, block=block, require_success=require_success)]
+    
     # https://github.com/makerdao/multicall
     multicall_input = []
+    attribute_errors = []
     fn_list = []
     decoded = []
 
-    for contract, fn_name, *fn_inputs in calls:
-        fn = getattr(contract, fn_name)
+    for i, (contract, fn_name, *fn_inputs) in enumerate(calls):
+        try:
+            fn = getattr(contract, fn_name)
 
-        # check that there aren't multiple functions with the same name
-        if hasattr(fn, "_get_fn_from_args"):
-            fn = fn._get_fn_from_args(fn_inputs)
+            # check that there aren't multiple functions with the same name
+            if hasattr(fn, "_get_fn_from_args"):
+                fn = fn._get_fn_from_args(fn_inputs)
 
-        fn_list.append(fn)
-        multicall_input.append((contract, fn.encode_input(*fn_inputs)))
+            fn_list.append(fn)
+            multicall_input.append((contract, fn.encode_input(*fn_inputs)))
+        except AttributeError:
+            if not require_success:
+                attribute_errors.append(i)
+                continue
+            raise
 
-    if isinstance(block, int) and block < contract_creation_block(MULTICALL2[chain.id]):
-        # use state override to resurrect the contract prior to deployment
-        data = multicall2.tryAggregate.encode_input(False, multicall_input)
-        call = web3.eth.call(
-            {'to': str(multicall2), 'data': data},
-            block or 'latest',
-            {str(multicall2): {'code': f'0x{multicall2.bytecode}'}},
-        )
-        result = multicall2.tryAggregate.decode_output(call)
-    else:
-        result = multicall2.tryAggregate.call(
-            False, multicall_input, block_identifier=block or 'latest'
-        )
+    try:
+        if isinstance(block, int) and block < contract_creation_block(MULTICALL2[chain.id]):
+            # use state override to resurrect the contract prior to deployment
+            data = multicall2.tryAggregate.encode_input(False, multicall_input)
+            call = web3.eth.call(
+                {'to': str(multicall2), 'data': data},
+                block or 'latest',
+                {str(multicall2): {'code': f'0x{multicall2.bytecode}'}},
+            )
+            result = multicall2.tryAggregate.decode_output(call)
+        else:
+            result = multicall2.tryAggregate.call(
+                False, multicall_input, block_identifier=block or 'latest'
+            )
+    except ValueError as e:
+        if 'out of gas' in str(e) or 'execution aborted (timeout = 10s)' in str(e):
+            halfpoint = len(calls) // 2
+            batch0 = fetch_multicall(*calls[:halfpoint],block=block,require_success=require_success)
+            batch1 = fetch_multicall(*calls[halfpoint:],block=block,require_success=require_success)
+            return batch0 + batch1
+        raise
 
     for fn, (ok, data) in zip(fn_list, result):
         try:
@@ -56,6 +81,10 @@ def fetch_multicall(*calls, block=None, require_success=False):
             if require_success:
                 raise MulticallError()
             decoded.append(None)
+
+    # NOTE this will only run if `require_success` is True
+    for i in attribute_errors:
+        decoded.insert(i, None)
 
     return decoded
 
@@ -96,12 +125,15 @@ def batch_call(calls):
                 'method': 'eth_call',
                 'params': [
                     {'to': str(contract), 'data': fn.encode_input(*fn_inputs)},
-                    block,
+                    hex(block),
                 ],
             }
         )
 
     response = requests.post(web3.provider.endpoint_uri, json=jsonrpc_batch).json()
+    if isinstance(response, dict) and isinstance(response['result'], dict) and 'message' in response['result']:
+        raise ValueError(response['result']['message'])
+
     return [
         fn.decode_output(res['result']) if res['result'] != '0x' else None
         for res in sorted(response, key=itemgetter('id'))
