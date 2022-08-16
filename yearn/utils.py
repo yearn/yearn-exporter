@@ -14,24 +14,19 @@ from yearn.cache import memory
 from yearn.exceptions import ArchiveNodeRequired, NodeNotSynced
 from yearn.networks import Network
 from yearn.typing import Address, AddressOrContract
-
 logger = logging.getLogger(__name__)
-
 BINARY_SEARCH_BARRIER = {
     Network.Mainnet: 0,
     Network.Gnosis: 15_659_482, # gnosis returns "No state available for block 0x3f9e020290502d1d41f4b5519e7d456f0935dea980ec310935206cac8239117e"
     Network.Fantom: 4_564_024,  # fantom returns "missing trie node" before that
     Network.Arbitrum: 0,
 }
-
 _erc20 = lru_cache(maxsize=None)(interface.ERC20)
-
 PREFER_INTERFACE = {
     Network.Arbitrum: {
         "0x2f2a2543B76A4166549F7aaB2e75Bef0aefC5B0f": _erc20, # empty ABI for WBTC when compiling the contract
     }
 }
-
 def safe_views(abi: List) -> List[str]:
     return [
         item["name"]
@@ -41,8 +36,6 @@ def safe_views(abi: List) -> List[str]:
         and not item["inputs"]
         and all(x["type"] in ["uint256", "bool"] for x in item["outputs"])
     ]
-
-
 @memory.cache()
 def get_block_timestamp(height):
     """
@@ -55,27 +48,20 @@ def get_block_timestamp(height):
         except:
             pass
     return chain[height].timestamp
-
-
 @memory.cache()
 def closest_block_after_timestamp(timestamp):
     logger.debug('closest block after timestamp %d', timestamp)
     height = chain.height
     lo, hi = 0, height
-
     while hi - lo > 1:
         mid = lo + (hi - lo) // 2
         if get_block_timestamp(mid) > timestamp:
             hi = mid
         else:
             lo = mid
-
     if get_block_timestamp(hi) < timestamp:
         raise IndexError('timestamp is in the future')
-
     return hi
-
-
 def get_code(address, block=None):
     try:
         return web3.eth.get_code(address, block_identifier=block)
@@ -83,8 +69,6 @@ def get_code(address, block=None):
         if isinstance(exc.args[0], dict) and 'missing trie node' in exc.args[0]['message']:
             raise ArchiveNodeRequired('querying historical state requires an archive node')
         raise exc
-
-
 @memory.cache()
 def contract_creation_block(address: AddressOrContract) -> int:
     """
@@ -93,16 +77,13 @@ def contract_creation_block(address: AddressOrContract) -> int:
     """
     logger.info("contract creation block %s", address)
     address = convert.to_address(address)
-
     barrier = BINARY_SEARCH_BARRIER[chain.id]
     lo = barrier
     hi = end = chain.height
-
     if hi == 0:
         raise NodeNotSynced(f'''
             `chain.height` returns 0 on your node, which means it is not fully synced.
             You can only use contract_creation_block on a fully synced node.''')
-
     while hi - lo > 1:
         mid = lo + (hi - lo) // 2
         try:
@@ -120,32 +101,24 @@ def contract_creation_block(address: AddressOrContract) -> int:
             hi = mid
         else:
             lo = mid
-
     # only happens on fantom
     if hi == barrier + 1:
         logger.warning('could not determine creation block for a contract deployed prior to barrier')
         return 0
-
     return hi if hi != end else None
-
-
 class Singleton(type):
     def __init__(self, *args, **kwargs):
         self.__instance = None
         super().__init__(*args, **kwargs)
-
     def __call__(self, *args, **kwargs):
         if self.__instance is None:
             self.__instance = super().__call__(*args, **kwargs)
             return self.__instance
         else:
             return self.__instance
-
-
 # cached Contract instance, saves about 20ms of init time
 _contract_lock = threading.Lock()
 _contract = lru_cache(maxsize=None)(Contract)
-
 @eth_retry.auto_retry
 def contract(address: Address) -> Contract:
     with _contract_lock:
@@ -156,7 +129,6 @@ def contract(address: Address) -> Contract:
                 _interface = PREFER_INTERFACE[chain.id][address]
                 i = _interface(address)
                 return _squeeze(i)
-
         failed_attempts = 0
         while True:
             try:
@@ -214,14 +186,10 @@ def _resolve_proxy(address):
 def is_contract(address: str) -> bool:
     '''checks to see if the input address is a contract'''
     return web3.eth.get_code(address) not in ['0x',b'']
-
-
 def chunks(lst, n):
     """Yield successive n-sized chunks from lst."""
     for i in range(0, len(lst), n):
         yield lst[i:i + n]
-
-
 def _squeeze(it):
     """ Reduce the contract size in RAM significantly. """
     for k in ["ast", "bytecode", "coverageMap", "deployedBytecode", "deployedSourceMap", "natspec", "opcodes", "pcMap"]:
