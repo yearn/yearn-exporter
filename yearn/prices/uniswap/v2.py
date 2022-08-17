@@ -82,6 +82,12 @@ addresses: List[Dict[str,str]] = {
     ]
 }
 
+EXCLUDED_POOLS = {
+    Network.Optimism: [
+        "0x6b8EF8E744Ad206D52F143560f49c1e5D60797B7", # unverified CRV-USDC on zigswap
+    ]
+}
+
 
 class CantFindSwapPath(Exception):
     pass
@@ -155,7 +161,15 @@ class UniswapV2:
             res / scale * price for res, scale, price in zip(reserves, scales, prices)
         ]
         return sum(balances) / supply
-    
+
+
+    def excluded_pools(self):
+        if chain.id in EXCLUDED_POOLS:
+            return EXCLUDED_POOLS[chain.id]
+        else:
+            return []
+
+
     @cached_property
     def pools(self) -> Dict[Address,Dict[Address,Address]]:
         '''
@@ -185,8 +199,8 @@ class UniswapV2:
             poolids_your_node_couldnt_get = [i for i in range(all_pairs_len) if i not in pairs]
             logger.debug(f'missing poolids: {poolids_your_node_couldnt_get}')
             pools_your_node_couldnt_get = fetch_multicall(*[[self.factory,'allPairs',i] for i in poolids_your_node_couldnt_get])
-            token0s = fetch_multicall(*[[contract(pool), 'token0'] for pool in pools_your_node_couldnt_get])
-            token1s = fetch_multicall(*[[contract(pool), 'token1'] for pool in pools_your_node_couldnt_get])
+            token0s = fetch_multicall(*[[contract(pool), 'token0'] for pool in pools_your_node_couldnt_get if pool not in self.excluded_pools()])
+            token1s = fetch_multicall(*[[contract(pool), 'token1'] for pool in pools_your_node_couldnt_get if pool not in self.excluded_pools()])
             additional_pools = {
                 convert.to_address(pool): {
                     'token0':convert.to_address(token0),
