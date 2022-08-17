@@ -147,7 +147,7 @@ services:
 
   historical-gnosis-exporter:
     image: yearn-exporter
-    command: exporter
+    command: historical_exporter
     volumes: *common-volumes
     environment:
       <<: *common-envs
@@ -159,7 +159,7 @@ services:
 
   historical-arbi-exporter:
     image: yearn-exporter
-    command: exporter
+    command: historical_exporter
     volumes: *common-volumes
     environment:
       <<: *common-envs
@@ -171,7 +171,7 @@ services:
 
   historical-opti-exporter:
     image: yearn-exporter
-    command: exporter
+    command: historical_exporter
     volumes: *common-volumes
     environment:
       <<: *common-envs
