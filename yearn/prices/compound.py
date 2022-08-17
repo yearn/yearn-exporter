@@ -161,7 +161,7 @@ class Compound:
 class CompoundMultiplexer(metaclass=Singleton):
     def __init__(self) -> None:
         if chain.id not in addresses:
-            raise UnsupportedNetwork('uniswap v2 is not supported on this network')
+            raise UnsupportedNetwork('compound is not supported on this network')
         self.compounds = [
             Compound(conf.name, conf.address, conf.oracle_base)
             for conf in addresses[chain.id]
