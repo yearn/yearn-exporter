@@ -48,7 +48,7 @@ addresses = {
 class UniswapV3(metaclass=Singleton):
     def __init__(self) -> None:
         if chain.id not in addresses:
-            raise UnsupportedNetwork('compound is not supported on this network')
+            raise UnsupportedNetwork('uniswap v3 is not supported on this network')
 
         conf = addresses[chain.id]
         self.factory: Contract = contract(conf['factory'])
