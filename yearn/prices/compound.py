@@ -69,6 +69,12 @@ addresses = {
             address='0xbadaC56c9aca307079e8B8FC699987AAc89813ee',
         ),
     ],
+    Network.Optimism: [
+        CompoundConfig(
+            name='ironbank',
+            address='0xE0B57FEEd45e7D908f2d0DaCd26F113Cf26715BF',
+        )
+    ],
 }
 
 
