@@ -1,5 +1,6 @@
 import logging
 import math
+import json
 from collections import defaultdict
 from functools import cached_property
 from itertools import cycle
@@ -26,7 +27,11 @@ Path = List[Union[Address,FeeTier]]
 
 # https://github.com/Uniswap/uniswap-v3-periphery/blob/main/deploys.md
 UNISWAP_V3_FACTORY = '0x1F98431c8aD98523631AE4a59f267346ea31F984'
-UNISWAP_V3_QUOTER = '0xb27308f9F90D607463bb33eA1BeBb41C27CE5AB6'
+UNISWAP_V3_QUOTER = Contract.from_abi(
+    name='Quoter',
+    address='0xb27308f9F90D607463bb33eA1BeBb41C27CE5AB6',
+    abi=json.load(open('interfaces/uniswap/UniswapV3Quoter.json'))
+) # use direct abi from etherscan because the quoter is not verified on all chains (opti)
 FEE_DENOMINATOR = 1_000_000
 USDC_SCALE = 1e6
 
@@ -41,7 +46,12 @@ addresses = {
         'factory': UNISWAP_V3_FACTORY,
         'quoter': UNISWAP_V3_QUOTER,
         'fee_tiers': [3000, 500, 10_000],
-    }
+    },
+    Network.Optimism: {
+        'factory': UNISWAP_V3_FACTORY,
+        'quoter': UNISWAP_V3_QUOTER,
+        'fee_tiers': [3000, 500, 10_000, 100]
+    },
 }
 
 
@@ -52,7 +62,7 @@ class UniswapV3(metaclass=Singleton):
 
         conf = addresses[chain.id]
         self.factory: Contract = contract(conf['factory'])
-        self.quoter: Contract = contract(conf['quoter'])
+        self.quoter: Contract = conf['quoter']
         self.fee_tiers = [FeeTier(fee) for fee in conf['fee_tiers']]
 
     def __contains__(self, asset: Any) -> bool:
