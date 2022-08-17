@@ -34,6 +34,7 @@ BATCH_SIZE = {
     Network.Fantom: 20_000,
     Network.Gnosis: 2_000_000,
     Network.Arbitrum: 10_000,
+    Network.Optimism: 150_000,
 }[chain.id]
 
 FIRST_END_BLOCK = {
@@ -41,6 +42,7 @@ FIRST_END_BLOCK = {
     Network.Fantom: 5_000_000, # NOTE block some arbitrary time after v2's first deployment
     Network.Gnosis: 21_440_000, # # NOTE block some arbitrary time after first vault deployment
     Network.Arbitrum: 4_837_859,
+    Network.Optimism: 18_111_485,
 }[chain.id]
 
 

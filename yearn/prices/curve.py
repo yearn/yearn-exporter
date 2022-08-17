@@ -73,6 +73,9 @@ curve_contracts = {
     Network.Arbitrum: {
         'address_provider': ADDRESS_PROVIDER,
     },
+    Network.Optimism: {
+        'address_provider': ADDRESS_PROVIDER,
+    }
 }
 
 
