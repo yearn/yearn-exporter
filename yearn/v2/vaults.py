@@ -162,6 +162,14 @@ class Vault:
 
     def process_events(self, events):
         for event in events:
+            # some issues during the migration of this strat prevented it from being verified so we skip it here...
+            if chain.id == Network.Optimism:
+                failed_migration = False
+                for key in ["newVersion", "oldVersion", "strategy"]:
+                    failed_migration |= (key in event and event[key] == "0x4286a40EB3092b0149ec729dc32AD01942E13C63")
+                if failed_migration:
+                    continue
+
             if event.name == "StrategyAdded":
                 strategy_address = event["strategy"]
                 logger.debug("%s strategy added %s", self.name, strategy_address)
