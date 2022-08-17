@@ -54,6 +54,12 @@ x-common-arbi-envs: &common-arbi-envs
   - EXPLORER: $ARBI_EXPLORER
   - ARBISCAN_TOKEN:
 
+x-common-opti-envs: &common-opti-envs
+  - NETWORK: optimism-main
+  - WEB3_PROVIDER: $OPTI_WEB3_PROVIDER
+  - EXPLORER: $OPTI_EXPLORER
+  - OPTISCAN_TOKEN:
+
 x-common-volumes: &common-volumes
   - brownie:/root/.brownie
   - cache:/app/yearn-exporter/cache
@@ -104,6 +110,17 @@ services:
       - yearn-exporter
     restart: on-failure
 
+  opti-exporter:
+    image: yearn-exporter
+    command: exporter
+    volumes: *common-volumes
+    environment:
+      <<: *common-envs
+      <<: *common-opti-envs
+    networks:
+      - yearn-exporter
+    restart: on-failure
+
   historical-eth-exporter:
     image: yearn-exporter
     command: historical_exporter
@@ -130,7 +147,7 @@ services:
 
   historical-gnosis-exporter:
     image: yearn-exporter
-    command: exporter
+    command: historical_exporter
     volumes: *common-volumes
     environment:
       <<: *common-envs
@@ -142,11 +159,23 @@ services:
 
   historical-arbi-exporter:
     image: yearn-exporter
-    command: exporter
+    command: historical_exporter
     volumes: *common-volumes
     environment:
       <<: *common-envs
       <<: *common-arbi-envs
+      <<: *common-historical-envs
+    networks:
+      - yearn-exporter
+    restart: on-failure
+
+  historical-opti-exporter:
+    image: yearn-exporter
+    command: historical_exporter
+    volumes: *common-volumes
+    environment:
+      <<: *common-envs
+      <<: *common-opti-envs
       <<: *common-historical-envs
     networks:
       - yearn-exporter
@@ -205,6 +234,21 @@ services:
     environment:
       <<: *common-envs
       <<: *common-arbi-envs
+      <<: *common-postgres-envs
+    networks:
+      - yearn-exporter
+    restart: on-failure
+    depends_on:
+      - victoria-metrics
+      - postgres
+
+  opti-treasury-exporter:
+    image: yearn-exporter
+    command: treasury_exporter
+    volumes: *common-volumes
+    environment:
+      <<: *common-envs
+      <<: *common-opti-envs
       <<: *common-postgres-envs
     networks:
       - yearn-exporter
@@ -277,6 +321,22 @@ services:
       - victoria-metrics
       - postgres
 
+  historical-opti-treasury-exporter:
+    image: yearn-exporter
+    command: historical_treasury_exporter
+    volumes: *common-volumes
+    environment:
+      <<: *common-envs
+      <<: *common-opti-envs
+      <<: *common-historical-envs
+      <<: *common-postgres-envs
+    networks:
+      - yearn-exporter
+    restart: on-failure
+    depends_on:
+      - victoria-metrics
+      - postgres
+
   sms-exporter:
     image: yearn-exporter
     command: sms_exporter
@@ -317,6 +377,17 @@ services:
     environment:
       <<: *common-envs
       <<: *common-arbi-envs
+    networks:
+      - yearn-exporter
+    restart: on-failure
+
+  opti-sms-exporter:
+    image: yearn-exporter
+    command: sms_exporter
+    volumes: *common-volumes
+    environment:
+      <<: *common-envs
+      <<: *common-opti-envs
     networks:
       - yearn-exporter
     restart: on-failure
@@ -364,6 +435,18 @@ services:
     environment:
       <<: *common-envs
       <<: *common-arbi-envs
+      <<: *common-historical-envs
+    networks:
+      - yearn-exporter
+    restart: on-failure
+
+  historical-opti-sms-exporter:
+    image: yearn-exporter
+    command: historical_sms_exporter
+    volumes: *common-volumes
+    environment:
+      <<: *common-envs
+      <<: *common-opti-envs
       <<: *common-historical-envs
     networks:
       - yearn-exporter
@@ -429,6 +512,21 @@ services:
     depends_on:
       - postgres
 
+  opti-transactions-exporter:
+    image: yearn-exporter
+    command: transactions_exporter
+    volumes: *common-volumes
+    environment:
+      <<: *common-envs
+      <<: *common-opti-envs
+      <<: *common-historical-envs
+      <<: *common-postgres-envs
+    networks:
+      - yearn-exporter
+    restart: on-failure
+    depends_on:
+      - postgres
+
   wallet-exporter:
     image: yearn-exporter
     command: wallet_exporter
@@ -484,6 +582,22 @@ services:
     environment:
       <<: *common-envs
       <<: *common-arbi-envs
+      <<: *common-historical-envs
+      <<: *common-postgres-envs
+    networks:
+      - yearn-exporter
+    restart: always
+    depends_on:
+      - victoria-metrics
+      - postgres
+
+  opti-wallet-exporter:
+    image: yearn-exporter
+    command: wallet_exporter
+    volumes: *common-volumes
+    environment:
+      <<: *common-envs
+      <<: *common-opti-envs
       <<: *common-historical-envs
       <<: *common-postgres-envs
     networks:

@@ -65,7 +65,26 @@ addresses: List[Dict[str,str]] = {
             'name': 'fraxswap',
             'factory': '0x5Ca135cB8527d76e932f34B5145575F9d8cbE08E',
             'router': '0xc2544A32872A91F4A553b404C6950e89De901fdb',
+        },
+        {
+            'name': 'zipswap',
+            'factory': '0x9e343Bea27a12B23523ad88333a1B0f68cc1F05E',
+            "router": '0x4D70D768f5E1e6a7062973aFB0c7FBDa9bBb42b3',
         }
+    ],
+    Network.Optimism: [
+        {
+            'name': 'zipswap',
+            'factory': '0x8BCeDD62DD46F1A76F8A1633d4f5B76e0CDa521E',
+            'router': '0xE6Df0BB08e5A97b40B21950a0A51b94c4DbA0Ff6',
+
+        }
+    ]
+}
+
+EXCLUDED_POOLS = {
+    Network.Optimism: [
+        "0x6b8EF8E744Ad206D52F143560f49c1e5D60797B7", # unverified CRV-USDC on zigswap
     ]
 }
 
@@ -142,7 +161,15 @@ class UniswapV2:
             res / scale * price for res, scale, price in zip(reserves, scales, prices)
         ]
         return sum(balances) / supply
-    
+
+
+    def excluded_pools(self):
+        if chain.id in EXCLUDED_POOLS:
+            return EXCLUDED_POOLS[chain.id]
+        else:
+            return []
+
+
     @cached_property
     def pools(self) -> Dict[Address,Dict[Address,Address]]:
         '''
@@ -172,8 +199,8 @@ class UniswapV2:
             poolids_your_node_couldnt_get = [i for i in range(all_pairs_len) if i not in pairs]
             logger.debug(f'missing poolids: {poolids_your_node_couldnt_get}')
             pools_your_node_couldnt_get = fetch_multicall(*[[self.factory,'allPairs',i] for i in poolids_your_node_couldnt_get])
-            token0s = fetch_multicall(*[[contract(pool), 'token0'] for pool in pools_your_node_couldnt_get])
-            token1s = fetch_multicall(*[[contract(pool), 'token1'] for pool in pools_your_node_couldnt_get])
+            token0s = fetch_multicall(*[[contract(pool), 'token0'] for pool in pools_your_node_couldnt_get if pool not in self.excluded_pools()])
+            token1s = fetch_multicall(*[[contract(pool), 'token1'] for pool in pools_your_node_couldnt_get if pool not in self.excluded_pools()])
             additional_pools = {
                 convert.to_address(pool): {
                     'token0':convert.to_address(token0),

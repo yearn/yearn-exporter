@@ -24,6 +24,7 @@ BINARY_SEARCH_BARRIER = {
     Network.Gnosis: 15_659_482, # gnosis returns "No state available for block 0x3f9e020290502d1d41f4b5519e7d456f0935dea980ec310935206cac8239117e"
     Network.Fantom: 4_564_024,  # fantom returns "missing trie node" before that
     Network.Arbitrum: 0,
+    Network.Optimism: 0,
 }
 
 _erc20 = lru_cache(maxsize=None)(interface.ERC20)

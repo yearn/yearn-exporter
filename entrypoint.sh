@@ -25,6 +25,11 @@ elif [[ $NETWORK == "ftm-main" ]]; then
 elif [[ $NETWORK == "arbitrum-main" ]]; then
   CHAIN_ID=42161
   EXPLORER=${EXPLORER:-https://api.arbiscan.io/api}
+
+elif [[ $NETWORK == "optimism-main" ]]; then
+  CHAIN_ID=10
+  EXPLORER=${EXPLORER:-https://api-optimistic.etherscan.io/api}
+
 fi
 
 # modify the network

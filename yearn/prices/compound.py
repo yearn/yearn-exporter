@@ -69,6 +69,12 @@ addresses = {
             address='0xbadaC56c9aca307079e8B8FC699987AAc89813ee',
         ),
     ],
+    Network.Optimism: [
+        CompoundConfig(
+            name='ironbank',
+            address='0xE0B57FEEd45e7D908f2d0DaCd26F113Cf26715BF',
+        )
+    ],
 }
 
 
@@ -155,7 +161,7 @@ class Compound:
 class CompoundMultiplexer(metaclass=Singleton):
     def __init__(self) -> None:
         if chain.id not in addresses:
-            raise UnsupportedNetwork('uniswap v2 is not supported on this network')
+            raise UnsupportedNetwork('compound is not supported on this network')
         self.compounds = [
             Compound(conf.name, conf.address, conf.oracle_base)
             for conf in addresses[chain.id]
