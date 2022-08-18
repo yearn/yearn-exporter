@@ -17,12 +17,14 @@ def is_robovault_share(tx: TreasuryTx) -> Optional[TxGroup]:
     """
     After Yearn devs helped robovault with a vulnerability, robovault committed to sending Yearn a portion of their fees.
     """
-    if not all([
-        chain.id == Network.Fantom,
-        tx.to_address and tx.to_address.address in treasury.addresses,
-        tx.token.symbol.startswith('rv'),
-        tx.from_address.is_contract,
-    ]):
+    if chain.id != Network.Fantom:
+        return False
+        
+    if not (
+        tx.to_address and tx.to_address.address in treasury.addresses
+        and tx.token.symbol.startswith('rv')
+        and tx.from_address.is_contract
+    ):
         return False
     
     try:
