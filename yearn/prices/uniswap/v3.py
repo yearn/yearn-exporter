@@ -73,7 +73,7 @@ class UniswapV3(metaclass=Singleton):
         return math.prod(fees)
 
     def get_price(self, token: Address, block: Optional[Block] = None) -> Optional[float]:
-        if block and block < contract_creation_block(UNISWAP_V3_QUOTER):
+        if block and block < contract_creation_block(self.quoter.address):
             return None
 
         paths = self.get_paths(token)
