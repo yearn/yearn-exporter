@@ -144,6 +144,7 @@ ignore_txgroup.create_child("Sent thru Disperse.app", general.is_disperse_dot_ap
 passthru_txgroup = ignore_txgroup.create_child("Pass-Thru to Vaults", passthru.is_pass_thru)
 passthru_txgroup.create_child("Curve Bribes for yveCRV", passthru.is_curve_bribe)
 if chain.id == Network.Mainnet:
+    passthru_txgroup.create_child("Cowswap Migration", passthru.is_cowswap_migration)
     passthru_txgroup.create_child("Single Sided IB", passthru.is_single_sided_ib)
     passthru_txgroup.create_child("StrategyConvex3CrvRewardsClonable", passthru.is_cvx)
     passthru_txgroup.create_child("stkAAVE", passthru.is_stkaave)

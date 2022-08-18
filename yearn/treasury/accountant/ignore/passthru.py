@@ -116,3 +116,11 @@ def is_single_sided_ib(tx: TreasuryTx) -> bool:
         ["0xcbc2edfd6f8eb2b89e474ae70efea06c2c24a3e0df3e69b5c598aee4626bca0f", IterFilter('log_index', [70, 71])],
         "0xc8bdb3c809219ad0f3285aa148e20bb29b604c0a1b6d30701a56cfdf930923b3"
     ])
+
+def is_cowswap_migration(tx: TreasuryTx) -> bool:
+    """ A one-time tx that transferred tokens from an old contract to its replacement. """
+    return tx in HashMatcher({
+        Network.Mainnet: [
+            "0xb50341d3db2ff4a39b9bfa21753893035554ae44abb7d104ab650753db1c4855",
+        ],
+    }.get(chain.id, []))
