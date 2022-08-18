@@ -9,13 +9,13 @@ from pony.orm.core import Entity
 from tqdm import tqdm
 from yearn.entities import Chain, TreasuryTx, TxGroup
 from yearn.outputs.postgres.utils import cache_txgroup
-#from yearn.treasury.accountant.cost_of_revenue import cost_of_revenue
-#from yearn.treasury.accountant.expenses import expenses
-from yearn.treasury.accountant.fees import fees
-from yearn.treasury.accountant.ignore import ignore
-from yearn.treasury.accountant.other_income import other_income
-
-PENDING_LABEL = "Categorization Pending"
+from yearn.treasury.accountant.constants import PENDING_LABEL
+from yearn.treasury.accountant.cost_of_revenue import cost_of_revenue_txgroup
+from yearn.treasury.accountant.expenses import expenses_txgroup
+from yearn.treasury.accountant.ignore import ignore_txgroup
+from yearn.treasury.accountant.other_expenses import other_expense_txgroup
+from yearn.treasury.accountant.other_income import other_income_txgroup
+from yearn.treasury.accountant.revenue import revenue_txgroup
 
 logger = logging.getLogger(__name__)
     
@@ -23,11 +23,12 @@ logger = logging.getLogger(__name__)
 """ Accountant sorts treasury transactions into the appropriate categories for real-time transparent reporting. """
 
 top_level_txgroups = [
-    fees,
-    #cost_of_revenue,
-    #expenses,
-    other_income,
-    ignore,
+    revenue_txgroup,
+    ignore_txgroup,
+    cost_of_revenue_txgroup,
+    expenses_txgroup,
+    other_income_txgroup,
+    other_expense_txgroup,
 ]
 
 
@@ -39,7 +40,7 @@ def pending_txgroup() -> TxGroup:
 @db_session
 def unsorted_txs() -> List[TreasuryTx]:
     """ Returns all unsorted txs for the current chain. """
-    return select(tx for tx in TreasuryTx if tx.chain.chainid == chain.id and tx.txgroup.name == PENDING_LABEL) #'0xfa116AB2137c81811B0198d59a51BD7c1c32659C' in [tx.from_address.address, tx.to_address.address] ) # and not tx.token.symbol.startswith('rv')) # and tx.token.symbol == 'CRV')
+    return select(tx for tx in TreasuryTx if tx.chain.chainid == chain.id and tx.txgroup.name == PENDING_LABEL)
 
 
 @db_session

@@ -1,26 +1,12 @@
 
-import logging
 from typing import Optional
-
 from brownie import chain
 from yearn.entities import TreasuryTx, TxGroup
 from yearn.multicall2 import fetch_multicall
 from yearn.networks import Network
-from yearn.treasury.accountant.classes import TopLevelTxGroup
-from yearn.treasury.treasury import YearnTreasury
+from yearn.treasury.accountant.constants import treasury, v1, v2
 from yearn.utils import contract
-from yearn.v1.registry import Registry as RegistryV1
-from yearn.v2.registry import Registry as RegistryV2
 
-logger = logging.getLogger(__name__)
-
-FEES_LABEL = "Protocol Revenue"
-fees = TopLevelTxGroup(FEES_LABEL)
-
-v1 = RegistryV1() if chain.id == Network.Mainnet else None
-v2 = RegistryV2()
-
-treasury = YearnTreasury()
 
 def is_fees_v1(tx: TreasuryTx) -> bool:
     if chain.id != Network.Mainnet:
@@ -33,8 +19,8 @@ def is_fees_v1(tx: TreasuryTx) -> bool:
         if (
             tx.token.address.address != vault.token.address
             # Fees from single-sided strategies are not denominated in `vault.token`
-            and not (tx.token.symbol == "y3Crv" and tx.from_address.nickname.startswith("Contract: Strategy") and tx.from_address.nickname.endswith("3pool"))
-            and not (tx.token.symbol == "yyDAI+yUSDC+yUSDT+yTUSD" and tx.from_address.nickname.startswith("Contract: Strategy") and tx.from_address.nickname.endswith("ypool"))
+            and not (tx._symbol == "y3Crv" and tx._from_nickname.startswith("Contract: Strategy") and tx._from_nickname.endswith("3pool"))
+            and not (tx._symbol == "yyDAI+yUSDC+yUSDT+yTUSD" and tx._from_nickname.startswith("Contract: Strategy") and tx._from_nickname.endswith("ypool"))
             ):
             continue
         
@@ -55,7 +41,7 @@ def is_fees_v1(tx: TreasuryTx) -> bool:
 
     return False
 
-def is_fees_v2(tx: TreasuryTx) -> Optional[TxGroup]:
+def is_fees_v2(tx: TreasuryTx) -> bool:
     return any(
         tx.from_address.address == vault.vault.address 
         and tx.token.address.address == vault.vault.address
@@ -64,19 +50,11 @@ def is_fees_v2(tx: TreasuryTx) -> Optional[TxGroup]:
         for vault in v2.vaults + v2.experiments
     )
 
-def is_fees_v3(tx: TreasuryTx) -> Optional[TxGroup]:
+def is_fees_v3(tx: TreasuryTx) -> bool:
     # Stay tuned...
     return False
 
-def is_keep_beets(tx: TreasuryTx) -> bool:
-    if chain.id != Network.Fantom:
-        return False
-
-    if tx.token.symbol == "BEETS" and tx.to_address and tx.to_address.address in treasury.addresses and tx.hash != "0x1e997aa8c79ece76face8deb8fe7df4cea4f6a1ef7cd28501013ed30dfbe238f":
+def is_yearn_fed_fees(tx: TreasuryTx) -> bool:
+    yearn_fed_strat = "0x7928becDda70755B9ABD5eE7c7D5E267F1412042"
+    if tx._symbol == "yvCurve-DOLA-U" and tx.from_address.address == yearn_fed_strat and tx.to_address and tx.to_address.address in treasury.addresses:
         return True
-
-
-fees.create_child("Vaults V1", is_fees_v1)
-fees.create_child("Vaults V2", is_fees_v2)
-fees.create_child("Vaults V3", is_fees_v3)
-fees.create_child("KeepBEETS", is_keep_beets)

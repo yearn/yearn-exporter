@@ -1,17 +1,13 @@
 
 
-
 from typing import Optional
 
 from brownie import chain
 from yearn.entities import TreasuryTx, TxGroup
 from yearn.networks import Network
-from yearn.treasury.accountant.classes import TopLevelTxGroup
-from yearn.treasury.accountant.fees import treasury
+from yearn.treasury.accountant.constants import treasury
 from yearn.utils import contract
 
-OTHER_INCOME_LABEL = "Other Income"
-other_income = TopLevelTxGroup(OTHER_INCOME_LABEL)
 
 def is_robovault_share(tx: TreasuryTx) -> Optional[TxGroup]:
     """
@@ -22,7 +18,7 @@ def is_robovault_share(tx: TreasuryTx) -> Optional[TxGroup]:
         
     if not (
         tx.to_address and tx.to_address.address in treasury.addresses
-        and tx.token.symbol.startswith('rv')
+        and tx._symbol.startswith('rv')
         and tx.from_address.is_contract
     ):
         return False
@@ -41,14 +37,11 @@ def is_robovault_share(tx: TreasuryTx) -> Optional[TxGroup]:
         return True
     
     # For some reason these weren't caught by the above logic. Its inconsequential and not worth investigating to come up with better hueristics.
-    if tx.from_address.nickname == "Contract: teamWallet" and tx.amount == 0:
+    if tx._from_nickname == "Contract: teamWallet" and tx.amount == 0:
         return True
 
     return all([
-        tx.from_address.nickname == "Contract: Strategy",
-        tx.token.symbol == 'rv3USDCc',
+        tx._from_nickname == "Contract: Strategy",
+        tx._symbol == 'rv3USDCc',
         contract(strat.vault(block_identifier = tx.block)).symbol() == 'rv3USDCb'
     ])
-
-
-other_income.create_child("RoboVault Thank You", is_robovault_share)
