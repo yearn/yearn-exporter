@@ -84,6 +84,11 @@ def is_ygift_grant(tx: TreasuryTx) -> bool:
         return True
     return False
 
+def is_frontend_support(tx: TreasuryTx) -> bool:
+    return tx in HashMatcher([
+        ["0x213979422ec4154eb0aa0db4b03f48e1669c08fa055ab44e4006fa7d90bb8547", IterFilter('log_index', [535,536])] 
+    ])
+
 def is_other_grant(tx: TreasuryTx) -> bool:
     hashes = [
         "0x34714d6056c44b907fb28eec3638b58f57178dbde180d4019d04447ef2f780da",

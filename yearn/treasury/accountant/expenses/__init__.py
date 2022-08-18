@@ -39,6 +39,7 @@ if chain.id == Network.Mainnet:
 
     grants.create_child("Vault Management Dashboard", HashMatcher(["0xc59b692bff01c3a364d9a1fc629dfd743c1e421f7eaee7efdca86f23d0a8a7ad"]).contains) # These is also a stream for these guys TODO figure out how to account for streams as they stream
     grants.create_child("V3 Support", HashMatcher([["0x213979422ec4154eb0aa0db4b03f48e1669c08fa055ab44e4006fa7d90bb8547", Filter('log_index', 534)]]).contains) # These is also a stream for these guys TODO figure out how to account for streams as they stream
+    grants.create_child("Frontend Support", people.is_frontend_support)
     grants.create_child("yGift Team Grant", people.is_ygift_grant)
     grants.create_child("Other Grants", people.is_other_grant)
     grants.create_child("2021 Bonus", HashMatcher(people.eoy_bonus_hashes).contains)
