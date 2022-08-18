@@ -125,6 +125,8 @@ def registry_adapter():
         registry_adapter_address = "0xF628Fb7436fFC382e2af8E63DD7ccbaa142E3cd1"
     elif chain.id == Network.Arbitrum:
         registry_adapter_address = "0x57AA88A0810dfe3f9b71a9b179Dd8bF5F956C46A"
+    elif chain.id == Network.Optimism:
+        registry_adapter_address = "0xBcfCA75fF12E2C1bB404c2C216DBF901BE047690"
     return contract(registry_adapter_address)
 
 
