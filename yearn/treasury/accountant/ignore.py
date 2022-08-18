@@ -61,7 +61,6 @@ def is_vault_withdrawal(tx: TreasuryTx) -> bool:
                 underlying = contract(tx.token.address.address).token()
                 for _event in events['Transfer']:
                     _sender, _receiver, _value = _event.values()
-                    print(_event.__dir__())
                     if _event.address == underlying and _receiver == tx.from_address.address and event.pos < _event.pos and _sender == tx.token.address.address:
                         return True
     # token side

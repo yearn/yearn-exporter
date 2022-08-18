@@ -227,9 +227,6 @@ def get_token_transfers(start: Block, end: Block) -> List[Dict]:
             # Woohoo, we fixed it!
             _transfers.append(decoded['Transfer'][0])
 
-    pprint(busted_tokens)
-    pprint(failures)
-
     transfers = Parallel(8,'threading')(delayed(_prep_token_transfer_for_insert)(transfer) for transfer in tqdm(_transfers))
     return [x for x in transfers if x]
 
