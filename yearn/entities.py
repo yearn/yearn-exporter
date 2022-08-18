@@ -1,7 +1,10 @@
 import os
 from datetime import datetime
 from decimal import Decimal
+from functools import cached_property, lru_cache
 
+from brownie import chain
+from brownie.network.transaction import TransactionReceipt
 from pony.orm import *
 
 db = Database()
@@ -122,7 +125,25 @@ class TxGroup(db.Entity):
         if self.parent_txgroup is None:
             return self
         return self.parent_txgroup.top_txgroup
+    
+    @property
+    def full_string(self):
+        t = self
+        retval = t.name
+        while True:
+            if t.parent_txgroup is None:
+                return retval
+            t = t.parent_txgroup
+            retval = f"{t.name}:{retval}"
+            
 
+
+def get_transaction(txhash: str) -> TransactionReceipt:
+    return chain.get_transaction(txhash)
+
+@lru_cache(50)
+def get_events(txhash: str):
+    return get_transaction(txhash).events
 
 class TreasuryTx(db.Entity):
     _table_ = "treasury_txs"
@@ -144,6 +165,30 @@ class TreasuryTx(db.Entity):
     gas_price = Optional(Decimal,38,1)
     txgroup = Required(TxGroup, reverse="treasury_tx", column="txgroup_id", index=True)
     composite_index(chain,txgroup)
+
+    # Helpers
+    @cached_property
+    def _events(self):
+        return self._transaction.events
+    
+    @cached_property
+    def _transaction(self):
+        return get_transaction(self.hash)
+    
+    @property
+    def _to_nickname(self):
+        if not self.to_address:
+            return None
+        return self.to_address.nickname
+    
+    @property
+    def _from_nickname(self):
+        return self.from_address.nickname
+    
+    @property
+    def _symbol(self):
+        return self.token.symbol
+
 
 
 # Caching for partners.py
