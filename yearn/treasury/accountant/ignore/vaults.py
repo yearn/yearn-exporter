@@ -17,11 +17,10 @@ def is_vault_deposit(tx: TreasuryTx) -> bool:
             if "Transfer" not in tx._events:
                 return False
                 
-            transfers = tx._events["Transfer"]
-            for event in transfers:
+            for event in tx._events["Transfer"]:
                 sender, receiver, value = event.values()
                 if event.address == tx.token.address.address and sender == ZERO_ADDRESS and receiver in treasury.addresses:
-                    for _event in transfers:
+                    for _event in tx._events["Transfer"]:
                         _sender, _receiver, _value = _event.values()
                         if _event.address == vault.token.address and _sender == tx.to_address.address and _receiver == tx.token.address.address:
                             # v1
@@ -37,11 +36,10 @@ def is_vault_deposit(tx: TreasuryTx) -> bool:
             if "Transfer" not in tx._events:
                 return False
 
-            transfers = tx._events["Transfer"]
-            for event in transfers:
+            for event in tx._events["Transfer"]:
                 sender, receiver, value = event.values()
                 if event.address == tx.token.address.address and sender in treasury.addresses and receiver == vault.vault.address:
-                    for _event in transfers:
+                    for _event in tx._events["Transfer"]:
                         _sender, _receiver, _value = _event.values()
                         if _event.address == vault.vault.address and _sender == ZERO_ADDRESS and _receiver in treasury.addresses:
                             # v1?
@@ -71,34 +69,36 @@ def is_vault_deposit(tx: TreasuryTx) -> bool:
     }.get(chain.id, []))
 
 def is_vault_withdrawal(tx: TreasuryTx) -> bool:
+
+    # This is a strange tx that won't sort the usual way and isn't worth determining sorting hueristics for.
+    if tx in HashMatcher({
+        Network.Mainnet: [
+            "0xfa8652a888039183770ae766b855160c5e962b2963745ba0b67334dae9605348",
+        ],
+    }.get(chain.id, [])):
+        return True
+
     if not tx.to_address or tx.to_address.address not in treasury.addresses + [ZERO_ADDRESS]:
         return False
 
     # vault side
     if any(tx.token.address.address == vault.vault.address for vault in vaults):
-        events = tx._events
-        if 'Transfer' not in events:
-            return False
-
-        for event in events['Transfer']:
-            sender, receiver, value = event.values()
-            if event.address == tx.token.address.address and receiver == ZERO_ADDRESS == tx.to_address.address and sender in treasury.addresses and sender == tx.from_address.address:
-                underlying = contract(tx.token.address.address).token()
-                for _event in events['Transfer']:
-                    _sender, _receiver, _value = _event.values()
-                    if _event.address == underlying and _receiver == tx.from_address.address and event.pos < _event.pos and _sender == tx.token.address.address:
-                        return True
+        if 'Transfer' in tx._events:
+            for event in tx._events['Transfer']:
+                sender, receiver, value = event.values()
+                if event.address == tx.token.address.address and receiver == ZERO_ADDRESS == tx.to_address.address and sender in treasury.addresses and sender == tx.from_address.address:
+                    underlying = contract(tx.token.address.address).token()
+                    for _event in tx._events['Transfer']:
+                        _sender, _receiver, _value = _event.values()
+                        if _event.address == underlying and _receiver == tx.from_address.address and event.pos < _event.pos and _sender == tx.token.address.address:
+                            return True
     # token side
     for vault in vaults:
-        if tx.token.address.address == vault.token.address:
-            events = tx._events
-            if "Transfer" not in events:
-                continue
-
-            for event in events["Transfer"]:
+        if tx.token.address.address == vault.token.address and "Transfer" in tx._events:
+            for event in tx._events["Transfer"]:
                 sender, receiver, value = event.values()
                 if event.address == tx.token.address.address and sender == vault.vault.address == tx.from_address.address and receiver == tx.to_address.address:
-                    for _event in events["Transfer"]:
+                    for _event in tx._events["Transfer"]:
                         _sender, _receiver, _value = _event.values()
                         if _event.address == vault.vault.address and _receiver == ZERO_ADDRESS and _sender in treasury.addresses and _sender == tx.to_address.address and _event.pos < event.pos:
                             return True
