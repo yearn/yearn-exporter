@@ -132,7 +132,7 @@ class UniswapV2:
         fees = 0.997 ** (len(path) - 1)
         try:
             quote = self.router.getAmountsOut(amount_in, path, block_identifier=block)
-            amount_out = quote[-1] / 10 ** tokens[1].decimals()
+            amount_out = quote[-1] / 10 ** contract(str(path[-1])).decimals()
             return amount_out / fees
         except VirtualMachineError as e:
             okay_errs = ['INSUFFICIENT_INPUT_AMOUNT']
