@@ -17,9 +17,8 @@ logger = logging.getLogger('yearn.wallet_exporter')
 
 def main():
     while True:
-        start = datetime.now(tz=timezone.utc)
-        # end: 2020-02-12 first iearn deployment
-        end = datetime(2020, 2, 12, tzinfo=timezone.utc)
+        # start: 2020-02-12 first iearn deployment
+        start = datetime(2020, 2, 12, tzinfo=timezone.utc)
         start_bidirectional_export(
             start,
             export_snapshot,
