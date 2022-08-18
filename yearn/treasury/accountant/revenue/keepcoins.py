@@ -1,13 +1,24 @@
 
 # keepCOINS: excludes keepCRV as the CRV are locked forever.
 
+from brownie import chain
+from y import Network
 from yearn.entities import TreasuryTx
 from yearn.treasury.accountant.constants import treasury
 
+angle_strats_with_non_specific_names = {
+    Network.Mainnet: [
+        "0x2CB390212b0e5091a3c0D0331669c1419165CF80",
+        "0x7C2b9DB2Ae5aCC6fAC2Fd6cE9b01A5EB4bDD1309",
+    ],
+}.get(chain.id, [])
 
 def is_keep_angle(tx: TreasuryTx) -> bool:
-    if tx._symbol == "ANGLE" and tx.to_address and tx.to_address.address in treasury.addresses and tx._from_nickname == "Contract: StrategyAngleUSDC":
-        return True
+    if tx._symbol == "ANGLE" and tx.to_address and tx.to_address.address in treasury.addresses:
+        if tx._from_nickname == "Contract: StrategyAngleUSDC":
+            return True
+        return tx.from_address.address in angle_strats_with_non_specific_names
+        
     return False
 
 def is_keep_bal(tx: TreasuryTx) -> bool:
