@@ -35,6 +35,7 @@ if chain.id == Network.Mainnet:
     ux = website.create_child("UX")
     testing = ux.create_child("Testing", HashMatcher(general.hashes["website"]["ux"]["testing"]).contains)
 
+    grants.create_child("Vault Management Dashboard", HashMatcher(["0xc59b692bff01c3a364d9a1fc629dfd743c1e421f7eaee7efdca86f23d0a8a7ad"]).contains) # These is also a stream for these guys TODO figure out how to account for streams as they stream
     grants.create_child("yGift Team Grant", people.is_ygift_grant)
     grants.create_child("Other Grants", people.is_other_grant)
     grants.create_child("2021 Bonus", HashMatcher(people.eoy_bonus_hashes).contains)
