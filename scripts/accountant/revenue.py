@@ -3,16 +3,14 @@ from pprint import pprint
 
 from pandas import DataFrame, pivot_table, to_datetime
 from pony.orm import db_session, select
-from tqdm import tqdm
 from yearn.entities import TreasuryTx, TxGroup
-from yearn.treasury.accountant import PENDING_LABEL
-from yearn.treasury.accountant.fees import FEES_LABEL
+from yearn.treasury.accountant.revenue import REVENUE_LABEL
 
 
 @db_session
 def main():
     # Which txgroups apply?
-    txgroups = [t for t in select(t for t in TxGroup) if t.top_txgroup.name == FEES_LABEL]
+    txgroups = [t for t in select(t for t in TxGroup) if t.top_txgroup.name == REVENUE_LABEL]
 
     # Create initial dataframe.
     df = DataFrame([
