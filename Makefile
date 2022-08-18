@@ -51,7 +51,7 @@ rebuild: down build up
 scratch: clean-volumes build up
 
 logs:
-	$(dashboards_command) logs -f -t eth-exporter historical-eth-exporter ftm-exporter historical-ftm-exporter treasury-exporter historical-treasury-exporter ftm-treasury-exporter historical-ftm-treasury-exporter sms-exporter historical-sms-exporter ftm-sms-exporter historical-ftm-sms-exporter transactions-exporter ftm-transactions-exporter gnosis-exporter historical-gnosis-exporter gnosis-treasury-exporter historical-gnosis-treasury-exporter gnosis-sms-exporter historical-gnosis-sms-exporter gnosis-transactions-exporter
+	$(dashboards_command) logs -f -t eth-exporter historical-eth-exporter ftm-exporter historical-ftm-exporter treasury-exporter historical-treasury-exporter ftm-treasury-exporter historical-ftm-treasury-exporter sms-exporter historical-sms-exporter ftm-sms-exporter historical-ftm-sms-exporter transactions-exporter ftm-transactions-exporter gnosis-exporter historical-gnosis-exporter gnosis-treasury-exporter historical-gnosis-treasury-exporter gnosis-sms-exporter historical-gnosis-sms-exporter gnosis-transactions-exporter treasury-transactions-exporter ftm-treasury-transactions-exporter gnosis-treasury-transactions-exporter
 
 test:
 	$(test_command) up
@@ -60,7 +60,7 @@ all:
 	$(all_command) down && $(all_command) build --no-cache && $(all_command) up $(flags)
 
 logs-all:
-	$(dashboards_command) logs -f -t eth-exporter historical-eth-exporter ftm-exporter historical-ftm-exporter treasury-exporter historical-treasury-exporter ftm-treasury-exporter historical-ftm-treasury-exporter sms-exporter historical-sms-exporter ftm-sms-exporter historical-ftm-sms-exporter transactions-exporter wallet-exporter ftm-transactions-exporter ftm-wallet-exporter partners-exporter ftm-partners-exporter
+	$(dashboards_command) logs -f -t eth-exporter historical-eth-exporter ftm-exporter historical-ftm-exporter treasury-exporter historical-treasury-exporter ftm-treasury-exporter historical-ftm-treasury-exporter sms-exporter historical-sms-exporter ftm-sms-exporter historical-ftm-sms-exporter transactions-exporter wallet-exporter ftm-transactions-exporter ftm-wallet-exporter treasury-transactions-exporter ftm-treasury-transactions-exporter gnosis-treasury-transactions-exporter partners-exporter ftm-partners-exporter gnosis-partners-exporter
 
 postgres:
 	$(dashboards_command) up -d --build postgres
