@@ -176,7 +176,7 @@ class Vault:
                 try: 
                     self._strategies[strategy_address] = Strategy(strategy_address, self, self._watch_events_forever)
                 except ValueError:
-                    print(f"Error loading strategy {strategy_address}")
+                    logger.error(f"Error loading strategy {strategy_address}")
                     pass
             elif event.name == "StrategyRevoked":
                 logger.debug("%s strategy revoked %s", self.name, event["strategy"])
