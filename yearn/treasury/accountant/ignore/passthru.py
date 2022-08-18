@@ -83,7 +83,10 @@ def is_buying_yvboost(tx: TreasuryTx) -> bool:
         "0x9eabdf110efbfb44aab7a50eb4fe187f68deae7c8f28d78753c355029f2658d3",
         "0x5a80f5ff90fc6f4f4597290b2432adbb62ab4154ead68b515accdf19b01c1086",
         "0x848b4d629e137ad8d8eefe5db40eab895c9959b9c210d0ae0fef16a04bfaaee1",
-        "",
+        "0x896663aa9e2633b5d152028bdf84d7f4b1137dd27a8e61daca3863db16bebc4f",
+        "0xd8aa1e5d093a89515530b7267a9fd216b97fddb6478b3027b2f5c1d53070cd5f",
+        "0x169aab84b408fce76e0b776ebf412c796240300c5610f0263d5c09d0d3f1b062",
+        "0xe6fefbf061f4489cd967cdff6aa8aca616f0c709e08c3696f12b0027e9e166c9",
     ]
 
     if tx in HashMatcher(hashes):
