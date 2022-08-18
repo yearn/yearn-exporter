@@ -25,6 +25,12 @@ def is_kp3r(tx: TreasuryTx) -> bool:
         '0x3efaafc34054dbc50871abef5e90a040688fbddc51ec4c8c45691fb2f21fd495'
     ]
 
+    if tx._symbol == "kLP-KP3R/WETH" and tx._to_nickname == "Contract: Keep3r" and "LiquidityAddition" in tx._events:
+        for event in tx._events['LiquidityAddition']:
+            _, _, _, amount = event.values()
+            if Decimal(amount) / tx.token.scale == tx.amount:
+                return True
+
     try:
         return (
             (
