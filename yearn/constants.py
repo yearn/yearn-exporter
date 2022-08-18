@@ -74,7 +74,8 @@ TREASURY_WALLETS = {
     },
     Network.Gnosis: {
         YCHAD_MULTISIG,
-        "0x5FcdC32DfC361a32e9d5AB9A384b890C62D0b8AC", # Yearn Treasury (EOA?)
+        # TODO replace this with treasury msig
+        #"0x5FcdC32DfC361a32e9d5AB9A384b890C62D0b8AC", # Yearn Treasury (EOA?)
     },
     Network.Arbitrum: {
         YCHAD_MULTISIG,
