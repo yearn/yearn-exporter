@@ -69,6 +69,9 @@ SKIP_LOGS = {
         # Other:
         '0x1BA4b447d0dF64DA64024e5Ec47dA94458C1e97f', # Hegic Option Token from strategist testing, expired and worthless
     ],
+    Network.Fantom: [
+        "0x630277E37fd2Ddf81e4683f3692dD817aa6225Cb", # 8bitcats
+    ]
 }.get(chain.id,[])
 
 def _get_price(token: EthAddress, block: int = None) -> float:
