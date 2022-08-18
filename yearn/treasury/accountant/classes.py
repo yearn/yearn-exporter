@@ -1,9 +1,12 @@
 
-from typing import Any, Callable, Dict, Iterable, List, Optional, Tuple, Union
+import logging
+from typing import Any, Callable, Iterable, List, Optional, Tuple, Union
 
-from hexbytes import HexBytes
+import sentry_sdk
 from yearn.entities import TreasuryTx, TxGroup
 from yearn.outputs.postgres.utils import cache_txgroup
+
+logger = logging.getLogger(__name__)
 
 
 class _TxGroup:
@@ -51,8 +54,13 @@ class ChildTxGroup(_TxGroup):
         return self.parent.top
     
     def sort(self, tx: TreasuryTx) -> Optional[TxGroup]:
-        if hasattr(self, 'check') and self.check(tx):
-            return self.txgroup
+        try:
+            if hasattr(self, 'check') and self.check(tx):
+                return self.txgroup
+        except Exception as e:
+            logger.error(f"{e.__repr__()} when sorting {tx} with {self.label}.")
+            sentry_sdk.capture_exception(e)
+            return None
         return super().sort(tx)
 
 
