@@ -4,6 +4,7 @@ networks:
 autofetch_sources: false
 
 compiler:
+    evm_version: london
     solc:
         use_latest_patch:
             - '0x514910771AF9Ca656af840dff83E8264EcF986CA'

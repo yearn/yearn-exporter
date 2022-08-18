@@ -337,6 +337,77 @@ services:
       - victoria-metrics
       - postgres
 
+  treasury-transactions-exporter:
+    image: yearn-exporter
+    command: treasury_transactions_exporter
+    volumes: *common-volumes
+    environment:
+      <<: *common-envs
+      <<: *common-eth-envs
+      <<: *common-historical-envs
+      <<: *common-postgres-envs
+    networks:
+      - yearn-exporter
+    restart: on-failure
+    depends_on:
+      - postgres
+
+  ftm-treasury-transactions-exporter:
+    image: yearn-exporter
+    command: treasury_transactions_exporter
+    volumes: *common-volumes
+    environment:
+      <<: *common-envs
+      <<: *common-ftm-envs
+      <<: *common-postgres-envs
+    networks:
+      - yearn-exporter
+    restart: on-failure
+    depends_on:
+      - postgres
+  
+  gnosis-treasury-transactions-exporter:
+    image: yearn-exporter
+    command: treasury_transactions_exporter
+    volumes: *common-volumes
+    environment:
+      <<: *common-envs
+      <<: *common-gnosis-envs
+      <<: *common-postgres-envs
+    networks:
+      - yearn-exporter
+    restart: on-failure
+    depends_on:
+      - postgres
+    
+  arbi-treasury-transactions-exporter:
+    image: yearn-exporter
+    command: treasury_transactions_exporter
+    volumes: *common-volumes
+    environment:
+      <<: *common-envs
+      <<: *common-arbi-envs
+      <<: *common-postgres-envs
+    networks:
+      - yearn-exporter
+    restart: on-failure
+    depends_on:
+      - postgres
+  
+  opti-treasury-transactions-exporter:
+    image: yearn-exporter
+    command: treasury_transactions_exporter
+    volumes: *common-volumes
+    environment:
+      <<: *common-envs
+      <<: *common-opti-envs
+      <<: *common-postgres-envs
+    networks:
+      - yearn-exporter
+    restart: on-failure
+    depends_on:
+      - postgres
+
   sms-exporter:
     image: yearn-exporter
     command: sms_exporter
@@ -630,6 +701,51 @@ services:
     environment:
       <<: *common-envs
       <<: *common-ftm-envs
+      <<: *common-postgres-envs
+    networks:
+      - yearn-exporter
+    restart: on-failure
+    depends_on:
+      - victoria-metrics
+      - postgres
+  
+  gnosis-partners-exporter:
+    image: yearn-exporter
+    command: partners_exporter
+    volumes: *common-volumes
+    environment:
+      <<: *common-envs
+      <<: *common-gnosis-envs
+      <<: *common-postgres-envs
+    networks:
+      - yearn-exporter
+    restart: on-failure
+    depends_on:
+      - victoria-metrics
+      - postgres
+  
+  arbi-partners-exporter:
+    image: yearn-exporter
+    command: partners_exporter
+    volumes: *common-volumes
+    environment:
+      <<: *common-envs
+      <<: *common-arbi-envs
+      <<: *common-postgres-envs
+    networks:
+      - yearn-exporter
+    restart: on-failure
+    depends_on:
+      - victoria-metrics
+      - postgres
+  
+  opti-partners-exporter:
+    image: yearn-exporter
+    command: partners_exporter
+    volumes: *common-volumes
+    environment:
+      <<: *common-envs
+      <<: *common-opti-envs
       <<: *common-postgres-envs
     networks:
       - yearn-exporter

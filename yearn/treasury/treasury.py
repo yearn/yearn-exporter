@@ -47,6 +47,7 @@ SKIP_LOGS = {
     Network.Mainnet: [
         # Spam:
         '0x0734E85525Ca6838fe48EC6EB29b9d457F254F73', # SOLID spam
+        '0x3B6e5fA0322888b94DCA443cE4F3785ac0001DFA', # SOLID spam
         '0x459176FDC68C945B6bb23eB946eee62457041567', # SOLID spam
         '0x4709099BE25D156578405132d66aeBfC2e12937A', # SOLID spam
         '0x698068C6a369b1BF04D516f5fE48424797973DCf', # SOLID spam
@@ -68,6 +69,9 @@ SKIP_LOGS = {
         # Other:
         '0x1BA4b447d0dF64DA64024e5Ec47dA94458C1e97f', # Hegic Option Token from strategist testing, expired and worthless
     ],
+    Network.Fantom: [
+        "0x630277E37fd2Ddf81e4683f3692dD817aa6225Cb", # 8bitcats
+    ]
 }.get(chain.id,[])
 
 def _get_price(token: EthAddress, block: int = None) -> float:

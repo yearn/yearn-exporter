@@ -1,0 +1,27 @@
+
+from yearn.entities import TreasuryTx
+from yearn.treasury.accountant.classes import HashMatcher
+
+
+def is_double_fee_reimbursement(tx: TreasuryTx) -> bool:
+    """
+    Due to new single-sided strats that deposit into other vaults,
+    some users were accidentally charged 2x the expected withdrawal fee.
+    """
+    hashes = [
+        "0x4ce0c829fb46fc1ea03e434599a68af4c6f65f80aff7e934a008c0fe63e9da3f",
+        "0x90b54bf0d35621160b5094c263a2684f8e7b37fc6467c8c1ce6a53e2e7acbfa1",
+    ]
+    if tx._from_nickname == "Disperse.app" and tx in HashMatcher(hashes):
+        return True
+    return False
+
+def is_ydai_fee_reimbursement(tx: TreasuryTx) -> bool:
+    if tx._from_nickname == "Disperse.app" and tx in HashMatcher(["0x2f667223aaefc4b153c28440d151fdb19333aff5d052c0524f2804fbd5a7964c"]):
+        return True
+    return False
+
+def is_yyfi_fee_reimbursement(tx: TreasuryTx) -> bool:
+    if tx._from_nickname == "Disperse.app" and tx in HashMatcher(["0x867b547b67910a08c939978d8071acca28ecc444d7155c0626e87730f67c058c"]):
+        return True
+    return False

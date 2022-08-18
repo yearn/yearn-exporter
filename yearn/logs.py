@@ -1,7 +1,9 @@
 import logging
-import warnings
 import os
-from brownie.exceptions import BrownieEnvironmentWarning
+import warnings
+
+from brownie.exceptions import (BrownieCompilerWarning,
+                                BrownieEnvironmentWarning)
 
 
 def setup_logging():
@@ -15,4 +17,16 @@ def setup_logging():
         'ignore',
         r".*defines a 'balance' function.*",
         BrownieEnvironmentWarning
+    )
+
+    warnings.filterwarnings(
+        'ignore',
+        r"Namespace collision between contract function and brownie `Contract` class member: *",
+        BrownieEnvironmentWarning
+    )
+
+    warnings.filterwarnings(
+        'ignore',
+        r"0x*: Locally compiled and on-chain bytecode do not match!",
+        BrownieCompilerWarning
     )

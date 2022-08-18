@@ -238,15 +238,15 @@ class Vault:
         # not able to calculate gauge weighting on chains other than mainnet
         curve_simple_excludes = {
             Network.Mainnet: [
-                "0x3D27705c64213A5DcD9D26880c1BcFa72d5b6B0E"
+                "0x3D27705c64213A5DcD9D26880c1BcFa72d5b6B0E",
             ],
             Network.Fantom: [
                 "0xCbCaF8cB8cbeAFA927ECEE0c5C56560F83E9B7D9",
-                "0xA97E7dA01C7047D6a65f894c99bE8c832227a8BC"
+                "0xA97E7dA01C7047D6a65f894c99bE8c832227a8BC",
             ],
             Network.Arbitrum: [
                 "0x239e14A19DFF93a17339DCC444f74406C17f8E67",
-                "0x1dBa7641dc69188D6086a73B972aC4bda29Ec35d"
+                "0x1dBa7641dc69188D6086a73B972aC4bda29Ec35d",
             ]
         }
         needs_simple = True

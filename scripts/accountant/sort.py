@@ -1,0 +1,35 @@
+
+from datetime import datetime
+from time import time
+
+import pandas as pd
+from pony.orm import db_session
+from tqdm import tqdm
+from yearn.treasury import accountant
+
+pd.set_option('display.max_rows', 1000)
+pd.set_option('display.max_colwidth', -1)
+
+@db_session
+def main():
+    txs = accountant.unsorted_txs()
+    start_ct, start = len(txs), time()
+    accountant.sort_txs(txs)
+    print(f"Sorted {start_ct - len(txs)} transactions in {round(time() - start, 2)}s.")
+    print(f"{len(txs)} remain:")
+    df = pd.DataFrame([
+        {  
+            'timestamp': datetime.fromtimestamp(tx.timestamp),
+            'log index': tx.log_index,
+            'from': tx.from_address.nickname if tx.from_address.nickname else tx.from_address.address,
+            'to': tx.to_address.nickname if tx.to_address and tx.to_address.nickname else tx.to_address.address if tx.to_address else None,
+            'amount': round(tx.amount,6),
+            'hash':tx.hash,
+            'token': tx.token.symbol,
+            'value_usd': round(tx.value_usd,2) if tx.value_usd else None,
+        } for tx in tqdm(txs)
+    ])
+
+    if len(df) > 0:
+        df.sort_values('timestamp',inplace=True)
+        print(df)
