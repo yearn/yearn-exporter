@@ -25,7 +25,6 @@ def is_uniswap_deposit(tx: TreasuryTx) -> bool:
                 # KP3R/WETH Uni v3 LP -- used while depositing to kLP-KP3R/WETH
                 mint.address == "0x11B7a6bc0259ed6Cf9DB8F499988F9eCc7167bf5"
             ):
-                print('reached here')
                 tokens = [
                     contract(tx.token.address.address).token0(),
                     contract(tx.token.address.address).token1(),

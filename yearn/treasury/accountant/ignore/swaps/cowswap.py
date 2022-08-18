@@ -14,7 +14,6 @@ def is_cowswap_swap(tx: TreasuryTx) -> bool:
                     return True
                 elif tx.token.address.address == trade["sellToken"] and tx.from_address.address == trade['owner'] and round(float(tx.amount), 15) == round(trade['sellAmount'] / tx.token.scale, 15):
                     # Did Yearn actually receive the other side of the trade?
-                    print('reach')
                     other_side_query = select(
                         t for t in TreasuryTx
                         if t.hash == tx.hash
