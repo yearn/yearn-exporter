@@ -198,12 +198,11 @@ services:
 
   treasury-transactions-exporter:
     image: yearn-exporter
-    command: treasury_transactions_exporter
+    command: exporters/treasury_transactions
     volumes: *common-volumes
     environment:
       <<: *common-envs
       <<: *common-eth-envs
-      <<: *common-historical-envs
       <<: *common-postgres-envs
     networks:
       - yearn-exporter
@@ -213,7 +212,7 @@ services:
 
   ftm-treasury-transactions-exporter:
     image: yearn-exporter
-    command: treasury_transactions_exporter
+    command: exporters/treasury_transactions
     volumes: *common-volumes
     environment:
       <<: *common-envs
@@ -227,7 +226,7 @@ services:
   
   gnosis-treasury-transactions-exporter:
     image: yearn-exporter
-    command: treasury_transactions_exporter
+    command: exporters/treasury_transactions
     volumes: *common-volumes
     environment:
       <<: *common-envs
@@ -241,7 +240,7 @@ services:
     
   arbi-treasury-transactions-exporter:
     image: yearn-exporter
-    command: treasury_transactions_exporter
+    command: exporters/treasury_transactions
     volumes: *common-volumes
     environment:
       <<: *common-envs
@@ -255,7 +254,7 @@ services:
   
   opti-treasury-transactions-exporter:
     image: yearn-exporter
-    command: treasury_transactions_exporter
+    command: exporters/treasury_transactions
     volumes: *common-volumes
     environment:
       <<: *common-envs
@@ -387,7 +386,6 @@ services:
     environment:
       <<: *common-envs
       <<: *common-opti-envs
-      <<: *common-historical-envs
       <<: *common-postgres-envs
     networks:
       - yearn-exporter
@@ -502,7 +500,7 @@ services:
   
   gnosis-partners-exporter:
     image: yearn-exporter
-    command: partners_exporter
+    command: exporters/partners
     volumes: *common-volumes
     environment:
       <<: *common-envs
@@ -517,7 +515,7 @@ services:
   
   arbi-partners-exporter:
     image: yearn-exporter
-    command: partners_exporter
+    command: exporters/partners
     volumes: *common-volumes
     environment:
       <<: *common-envs
@@ -532,7 +530,7 @@ services:
   
   opti-partners-exporter:
     image: yearn-exporter
-    command: partners_exporter
+    command: exporters/partners
     volumes: *common-volumes
     environment:
       <<: *common-envs
