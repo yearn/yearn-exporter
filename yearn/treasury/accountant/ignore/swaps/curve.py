@@ -3,7 +3,7 @@ from brownie import ZERO_ADDRESS, chain
 from yearn.entities import TreasuryTx
 from yearn.multicall2 import fetch_multicall
 from yearn.networks import Network
-from yearn.treasury.accountant.classes import HashMatcher, IterFilter
+from yearn.treasury.accountant.classes import Filter, HashMatcher, IterFilter
 from yearn.treasury.accountant.constants import treasury
 from yearn.utils import contract
 
@@ -63,6 +63,7 @@ def is_curve_withdrawal(tx: TreasuryTx) -> bool:
             "0x1c8d0faa2c1ffdd8bc6b7546ffff807329baf86b5dbf3b512511cb2da23a0525",
             # ibcrv, token outputs don't match pool coins
             ["0x1de24003b7c19ac0925fea44b73f22745a3533aaa8c45790a2e9f2075c685161", IterFilter('log_index', [22,27,32])],
+            ["0xd1c52ba3e5f0ade00cc39b3c00ab1c96f8b5ed5eb11be99230e3b0fa06fdac67", Filter('log_index', 84)],
             # musd3crv, gusd3crv, compcrv, usdn3crv pools have neither `lp_token` method nor `totalSupply` method.
             ["0xa888094c10003c6455f852885d932c8fa2849cbadb9fdfe3ecfc96bda6bcf340", IterFilter('log_index', [86,140,161,205])],
         ],
