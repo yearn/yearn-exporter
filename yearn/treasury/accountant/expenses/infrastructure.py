@@ -17,5 +17,6 @@ def is_tenderly(tx: TreasuryTx) -> bool:
 def is_generic(tx: TreasuryTx) -> bool:
     hashes = [
         ["0x47035f156d4e6144c144b2ac5e91497e353c9a4e23133587bbf3da2f9d7da596", Filter('_symbol', 'DAI')],
+        ["0xeb51cb5a3b4ae618be75bf3e23c2d8e333d93d5e81e869eca7f9612a30079822", Filter('log_index', 195)],
     ]
     return tx in HashMatcher(hashes)
