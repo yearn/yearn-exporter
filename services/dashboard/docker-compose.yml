@@ -708,6 +708,51 @@ services:
     depends_on:
       - victoria-metrics
       - postgres
+  
+  gnosis-partners-exporter:
+    image: yearn-exporter
+    command: partners_exporter
+    volumes: *common-volumes
+    environment:
+      <<: *common-envs
+      <<: *common-gnosis-envs
+      <<: *common-postgres-envs
+    networks:
+      - yearn-exporter
+    restart: on-failure
+    depends_on:
+      - victoria-metrics
+      - postgres
+  
+  arbi-partners-exporter:
+    image: yearn-exporter
+    command: partners_exporter
+    volumes: *common-volumes
+    environment:
+      <<: *common-envs
+      <<: *common-arbi-envs
+      <<: *common-postgres-envs
+    networks:
+      - yearn-exporter
+    restart: on-failure
+    depends_on:
+      - victoria-metrics
+      - postgres
+  
+  opti-partners-exporter:
+    image: yearn-exporter
+    command: partners_exporter
+    volumes: *common-volumes
+    environment:
+      <<: *common-envs
+      <<: *common-opti-envs
+      <<: *common-postgres-envs
+    networks:
+      - yearn-exporter
+    restart: on-failure
+    depends_on:
+      - victoria-metrics
+      - postgres
 
   vmagent:
     image: victoriametrics/vmagent:heads-public-single-node-0-g52eb9c99e
