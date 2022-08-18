@@ -19,7 +19,8 @@ logger = logging.getLogger('yearn.partners_exporter')
 
 
 def main():
-    data_query = 'sms_assets{network="' + Network.label() + '"}'
+    data_query = 'partners{network="' + Network.label() + '"}'
+    # This is forward-only
     start_bidirectional_export(datetime.now(tz=timezone.utc), export_snapshot, data_query)
 
 
