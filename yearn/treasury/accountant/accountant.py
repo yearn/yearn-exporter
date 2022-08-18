@@ -4,6 +4,7 @@ from time import time
 from typing import Any, Dict, Iterable, List, Optional
 
 from brownie import chain
+from joblib import Parallel, delayed
 from pony.orm import Set, commit, db_session, select
 from pony.orm.core import Entity
 from tqdm import tqdm
@@ -58,26 +59,22 @@ def all_txs(all_chains: bool = False) -> List[TreasuryTx]:
     return txs
 
 
-def sort_tx(tx: Optional[TreasuryTx]) -> Optional[TxGroup]:
+@db_session
+def sort_tx(treasury_tx_id: int) -> Optional[TxGroup]:
     """ Sorts a TreasuryTx `tx` into the appropriate TxGroup. """
+    tx = TreasuryTx[treasury_tx_id]
     txgroup = get_txgroup(tx)
     if txgroup != tx.txgroup:
         tx.txgroup = txgroup
+        commit()
     return txgroup
 
 
 def sort_txs(txs: Iterable[TreasuryTx]) -> None:
     """ Sorts each TreasuryTx in `txs` into the appropriate TxGroup. """
-
-    start = time()
-    start_len = len(txs)
-    i = 0
-    for tx in tqdm(txs):
-        sort_tx(tx)
-        if i / 10 == i // 10:
-            commit()
-
-    logger.info(f"sorted {start_len} transactions in {round(time()-start,2)}s")
+    ct, start = len(txs), time()
+    Parallel(n_jobs=8, backend="threading")(delayed(sort_tx)(tx.treasury_tx_id) for tx in tqdm(txs, total=ct))
+    logger.info(f"sorted {ct} transactions in {round(time()-start,2)}s")
 
 
 def get_txgroup(tx: Optional[TreasuryTx]) -> Optional[TxGroup]:
