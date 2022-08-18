@@ -24,6 +24,7 @@ if chain.id == Network.Mainnet:
     audit_txgroup = security_txgroup.create_child("Audit")
     audit_txgroup.create_child("yAcademy", security.is_yacademy_audit)
     audit_txgroup.create_child("ChaiSec", security.is_chaisec_audit)
+    audit_txgroup.create_child("StateMind", security.is_statemind_audit)
     audit_txgroup.create_child("Unspecified Audit", security.is_other_audit)
 
 

@@ -18,6 +18,11 @@ def is_chaisec_audit(tx: TreasuryTx) -> bool:
         ],
     }.get(chain.id, []))
 
+def is_statemind_audit(tx: TreasuryTx) -> bool:
+    return tx in HashMatcher([
+        ["0xeb51cb5a3b4ae618be75bf3e23c2d8e333d93d5e81e869eca7f9612a30079822", Filter('log_index', 193)]
+    ])
+
 def is_other_audit(tx: TreasuryTx) -> bool:
     hashes = [
         "0x7df5566cc9ff8ed0aafe126b74ad0e3957e62d530d007565ee32bd1303bcec32",
