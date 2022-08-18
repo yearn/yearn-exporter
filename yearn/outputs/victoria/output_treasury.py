@@ -1,12 +1,18 @@
+import logging
 from yearn.outputs.victoria.output_helper import _build_item, _post
 from yearn.treasury.buckets import get_token_bucket
 from yearn.utils import contract
+
+logger = logging.getLogger(__name__)
+
 
 def export(timestamp, data, label):
     metrics_to_export = []
     for section, section_data in data.items():
         for wallet, wallet_data in section_data.items():
             for token, bals in wallet_data.items():
+                if bals['usd value'] >= 1_000_000_000_000:
+                    logger.critical(f'Crazy price for {token} {bals["usd value"]}')
                 symbol = _get_symbol(token)
                 bucket = get_token_bucket(token)
                 for key, value in bals.items():
