@@ -36,6 +36,10 @@ def is_travel_reimbursement(tx: TreasuryTx) -> bool:
         ["0x4adad1e3cff3410d50fb11ca31fa7029d8533b79192f120c2a445e1241711320", Filter('_from_nickname', "Disperse.app")],
         ["0xde196619d5ba63655f8cb3c84f1e7b0e2a23231804d52661f37062ffa8d97a32", Filter('_symbol', "DAI")],
         ["0x36bae3823953df3d2eae7f504349554a04972a147bb837a5d8e2e8f9abfc5fa8", IterFilter('log_index', [74,75,76,78])],
+        # This tx is for a budget request TODO curate the budget requests somewhere in this repo.
+        "0xe5ff2368fae88c103f80cbbc10a2f32b91f562d83bcd34e94aba6e249a0f317a",
+        # This was for travel planning but this is the most fitting category at this time.
+        "0x7222e1ae42ed80dc0b0cbc90db23b1b5ccae356d045ddb039ce635fd5871643b",
     ]
     return tx in HashMatcher(hashes)
 
