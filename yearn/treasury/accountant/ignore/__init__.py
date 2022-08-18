@@ -152,6 +152,7 @@ if chain.id == Network.Mainnet:
     passthru_txgroup.create_child("yvBoost from elsewhere INCOMPLETE", passthru.is_yvboost_from_elsewhere)
 elif chain.id == Network.Fantom:
     passthru_txgroup.create_child("IB", passthru.is_ib)
+    passthru_txgroup.create_child("yvUSDC STABEET", passthru.is_usdc_stabeet)
 # other pass-thru
 if chain.id == Network.Mainnet:
     passthru_txgroup.create_child("Inverse-earned YearnFed Fees", passthru.is_inverse_fees_from_yearn_fed)

@@ -124,3 +124,7 @@ def is_cowswap_migration(tx: TreasuryTx) -> bool:
             "0xb50341d3db2ff4a39b9bfa21753893035554ae44abb7d104ab650753db1c4855",
         ],
     }.get(chain.id, []))
+
+def is_usdc_stabeet(tx: TreasuryTx) -> bool:
+    """ USDC is sent from a strategy to fchad for unwrapping, then back to the strategy. """
+    return tx in HashMatcher(["0x97fa790c34e1da6c51ebf7b0c80e08e6b231e739c949dddca3054708e43bb5d0"])
