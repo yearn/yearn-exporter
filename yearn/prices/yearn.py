@@ -28,6 +28,9 @@ addresses = {
         'v2': '0x57AA88A0810dfe3f9b71a9b179Dd8bF5F956C46A',
         'ib': '0xf900ea42c55D165Ca5d5f50883CddD352AE48F40',
     },
+    Network.Optimism: {
+        'v2': '0xBcfCA75fF12E2C1bB404c2C216DBF901BE047690',
+    },
 }
 
 
