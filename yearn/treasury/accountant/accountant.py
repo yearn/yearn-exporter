@@ -13,7 +13,7 @@ from yearn.outputs.postgres.utils import cache_txgroup
 #from yearn.treasury.accountant.expenses import expenses
 from yearn.treasury.accountant.fees import fees
 #from yearn.treasury.accountant.ignore import ignore
-#from yearn.treasury.accountant.other_income import other_income
+from yearn.treasury.accountant.other_income import other_income
 
 PENDING_LABEL = "Categorization Pending"
 
@@ -26,7 +26,7 @@ top_level_txgroups = [
     fees,
     #cost_of_revenue,
     #expenses,
-    #other_income,
+    other_income,
     #ignore,
 ]
 
