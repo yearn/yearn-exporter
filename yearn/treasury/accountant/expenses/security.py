@@ -1,5 +1,7 @@
 
+from brownie import chain
 from yearn.entities import TreasuryTx
+from yearn.networks import Network
 from yearn.treasury.accountant.classes import Filter, HashMatcher
 
 
@@ -8,6 +10,13 @@ def is_yacademy_audit(tx: TreasuryTx) -> bool:
         "0x48e05bff53a67304593a0bff5238fd2bed01c61074937706df879fb901e9e1ba",
     ]
     return tx in HashMatcher(hashes)
+
+def is_chaisec_audit(tx: TreasuryTx) -> bool:
+    return tx in HashMatcher({
+        Network.Mainnet: [
+        "0x7672b9d10b968c58525cff566a60bc8d44a6633f51a712e0eb00ecf88f86aef3",
+        ],
+    }.get(chain.id, []))
 
 def is_other_audit(tx: TreasuryTx) -> bool:
     hashes = [

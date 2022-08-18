@@ -23,6 +23,7 @@ if chain.id == Network.Mainnet:
     security_txgroup.create_child("Anti-Spam Discord Bot", security.is_antispam_bot)
     audit_txgroup = security_txgroup.create_child("Audit")
     audit_txgroup.create_child("yAcademy", security.is_yacademy_audit)
+    audit_txgroup.create_child("ChaiSec", security.is_chaisec_audit)
     audit_txgroup.create_child("Unspecified Audit", security.is_other_audit)
 
 
