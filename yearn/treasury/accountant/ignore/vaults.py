@@ -58,7 +58,17 @@ def is_vault_deposit(tx: TreasuryTx) -> bool:
             "0x248e896eb732dfe40a0fa49131717bb7d2c1721743a2945ab9680787abcf9c50",
         ],
     }.get(chain.id, [])
-    return tx in HashMatcher(hashes)
+
+    if tx in HashMatcher(hashes):
+        return True
+    
+    # TODO Figure out hueristics for ETH deposit to yvWETH
+    return tx in HashMatcher({
+        Network.Mainnet: [
+            "0x6efac7fb65f187d9aa48d3ae42f3d3a2acdeed3e0b1ded2bb6967cf08c6548a4",
+            "0xf37fe9e92366f215f97eb223571c0070f8a5195274658496fbc214083be43dbf",
+        ],
+    }.get(chain.id, []))
 
 def is_vault_withdrawal(tx: TreasuryTx) -> bool:
     if not tx.to_address or tx.to_address.address not in treasury.addresses + [ZERO_ADDRESS]:
