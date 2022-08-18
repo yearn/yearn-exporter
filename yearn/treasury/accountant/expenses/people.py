@@ -36,8 +36,7 @@ def is_team_payment(tx: TreasuryTx) -> bool:
         "0xd268946b6937df798e965a98b3f9348f7fc8519a2df9ba124210e4ce6c3fecaf",
         "0x9d8fc48fe2f552a424fa2e4fa35f2ddbe73eb9f1eae33bb3b7b27466b8dbb62f",
         "0x7979a77ab8a30bc6cd12e1df92e5ba0478a8907caf6e100317b7968668d0d4a2",
-        # I think this is actually 0xsplits
-       # "",
+        "0x91656eb3246a560498e808cbfb00af0518ec12f50effda42fc1496d0b0fb080a",
     ]
 
     zerox_splits_hashes = [
