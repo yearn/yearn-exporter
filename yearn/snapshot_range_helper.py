@@ -23,12 +23,22 @@ if POOL_SIZE == 1:
 else:
     executor = ProcessPoolExecutor(POOL_SIZE)
 
+# We can save time and calls to Victoria Metrics by skipping snapshots that were already checked in less granular resolutions.
+checked = set()
+
 
 def _raise_any_exceptions(futures: Iterable[Future]):
     for fut in futures:
         if fut.done() and fut.exception():
             raise fut.exception()
 
+def _get_resolution(interval_map) -> str:
+    resolutions = [item['resolution'] for item in interval_map]
+    # default resolution is hourly
+    resolution = os.environ.get('RESOLUTION', '1h')
+    if resolution not in resolutions:
+        resolution = "1h"
+    return resolution
 
 def start_bidirectional_export(
     start: datetime,
@@ -56,15 +66,19 @@ def start_bidirectional_export(
 
 
 def forward_snapshot_generator(interval_map):
-    end = interval_map[0]['end']
-    interval = interval_map[0]['interval']
-    # as `end` will already be handled by the historical_snapshot_generator, forward can begin processing from snapshot ``end + interval``
-    checkpoint = end
+    resolution = _get_resolution(interval_map)
+    for res in interval_map:
+        if res['resolution'] == resolution:
+            interval = res['interval']
+            # as `end` will already be handled by the historical_snapshot_generator, forward can begin processing from snapshot ``end + interval``
+            checkpoint = res['end']
+            break
+
     while True:
         now = datetime.now(tz=timezone.utc)
         # If the next interval is ready, check it in and yield it.
         if now > checkpoint + interval + REORG_BUFFER:
-            checkpoint = checkpoint + interval
+            checkpoint += interval
             yield checkpoint
 
         # Otherwise, yield None and the bidirectional_snapshot_generator will defer to
@@ -74,12 +88,7 @@ def forward_snapshot_generator(interval_map):
 
 
 def historical_snapshot_generator(start, data_query, interval_map, generate_snapshot_range_func):
-    resolutions = [item['resolution'] for item in interval_map]
-    # default resolution is hourly
-    resolution = os.environ.get('RESOLUTION', '1h')
-    if resolution not in resolutions:
-        resolution = "1h"
-
+    resolution = _get_resolution(interval_map)
     for entry in interval_map:
         generator = generate_snapshot_range_func(
             start,
@@ -110,6 +119,7 @@ def bidirectional_snapshot_generator(forward_snapshot_generator: Iterator[dateti
             else: yield next_historical_snapshot
         else:
             # Some arbitrary number of seconds to sleep before checking whether the next interval is ready to export.
+            logger.debug('waiting for next timestamp')
             time.sleep(5)
 
 
@@ -200,7 +210,11 @@ def _generate_snapshot_range(start, end, interval, data_query):
         snapshot = end - i * interval
         if snapshot < start:
             return
+        elif snapshot in checked:
+            continue
         else:
+            # We can save time and calls to Victoria Metrics by skipping snapshots that were already checked in less granular resolutions.
+            checked.add(snapshot)
             ts = snapshot.timestamp()
             if has_data(ts, data_query):
                 logger.info("data already present for snapshot %s, ts %d", snapshot, ts)
