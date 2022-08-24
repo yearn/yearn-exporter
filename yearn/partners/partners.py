@@ -449,6 +449,17 @@ partners = {
             ],
         ),
         Partner(
+            name='rhino.fi',
+            start_block=0,
+            treasury='0x520Cf70a2D0B3dfB7386A2Bc9F800321F62a5c3a',
+            wrappers=[
+                WildcardWrapper(
+                    name='rhino.fi Layer2 StarkEx Bridge',
+                    wrapper='0x5d22045DAcEAB03B158031eCB7D9d06Fad24609b',
+                 ),
+            ],
+        ),
+        Partner(
             name='element',
             start_block=0,
             treasury='0x82eF450FB7f06E3294F2f19ed1713b255Af0f541',
