@@ -129,8 +129,13 @@ class UniswapV2:
             quote = self.router.getAmountsOut(amount_in, path, block_identifier=block)
             amount_out = quote[-1] / 10 ** contract(str(path[-1])).decimals()
             return amount_out / fees
+        except ValueError as e:
+            okay_errs = ['execution reverted']
+            if not any([err in str(e) for err in okay_errs]):
+                raise
+            return None
         except VirtualMachineError as e:
-            okay_errs = ['INSUFFICIENT_INPUT_AMOUNT']
+            okay_errs = ['INSUFFICIENT_INPUT_AMOUNT','revert: twamm out of date']
             if not any([err in str(e) for err in okay_errs]):
                 raise
             return None
