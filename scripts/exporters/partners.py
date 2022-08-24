@@ -3,6 +3,7 @@ from datetime import datetime, timezone
 from time import time
 
 import sentry_sdk
+from brownie import chain
 from yearn.networks import Network
 from yearn.outputs.victoria import output_duration
 from yearn.outputs.victoria.output_helper import _build_item, _post
@@ -27,7 +28,7 @@ def main():
 @time_tracking
 def export_snapshot(snapshot, ts):
     start = time()
-    block = closest_block_after_timestamp(snapshot.timestamp())
+    block = chain[closest_block_after_timestamp(snapshot.timestamp())]
     export_partners(block)
     duration = time.time() - start
     output_duration.export(duration, 1, "partners", block.timestamp)
