@@ -4,6 +4,7 @@ from itertools import zip_longest
 from typing import Any, Dict, List, Optional, Union
 
 from brownie import chain, web3
+from brownie.exceptions import ContractNotFound
 from brownie.network.event import (EventDict, _add_deployment_topics,
                                    _decode_logs)
 from joblib import Parallel, delayed
@@ -48,8 +49,11 @@ def create_filter(address: Address, topics: Optional[Topics] = None) -> RPCEndpo
 
 
 def __add_deployment_topics(address: Address) -> None:
-    _add_deployment_topics(address, contract(address).abi)
-
+    try:
+        _add_deployment_topics(address, contract(address).abi)
+    except ContractNotFound:
+        # This contract seems to have self destructed
+        pass
 
 def get_logs_asap(
     addresses: Optional[Union[Address,List[Address]]] = None,
