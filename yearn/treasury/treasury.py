@@ -124,7 +124,7 @@ def get_token_from_event(event: _EventItem) -> EthAddress:
                 f'One of your cached contracts has an incorrect definition: {event.address}. Please fix this manually'
             )
         except AttributeError:
-            address = event["(unknown)"].address
+            address = event["(unknown)"][0].address
             if address is None:
                 logger.critical("event.address is None")
                 return
