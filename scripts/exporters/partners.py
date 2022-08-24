@@ -30,7 +30,7 @@ def export_snapshot(snapshot, ts):
     start = time()
     block = chain[closest_block_after_timestamp(snapshot.timestamp())]
     export_partners(block)
-    duration = time.time() - start
+    duration = time() - start
     output_duration.export(duration, 1, "partners", block.timestamp)
     logger.info("exported partners snapshot %s took %.3fs", snapshot, time() - start)
 
