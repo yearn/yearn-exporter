@@ -1,5 +1,6 @@
 
 from brownie import Contract
+from brownie.exceptions import ContractNotFound
 from tqdm import tqdm
 from yearn.entities import Address
 from yearn.networks import Network
@@ -40,6 +41,9 @@ def __ensure_topics_are_known(addresses: List[Address]) -> None:
             if not contract(address.address).topics:
                 if not force_gnosis_safe_abi(address):
                     no_topics.append(address)
+        except ContractNotFound:
+            # This is MOST LIKELY unimportant and not Yearn related.
+            logger.debug(f"{address.address} self destructed")
         except ValueError as e:
             if str(e).startswith("Source for") and str(e).endswith("has not been verified"):
                 continue
@@ -67,6 +71,9 @@ def __ensure_signatures_are_known(addresses: List[Address]) -> None:
             if not contract(address.address).signatures:
                 if not force_gnosis_safe_abi(address):
                     no_sigs.append(address)
+        except ContractNotFound:
+            # This is MOST LIKELY unimportant and not Yearn related.
+            logger.debug(f"{address.address} self destructed")
         except ValueError as e:
             if str(e).startswith("Source for") and str(e).endswith("has not been verified"):
                 continue
