@@ -1,5 +1,6 @@
 import logging
 from collections import Counter
+from functools import lru_cache
 from time import time
 
 from brownie import chain
@@ -135,3 +136,11 @@ class Yearn:
         data = self.describe_wallets(block)
         output_wallets.export(ts,data)
         logger.info('exported block=%d took=%.3fs', block, time() - start)
+
+@lru_cache(maxsize=1)
+def _yearn():
+    return Yearn()
+
+@lru_cache(maxsize=1)
+def _yearn_lite():
+    return Yearn(load_strategies=False, watch_events_forever=False)

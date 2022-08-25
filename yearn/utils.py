@@ -1,21 +1,17 @@
 import json
 import logging
 import threading
-import json
 from functools import lru_cache
 from typing import List
 
 import eth_retry
 from brownie import Contract, chain, convert, interface, web3
-from web3 import Web3
-from brownie.network.contract import _resolve_address, _fetch_from_explorer
-from brownie.exceptions import CompilerError
 from brownie.network.contract import _fetch_from_explorer, _resolve_address
 
 from yearn.cache import memory
 from yearn.exceptions import ArchiveNodeRequired, NodeNotSynced
 from yearn.networks import Network
-from yearn.typing import Address, AddressOrContract
+from yearn.typing import AddressOrContract
 
 logger = logging.getLogger(__name__)
 
@@ -61,7 +57,7 @@ def get_block_timestamp(height):
 
 
 @memory.cache()
-def closest_block_after_timestamp(timestamp):
+def closest_block_after_timestamp(timestamp: int) -> int:
     logger.debug('closest block after timestamp %d', timestamp)
     height = chain.height
     lo, hi = 0, height
@@ -150,9 +146,9 @@ _contract_lock = threading.Lock()
 _contract = lru_cache(maxsize=None)(Contract)
 
 @eth_retry.auto_retry
-def contract(address: Address) -> Contract:
+def contract(address: AddressOrContract) -> Contract:
     with _contract_lock:
-        address = web3.toChecksumAddress(address)
+        address = web3.toChecksumAddress(str(address))
 
         if chain.id in PREFER_INTERFACE:
             if address in PREFER_INTERFACE[chain.id]:

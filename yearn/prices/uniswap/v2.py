@@ -66,11 +66,6 @@ addresses: List[Dict[str,str]] = {
             'factory': '0x5Ca135cB8527d76e932f34B5145575F9d8cbE08E',
             'router': '0xc2544A32872A91F4A553b404C6950e89De901fdb',
         },
-        {
-            'name': 'zipswap',
-            'factory': '0x9e343Bea27a12B23523ad88333a1B0f68cc1F05E',
-            "router": '0x4D70D768f5E1e6a7062973aFB0c7FBDa9bBb42b3',
-        }
     ],
     Network.Optimism: [
         {
@@ -134,8 +129,13 @@ class UniswapV2:
             quote = self.router.getAmountsOut(amount_in, path, block_identifier=block)
             amount_out = quote[-1] / 10 ** contract(str(path[-1])).decimals()
             return amount_out / fees
+        except ValueError as e:
+            okay_errs = ['execution reverted']
+            if not any([err in str(e) for err in okay_errs]):
+                raise
+            return None
         except VirtualMachineError as e:
-            okay_errs = ['INSUFFICIENT_INPUT_AMOUNT']
+            okay_errs = ['INSUFFICIENT_INPUT_AMOUNT','revert: twamm out of date']
             if not any([err in str(e) for err in okay_errs]):
                 raise
             return None
