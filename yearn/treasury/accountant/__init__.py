@@ -1,6 +1,5 @@
 
 from brownie import Contract
-from brownie.exceptions import CompilerError
 from tqdm import tqdm
 from yearn.entities import Address
 from yearn.networks import Network
@@ -41,26 +40,10 @@ def __ensure_topics_are_known(addresses: List[Address]) -> None:
             if not contract(address.address).topics:
                 if not force_gnosis_safe_abi(address):
                     no_topics.append(address)
-        except CompilerError as e:
-            if '"basefee" is not supported by the VM version.' in str(e):
-                print(f"must debug: why isn't the compiler running on london? {address.address}")
-                continue
-            if "Stack too deep" in str(e):
-                print(f"must debug: how is stack 'too deep' for a contract that is successfully deployed on chain? {address.address}")
-                continue
-            raise
-        except IndexError as e:
-            if str(e) == 'pop from an empty deque':
-                print(f"your contract definition for {address.address} is messed up. This may or may not impact the sorting.")
-                continue
-            raise
         except ValueError as e:
             if str(e).startswith("Source for") and str(e).endswith("has not been verified"):
                 continue
             if "Contract source code not verified" in str(e):
-                continue
-            if str(e) == "invalid literal for int() with base 16: ''":
-                print(f"your contract definition for {address.address} is messed up. This may or may not impact the sorting.")
                 continue
             raise
 
@@ -84,26 +67,10 @@ def __ensure_signatures_are_known(addresses: List[Address]) -> None:
             if not contract(address.address).signatures:
                 if not force_gnosis_safe_abi(address):
                     no_sigs.append(address)
-        except CompilerError as e:
-            if '"basefee" is not supported by the VM version.' in str(e):
-                print(f"must debug: why isn't the compiler running on london? {address.address}")
-                continue
-            if "Stack too deep" in str(e):
-                print(f"must debug: how is 'stack too deep' possible for a contract that is successfully deployed on chain? {address.address}")
-                continue
-            raise
-        except IndexError as e:
-            if str(e) == 'pop from an empty deque':
-                print(f"your contract definition for {address.address} is messed up. This may or may not impact the sorting.")
-                continue
-            raise
         except ValueError as e:
             if str(e).startswith("Source for") and str(e).endswith("has not been verified"):
                 continue
             if "Contract source code not verified" in str(e):
-                continue
-            if str(e) == "invalid literal for int() with base 16: ''":
-                print(f"your contract definition for {address.address} is messed up. This may or may not impact the sorting.")
                 continue
             raise
 
