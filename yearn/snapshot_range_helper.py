@@ -13,7 +13,7 @@ from yearn.outputs.victoria import output_duration
 
 POOL_SIZE = int(os.environ.get("POOL_SIZE", 4))
 CHUNK_SIZE = int(os.environ.get("CHUNK_SIZE", 50))
-REORG_BUFFER = timedelta(seconds=int(os.environ.get("REORG_BUFFER", "60")))
+REORG_BUFFER = timedelta(seconds=int(os.environ.get("REORG_BUFFER", "300")))
 
 logger = logging.getLogger('yearn.snapshot_range_helper')
 
