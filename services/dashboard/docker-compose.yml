@@ -21,6 +21,11 @@ x-common-envs: &common-envs
   - LOG_LEVEL:
   - POOL_SIZE:
   - RESOLUTION:
+  - REORG_BUFFER:
+  # eth-retry (optional)
+  - MAX_RETRIES:
+  - MIN_SLEEP_TIME:
+  - MAX_SLEEP_TIME:
   # This is a temporary hack that can be removed once deps support eth_hash==0.5.0. Creds to bunny for finding this.
   - ETH_HASH_BACKEND: ${ETH_HASH_BACKEND:-pysha3}
 
