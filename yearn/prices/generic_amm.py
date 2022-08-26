@@ -3,6 +3,7 @@ from functools import lru_cache
 from typing import List, Optional
 
 from brownie.convert.datatypes import EthAddress
+from yearn.exceptions import PriceError
 
 from yearn.multicall2 import fetch_multicall
 from yearn.prices import magic
@@ -40,7 +41,25 @@ class GenericAmm:
         tokens = self.get_tokens(lp_token_address)
         reserves = lp_token_contract.getReserves(block_identifier=block)
         reserves = [reserves[i] / 10 ** contract(token).decimals() for i, token in enumerate(tokens)]
-        return sum(reserve * magic.get_price(token) for token, reserve in zip(tokens, reserves))
+        prices = []
+        for token in tokens:
+            try:
+                prices.append(magic.get_price(token, block = block))
+            except PriceError:
+                prices.append(None)
+        
+        if all(price is None for price in prices):
+            return None
+        
+        values = [reserve * price if price is not None else None for reserve, price in zip(reserves, prices)]
+
+        # If we only know the value of one side, we can extrapolate for the other.
+        if values[0] is None:
+            values[0] = values[1]
+        elif values[1] is None:
+            values[1] = values[0]
+
+        return sum(values)
 
 
 generic_amm = GenericAmm()
