@@ -139,6 +139,9 @@ def find_price(
         price, underlying = price
         logger.debug("peel %s %s", price, underlying)
         return price * get_price(underlying, block=block)
+    
+    if price is None and token in curve.curve.coin_to_pools:
+        price = curve.curve.get_coin_price(token, block = block)
 
     if price is None and return_price_during_vault_downtime:
         for incident in INCIDENTS[token]:
