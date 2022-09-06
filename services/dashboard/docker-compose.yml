@@ -22,6 +22,7 @@ x-common-envs: &common-envs
   - TX_POOL_SIZE:
   - RESOLUTION:
   - REORG_BUFFER:
+  - JSONRPC_BATCH_MAX_SIZE:
   # eth-retry (optional)
   - MAX_RETRIES:
   - MIN_SLEEP_TIME:

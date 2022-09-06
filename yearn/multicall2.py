@@ -13,6 +13,7 @@ from yearn.networks import Network
 from yearn.typing import Block
 from yearn.utils import contract, contract_creation_block
 
+JSONRPC_BATCH_MAX_SIZE = int(os.environ.get("JSONRPC_BATCH_MAX_SIZE", 10_000)) # Currently set arbitrarily, necessaary for certain node-as-a-service providers.
 MULTICALL_MAX_SIZE = int(os.environ.get("MULTICALL_MAX_SIZE", 500)) # Currently set arbitrarily
 MULTICALL2 = {
     Network.Mainnet: '0x5BA1e12693Dc8F9c48aAD8770482f4739bEeD696',
@@ -130,12 +131,21 @@ def batch_call(calls):
                 ],
             }
         )
-
-    response = requests.post(web3.provider.endpoint_uri, json=jsonrpc_batch).json()
     
-    # A successful response will be a list
-    if isinstance(response, dict) and 'result' in response and isinstance(response['result'], dict) and 'message' in response['result']:
-        raise ValueError(response['result']['message'])
+    chunks = [jsonrpc_batch[i:i+JSONRPC_BATCH_MAX_SIZE] for i in range(0, len(jsonrpc_batch), JSONRPC_BATCH_MAX_SIZE)]
+
+    responses = [requests.post(web3.provider.endpoint_uri, json=jsonrpc_batch).json() for jsonrpc_batch in chunks]
+
+    for response in responses:
+        # A successful response will be a list
+        if isinstance(response, dict) and 'result' in response and isinstance(response['result'], dict) and 'message' in response['result']:
+            raise ValueError(response['result']['message'])
+            
+        for call_response in response:
+            if 'error' in call_response:
+                raise ValueError(call_response['error']['message'])
+
+    response = [call_response for batch_response in responses for call_response in batch_response]
 
     return [
         fn.decode_output(res['result']) if res['result'] != '0x' else None
