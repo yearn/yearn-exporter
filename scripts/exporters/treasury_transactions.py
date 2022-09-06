@@ -112,7 +112,7 @@ def get_all_transfers(start: Block, end: Block) -> List[Dict]:
 
 def get_transactions(start: Block, end: Block) -> List[Dict]:
     logger.debug("Getting eth transactions")
-    blockdata = Parallel(96, 'multiprocessing')(delayed(get_transactions_for_block)(treasury.addresses, block) for block in tqdm(range(start,end)))
+    blockdata = Parallel(int(os.getenv('TX_POOL_SIZE', 1)), 'multiprocessing')(delayed(get_transactions_for_block)(treasury.addresses, block) for block in tqdm(range(start,end)))
     return [tx for block in blockdata for tx in block]
 
 

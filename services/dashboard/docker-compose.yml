@@ -20,6 +20,7 @@ x-common-envs: &common-envs
   - SENTRY_DSN:
   - LOG_LEVEL:
   - POOL_SIZE:
+  - TX_POOL_SIZE:
   - RESOLUTION:
   - REORG_BUFFER:
   # eth-retry (optional)

@@ -73,7 +73,7 @@ def sort_tx(treasury_tx_id: int) -> Optional[TxGroup]:
 def sort_txs(txs: Iterable[TreasuryTx]) -> None:
     """ Sorts each TreasuryTx in `txs` into the appropriate TxGroup. """
     ct, start = len(txs), time()
-    Parallel(n_jobs=8, backend="threading")(delayed(sort_tx)(tx.treasury_tx_id) for tx in tqdm(txs, total=ct))
+    Parallel(n_jobs=int(os.getenv('TX_POOL_SIZE', 1)), backend="threading")(delayed(sort_tx)(tx.treasury_tx_id) for tx in tqdm(txs, total=ct))
     logger.info(f"sorted {ct} transactions in {round(time()-start,2)}s")
 
 
