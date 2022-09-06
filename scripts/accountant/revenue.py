@@ -20,9 +20,10 @@ def main():
             'amount': amount,
             'value_usd': value_usd,
             'chain': chain,
+            'txgroup': txgroup,
         }
-        for timestamp, symbol, amount, value_usd, chain
-        in select((tx.timestamp, tx.token.symbol, tx.amount, tx.value_usd, tx.chain.chain_name) for tx in TreasuryTx if tx.txgroup in txgroups)
+        for timestamp, symbol, amount, value_usd, chain, txgroup
+        in select((tx.timestamp, tx._symbol, tx.amount, tx.value_usd, tx.chain.chain_name, tx.txgroup.name) for tx in TreasuryTx if tx.txgroup in txgroups)
     ])
 
     # Timestamp must be datetime.
@@ -46,10 +47,11 @@ def main():
         df,
         ['value_usd'],
         'timestamp',
-        'chain',
+        ['chain', 'txgroup'],
         'sum',
-    ).resample('1M').sum().stack()
+    ).resample('1M').sum().stack().fillna(0)
 
     chain_grouped = chain_grouped[chain_grouped.value_usd > 0]
 
     pprint(chain_grouped)
+    chain_grouped.to_csv('./reports/revenue.csv')
