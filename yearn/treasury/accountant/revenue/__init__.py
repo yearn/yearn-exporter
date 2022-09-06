@@ -13,6 +13,7 @@ fees_txgroup.create_child("Vaults V2", fees.is_fees_v2)
 fees_txgroup.create_child("Vaults V3", fees.is_fees_v3)
 
 fees_txgroup.create_child("YearnFed Fees", fees.is_yearn_fed_fees)
+fees_txgroup.create_child("TempleDAO Private Vault Fees", fees.is_temple)
 
 
 keepcoins_txgroup = revenue_txgroup.create_child("keepCOINS")

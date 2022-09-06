@@ -30,6 +30,11 @@ def is_pass_thru(tx: TreasuryTx) -> bool:
             return True
     
     pass_thru_hashes = {
+        Network.Mainnet: [
+            ["0x51baf41f9daa68ac7be8024125852f1e21a3bb954ea32e686ac25a72903a1c8e", IterFilter('_symbol',['CRV','CVX'])],
+            ["0xdc4e0045901cfd5ef4c6327b846a8bd229abdbf289547cd0e969874b47124342", IterFilter('log_index',[28,29,30,31])],
+            "0xae6797ad466de75731117df46ccea5c263265dd6258d596b9d6d8cf3a7b1e3c2",
+        ],
         Network.Fantom: [
             "0x14faeac8ee0734875611e68ce0614eaf39db94a5ffb5bc6f9739da6daf58282a",
         ],
@@ -100,7 +105,7 @@ def is_yvboost_from_elsewhere(tx: TreasuryTx) -> bool:
     return tx in HashMatcher(hashes)
 
 def is_inverse_fees_from_yearn_fed(tx: TreasuryTx) -> bool:
-    if tx._symbol == "yvDOLA-U" and tx.from_address.address in treasury.addresses and tx.to_address and tx._to_nickname == "Contract: YearnFed":
+    if tx._symbol == "yvDOLA-U" and tx.from_address.address in treasury.addresses and tx._to_nickname == "Contract: YearnFed":
         return True
 
 def is_stkaave(tx: TreasuryTx) -> bool:

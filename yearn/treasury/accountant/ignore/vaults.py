@@ -54,6 +54,7 @@ def is_vault_deposit(tx: TreasuryTx) -> bool:
         Network.Mainnet: [
             "0x39616fdfc8851e10e17d955f55beea5c3dd4eed7c066a8ecbed8e50b496012ff",
             "0x248e896eb732dfe40a0fa49131717bb7d2c1721743a2945ab9680787abcf9c50",
+            "0x2ce0240a08c8cc8d35b018995862711eb660a24d294b1aa674fbc467af4e621b",
         ],
     }.get(chain.id, [])
 
