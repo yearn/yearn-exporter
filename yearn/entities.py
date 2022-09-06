@@ -243,4 +243,18 @@ def create_views() -> None:
         if str(e).strip() != 'relation "general_ledger" already exists':
             raise
 
+    try:
+        db.execute(
+        """
+        CREATE VIEW unsorted_txs as
+        SELECT *
+        FROM general_ledger
+        WHERE txgroup = 'Categorization Pending' AND TIMESTAMP >= '2022-06-05 09:28:16+00'
+        ORDER BY TIMESTAMP desc
+        """
+        )
+    except ProgrammingError as e:
+        if str(e).strip() != 'relation "unsorted_txs" already exists':
+            raise
+
 create_views()
