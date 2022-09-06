@@ -21,8 +21,8 @@ def main():
         {  
             'timestamp': datetime.fromtimestamp(tx.timestamp),
             'log index': tx.log_index,
-            'from': tx.from_address.nickname if tx.from_address.nickname else tx.from_address.address,
-            'to': tx.to_address.nickname if tx.to_address and tx.to_address.nickname else tx.to_address.address if tx.to_address else None,
+            'from': tx._from_nickname if tx._from_nickname else tx.from_address.address,
+            'to': tx._to_nickname if tx._to_nickname else tx.to_address.address if tx.to_address else None,
             'amount': round(tx.amount,6),
             'hash':tx.hash,
             'token': tx.token.symbol,
