@@ -224,17 +224,23 @@ db.generate_mapping(create_tables=True)
 
 @db_session
 def create_views() -> None:
-    db.execute(
-        """
-        create VIEW general_ledger as
-        SELECT b.chain_name, TO_TIMESTAMP(a.timestamp) AS timestamp, a.block, a.hash, a.log_index, c.symbol AS token, d.address AS "from", d.nickname as from_nickname, e.address AS "to", e.nickname as to_nickname, a.amount, a.price, a.value_usd, f.name AS txgroup, g.name AS parent_txgroup
-        FROM treasury_txs a
-            LEFT JOIN chains b ON a.chain = b.chain_dbid
-            LEFT JOIN tokens c ON a.token_id = c.token_id
-            LEFT JOIN addresses d ON a."from" = d.address_id
-            LEFT JOIN addresses e ON a."to" = e.address_id
-            LEFT JOIN txgroups f ON a.txgroup_id = f.txgroup_id
-            LEFT JOIN txgroups g ON f.parent_txgroup = g.txgroup_id
-        ORDER BY TO_TIMESTAMP(a.timestamp)
-        """
-    )
+    try:
+        db.execute(
+            """
+            create VIEW general_ledger as
+            SELECT b.chain_name, TO_TIMESTAMP(a.timestamp) AS timestamp, a.block, a.hash, a.log_index, c.symbol AS token, d.address AS "from", d.nickname as from_nickname, e.address AS "to", e.nickname as to_nickname, a.amount, a.price, a.value_usd, f.name AS txgroup, g.name AS parent_txgroup
+            FROM treasury_txs a
+                LEFT JOIN chains b ON a.chain = b.chain_dbid
+                LEFT JOIN tokens c ON a.token_id = c.token_id
+                LEFT JOIN addresses d ON a."from" = d.address_id
+                LEFT JOIN addresses e ON a."to" = e.address_id
+                LEFT JOIN txgroups f ON a.txgroup_id = f.txgroup_id
+                LEFT JOIN txgroups g ON f.parent_txgroup = g.txgroup_id
+            ORDER BY TO_TIMESTAMP(a.timestamp)
+            """
+        )
+    except ProgrammingError as e:
+        if str(e).strip() != 'relation "general_ledger" already exists':
+            raise
+
+create_views()
