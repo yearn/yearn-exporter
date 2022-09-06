@@ -13,7 +13,6 @@ networks:
 x-common-envs: &common-envs
   - WEB3_PROVIDER:
   - EXPLORER:
-  - SLEEP_SECONDS:
   - SKIP_WALLET_STATS:
   - SENTRY_ENVIRONMENT: ${SENTRY_ENVIRONMENT:-development}
   - SENTRY_RELEASE:
