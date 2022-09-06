@@ -249,7 +249,7 @@ def create_views() -> None:
         CREATE VIEW unsorted_txs as
         SELECT *
         FROM general_ledger
-        WHERE txgroup = 'Categorization Pending' AND TIMESTAMP >= '2022-06-05 09:28:16+00'
+        WHERE txgroup = 'Categorization Pending'
         ORDER BY TIMESTAMP desc
         """
         )
