@@ -9,3 +9,19 @@ datasources:
   is_default: true
   version: 1
   editable: false
+
+- name: POSTGRES
+  type: postgres
+  org_id: 1
+  url: postgres:5432
+  database: $PGDATABASE
+  user: $PGUSER
+  secureJsonData:
+    password: $PGPASSWORD
+  jsonData:
+    sslmode: 'disable'
+    maxOpenConns: 0
+    maxIdleConns: 2
+    connMaxLifetime: 14400
+    postgresVersion: 903
+    timescaledb: false

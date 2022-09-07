@@ -26,10 +26,7 @@
   "liveNow": false,
   "panels": [
     {
-      "datasource": {
-        "type": "postgres",
-        "uid": "p4hPF2ZVk"
-      },
+      "datasource": "POSTGRES",
       "description": "",
       "fieldConfig": {
         "defaults": {
@@ -101,10 +98,7 @@
       },
       "targets": [
         {
-          "datasource": {
-            "type": "postgres",
-            "uid": "p4hPF2ZVk"
-          },
+          "datasource": "POSTGRES",
           "format": "time_series",
           "group": [],
           "metricColumn": "none",
@@ -153,10 +147,7 @@
       "type": "timeseries"
     },
     {
-      "datasource": {
-        "type": "postgres",
-        "uid": "p4hPF2ZVk"
-      },
+      "datasource": "POSTGRES",
       "fieldConfig": {
         "defaults": {
           "color": {
@@ -227,10 +218,7 @@
       },
       "targets": [
         {
-          "datasource": {
-            "type": "postgres",
-            "uid": "p4hPF2ZVk"
-          },
+          "datasource": "POSTGRES",
           "format": "time_series",
           "group": [],
           "metricColumn": "none",
@@ -279,10 +267,7 @@
       "type": "timeseries"
     },
     {
-      "datasource": {
-        "type": "postgres",
-        "uid": "p4hPF2ZVk"
-      },
+      "datasource": "POSTGRES",
       "fieldConfig": {
         "defaults": {
           "color": {
@@ -353,10 +338,7 @@
       },
       "targets": [
         {
-          "datasource": {
-            "type": "postgres",
-            "uid": "p4hPF2ZVk"
-          },
+          "datasource": "POSTGRES",
           "format": "time_series",
           "group": [],
           "metricColumn": "none",
