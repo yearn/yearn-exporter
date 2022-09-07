@@ -28,12 +28,16 @@ def delegated_deposit_totals():
     for deposit in decode_logs(get_logs_asap(str(YEARN_PARTNER_TRACKER), [YEARN_PARTNER_TRACKER.topics['ReferredBalanceIncreased']])):
         partnerId, vault, depositor, amount_added, total_deposited = deposit.values()
 
-        # Make sure AsOfDict has a start point.
-        if len(delegated_deposits[vault][depositor][partnerId]) == 0:
-            delegated_deposits[vault][depositor][partnerId][0] = 0
+        vault_deposits = delegated_deposits[vault]
+        depositor_deposits = vault_deposits[depositor]
+        partner_deposits = depositor_deposits[partnerId]
 
-        pre_value = delegated_deposits[vault][depositor][partnerId][deposit.block_number]
-        delegated_deposits[vault][depositor][partnerId][deposit.block_number] = pre_value + amount_added
+        # Make sure AsOfDict has a start point.
+        if len(partner_deposits) == 0:
+            partner_deposits[0] = 0
+
+        pre_value = partner_deposits[deposit.block_number]
+        partner_deposits[deposit.block_number] = pre_value + amount_added
     return delegated_deposits
 
 def proportional_withdrawal_totals(delegated_deposits):
@@ -42,28 +46,34 @@ def proportional_withdrawal_totals(delegated_deposits):
         vault = contract(vault)
         for transfer in decode_logs(get_logs_asap(str(vault), [vault.topics['Transfer']])):
             sender, receiver, amount = transfer.values()
-            if sender not in delegated_deposits[vault.address]:
+            vault_deposits = delegated_deposits[vault.address]
+            if sender not in vault_deposits:
                 continue
+            
+            sender_deposits = vault_deposits[sender]
 
             if transfer.block_number <= min(
                 block
-                for partner in delegated_deposits[vault.address][sender]
-                for block in delegated_deposits[vault.address][sender][partner]
+                for partner in sender_deposits
+                for block in sender_deposits[partner]
                 if block > 0
             ):
                 continue
 
             partner_balances = {
-                partner: delegated_deposits[vault.address][sender][partner][transfer.block_number]
-                for partner in delegated_deposits[vault.address][sender]
+                partner: sender_deposits[partner][transfer.block_number]
+                for partner in sender_deposits
             }
 
             total = sum(partner_balances.values())
             for partner, balance in partner_balances.items():
+                vault_withdrawals = proportional_withdrawals[vault.address]
+                sender_withdrawals = vault_withdrawals[sender]
+                partner_withdrawals = sender_withdrawals[partner]
                 # Make sure AsOfDict has a start point.
-                if len(proportional_withdrawals[vault.address][sender][partner]) == 0:
-                    proportional_withdrawals[vault.address][sender][partner][0] = 0
-                proportional_withdrawals[vault.address][sender][partner][transfer.block_number] += ceil(amount * balance / total)
+                if len(partner_withdrawals) == 0:
+                    partner_withdrawals[0] = 0
+                partner_withdrawals[transfer.block_number] += ceil(amount * balance / total)
     return proportional_withdrawals
     
 def delegated_deposit_balances():
@@ -78,14 +88,23 @@ def delegated_deposit_balances():
     for vault, vdeets in deposits.items():
         for depositor, ddeets in vdeets.items():
             for partner, pdeets in ddeets.items():
-                if len(balances[vault][depositor][partner]) == 0:
-                    balances[vault][depositor][partner][0] = 0
-                blocks = list(pdeets.keys()) + list(withdrawals[vault][depositor][partner].keys())
+                vault_balances = balances[vault]
+                depositor_balances = vault_balances[depositor]
+                partner_balances = depositor_balances[partner]
+                if len(partner_balances) == 0:
+                    partner_balances[0] = 0
+                vault_withdrawals = withdrawals[vault]
+                depositor_withdrawals = vault_withdrawals[depositor]
+                partner_withdrawals = depositor_withdrawals[partner]
+                blocks = list(pdeets.keys()) + list(partner_withdrawals.keys())
                 for block in blocks:
-                    balance = deposits[vault][depositor][partner][block]
-                    if len(withdrawals[vault][depositor][partner]) > 0:
-                        balance = max(balance - withdrawals[vault][depositor][partner][block], 0)
-                    balances[vault][depositor][partner][block] = balance
+                    vault_deposits = deposits[vault]
+                    depositor_deposits = vault_deposits[depositor]
+                    partner_deposits = depositor_deposits[partner]
+                    balance = partner_deposits[block]
+                    if len(partner_withdrawals) > 0:
+                        balance = max(balance - partner_withdrawals[block], 0)
+                    partner_balances[block] = balance
     return balances
 
 DELEGATED_BALANCES = delegated_deposit_balances()
