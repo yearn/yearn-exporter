@@ -52,7 +52,7 @@ def proportional_withdrawal_totals(delegated_deposits):
             
             sender_deposits = vault_deposits[sender]
 
-            if transfer.block_number <= min(
+            if transfer.block_number < min(
                 block
                 for partner in sender_deposits
                 for block in sender_deposits[partner]
