@@ -39,29 +39,34 @@ x-common-postgres-envs: &common-postgres-envs
 x-common-eth-envs: &common-eth-envs
   - NETWORK: mainnet
   - ETHERSCAN_TOKEN:
+  - DEFAULT_EXPLORER: https://api.etherscan.io/api
 
 x-common-gnosis-envs: &common-gnosis-envs
   - NETWORK: xdai-main
   - WEB3_PROVIDER: $XDAI_WEB3_PROVIDER
   - EXPLORER: $XDAI_EXPLORER
+  - DEFAULT_EXPLORER: https://blockscout.com/xdai/mainnet/api
   - XDAISCAN_TOKEN:
 
 x-common-ftm-envs: &common-ftm-envs
   - NETWORK: ftm-main
   - WEB3_PROVIDER: $FTM_WEB3_PROVIDER
   - EXPLORER: $FTM_EXPLORER
+  - DEFAULT_EXPLORER: https://api.ftmscan.com/api
   - FTMSCAN_TOKEN:
 
 x-common-arbi-envs: &common-arbi-envs
   - NETWORK: arbitrum-main
   - WEB3_PROVIDER: $ARBI_WEB3_PROVIDER
   - EXPLORER: $ARBI_EXPLORER
+  - DEFAULT_EXPLORER: https://api.arbiscan.io/api
   - ARBISCAN_TOKEN:
 
 x-common-opti-envs: &common-opti-envs
   - NETWORK: optimism-main
   - WEB3_PROVIDER: $OPTI_WEB3_PROVIDER
   - EXPLORER: $OPTI_EXPLORER
+  - DEFAULT_EXPLORER: https://api-optimistic.etherscan.io/api
   - OPTISCAN_TOKEN:
 
 x-grafana-envs: &grafana-envs

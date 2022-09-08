@@ -154,7 +154,8 @@ def get_internal_transactions(start: Block, end: Block) -> List[Dict]:
 
 
 def get_internal_transactions_for_address(address: Address, start: Block, end: Block) -> List[Dict]:
-    explorer_endpoint = CONFIG.active_network.get("explorer")
+    explorer_endpoint = os.getenv("DEFAULT_EXPLORER", None)
+    assert explorer_endpoint, "explorer_endpoint must be set!"
     env_token = next((v for k, v in _explorer_tokens.items() if k in explorer_endpoint), None)
     explorer_token = os.environ[env_token]
     internal_txs = []
