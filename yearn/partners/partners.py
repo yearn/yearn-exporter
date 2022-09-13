@@ -450,7 +450,7 @@ partners = {
         ),
         Partner(
             name='rhino.fi',
-            start_block=0,
+            start_block=15405907,
             treasury='0x520Cf70a2D0B3dfB7386A2Bc9F800321F62a5c3a',
             wrappers=[
                 WildcardWrapper(
