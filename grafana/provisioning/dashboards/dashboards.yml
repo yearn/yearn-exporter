@@ -12,12 +12,12 @@ providers:
 
 - name: 'Yearn Treasury dashboards'
   orgId: 1
-  folder: 'treasury'
+  folder: 'treasury-dashboards'
   type: file
   disableDeletion: true
   editable: false
   options:
-    path: /etc/grafana/provisioning/dashboards/treasury
+    path: /etc/grafana/provisioning/dashboards/treasury-dashboards
 
 - name: 'System dashboards'
   orgId: 1
