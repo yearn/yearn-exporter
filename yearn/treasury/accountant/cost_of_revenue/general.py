@@ -25,6 +25,7 @@ hashes = {
         'ykeeper': [
             '0x1ab9ff3228cf25bf2a7c1eac596e836069f8c0adc46acd46d948eb77743fbb96',
             '0xe2a6bec23d0c73b35e969bc949072f8c1768767b06d57e5602b2b95eddf41a66',
+            '0x140246e693445b448f8e9baaad1872fe44f3982cba44e7d652bf1c2235c7ac4a',
         ],
     }
 }.get(chain.id, {})
@@ -47,6 +48,7 @@ def is_partner_fees(tx: TreasuryTx) -> bool:
             ["0x590b0cc67ba42dbc046b8cbfe2d314fbe8da82f11649ef21cdacc61bc9752d83", IterFilter('log_index',[275,276,278])],
             ["0xd1b925ad7fdd9abdd31460a346d081d6afe9f6cb1c1b0cd5f6129885edf318da", IterFilter('log_index',[174,177])],
             ["0xe11b4e3ece520c1818ffe821c038779f87c293aa32c26115265b6b8fb23c30bd", Filter('log_index', 154)],
+            ["0xdc4e0045901cfd5ef4c6327b846a8bd229abdbf289547cd0e969874b47124342", Filter('log_index', 116)]
         ],
     }.get(chain.id, [])
 

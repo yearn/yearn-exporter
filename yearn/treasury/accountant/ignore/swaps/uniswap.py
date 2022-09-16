@@ -3,6 +3,7 @@ from brownie import ZERO_ADDRESS, chain
 from yearn.constants import WRAPPED_GAS_COIN
 from yearn.entities import TreasuryTx
 from yearn.multicall2 import fetch_multicall
+from yearn.treasury.accountant.classes import HashMatcher
 from yearn.treasury.accountant.constants import treasury
 from yearn.treasury.accountant.ignore.swaps.skip_tokens import SKIP_TOKENS
 from yearn.utils import contract
@@ -103,6 +104,9 @@ def is_uniswap_withdrawal(tx: TreasuryTx) -> bool:
             # Component tokens
             elif tx.from_address.address == burn.address:
                 return True
+    return tx in HashMatcher([
+        "0xf0723677162cdf8105c0f752a8c03c53803cb9dd9a6649f3b9bc5d26822d531f",
+    ])
 
 def is_uniswap_swap(tx: TreasuryTx) -> bool:
     # The LP for dumping solidSEX is not verified :( devs blz do something

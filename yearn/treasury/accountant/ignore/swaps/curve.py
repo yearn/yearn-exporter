@@ -29,6 +29,11 @@ def is_curve_deposit(tx: TreasuryTx) -> bool:
                 for i, amount in enumerate(event["token_amounts"]):
                     if tx.token.address.address == pool.coins(i) and round(float(tx.amount), 15) == round(amount/tx.token.scale, 15):
                         return True
+    
+    return tx in HashMatcher([
+        "0x567d2ebc1a336185950432b8f8b010e1116936f9e6c061634f5aba65bdb1e188",
+        "0x17e2d7a40697204b3e726d40725082fec5f152f65f400df850f13ef4a4f6c827",
+    ])
 
 def is_curve_withdrawal(tx: TreasuryTx) -> bool:
     if 'RemoveLiquidityOne' in tx._events:
@@ -66,6 +71,8 @@ def is_curve_withdrawal(tx: TreasuryTx) -> bool:
             ["0xd1c52ba3e5f0ade00cc39b3c00ab1c96f8b5ed5eb11be99230e3b0fa06fdac67", Filter('log_index', 84)],
             # musd3crv, gusd3crv, compcrv, usdn3crv pools have neither `lp_token` method nor `totalSupply` method.
             ["0xa888094c10003c6455f852885d932c8fa2849cbadb9fdfe3ecfc96bda6bcf340", IterFilter('log_index', [86,140,161,205])],
+            # dola3pool
+            ["0xc14c29fd2bf495bd27c8eb862b34a98eb34dec8e533046fc6278eb41b342cfce", IterFilter('log_index',[430,437])],
         ],
     }.get(chain.id, [])
     return tx in HashMatcher(hashes)
@@ -82,4 +89,8 @@ def is_curve_swap(tx: TreasuryTx) -> bool:
                 # Buy side
                 elif tx.from_address.address == event.address and tx.to_address and tx.to_address.address == event['buyer'] and tx.token.address.address == buy_token and round(float(tx.amount), 15) == round(event['tokens_bought']/tx.token.scale, 15):
                     return True
+    
+    return tx in HashMatcher([
+        ["0xc14c29fd2bf495bd27c8eb862b34a98eb34dec8e533046fc6278eb41b342cfce", IterFilter('log_index', [439,443])],
+    ])
 

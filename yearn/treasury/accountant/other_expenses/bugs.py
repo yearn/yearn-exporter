@@ -1,6 +1,6 @@
 
 from yearn.entities import TreasuryTx
-from yearn.treasury.accountant.classes import HashMatcher
+from yearn.treasury.accountant.classes import Filter, HashMatcher
 
 
 def is_double_fee_reimbursement(tx: TreasuryTx) -> bool:
@@ -25,3 +25,7 @@ def is_yyfi_fee_reimbursement(tx: TreasuryTx) -> bool:
     if tx._from_nickname == "Disperse.app" and tx in HashMatcher(["0x867b547b67910a08c939978d8071acca28ecc444d7155c0626e87730f67c058c"]):
         return True
     return False
+
+def is_lossy_fee_reimbursement(tx: TreasuryTx) -> bool:
+    """old vault code doesn't prevent fees from making harvest lossy. so here we airdrop the fee-take back to vault and do some housekeeper to prevent this from happening on other strats."""
+    return tx in HashMatcher([["0x61eea3d40b2dc8586a5d20109ed962998c43cc55a37c300f283820150490eaa0", Filter('log_index', 179)]])

@@ -13,7 +13,6 @@ networks:
 x-common-envs: &common-envs
   - WEB3_PROVIDER:
   - EXPLORER:
-  - SLEEP_SECONDS:
   - SKIP_WALLET_STATS:
   - SENTRY_ENVIRONMENT: ${SENTRY_ENVIRONMENT:-development}
   - SENTRY_RELEASE:
@@ -23,6 +22,7 @@ x-common-envs: &common-envs
   - TX_POOL_SIZE:
   - RESOLUTION:
   - REORG_BUFFER:
+  - JSONRPC_BATCH_MAX_SIZE:
   # eth-retry (optional)
   - MAX_RETRIES:
   - MIN_SLEEP_TIME:
@@ -39,30 +39,45 @@ x-common-postgres-envs: &common-postgres-envs
 x-common-eth-envs: &common-eth-envs
   - NETWORK: mainnet
   - ETHERSCAN_TOKEN:
+  - DEFAULT_EXPLORER: https://api.etherscan.io/api
 
 x-common-gnosis-envs: &common-gnosis-envs
   - NETWORK: xdai-main
   - WEB3_PROVIDER: $XDAI_WEB3_PROVIDER
   - EXPLORER: $XDAI_EXPLORER
+  - DEFAULT_EXPLORER: https://blockscout.com/xdai/mainnet/api
   - XDAISCAN_TOKEN:
 
 x-common-ftm-envs: &common-ftm-envs
   - NETWORK: ftm-main
   - WEB3_PROVIDER: $FTM_WEB3_PROVIDER
   - EXPLORER: $FTM_EXPLORER
+  - DEFAULT_EXPLORER: https://api.ftmscan.com/api
   - FTMSCAN_TOKEN:
 
 x-common-arbi-envs: &common-arbi-envs
   - NETWORK: arbitrum-main
   - WEB3_PROVIDER: $ARBI_WEB3_PROVIDER
   - EXPLORER: $ARBI_EXPLORER
+  - DEFAULT_EXPLORER: https://api.arbiscan.io/api
   - ARBISCAN_TOKEN:
 
 x-common-opti-envs: &common-opti-envs
   - NETWORK: optimism-main
   - WEB3_PROVIDER: $OPTI_WEB3_PROVIDER
   - EXPLORER: $OPTI_EXPLORER
+  - DEFAULT_EXPLORER: https://api-optimistic.etherscan.io/api
   - OPTISCAN_TOKEN:
+
+x-grafana-envs: &grafana-envs
+  - GF_SECURITY_ADMIN_USER: ${GF_SECURITY_ADMIN_USER:-admin}
+  - GF_SECURITY_ADMIN_PASSWORD: ${GF_SECURITY_ADMIN_PASSWORD:-admin}
+  - GF_AUTH_ANONYMOUS_ENABLED: 'true'
+  - GF_DASHBOARDS_DEFAULT_HOME_DASHBOARD_PATH: /etc/grafana/provisioning/dashboards/yearn/Overview.json
+  - GF_SERVER_ROOT_URL: https://yearn.vision
+  - GF_RENDERING_SERVER_URL: http://renderer:8091/render
+  - GF_RENDERING_CALLBACK_URL: http://grafana:3000/
+  - GF_LOG_FILTERS: rendering:debug
 
 x-common-volumes: &common-volumes
   - brownie:/root/.brownie
@@ -585,14 +600,8 @@ services:
     ports:
       - 3000:3000
     environment:
-      - GF_SECURITY_ADMIN_USER=${GF_SECURITY_ADMIN_USER:-admin}
-      - GF_SECURITY_ADMIN_PASSWORD=${GF_SECURITY_ADMIN_PASSWORD:-admin}
-      - GF_AUTH_ANONYMOUS_ENABLED=true
-      - GF_DASHBOARDS_DEFAULT_HOME_DASHBOARD_PATH=/etc/grafana/provisioning/dashboards/yearn/Overview.json
-      - GF_SERVER_ROOT_URL=https://yearn.vision
-      - GF_RENDERING_SERVER_URL=http://renderer:8091/render
-      - GF_RENDERING_CALLBACK_URL=http://grafana:3000/
-      - GF_LOG_FILTERS=rendering:debug
+      <<: *grafana-envs
+      <<: *common-postgres-envs
     volumes:
       - grafana_data:/var/lib/grafana
       - ./grafana/provisioning/:/etc/grafana/provisioning/

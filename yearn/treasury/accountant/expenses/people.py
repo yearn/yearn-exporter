@@ -32,11 +32,15 @@ def is_team_payment(tx: TreasuryTx) -> bool:
         '0x21db6975146cfe40e0db6db3acd1f061958f0722ebc2b1018a01f00d013a9b05',
     ]
 
+    if tx.hash == '0x91656eb3246a560498e808cbfb00af0518ec12f50effda42fc1496d0b0fb080a' and tx.log_index == 421:
+        return False
+
     llamapay_hashes = [
         "0xd268946b6937df798e965a98b3f9348f7fc8519a2df9ba124210e4ce6c3fecaf",
         "0x9d8fc48fe2f552a424fa2e4fa35f2ddbe73eb9f1eae33bb3b7b27466b8dbb62f",
         "0x7979a77ab8a30bc6cd12e1df92e5ba0478a8907caf6e100317b7968668d0d4a2",
         "0x91656eb3246a560498e808cbfb00af0518ec12f50effda42fc1496d0b0fb080a",
+        "0x16c193b8891af35ec811ebe8416f25addc0c4ffe39e074b5820577f1d8be72ec",
     ]
 
     zerox_splits_hashes = [
@@ -95,13 +99,8 @@ def is_other_grant(tx: TreasuryTx) -> bool:
         ["0x57fd81a0a665324558ae91a927097e44febd89972136165f3ec6cd4d6f8bc749", IterFilter('log_index', [157,159,160,161])],
         ["0x3baa6dd5f5db014e04af9d73dc4fa83d54f9803a5cc32140801fe2571e866831", Filter('_from_nickname', 'Disperse.app')],
         ["0x3249dac3b85f6dd9e268b4440322b2e437237d6b8a264286bd6fe97575804b00", IterFilter('log_index', [243,245,247,253,261,267,269,271,273,275,277])],
-        ["0xca372ad75b957bfce7e7fbca879399f46f923f9ca17299e310150da8666703b9", Filter('log_index', 547)],
-        # user research
-        ["0xca372ad75b957bfce7e7fbca879399f46f923f9ca17299e310150da8666703b9", Filter('log_index', 546)],
-        # vault v3 hype video
-        ["0xca372ad75b957bfce7e7fbca879399f46f923f9ca17299e310150da8666703b9", Filter('log_index', 545)],
-        
-
+        # "May 2022 grant" ?
+        ["0xca372ad75b957bfce7e7fbca879399f46f923f9ca17299e310150da8666703b9", Filter('log_index', 515)],
     ]
     disperse_hashes = [
         "0x1e411c81fc83abfe260f58072c74bfa91e38e27e0066da07ea06f75d9c8f4a00",

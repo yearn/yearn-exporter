@@ -21,3 +21,4 @@ if chain.id == Network.Mainnet:
     bug_reimbursements_txgroup.create_child("yDAI Fee Calculation Bug", bugs.is_double_fee_reimbursement)
     bug_reimbursements_txgroup.create_child("yDAI Fee Calculation Bug", bugs.is_ydai_fee_reimbursement)
     bug_reimbursements_txgroup.create_child("yYFI Fee Calculation Bug", bugs.is_yyfi_fee_reimbursement)
+    bug_reimbursements_txgroup.create_child("yvCurve-IB Fee Calculation Bug", bugs.is_lossy_fee_reimbursement)

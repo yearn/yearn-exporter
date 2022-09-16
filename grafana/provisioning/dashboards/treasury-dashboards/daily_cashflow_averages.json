@@ -1,0 +1,407 @@
+{
+  "annotations": {
+    "list": [
+      {
+        "builtIn": 1,
+        "datasource": "-- Grafana --",
+        "enable": true,
+        "hide": true,
+        "iconColor": "rgba(0, 211, 255, 1)",
+        "name": "Annotations & Alerts",
+        "target": {
+          "limit": 100,
+          "matchAny": false,
+          "tags": [],
+          "type": "dashboard"
+        },
+        "type": "dashboard"
+      }
+    ]
+  },
+  "editable": true,
+  "fiscalYearStartMonth": 0,
+  "graphTooltip": 0,
+  "id": 26,
+  "links": [],
+  "liveNow": false,
+  "panels": [
+    {
+      "datasource": "POSTGRES",
+      "description": "",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisLabel": "",
+            "axisPlacement": "auto",
+            "barAlignment": 0,
+            "drawStyle": "line",
+            "fillOpacity": 0,
+            "gradientMode": "none",
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            },
+            "lineInterpolation": "linear",
+            "lineWidth": 1,
+            "pointSize": 5,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "showPoints": "auto",
+            "spanNulls": false,
+            "stacking": {
+              "group": "A",
+              "mode": "none"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 80
+              }
+            ]
+          },
+          "unit": "currencyUSD"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 9,
+        "w": 24,
+        "x": 0,
+        "y": 0
+      },
+      "id": 4,
+      "options": {
+        "legend": {
+          "calcs": [],
+          "displayMode": "list",
+          "placement": "bottom"
+        },
+        "tooltip": {
+          "mode": "single"
+        }
+      },
+      "targets": [
+        {
+          "datasource": "POSTGRES",
+          "format": "time_series",
+          "group": [],
+          "metricColumn": "none",
+          "rawQuery": true,
+          "rawSql": "select *\nfrom (\n  SELECT\n    date as time,\n    sum(average_14d),\n    'Cash Out' as metric\n  FROM treasury_time_averages a\n  left join txgroups b on a.parent_txgroup_id = b.txgroup_id\n  left join txgroups c on b.parent_txgroup = c.txgroup_id\n  left join txgroups d on c.parent_txgroup = d.txgroup_id\n  left join txgroups e on d.parent_txgroup = e.txgroup_id\n  WHERE\n    $__timeFilter(date) and\n    coalesce(e.name, d.name, c.name, b.name, a.parent_txgroup) in ('Cost of Revenue','Operating Expenses','Other Operating Expense')\n  group by date\n  union\n  SELECT\n    date as time,\n    sum(average_14d),\n    'Cash In' as metric\n  FROM treasury_time_averages a\n  left join txgroups b on a.parent_txgroup_id = b.txgroup_id\n  left join txgroups c on b.parent_txgroup = c.txgroup_id\n  left join txgroups d on c.parent_txgroup = d.txgroup_id\n  left join txgroups e on d.parent_txgroup = e.txgroup_id\n  WHERE\n    $__timeFilter(date) and\n    coalesce(e.name, d.name, c.name, b.name, a.parent_txgroup) in ('Protocol Revenue','Other Income')\n  group by date\n) final\norder by time",
+          "refId": "A",
+          "select": [
+            [
+              {
+                "params": [
+                  "value"
+                ],
+                "type": "column"
+              }
+            ]
+          ],
+          "timeColumn": "time",
+          "where": [
+            {
+              "name": "$__timeFilter",
+              "params": [],
+              "type": "macro"
+            }
+          ]
+        }
+      ],
+      "title": "14-day averages",
+      "transformations": [
+        {
+          "id": "calculateField",
+          "options": {
+            "alias": "Net",
+            "binary": {
+              "left": "Cash In",
+              "operator": "-",
+              "reducer": "sum",
+              "right": "Cash Out"
+            },
+            "mode": "binary",
+            "reduce": {
+              "reducer": "sum"
+            }
+          }
+        }
+      ],
+      "type": "timeseries"
+    },
+    {
+      "datasource": "POSTGRES",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisLabel": "",
+            "axisPlacement": "auto",
+            "barAlignment": 0,
+            "drawStyle": "line",
+            "fillOpacity": 0,
+            "gradientMode": "none",
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            },
+            "lineInterpolation": "linear",
+            "lineWidth": 1,
+            "pointSize": 5,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "showPoints": "auto",
+            "spanNulls": false,
+            "stacking": {
+              "group": "A",
+              "mode": "none"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 80
+              }
+            ]
+          },
+          "unit": "currencyUSD"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 9,
+        "w": 24,
+        "x": 0,
+        "y": 9
+      },
+      "id": 2,
+      "options": {
+        "legend": {
+          "calcs": [],
+          "displayMode": "list",
+          "placement": "bottom"
+        },
+        "tooltip": {
+          "mode": "single"
+        }
+      },
+      "targets": [
+        {
+          "datasource": "POSTGRES",
+          "format": "time_series",
+          "group": [],
+          "metricColumn": "none",
+          "rawQuery": true,
+          "rawSql": "select *\nfrom (\n  SELECT\n    date as time,\n    sum(average_30d),\n    'Cash Out' as metric\n  FROM treasury_time_averages a\n  left join txgroups b on a.parent_txgroup_id = b.txgroup_id\n  left join txgroups c on b.parent_txgroup = c.txgroup_id\n  left join txgroups d on c.parent_txgroup = d.txgroup_id\n  left join txgroups e on d.parent_txgroup = e.txgroup_id\n  WHERE\n    $__timeFilter(date) and\n    coalesce(e.name, d.name, c.name, b.name, a.parent_txgroup) in ('Cost of Revenue','Operating Expenses','Other Operating Expense')\n  group by date\n  union\n  SELECT\n    date as time,\n    sum(average_30d),\n    'Cash In' as metric\n  FROM treasury_time_averages a\n  left join txgroups b on a.parent_txgroup_id = b.txgroup_id\n  left join txgroups c on b.parent_txgroup = c.txgroup_id\n  left join txgroups d on c.parent_txgroup = d.txgroup_id\n  left join txgroups e on d.parent_txgroup = e.txgroup_id\n  WHERE\n    $__timeFilter(date) and\n    coalesce(e.name, d.name, c.name, b.name, a.parent_txgroup) in ('Protocol Revenue','Other Income')\n  group by date\n) final\norder by time",
+          "refId": "A",
+          "select": [
+            [
+              {
+                "params": [
+                  "value"
+                ],
+                "type": "column"
+              }
+            ]
+          ],
+          "timeColumn": "time",
+          "where": [
+            {
+              "name": "$__timeFilter",
+              "params": [],
+              "type": "macro"
+            }
+          ]
+        }
+      ],
+      "title": "30-day averages",
+      "transformations": [
+        {
+          "id": "calculateField",
+          "options": {
+            "alias": "Net",
+            "binary": {
+              "left": "Cash In",
+              "operator": "-",
+              "reducer": "sum",
+              "right": "Cash Out"
+            },
+            "mode": "binary",
+            "reduce": {
+              "reducer": "sum"
+            }
+          }
+        }
+      ],
+      "type": "timeseries"
+    },
+    {
+      "datasource": "POSTGRES",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisLabel": "",
+            "axisPlacement": "auto",
+            "barAlignment": 0,
+            "drawStyle": "line",
+            "fillOpacity": 0,
+            "gradientMode": "none",
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            },
+            "lineInterpolation": "linear",
+            "lineWidth": 1,
+            "pointSize": 5,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "showPoints": "auto",
+            "spanNulls": false,
+            "stacking": {
+              "group": "A",
+              "mode": "none"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 80
+              }
+            ]
+          },
+          "unit": "currencyUSD"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 9,
+        "w": 24,
+        "x": 0,
+        "y": 18
+      },
+      "id": 3,
+      "options": {
+        "legend": {
+          "calcs": [],
+          "displayMode": "list",
+          "placement": "bottom"
+        },
+        "tooltip": {
+          "mode": "single"
+        }
+      },
+      "targets": [
+        {
+          "datasource": "POSTGRES",
+          "format": "time_series",
+          "group": [],
+          "metricColumn": "none",
+          "rawQuery": true,
+          "rawSql": "select *\nfrom (\n  SELECT\n    date as time,\n    sum(average_90d),\n    'Cash Out' as metric\n  FROM treasury_time_averages a\n  left join txgroups b on a.parent_txgroup_id = b.txgroup_id\n  left join txgroups c on b.parent_txgroup = c.txgroup_id\n  left join txgroups d on c.parent_txgroup = d.txgroup_id\n  left join txgroups e on d.parent_txgroup = e.txgroup_id\n  WHERE\n    $__timeFilter(date) and\n    coalesce(e.name, d.name, c.name, b.name, a.parent_txgroup) in ('Cost of Revenue','Operating Expenses','Other Operating Expense')\n  group by date\n  union\n  SELECT\n    date as time,\n    sum(average_90d),\n    'Cash In' as metric\n  FROM treasury_time_averages a\n  left join txgroups b on a.parent_txgroup_id = b.txgroup_id\n  left join txgroups c on b.parent_txgroup = c.txgroup_id\n  left join txgroups d on c.parent_txgroup = d.txgroup_id\n  left join txgroups e on d.parent_txgroup = e.txgroup_id\n  WHERE\n    $__timeFilter(date) and\n    coalesce(e.name, d.name, c.name, b.name, a.parent_txgroup) in ('Protocol Revenue','Other Income')\n  group by date\n) final\norder by time",
+          "refId": "A",
+          "select": [
+            [
+              {
+                "params": [
+                  "value"
+                ],
+                "type": "column"
+              }
+            ]
+          ],
+          "timeColumn": "time",
+          "where": [
+            {
+              "name": "$__timeFilter",
+              "params": [],
+              "type": "macro"
+            }
+          ]
+        }
+      ],
+      "title": "90-day averages",
+      "transformations": [
+        {
+          "id": "calculateField",
+          "options": {
+            "alias": "Net",
+            "binary": {
+              "left": "Cash In",
+              "operator": "-",
+              "reducer": "sum",
+              "right": "Cash Out"
+            },
+            "mode": "binary",
+            "reduce": {
+              "reducer": "sum"
+            }
+          }
+        }
+      ],
+      "type": "timeseries"
+    }
+  ],
+  "refresh": "5m",
+  "schemaVersion": 33,
+  "style": "dark",
+  "tags": [],
+  "templating": {
+    "list": []
+  },
+  "time": {
+    "from": "now-2y",
+    "to": "now"
+  },
+  "timepicker": {},
+  "timezone": "",
+  "title": "Daily Cashflow Averages",
+  "uid": "Usi2_nMVk",
+  "version": 2,
+  "weekStart": ""
+}

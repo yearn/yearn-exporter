@@ -1,8 +1,8 @@
+from json import JSONDecodeError
 import logging
 import os
 import time
 import warnings
-from pprint import pprint
 from typing import Dict, List, Optional
 
 import pandas as pd
@@ -117,28 +117,32 @@ def get_transactions(start: Block, end: Block) -> List[Dict]:
 
 
 def get_transactions_for_block(treasury_addresses: List[Address], block: Block) -> List[Dict]:
-    # NOTE Need to do this the hard way to get parallelism
-    block = Web3(HTTPProvider(web3.provider.endpoint_uri)).eth.get_block(block, full_transactions=True)
+    while True:
+        try:
+            # NOTE Need to do this the hard way to get parallelism
+            block = Web3(HTTPProvider(web3.provider.endpoint_uri)).eth.get_block(block, full_transactions=True)
 
-    return [
-        {
-            'chainid': chain.id,
-            'block': tx['blockNumber'],
-            'timestamp': block['timestamp'],
-            'hash': tx['hash'].hex(),
-            'log_index': None,
-            'token': "0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE",
-            'from': tx['from'],
-            'to': tx['to'],
-            'amount': tx['value'] / 1e18,
-            'price': magic.get_price(constants.weth, block['number']),
-            'value_usd': tx['value'] / 1e18 * magic.get_price(constants.weth, block['number']),
-            'gas_used': web3.eth.getTransactionReceipt(tx['hash']).gasUsed,
-            'gas_price': tx['gasPrice']
-        }
-        for tx in block['transactions']
-        if tx['from'] in treasury_addresses or tx['to'] in treasury_addresses
-    ]
+            return [
+                {
+                    'chainid': chain.id,
+                    'block': tx['blockNumber'],
+                    'timestamp': block['timestamp'],
+                    'hash': tx['hash'].hex(),
+                    'log_index': None,
+                    'token': "0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE",
+                    'from': tx['from'],
+                    'to': tx['to'],
+                    'amount': tx['value'] / 1e18,
+                    'price': magic.get_price(constants.weth, block['number']),
+                    'value_usd': tx['value'] / 1e18 * magic.get_price(constants.weth, block['number']),
+                    'gas_used': web3.eth.getTransactionReceipt(tx['hash']).gasUsed,
+                    'gas_price': tx['gasPrice']
+                }
+                for tx in block['transactions']
+                if tx['from'] in treasury_addresses or tx['to'] in treasury_addresses
+            ]
+        except JSONDecodeError:
+            pass  # try again
 
 
 def get_internal_transactions(start: Block, end: Block) -> List[Dict]:
@@ -150,7 +154,8 @@ def get_internal_transactions(start: Block, end: Block) -> List[Dict]:
 
 
 def get_internal_transactions_for_address(address: Address, start: Block, end: Block) -> List[Dict]:
-    explorer_endpoint = CONFIG.active_network.get("explorer")
+    explorer_endpoint = os.getenv("DEFAULT_EXPLORER", None)
+    assert explorer_endpoint, "explorer_endpoint must be set!"
     env_token = next((v for k, v in _explorer_tokens.items() if k in explorer_endpoint), None)
     explorer_token = os.environ[env_token]
     internal_txs = []

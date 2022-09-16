@@ -221,3 +221,82 @@ db.bind(
 )
     
 db.generate_mapping(create_tables=True)
+
+
+@db_session
+def create_general_ledger_view() -> None:
+    try:
+        db.execute(
+            """
+            create VIEW general_ledger as
+            SELECT b.chain_name, TO_TIMESTAMP(a.timestamp) AS timestamp, a.block, a.hash, a.log_index, c.symbol AS token, d.address AS "from", d.nickname as from_nickname, e.address AS "to", e.nickname as to_nickname, a.amount, a.price, a.value_usd, f.name AS txgroup, g.name AS parent_txgroup
+            FROM treasury_txs a
+                LEFT JOIN chains b ON a.chain = b.chain_dbid
+                LEFT JOIN tokens c ON a.token_id = c.token_id
+                LEFT JOIN addresses d ON a."from" = d.address_id
+                LEFT JOIN addresses e ON a."to" = e.address_id
+                LEFT JOIN txgroups f ON a.txgroup_id = f.txgroup_id
+                LEFT JOIN txgroups g ON f.parent_txgroup = g.txgroup_id
+            ORDER BY TO_TIMESTAMP(a.timestamp)
+            """
+        )
+    except ProgrammingError as e:
+        if str(e).strip() != 'relation "general_ledger" already exists':
+            raise
+    
+@db_session
+def create_unsorted_txs_view() -> None:
+    try:
+        db.execute(
+            """
+            CREATE VIEW unsorted_txs as
+            SELECT *
+            FROM general_ledger
+            WHERE txgroup = 'Categorization Pending'
+            ORDER BY TIMESTAMP desc
+            """
+        )
+    except ProgrammingError as e:
+        if str(e).strip() != 'relation "unsorted_txs" already exists':
+            raise
+
+@db_session
+def create_treasury_time_averages_view() -> None:
+    try:
+        db.execute(
+            """
+            CREATE VIEW treasury_time_averages AS
+            WITH base AS (
+                SELECT gs as DATE, a.NAME AS txgroup, b.name as parent_txgroup, b.txgroup_id AS parent_txgroup_id
+                FROM txgroups a
+                LEFT JOIN txgroups b ON a.parent_txgroup = b.txgroup_id
+                LEFT JOIN generate_series('2020-07-21', '2022-09-03', interval '1 day') gs ON 1=1
+            ), summed AS (
+                SELECT DATE,
+                    coalesce(sum(value_usd), 0) daily_total,
+                    a.txgroup,
+                    a.parent_txgroup,
+                    a.parent_txgroup_id
+                FROM base a
+                left join general_ledger b ON date = CAST(TIMESTAMP AS DATE) and a.txgroup = b.txgroup AND a.parent_txgroup = b.parent_txgroup
+                GROUP BY date, a.txgroup, a.parent_txgroup, a.parent_txgroup_id
+            )
+            SELECT *,
+                sum(daily_total) OVER (partition BY txgroup, parent_txgroup ORDER BY date ROWS 6 PRECEDING) / 7 average_7d,
+                sum(daily_total) OVER (partition BY txgroup, parent_txgroup ORDER BY date ROWS 13 PRECEDING) / 14 average_14d,
+                sum(daily_total) OVER (partition BY txgroup, parent_txgroup ORDER BY date ROWS 29 PRECEDING) / 30 average_30d,
+                sum(daily_total) OVER (partition BY txgroup, parent_txgroup ORDER BY date ROWS 89 PRECEDING) / 90 average_90d
+            FROM summed
+            ORDER BY DATE
+            """
+        )
+    except ProgrammingError as e:
+        if str(e).strip() != 'relation "treasury_time_averages" already exists':
+            raise
+
+def create_views() -> None:
+    create_general_ledger_view()
+    create_unsorted_txs_view()
+    create_treasury_time_averages_view()
+
+create_views()

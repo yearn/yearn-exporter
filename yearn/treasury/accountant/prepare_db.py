@@ -17,6 +17,7 @@ def prepare_db() -> None:
     cache_treasury()
     cache_ychad()
     cache_sms()
+    cache_ykp3r()
     cache_yswaps()
     cache_ymechs()
     cache_partners()
@@ -33,6 +34,12 @@ def cache_ychad() -> None:
 
     if label:
         cache_address(constants.YCHAD_MULTISIG).nickname = f"Yearn {label} Multisig"
+        db.commit()
+
+def cache_ykp3r() -> None:
+    """ Label yKP3R in pg. """
+    if chain.id == Network.Mainnet:
+        cache_address("0x8d12a197cb00d4747a1fe03395095ce2a5cc6819").nickname = "Yearn KP3R Wallet"
         db.commit()
 
 def cache_yswaps() -> None:

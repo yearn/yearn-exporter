@@ -2,11 +2,10 @@
 set -e
 
 NETWORK=${NETWORK:-mainnet} # default to Ethereum mainnet
+EXPLORER=${EXPLORER:-$DEFAULT_EXPLORER}
 
 if [[ $NETWORK == "mainnet" ]]; then
   CHAIN_ID=1
-  EXPLORER=${EXPLORER:-https://api.etherscan.io/api}
-
   # some legacy cleanup
   if [[ ! -z "$WEB3_PROVIDER" ]]; then
     if [[ $(brownie networks list | grep mainnet-custom) ]]; then
@@ -16,20 +15,15 @@ if [[ $NETWORK == "mainnet" ]]; then
 
 elif [[ $NETWORK == "xdai-main" ]]; then
   CHAIN_ID=100
-  EXPLORER=${EXPLORER:-https://blockscout.com/xdai/mainnet/api}
 
 elif [[ $NETWORK == "ftm-main" ]]; then
   CHAIN_ID=250
-  EXPLORER=${EXPLORER:-https://api.ftmscan.com/api}
 
 elif [[ $NETWORK == "arbitrum-main" ]]; then
   CHAIN_ID=42161
-  EXPLORER=${EXPLORER:-https://api.arbiscan.io/api}
 
 elif [[ $NETWORK == "optimism-main" ]]; then
   CHAIN_ID=10
-  EXPLORER=${EXPLORER:-https://api-optimistic.etherscan.io/api}
-
 fi
 
 # modify the network

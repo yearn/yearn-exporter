@@ -8,13 +8,16 @@ from yearn.treasury.accountant.classes import Filter, HashMatcher
 def is_yacademy_audit(tx: TreasuryTx) -> bool:
     hashes = [
         "0x48e05bff53a67304593a0bff5238fd2bed01c61074937706df879fb901e9e1ba",
+        "0xf3a31b7c162018f93c8485ad4e374a15e0053308148c7f9afe2f6d16b2013c19",
+        ["0x3e75d22250d87c183824c3b77ddb9cb11935db2061ce7f34df4f024d0646fcfb", Filter('log_index', 116)],
     ]
     return tx in HashMatcher(hashes)
 
-def is_chaisec_audit(tx: TreasuryTx) -> bool:
+def is_chainsec_audit(tx: TreasuryTx) -> bool:
     return tx in HashMatcher({
         Network.Mainnet: [
         "0x7672b9d10b968c58525cff566a60bc8d44a6633f51a712e0eb00ecf88f86aef3",
+        "0x4a77efb6234793b6316e11b6ef7f345f26d3d1b7b8edb8efffe1c0dc4cdfb0e0",
         ],
     }.get(chain.id, []))
 
@@ -25,7 +28,14 @@ def is_decurity_audit(tx: TreasuryTx) -> bool:
 
 def is_statemind_audit(tx: TreasuryTx) -> bool:
     return tx in HashMatcher([
-        ["0xeb51cb5a3b4ae618be75bf3e23c2d8e333d93d5e81e869eca7f9612a30079822", Filter('log_index', 193)]
+        ["0xeb51cb5a3b4ae618be75bf3e23c2d8e333d93d5e81e869eca7f9612a30079822", Filter('log_index', 193)],
+        ["0xcb79cbe5b68d04a1a3feab3360734277020ee0536380843a8c9db3e8356b81d6", Filter('log_index', 398)],
+        ["0x3e75d22250d87c183824c3b77ddb9cb11935db2061ce7f34df4f024d0646fcfb", Filter('log_index', 115)]
+    ])
+
+def is_mixbytes_audit(tx: TreasuryTx) -> bool:
+    return tx in HashMatcher([
+        ["0xcb79cbe5b68d04a1a3feab3360734277020ee0536380843a8c9db3e8356b81d6", Filter('log_index', 399)],
     ])
 
 def is_other_audit(tx: TreasuryTx) -> bool:
@@ -34,6 +44,7 @@ def is_other_audit(tx: TreasuryTx) -> bool:
         "0x5e95d5b0773eefaef9c7187d5e9187a89717d269f48e5dcf707acfe1a7e55cb9",
         "0x9cfd1098c5459002a90ffa23931f7bbec430b3f2ec0ef2d3a641cef574eb0817",
         "0x70cdcffa444f70754a1df2d80a1adf9c432dfe678381e05ac78ab50b9de9d393",
+        ["0x70ecc34da6c461a0bb9dadfbc4d082a8486e742cbb454f0f67b2df384fb9bffc", Filter("log_index", 89)]
     ]
     return tx in HashMatcher(hashes)
 

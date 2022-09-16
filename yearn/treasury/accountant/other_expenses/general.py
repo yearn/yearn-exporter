@@ -12,7 +12,7 @@ def is_strategist_buyout(tx: TreasuryTx) -> bool:
 
 def is_gitcoin_matching_donation(tx: TreasuryTx) -> bool:
     gitcoin = "0xde21F729137C5Af1b01d73aF1dC21eFfa2B8a0d6"
-    if tx.from_address.address in treasury.addresses and tx.to_address and tx.to_address.address == gitcoin and tx._symbol == "DAI":
+    if tx.from_address.address in treasury.addresses and tx.to_address and tx.to_address.address == gitcoin and tx._symbol in ["DAI", "USDC"]:
         return True
 
 def is_yacademy_fellow_grant(tx: TreasuryTx) -> bool:

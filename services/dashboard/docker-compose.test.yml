@@ -16,7 +16,6 @@ services:
       - WEB3_PROVIDER
       - ETHERSCAN_TOKEN
       - EXPLORER
-      - SLEEP_SECONDS
       - TEST_CMD
     volumes:
       - .:/tests

@@ -30,6 +30,7 @@ gnosis_containers 	:= $(gnosis_containers_lite) 	gnosis-wallet-exporter	gnosis-p
 optimism_containers := $(optimism_containers_lite) 	opti-wallet-exporter	opti-partners-exporter
 
 treasury_containers := 	$(ethereum_treasury_containers) $(fantom_treasury_containers) 	$(arbitrum_treasury_containers) $(gnosis_treasury_containers) 	$(optimism_treasury_contrainers)
+treasury_tx_containers := treasury-transactions-exporter ftm-treasury-transactions-exporter arbi-treasury-transactions-exporter gnosis-treasury-transactions-exporter opti-treasury-transactions-exporter
 all_containers := 		$(ethereum_containers) 			$(fantom_containers) 			$(arbitrum_containers) 			$(gnosis_containers) 			$(optimism_containers)
 
 # Basic Makefile commands
@@ -152,5 +153,12 @@ stop-optimism:
 treasury:
 	$(dashboards_command) up -d --build $(treasury_containers) && make logs-treasury
 
+# Treasury TX Exporters
+treasury-tx:
+	$(dashboards_command) up -d --build $(treasury_tx_containers) && make logs-treasury-tx
+
 logs-treasury:
 	$(dashboards_command) logs -ft $(treasury_containers)
+
+logs-treasury-tx:
+	$(dashboards_command) logs -ft $(treasury_tx_containers)
