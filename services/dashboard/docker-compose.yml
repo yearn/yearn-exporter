@@ -80,6 +80,9 @@ services:
     networks:
       - yearn-exporter
     restart: on-failure
+    depends_on:
+      - victoria-metrics
+      - postgres
 
   ftm-exporter:
     image: yearn-exporter
@@ -91,6 +94,9 @@ services:
     networks:
       - yearn-exporter
     restart: on-failure
+    depends_on:
+      - victoria-metrics
+      - postgres
 
   gnosis-exporter:
     image: yearn-exporter
@@ -102,6 +108,9 @@ services:
     networks:
       - yearn-exporter
     restart: on-failure
+    depends_on:
+      - victoria-metrics
+      - postgres
 
   arbi-exporter:
     image: yearn-exporter
@@ -113,6 +122,9 @@ services:
     networks:
       - yearn-exporter
     restart: on-failure
+    depends_on:
+      - victoria-metrics
+      - postgres
 
   opti-exporter:
     image: yearn-exporter
@@ -124,7 +136,9 @@ services:
     networks:
       - yearn-exporter
     restart: on-failure
-
+    depends_on:
+      - victoria-metrics
+      - postgres
 
   treasury-exporter:
     image: yearn-exporter
@@ -201,7 +215,6 @@ services:
       - victoria-metrics
       - postgres
 
-
   treasury-transactions-exporter:
     image: yearn-exporter
     command: exporters/treasury_transactions
@@ -214,6 +227,7 @@ services:
       - yearn-exporter
     restart: on-failure
     depends_on:
+      - victoria-metrics
       - postgres
 
   ftm-treasury-transactions-exporter:
@@ -228,8 +242,9 @@ services:
       - yearn-exporter
     restart: on-failure
     depends_on:
+      - victoria-metrics
       - postgres
-  
+
   gnosis-treasury-transactions-exporter:
     image: yearn-exporter
     command: exporters/treasury_transactions
@@ -242,8 +257,9 @@ services:
       - yearn-exporter
     restart: on-failure
     depends_on:
+      - victoria-metrics
       - postgres
-    
+
   arbi-treasury-transactions-exporter:
     image: yearn-exporter
     command: exporters/treasury_transactions
@@ -256,8 +272,9 @@ services:
       - yearn-exporter
     restart: on-failure
     depends_on:
+      - victoria-metrics
       - postgres
-  
+
   opti-treasury-transactions-exporter:
     image: yearn-exporter
     command: exporters/treasury_transactions
@@ -270,8 +287,8 @@ services:
       - yearn-exporter
     restart: on-failure
     depends_on:
+      - victoria-metrics
       - postgres
-
 
   sms-exporter:
     image: yearn-exporter
@@ -283,6 +300,9 @@ services:
     networks:
       - yearn-exporter
     restart: on-failure
+    depends_on:
+      - victoria-metrics
+      - postgres
 
   ftm-sms-exporter:
     image: yearn-exporter
@@ -294,6 +314,9 @@ services:
     networks:
       - yearn-exporter
     restart: on-failure
+    depends_on:
+      - victoria-metrics
+      - postgres
 
   gnosis-sms-exporter:
     image: yearn-exporter
@@ -305,6 +328,9 @@ services:
     networks:
       - yearn-exporter
     restart: on-failure
+    depends_on:
+      - victoria-metrics
+      - postgres
 
   arbi-sms-exporter:
     image: yearn-exporter
@@ -316,6 +342,9 @@ services:
     networks:
       - yearn-exporter
     restart: on-failure
+    depends_on:
+      - victoria-metrics
+      - postgres
 
   opti-sms-exporter:
     image: yearn-exporter
@@ -327,7 +356,9 @@ services:
     networks:
       - yearn-exporter
     restart: on-failure
-
+    depends_on:
+      - victoria-metrics
+      - postgres
 
   transactions-exporter:
     image: yearn-exporter
@@ -341,6 +372,7 @@ services:
       - yearn-exporter
     restart: on-failure
     depends_on:
+      - victoria-metrics
       - postgres
 
   ftm-transactions-exporter:
@@ -355,6 +387,7 @@ services:
       - yearn-exporter
     restart: on-failure
     depends_on:
+      - victoria-metrics
       - postgres
 
   gnosis-transactions-exporter:
@@ -369,6 +402,7 @@ services:
       - yearn-exporter
     restart: on-failure
     depends_on:
+      - victoria-metrics
       - postgres
 
   arbi-transactions-exporter:
@@ -383,6 +417,7 @@ services:
       - yearn-exporter
     restart: on-failure
     depends_on:
+      - victoria-metrics
       - postgres
 
   opti-transactions-exporter:
@@ -397,6 +432,7 @@ services:
       - yearn-exporter
     restart: on-failure
     depends_on:
+      - victoria-metrics
       - postgres
 
   wallet-exporter:
@@ -503,7 +539,7 @@ services:
     depends_on:
       - victoria-metrics
       - postgres
-  
+
   gnosis-partners-exporter:
     image: yearn-exporter
     command: exporters/partners
@@ -518,7 +554,7 @@ services:
     depends_on:
       - victoria-metrics
       - postgres
-  
+
   arbi-partners-exporter:
     image: yearn-exporter
     command: exporters/partners
@@ -533,7 +569,7 @@ services:
     depends_on:
       - victoria-metrics
       - postgres
-  
+
   opti-partners-exporter:
     image: yearn-exporter
     command: exporters/partners
