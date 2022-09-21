@@ -30,6 +30,16 @@ x-common-envs: &common-envs
   # This is a temporary hack that can be removed once deps support eth_hash==0.5.0. Creds to bunny for finding this.
   - ETH_HASH_BACKEND: ${ETH_HASH_BACKEND:-pysha3}
 
+x-common-apy-envs: &common-apy-envs
+  - NETWORK:
+  - AWS_ACCESS_KEY:
+  - AWS_ACCESS_SECRET:
+  - AWS_BUCKET:
+  - TG_YFIREBOT_GROUP_INTERNAL:
+  - TG_YFIREBOT_GROUP_EXTERNAL:
+  - TG_YFIREBOT:
+  - EXPORT_MODE:
+
 x-common-postgres-envs: &common-postgres-envs
   - PGHOST: postgres
   - PGDATABASE: postgres
@@ -599,6 +609,17 @@ services:
     depends_on:
       - victoria-metrics
       - postgres
+
+  apy:
+    image: yearn-exporter
+    command: "s3 with_monitoring"
+    volumes: *common-volumes
+    environment:
+      <<: *common-envs
+      <<: *common-apy-envs
+    networks:
+      - yearn-exporter
+    restart: on-failure
 
   vmagent:
     image: victoriametrics/vmagent:heads-public-single-node-0-g52eb9c99e

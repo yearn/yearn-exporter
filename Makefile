@@ -157,6 +157,22 @@ treasury:
 treasury-tx:
 	$(dashboards_command) up -d --build $(treasury_tx_containers) && make logs-treasury-tx
 
+# apy scripts
+ethereum-apy-endorsed:
+	PROJECT=ethereum SERVICE=apy ./run.sh
+
+ethereum-apy-experimental:
+	PROJECT=ethereum SERVICE=apy EXPORT_MODE=experimental ./run.sh
+
+fantom-apy-endorsed:
+	PROJECT=fantom SERVICE=apy ./run.sh
+
+arbi-apy-endorsed:
+	PROJECT=arbitrum SERVICE=apy ./run.sh
+
+opti-apy-endorsed:
+	PROJECT=optimism SERVICE=apy ./run.sh
+
 logs-treasury:
 	$(dashboards_command) logs -ft $(treasury_containers)
 
