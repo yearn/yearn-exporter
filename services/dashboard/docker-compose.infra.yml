@@ -1,0 +1,107 @@
+version: "3.7"
+
+volumes:
+  grafana_data: {}
+  victoria_metrics_data: {}
+  postgres_data: {}
+
+networks:
+  yearn-exporter:
+
+x-grafana-envs: &grafana-envs
+  - GF_SECURITY_ADMIN_USER: ${GF_SECURITY_ADMIN_USER:-admin}
+  - GF_SECURITY_ADMIN_PASSWORD: ${GF_SECURITY_ADMIN_PASSWORD:-admin}
+  - GF_AUTH_ANONYMOUS_ENABLED: "true"
+  - GF_DASHBOARDS_DEFAULT_HOME_DASHBOARD_PATH: /etc/grafana/provisioning/dashboards/yearn/Overview.json
+  - GF_SERVER_ROOT_URL: https://yearn.vision
+  - GF_RENDERING_SERVER_URL: http://renderer:8091/render
+  - GF_RENDERING_CALLBACK_URL: http://grafana:3000/
+  - GF_LOG_FILTERS: rendering:debug
+
+x-common-postgres-envs: &common-postgres-envs
+  - PGHOST: postgres
+  - PGDATABASE: postgres
+  - PGUSER: postgres
+  - PGPASSWORD: yearn-exporter
+
+services:
+  vmagent:
+    image: victoriametrics/vmagent:heads-public-single-node-0-g52eb9c99e
+    volumes:
+      - ./prometheus/:/etc/prometheus/
+    command:
+      - "-promscrape.config=/etc/prometheus/prometheus.yml"
+      - "-remoteWrite.url=http://victoria-metrics:8428/api/v1/write"
+    links:
+      - victoria-metrics:victoria-metrics
+    depends_on:
+      - victoria-metrics
+    networks:
+      - yearn-exporter
+    restart: always
+
+  victoria-metrics:
+    image: victoriametrics/victoria-metrics
+    volumes:
+      - victoria_metrics_data:/victoria-metrics-data
+    command:
+      - "-retentionPeriod=10y"
+    ports:
+      - 127.0.0.1:8428:8428
+    networks:
+      - yearn-exporter
+    restart: always
+
+  grafana:
+    image: grafana/grafana:8.3.1
+    depends_on:
+      - victoria-metrics
+      - postgres
+    ports:
+      - 3000:3000
+    environment:
+      <<: *grafana-envs
+      <<: *common-postgres-envs
+    volumes:
+      - grafana_data:/var/lib/grafana
+      - ./grafana/provisioning/:/etc/grafana/provisioning/
+    networks:
+      - yearn-exporter
+    restart: always
+
+  renderer:
+    image: grafana/grafana-image-renderer:latest
+    ports:
+      - 127.0.0.1:8091:8091
+    environment:
+      - ENABLE_METRICS=true
+      - HTTP_PORT=8091
+    networks:
+      - yearn-exporter
+    restart: always
+
+  node-exporter:
+    image: quay.io/prometheus/node-exporter:latest
+    ports:
+      - 127.0.0.1:9100:9100
+    command:
+      - "--path.rootfs=/host"
+    networks:
+      - yearn-exporter
+    volumes:
+      - "/:/host:ro,rslave"
+    restart: always
+
+  postgres:
+    image: postgres
+    ports:
+      - 127.0.0.1:5432:5432
+    environment:
+      - POSTGRES_USER=${PGUSER:-postgres}
+      - POSTGRES_PASSWORD=${PGPASSWORD:-yearn-exporter}
+      - POSTGRES_DB=${PGDATABASE:-postgres}
+    networks:
+      - yearn-exporter
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    restart: always
