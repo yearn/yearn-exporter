@@ -1,5 +1,6 @@
 from dataclasses import dataclass
 import logging
+import os
 from time import time
 
 from brownie import ZERO_ADDRESS, chain, interface
@@ -256,6 +257,19 @@ class _ConvexVault:
         cvx_net_farmed_apy = (1 + (cvx_net_apr / COMPOUNDING)) ** COMPOUNDING - 1
         cvx_net_apy = ((1 + cvx_net_farmed_apy) * (1 + pool_apy)) - 1
 
+        if os.getenv('DEBUG', None):
+            logger.info("base_asset_price=%.6f", base_asset_price)
+            logger.info("pool_price=%.6f", pool_price)
+            logger.info("base_apr=%.6f", base_apr)
+            logger.info("pool_apy=%.6f", pool_apy)
+            logger.info("management_fee=%.6f", management_fee)
+            logger.info("performance_fee=%.6f", performance_fee)
+            logger.info("detailed_apy_data")
+            logger.info(apy_data)
+            logger.info("gross_apr=%.6f", gross_apr)
+            logger.info("cvx_net_apr=%.6f", cvx_net_apr)
+            logger.info("cvx_net_farmed_apy=%.6f", cvx_net_farmed_apy)
+            logger.info("cvx_net_apy=%.6f", cvx_net_apy)
         # 0.3.5+ should never be < 0% because of management
         if cvx_net_apy < 0 and Version(self.vault.api_version) >= Version("0.3.5"): 
             cvx_net_apy = 0

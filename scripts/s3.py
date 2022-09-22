@@ -196,6 +196,9 @@ def _export(data, file_name, s3_path):
     with open(file_name, "w+") as f:
         json.dump(data, f)
 
+    if os.getenv("DEBUG", None):
+        return
+
     aws_bucket = os.environ.get("AWS_BUCKET")
 
     s3 = _get_s3()

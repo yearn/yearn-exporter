@@ -1,4 +1,4 @@
-
+import os
 from typing import Any, Dict, Optional, Union
 
 from brownie import chain, convert
@@ -15,10 +15,12 @@ from yearn.utils import contract, contract_creation_block
 Uniswap = Union[UniswapV1,UniswapV2Multiplexer,UniswapV3]
 
 UNISWAPS: Dict[str,Optional[Uniswap]] = {
-    'v1': uniswap_v1,
-    'v2': uniswap_v2,
-    'v3': uniswap_v3
+    'v1': uniswap_v1
 }
+# disable v2 and v3 pools during debugging
+if os.getenv("DEBUG", None) is None:
+    UNISWAPS['v2'] = uniswap_v2
+    UNISWAPS['v3'] = uniswap_v3
 
 class UniswapVersionMultiplexer:
     def __init__(self) -> None:

@@ -44,12 +44,12 @@ infra:
 
 # exporter specifc scripts
 single-network: infra
-	NETWORK=$(NETWORK) SERVICE=$(SERVICE) COMMANDS="$(COMMANDS)" ./run.sh
+	NETWORK=$(NETWORK) SERVICE=$(SERVICE) COMMANDS="$(COMMANDS)" DEBUG=$(DEBUG) ./run.sh
 
 .ONESHELL:
 all-networks: infra
 	for network in $(networks); do
-		NETWORK=$$network SERVICE=$(SERVICE) COMMANDS="$(COMMANDS)" make single-network
+		NETWORK=$$network SERVICE=$(SERVICE) COMMANDS="$(COMMANDS)" DEBUG=$(DEBUG) make single-network
 	done
 
 down:
@@ -67,15 +67,21 @@ up:
 	$(eval SERVICE = $(if $(SERVICE),$(SERVICE),exporter))
 	$(eval COMMANDS = $(if $(COMMANDS),$(COMMANDS),$(exporter_scripts)))
 	if [ "$(NETWORK)" != "" ]; then
-		NETWORK=$(NETWORK) SERVICE=$(SERVICE) COMMANDS="$(COMMANDS)" make single-network logs
+		NETWORK=$(NETWORK) SERVICE=$(SERVICE) COMMANDS="$(COMMANDS)" DEBUG=$(DEBUG) make single-network logs
 	else
-		NETWORK=$(NETWORK) SERVICE=$(SERVICE) COMMANDS="$(COMMANDS)" make all-networks logs
+		NETWORK=$(NETWORK) SERVICE=$(SERVICE) COMMANDS="$(COMMANDS)" DEBUG=$(DEBUG) make all-networks logs
 	fi
 
 .ONESHELL:
 console:
 	$(eval BROWNIE_NETWORK = $(if $(BROWNIE_NETWORK),$(BROWNIE_NETWORK),mainnet))
 	docker-compose --file services/dashboard/docker-compose.yml --project-directory . run --entrypoint "brownie console --network $(BROWNIE_NETWORK)" exporter
+
+.ONESHELL:
+debug-apy:
+	$(eval NETWORK = $(if $(NETWORK),$(NETWORK),ethereum))
+	DEBUG=true DEBUG_ADDRESS=$(DEBUG_ADDRESS) NETWORK=$(NETWORK) SERVICE=apy COMMANDS=debug_apy ./run.sh
+	FILTER=debug make logs
 
 # some convenience aliases
 exporters: SERVICE=exporter
