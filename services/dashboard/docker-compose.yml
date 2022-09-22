@@ -36,7 +36,7 @@ x-common-apy-envs: &common-apy-envs
   - EXPORT_MODE:
 
 x-common-network-envs: &common-network-envs
-  - NETWORK:
+  - BROWNIE_NETWORK:
   - WEB3_PROVIDER:
   - EXPLORER:
   - DEFAULT_EXPLORER:

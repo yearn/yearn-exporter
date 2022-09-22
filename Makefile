@@ -44,12 +44,12 @@ infra:
 
 # exporter specifc scripts
 single-network: infra
-	PROJECT=$(PROJECT) SERVICE=$(SERVICE) COMMANDS="$(COMMANDS)" ./run.sh
+	NETWORK=$(NETWORK) SERVICE=$(SERVICE) COMMANDS="$(COMMANDS)" ./run.sh
 
 .ONESHELL:
 all-networks: infra
-	for project in $(networks); do
-		PROJECT=$$project SERVICE=$(SERVICE) COMMANDS="$(COMMANDS)" make single-network
+	for network in $(networks); do
+		NETWORK=$$network SERVICE=$(SERVICE) COMMANDS="$(COMMANDS)" make single-network
 	done
 
 down:
@@ -66,10 +66,10 @@ logs:
 up:
 	$(eval SERVICE = $(if $(SERVICE),$(SERVICE),exporter))
 	$(eval COMMANDS = $(if $(COMMANDS),$(COMMANDS),$(exporter_scripts)))
-	if [ "$(PROJECT)" != "" ]; then
-		SERVICE=$(SERVICE) COMMANDS="$(COMMANDS)" make single-network logs
+	if [ "$(NETWORK)" != "" ]; then
+		NETWORK=$(NETWORK) SERVICE=$(SERVICE) COMMANDS="$(COMMANDS)" make single-network logs
 	else
-		SERVICE=$(SERVICE) COMMANDS="$(COMMANDS)" make all-networks logs
+		NETWORK=$(NETWORK) SERVICE=$(SERVICE) COMMANDS="$(COMMANDS)" make all-networks logs
 	fi
 
 # some convenience aliases
@@ -109,7 +109,7 @@ dashboards-clean-cache: clean_cache
 ############################
 
 # Ethereum
-ethereum: PROJECT=ethereum
+ethereum: NETWORK=ethereum
 ethereum: FILTER=ethereum
 ethereum: exporters logs
 
@@ -118,22 +118,22 @@ eth: ethereum
 mainnet: ethereum
 
 # Fantom
-fantom: PROJECT=fantom
+fantom: NETWORK=fantom
 fantom: FILTER=fantom
 fantom: exporters logs
 
 # Arbitrum Chain
-arbitrum: PROJECT=arbitrum
+arbitrum: NETWORK=arbitrum
 arbitrum: FILTER=arbitrum
 arbitrum: exporters logs
 
 # Optimism Chain
-optimism: PROJECT=optimism
+optimism: NETWORK=optimism
 optimism: FILTER=optimism
 optimism: exporters logs
 
 # Gnosis Chain
-gnosis: PROJECT=gnosis
+gnosis: NETWORK=gnosis
 gnosis: FILTER=gnosis
 gnosis: exporters logs
 

@@ -1,12 +1,12 @@
 #! /bin/bash
 set -e
 
-NETWORK=${NETWORK:-mainnet} # default to Ethereum mainnet
+BROWNIE_NETWORK=${BROWNIE_NETWORK:-mainnet} # default to Ethereum mainnet
 EXPLORER=${EXPLORER:-$DEFAULT_EXPLORER}
 
 # modify the network
 if [[ ! -z "$WEB3_PROVIDER" ]]; then
-  brownie networks modify $NETWORK host=$WEB3_PROVIDER explorer=$EXPLORER
+  brownie networks modify $BROWNIE_NETWORK host=$WEB3_PROVIDER explorer=$EXPLORER
 fi
 
 if [[ $# -eq 0 ]]; then
@@ -14,5 +14,5 @@ if [[ $# -eq 0 ]]; then
   exit 1
 fi
 
-echo "Running brownie for $@ on network $NETWORK..."
-brownie run $@ --network $NETWORK -r
+echo "Running brownie for $@ on network $BROWNIE_NETWORK..."
+brownie run $@ --network $BROWNIE_NETWORK -r

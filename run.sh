@@ -1,8 +1,8 @@
 #! /bin/bash
 set -e
 
-if [[ -z "${PROJECT}" ]]; then
-  echo "please provide a project name via \$PROJECT."
+if [[ -z "${NETWORK}" ]]; then
+  echo "please provide a network via \$NETWORK."
   exit 1
 fi
 if [[ -z "${SERVICE}" ]]; then
@@ -14,38 +14,38 @@ if [[ -z "${COMMANDS}" ]]; then
   exit 1
 fi
 
-if [[ $PROJECT == "ethereum" ]]; then
-  export NETWORK=mainnet
+if [[ $NETWORK == "ethereum" ]]; then
+  export BROWNIE_NETWORK=mainnet
   export WEB3_PROVIDER=$WEB3_PROVIDER
   export EXPLORER=$EXPLORER
   export DEFAULT_EXPLORER=https://api.etherscan.io/api
 
-elif [[ $PROJECT == "fantom" ]]; then
-  export NETWORK=ftm-main
+elif [[ $NETWORK == "fantom" ]]; then
+  export BROWNIE_NETWORK=ftm-main
   export WEB3_PROVIDER=$FTM_WEB3_PROVIDER
   export EXPLORER=$FTM_EXPLORER
   export DEFAULT_EXPLORER=https://api.ftmscan.com/api
 
-elif [[ $PROJECT == "gnosis" ]]; then
-  export NETWORK=xdai-main
+elif [[ $NETWORK == "gnosis" ]]; then
+  export BROWNIE_NETWORK=xdai-main
   export WEB3_PROVIDER=$XDAI_WEB3_PROVIDER
   export EXPLORER=$XDAI_EXPLORER
   export DEFAULT_EXPLORER=https://blockscout.com/xdai/mainnet/api
 
-elif [[ $PROJECT == "arbitrum" ]]; then
-  export NETWORK=arbitrum-main
+elif [[ $NETWORK == "arbitrum" ]]; then
+  export BROWNIE_NETWORK=arbitrum-main
   export WEB3_PROVIDER=$ARBI_WEB3_PROVIDER
   export EXPLORER=$ARBI_EXPLORER
   export DEFAULT_EXPLORER=https://api.arbiscan.io/api
 
-elif [[ $PROJECT == "optimism" ]]; then
-  export NETWORK=optimism-main
+elif [[ $NETWORK == "optimism" ]]; then
+  export BROWNIE_NETWORK=optimism-main
   export WEB3_PROVIDER=$OPTI_WEB3_PROVIDER
   export EXPLORER=$OPTI_EXPLORER
   export DEFAULT_EXPLORER=https://api-optimistic.etherscan.io/api
 
 else
-  echo "unsupported project $PROJECT specified!"
+  echo "unsupported network $NETWORK specified!"
   exit 1
 fi
 
@@ -56,12 +56,12 @@ IFS=', ' read -r -a commands <<< "$COMMANDS"
 for CMD in "${commands[@]}"; do
   NAME=$(echo $CMD | sed -e 's/\//_/g')
   # TODO handle multiple containers with the same name more gracefully
-  CONTAINER_NAME=${PROJECT}_${NAME}_1
+  CONTAINER_NAME=${NETWORK}_${NAME}_1
   docker rm -f $CONTAINER_NAME 2> /dev/null || true
   docker-compose \
     --file services/dashboard/docker-compose.yml \
     --project-directory . \
-    -p $PROJECT run \
+    -p $NETWORK run \
     --name $CONTAINER_NAME \
     --detach \
     $SERVICE $CMD

@@ -50,7 +50,7 @@ The dockerized exporter is controlled via multiple docker commands which are inv
 It's possible to specify three different params that control which exporters are started on which network.
 The available env variables to control the startup sequence of containers are the following:
 
-- `$PROJECT`: one of `ethereum`, `fantom`, `arbitrum`, `optimism`, `gnosis`
+- `$NETWORK`: one of `ethereum`, `fantom`, `arbitrum`, `optimism`, `gnosis`
 - `$SERVICE`: one of `exporter`, `apy`
 - `$COMMANDS`: a list of strings delimited with whitespace pointing to brownie scripts in `./scripts/` e.g. `exporters/partners exporters/vaults`
 
@@ -68,13 +68,13 @@ This is a flexible approach to start multiple containers on multiple networks wh
   `make down`
 
 - start only the vaults exporter for ethereum:
-  `PROJECT=ethereum SERVICE=exporter COMMANDS=exporters/vaults make up`
+  `NETWORK=ethereum SERVICE=exporter COMMANDS=exporters/vaults make up`
 
 - start only the treasury exporters for all supported networks:
   `make treasury`
 
 - start all available exporters on arbitrum:
-  `PROJECT=arbitrum make up`
+  `NETWORK=arbitrum make up`
 
 - show the logs of all exporters on arbitrum:
   `FILTER=arbitrum make logs`
