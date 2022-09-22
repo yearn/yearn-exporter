@@ -72,6 +72,11 @@ up:
 		NETWORK=$(NETWORK) SERVICE=$(SERVICE) COMMANDS="$(COMMANDS)" make all-networks logs
 	fi
 
+.ONESHELL:
+console:
+	$(eval BROWNIE_NETWORK = $(if $(BROWNIE_NETWORK),$(BROWNIE_NETWORK),mainnet))
+	docker-compose --file services/dashboard/docker-compose.yml --project-directory . run --entrypoint "brownie console --network $(BROWNIE_NETWORK)" exporter
+
 # some convenience aliases
 exporters: SERVICE=exporter
 exporters: COMMANDS=$(exporter_scripts)
