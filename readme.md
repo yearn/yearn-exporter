@@ -1,6 +1,7 @@
 # Yearn Exporter
 
-Collects realtime on-chain numeric data about all Yearn products and exposes it in multiple formats.
+Collects realtime on-chain numeric data about all Yearn products and exposes it in multiple formats. Currently it's able to export data from the following networks:
+ethereum, fantom, arbitrum, gnosis and optimism.
 
 Hosted version is available at https://yearn.vision.
 
@@ -9,9 +10,10 @@ Hosted version is available at https://yearn.vision.
 You will need:
 
 - Erigon for querying historical data
-- Prometheus to pull the metrics, persist them and make them queryable
+- Victoria-metrics to pull the metrics, persist them and make them queryable
 - Grafana if you want to set up custom dashboards and alerts
 - Etherscan API key
+- docker and docker-compose (not mandatory but easier usage, see below)
 
 ## Usage
 
@@ -43,6 +45,42 @@ brownie run print_strategies
 ```
 
 ## Docker setup
+
+The dockerized exporter is controlled via multiple docker commands which are invoked via multiple Makefile recipes.
+It's possible to specify three different params that control which exporters are started on which network.
+The available env variables to control the startup sequence of containers are the following:
+
+- `$PROJECT`: one of `ethereum`, `fantom`, `arbitrum`, `optimism`, `gnosis`
+- `$SERVICE`: one of `exporter`, `apy`
+- `$COMMANDS`: a list of strings delimited with whitespace pointing to brownie scripts in `./scripts/` e.g. `exporters/partners exporters/vaults`
+
+This is a flexible approach to start multiple containers on multiple networks which can be used for a given network or given exporters of a certain type and a combination of both.
+
+### Usage examples:
+
+- build the docker image:
+  `make build`
+
+- start _all_ exporters on _all_ supported networks, NOTE: this will require at least `num_exporters x num_networks` available cpu cores on your host.
+  `make up`
+
+- stop all exporters:
+  `make down`
+
+- start only the vaults exporter for ethereum:
+  `PROJECT=ethereum SERVICE=exporter COMMANDS=exporters/vaults make up`
+
+- start only the treasury exporters for all supported networks:
+  `make treasury`
+
+- start all available exporters on arbitrum:
+  `PROJECT=arbitrum make up`
+
+- show the logs of all exporters on arbitrum:
+  `FILTER=arbitrum make logs`
+
+- stop all containers matching a string in their name, e.g. fantom:
+  `FILTER=fantom make down`
 
 ### Grafana dashboard
 
