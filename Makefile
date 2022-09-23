@@ -3,9 +3,6 @@ ifdef FLAGS
 	flags += $(FLAGS)
 endif
 
-# define a default filter
-filter := $(if $(FILTER),$(FILTER),exporter)
-
 #######################################
 # specify all supported networks here #
 #######################################
@@ -53,6 +50,7 @@ all-networks: infra
 	done
 
 down:
+	$(eval filter = $(if $(FILTER),$(FILTER),exporter))
 	docker ps -a -q --filter="name=$(filter)" | xargs -L 1 docker rm -f 2> /dev/null || true
 
 .PHONY: build
@@ -60,6 +58,7 @@ build:
 	$(dashboards_command) build $(BUILD_FLAGS)
 
 logs:
+	$(eval filter = $(if $(FILTER),$(FILTER),exporter))
 	docker ps -a -q --filter="name=$(filter)"| xargs -L 1 -P $$(docker ps --filter="name=$(filter)" | wc -l) docker logs --since 30s -ft
 
 .ONESHELL:
@@ -103,6 +102,7 @@ rebuild: down build up
 all: rebuild
 scratch: clean-volumes build up
 clean_volumes: down
+	$(eval filter = $(if $(FILTER),$(FILTER),exporter))
 	docker volume ls -q --filter="name=$(filter)" | xargs -L 1 docker volume rm 2> /dev/null || true
 clean-exporter-volumes: clean_volumes
 dashboards-clean-volumes: clean-exporter-volumes
