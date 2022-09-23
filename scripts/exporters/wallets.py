@@ -31,7 +31,7 @@ def main():
 def export_snapshot(snapshot, ts):
     start = time()
     from yearn.yearn import _yearn_lite
-    block = closest_block_after_timestamp(ts)
+    block = closest_block_after_timestamp(ts, wait_for=True)
     assert block is not None, "no block after timestamp found"
     _yearn_lite().export_wallets(block, ts)
     logger.info("exported wallets snapshot %s took %.3fs", snapshot, time() - start)

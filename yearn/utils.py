@@ -2,6 +2,7 @@ import json
 import logging
 import threading
 from functools import lru_cache
+from time import sleep
 from typing import List
 
 import eth_retry
@@ -57,7 +58,17 @@ def get_block_timestamp(height):
 
 
 @memory.cache()
-def closest_block_after_timestamp(timestamp: int) -> int:
+def closest_block_after_timestamp(timestamp: int, wait_for: bool = False) -> int:
+    """
+    Set `wait_for = True` to make this work for future `timestamp` values.
+    """
+
+    while wait_for:
+        try:
+            return closest_block_after_timestamp(timestamp)
+        except IndexError:
+            sleep(.2)
+            
     logger.debug('closest block after timestamp %d', timestamp)
     height = chain.height
     lo, hi = 0, height
