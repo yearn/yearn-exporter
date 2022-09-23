@@ -8,7 +8,7 @@ networks:
   infra_yearn-exporter:
     external: true
 
-x-common-envs: &common-envs
+x-envs: &envs
   - SKIP_WALLET_STATS:
   - SENTRY_ENVIRONMENT: ${SENTRY_ENVIRONMENT:-development}
   - SENTRY_RELEASE:
@@ -27,7 +27,7 @@ x-common-envs: &common-envs
   # This is a temporary hack that can be removed once deps support eth_hash==0.5.0. Creds to bunny for finding this.
   - ETH_HASH_BACKEND: ${ETH_HASH_BACKEND:-pysha3}
 
-x-common-apy-envs: &common-apy-envs
+x-apy-envs: &apy-envs
   - AWS_ACCESS_KEY:
   - AWS_ACCESS_SECRET:
   - AWS_BUCKET:
@@ -37,7 +37,7 @@ x-common-apy-envs: &common-apy-envs
   - EXPORT_MODE:
   - DEBUG_ADDRESS:
 
-x-common-network-envs: &common-network-envs
+x-network-envs: &network-envs
   - BROWNIE_NETWORK:
   - WEB3_PROVIDER:
   - EXPLORER:
@@ -48,13 +48,13 @@ x-common-network-envs: &common-network-envs
   - ARBISCAN_TOKEN:
   - OPTISCAN_TOKEN:
 
-x-common-postgres-envs: &common-postgres-envs
+x-postgres-envs: &postgres-envs
   - PGHOST: postgres
   - PGDATABASE: postgres
   - PGUSER: postgres
   - PGPASSWORD: yearn-exporter
 
-x-common-volumes: &common-volumes
+x-volumes: &volumes
   - brownie:/root/.brownie
   - cache:/app/yearn-exporter/cache
 
@@ -62,11 +62,12 @@ services:
   exporter:
     build: .
     image: yearn-exporter
-    volumes: *common-volumes
+    volumes: *volumes
     environment:
-      <<: *common-envs
-      <<: *common-postgres-envs
-      <<: *common-network-envs
+      <<: *envs
+      <<: *postgres-envs
+      <<: *network-envs
+      <<: *apy-envs
     networks:
       - infra_yearn-exporter
     external_links:

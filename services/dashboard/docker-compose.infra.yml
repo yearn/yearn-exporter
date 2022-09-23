@@ -18,7 +18,7 @@ x-grafana-envs: &grafana-envs
   - GF_RENDERING_CALLBACK_URL: http://grafana:3000/
   - GF_LOG_FILTERS: rendering:debug
 
-x-common-postgres-envs: &common-postgres-envs
+x-postgres-envs: &postgres-envs
   - PGHOST: postgres
   - PGDATABASE: postgres
   - PGUSER: postgres
@@ -61,7 +61,7 @@ services:
       - 3000:3000
     environment:
       <<: *grafana-envs
-      <<: *common-postgres-envs
+      <<: *postgres-envs
     volumes:
       - grafana_data:/var/lib/grafana
       - ./grafana/provisioning/:/etc/grafana/provisioning/
