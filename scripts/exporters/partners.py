@@ -28,7 +28,7 @@ def main():
 @time_tracking
 def export_snapshot(snapshot, ts):
     start = time()
-    block = chain[closest_block_after_timestamp(snapshot.timestamp())]
+    block = chain[closest_block_after_timestamp(snapshot.timestamp(), wait_for=True)]
     export_partners(block)
     duration = time() - start
     output_duration.export(duration, 1, "partners", block.timestamp)

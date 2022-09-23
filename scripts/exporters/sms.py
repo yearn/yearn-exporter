@@ -30,7 +30,7 @@ def main():
 def export_snapshot(snapshot, ts):
     start = time()
     from yearn.treasury.treasury import _sms
-    block = closest_block_after_timestamp(ts)
+    block = closest_block_after_timestamp(ts, wait_for=True)
     assert block is not None, "no block after timestamp found"
     _sms().export(block, ts)
     logger.info("exported sms snapshot %s took %.3fs", snapshot, time() - start)

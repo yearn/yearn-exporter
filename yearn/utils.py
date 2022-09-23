@@ -57,7 +57,17 @@ def get_block_timestamp(height):
 
 
 @memory.cache()
-def closest_block_after_timestamp(timestamp: int) -> int:
+def closest_block_after_timestamp(timestamp: int, wait_for: bool = False) -> int:
+    """
+    Set `wait_for = True` to make this work for future `timestamp` values.
+    """
+
+    while wait_for:
+        try:
+            return closest_block_after_timestamp(timestamp)
+        except IndexError:
+            pass
+            
     logger.debug('closest block after timestamp %d', timestamp)
     height = chain.height
     lo, hi = 0, height
