@@ -73,12 +73,17 @@ up:
 .ONESHELL:
 console:
 	$(eval BROWNIE_NETWORK = $(if $(BROWNIE_NETWORK),$(BROWNIE_NETWORK),mainnet))
-	docker-compose --file services/dashboard/docker-compose.yml --project-directory . run --entrypoint "brownie console --network $(BROWNIE_NETWORK)" exporter
+	docker-compose --file services/dashboard/docker-compose.yml --project-directory . run --rm --entrypoint "brownie console --network $(BROWNIE_NETWORK)" exporter
+
+.ONESHELL:
+shell:
+	$(eval BROWNIE_NETWORK = $(if $(BROWNIE_NETWORK),$(BROWNIE_NETWORK),mainnet))
+	docker-compose --file services/dashboard/docker-compose.yml --project-directory . run --rm --entrypoint bash exporter
 
 .ONESHELL:
 debug-apy:
-	$(eval NETWORK = $(if $(NETWORK),$(NETWORK),ethereum))
-	DEBUG=true DEBUG_ADDRESS=$(DEBUG_ADDRESS) NETWORK=$(NETWORK) COMMANDS=debug_apy ./run.sh
+	$(eval BROWNIE_NETWORK = $(if $(BROWNIE_NETWORK),$(BROWNIE_NETWORK),mainnet))
+	DEBUG=true docker-compose --file services/dashboard/docker-compose.yml --project-directory . run --rm --entrypoint "brownie run --network $(BROWNIE_NETWORK) debug_apy -I" exporter
 	FILTER=debug make logs
 
 list-networks:

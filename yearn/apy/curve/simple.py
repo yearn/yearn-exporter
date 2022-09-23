@@ -1,6 +1,7 @@
 from dataclasses import dataclass
 import logging
 import os
+from pprint import pformat
 from time import time
 
 from brownie import ZERO_ADDRESS, chain, interface
@@ -259,7 +260,7 @@ class _ConvexVault:
         cvx_net_apy = ((1 + cvx_net_farmed_apy) * (1 + pool_apy)) - 1
 
         if os.getenv("DEBUG", None):
-            logger.info(Debug.extract_variables(locals()))
+            logger.info(pformat(Debug().collect_variables(locals())))
 
         # 0.3.5+ should never be < 0% because of management
         if cvx_net_apy < 0 and Version(self.vault.api_version) >= Version("0.3.5"): 
@@ -293,7 +294,7 @@ class _ConvexVault:
         cvx_apr_minus_keep_crv = ((1 - cvx_fee) * cvx_boost * base_apr) * ((1 - cvx_keep_crv) + cvx_printed_as_crv)
 
         if os.getenv("DEBUG", None):
-            logger.info(Debug.extract_variables(locals()))
+            logger.info(pformat(Debug().collect_variables(locals())))
 
         return ConvexDetailedApyData(cvx_apr, cvx_apr_minus_keep_crv, cvx_keep_crv, self._debt_ratio, convex_reward_apr)
 
