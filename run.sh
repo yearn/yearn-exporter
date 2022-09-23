@@ -5,10 +5,6 @@ if [[ -z "${NETWORK}" ]]; then
   echo "please provide a network via \$NETWORK."
   exit 1
 fi
-if [[ -z "${SERVICE}" ]]; then
-  echo "please provide a services to run via \$SERVICE."
-  exit 1
-fi
 if [[ -z "${COMMANDS}" ]]; then
   echo "please provide a list of commands to run via \$COMMANDS."
   exit 1
@@ -64,7 +60,7 @@ for CMD in "${commands[@]}"; do
     -p $NETWORK run \
     --name $CONTAINER_NAME \
     --detach \
-    $SERVICE $CMD
+    exporter $CMD
   # hack to manually patch the container docker config so the container is restarted
   # if the docker-compose run failed
   docker container update --restart on-failure $CONTAINER_NAME

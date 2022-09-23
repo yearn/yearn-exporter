@@ -73,15 +73,3 @@ services:
       - infra_postgres_1:postgres
       - infra_victoria-metrics_1:victoria-metrics
     restart: on-failure
-
-  apy:
-    build: .
-    image: yearn-exporter
-    volumes: *common-volumes
-    environment:
-      <<: *common-envs
-      <<: *common-network-envs
-      <<: *common-apy-envs
-    networks:
-      - infra_yearn-exporter
-    restart: on-failure

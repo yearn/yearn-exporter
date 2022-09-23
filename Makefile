@@ -41,12 +41,12 @@ infra:
 
 # exporter specifc scripts
 single-network: infra
-	NETWORK=$(NETWORK) SERVICE=$(SERVICE) COMMANDS="$(COMMANDS)" DEBUG=$(DEBUG) ./run.sh
+	NETWORK=$(NETWORK) COMMANDS="$(COMMANDS)" DEBUG=$(DEBUG) ./run.sh
 
 .ONESHELL:
 all-networks: infra
 	for network in $(networks); do
-		NETWORK=$$network SERVICE=$(SERVICE) COMMANDS="$(COMMANDS)" DEBUG=$(DEBUG) make single-network
+		NETWORK=$$network COMMANDS="$(COMMANDS)" DEBUG=$(DEBUG) make single-network
 	done
 
 down:
@@ -63,12 +63,11 @@ logs:
 
 .ONESHELL:
 up:
-	$(eval SERVICE = $(if $(SERVICE),$(SERVICE),exporter))
 	$(eval COMMANDS = $(if $(COMMANDS),$(COMMANDS),$(exporter_scripts)))
 	if [ "$(NETWORK)" != "" ]; then
-		NETWORK=$(NETWORK) SERVICE=$(SERVICE) COMMANDS="$(COMMANDS)" DEBUG=$(DEBUG) make single-network logs
+		NETWORK=$(NETWORK) COMMANDS="$(COMMANDS)" DEBUG=$(DEBUG) make single-network logs
 	else
-		NETWORK=$(NETWORK) SERVICE=$(SERVICE) COMMANDS="$(COMMANDS)" DEBUG=$(DEBUG) make all-networks logs
+		NETWORK=$(NETWORK) COMMANDS="$(COMMANDS)" DEBUG=$(DEBUG) make all-networks logs
 	fi
 
 .ONESHELL:
@@ -79,11 +78,16 @@ console:
 .ONESHELL:
 debug-apy:
 	$(eval NETWORK = $(if $(NETWORK),$(NETWORK),ethereum))
-	DEBUG=true DEBUG_ADDRESS=$(DEBUG_ADDRESS) NETWORK=$(NETWORK) SERVICE=apy COMMANDS=debug_apy ./run.sh
+	DEBUG=true DEBUG_ADDRESS=$(DEBUG_ADDRESS) NETWORK=$(NETWORK) COMMANDS=debug_apy ./run.sh
 	FILTER=debug make logs
 
+list-networks:
+	@echo "supported networks: $(networks)"
+
+list-commands:
+	@echo "supported exporter commands: $(exporter_scripts)"
+
 # some convenience aliases
-exporters: SERVICE=exporter
 exporters: COMMANDS=$(exporter_scripts)
 exporters: up
 
@@ -153,7 +157,6 @@ gnosis: exporters logs
 ############################
 
 # Treasury Exporters
-treasury: SERVICE=exporter
 treasury: FILTER=treasury
 treasury: COMMANDS="exporters/treasury"
 treasury: up
@@ -162,7 +165,6 @@ logs-treasury: FILTER=treasury
 logs-treasury: logs
 
 # Treasury TX Exporters
-treasury-tx: SERVICE=exporter
 treasury-tx: COMMANDS="exporters/treasury_transactions"
 treasury-tx: FILTER=treasury_transactions
 treasury-tx: up
@@ -171,6 +173,5 @@ logs-treasury-tx: FILTER=treasury_transactions
 logs-treasury-tx: logs
 
 # apy scripts
-apy: SERVICE=apy
 apy: COMMANDS=s3
 apy: up

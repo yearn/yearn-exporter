@@ -51,7 +51,6 @@ It's possible to specify three different params that control which exporters are
 The available env variables to control the startup sequence of containers are the following:
 
 - `$NETWORK`: one of `ethereum`, `fantom`, `arbitrum`, `optimism`, `gnosis`
-- `$SERVICE`: one of `exporter`, `apy`
 - `$COMMANDS`: a list of strings delimited with whitespace pointing to brownie scripts in `./scripts/` e.g. `exporters/partners exporters/vaults`
 
 This is a flexible approach to start multiple containers on multiple networks which can be used for a given network or given exporters of a certain type and a combination of both.
@@ -68,7 +67,7 @@ This is a flexible approach to start multiple containers on multiple networks wh
   `make down`
 
 - start only the vaults exporter for ethereum:
-  `NETWORK=ethereum SERVICE=exporter COMMANDS=exporters/vaults make up`
+  `NETWORK=ethereum COMMANDS=exporters/vaults make up`
 
 - start only the treasury exporters for all supported networks:
   `make treasury`
