@@ -2,6 +2,7 @@ import json
 import logging
 import threading
 from functools import lru_cache
+from time import sleep
 from typing import List
 
 import eth_retry
@@ -66,7 +67,7 @@ def closest_block_after_timestamp(timestamp: int, wait_for: bool = False) -> int
         try:
             return closest_block_after_timestamp(timestamp)
         except IndexError:
-            pass
+            sleep(.2)
             
     logger.debug('closest block after timestamp %d', timestamp)
     height = chain.height
