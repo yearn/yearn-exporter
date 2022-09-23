@@ -1,4 +1,5 @@
 import os
+import logging
 from typing import Any, Dict, Optional, Union
 
 from brownie import chain, convert
@@ -12,13 +13,16 @@ from yearn.prices.uniswap.v3 import UniswapV3, uniswap_v3
 from yearn.typing import Address, AddressOrContract, Block
 from yearn.utils import contract, contract_creation_block
 
+logger = logging.getLogger(__name__)
 Uniswap = Union[UniswapV1,UniswapV2Multiplexer,UniswapV3]
 
 UNISWAPS: Dict[str,Optional[Uniswap]] = {
     'v1': uniswap_v1
 }
 # disable v2 and v3 pools during debugging
-if os.getenv("DEBUG", None) is None:
+if os.getenv("DEBUG", None):
+    logger.info("DEBUG is on, disabling uniswap v2 and v3 pool generation for faster debugging.")
+else:
     UNISWAPS['v2'] = uniswap_v2
     UNISWAPS['v3'] = uniswap_v3
 
