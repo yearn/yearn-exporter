@@ -57,6 +57,12 @@ This is a flexible approach to start multiple containers on multiple networks wh
 
 ### Usage examples:
 
+- list supported networks:
+  `make list-networks`
+
+- list supported exporter commands:
+  `make list-commands`
+
 - build the docker image:
   `make build`
 
