@@ -97,5 +97,4 @@ def setup_middleware():
         w3.middleware_onion.add(catch_and_retry_middleware)
         
         if chain.id in poa_chains:
-            raise Exception('it works')
             w3.middleware_onion.inject(geth_poa_middleware, name='poa', layer=0)
