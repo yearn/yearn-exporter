@@ -47,11 +47,12 @@ brownie run print_strategies
 ## Docker setup
 
 The dockerized exporter is controlled via multiple docker commands which are invoked via multiple Makefile recipes.
-It's possible to specify three different params that control which exporters are started on which network.
-The available env variables to control the startup sequence of containers are the following:
+It's possible to specify multiple Makefile args that control which exporters are started on which network.
+The available args to control the startup sequence of containers are the following:
 
-- `$NETWORK`: one of `ethereum`, `fantom`, `arbitrum`, `optimism`, `gnosis`
-- `$COMMANDS`: a list of strings delimited with whitespace pointing to brownie scripts in `./scripts/` e.g. `exporters/partners exporters/vaults`
+- `network`: one of `ethereum`, `fantom`, `arbitrum`, `optimism`, `gnosis`, see `make list-networks`
+- `commands`: a list of strings delimited with whitespace pointing to brownie scripts in `./scripts/` e.g. `exporters/partners exporters/vaults`, see `make list-commands`
+- `filter`: used for `make logs` and `make down` to match the container name substring.
 
 This is a flexible approach to start multiple containers on multiple networks which can be used for a given network or given exporters of a certain type and a combination of both.
 
@@ -73,24 +74,27 @@ This is a flexible approach to start multiple containers on multiple networks wh
   `make down`
 
 - start only the vaults exporter for ethereum:
-  `NETWORK=ethereum COMMANDS=exporters/vaults make up`
+  `make up network=ethereum commands="exporters/vaults"`
+
+- start only the vaults exporter for all supported networks:
+  `make up commands="exporters/vaults"`
 
 - start only the treasury exporters for all supported networks:
   `make treasury`
 
 - start all available exporters on arbitrum:
-  `NETWORK=arbitrum make up`
+  `make up network=arbitrum`
 
 - show the logs of all exporters on arbitrum:
-  `FILTER=arbitrum make logs`
+  `make logs network=arbitrum`
 
-- stop all containers matching a string in their name, e.g. fantom:
-  `FILTER=fantom make down`
+- stop all containers matching a string in their name, e.g. treasury:
+  `make down filter=treasury`
 
 ### Grafana Dashboard & Exporters
 
 ```bash
-# Grafana 
+# Grafana
 export GF_SECURITY_ADMIN_USER=<YOUR_ADMIN_USER> # change this if you want to have a different admin user name, default is admin
 export GF_SECURITY_ADMIN_PASSWORD=<YOUR_ADMIN_PASSWORD> # change this if you want to have a different admin password, default is admin
 # Ethereum

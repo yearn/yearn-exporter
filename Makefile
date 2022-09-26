@@ -1,3 +1,36 @@
+SHELL := /bin/bash
+
+NETWORK ?= ethereum
+export
+BROWNIE_NETWORK ?= mainnet
+export
+
+.ONESHELL:
+get-network-name:
+ifneq ($(shell echo $(network) | egrep "^ethereum$$|^eth$$|^ETH$$|^mainnet$$"),)
+	$(eval NETWORK = ethereum)
+	$(eval BROWNIE_NETWORK = mainnet)
+else ifneq ($(shell echo $(network) | egrep "^ftm$$|^FTM$$|^fantom$$"),)
+	$(eval NETWORK = fantom)
+	$(eval BROWNIE_NETWORK = ftm-main)
+else ifneq ($(shell echo $(network) | egrep "^arrb$$|^ARRB$$|arbi$$|^arbitrum$$"),)
+	$(eval NETWORK = arbitrum)
+	$(eval BROWNIE_NETWORK = arbitrum-main)
+else ifneq ($(shell echo $(network) | egrep "^op$$|^OPTI$$|^opti$$|^optimism$$"),)
+	$(eval NETWORK = optimism)
+	$(eval BROWNIE_NETWORK = optimism-main)
+else ifneq ($(shell echo $(network) | egrep "^gno$$|^GNO$$|^gnosis$$"),)
+	$(eval NETWORK = gnosis)
+	$(eval BROWNIE_NETWORK = xdai-main)
+else ifeq ($(network),)
+		@echo "No valid network specified. You can specify a network by passing network=<NETWORK>. Supported networks: '$(supported_networks)'"
+		$(eval undefine NETWORK)
+		$(eval undefine BROWNIE_NETWORK)
+endif
+	if [[ $${NETWORK} != "" ]]; then
+		@echo "Running on network '$(NETWORK)'"
+	fi
+
 flags := --remove-orphans --detach
 ifdef FLAGS
 	flags += $(FLAGS)
@@ -6,7 +39,7 @@ endif
 #######################################
 # specify all supported networks here #
 #######################################
-networks := ethereum fantom arbitrum optimism gnosis
+supported_networks := ethereum fantom arbitrum optimism gnosis
 
 ###############################################
 # specify all supported exporter scripts here #
@@ -41,50 +74,52 @@ infra:
 
 # exporter specifc scripts
 single-network: infra
-	NETWORK=$(NETWORK) COMMANDS="$(COMMANDS)" DEBUG=$(DEBUG) ./run.sh
+	NETWORK=$(network) COMMANDS="$(commands)" DEBUG=$(DEBUG) ./run.sh
 
 .ONESHELL:
 all-networks: infra
-	for network in $(networks); do
-		NETWORK=$$network COMMANDS="$(COMMANDS)" DEBUG=$(DEBUG) make single-network
+	for network in $(supported_networks); do
+		network=$$network commands="$(commands)" DEBUG=$(DEBUG) make single-network
 	done
 
-down:
-	$(eval filter = $(if $(FILTER),$(FILTER),exporter))
+down: get-network-name
+	$(eval filter = $(if $(filter),$(filter),$(if $(NETWORK),$(NETWORK),exporter)))
+	echo "stopping containers for filter: $(filter)"
 	docker ps -a -q --filter="name=$(filter)" | xargs -L 1 docker rm -f 2> /dev/null || true
+	echo "running containers:"
+	docker ps
 
 .PHONY: build
 build:
 	$(dashboards_command) build $(BUILD_FLAGS)
 
-logs:
-	$(eval filter = $(if $(FILTER),$(FILTER),exporter))
-	docker ps -a -q --filter="name=$(filter)"| xargs -L 1 -P $$(docker ps --filter="name=$(filter)" | wc -l) docker logs --since 30s -ft
+logs: get-network-name
+	$(eval filter = $(if $(filter),$(filter),$(if $(NETWORK),$(NETWORK),exporter)))
+	$(eval since = $(if $(since),$(since),30s))
+	docker ps -a -q --filter="name=$(filter)"| xargs -L 1 -P $$(docker ps --filter="name=$(filter)" | wc -l) docker logs --since $(since) -ft
+
 
 .ONESHELL:
-up:
-	$(eval COMMANDS = $(if $(COMMANDS),$(COMMANDS),$(exporter_scripts)))
+.SILENT:
+up: get-network-name
+	$(eval commands = $(if $(commands),$(commands),$(exporter_scripts)))
 	if [ "$(NETWORK)" != "" ]; then
-		NETWORK=$(NETWORK) COMMANDS="$(COMMANDS)" DEBUG=$(DEBUG) make single-network logs
+		make single-network network=$(NETWORK) commands="$(commands)" logs
 	else
-		NETWORK=$(NETWORK) COMMANDS="$(COMMANDS)" DEBUG=$(DEBUG) make all-networks logs
+		make all-networks commands="$(commands)" logs
 	fi
 
-.ONESHELL:
-console:
+console: get-network-name
 	$(eval BROWNIE_NETWORK = $(if $(BROWNIE_NETWORK),$(BROWNIE_NETWORK),mainnet))
 	docker-compose --file services/dashboard/docker-compose.yml --project-directory . run --rm --entrypoint "brownie console --network $(BROWNIE_NETWORK)" exporter
 
-.ONESHELL:
-shell:
-	$(eval BROWNIE_NETWORK = $(if $(BROWNIE_NETWORK),$(BROWNIE_NETWORK),mainnet))
+shell: get-network-name
 	docker-compose --file services/dashboard/docker-compose.yml --project-directory . run --rm --entrypoint bash exporter
 
 .ONESHELL:
-debug-apy:
-	$(eval BROWNIE_NETWORK = $(if $(BROWNIE_NETWORK),$(BROWNIE_NETWORK),mainnet))
+debug-apy: get-network-name
 	DEBUG=true docker-compose --file services/dashboard/docker-compose.yml --project-directory . run --rm --entrypoint "brownie run --network $(BROWNIE_NETWORK) debug_apy -I" exporter
-	FILTER=debug make logs
+	make logs filter=debug
 
 list-networks:
 	@echo "supported networks: $(networks)"
@@ -93,8 +128,8 @@ list-commands:
 	@echo "supported exporter commands: $(exporter_scripts)"
 
 # some convenience aliases
-exporters: COMMANDS=$(exporter_scripts)
-exporters: up
+exporters:
+	make up commands="$(exporter_scripts)"
 
 exporters-up: exporters
 exporters-down: down
@@ -110,18 +145,18 @@ logs-all: logs
 rebuild: down build up
 all: rebuild
 scratch: clean-volumes build up
-clean_volumes: down
-	$(eval filter = $(if $(FILTER),$(FILTER),exporter))
+clean-volumes: down
+	$(eval filter = $(if $(filter),$(filter),$(if $(NETWORK),$(NETWORK),exporter)))
 	docker volume ls -q --filter="name=$(filter)" | xargs -L 1 docker volume rm 2> /dev/null || true
-clean-exporter-volumes: clean_volumes
+clean-exporter-volumes: clean-volumes
 dashboards-clean-volumes: clean-exporter-volumes
 
 tvl-clean-volumes:
-	$(tvl_command) down -v
+	$(tvl_ command) down -v
 
-clean_cache: FILTER=cache
-clean-cache: clean_volumes
-dashboards-clean-cache: clean_cache
+clean-cache:
+	make clean-volumes filter=cache
+dashboards-clean-cache: clean-cache
 
 
 ############################
@@ -129,54 +164,47 @@ dashboards-clean-cache: clean_cache
 ############################
 
 # Ethereum
-ethereum: NETWORK=ethereum
-ethereum: FILTER=ethereum
-ethereum: exporters logs
+ethereum:
+	make up logs network=ethereum
 
 # Ethereum aliases
 eth: ethereum
 mainnet: ethereum
 
 # Fantom
-fantom: NETWORK=fantom
-fantom: FILTER=fantom
-fantom: exporters logs
+fantom:
+	make up logs network=fantom
 
 # Arbitrum Chain
-arbitrum: NETWORK=arbitrum
-arbitrum: FILTER=arbitrum
-arbitrum: exporters logs
+arbitrum:
+	make up logs network=arbitrum
 
 # Optimism Chain
-optimism: NETWORK=optimism
-optimism: FILTER=optimism
-optimism: exporters logs
+optimism:
+	make up logs network=optimism
 
 # Gnosis Chain
-gnosis: NETWORK=gnosis
-gnosis: FILTER=gnosis
-gnosis: exporters logs
+gnosis:
+	make up logs network=gnosis
 
 ############################
 # Exporter-specifc recipes #
 ############################
 
 # Treasury Exporters
-treasury: FILTER=treasury
-treasury: COMMANDS="exporters/treasury"
-treasury: up
+treasury:
+	make up filter=treasury commands="exporters/treasury"
 
-logs-treasury: FILTER=treasury
-logs-treasury: logs
+logs-treasury:
+	make logs filter=treasury
 
 # Treasury TX Exporters
-treasury-tx: COMMANDS="exporters/treasury_transactions"
-treasury-tx: FILTER=treasury_transactions
-treasury-tx: up
+treasury-tx:
+	make up filter=treasury_transactions commands="exporters/treasury_transactions"
 
-logs-treasury-tx: FILTER=treasury_transactions
-logs-treasury-tx: logs
+logs-treasury-tx:
+	make logs filter=treasury_transactions
 
 # apy scripts
-apy: COMMANDS=s3
+apy: commands=s3
 apy: up
