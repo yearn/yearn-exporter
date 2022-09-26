@@ -1,4 +1,3 @@
-from http.client import NETWORK_AUTHENTICATION_REQUIRED
 import logging
 
 import eth_retry
@@ -9,7 +8,7 @@ from eth_utils import function_signature_to_4byte_selector as fourbyte
 from requests import Session
 from requests.adapters import HTTPAdapter
 from web3 import HTTPProvider
-from web3.middleware import filter
+from web3.middleware import filter, geth_poa_middleware
 from yearn.cache import memory
 from yearn.middleware import yearn_filter
 from yearn.networks import Network
@@ -44,6 +43,8 @@ CACHED_CALLS = [
 ]
 
 CACHED_CALLS = [encode_hex(fourbyte(data)) for data in CACHED_CALLS]
+
+poa_chains = [Network.Optimism]
 
 
 def should_cache(method, params):
@@ -94,3 +95,7 @@ def setup_middleware():
         w3.middleware_onion.add(yearn_filter.local_filter_middleware)
         w3.middleware_onion.add(cache_middleware)
         w3.middleware_onion.add(catch_and_retry_middleware)
+        
+        if chain.id in poa_chains:
+            raise Exception('it works')
+            w3.middleware_onion.inject(geth_poa_middleware, name='poa', layer=0)
