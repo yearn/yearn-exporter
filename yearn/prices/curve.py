@@ -394,9 +394,11 @@ class CurveRegistry(metaclass=Singleton):
             try:
                 tvl = self.get_tvl(pool, block=block)
             except ValueError:
-                return None
+                tvl = 0
             supply = contract(token).totalSupply(block_identifier=block) / 1e18
             if supply == 0:
+                if tvl > 0:
+                    raise ValueError('curve pool has balance but no supply')
                 return 0
             return tvl / supply
 
