@@ -128,7 +128,7 @@ def get_transactions_for_block(treasury_addresses: List[Address], block: Block) 
                     'log_index': None,
                     'token': "0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE",
                     'from': tx['from'],
-                    'to': tx['to'],
+                    'to': tx['to'] if 'to' in tx else None,
                     'amount': tx['value'] / 1e18,
                     'price': magic.get_price(constants.weth, block['number']),
                     'value_usd': tx['value'] / 1e18 * magic.get_price(constants.weth, block['number']),
@@ -136,7 +136,7 @@ def get_transactions_for_block(treasury_addresses: List[Address], block: Block) 
                     'gas_price': tx['gasPrice']
                 }
                 for tx in block['transactions']
-                if tx['from'] in treasury_addresses or tx['to'] in treasury_addresses
+                if tx['from'] in treasury_addresses or ('to' in tx and tx['to'] in treasury_addresses)
             ]
         except JSONDecodeError:
             pass  # try again
