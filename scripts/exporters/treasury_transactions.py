@@ -15,7 +15,6 @@ from brownie.network.contract import _explorer_tokens
 from joblib import Parallel, delayed
 from pony.orm import TransactionIntegrityError, db_session
 from tqdm import tqdm
-from web3 import HTTPProvider, Web3
 from yearn.entities import TreasuryTx
 from yearn.events import decode_logs
 from yearn.exceptions import BatchSizeError, PriceError
@@ -119,9 +118,7 @@ def get_transactions(start: Block, end: Block) -> List[Dict]:
 def get_transactions_for_block(treasury_addresses: List[Address], block: Block) -> List[Dict]:
     while True:
         try:
-            # NOTE Need to do this the hard way to get parallelism
-            block = Web3(HTTPProvider(web3.provider.endpoint_uri)).eth.get_block(block, full_transactions=True)
-
+            block = web3.eth.get_block(block, full_transactions=True)
             return [
                 {
                     'chainid': chain.id,
