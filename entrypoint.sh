@@ -1,34 +1,12 @@
 #! /bin/bash
 set -e
 
-NETWORK=${NETWORK:-mainnet} # default to Ethereum mainnet
+BROWNIE_NETWORK=${BROWNIE_NETWORK:-mainnet} # default to Ethereum mainnet
 EXPLORER=${EXPLORER:-$DEFAULT_EXPLORER}
-
-if [[ $NETWORK == "mainnet" ]]; then
-  CHAIN_ID=1
-  # some legacy cleanup
-  if [[ ! -z "$WEB3_PROVIDER" ]]; then
-    if [[ $(brownie networks list | grep mainnet-custom) ]]; then
-      brownie networks delete mainnet-custom
-    fi
-  fi
-
-elif [[ $NETWORK == "xdai-main" ]]; then
-  CHAIN_ID=100
-
-elif [[ $NETWORK == "ftm-main" ]]; then
-  CHAIN_ID=250
-
-elif [[ $NETWORK == "arbitrum-main" ]]; then
-  CHAIN_ID=42161
-
-elif [[ $NETWORK == "optimism-main" ]]; then
-  CHAIN_ID=10
-fi
 
 # modify the network
 if [[ ! -z "$WEB3_PROVIDER" ]]; then
-  brownie networks modify $NETWORK host=$WEB3_PROVIDER chainid=$CHAIN_ID explorer=$EXPLORER
+  brownie networks modify $BROWNIE_NETWORK host=$WEB3_PROVIDER explorer=$EXPLORER
 fi
 
 if [[ $# -eq 0 ]]; then
@@ -36,5 +14,5 @@ if [[ $# -eq 0 ]]; then
   exit 1
 fi
 
-echo "Running brownie for $@ on network $NETWORK..."
-brownie run $@ --network $NETWORK -r
+echo "Running brownie for $@ on network $BROWNIE_NETWORK..."
+brownie run $@ --network $BROWNIE_NETWORK -r

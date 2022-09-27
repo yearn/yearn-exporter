@@ -1,63 +1,61 @@
+SHELL := /bin/bash
+
+NETWORK ?= ethereum
+export
+BROWNIE_NETWORK ?= mainnet
+export
+
+.ONESHELL:
+get-network-name:
+ifneq ($(shell echo $(network) | egrep "^ethereum$$|^eth$$|^ETH$$|^mainnet$$"),)
+	$(eval NETWORK = ethereum)
+	$(eval BROWNIE_NETWORK = mainnet)
+else ifneq ($(shell echo $(network) | egrep "^ftm$$|^FTM$$|^fantom$$"),)
+	$(eval NETWORK = fantom)
+	$(eval BROWNIE_NETWORK = ftm-main)
+else ifneq ($(shell echo $(network) | egrep "^arrb$$|^ARRB$$|arbi$$|^arbitrum$$"),)
+	$(eval NETWORK = arbitrum)
+	$(eval BROWNIE_NETWORK = arbitrum-main)
+else ifneq ($(shell echo $(network) | egrep "^op$$|^OPTI$$|^opti$$|^optimism$$"),)
+	$(eval NETWORK = optimism)
+	$(eval BROWNIE_NETWORK = optimism-main)
+else ifneq ($(shell echo $(network) | egrep "^gno$$|^GNO$$|^gnosis$$"),)
+	$(eval NETWORK = gnosis)
+	$(eval BROWNIE_NETWORK = xdai-main)
+else ifeq ($(network),)
+		@echo "No valid network specified. You can specify a network by passing network=<NETWORK>. Supported networks: '$(supported_networks)'"
+		$(eval undefine NETWORK)
+		$(eval undefine BROWNIE_NETWORK)
+endif
+	if [[ $${NETWORK} != "" ]]; then
+		@echo "Running on network '$(NETWORK)'"
+	fi
+
 flags := --remove-orphans --detach
 ifdef FLAGS
 	flags += $(FLAGS)
 endif
 
+#######################################
+# specify all supported networks here #
+#######################################
+supported_networks := ethereum fantom arbitrum optimism gnosis
+
+###############################################
+# specify all supported exporter scripts here #
+###############################################
+exporter_scripts := exporters/vaults exporters/treasury exporters/treasury_transactions exporters/sms exporters/transactions exporters/wallets exporters/partners
+
 # docker-compose commands
-dashboards_command 	:= docker-compose --file services/dashboard/docker-compose.yml --project-directory .
-tvl_command 		:= docker-compose --file services/tvl/docker-compose.yml --project-directory .
-test_command 		:= docker-compose --file services/dashboard/docker-compose.test.yml --project-directory .
+dashboards_command := docker-compose --file services/dashboard/docker-compose.yml --project-directory .
+tvl_command 		   := docker-compose --file services/tvl/docker-compose.yml --project-directory .
+test_command 		   := docker-compose --file services/dashboard/docker-compose.test.yml --project-directory .
 
-# treasury exporter convenience vars
-ethereum_treasury_containers := treasury-exporter 			treasury-transactions-exporter
-fantom_treasury_containers   := ftm-treasury-exporter 		ftm-treasury-transactions-exporter
-arbitrum_treasury_containers := arbi-treasury-exporter 		arbi-treasury-transactions-exporter
-gnosis_treasury_containers 	 := gnosis-treasury-exporter 	gnosis-treasury-transactions-exporter
-optimism_treasury_contrainers:= opti-treasury-exporter 		opti-treasury-transactions-exporter
-
-# less spammy output convenience vars
-ethereum_containers_lite := eth-exporter  	sms-exporter 	 		transactions-exporter 			$(ethereum_treasury_containers)
-fantom_containers_lite   := ftm-exporter 	ftm-sms-exporter 		ftm-transactions-exporter 		$(fantom_treasury_containers)
-arbitrum_containers_lite := arbi-exporter 	arbi-sms-exporter 		arbi-transactions-exporter 		$(arbitrum_treasury_containers)
-gnosis_containers_lite   := gnosis-exporter gnosis-sms-exporter 	gnosis-transactions-exporter 	$(gnosis_treasury_containers)
-optimism_containers_lite := opti-exporter 	opti-sms-exporter 		opti-transactions-exporter 		$(optimism_treasury_contrainers)
-
-# container vars
-ethereum_containers := $(ethereum_containers_lite) 	wallet-exporter 		partners-exporter
-fantom_containers 	:= $(fantom_containers_lite) 	ftm-wallet-exporter 	ftm-partners-exporter
-arbitrum_containers := $(arbitrum_containers_lite) 	arbi-wallet-exporter	arbi-partners-exporter
-gnosis_containers 	:= $(gnosis_containers_lite) 	gnosis-wallet-exporter	gnosis-partners-exporter
-optimism_containers := $(optimism_containers_lite) 	opti-wallet-exporter	opti-partners-exporter
-
-treasury_containers := 	$(ethereum_treasury_containers) $(fantom_treasury_containers) 	$(arbitrum_treasury_containers) $(gnosis_treasury_containers) 	$(optimism_treasury_contrainers)
-treasury_tx_containers := treasury-transactions-exporter ftm-treasury-transactions-exporter arbi-treasury-transactions-exporter gnosis-treasury-transactions-exporter opti-treasury-transactions-exporter
-all_containers := 		$(ethereum_containers) 			$(fantom_containers) 			$(arbitrum_containers) 			$(gnosis_containers) 			$(optimism_containers)
-
-# Basic Makefile commands
-dashboards: dashboards-up
-tvl: tvl-up
-
-logs:
-	$(dashboards_command) logs -f -t $(ethereum_containers_lite) $(fantom_containers_lite) $(arbitrum_containers_lite) $(gnosis_containers_lite) $(optimism_containers_lite)
-
-logs-all:
-	$(dashboards_command) logs -f -t $(ethereum_containers) $(fantom_containers) $(arbitrum_containers) $(gnosis_containers) $(optimism_containers)
-	
-all:
-	$(dashboards_command) down && $(dashboards_command) build --no-cache && $(dashboards_command) up $(flags)
-
-# More advanced control
-dashboards-up:
-	$(dashboards_command) up $(flags)
-
-dashboards-down:
-	$(dashboards_command) down
-
-dashboards-build:
-	$(dashboards_command) build $(BUILD_FLAGS)
-
+# TODO integrate tvl exporters into BASE recipes below
+# tvl recipes
 tvl-up:
 	$(tvl_command) up $(flags)
+tvl: tvl-up
 
 tvl-down:
 	$(tvl_command) down
@@ -65,100 +63,148 @@ tvl-down:
 tvl-build:
 	$(tvl_command) build $(BUILD_FLAGS)
 
-up: dashboards-up
-build: dashboards-build
-down: dashboards-down
+
+##########################################
+# BASE recipes for running all exporters #
+##########################################
+
+# postgres, grafana, victoria
+infra:
+	docker-compose --file services/dashboard/docker-compose.infra.yml --project-directory . -p infra up --detach
+
+# exporter specifc scripts
+single-network: infra
+	NETWORK=$(network) COMMANDS="$(commands)" DEBUG=$(DEBUG) ./run.sh
+
+.ONESHELL:
+all-networks: infra
+	for network in $(supported_networks); do
+		network=$$network commands="$(commands)" DEBUG=$(DEBUG) make single-network
+	done
+
+down: get-network-name
+	$(eval filter = $(if $(filter),$(filter),$(if $(NETWORK),$(NETWORK),exporter)))
+	echo "stopping containers for filter: $(filter)"
+	docker ps -a -q --filter="name=$(filter)" | xargs -L 1 docker rm -f 2> /dev/null || true
+	echo "running containers:"
+	docker ps
+
+.PHONY: build
+build:
+	$(dashboards_command) build $(BUILD_FLAGS)
+
+logs: get-network-name
+	$(eval filter = $(if $(filter),$(filter),$(if $(NETWORK),$(NETWORK),exporter)))
+	$(eval since = $(if $(since),$(since),30s))
+	docker ps -a -q --filter="name=$(filter)"| xargs -L 1 -P $$(docker ps --filter="name=$(filter)" | wc -l) docker logs --since $(since) -ft
+
+
+.ONESHELL:
+.SILENT:
+up: get-network-name
+	$(eval commands = $(if $(commands),$(commands),$(exporter_scripts)))
+	if [ "$(NETWORK)" != "" ]; then
+		make single-network network=$(NETWORK) commands="$(commands)" logs
+	else
+		make all-networks commands="$(commands)" logs
+	fi
+
+console: get-network-name
+	$(eval BROWNIE_NETWORK = $(if $(BROWNIE_NETWORK),$(BROWNIE_NETWORK),mainnet))
+	docker-compose --file services/dashboard/docker-compose.yml --project-directory . run --rm --entrypoint "brownie console --network $(BROWNIE_NETWORK)" exporter
+
+shell: get-network-name
+	docker-compose --file services/dashboard/docker-compose.yml --project-directory . run --rm --entrypoint bash exporter
+
+.ONESHELL:
+debug-apy: get-network-name
+	DEBUG=true docker-compose --file services/dashboard/docker-compose.yml --project-directory . run --rm --entrypoint "brownie run --network $(BROWNIE_NETWORK) debug_apy -I" exporter
+	make logs filter=debug
+
+list-networks:
+	@echo "supported networks: $(networks)"
+
+list-commands:
+	@echo "supported exporter commands: $(exporter_scripts)"
+
+# some convenience aliases
+exporters:
+	make up commands="$(exporter_scripts)"
+
+exporters-up: exporters
+exporters-down: down
+logs-exporters: logs
+exporters-logs: logs-exporters
+dashboards: up
+dashboards-up: up
+dashboards-down: down
+dashboards-build: build
+logs-all: logs
 
 # Maintenance
 rebuild: down build up
+all: rebuild
 scratch: clean-volumes build up
+clean-volumes: down
+	$(eval filter = $(if $(filter),$(filter),$(if $(NETWORK),$(NETWORK),exporter)))
+	docker volume ls -q --filter="name=$(filter)" | xargs -L 1 docker volume rm 2> /dev/null || true
+clean-exporter-volumes: clean-volumes
+dashboards-clean-volumes: clean-exporter-volumes
 
-dashboards-clean-volumes:
-	$(dashboards_command) down -v
-	
 tvl-clean-volumes:
-	$(tvl_command) down -v
+	$(tvl_ command) down -v
 
-clean-cache: dashboards-clean-cache
-
-postgres:
-	$(dashboards_command) up -d --build postgres
-
-
-# Mainnet:
-mainnet:
-	$(dashboards_command) up -d --build $(ethereum_containers) && make logs-mainnet
-
-logs-mainnet:
-	$(dashboards_command) logs -ft $(ethereum_containers_lite)
-
-stop-mainnet:
-	$(dashboards_command) stop $(ethereum_containers) && $(dashboards_command) rm $(ethereum_containers)
-
-eth:
-	make mainnet
-
-logs-eth:
-	make logs-mainnet
-
-stop-eth:
-	make stop-mainnet
+clean-cache:
+	make clean-volumes filter=cache
+dashboards-clean-cache: clean-cache
 
 
-# Fantom:
+############################
+# Network-specific recipes #
+############################
+
+# Ethereum
+ethereum:
+	make up logs network=ethereum
+
+# Ethereum aliases
+eth: ethereum
+mainnet: ethereum
+
+# Fantom
 fantom:
-	$(dashboards_command) up -d --build $(fantom_containers) && make logs-fantom
-
-logs-fantom:
-	$(dashboards_command) logs -ft $(fantom_containers_lite)
-
-stop-fantom:
-	$(dashboards_command) down $(fantom_containers) && $(dashboards_command) rm $(fantom_containers)
-
-
-# Gnosis chain:
-gnosis:
-	$(dashboards_command) up -d --build $(gnosis_containers) && make logs-gnosis
-
-logs-gnosis:
-	$(dashboards_command) logs -ft $(gnosis_containers_lite)
-
-stop-gnosis:
-	$(dashboards_command) stop $(gnosis_containers) && $(dashboards_command) rm $(gnosis_containers)
-
+	make up logs network=fantom
 
 # Arbitrum Chain
 arbitrum:
-	$(dashboards_command) up -d --build $(arbitrum_containers) && make logs-arbitrum
-
-logs-arbitrum:
-	$(dashboards_command) logs -ft $(arbitrum_containers_lite)
-
-stop-arbitrum:
-	$(dashboards_command) stop $(arbitrum_containers) && $(dashboards_command) rm $(arbitrum_containers)
-
+	make up logs network=arbitrum
 
 # Optimism Chain
 optimism:
-	$(dashboards_command) up -d --build $(optimism_containers) && make logs-optimism
+	make up logs network=optimism
 
-logs-optimism:
-	$(dashboards_command) logs -ft $(optimism_containers_lite)
+# Gnosis Chain
+gnosis:
+	make up logs network=gnosis
 
-stop-optimism:
-	$(dashboards_command) down $(optimism_containers) && $(all_command) rm $(optimism_containers)
-
+############################
+# Exporter-specifc recipes #
+############################
 
 # Treasury Exporters
 treasury:
-	$(dashboards_command) up -d --build $(treasury_containers) && make logs-treasury
+	make up filter=treasury commands="exporters/treasury"
+
+logs-treasury:
+	make logs filter=treasury
 
 # Treasury TX Exporters
 treasury-tx:
-	$(dashboards_command) up -d --build $(treasury_tx_containers) && make logs-treasury-tx
-
-logs-treasury:
-	$(dashboards_command) logs -ft $(treasury_containers)
+	make up filter=treasury_transactions commands="exporters/treasury_transactions"
 
 logs-treasury-tx:
-	$(dashboards_command) logs -ft $(treasury_tx_containers)
+	make logs filter=treasury_transactions
+
+# apy scripts
+apy: commands=s3
+apy: up
