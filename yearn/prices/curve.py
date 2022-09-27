@@ -411,8 +411,7 @@ class CurveRegistry(metaclass=Singleton):
             virtual_price = self.get_virtual_price(pool, block)
             if virtual_price:
                 return virtual_price * magic.get_price(coin, block)
-            else:
-                return sum([uc.balanceOf(pool) * magic.get_price(uc) / 10**uc.decimals() for c in coins if (uc := contract(c))])
+            return sum([balance * magic.get_price(coin) for coin, balance in self.get_balances(pool, block).items()])
         except ValueError as e:
             logger.warn(f'ValueError: {str(e)}')
             if 'No data was returned' in str(e):
