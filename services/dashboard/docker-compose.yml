@@ -37,6 +37,14 @@ x-apy-envs: &apy-envs
   - EXPORT_MODE:
   - DEBUG_ADDRESS:
 
+x-revenues-envs: &revenues-envs
+  - REVENUES_AWS_KEY_ID:
+  - REVENUES_AWS_SECRET_ACCESS_KEY:
+  - REVENUES_S3_BUCKET:
+  - REVENUES_S3_PATH:
+  - REVENUES_FROM:
+  - REVENUES_TO:
+
 x-network-envs: &network-envs
   - BROWNIE_NETWORK:
   - WEB3_PROVIDER:
@@ -50,6 +58,7 @@ x-network-envs: &network-envs
 
 x-postgres-envs: &postgres-envs
   - PGHOST: postgres
+  - PGPORT: 5432
   - PGDATABASE: postgres
   - PGUSER: postgres
   - PGPASSWORD: yearn-exporter
@@ -68,6 +77,7 @@ services:
       <<: *postgres-envs
       <<: *network-envs
       <<: *apy-envs
+      <<: *revenues-envs
     networks:
       - infra_yearn-exporter
     external_links:
