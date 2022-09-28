@@ -390,17 +390,16 @@ class CurveRegistry(metaclass=Singleton):
         token = to_address(token)
         pool = self.get_pool(token)
         # crypto pools can have different tokens, use slow method
-        if hasattr(contract(pool), 'price_oracle'):
-            try:
-                tvl = self.get_tvl(pool, block=block)
-            except ValueError:
-                tvl = 0
-            supply = contract(token).totalSupply(block_identifier=block) / 1e18
-            if supply == 0:
-                if tvl > 0:
-                    raise ValueError('curve pool has balance but no supply')
-                return 0
-            return tvl / supply
+        try:
+            tvl = self.get_tvl(pool, block=block)
+        except ValueError:
+            tvl = 0
+        supply = contract(token).totalSupply(block_identifier=block) / 1e18
+        if supply == 0:
+            if tvl > 0:
+                raise ValueError('curve pool has balance but no supply')
+            return 0
+        return tvl / supply
 
         # approximate by using the most common base token we find
         coins = self.get_underlying_coins(pool)
