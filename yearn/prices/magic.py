@@ -122,7 +122,8 @@ def find_price(
         uniswaps
     ]
     for market in markets:
-        if price:
+        # break on the first numerical price
+        if price or price == 0:
             break
         if not market:
             continue
@@ -151,6 +152,9 @@ def find_price(
     if price is None:
         logger.error(f"failed to get price for {_describe_err(token, block)}")
         raise PriceError(f'could not fetch price for {_describe_err(token, block)}')
+
+    if price == 0:
+        logger.warn("Price is 0 for token %s at block %d", token, block)
 
     return price
 

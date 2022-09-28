@@ -126,7 +126,7 @@ class VaultV1:
             info["strategy buffer"] = info.pop("min") / info.pop("max")
 
         if "token price" not in info:
-            info["token price"] = self.get_price(block=block)
+            info["token price"] = self.get_price(block=block) if info["vault total"] > 0 else 0
 
         info["tvl"] = info["vault balance"] * info["token price"]
             

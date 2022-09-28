@@ -75,30 +75,36 @@ class YearnLens(metaclass=Singleton):
         vault = contract(token)
         if hasattr(vault, 'pricePerShare'):
             try:
-                share_price, underlying, decimals = fetch_multicall(
+                share_price, underlying, decimals, supply = fetch_multicall(
                     [vault, 'pricePerShare'],
                     [vault, 'token'],
                     [vault, 'decimals'],
+                    [vault, 'totalSupply'],
                     block=block,
                     require_success=True,
                 )
             except MulticallError:
                 return None
             else:
+                if supply == 0:
+                    return 0
                 return [share_price / 10 ** decimals, underlying]
 
         # v1 vaults use getPricePerFullShare scaled to 18 decimals
         if hasattr(vault, 'getPricePerFullShare'):
             try:
-                share_price, underlying = fetch_multicall(
+                share_price, underlying, supply = fetch_multicall(
                     [vault, 'getPricePerFullShare'],
                     [vault, 'token'],
+                    [vault, 'totalSupply'],
                     block=block,
                     require_success=True,
                 )
             except MulticallError:
                 return None
             else:
+                if supply == 0:
+                    return 0
                 return [share_price / 1e18, underlying]
 
 

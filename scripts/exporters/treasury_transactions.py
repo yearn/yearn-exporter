@@ -15,7 +15,6 @@ from brownie.network.contract import _explorer_tokens
 from joblib import Parallel, delayed
 from pony.orm import TransactionIntegrityError, db_session
 from tqdm import tqdm
-from web3 import HTTPProvider, Web3
 from yearn.entities import TreasuryTx
 from yearn.events import decode_logs
 from yearn.exceptions import BatchSizeError, PriceError
@@ -119,9 +118,7 @@ def get_transactions(start: Block, end: Block) -> List[Dict]:
 def get_transactions_for_block(treasury_addresses: List[Address], block: Block) -> List[Dict]:
     while True:
         try:
-            # NOTE Need to do this the hard way to get parallelism
-            block = Web3(HTTPProvider(web3.provider.endpoint_uri)).eth.get_block(block, full_transactions=True)
-
+            block = web3.eth.get_block(block, full_transactions=True)
             return [
                 {
                     'chainid': chain.id,
@@ -131,7 +128,7 @@ def get_transactions_for_block(treasury_addresses: List[Address], block: Block) 
                     'log_index': None,
                     'token': "0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE",
                     'from': tx['from'],
-                    'to': tx['to'],
+                    'to': tx['to'] if 'to' in tx else None,
                     'amount': tx['value'] / 1e18,
                     'price': magic.get_price(constants.weth, block['number']),
                     'value_usd': tx['value'] / 1e18 * magic.get_price(constants.weth, block['number']),
@@ -139,7 +136,7 @@ def get_transactions_for_block(treasury_addresses: List[Address], block: Block) 
                     'gas_price': tx['gasPrice']
                 }
                 for tx in block['transactions']
-                if tx['from'] in treasury_addresses or tx['to'] in treasury_addresses
+                if tx['from'] in treasury_addresses or ('to' in tx and tx['to'] in treasury_addresses)
             ]
         except JSONDecodeError:
             pass  # try again

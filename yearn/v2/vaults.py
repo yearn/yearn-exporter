@@ -206,7 +206,7 @@ class Vault:
         for strategy in self.strategies:
             info["strategies"][strategy.unique_name] = strategy.describe(block=block)
 
-        info["token price"] = magic.get_price(self.token, block=block)
+        info["token price"] = magic.get_price(self.token, block=block) if info['totalSupply'] > 0 else 0
         if "totalAssets" in info:
             info["tvl"] = info["token price"] * info["totalAssets"]
 
