@@ -208,3 +208,7 @@ logs-treasury-tx:
 # apy scripts
 apy: commands=s3
 apy: up
+
+# revenue scripts
+revenues:
+	make up network=eth commands=revenues
