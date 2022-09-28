@@ -122,7 +122,8 @@ def find_price(
         uniswaps
     ]
     for market in markets:
-        if price is not None:
+        # break on the first numerical price
+        if price or price == 0:
             break
         if not market:
             continue
