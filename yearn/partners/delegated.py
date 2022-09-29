@@ -88,23 +88,28 @@ def delegated_deposit_balances():
     for vault, vdeets in deposits.items():
         for depositor, ddeets in vdeets.items():
             for partner, pdeets in ddeets.items():
-                vault_balances = balances[vault]
-                depositor_balances = vault_balances[depositor]
-                partner_balances = depositor_balances[partner]
+
+                partner_balances = _unwrap(balances, vault, depositor, partner)
                 if len(partner_balances) == 0:
                     partner_balances[0] = 0
-                vault_withdrawals = withdrawals[vault]
-                depositor_withdrawals = vault_withdrawals[depositor]
-                partner_withdrawals = depositor_withdrawals[partner]
+
+                partner_withdrawals = _unwrap(withdrawals, vault, depositor, partner)
+
                 blocks = list(pdeets.keys()) + list(partner_withdrawals.keys())
                 for block in blocks:
-                    vault_deposits = deposits[vault]
-                    depositor_deposits = vault_deposits[depositor]
-                    partner_deposits = depositor_deposits[partner]
+                    partner_deposits = _unwrap(deposits, vault, depositor, partner)
                     balance = partner_deposits[block]
                     if len(partner_withdrawals) > 0:
                         balance = max(balance - partner_withdrawals[block], 0)
                     partner_balances[block] = balance
     return balances
+
+
+def _unwrap(root_dict, vault, depositor, partner):
+    vault_based = root_dict[vault]
+    depositor_based = vault_based[depositor]
+    partner_based = depositor_based[partner]
+    return partner_based
+
 
 DELEGATED_BALANCES = delegated_deposit_balances()
