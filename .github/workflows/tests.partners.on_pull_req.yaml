@@ -5,7 +5,7 @@ on:
     branches: [ master ]
     types: [ labeled ]
     paths:
-      - '**/partners.py'
+      - '**/partners_summary.py'
       - '**/snapshot.py'
       - '**/tests.partners.on_pull_req.yaml'
       - '**/contracts.py'
@@ -77,9 +77,9 @@ jobs:
         # continue-on-error is needed because this step will raise an exception on Windows, but will still correctly set the host.
         continue-on-error: true
 
-      - name: Test partners.py
+      - name: Test partners_summary.py
         env:
           # Explorer tokens for all chains:
           ETHERSCAN_TOKEN: ${{ secrets.ETHERSCAN_TOKEN }}
           FTMSCAN_TOKEN: ${{ secrets.FTMSCAN_TOKEN }}
-        run: brownie run partners --network ${{ matrix.network }}
+        run: brownie run partners_summary --network ${{ matrix.network }}
