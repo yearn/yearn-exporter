@@ -23,6 +23,7 @@ from yearn.multicall2 import batch_call
 from yearn.networks import Network
 from yearn.partners.charts import make_partner_charts
 from yearn.partners.constants import OPEX_COST, get_tier
+from yearn.partners.delegated import DELEGATED_BALANCES
 from yearn.prices import magic
 from yearn.utils import contract, contract_creation_block, get_block_timestamp
 from yearn.v2.registry import Registry
@@ -247,7 +248,43 @@ class GearboxWrapper(Wrapper):
             balances.append(tvl)
         return balances
 
-    
+
+class DelegatedDepositWrapper(Wrapper):
+    """
+    Set `wrapper` equal to the the partner's partnerId from the YearnPartnerTracker contract.
+    """
+
+    def balances(self, blocks) -> List[Decimal]:
+        vault_balances = DELEGATED_BALANCES[self.vault]
+        balances = []
+        for block in blocks:
+            balance = sum(
+                asofdict[block]
+                for depositor in vault_balances
+                for partnerId, asofdict in vault_balances[depositor].items()
+                if partnerId == self.wrapper
+            )
+            balances.append(Decimal(balance) / Decimal(Vault.from_address(self.vault).scale))
+        return balances
+        
+
+@dataclass
+class DelegatedDepositWildcardWrapper:
+    """
+    Automatically find and generate all valid (partnerId, vault) pairs using a valid delegated deposit partnerId.
+    """
+
+    name: str
+    partnerId: str
+
+    def unwrap(self) -> List[Wrapper]:
+        wrappers = []
+        for vault in DELEGATED_BALANCES:
+            vault = Vault.from_address(vault)
+            wrappers.append(DelegatedDepositWrapper(name=vault.name, vault=vault.vault.address, wrapper=self.partnerId))
+        return wrappers
+
+
 @dataclass
 class Partner:
     name: str
@@ -263,7 +300,7 @@ class Partner:
         for wrapper in self.wrappers:
             if isinstance(wrapper, Wrapper):
                 flat_wrappers.append(wrapper)
-            elif isinstance(wrapper, WildcardWrapper):
+            elif isinstance(wrapper, WildcardWrapper) or isinstance(wrapper, DelegatedDepositWildcardWrapper):
                 flat_wrappers.extend(wrapper.unwrap())
         return flat_wrappers
 

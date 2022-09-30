@@ -191,7 +191,7 @@ class TreasuryTx(db.Entity):
 
 
 
-# Caching for partners.py
+# Caching for partners_summary.py
 class PartnerHarvestEvent(db.Entity):
     _table_ = 'partners_txs'
     partner_id = PrimaryKey(int, auto=True)

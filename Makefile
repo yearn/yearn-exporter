@@ -212,3 +212,16 @@ apy: up
 # revenue scripts
 revenues:
 	make up network=eth commands=revenues
+
+# partners scripts
+partners-eth:
+	make up network=eth commands="exporters/partners"
+
+partners-ftm:
+	make up network=ftm commands="exporters/partners"
+
+partners-summary-eth:
+	make up network=eth commands="partners_summary"
+
+partners-summary-ftm:
+	make up network=ftm commands="partners_summary"
