@@ -20,6 +20,9 @@ class AsOfDict(dict):
     'a'
     """
 
+    def __init__(self):
+        self[0] = 0
+
     def __getitem__(self, key):
         return super().__getitem__(last(item for item in sorted(self) if item <= key))
 
@@ -27,14 +30,7 @@ def delegated_deposit_totals():
     delegated_deposits = defaultdict(lambda: defaultdict(lambda: defaultdict(AsOfDict)))
     for deposit in decode_logs(get_logs_asap(str(YEARN_PARTNER_TRACKER), [YEARN_PARTNER_TRACKER.topics['ReferredBalanceIncreased']])):
         partnerId, vault, depositor, amount_added, total_deposited = deposit.values()
-
-        vault_deposits = delegated_deposits[vault]
-        depositor_deposits = vault_deposits[depositor]
-        partner_deposits = depositor_deposits[partnerId]
-
-        # Make sure AsOfDict has a start point.
-        if len(partner_deposits) == 0:
-            partner_deposits[0] = 0
+        partner_deposits = _unwrap(delegated_deposits, vault, depositor, partnerId)
 
         pre_value = partner_deposits[deposit.block_number]
         partner_deposits[deposit.block_number] = pre_value + amount_added
@@ -67,12 +63,7 @@ def proportional_withdrawal_totals(delegated_deposits):
 
             total = sum(partner_balances.values())
             for partner, balance in partner_balances.items():
-                vault_withdrawals = proportional_withdrawals[vault.address]
-                sender_withdrawals = vault_withdrawals[sender]
-                partner_withdrawals = sender_withdrawals[partner]
-                # Make sure AsOfDict has a start point.
-                if len(partner_withdrawals) == 0:
-                    partner_withdrawals[0] = 0
+                partner_withdrawals = _unwrap(proportional_withdrawals, vault.address, sender, partner)
                 partner_withdrawals[transfer.block_number] += ceil(amount * balance / total)
     return proportional_withdrawals
     
@@ -90,9 +81,6 @@ def delegated_deposit_balances():
             for partner, pdeets in ddeets.items():
 
                 partner_balances = _unwrap(balances, vault, depositor, partner)
-                if len(partner_balances) == 0:
-                    partner_balances[0] = 0
-
                 partner_withdrawals = _unwrap(withdrawals, vault, depositor, partner)
 
                 blocks = list(pdeets.keys()) + list(partner_withdrawals.keys())
