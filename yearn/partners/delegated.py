@@ -48,6 +48,7 @@ def proportional_withdrawal_totals(delegated_deposits):
             
             sender_deposits = vault_deposits[sender]
 
+            # If the withdrawal took place prior to the user's first delegated partner deposit, skip.
             if transfer.block_number < min(
                 block
                 for partner in sender_deposits
