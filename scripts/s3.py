@@ -257,7 +257,7 @@ def with_monitoring():
         tb = traceback.format_exc()
         export_mode = os.getenv("EXPORT_MODE", "endorsed")
         now = datetime.now()
-        message = f"`[{now}]`\n🔥 API ({export_mode} vaults) update for {Network(chain.id).name} failed!\n```\n{tb}\n```\n{tags}"[:4000]
+        message = f"`[{now}]`\n🔥 API ({export_mode} vaults) update for {Network(chain.id).name} failed!\n```\n{tb}\n```"[:4000]
         updater.bot.send_message(chat_id=private_group, text=message, parse_mode="Markdown", reply_to_message_id=ping)
         updater.bot.send_message(chat_id=public_group, text=message, parse_mode="Markdown")
         raise error
