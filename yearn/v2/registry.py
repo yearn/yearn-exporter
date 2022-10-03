@@ -18,6 +18,12 @@ from yearn.decorators import sentry_catch_all, wait_or_exit_before, wait_or_exit
 
 logger = logging.getLogger(__name__)
 
+DEPRECATED_VAULTS = {
+    Network.Mainnet: [
+        "0x8a0889d47f9Aa0Fac1cC718ba34E26b867437880", # rekt st-yCRV (vyper / etherscan verification issue)
+        "0x61f46C65E403429266e8b569F23f70dD75d9BeE7", # rekt lp-yCRV (vyper / etherscan verification issue)
+    ]
+}
 
 class Registry(metaclass=Singleton):
     def __init__(self, watch_events_forever=True, include_experimental=True):
@@ -87,6 +93,7 @@ class Registry(metaclass=Singleton):
         logs = self.log_filter.get_all_entries()
         while True:
             self.process_events(decode_logs(logs))
+            self._filter_vaults()
             if not self._done.is_set():
                 self._done.set()
                 logger.info("loaded v2 registry in %.3fs", time.time() - start)
@@ -127,7 +134,12 @@ class Registry(metaclass=Singleton):
                 logger.debug("new experiment %s %s", vault.vault, vault.name)
 
             if event.name == "VaultTagged":
-                self.tags[event["vault"]] = event["tag"]
+                if event["tag"] == "Removed":
+                    vault = self.vault_from_event(event)
+                    self._remove_vault(event["vault"])
+                    logger.debug("Removed vault %s %s", vault.vault, vault.name)
+                else:
+                    self.tags[event["vault"]] = event["tag"]
 
     def vault_from_event(self, event):
         return Vault(
@@ -168,3 +180,13 @@ class Registry(metaclass=Singleton):
 
     def wallets(self, block=None):
         return set(vault.wallets(block) for vault in self.active_vaults_at(block))
+
+    def _filter_vaults(self):
+        if chain.id in DEPRECATED_VAULTS:
+            for vault in DEPRECATED_VAULTS[chain.id]:
+                self._remove_vault(vault)
+
+    def _remove_vault(self, address):
+        self._vaults.pop(address, None)
+        self._experiments.pop(address, None)
+        self.tags.pop(address, None)
