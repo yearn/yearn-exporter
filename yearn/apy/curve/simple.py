@@ -230,6 +230,8 @@ def simple(vault, samples: ApySamples) -> Apy:
         "rewards_apr": reward_apr,
     }
 
+    if os.getenv("DEBUG", None):
+        logger.info(pformat(Debug().collect_variables(locals())))
     return Apy("crv", gross_apr, net_apy, fees, composite=composite)
 
 class _ConvexVault:
