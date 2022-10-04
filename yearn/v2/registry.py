@@ -135,9 +135,8 @@ class Registry(metaclass=Singleton):
 
             if event.name == "VaultTagged":
                 if event["tag"] == "Removed":
-                    vault = self.vault_from_event(event)
                     self._remove_vault(event["vault"])
-                    logger.debug("Removed vault %s %s", vault.vault, vault.name)
+                    logger.debug("Removed vault %s", event["vault"])
                 else:
                     self.tags[event["vault"]] = event["tag"]
 
