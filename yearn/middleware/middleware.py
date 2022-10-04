@@ -2,6 +2,7 @@ import logging
 
 from brownie import chain
 from brownie import web3 as w3
+from http.client import NETWORK_AUTHENTICATION_REQUIRED
 from eth_utils import encode_hex
 from eth_utils import function_signature_to_4byte_selector as fourbyte
 from requests import Session
@@ -19,6 +20,7 @@ BATCH_SIZE = {
     Network.Mainnet: 10_000,  # 1.58 days
     Network.Fantom: 100_000,  # 1.03 days
     Network.Arbitrum: 20_000, # 0.34 days
+    Network.Optimism: 80_000, # 1.02 days
 }
 CACHED_CALLS = [
     "name()",

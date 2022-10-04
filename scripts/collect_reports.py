@@ -30,7 +30,7 @@ warnings.filterwarnings("ignore", ".*It has been discarded*")
 inv_telegram_key = os.environ.get('WAVEY_ALERTS_BOT_KEY')
 invbot = telebot.TeleBot(inv_telegram_key)
 env = os.environ.get('ENVIRONMENT')
-alerts_enabled = True if env == "PROD" or env == "TEST" else False
+alerts_enabled = True #if env == "PROD" or env == "TEST" else False
 
 test_channel = os.environ.get('TELEGRAM_CHANNEL_TEST')
 if env == "TEST":
@@ -133,6 +133,28 @@ CHAIN_VALUES = {
         "TENDERLY_CHAIN_IDENTIFIER": "arbitrum",
         "TELEGRAM_CHAT_ID": os.environ.get('TELEGRAM_CHANNEL_42161_PUBLIC'),
         "DISCORD_CHAN": os.environ.get('DISCORD_CHANNEL_42161'),
+    },
+    Network.Optimism: {
+        "NETWORK_NAME": "Optimism",
+        "NETWORK_SYMBOL": "OPT",
+        "EMOJI": "🔴",
+        "START_DATE": datetime(2022, 8, 6, tzinfo=timezone.utc),
+        "START_BLOCK": 24097341,
+        "REGISTRY_ADDRESS": "0x1ba4eB0F44AB82541E56669e18972b0d6037dfE0",
+        "REGISTRY_DEPLOY_BLOCK": 18097341,
+        "REGISTRY_HELPER_ADDRESS": "0x0983b4899a3168c2509569faf1e4e75c57b4aba6",
+        "LENS_ADDRESS": "0xD3A93C794ee2798D8f7906493Cd3c2A835aa0074",
+        "VAULT_ADDRESS030": "0x0fBeA11f39be912096cEc5cE22F46908B5375c19",
+        "VAULT_ADDRESS031": "0x0fBeA11f39be912096cEc5cE22F46908B5375c19",
+        "KEEPER_CALL_CONTRACT": "",
+        "KEEPER_TOKEN": "",
+        "YEARN_TREASURY": "0x84654e35E504452769757AAe5a8C7C6599cBf954",
+        "STRATEGIST_MULTISIG": "0xea3a15df68fCdBE44Fdb0DB675B2b3A14a148b26",
+        "GOVERNANCE_MULTISIG": "0xF5d9D6133b698cE29567a90Ab35CfB874204B3A7",
+        "EXPLORER_URL": "https://optimistic.etherscan.io/",
+        "TENDERLY_CHAIN_IDENTIFIER": "optimism",
+        "TELEGRAM_CHAT_ID": os.environ.get('TELEGRAM_CHANNEL_10_PUBLIC'),
+        "DISCORD_CHAN": os.environ.get('DISCORD_CHANNEL_10'),
     }
 }
 

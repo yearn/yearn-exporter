@@ -23,6 +23,11 @@ tokens_by_network = {
         'usdc': '0xFF970A61A04b1cA14834A43f5dE4533eBDDB5CC8',
         'dai': '0xDA10009cBd5D07dd0CeCc66161FC93D7c9000da1',
     },
+    Network.Optimism: {
+        'weth': '0x4200000000000000000000000000000000000006',
+        'usdc': '0x7F5c764cBc14f9669B88837ca1490cCa17c31607',
+        'dai': '0xDA10009cBd5D07dd0CeCc66161FC93D7c9000da1',
+    },
 }
 
 stablecoins_by_network = {
@@ -76,13 +81,21 @@ stablecoins_by_network = {
         '0xFEa7a6a0B346362BF88A9e4A88416B77a57D6c2A': 'mim',
         '0xFd086bC7CD5C481DCC9C85ebE478A1C0b69FCbb9': 'usdt'
     },
+    Network.Optimism: {
+        '0x94b008aA00579c1307B0EF2c499aD98a8ce58e58': 'usdt',
+        '0x7F5c764cBc14f9669B88837ca1490cCa17c31607': 'usdc',
+        '0xDA10009cBd5D07dd0CeCc66161FC93D7c9000da1': 'dai',
+        '0x2E3D870790dC77A83DD1d18184Acc7439A53f475': 'frax',
+        '0x8c6f28f2F1A3C87F0f938b96d27520d9751ec8d9': 'susd',
+    },
 }
 
 ib_snapshot_block_by_network = {
     Network.Mainnet: 14051986,
     Network.Fantom: 28680044,
     Network.Gnosis: 1, # TODO revisit as IB is not deployed in gnosis
-    Network.Arbitrum: 1
+    Network.Arbitrum: 1,
+    Network.Optimism: 12658427,
 }
 
 # We convert to checksum address here to prevent minor annoyances. It's worth it.

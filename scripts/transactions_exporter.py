@@ -26,8 +26,11 @@ logger = logging.getLogger('yearn.transactions_exporter')
 BATCH_SIZE = 5000
 
 FIRST_END_BLOCK = {
-    Network.Mainnet: 9480000, # NOTE block some arbitrary time after iearn's first deployment
-    Network.Fantom: 5000000, # NOTE block some arbitrary time after v2's first deployment
+    Network.Mainnet: 9_480_000, # NOTE block some arbitrary time after iearn's first deployment
+    Network.Fantom: 5_000_000, # NOTE block some arbitrary time after v2's first deployment
+    Network.Gnosis: 21_440_000, # # NOTE block some arbitrary time after first vault deployment
+    Network.Arbitrum: 4_837_859,
+    Network.Optimism: 18_111_485,
 }[chain.id]
 
 def main():
