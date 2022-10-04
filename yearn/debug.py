@@ -12,7 +12,10 @@ class Debug(metaclass=Singleton):
     def collect_variables(self, variables):
         caller = stack()[1][0]
         caller_frame = getframeinfo(caller)
-        class_name = caller.f_locals["self"].__class__.__name__
+        if "self" in caller.f_locals:
+            class_name = caller.f_locals["self"].__class__.__name__
+        else:
+            class_name = caller_frame.filename.split("/")[-1]
         method_name = caller.f_code.co_name
         line_number = caller_frame.lineno
         extracted = { k: v for k, v in variables.items() if '__' not in k and 'pdb' not in k }

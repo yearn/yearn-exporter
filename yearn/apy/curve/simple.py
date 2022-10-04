@@ -136,12 +136,17 @@ def simple(vault, samples: ApySamples) -> Apy:
     now_point = SharePricePoint(samples.now, now_price)
     week_ago_point = SharePricePoint(samples.week_ago, week_ago_price)
 
-    pool_apr = calculate_roi(now_point, week_ago_point)
-    pool_apy = (((pool_apr / 365) + 1) ** 365) - 1
-
     # FIXME: crvANKR's pool apy going crazy
     if vault.vault.address == "0xE625F5923303f1CE7A43ACFEFd11fd12f30DbcA4":
         pool_apy = 0
+
+    # Curve USDT Pool yVault apr is way too high which fails the apy calculations with a OverflowError
+    elif vault.vault.address == "0x28a5b95C101df3Ded0C0d9074DB80C438774B6a9":
+        pool_apy = 0
+
+    else:
+        pool_apr = calculate_roi(now_point, week_ago_point)
+        pool_apy = (((pool_apr / 365) + 1) ** 365) - 1
 
     # prevent circular import for partners calculations
     from yearn.v2.vaults import Vault as VaultV2
@@ -225,6 +230,8 @@ def simple(vault, samples: ApySamples) -> Apy:
         "rewards_apr": reward_apr,
     }
 
+    if os.getenv("DEBUG", None):
+        logger.info(pformat(Debug().collect_variables(locals())))
     return Apy("crv", gross_apr, net_apy, fees, composite=composite)
 
 class _ConvexVault:
