@@ -45,7 +45,7 @@ class Registry(metaclass=Singleton):
         elif chain.id == Network.Arbitrum:
             return [contract('0x3199437193625DCcD6F9C9e98BDf93582200Eb1f')]
         elif chain.id == Network.Optimism:
-            return [contract('0x1ba4eB0F44AB82541E56669e18972b0d6037dfE0')]
+            return [contract('0x79286Dd38C9017E5423073bAc11F53357Fc5C128')]
         else:
             raise UnsupportedNetwork('yearn v2 is not available on this network')
 
