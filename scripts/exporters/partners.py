@@ -51,30 +51,33 @@ def export_partners(block):
         # export wrapper data
         metrics_to_export = []
         for wrapper in set(data.wrapper):
-            wrapper_info = {}
             wrapper_data = data[data.wrapper == wrapper]
+
             # iterate over vault addresses
             for vault in set(wrapper_data.vault):
                 wrapper_vault_data = wrapper_data[wrapper_data.vault == vault]
                 symbol = _get_symbol(vault)
                 bucket = get_token_bucket(vault)
 
+                # placeholder for the wrapper-vault level info
+                wrapper_vault_info = {}
+
                 # wrapper balance
-                wrapper_info["balance"] = float(wrapper_vault_data.balance.iloc[-1])
-                wrapper_info["balance_usd"] = float(wrapper_vault_data.balance_usd.iloc[-1])
+                wrapper_vault_info["balance"] = float(wrapper_vault_data.balance.iloc[-1])
+                wrapper_vault_info["balance_usd"] = float(wrapper_vault_data.balance_usd.iloc[-1])
 
                 # wrapper payouts
                 daily_data = wrapper_vault_data.set_index('timestamp').resample('1D').sum()
-                wrapper_info["payout_daily"] = float(daily_data.payout.iloc[-1])
-                wrapper_info["payout_weekly"] = float(daily_data.payout.iloc[-7:].sum())
-                wrapper_info["payout_monthly"] = float(daily_data.payout.iloc[-30:].sum())
-                wrapper_info["payout_total"] = float(daily_data.payout.sum())
-                wrapper_info["payout_usd_daily"] = float(daily_data.payout_usd.iloc[-1])
-                wrapper_info["payout_usd_weekly"] = float(daily_data.payout_usd.iloc[-7:].sum())
-                wrapper_info["payout_usd_monthly"] = float(daily_data.payout_usd.iloc[-30:].sum())
-                wrapper_info["payout_usd_total"] = float(daily_data.payout_usd.sum())
+                wrapper_vault_info["payout_daily"] = float(daily_data.payout.iloc[-1])
+                wrapper_vault_info["payout_weekly"] = float(daily_data.payout.iloc[-7:].sum())
+                wrapper_vault_info["payout_monthly"] = float(daily_data.payout.iloc[-30:].sum())
+                wrapper_vault_info["payout_total"] = float(daily_data.payout.sum())
+                wrapper_vault_info["payout_usd_daily"] = float(daily_data.payout_usd.iloc[-1])
+                wrapper_vault_info["payout_usd_weekly"] = float(daily_data.payout_usd.iloc[-7:].sum())
+                wrapper_vault_info["payout_usd_monthly"] = float(daily_data.payout_usd.iloc[-30:].sum())
+                wrapper_vault_info["payout_usd_total"] = float(daily_data.payout_usd.sum())
 
-                for key, value in wrapper_info.items():
+                for key, value in wrapper_vault_info.items():
                     item = _build_item(
                         "partners",
                         ['partner', 'wrapper', 'param', 'token_address', 'token', 'bucket'],
