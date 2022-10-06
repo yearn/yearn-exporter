@@ -281,6 +281,9 @@ class _ConvexVault:
         # some strategies have a localCRV property which is used based on a flag, otherwise
         # falling back to the global curve config contract.
         # note the spelling mistake in the variable name uselLocalCRV
+        if os.getenv("DEBUG", None):
+            logger.info(pformat(Debug().collect_variables(locals())))
+
         if hasattr(self._cvx_strategy, "uselLocalCRV"):
             use_local_crv = self._cvx_strategy.uselLocalCRV(block_identifier=self.block)
             if use_local_crv:
@@ -288,8 +291,13 @@ class _ConvexVault:
             else:
                 curve_global = contract(self._cvx_strategy.curveGlobal(block_identifier=self.block))
                 cvx_keep_crv = curve_global.keepCRV(block_identifier=self.block) / 1e4
-        else: 
+        elif hasattr(self._cvx_strategy, "keepCRV"):
             cvx_keep_crv = self._cvx_strategy.keepCRV(block_identifier=self.block) / 1e4
+        else:
+            # the experimental vault 0xe92AE2cF5b373c1713eB5855D4D3aF81D8a8aCAE yvCurvexFraxTplLP-U
+            # has a strategy 0x06aee67AC42473E9F0e7DC1A6687A1F26C8136A3 ConvexTempleDAO-U which doesn't have
+            # uselLocalCRV nor keepCRV
+            cvx_keep_crv = 0
 
         cvx_booster = contract(addresses[chain.id]['convex_booster'])
         cvx_fee = self._get_convex_fee(cvx_booster, self.block)
