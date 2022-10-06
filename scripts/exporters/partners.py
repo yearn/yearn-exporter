@@ -1,3 +1,7 @@
+# NOTE: make sure that the partner exporter runs on a single process
+import os
+os.environ["POOL_SIZE"] = "1"
+
 import logging
 from datetime import datetime, timezone
 from time import time
@@ -36,6 +40,7 @@ def export_snapshot(snapshot, ts):
 
 
 def export_partners(block):
+    # for partner in partners:
     for partner in partners:
         # collect payout data
         data, _ = partner.process()
@@ -47,36 +52,36 @@ def export_partners(block):
         metrics_to_export = []
         for wrapper in set(data.wrapper):
             wrapper_info = {}
-
             wrapper_data = data[data.wrapper == wrapper]
-            if len(wrapper_data) == 0:
-                continue
-            token = wrapper_data.vault.iloc[-1]
-            symbol = _get_symbol(token)
-            bucket = get_token_bucket(token)
+            # iterate over vault addresses
+            for vault in set(wrapper_data.vault):
+                wrapper_vault_data = wrapper_data[wrapper_data.vault == vault]
+                symbol = _get_symbol(vault)
+                bucket = get_token_bucket(vault)
 
-            # wrapper balance
-            wrapper_info["balance"] = float(wrapper_data.balance.iloc[-1])
-            wrapper_info["balance_usd"] = float(wrapper_data.balance_usd.iloc[-1])
+                # wrapper balance
+                wrapper_info["balance"] = float(wrapper_vault_data.balance.iloc[-1])
+                wrapper_info["balance_usd"] = float(wrapper_vault_data.balance_usd.iloc[-1])
 
-            # wrapper payouts
-            wrapper_daily_data = wrapper_data.set_index('timestamp').resample('1D').sum()
-            wrapper_info["payout_daily"] = float(wrapper_daily_data.payout.iloc[-1])
-            wrapper_info["payout_weekly"] = float(wrapper_daily_data.payout.iloc[-7:].sum())
-            wrapper_info["payout_monthly"] = float(wrapper_daily_data.payout.iloc[-30:].sum())
-            wrapper_info["payout_total"] = float(wrapper_daily_data.payout.sum())
-            wrapper_info["payout_usd_daily"] = float(wrapper_daily_data.payout_usd.iloc[-1])
-            wrapper_info["payout_usd_weekly"] = float(wrapper_daily_data.payout_usd.iloc[-7:].sum())
-            wrapper_info["payout_usd_monthly"] = float(wrapper_daily_data.payout_usd.iloc[-30:].sum())
-            wrapper_info["payout_usd_total"] = float(wrapper_daily_data.payout_usd.sum())
+                # wrapper payouts
+                daily_data = wrapper_vault_data.set_index('timestamp').resample('1D').sum()
+                wrapper_info["payout_daily"] = float(daily_data.payout.iloc[-1])
+                wrapper_info["payout_weekly"] = float(daily_data.payout.iloc[-7:].sum())
+                wrapper_info["payout_monthly"] = float(daily_data.payout.iloc[-30:].sum())
+                wrapper_info["payout_total"] = float(daily_data.payout.sum())
+                wrapper_info["payout_usd_daily"] = float(daily_data.payout_usd.iloc[-1])
+                wrapper_info["payout_usd_weekly"] = float(daily_data.payout_usd.iloc[-7:].sum())
+                wrapper_info["payout_usd_monthly"] = float(daily_data.payout_usd.iloc[-30:].sum())
+                wrapper_info["payout_usd_total"] = float(daily_data.payout_usd.sum())
 
-            for key, value in wrapper_info.items():
-                item = _build_item(
-                    "partners",
-                    ['partner', 'param', 'token_address', 'token', 'bucket'],
-                    [partner.name, key, token, symbol, bucket],
-                    value,
-                    block.timestamp
-                )
-                metrics_to_export.append(item)
+                for key, value in wrapper_info.items():
+                    item = _build_item(
+                        "partners",
+                        ['partner', 'wrapper', 'param', 'token_address', 'token', 'bucket'],
+                        [partner.name, wrapper, key, vault, symbol, bucket],
+                        value,
+                        block.timestamp
+                    )
+                    metrics_to_export.append(item)
+
         _post(metrics_to_export)
