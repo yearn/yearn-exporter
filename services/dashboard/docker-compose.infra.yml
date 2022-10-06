@@ -6,7 +6,7 @@ volumes:
   postgres_data: {}
 
 networks:
-  yearn-exporter:
+  stack:
 
 services:
   vmagent:
@@ -21,7 +21,7 @@ services:
     depends_on:
       - victoria-metrics
     networks:
-      - yearn-exporter
+      - stack
     restart: always
 
   victoria-metrics:
@@ -33,7 +33,7 @@ services:
     ports:
       - 127.0.0.1:8428:8428
     networks:
-      - yearn-exporter
+      - stack
     restart: always
 
   grafana:
@@ -60,7 +60,7 @@ services:
       - grafana_data:/var/lib/grafana
       - ./grafana/provisioning/:/etc/grafana/provisioning/
     networks:
-      - yearn-exporter
+      - stack
     restart: always
 
   renderer:
@@ -71,7 +71,7 @@ services:
       - ENABLE_METRICS=true
       - HTTP_PORT=8091
     networks:
-      - yearn-exporter
+      - stack
     restart: always
 
   node-exporter:
@@ -81,7 +81,7 @@ services:
     command:
       - "--path.rootfs=/host"
     networks:
-      - yearn-exporter
+      - stack
     volumes:
       - "/:/host:ro,rslave"
     restart: always
@@ -95,7 +95,7 @@ services:
       - POSTGRES_PASSWORD=${PGPASSWORD:-yearn-exporter}
       - POSTGRES_DB=${PGDATABASE:-postgres}
     networks:
-      - yearn-exporter
+      - stack
     volumes:
       - postgres_data:/var/lib/postgresql/data
     restart: always

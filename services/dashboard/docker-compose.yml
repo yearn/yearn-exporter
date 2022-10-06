@@ -5,7 +5,7 @@ volumes:
   cache: {}
 
 networks:
-  infra_yearn-exporter:
+  yearn-exporter-infra_stack:
     external: true
 
 x-envs: &envs
@@ -69,13 +69,12 @@ x-volumes: &volumes
 
 services:
   exporter:
-    build: .
     image: ghcr.io/yearn/yearn-exporter
     volumes: *volumes
     environment: *envs
     networks:
-      - infra_yearn-exporter
+      - yearn-exporter-infra_stack
     external_links:
-      - infra-postgres-1:postgres
-      - infra-victoria-metrics-1:victoria-metrics
+      - yearn-exporter-infra-postgres-1:postgres
+      - yearn-exporter-infra-victoria-metrics-1:victoria-metrics
     restart: on-failure
