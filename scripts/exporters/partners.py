@@ -40,7 +40,6 @@ def export_snapshot(snapshot, ts):
 
 
 def export_partners(block):
-    # for partner in partners:
     for partner in partners:
         # collect payout data
         data, _ = partner.process()
