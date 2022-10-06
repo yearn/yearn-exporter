@@ -37,8 +37,10 @@ class UniswapVersionMultiplexer:
         token = convert.to_address(token)
 
         # NOTE Following our usual logic with WETH is a big no-no. Too many calls.
-        if token in [constants.weth, WRAPPED_GAS_COIN] and block <= contract_creation_block(chainlink.get_feed(token)):
-            return self._early_exit_for_gas_coin(token, block=block)
+        if token in [constants.weth, WRAPPED_GAS_COIN]:
+            # try to use chainlink if it's available on the current network
+            if chainlink and block <= contract_creation_block(chainlink.get_feed(token)):
+                return self._early_exit_for_gas_coin(token, block=block)
 
         deepest_uniswap = self.deepest_uniswap(token, block)
         if deepest_uniswap:
