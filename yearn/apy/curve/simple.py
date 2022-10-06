@@ -281,6 +281,9 @@ class _ConvexVault:
         # some strategies have a localCRV property which is used based on a flag, otherwise
         # falling back to the global curve config contract.
         # note the spelling mistake in the variable name uselLocalCRV
+        if os.getenv("DEBUG", None):
+            logger.info(pformat(Debug().collect_variables(locals())))
+
         if hasattr(self._cvx_strategy, "uselLocalCRV"):
             use_local_crv = self._cvx_strategy.uselLocalCRV(block_identifier=self.block)
             if use_local_crv:

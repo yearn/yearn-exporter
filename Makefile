@@ -118,7 +118,7 @@ shell: get-network-name
 
 .ONESHELL:
 debug-apy: get-network-name
-	DEBUG=true docker-compose --file services/dashboard/docker-compose.yml --project-directory . run --rm --entrypoint "brownie run --network $(BROWNIE_NETWORK) debug_apy -I" exporter
+	DEBUG=true docker-compose --file services/dashboard/docker-compose.yml --project-directory . run --rm --entrypoint "brownie run --network $(BROWNIE_NETWORK) debug_apy with_exception_handling -I" exporter
 	make logs filter=debug
 
 list-networks:
