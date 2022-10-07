@@ -2,7 +2,7 @@ import logging
 import re
 import threading
 import time
-from typing import List
+from typing import Dict, List
 
 from brownie import chain
 from eth_utils import encode_hex, event_abi_to_log_topic
@@ -15,10 +15,13 @@ from yearn.events import create_filter, decode_logs
 from yearn.multicall2 import fetch_multicall
 from yearn.prices import magic
 from yearn.prices.curve import curve
+from yearn.special import Ygov
+from yearn.typing import Address
 from yearn.utils import safe_views, contract
 from yearn.v2.strategies import Strategy
 from yearn.exceptions import PriceError
 from yearn.decorators import sentry_catch_all, wait_or_exit_after
+from yearn.networks import Network
 
 VAULT_VIEWS_SCALED = [
     "totalAssets",
@@ -49,8 +52,8 @@ logger = logging.getLogger(__name__)
 
 class Vault:
     def __init__(self, vault, api_version=None, token=None, registry=None, watch_events_forever=True):
-        self._strategies = {}
-        self._revoked = {}
+        self._strategies: Dict[Address, Strategy] = {}
+        self._revoked: Dict[Address, Strategy] = {}
         self._reports = []
         self.vault = vault
         self.api_version = api_version
@@ -87,6 +90,10 @@ class Vault:
 
         if isinstance(other, str):
             return self.vault == other
+        
+        # Needed for transactions_exporter
+        if isinstance(other, Ygov):
+            return False
 
         raise ValueError("Vault is only comparable with [Vault, str]")
 
@@ -106,6 +113,12 @@ class Vault:
     def revoked_strategies(self) -> List[Strategy]:
         self.load_strategies()
         return list(self._revoked.values())
+
+    @property
+    def reports(self):
+        # strategy reports are loaded at the same time as other vault strategy events
+        self.load_strategies()
+        return self._reports
 
     @property
     def is_endorsed(self):
@@ -132,8 +145,8 @@ class Vault:
     def watch_events(self):
         start = time.time()
         self.log_filter = create_filter(str(self.vault), topics=self._topics)
+        logs = self.log_filter.get_all_entries()
         while True:
-            logs = self.log_filter.get_new_entries()
             events = decode_logs(logs)
             self.process_events(events)
             if not self._done.is_set():
@@ -143,15 +156,27 @@ class Vault:
                 return
             time.sleep(300)
 
+            # read new logs at end of loop
+            logs = self.log_filter.get_new_entries()
+
+
     def process_events(self, events):
         for event in events:
+            # some issues during the migration of this strat prevented it from being verified so we skip it here...
+            if chain.id == Network.Optimism:
+                failed_migration = False
+                for key in ["newVersion", "oldVersion", "strategy"]:
+                    failed_migration |= (key in event and event[key] == "0x4286a40EB3092b0149ec729dc32AD01942E13C63")
+                if failed_migration:
+                    continue
+
             if event.name == "StrategyAdded":
                 strategy_address = event["strategy"]
                 logger.debug("%s strategy added %s", self.name, strategy_address)
                 try: 
                     self._strategies[strategy_address] = Strategy(strategy_address, self, self._watch_events_forever)
                 except ValueError:
-                    print(f"Error loading strategy {strategy_address}")
+                    logger.error(f"Error loading strategy {strategy_address}")
                     pass
             elif event.name == "StrategyRevoked":
                 logger.debug("%s strategy revoked %s", self.name, event["strategy"])
@@ -181,7 +206,7 @@ class Vault:
         for strategy in self.strategies:
             info["strategies"][strategy.unique_name] = strategy.describe(block=block)
 
-        info["token price"] = magic.get_price(self.token, block=block)
+        info["token price"] = magic.get_price(self.token, block=block) if info['totalSupply'] > 0 else 0
         if "totalAssets" in info:
             info["tvl"] = info["token price"] * info["totalAssets"]
 
@@ -192,7 +217,7 @@ class Vault:
         return info
 
     def apy(self, samples: ApySamples):
-        if curve and curve.get_pool(self.token.address):
+        if self._needs_curve_simple():
             return apy.curve.simple(self, samples)
         elif Version(self.api_version) >= Version("0.3.2"):
             return apy.v2.average(self, samples)
@@ -207,3 +232,25 @@ class Vault:
             price = None
         tvl = total_assets * price / 10 ** self.vault.decimals(block_identifier=block) if price else None
         return Tvl(total_assets, price, tvl)
+
+
+    def _needs_curve_simple(self):
+        # not able to calculate gauge weighting on chains other than mainnet
+        curve_simple_excludes = {
+            Network.Mainnet: [
+                "0x3D27705c64213A5DcD9D26880c1BcFa72d5b6B0E",
+            ],
+            Network.Fantom: [
+                "0xCbCaF8cB8cbeAFA927ECEE0c5C56560F83E9B7D9",
+                "0xA97E7dA01C7047D6a65f894c99bE8c832227a8BC",
+            ],
+            Network.Arbitrum: [
+                "0x239e14A19DFF93a17339DCC444f74406C17f8E67",
+                "0x1dBa7641dc69188D6086a73B972aC4bda29Ec35d",
+            ]
+        }
+        needs_simple = True
+        if chain.id in curve_simple_excludes:
+            needs_simple = self.vault.address not in curve_simple_excludes[chain.id]
+
+        return needs_simple and curve and curve.get_pool(self.token.address)

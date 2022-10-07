@@ -26,7 +26,7 @@ from cachetools.func import lru_cache, ttl_cache
 
 from yearn.decorators import sentry_catch_all, wait_or_exit_after
 from yearn.events import create_filter, decode_logs
-from yearn.exceptions import UnsupportedNetwork
+from yearn.exceptions import PriceError, UnsupportedNetwork
 from yearn.multicall2 import fetch_multicall
 from yearn.networks import Network
 from yearn.prices import magic
@@ -73,6 +73,9 @@ curve_contracts = {
     Network.Arbitrum: {
         'address_provider': ADDRESS_PROVIDER,
     },
+    Network.Optimism: {
+        'address_provider': ADDRESS_PROVIDER,
+    }
 }
 
 
@@ -103,6 +106,7 @@ class CurveRegistry(metaclass=Singleton):
         self.registries = defaultdict(set)  # registry -> pools
         self.factories = defaultdict(set)  # factory -> pools
         self.token_to_pool = dict()  # lp_token -> pool
+        self.coin_to_pools = defaultdict(list)
         self.address_provider = contract(addrs['address_provider'])
 
         self._done = threading.Event()
@@ -146,9 +150,17 @@ class CurveRegistry(metaclass=Singleton):
                 if event.name == 'PoolAdded':
                     self.registries[event.address].add(event['pool'])
                     lp_token = contract(event.address).get_lp_token(event['pool'])
-                    self.token_to_pool[lp_token] = event['pool']
+                    pool = event['pool']
+                    self.token_to_pool[lp_token] = pool
+                    for coin in self.get_coins(pool):
+                        if pool not in self.coin_to_pools[coin]:
+                            self.coin_to_pools[coin].append(pool)
                 elif event.name == 'PoolRemoved':
-                    self.registries[event.address].discard(event['pool'])
+                    pool = event['pool']
+                    self.registries[event.address].discard(pool)
+                    for coin in self.get_coins(pool):
+                        if pool in self.coin_to_pools[coin]:
+                            self.coin_to_pools[coin].remove(pool)
 
             # load metapool and curve v5 factories
             self.load_factories()
@@ -178,6 +190,9 @@ class CurveRegistry(metaclass=Singleton):
                 # for metpool factories pool is the same as lp token
                 self.token_to_pool[pool] = pool
                 self.factories[factory].add(pool)
+                for coin in self.get_coins(pool):
+                    if pool not in self.coin_to_pools[coin]:
+                        self.coin_to_pools[coin].append(pool)
 
         # if there are factories that haven't yet been added to the on-chain address provider,
         # please refer to commit 3f70c4246615017d87602e03272b3ed18d594d3c to see how to add them manually
@@ -190,6 +205,9 @@ class CurveRegistry(metaclass=Singleton):
                 lp_token = contract(factory).get_token(pool)
                 self.token_to_pool[lp_token] = pool
                 self.factories[factory].add(pool)
+                for coin in self.get_coins(pool):
+                    if pool not in self.coin_to_pools[coin]:
+                        self.coin_to_pools[coin].append(pool)
 
     def get_factory(self, pool: AddressOrContract) -> EthAddress:
         """
@@ -372,15 +390,16 @@ class CurveRegistry(metaclass=Singleton):
         token = to_address(token)
         pool = self.get_pool(token)
         # crypto pools can have different tokens, use slow method
-        if hasattr(contract(pool), 'price_oracle'):
-            try:
-                tvl = self.get_tvl(pool, block=block)
-            except ValueError:
-                return None
-            supply = contract(token).totalSupply(block_identifier=block) / 1e18
-            if supply == 0:
-                return 0
-            return tvl / supply
+        try:
+            tvl = self.get_tvl(pool, block=block)
+        except ValueError:
+            tvl = 0
+        supply = contract(token).totalSupply(block_identifier=block) / 1e18
+        if supply == 0:
+            if tvl > 0:
+                raise ValueError('curve pool has balance but no supply')
+            return 0
+        return tvl / supply
 
         # approximate by using the most common base token we find
         coins = self.get_underlying_coins(pool)
@@ -388,11 +407,51 @@ class CurveRegistry(metaclass=Singleton):
             coin = (set(coins) & BASIC_TOKENS).pop()
         except KeyError:
             coin = coins[0]
+
+        try:
+            virtual_price = self.get_virtual_price(pool, block)
+            if virtual_price:
+                return virtual_price * magic.get_price(coin, block)
+            return sum([balance * magic.get_price(coin, block) for coin, balance in self.get_balances(pool, block).items()])
+        except ValueError as e:
+            logger.warn(f'ValueError: {str(e)}')
+            if 'No data was returned' in str(e):
+                return None
+            else:
+                raise
+    
+    def get_coin_price(self, token: AddressOrContract, block: Optional[Block] = None) -> Optional[float]:
+
+        # Get the pool
+        if len(self.coin_to_pools[token]) == 1:
+            pool = self.coin_to_pools[token][0]
+        else:
+            # TODO: handle this sitch if necessary
+            return
         
-        virtual_price = self.get_virtual_price(pool, block)
+        # Get the index for `token`
+        coins = self.get_coins(pool)
+        token_in_ix = [i for i, coin in enumerate(coins) if coin == token][0]
+        amount_in = 10 ** contract(str(token)).decimals()
+        if len(coins) == 2:
+            # this works for most typical metapools
+            token_out_ix = 0 if token_in_ix == 1 else 1 if token_in_ix == 0 else None
+        else:
+            # TODO: handle this sitch if necessary
+            return None
         
-        if virtual_price:
-            return virtual_price * magic.get_price(coin, block)
+        # Get the price for `token` using the selected pool.
+        try:
+            dy = contract(pool).get_dy(token_in_ix, token_out_ix, amount_in, block_identifier = block)
+        except:
+            return None
+        
+        token_out = contract(coins[token_out_ix])
+        amount_out = dy / 10 ** token_out.decimals()
+        try:
+            return amount_out * magic.get_price(token_out, block = block)
+        except PriceError:
+            return None
 
     def calculate_boost(self, gauge: Contract, addr: Address, block: Optional[Block] = None) -> Dict[str,float]:
         results = fetch_multicall(
