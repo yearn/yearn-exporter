@@ -5,7 +5,7 @@ import boto3
 import sentry_sdk
 import logging
 import yearn
-from datetime import datetime
+from datetime import datetime, timedelta
 
 sentry_sdk.set_tag('script','revenues')
 logger = logging.getLogger(__name__)
@@ -14,7 +14,7 @@ def main():
     debug = os.getenv("DEBUG", None)
 
     today = datetime.today()
-    from_str = os.getenv("REVENUES_FROM", today.replace(day=1).strftime('%Y-%m-%d'))
+    from_str = os.getenv("REVENUES_FROM", (today-timedelta(days=7)).strftime('%Y-%m-%d'))
     to_str   = os.getenv("REVENUES_TO", today.strftime('%Y-%m-%d'))
     file_name = f"revenues_{from_str}_{to_str}.csv"
     file_path = f"/tmp/{file_name}"
