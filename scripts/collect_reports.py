@@ -30,7 +30,7 @@ warnings.filterwarnings("ignore", ".*It has been discarded*")
 inv_telegram_key = os.environ.get('WAVEY_ALERTS_BOT_KEY')
 invbot = telebot.TeleBot(inv_telegram_key)
 env = os.environ.get('ENVIRONMENT')
-alerts_enabled = True #if env == "PROD" or env == "TEST" else False
+alerts_enabled = True if env == "PROD" or env == "TEST" else False
 
 test_channel = os.environ.get('TELEGRAM_CHANNEL_TEST')
 if env == "TEST":
@@ -174,6 +174,7 @@ if chain.id == 1:
     )
 
 def main(dynamically_find_multi_harvest=False):
+    ycrv = interface.YCRV('0xFCc5c47bE19d06BF83eB04298b026F81069ff65b')
     print(f"dynamic multi_harvest detection is enabled: {dynamically_find_multi_harvest}")
     interval_seconds = 25
 
