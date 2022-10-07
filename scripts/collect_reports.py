@@ -174,7 +174,9 @@ if chain.id == 1:
     )
 
 def main(dynamically_find_multi_harvest=False):
-    ycrv = interface.YCRV('0xFCc5c47bE19d06BF83eB04298b026F81069ff65b')
+    if chain.id == 1:
+        ycrv = interface.YCRV('0xFCc5c47bE19d06BF83eB04298b026F81069ff65b')
+        y = Contract.from_abi('','0xFCc5c47bE19d06BF83eB04298b026F81069ff65b',interface.YCRV.abi)
     print(f"dynamic multi_harvest detection is enabled: {dynamically_find_multi_harvest}")
     interval_seconds = 25
 
