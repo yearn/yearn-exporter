@@ -7,7 +7,7 @@ from dotenv import load_dotenv
 from yearn.cache import memory
 import pandas as pd
 from datetime import datetime, timezone
-from brownie import chain, web3, Contract, ZERO_ADDRESS
+from brownie import chain, web3, Contract, ZERO_ADDRESS, interface
 from web3._utils.events import construct_event_topic_set
 from yearn.utils import contract, contract_creation_block
 from yearn.prices import magic, constants
