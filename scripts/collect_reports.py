@@ -152,7 +152,7 @@ CHAIN_VALUES = {
         "STRATEGIST_MULTISIG": "0xea3a15df68fCdBE44Fdb0DB675B2b3A14a148b26",
         "GOVERNANCE_MULTISIG": "0xF5d9D6133b698cE29567a90Ab35CfB874204B3A7",
         "EXPLORER_URL": "https://optimistic.etherscan.io/",
-        "TENDERLY_CHAIN_IDENTIFIER": "optimism",
+        "TENDERLY_CHAIN_IDENTIFIER": "optimistic",
         "TELEGRAM_CHAT_ID": os.environ.get('TELEGRAM_CHANNEL_10_PUBLIC'),
         "DISCORD_CHAN": os.environ.get('DISCORD_CHANNEL_10'),
     }
