@@ -69,6 +69,7 @@ SKIP_LOGS = {
         '0x9D79d5B61De59D882ce90125b18F74af650acB93', # NBST token with erroneous price
         # Other:
         '0x1BA4b447d0dF64DA64024e5Ec47dA94458C1e97f', # Hegic Option Token from strategist testing, expired and worthless
+        '0xeaaa790591c646b0436f02f63e8Ca56209FEDE4E', # DHR D-Horse token
     ],
     Network.Fantom: [
         "0x630277E37fd2Ddf81e4683f3692dD817aa6225Cb", # 8bitcats

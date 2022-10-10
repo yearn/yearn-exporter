@@ -103,10 +103,19 @@ logs: get-network-name
 .SILENT:
 up: get-network-name
 	$(eval commands = $(if $(commands),$(commands),$(exporter_scripts)))
+	$(eval with_logs = $(if $(with_logs),$(with_logs),true))
 	if [ "$(NETWORK)" != "" ]; then
-		make single-network network=$(NETWORK) commands="$(commands)" logs
+		if [ "$(with_logs)" == "true" ]; then
+			make single-network network=$(NETWORK) commands="$(commands)" logs
+		else
+			make single-network network=$(NETWORK) commands="$(commands)"
+		fi
 	else
-		make all-networks commands="$(commands)" logs
+		if [ "$(with_logs)" == "true" ]; then
+			make all-networks commands="$(commands)" logs
+		else
+			make all-networks commands="$(commands)"
+		fi
 	fi
 
 console: get-network-name
@@ -211,7 +220,7 @@ apy: up
 
 # revenue scripts
 revenues:
-	make up network=eth commands=revenues
+	make up network=eth commands=revenues with_logs=false
 
 # partners scripts
 partners-eth:
