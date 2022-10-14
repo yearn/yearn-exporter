@@ -2,6 +2,7 @@ from brownie import chain
 from yearn.networks import Network
 from yearn.partners.snapshot import (BentoboxWrapper, DegenboxWrapper, ElementWrapper, Partner, WildcardWrapper,
                                      Wrapper, YApeSwapFactoryWrapper, GearboxWrapper)
+# make sure partner names are lowercase
 
 partners = {
     Network.Mainnet: [
@@ -283,7 +284,7 @@ partners = {
             ],
         ),
         Partner(
-            name="Mover",
+            name="mover",
             start_block=0,
             treasury='0xf6A0307cb6aA05D7C19d080A0DA9B14eAB1050b7',
             wrappers=[
