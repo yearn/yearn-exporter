@@ -8,8 +8,10 @@ from yearn.networks import Network
 from yearn.utils import contract
 
 YEARN_PARTNER_TRACKER = contract({
-    Network.Mainnet:"0x8ee392a4787397126C163Cb9844d7c447da419D8",
-    Network.Fantom:"0x086865B2983320b36C42E48086DaDc786c9Ac73B",
+    Network.Mainnet: "0x8ee392a4787397126C163Cb9844d7c447da419D8",
+    Network.Fantom: "0x086865B2983320b36C42E48086DaDc786c9Ac73B",
+    Network.Arbitrum: "0x0e5b46E4b2a05fd53F5a4cD974eb98a9a613bcb7",
+    Network.Optimism: "0x7E08735690028cdF3D81e7165493F1C34065AbA2",
 }[chain.id])
 
 class AsOfDict(dict):
