@@ -53,6 +53,9 @@ INTL_STABLECOINS = {
         '0x1CC481cE2BD2EC7Bf67d1Be64d4878b16078F309',  # ibCHF
         '0x5555f75e3d5278082200Fb451D1b6bA946D8e13b',  # ibJPY
     },
+    Network.Arbitrum: {
+        '0xFa247d0D55a324ca19985577a2cDcFC383D87953',  # PHP Philippine Peso
+    },
 }.get(chain.id, set())
 
 OTHER_LONG_TERM_ASSETS = {
