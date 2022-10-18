@@ -1,6 +1,7 @@
 import logging
 import threading
 import time
+import inflection
 from typing import List
 
 from brownie import Contract, chain, web3
@@ -106,6 +107,8 @@ class Registry(metaclass=Singleton):
 
     def process_events(self, events):
         for event in events:
+            # hack to make camels to snakes
+            event._ordered = [OrderedDict({inflection.underscore(k): v for k, v in od.items()}) for od in event._ordered]
             logger.debug("%s %s %s", event.address, event.name, dict(event))
             if event.name == "NewGovernance":
                 self.governance = event["governance"]

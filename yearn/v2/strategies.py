@@ -1,6 +1,7 @@
 import logging
 import threading
 import time
+import inflection
 from typing import List
 
 from eth_utils import encode_hex, event_abi_to_log_topic
@@ -88,6 +89,8 @@ class Strategy:
 
     def process_events(self, events):
         for event in events:
+            # hack to make camels to snakes
+            event._ordered = [OrderedDict({inflection.underscore(k): v for k, v in od.items()}) for od in event._ordered]
             if event.name == "Harvested":
                 block = event.block_number
                 logger.debug("%s harvested on %d", self.name, block)
