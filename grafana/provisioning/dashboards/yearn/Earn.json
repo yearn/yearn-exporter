@@ -9,13 +9,13 @@
       "pluginName": "Prometheus"
     }
   ],
-  "__elements": [],
+  "__elements": {},
   "__requires": [
     {
       "type": "grafana",
       "id": "grafana",
       "name": "Grafana",
-      "version": "8.3.1"
+      "version": "9.2.0"
     },
     {
       "type": "panel",
@@ -46,7 +46,10 @@
     "list": [
       {
         "builtIn": 1,
-        "datasource": "-- Grafana --",
+        "datasource": {
+          "type": "datasource",
+          "uid": "grafana"
+        },
         "enable": true,
         "hide": true,
         "iconColor": "rgba(0, 211, 255, 1)",
@@ -66,7 +69,6 @@
   "fiscalYearStartMonth": 0,
   "graphTooltip": 0,
   "id": null,
-  "iteration": 1639199550178,
   "links": [],
   "liveNow": false,
   "panels": [
@@ -93,7 +95,7 @@
             "mode": "absolute",
             "steps": [
               {
-                "color": "purple",
+                "color": "super-light-blue",
                 "value": null
               }
             ]
@@ -111,7 +113,7 @@
       "id": 13,
       "options": {
         "colorMode": "value",
-        "graphMode": "none",
+        "graphMode": "area",
         "justifyMode": "auto",
         "orientation": "auto",
         "reduceOptions": {
@@ -124,21 +126,23 @@
         "text": {},
         "textMode": "auto"
       },
-      "pluginVersion": "8.3.1",
+      "pluginVersion": "9.2.0",
       "targets": [
         {
           "datasource": {
             "type": "prometheus",
             "uid": "DS_PROMETHEUS"
           },
+          "editorMode": "code",
           "exemplar": false,
           "expr": "sum(iearn{network=\"ETH\", param=\"tvl\"})",
           "format": "time_series",
-          "instant": true,
+          "instant": false,
           "interval": "",
           "intervalFactor": 1,
           "legendFormat": "{{vault}}",
           "queryType": "randomWalk",
+          "range": true,
           "refId": "A"
         }
       ],
@@ -174,7 +178,7 @@
               }
             ]
           },
-          "unit": "short"
+          "unit": "currencyUSD"
         },
         "overrides": []
       },
@@ -200,9 +204,13 @@
         "text": {},
         "textMode": "auto"
       },
-      "pluginVersion": "8.3.1",
+      "pluginVersion": "9.2.0",
       "targets": [
         {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "DS_PROMETHEUS"
+          },
           "exemplar": true,
           "expr": "sum(delta(iearn{network=\"ETH\", param=\"tvl\"}[1d]))",
           "format": "time_series",
@@ -246,7 +254,7 @@
               }
             ]
           },
-          "unit": "short"
+          "unit": "currencyUSD"
         },
         "overrides": []
       },
@@ -272,9 +280,13 @@
         "text": {},
         "textMode": "auto"
       },
-      "pluginVersion": "8.3.1",
+      "pluginVersion": "9.2.0",
       "targets": [
         {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "DS_PROMETHEUS"
+          },
           "exemplar": true,
           "expr": "sum(delta(iearn{network=\"ETH\", param=\"tvl\"}[1w]))",
           "format": "time_series",
@@ -318,7 +330,7 @@
               }
             ]
           },
-          "unit": "short"
+          "unit": "currencyUSD"
         },
         "overrides": []
       },
@@ -344,9 +356,13 @@
         "text": {},
         "textMode": "auto"
       },
-      "pluginVersion": "8.3.1",
+      "pluginVersion": "9.2.0",
       "targets": [
         {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "DS_PROMETHEUS"
+          },
           "exemplar": true,
           "expr": "sum(delta(iearn{network=\"ETH\", param=\"tvl\"}[4w]))",
           "format": "time_series",
@@ -364,6 +380,10 @@
     },
     {
       "collapsed": true,
+      "datasource": {
+        "type": "datasource",
+        "uid": "grafana"
+      },
       "gridPos": {
         "h": 1,
         "w": 24,
@@ -426,7 +446,7 @@
             "alertThreshold": false
           },
           "percentage": false,
-          "pluginVersion": "8.3.1",
+          "pluginVersion": "9.2.0",
           "pointradius": 2,
           "points": false,
           "renderer": "flot",
@@ -445,6 +465,10 @@
           "steppedLine": true,
           "targets": [
             {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "DS_PROMETHEUS"
+              },
               "exemplar": true,
               "expr": "sum(iearn{network=\"ETH\", param=\"tvl\"})",
               "format": "time_series",
@@ -456,6 +480,10 @@
               "refId": "A"
             },
             {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "DS_PROMETHEUS"
+              },
               "exemplar": true,
               "expr": "sum(delta(iearn{network=\"ETH\", param=\"tvl\"}[1d]))",
               "hide": false,
@@ -500,11 +528,24 @@
           }
         }
       ],
+      "targets": [
+        {
+          "datasource": {
+            "type": "datasource",
+            "uid": "grafana"
+          },
+          "refId": "A"
+        }
+      ],
       "title": "TVL - Graph",
       "type": "row"
     },
     {
       "collapsed": true,
+      "datasource": {
+        "type": "datasource",
+        "uid": "grafana"
+      },
       "gridPos": {
         "h": 1,
         "w": 24,
@@ -543,7 +584,7 @@
             "h": 8,
             "w": 24,
             "x": 0,
-            "y": 6
+            "y": 16
           },
           "hiddenSeries": false,
           "id": 10,
@@ -567,7 +608,7 @@
             "alertThreshold": false
           },
           "percentage": false,
-          "pluginVersion": "8.3.1",
+          "pluginVersion": "9.2.0",
           "pointradius": 2,
           "points": false,
           "renderer": "flot",
@@ -679,7 +720,7 @@
             "h": 8,
             "w": 24,
             "x": 0,
-            "y": 14
+            "y": 24
           },
           "hiddenSeries": false,
           "id": 21,
@@ -703,7 +744,7 @@
             "alertThreshold": false
           },
           "percentage": false,
-          "pluginVersion": "8.3.1",
+          "pluginVersion": "9.2.0",
           "pointradius": 2,
           "points": false,
           "renderer": "flot",
@@ -786,11 +827,24 @@
           }
         }
       ],
+      "targets": [
+        {
+          "datasource": {
+            "type": "datasource",
+            "uid": "grafana"
+          },
+          "refId": "A"
+        }
+      ],
       "title": "TVL - Graphs Detailed",
       "type": "row"
     },
     {
       "collapsed": true,
+      "datasource": {
+        "type": "datasource",
+        "uid": "grafana"
+      },
       "gridPos": {
         "h": 1,
         "w": 24,
@@ -836,7 +890,7 @@
             "h": 7,
             "w": 24,
             "x": 0,
-            "y": 7
+            "y": 17
           },
           "id": 17,
           "options": {
@@ -854,7 +908,7 @@
             "text": {},
             "textMode": "auto"
           },
-          "pluginVersion": "8.3.1",
+          "pluginVersion": "9.2.0",
           "targets": [
             {
               "datasource": {
@@ -877,11 +931,24 @@
           "type": "stat"
         }
       ],
+      "targets": [
+        {
+          "datasource": {
+            "type": "datasource",
+            "uid": "grafana"
+          },
+          "refId": "A"
+        }
+      ],
       "title": "Share Price",
       "type": "row"
     },
     {
       "collapsed": true,
+      "datasource": {
+        "type": "datasource",
+        "uid": "grafana"
+      },
       "gridPos": {
         "h": 1,
         "w": 24,
@@ -902,6 +969,8 @@
                 "mode": "palette-classic"
               },
               "custom": {
+                "axisCenteredZero": false,
+                "axisColorMode": "text",
                 "axisGridShow": true,
                 "axisLabel": "Share Price",
                 "axisPlacement": "auto",
@@ -991,11 +1060,13 @@
               ],
               "displayMode": "table",
               "placement": "right",
+              "showLegend": true,
               "sortBy": "Last",
               "sortDesc": true
             },
             "tooltip": {
-              "mode": "single"
+              "mode": "single",
+              "sort": "none"
             }
           },
           "pluginVersion": "8.3.1",
@@ -1032,6 +1103,8 @@
                 "mode": "palette-classic"
               },
               "custom": {
+                "axisCenteredZero": false,
+                "axisColorMode": "text",
                 "axisGridShow": true,
                 "axisLabel": "Share Price",
                 "axisPlacement": "auto",
@@ -1097,11 +1170,13 @@
               ],
               "displayMode": "table",
               "placement": "right",
+              "showLegend": true,
               "sortBy": "Max",
               "sortDesc": true
             },
             "tooltip": {
-              "mode": "multi"
+              "mode": "multi",
+              "sort": "none"
             }
           },
           "pluginVersion": "8.3.1",
@@ -1138,6 +1213,8 @@
                 "mode": "palette-classic"
               },
               "custom": {
+                "axisCenteredZero": false,
+                "axisColorMode": "text",
                 "axisGridShow": true,
                 "axisLabel": "",
                 "axisPlacement": "auto",
@@ -1203,11 +1280,13 @@
               ],
               "displayMode": "table",
               "placement": "right",
+              "showLegend": true,
               "sortBy": "Max",
               "sortDesc": true
             },
             "tooltip": {
-              "mode": "single"
+              "mode": "single",
+              "sort": "none"
             }
           },
           "pluginVersion": "8.3.1",
@@ -1230,11 +1309,24 @@
           "type": "timeseries"
         }
       ],
+      "targets": [
+        {
+          "datasource": {
+            "type": "datasource",
+            "uid": "grafana"
+          },
+          "refId": "A"
+        }
+      ],
       "title": "Share Price - Graphs",
       "type": "row"
     },
     {
-      "collapsed": false,
+      "collapsed": true,
+      "datasource": {
+        "type": "datasource",
+        "uid": "grafana"
+      },
       "gridPos": {
         "h": 1,
         "w": 24,
@@ -1242,171 +1334,185 @@
         "y": 8
       },
       "id": 39,
-      "panels": [],
+      "panels": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "DS_PROMETHEUS"
+          },
+          "description": "This is the change in share price over the time range you have selected. If you put what day you deposited as the start till now, then you will see how much share price has increased since then. ",
+          "fieldConfig": {
+            "defaults": {
+              "color": {
+                "mode": "thresholds"
+              },
+              "decimals": 6,
+              "links": [
+                {
+                  "targetBlank": true,
+                  "title": "Earn ",
+                  "url": "https://v1.yearn.finance/earn"
+                }
+              ],
+              "mappings": [],
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {
+                    "color": "purple",
+                    "value": null
+                  }
+                ]
+              },
+              "unit": "none"
+            },
+            "overrides": []
+          },
+          "gridPos": {
+            "h": 5,
+            "w": 12,
+            "x": 0,
+            "y": 19
+          },
+          "id": 36,
+          "options": {
+            "colorMode": "value",
+            "graphMode": "none",
+            "justifyMode": "auto",
+            "orientation": "auto",
+            "reduceOptions": {
+              "calcs": [
+                "lastNotNull"
+              ],
+              "fields": "",
+              "values": false
+            },
+            "text": {},
+            "textMode": "auto"
+          },
+          "pluginVersion": "9.2.0",
+          "targets": [
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "DS_PROMETHEUS"
+              },
+              "exemplar": true,
+              "expr": "iearn{network=\"ETH\", param=\"price per share\", vault=~\"$earn\"} - iearn{network=\"ETH\", param=\"price per share\", vault=~\"$earn\"} offset $__range",
+              "format": "time_series",
+              "instant": false,
+              "interval": "",
+              "intervalFactor": 1,
+              "legendFormat": "{{vault}}",
+              "queryType": "randomWalk",
+              "refId": "A"
+            }
+          ],
+          "title": "Share Price Change",
+          "transparent": true,
+          "type": "stat"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "DS_PROMETHEUS"
+          },
+          "description": "This is the % change in share price over the time range you have selected. If you put what day you deposited as the start till now, then you will see how much yield you have gained.",
+          "fieldConfig": {
+            "defaults": {
+              "color": {
+                "mode": "thresholds"
+              },
+              "decimals": 6,
+              "links": [
+                {
+                  "targetBlank": true,
+                  "title": "Earn ",
+                  "url": "https://v1.yearn.finance/earn"
+                }
+              ],
+              "mappings": [],
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {
+                    "color": "purple",
+                    "value": null
+                  }
+                ]
+              },
+              "unit": "percentunit"
+            },
+            "overrides": []
+          },
+          "gridPos": {
+            "h": 5,
+            "w": 12,
+            "x": 12,
+            "y": 19
+          },
+          "id": 40,
+          "options": {
+            "colorMode": "value",
+            "graphMode": "none",
+            "justifyMode": "auto",
+            "orientation": "auto",
+            "reduceOptions": {
+              "calcs": [
+                "lastNotNull"
+              ],
+              "fields": "",
+              "values": false
+            },
+            "text": {},
+            "textMode": "auto"
+          },
+          "pluginVersion": "9.2.0",
+          "targets": [
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "DS_PROMETHEUS"
+              },
+              "exemplar": true,
+              "expr": "(iearn{network=\"ETH\", param=\"price per share\", vault=~\"$earn\"} / iearn{network=\"ETH\", param=\"price per share\", vault=~\"$earn\"} offset $__range ) - 1",
+              "format": "time_series",
+              "instant": false,
+              "interval": "",
+              "intervalFactor": 1,
+              "legendFormat": "{{vault}}",
+              "queryType": "randomWalk",
+              "refId": "A"
+            }
+          ],
+          "title": "Share Price % change",
+          "transparent": true,
+          "type": "stat"
+        }
+      ],
+      "targets": [
+        {
+          "datasource": {
+            "type": "datasource",
+            "uid": "grafana"
+          },
+          "refId": "A"
+        }
+      ],
       "title": "Share Price - Delta",
       "type": "row"
     },
     {
-      "datasource": {
-        "type": "prometheus",
-        "uid": "DS_PROMETHEUS"
-      },
-      "description": "This is the change in share price over the time range you have selected. If you put what day you deposited as the start till now, then you will see how much share price has increased since then. ",
-      "fieldConfig": {
-        "defaults": {
-          "color": {
-            "mode": "thresholds"
-          },
-          "decimals": 6,
-          "links": [
-            {
-              "targetBlank": true,
-              "title": "Earn ",
-              "url": "https://v1.yearn.finance/earn"
-            }
-          ],
-          "mappings": [],
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              {
-                "color": "purple",
-                "value": null
-              }
-            ]
-          },
-          "unit": "none"
-        },
-        "overrides": []
-      },
-      "gridPos": {
-        "h": 5,
-        "w": 12,
-        "x": 0,
-        "y": 9
-      },
-      "id": 36,
-      "options": {
-        "colorMode": "value",
-        "graphMode": "none",
-        "justifyMode": "auto",
-        "orientation": "auto",
-        "reduceOptions": {
-          "calcs": [
-            "lastNotNull"
-          ],
-          "fields": "",
-          "values": false
-        },
-        "text": {},
-        "textMode": "auto"
-      },
-      "pluginVersion": "8.3.1",
-      "targets": [
-        {
-          "datasource": {
-            "type": "prometheus",
-            "uid": "DS_PROMETHEUS"
-          },
-          "exemplar": true,
-          "expr": "iearn{network=\"ETH\", param=\"price per share\", vault=~\"$earn\"} - iearn{network=\"ETH\", param=\"price per share\", vault=~\"$earn\"} offset $__range",
-          "format": "time_series",
-          "instant": false,
-          "interval": "",
-          "intervalFactor": 1,
-          "legendFormat": "{{vault}}",
-          "queryType": "randomWalk",
-          "refId": "A"
-        }
-      ],
-      "title": "Share Price Change",
-      "transparent": true,
-      "type": "stat"
-    },
-    {
-      "datasource": {
-        "type": "prometheus",
-        "uid": "DS_PROMETHEUS"
-      },
-      "description": "This is the % change in share price over the time range you have selected. If you put what day you deposited as the start till now, then you will see how much yield you have gained.",
-      "fieldConfig": {
-        "defaults": {
-          "color": {
-            "mode": "thresholds"
-          },
-          "decimals": 6,
-          "links": [
-            {
-              "targetBlank": true,
-              "title": "Earn ",
-              "url": "https://v1.yearn.finance/earn"
-            }
-          ],
-          "mappings": [],
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              {
-                "color": "purple",
-                "value": null
-              }
-            ]
-          },
-          "unit": "percentunit"
-        },
-        "overrides": []
-      },
-      "gridPos": {
-        "h": 5,
-        "w": 12,
-        "x": 12,
-        "y": 9
-      },
-      "id": 40,
-      "options": {
-        "colorMode": "value",
-        "graphMode": "none",
-        "justifyMode": "auto",
-        "orientation": "auto",
-        "reduceOptions": {
-          "calcs": [
-            "lastNotNull"
-          ],
-          "fields": "",
-          "values": false
-        },
-        "text": {},
-        "textMode": "auto"
-      },
-      "pluginVersion": "8.3.1",
-      "targets": [
-        {
-          "datasource": {
-            "type": "prometheus",
-            "uid": "DS_PROMETHEUS"
-          },
-          "exemplar": true,
-          "expr": "(iearn{network=\"ETH\", param=\"price per share\", vault=~\"$earn\"} / iearn{network=\"ETH\", param=\"price per share\", vault=~\"$earn\"} offset $__range ) - 1",
-          "format": "time_series",
-          "instant": false,
-          "interval": "",
-          "intervalFactor": 1,
-          "legendFormat": "{{vault}}",
-          "queryType": "randomWalk",
-          "refId": "A"
-        }
-      ],
-      "title": "Share Price % change",
-      "transparent": true,
-      "type": "stat"
-    },
-    {
       "collapsed": true,
+      "datasource": {
+        "type": "datasource",
+        "uid": "grafana"
+      },
       "gridPos": {
         "h": 1,
         "w": 24,
         "x": 0,
-        "y": 14
+        "y": 9
       },
       "id": 32,
       "panels": [
@@ -1440,7 +1546,7 @@
             "h": 8,
             "w": 24,
             "x": 0,
-            "y": 15
+            "y": 20
           },
           "hiddenSeries": false,
           "id": 8,
@@ -1464,7 +1570,7 @@
             "alertThreshold": false
           },
           "percentage": false,
-          "pluginVersion": "8.3.1",
+          "pluginVersion": "9.2.0",
           "pointradius": 2,
           "points": false,
           "renderer": "flot",
@@ -1565,7 +1671,7 @@
             "h": 9,
             "w": 12,
             "x": 0,
-            "y": 23
+            "y": 28
           },
           "hiddenSeries": false,
           "id": 7,
@@ -1589,7 +1695,7 @@
             "alertThreshold": false
           },
           "percentage": false,
-          "pluginVersion": "8.3.1",
+          "pluginVersion": "9.2.0",
           "pointradius": 2,
           "points": false,
           "renderer": "flot",
@@ -1682,7 +1788,7 @@
             "h": 9,
             "w": 12,
             "x": 12,
-            "y": 23
+            "y": 28
           },
           "hiddenSeries": false,
           "id": 9,
@@ -1706,7 +1812,7 @@
             "alertThreshold": false
           },
           "percentage": false,
-          "pluginVersion": "8.3.1",
+          "pluginVersion": "9.2.0",
           "pointradius": 2,
           "points": false,
           "renderer": "flot",
@@ -1765,12 +1871,21 @@
           }
         }
       ],
+      "targets": [
+        {
+          "datasource": {
+            "type": "datasource",
+            "uid": "grafana"
+          },
+          "refId": "A"
+        }
+      ],
       "title": "Lent / Unlent Supply",
       "type": "row"
     }
   ],
   "refresh": false,
-  "schemaVersion": 33,
+  "schemaVersion": 37,
   "style": "dark",
   "tags": [
     "yEarn"
@@ -1779,9 +1894,9 @@
     "list": [
       {
         "current": {
-          "selected": false,
-          "text": "busd.curve.fi",
-          "value": ".*v3"
+          "selected": true,
+          "text": "y.curve.fi",
+          "value": ".*v2"
         },
         "description": "Select which yEarn product you want to view",
         "hide": 0,
@@ -1791,12 +1906,12 @@
         "name": "earn",
         "options": [
           {
-            "selected": false,
+            "selected": true,
             "text": "y.curve.fi",
             "value": ".*v2"
           },
           {
-            "selected": true,
+            "selected": false,
             "text": "busd.curve.fi",
             "value": ".*v3"
           }
@@ -1809,13 +1924,13 @@
     ]
   },
   "time": {
-    "from": "now-30d",
+    "from": "now-90d",
     "to": "now"
   },
   "timepicker": {},
   "timezone": "",
   "title": "Earn",
-  "uid": "ghD3028Mzzd",
-  "version": 24,
+  "uid": "ZE2j8US4k",
+  "version": 5,
   "weekStart": ""
 }
