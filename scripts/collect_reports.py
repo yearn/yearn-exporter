@@ -31,7 +31,6 @@ inv_telegram_key = os.environ.get('WAVEY_ALERTS_BOT_KEY')
 invbot = telebot.TeleBot(inv_telegram_key)
 env = os.environ.get('ENVIRONMENT')
 alerts_enabled = True if env == "PROD" or env == "TEST" else False
-alerts_enabled = False
 
 test_channel = os.environ.get('TELEGRAM_CHANNEL_TEST')
 if env == "TEST":
