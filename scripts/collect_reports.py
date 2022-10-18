@@ -31,6 +31,7 @@ inv_telegram_key = os.environ.get('WAVEY_ALERTS_BOT_KEY')
 invbot = telebot.TeleBot(inv_telegram_key)
 env = os.environ.get('ENVIRONMENT')
 alerts_enabled = True if env == "PROD" or env == "TEST" else False
+alerts_enabled = False
 
 test_channel = os.environ.get('TELEGRAM_CHANNEL_TEST')
 if env == "TEST":
@@ -325,13 +326,14 @@ def handle_event(event, multi_harvest):
         crv = '0xD533a949740bb3306d119CC777fa900bA034cd52'
         yvecrv = '0xc5bDdf9843308380375a611c18B50Fb9341f502A'
         voter = '0xF147b8125d2ef93FB6965Db97D6746952a133934'
+        treasury = '0x93A62dA5a14C80f265DAbC077fCEE437B1a0Efde'
         token_abi = Contract(crv).abi
         crv_token = web3.eth.contract(crv, abi=token_abi)
         decoded_events = crv_token.events.Transfer().processReceipt(tx)
         r.keep_crv = 0
         for tfr in decoded_events:
             _from, _to, _val = tfr.args.values()
-            if tfr.address == crv and _from == r.strategy_address and _to == voter:
+            if tfr.address == crv and _from == r.strategy_address and (_to == voter or _to == treasury):
                 r.keep_crv = _val / 1e18
                 r.crv_price_usd = magic.get_price(crv, r.block)
                 r.keep_crv_value_usd = r.keep_crv * r.crv_price_usd
