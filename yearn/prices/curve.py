@@ -87,6 +87,7 @@ class Ids(IntEnum):
     Fee_Distributor = 4
     CryptoSwap_Registry = 5
     CryptoPool_Factory = 6
+    MetaFactory = 7
 
 
 class CurveRegistry(metaclass=Singleton):
