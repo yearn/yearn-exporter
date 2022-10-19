@@ -6,44 +6,66 @@ from time import time
 import sentry_sdk
 from brownie import Contract, chain
 from yearn.multicall2 import fetch_multicall
-from yearn.networks import Network
-from yearn.utils import contract, safe_views
+from yearn.utils import closest_block_after_timestamp, safe_views
+from yearn.snapshot_range_helper import (start_bidirectional_export, time_tracking)
+from yearn.outputs.victoria.output_helper import _build_item, _post
+from yearn.outputs.victoria import output_duration
 
-sentry_sdk.set_tag('script','vaults_exporter')
+sentry_sdk.set_tag('script','veyfi_exporter')
 
-logger = logging.getLogger('yearn.vaults_exporter')
+logger = logging.getLogger('yearn.veyfi_exporter')
 
-def main():
-    # 0xd281F1C9f8B7A673D0556d5b44edE0e54CD27074 == veyfi
-    try:
-        results = fetch_multicall(*[[contract('0xd281F1C9f8B7A673D0556d5b44edE0e54CD27074'), view] for view in _views()])
-        info = dict(zip(_views, results))
-        print(info)
-    except ValueError as e:
-        info = {"strategies": {}}
-    # yearn = Yearn()
-    # for block in chain.new_blocks(height_buffer=1):
-    #     start_time = time.time()
-    #     yearn.export(block.number, block.timestamp)
-    #     duration = time.time() - start_time
-    #     output_duration.export(duration, 1, "forwards", block.timestamp)
-    #     time.sleep(sleep_interval)
 
-# todo move the _views to veyfi contract
-def _views():
-    voting: Contract = Contract.from_abi(
+class VotingYFI:
+    def __init__(self):
+        self.veyfi = Contract.from_abi(
             name='VotingYFI',
             address='0xd281F1C9f8B7A673D0556d5b44edE0e54CD27074',
             abi=json.load(open('interfaces/veyfi/VotingYFI.json'))
-        ) 
-    views = safe_views(voting.abi)
-    print(views)
-    return views
-# @time_tracking
-# def export_snapshot(snapshot, ts):
-#     start = time()
-#     from yearn.yearn import _yearn
-#     block = closest_block_after_timestamp(ts, wait_for=True)
-#     assert block is not None, "no block after timestamp found"
-#     _yearn().export(block, ts)
-#     logger.info("exported vaults snapshot %s took %.3fs", snapshot, time() - start)
+        )
+        self._views = safe_views(self.veyfi.abi)
+
+    def describe(self, block=None):
+        # TODO: this currently only fetches totalSupply and supply
+        #       will need to parse events & transactions
+        try:
+            results = fetch_multicall(
+                *[[self.veyfi, view] for view in self._views], block=block
+            )
+            info = dict(zip(self._views, results))
+        except ValueError as e:
+            info = {}
+        return info
+
+
+def main():
+    assert chain.id == 5, "must run on the Goerli chain"
+    start = datetime(2022, 9, 9, 1, tzinfo=timezone.utc)
+    data_query = 'veyfi{network="GTH"}'
+    start_bidirectional_export(start, export_snapshot, data_query)
+
+
+@time_tracking
+def export_snapshot(snapshot, ts):
+    start = time()
+    block = closest_block_after_timestamp(ts, wait_for=True)
+    assert block is not None, "no block after timestamp found"
+    export_veyfi(block, ts)
+    duration = time() - start
+    output_duration.export(duration, 1, "veyfi", ts)
+    logger.info("exported veyfi snapshot %s took %.3fs", snapshot, time() - start)
+
+
+def export_veyfi(block, timestamp):
+    data = VotingYFI().describe(block=block)
+    metrics_to_export = []
+    for key, value in data.items():
+        item = _build_item(
+            "veyfi",
+            ['param'],
+            [key],
+            value,
+            timestamp,
+        )
+        metrics_to_export.append(item)
+    _post(metrics_to_export)
