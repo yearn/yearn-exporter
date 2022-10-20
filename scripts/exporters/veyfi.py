@@ -6,6 +6,7 @@ from time import time
 import sentry_sdk
 from brownie import Contract, chain
 from yearn.multicall2 import fetch_multicall
+from yearn.networks import Network
 from yearn.utils import closest_block_after_timestamp, safe_views
 from yearn.snapshot_range_helper import (start_bidirectional_export, time_tracking)
 from yearn.outputs.victoria.output_helper import _build_item, _post
@@ -15,12 +16,17 @@ sentry_sdk.set_tag('script','veyfi_exporter')
 
 logger = logging.getLogger('yearn.veyfi_exporter')
 
+VEYFI = {
+    Network.Goerli: '0xd281F1C9f8B7A673D0556d5b44edE0e54CD27074',
+    Network.Optimism: '0xfc82d83144403b107BF1D95818d01E2dbc47F82a',
+}
+
 
 class VotingYFI:
     def __init__(self):
         self.veyfi = Contract.from_abi(
             name='VotingYFI',
-            address='0xd281F1C9f8B7A673D0556d5b44edE0e54CD27074',
+            address=VEYFI[chain.id],
             abi=json.load(open('interfaces/veyfi/VotingYFI.json'))
         )
         self._views = safe_views(self.veyfi.abi)
@@ -39,9 +45,15 @@ class VotingYFI:
 
 
 def main():
-    assert chain.id == 5, "must run on the Goerli chain"
-    start = datetime(2022, 9, 9, 1, tzinfo=timezone.utc)
-    data_query = 'veyfi{network="GTH"}'
+    if chain.id == Network.Goerli:
+        start = datetime(2022, 9, 9, 1, tzinfo=timezone.utc)
+        data_query = 'veyfi{network="GTH"}'
+    elif chain.id == Network.Optimism:
+        start = datetime(2022, 10, 6, 22, tzinfo=timezone.utc)
+        data_query = 'veyfi{network="OPT"}'
+    else:
+        raise NotImplementedError("Only Goerli and Optimism are supported")
+
     start_bidirectional_export(start, export_snapshot, data_query)
 
 
