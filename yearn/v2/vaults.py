@@ -5,6 +5,7 @@ import time
 import inflection
 from typing import Dict, List
 
+from collections import OrderedDict
 from brownie import chain
 from eth_utils import encode_hex, event_abi_to_log_topic
 from joblib import Parallel, delayed

@@ -5,6 +5,7 @@ import inflection
 from typing import List
 
 from brownie import Contract, chain, web3
+from collections import OrderedDict
 from joblib import Parallel, delayed
 from web3._utils.abi import filter_by_name
 from web3._utils.events import construct_event_topic_set

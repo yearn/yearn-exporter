@@ -4,6 +4,7 @@ import time
 import inflection
 from typing import List
 
+from collections import OrderedDict
 from eth_utils import encode_hex, event_abi_to_log_topic
 from yearn.decorators import sentry_catch_all, wait_or_exit_after
 from yearn.events import create_filter, decode_logs
