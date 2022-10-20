@@ -27,8 +27,9 @@ BINARY_SEARCH_BARRIER = {
 }
 
 # XXX: add PoA middleware for Goerli
-web3._custom_middleware.add(geth_poa_middleware)
-web3.middleware_onion.inject(geth_poa_middleware, layer=0)
+if chain.id == Network.Goerli:
+    web3._custom_middleware.add(geth_poa_middleware)
+    web3.middleware_onion.inject(geth_poa_middleware, layer=0)
 
 _erc20 = lru_cache(maxsize=None)(interface.ERC20)
 
