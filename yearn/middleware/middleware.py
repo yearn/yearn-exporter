@@ -1,4 +1,3 @@
-from http.client import NETWORK_AUTHENTICATION_REQUIRED
 import logging
 
 import eth_retry
