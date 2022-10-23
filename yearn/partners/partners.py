@@ -1,8 +1,9 @@
 from brownie import chain
 from yearn.networks import Network
-from yearn.partners.snapshot import (BentoboxWrapper, DegenboxWrapper, ElementWrapper, Partner, WildcardWrapper,
-                                     Wrapper, YApeSwapFactoryWrapper, GearboxWrapper)
-# make sure partner names are lowercase
+from yearn.partners.snapshot import (BentoboxWrapper, DegenboxWrapper,
+                                     ElementWrapper, GearboxWrapper, Partner,
+                                     WildcardWrapper, Wrapper,
+                                     YApeSwapFactoryWrapper)
 
 partners = {
     Network.Mainnet: [
