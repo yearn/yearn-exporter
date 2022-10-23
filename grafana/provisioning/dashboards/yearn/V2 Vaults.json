@@ -9,13 +9,13 @@
       "pluginName": "Prometheus"
     }
   ],
-  "__elements": [],
+  "__elements": {},
   "__requires": [
     {
       "type": "grafana",
       "id": "grafana",
       "name": "Grafana",
-      "version": "8.3.1"
+      "version": "9.2.1"
     },
     {
       "type": "panel",
@@ -40,13 +40,22 @@
       "id": "stat",
       "name": "Stat",
       "version": ""
+    },
+    {
+      "type": "panel",
+      "id": "timeseries",
+      "name": "Time series",
+      "version": ""
     }
   ],
   "annotations": {
     "list": [
       {
         "builtIn": 1,
-        "datasource": "-- Grafana --",
+        "datasource": {
+          "type": "datasource",
+          "uid": "grafana"
+        },
         "enable": true,
         "hide": true,
         "iconColor": "rgba(0, 211, 255, 1)",
@@ -103,7 +112,7 @@
       "id": 17,
       "options": {
         "colorMode": "value",
-        "graphMode": "none",
+        "graphMode": "area",
         "justifyMode": "auto",
         "orientation": "auto",
         "reduceOptions": {
@@ -116,15 +125,16 @@
         "text": {},
         "textMode": "auto"
       },
-      "pluginVersion": "8.3.1",
+      "pluginVersion": "9.2.1",
       "targets": [
         {
           "datasource": {
             "type": "prometheus",
             "uid": "DS_PROMETHEUS"
           },
+          "editorMode": "code",
           "exemplar": true,
-          "expr": "sum(yearn_vault{param=\"tvl\", experimental=\"false\"})",
+          "expr": "sum(yearn_vault{param=\"tvl\", experimental=\"false\", vault!~\"yveCRV|yGov\"})",
           "instant": false,
           "interval": "",
           "legendFormat": "v2 AUM",
@@ -191,15 +201,16 @@
         "text": {},
         "textMode": "auto"
       },
-      "pluginVersion": "8.3.1",
+      "pluginVersion": "9.2.1",
       "targets": [
         {
           "datasource": {
             "type": "prometheus",
             "uid": "DS_PROMETHEUS"
           },
+          "editorMode": "code",
           "exemplar": true,
-          "expr": "sum(delta(yearn_vault{param=\"tvl\", experimental=\"false\"}[1d]))",
+          "expr": "sum(delta(yearn_vault{param=\"tvl\", experimental=\"false\", vault!~\"yveCRV|yGov\"}[1d]))",
           "instant": false,
           "interval": "",
           "legendFormat": "v2 AUM",
@@ -266,15 +277,16 @@
         "text": {},
         "textMode": "auto"
       },
-      "pluginVersion": "8.3.1",
+      "pluginVersion": "9.2.1",
       "targets": [
         {
           "datasource": {
             "type": "prometheus",
             "uid": "DS_PROMETHEUS"
           },
+          "editorMode": "code",
           "exemplar": true,
-          "expr": "sum(delta(yearn_vault{param=\"tvl\", experimental=\"false\"}[1w]))",
+          "expr": "sum(delta(yearn_vault{param=\"tvl\", experimental=\"false\", vault!~\"yveCRV|yGov\"}[1w]))",
           "instant": false,
           "interval": "",
           "legendFormat": "v2 AUM",
@@ -341,15 +353,16 @@
         "text": {},
         "textMode": "auto"
       },
-      "pluginVersion": "8.3.1",
+      "pluginVersion": "9.2.1",
       "targets": [
         {
           "datasource": {
             "type": "prometheus",
             "uid": "DS_PROMETHEUS"
           },
+          "editorMode": "code",
           "exemplar": true,
-          "expr": "sum(delta(yearn_vault{param=\"tvl\", experimental=\"false\"}[4w]))",
+          "expr": "sum(delta(yearn_vault{param=\"tvl\", experimental=\"false\", vault!~\"yveCRV|yGov\"}[4w]))",
           "instant": false,
           "interval": "",
           "legendFormat": "v2 AUM",
@@ -364,6 +377,10 @@
     },
     {
       "collapsed": false,
+      "datasource": {
+        "type": "datasource",
+        "uid": "grafana"
+      },
       "gridPos": {
         "h": 1,
         "w": 24,
@@ -372,79 +389,141 @@
       },
       "id": 25,
       "panels": [],
+      "targets": [
+        {
+          "datasource": {
+            "type": "datasource",
+            "uid": "grafana"
+          },
+          "refId": "A"
+        }
+      ],
       "title": "TVL - Graphs",
       "type": "row"
     },
     {
-      "aliasColors": {},
-      "bars": false,
-      "dashLength": 10,
-      "dashes": false,
       "datasource": {
         "type": "prometheus",
         "uid": "DS_PROMETHEUS"
       },
       "description": "This show Total Value Locked in v2 Vaults. If you see a quick sharp dip just ignore it, that isn't someone withdrawing and depositing quickly but a problem with the exporter at that time. ",
-      "fill": 3,
-      "fillGradient": 3,
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisCenteredZero": false,
+            "axisColorMode": "series",
+            "axisLabel": "",
+            "axisPlacement": "auto",
+            "barAlignment": 0,
+            "drawStyle": "line",
+            "fillOpacity": 50,
+            "gradientMode": "opacity",
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            },
+            "lineInterpolation": "stepAfter",
+            "lineWidth": 1,
+            "pointSize": 5,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "showPoints": "never",
+            "spanNulls": true,
+            "stacking": {
+              "group": "A",
+              "mode": "none"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
+          },
+          "decimals": 2,
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              }
+            ]
+          },
+          "unit": "currencyUSD"
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "v2 net inflow/outflow"
+            },
+            "properties": [
+              {
+                "id": "custom.lineWidth",
+                "value": 1
+              },
+              {
+                "id": "custom.axisPlacement",
+                "value": "right"
+              },
+              {
+                "id": "custom.lineInterpolation",
+                "value": "smooth"
+              },
+              {
+                "id": "custom.fillOpacity",
+                "value": 95
+              },
+              {
+                "id": "color",
+                "value": {
+                  "fixedColor": "text",
+                  "mode": "fixed"
+                }
+              }
+            ]
+          }
+        ]
+      },
       "gridPos": {
         "h": 9,
         "w": 24,
         "x": 0,
         "y": 10
       },
-      "hiddenSeries": false,
       "id": 18,
-      "legend": {
-        "alignAsTable": true,
-        "avg": false,
-        "current": true,
-        "hideEmpty": false,
-        "hideZero": false,
-        "max": false,
-        "min": false,
-        "rightSide": true,
-        "show": true,
-        "sort": "current",
-        "sortDesc": true,
-        "total": false,
-        "values": true
-      },
-      "lines": true,
-      "linewidth": 2,
-      "nullPointMode": "connected",
       "options": {
-        "alertThreshold": false
-      },
-      "percentage": false,
-      "pluginVersion": "8.3.1",
-      "pointradius": 2,
-      "points": false,
-      "renderer": "flot",
-      "seriesOverrides": [
-        {
-          "$$hashKey": "object:1802",
-          "alias": "v2 net inflow/outflow",
-          "legend": true,
-          "lines": false,
-          "nullPointMode": "connected",
-          "yaxis": 2
+        "legend": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "displayMode": "table",
+          "placement": "right",
+          "showLegend": true
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
         }
-      ],
-      "spaceLength": 10,
-      "stack": false,
-      "steppedLine": true,
+      },
+      "pluginVersion": "9.2.1",
       "targets": [
         {
           "datasource": {
             "type": "prometheus",
             "uid": "DS_PROMETHEUS"
           },
-          "exemplar": true,
-          "expr": "sum(yearn_vault{param=\"tvl\", experimental=\"false\"})",
+          "editorMode": "code",
+          "exemplar": false,
+          "expr": "sum(yearn_vault{param=\"tvl\", experimental=\"false\", vault!~\"yveCRV|yGov\"})",
           "interval": "",
           "legendFormat": "v2 AUM",
           "queryType": "randomWalk",
+          "range": true,
           "refId": "A"
         },
         {
@@ -452,143 +531,139 @@
             "type": "prometheus",
             "uid": "DS_PROMETHEUS"
           },
-          "exemplar": true,
-          "expr": "sum(delta(yearn_vault{param=\"tvl\", experimental=\"false\"}[1d]))",
+          "editorMode": "code",
+          "exemplar": false,
+          "expr": "sum(delta(yearn_vault{param=\"tvl\", experimental=\"false\", vault!~\"yveCRV|yGov\"}[1d]))",
           "hide": false,
           "interval": "",
           "legendFormat": "v2 net inflow/outflow",
+          "range": true,
           "refId": "B"
         }
       ],
-      "thresholds": [],
-      "timeRegions": [],
       "title": "Total Value Locked",
-      "tooltip": {
-        "shared": true,
-        "sort": 2,
-        "value_type": "individual"
-      },
-      "transformations": [
-        {
-          "id": "filterByValue",
-          "options": {
-            "filters": [
-              {
-                "config": {
-                  "id": "lowerOrEqual",
-                  "options": {
-                    "value": 500000000
-                  }
-                },
-                "fieldName": "v2 AUM"
-              }
-            ],
-            "match": "any",
-            "type": "exclude"
-          }
-        }
-      ],
+      "transformations": [],
       "transparent": true,
-      "type": "graph",
-      "xaxis": {
-        "mode": "time",
-        "show": true,
-        "values": []
-      },
-      "yaxes": [
-        {
-          "$$hashKey": "object:919",
-          "decimals": 2,
-          "format": "short",
-          "label": "",
-          "logBase": 1,
-          "show": true
-        },
-        {
-          "$$hashKey": "object:920",
-          "format": "short",
-          "label": "",
-          "logBase": 1,
-          "show": false
-        }
-      ],
-      "yaxis": {
-        "align": false
-      }
+      "type": "timeseries"
     },
     {
-      "aliasColors": {},
-      "bars": false,
-      "dashLength": 10,
-      "dashes": false,
       "datasource": {
         "type": "prometheus",
         "uid": "DS_PROMETHEUS"
       },
       "description": "Show the Daily change in v2 yVault's Assets Under Management. \n",
-      "fill": 0,
-      "fillGradient": 0,
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisCenteredZero": false,
+            "axisColorMode": "series",
+            "axisLabel": "Change in Vault TVL",
+            "axisPlacement": "auto",
+            "barAlignment": 0,
+            "drawStyle": "line",
+            "fillOpacity": 0,
+            "gradientMode": "none",
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            },
+            "lineInterpolation": "stepAfter",
+            "lineWidth": 1,
+            "pointSize": 5,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "showPoints": "never",
+            "spanNulls": true,
+            "stacking": {
+              "group": "A",
+              "mode": "none"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "red",
+                "value": null
+              }
+            ]
+          },
+          "unit": "currencyUSD"
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "net inflow/outflow"
+            },
+            "properties": [
+              {
+                "id": "color",
+                "value": {
+                  "fixedColor": "rgb(204, 204, 220)",
+                  "mode": "fixed"
+                }
+              },
+              {
+                "id": "custom.fillOpacity",
+                "value": 25
+              },
+              {
+                "id": "custom.lineWidth",
+                "value": 0
+              },
+              {
+                "id": "custom.axisLabel",
+                "value": "Change in Total TVL"
+              }
+            ]
+          }
+        ]
+      },
       "gridPos": {
         "h": 10,
         "w": 24,
         "x": 0,
         "y": 19
       },
-      "hiddenSeries": false,
       "id": 19,
-      "legend": {
-        "alignAsTable": true,
-        "avg": false,
-        "current": true,
-        "hideEmpty": false,
-        "hideZero": false,
-        "max": false,
-        "min": false,
-        "rightSide": true,
-        "show": true,
-        "sort": "current",
-        "sortDesc": true,
-        "total": false,
-        "values": true
-      },
-      "lines": true,
-      "linewidth": 2,
-      "nullPointMode": "null",
       "options": {
-        "alertThreshold": false
-      },
-      "percentage": false,
-      "pluginVersion": "8.3.1",
-      "pointradius": 2,
-      "points": false,
-      "renderer": "flot",
-      "seriesOverrides": [
-        {
-          "$$hashKey": "object:1688",
-          "alias": "net inflow/outflow",
-          "color": "rgb(204, 204, 220)",
-          "fill": 1,
-          "fillGradient": 4,
-          "linewidth": 1,
-          "steppedLine": false,
-          "yaxis": 2,
-          "zindex": -3
+        "legend": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "displayMode": "table",
+          "placement": "right",
+          "showLegend": true
+        },
+        "tooltip": {
+          "mode": "single",
+          "sort": "none"
         }
-      ],
-      "spaceLength": 10,
-      "stack": false,
-      "steppedLine": true,
+      },
+      "pluginVersion": "9.2.1",
       "targets": [
         {
           "datasource": {
             "type": "prometheus",
             "uid": "DS_PROMETHEUS"
           },
+          "editorMode": "code",
           "exemplar": true,
-          "expr": "delta(yearn_vault{param=\"tvl\", experimental=\"false\"}[1d])",
+          "expr": "delta(yearn_vault{param=\"tvl\", experimental=\"false\", vault!~\"yveCRV|yGov\"}[1d])",
           "interval": "",
           "legendFormat": "{{vault}} - {{network}}",
           "queryType": "randomWalk",
+          "range": true,
           "refId": "A"
         },
         {
@@ -596,100 +671,27 @@
             "type": "prometheus",
             "uid": "DS_PROMETHEUS"
           },
+          "editorMode": "code",
           "exemplar": true,
-          "expr": "sum(delta(yearn_vault{param=\"tvl\", experimental=\"false\"}[1d]))",
+          "expr": "sum(delta(yearn_vault{param=\"tvl\", experimental=\"false\", vault!~\"yveCRV|yGov\"}[1d]))",
           "hide": false,
           "interval": "",
           "legendFormat": "net inflow/outflow",
+          "range": true,
           "refId": "B"
         }
       ],
-      "thresholds": [
-        {
-          "$$hashKey": "object:308",
-          "colorMode": "warning",
-          "fill": true,
-          "line": true,
-          "op": "lt",
-          "value": -50000000,
-          "yaxis": "left"
-        },
-        {
-          "$$hashKey": "object:314",
-          "colorMode": "critical",
-          "fill": true,
-          "line": true,
-          "op": "lt",
-          "value": -100000000,
-          "yaxis": "left"
-        },
-        {
-          "$$hashKey": "object:334",
-          "colorMode": "ok",
-          "fill": false,
-          "line": true,
-          "op": "gt",
-          "value": 50000000,
-          "yaxis": "left"
-        }
-      ],
-      "timeRegions": [],
       "title": "Daily Change",
-      "tooltip": {
-        "shared": false,
-        "sort": 1,
-        "value_type": "individual"
-      },
-      "transformations": [
-        {
-          "id": "filterByValue",
-          "options": {
-            "filters": [
-              {
-                "config": {
-                  "id": "lowerOrEqual",
-                  "options": {
-                    "value": 50000000
-                  }
-                },
-                "fieldName": "Value"
-              }
-            ],
-            "match": "any",
-            "type": "exclude"
-          }
-        }
-      ],
+      "transformations": [],
       "transparent": true,
-      "type": "graph",
-      "xaxis": {
-        "mode": "time",
-        "show": true,
-        "values": []
-      },
-      "yaxes": [
-        {
-          "$$hashKey": "object:919",
-          "format": "short",
-          "label": "Change in Vault TVL",
-          "logBase": 1,
-          "show": true
-        },
-        {
-          "$$hashKey": "object:920",
-          "format": "short",
-          "label": "Change in Total TVL",
-          "logBase": 1,
-          "show": true
-        }
-      ],
-      "yaxis": {
-        "align": true,
-        "alignLevel": 1
-      }
+      "type": "timeseries"
     },
     {
       "collapsed": false,
+      "datasource": {
+        "type": "datasource",
+        "uid": "grafana"
+      },
       "gridPos": {
         "h": 1,
         "w": 24,
@@ -698,6 +700,15 @@
       },
       "id": 21,
       "panels": [],
+      "targets": [
+        {
+          "datasource": {
+            "type": "datasource",
+            "uid": "grafana"
+          },
+          "refId": "A"
+        }
+      ],
       "title": "Share Price - Graphs",
       "type": "row"
     },
@@ -754,17 +765,14 @@
         "alertThreshold": false
       },
       "percentage": false,
-      "pluginVersion": "8.3.1",
+      "pluginVersion": "9.2.1",
       "pointradius": 2,
       "points": false,
       "renderer": "flot",
       "seriesOverrides": [
         {
           "$$hashKey": "object:1560",
-          "alias": "Number of Vaults",
-          "hiddenSeries": true,
-          "hideTooltip": true,
-          "lines": false
+          "alias": "Number of Vaults"
         }
       ],
       "spaceLength": 10,
@@ -776,11 +784,14 @@
             "type": "prometheus",
             "uid": "DS_PROMETHEUS"
           },
+          "editorMode": "code",
           "exemplar": true,
           "expr": "delta(yearn_vault{param=\"pricePerShare\", experimental=\"false\"}[1d]) * 365",
+          "hide": false,
           "interval": "",
           "legendFormat": "{{vault}} - {{network}}",
           "panelId": 6,
+          "range": true,
           "refId": "A"
         },
         {
@@ -872,7 +883,7 @@
         "alertThreshold": false
       },
       "percentage": false,
-      "pluginVersion": "8.3.1",
+      "pluginVersion": "9.2.1",
       "pointradius": 2,
       "points": false,
       "renderer": "flot",
@@ -937,6 +948,10 @@
     },
     {
       "collapsed": false,
+      "datasource": {
+        "type": "datasource",
+        "uid": "grafana"
+      },
       "gridPos": {
         "h": 1,
         "w": 24,
@@ -945,6 +960,15 @@
       },
       "id": 23,
       "panels": [],
+      "targets": [
+        {
+          "datasource": {
+            "type": "datasource",
+            "uid": "grafana"
+          },
+          "refId": "A"
+        }
+      ],
       "title": "TVL - Graphs Detailed",
       "type": "row"
     },
@@ -988,7 +1012,7 @@
         "alertThreshold": false
       },
       "percentage": false,
-      "pluginVersion": "8.3.1",
+      "pluginVersion": "9.2.1",
       "pointradius": 2,
       "points": false,
       "renderer": "flot",
@@ -1086,7 +1110,7 @@
         "alertThreshold": false
       },
       "percentage": false,
-      "pluginVersion": "8.3.1",
+      "pluginVersion": "9.2.1",
       "pointradius": 2,
       "points": false,
       "renderer": "flot",
@@ -1147,6 +1171,10 @@
     },
     {
       "collapsed": false,
+      "datasource": {
+        "type": "datasource",
+        "uid": "grafana"
+      },
       "gridPos": {
         "h": 1,
         "w": 24,
@@ -1155,6 +1183,15 @@
       },
       "id": 31,
       "panels": [],
+      "targets": [
+        {
+          "datasource": {
+            "type": "datasource",
+            "uid": "grafana"
+          },
+          "refId": "A"
+        }
+      ],
       "title": "Last Report aka Harvest",
       "type": "row"
     },
@@ -1198,7 +1235,7 @@
         "alertThreshold": false
       },
       "percentage": false,
-      "pluginVersion": "8.3.1",
+      "pluginVersion": "9.2.1",
       "pointradius": 2,
       "points": false,
       "renderer": "flot",
@@ -1254,56 +1291,114 @@
       }
     },
     {
-      "aliasColors": {},
-      "bars": false,
-      "dashLength": 10,
-      "dashes": false,
       "datasource": {
         "type": "prometheus",
         "uid": "DS_PROMETHEUS"
       },
-      "decimals": 2,
       "description": "",
-      "fill": 0,
-      "fillGradient": 0,
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisCenteredZero": false,
+            "axisColorMode": "text",
+            "axisLabel": "",
+            "axisPlacement": "auto",
+            "barAlignment": 0,
+            "drawStyle": "line",
+            "fillOpacity": 0,
+            "gradientMode": "none",
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            },
+            "lineInterpolation": "stepAfter",
+            "lineWidth": 2,
+            "pointSize": 5,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "showPoints": "never",
+            "spanNulls": true,
+            "stacking": {
+              "group": "A",
+              "mode": "none"
+            },
+            "thresholdsStyle": {
+              "mode": "area"
+            }
+          },
+          "mappings": [],
+          "max": 1.005,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "red",
+                "value": null
+              },
+              {
+                "color": "transparent",
+                "value": 0.3
+              }
+            ]
+          },
+          "unit": "percentunit"
+        },
+        "overrides": [
+          {
+            "__systemRef": "hideSeriesFrom",
+            "matcher": {
+              "id": "byNames",
+              "options": {
+                "mode": "exclude",
+                "names": [
+                  "yvBalancer-BoostedAaveUSD 0.4.3 - ETH"
+                ],
+                "prefix": "All except:",
+                "readOnly": true
+              }
+            },
+            "properties": [
+              {
+                "id": "custom.hideFrom",
+                "value": {
+                  "legend": false,
+                  "tooltip": false,
+                  "viz": true
+                }
+              }
+            ]
+          }
+        ]
+      },
       "gridPos": {
         "h": 12,
         "w": 12,
         "x": 12,
         "y": 49
       },
-      "hiddenSeries": false,
       "id": 41,
-      "legend": {
-        "alignAsTable": true,
-        "avg": false,
-        "current": true,
-        "hideEmpty": false,
-        "hideZero": false,
-        "max": false,
-        "min": false,
-        "rightSide": true,
-        "show": true,
-        "sort": "current",
-        "sortDesc": true,
-        "total": false,
-        "values": true
-      },
-      "lines": true,
-      "linewidth": 2,
-      "nullPointMode": "connected",
       "options": {
-        "alertThreshold": true
+        "legend": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "displayMode": "table",
+          "placement": "right",
+          "showLegend": true,
+          "sortBy": "Last *",
+          "sortDesc": true
+        },
+        "tooltip": {
+          "mode": "single",
+          "sort": "none"
+        }
       },
-      "percentage": false,
-      "pluginVersion": "8.3.1",
-      "pointradius": 2,
-      "points": false,
-      "renderer": "flot",
-      "seriesOverrides": [],
-      "spaceLength": 10,
-      "stack": false,
-      "steppedLine": true,
+      "pluginVersion": "9.2.1",
       "targets": [
         {
           "datasource": {
@@ -1318,311 +1413,118 @@
           "refId": "A"
         }
       ],
-      "thresholds": [
-        {
-          "$$hashKey": "object:3304",
-          "colorMode": "critical",
-          "fill": true,
-          "line": false,
-          "op": "lt",
-          "value": 0.3,
-          "yaxis": "left"
-        }
-      ],
-      "timeRegions": [],
       "title": "Percent of Funds Allocated to Strategies",
-      "tooltip": {
-        "shared": false,
-        "sort": 2,
-        "value_type": "individual"
-      },
       "transparent": true,
-      "type": "graph",
-      "xaxis": {
-        "mode": "time",
-        "show": true,
-        "values": []
-      },
-      "yaxes": [
-        {
-          "$$hashKey": "object:2541",
-          "format": "percentunit",
-          "label": "",
-          "logBase": 1,
-          "max": "1.005",
-          "show": true
-        },
-        {
-          "$$hashKey": "object:2542",
-          "format": "percentunit",
-          "logBase": 1,
-          "show": false
-        }
-      ],
-      "yaxis": {
-        "align": false
-      }
+      "type": "timeseries"
     },
     {
       "collapsed": true,
+      "datasource": {
+        "type": "datasource",
+        "uid": "grafana"
+      },
       "gridPos": {
         "h": 1,
         "w": 24,
         "x": 0,
         "y": 61
       },
-      "id": 43,
-      "panels": [],
-      "title": "Allocation",
-      "type": "row"
-    },
-    {
-      "collapsed": false,
-      "gridPos": {
-        "h": 1,
-        "w": 24,
-        "x": 0,
-        "y": 62
-      },
-      "id": 47,
-      "panels": [],
-      "title": "Number of Strategies",
-      "type": "row"
-    },
-    {
-      "aliasColors": {},
-      "bars": false,
-      "dashLength": 10,
-      "dashes": false,
-      "datasource": {
-        "type": "prometheus",
-        "uid": "DS_PROMETHEUS"
-      },
-      "decimals": 0,
-      "fill": 0,
-      "fillGradient": 0,
-      "gridPos": {
-        "h": 9,
-        "w": 24,
-        "x": 0,
-        "y": 63
-      },
-      "hiddenSeries": false,
-      "id": 45,
-      "legend": {
-        "alignAsTable": true,
-        "avg": false,
-        "current": true,
-        "max": false,
-        "min": false,
-        "rightSide": true,
-        "show": true,
-        "sort": "current",
-        "sortDesc": true,
-        "total": false,
-        "values": true
-      },
-      "lines": true,
-      "linewidth": 2,
-      "nullPointMode": "connected",
-      "options": {
-        "alertThreshold": false
-      },
-      "percentage": false,
-      "pluginVersion": "8.3.1",
-      "pointradius": 2,
-      "points": false,
-      "renderer": "flot",
-      "seriesOverrides": [
-        {
-          "$$hashKey": "object:1665",
-          "alias": "Unallocated Strategies",
-          "color": "rgb(204, 204, 220)",
-          "fill": 1,
-          "fillGradient": 4,
-          "linewidth": 1,
-          "yaxis": 2,
-          "zindex": -3
-        },
-        {
-          "$$hashKey": "object:1872",
-          "alias": "isActive",
-          "color": "#B877D9"
-        },
-        {
-          "$$hashKey": "object:1880",
-          "alias": "Assets Deployed > 0",
-          "color": "#5794F2"
-        }
-      ],
-      "spaceLength": 10,
-      "stack": false,
-      "steppedLine": true,
-      "targets": [
-        {
-          "datasource": {
-            "type": "prometheus",
-            "uid": "DS_PROMETHEUS"
-          },
-          "exemplar": true,
-          "expr": "sum(yearn_strategy{param=\"isActive\", experimental=\"false\"})",
-          "hide": false,
-          "interval": "",
-          "legendFormat": "isActive",
-          "refId": "A"
-        },
-        {
-          "datasource": {
-            "type": "prometheus",
-            "uid": "DS_PROMETHEUS"
-          },
-          "exemplar": true,
-          "expr": "count(yearn_strategy{param=\"totalDebt\", experimental=\"false\"} > 0)",
-          "hide": false,
-          "instant": false,
-          "interval": "",
-          "legendFormat": "Assets Deployed > 0",
-          "refId": "B"
-        },
-        {
-          "datasource": {
-            "type": "prometheus",
-            "uid": "DS_PROMETHEUS"
-          },
-          "exemplar": true,
-          "expr": "sum(yearn_strategy{param=\"isActive\", experimental=\"false\"}) - count(yearn_strategy{param=\"totalDebt\", experimental=\"false\"} > 0)",
-          "hide": false,
-          "interval": "",
-          "legendFormat": "Unallocated Strategies",
-          "refId": "C"
-        }
-      ],
-      "thresholds": [],
-      "timeRegions": [],
-      "title": "Number of Strategies",
-      "tooltip": {
-        "shared": true,
-        "sort": 2,
-        "value_type": "individual"
-      },
-      "transformations": [],
-      "transparent": true,
-      "type": "graph",
-      "xaxis": {
-        "mode": "time",
-        "show": true,
-        "values": []
-      },
-      "yaxes": [
-        {
-          "$$hashKey": "object:354",
-          "decimals": 0,
-          "format": "short",
-          "logBase": 1,
-          "show": true
-        },
-        {
-          "$$hashKey": "object:355",
-          "decimals": 0,
-          "format": "short",
-          "logBase": 1,
-          "show": true
-        }
-      ],
-      "yaxis": {
-        "align": false
-      }
-    },
-    {
-      "collapsed": false,
-      "gridPos": {
-        "h": 1,
-        "w": 24,
-        "x": 0,
-        "y": 72
-      },
       "id": 36,
-      "panels": [],
-      "title": "Activation",
-      "type": "row"
-    },
-    {
-      "datasource": {
-        "type": "prometheus",
-        "uid": "DS_PROMETHEUS"
-      },
-      "description": "Time since the vault was created in weeks.",
-      "fieldConfig": {
-        "defaults": {
-          "color": {
-            "mode": "palette-classic"
+      "panels": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "DS_PROMETHEUS"
           },
-          "custom": {
-            "hideFrom": {
-              "legend": false,
-              "tooltip": false,
-              "viz": false
+          "description": "Time since the vault was created in weeks.",
+          "fieldConfig": {
+            "defaults": {
+              "color": {
+                "mode": "palette-classic"
+              },
+              "custom": {
+                "hideFrom": {
+                  "legend": false,
+                  "tooltip": false,
+                  "viz": false
+                }
+              },
+              "mappings": [],
+              "unit": "s"
+            },
+            "overrides": []
+          },
+          "gridPos": {
+            "h": 11,
+            "w": 24,
+            "x": 0,
+            "y": 63
+          },
+          "id": 39,
+          "options": {
+            "displayLabels": [
+              "value"
+            ],
+            "legend": {
+              "displayMode": "table",
+              "placement": "right",
+              "showLegend": true,
+              "sortBy": "Value",
+              "sortDesc": false,
+              "values": [
+                "value"
+              ]
+            },
+            "pieType": "donut",
+            "reduceOptions": {
+              "calcs": [
+                "lastNotNull"
+              ],
+              "fields": "",
+              "values": false
+            },
+            "tooltip": {
+              "mode": "single",
+              "sort": "none"
             }
           },
-          "mappings": [],
-          "unit": "s"
-        },
-        "overrides": []
-      },
-      "gridPos": {
-        "h": 11,
-        "w": 24,
-        "x": 0,
-        "y": 73
-      },
-      "id": 39,
-      "options": {
-        "displayLabels": [
-          "value"
-        ],
-        "legend": {
-          "displayMode": "table",
-          "placement": "right",
-          "sortBy": "Value",
-          "sortDesc": false,
-          "values": [
-            "value"
-          ]
-        },
-        "pieType": "donut",
-        "reduceOptions": {
-          "calcs": [
-            "lastNotNull"
+          "pluginVersion": "8.3.1",
+          "targets": [
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "DS_PROMETHEUS"
+              },
+              "editorMode": "code",
+              "exemplar": true,
+              "expr": "time() - sort((yearn_vault{param=\"activation\", experimental=\"false\", vault!~\"yvUSDC 0.2.2|yvDAI 0.2.2|yvWBTC 0.3.1|yvHEGIC 0.3.0|yvAVAX 0.4.3\"}))",
+              "interval": "",
+              "legendFormat": "{{vault}} - {{network}}",
+              "queryType": "randomWalk",
+              "range": true,
+              "refId": "A"
+            }
           ],
-          "fields": "",
-          "values": false
-        },
-        "tooltip": {
-          "mode": "single"
+          "title": "Start of the Vault in weeks",
+          "transparent": true,
+          "type": "piechart"
         }
-      },
-      "pluginVersion": "8.3.1",
+      ],
       "targets": [
         {
           "datasource": {
-            "type": "prometheus",
-            "uid": "DS_PROMETHEUS"
+            "type": "datasource",
+            "uid": "grafana"
           },
-          "exemplar": true,
-          "expr": "time() - sort_desc((yearn_vault{param=\"activation\", experimental=\"false\", vault!~\"yvUSDC 0.2.2|yvDAI 0.2.2|yvWBTC 0.3.1|yvHEGIC 0.3.0|yvAVAX 0.4.3\"}))",
-          "interval": "",
-          "legendFormat": "{{vault}} - {{network}}",
-          "queryType": "randomWalk",
           "refId": "A"
         }
       ],
-      "title": "Start of the Vault in weeks",
-      "transparent": true,
-      "type": "piechart"
+      "title": "Activation",
+      "type": "row"
     }
   ],
   "refresh": false,
-  "schemaVersion": 33,
+  "schemaVersion": 37,
   "style": "dark",
   "tags": [
     "yVault",
@@ -1633,13 +1535,13 @@
     "list": []
   },
   "time": {
-    "from": "now-30d",
+    "from": "now-24h",
     "to": "now"
   },
   "timepicker": {},
   "timezone": "",
   "title": "V2 Vaults",
-  "uid": "eybEevXnz",
-  "version": 22,
+  "uid": "eybEevXnzz",
+  "version": 9,
   "weekStart": ""
 }

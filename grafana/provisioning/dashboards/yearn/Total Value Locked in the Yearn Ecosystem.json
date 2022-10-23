@@ -9,19 +9,13 @@
       "pluginName": "Prometheus"
     }
   ],
-  "__elements": [],
+  "__elements": {},
   "__requires": [
     {
       "type": "grafana",
       "id": "grafana",
       "name": "Grafana",
-      "version": "8.3.1"
-    },
-    {
-      "type": "panel",
-      "id": "graph",
-      "name": "Graph (old)",
-      "version": ""
+      "version": "9.2.0"
     },
     {
       "type": "datasource",
@@ -34,13 +28,22 @@
       "id": "stat",
       "name": "Stat",
       "version": ""
+    },
+    {
+      "type": "panel",
+      "id": "timeseries",
+      "name": "Time series",
+      "version": ""
     }
   ],
   "annotations": {
     "list": [
       {
         "builtIn": 1,
-        "datasource": "-- Grafana --",
+        "datasource": {
+          "type": "datasource",
+          "uid": "grafana"
+        },
         "enable": true,
         "hide": true,
         "iconColor": "rgba(0, 211, 255, 1)",
@@ -60,7 +63,6 @@
   "fiscalYearStartMonth": 0,
   "graphTooltip": 0,
   "id": null,
-  "iteration": 1643231921944,
   "links": [],
   "liveNow": true,
   "panels": [
@@ -69,7 +71,7 @@
         "type": "prometheus",
         "uid": "DS_PROMETHEUS"
       },
-      "description": "Accurate TVL with duplicates funds (funds from a vault deposited into another vault) subtracted includes all networks.",
+      "description": "TVL without subtracting delegated deposits",
       "fieldConfig": {
         "defaults": {
           "color": {
@@ -112,30 +114,34 @@
       "id": 13,
       "options": {
         "colorMode": "value",
-        "graphMode": "none",
+        "graphMode": "area",
         "justifyMode": "auto",
         "orientation": "auto",
         "reduceOptions": {
-          "calcs": ["lastNotNull"],
+          "calcs": [
+            "lastNotNull"
+          ],
           "fields": "",
           "values": false
         },
         "text": {},
         "textMode": "auto"
       },
-      "pluginVersion": "8.3.1",
+      "pluginVersion": "9.2.0",
       "targets": [
         {
           "datasource": {
             "type": "prometheus",
             "uid": "DS_PROMETHEUS"
           },
+          "editorMode": "code",
           "exemplar": false,
-          "expr": "(avg(yearn{network=\"ETH\", param=\"vecrv balance\"}) * avg(yearn{network=\"ETH\", param=\"crv price\"}) or vector(0)) + (sum(yearn{network=\"ETH\", param=\"tvl\"}) or vector(0)) + (sum(yearn_vault{network=\"ETH\", param=\"tvl\"}) or vector(0)) + (sum(yearn_vault{network=\"FTM\", param=\"tvl\"}) or vector(0)) + (sum(iearn{network=\"ETH\", param=\"tvl\"}) or vector(0)) - (sum((yearn_strategy{network=\"ETH\", param=\"delegatedAssets\"} / 1000000000000000000 > 0) * on(vault, version) group_left yearn_vault{network=\"ETH\", param=\"token price\"}) or vector(0))  - (sum((yearn_strategy{network=\"FTM\", param=\"delegatedAssets\"} / 1000000000000000000 > 0) * on(vault, version) group_left yearn_vault{network=\"FTM\", param=\"token price\"}) or vector(0))",
-          "instant": true,
+          "expr": "sum(sum by (network, vault, address, version) (yearn_vault{param=\"tvl\", experimental=\"false\"})) + sum(iearn{param=\"tvl\"}) + sum(yearn{param=\"tvl\"})",
+          "instant": false,
           "interval": "",
           "legendFormat": "TVL",
           "queryType": "randomWalk",
+          "range": true,
           "refId": "A"
         }
       ],
@@ -146,6 +152,10 @@
     },
     {
       "collapsed": false,
+      "datasource": {
+        "type": "datasource",
+        "uid": "grafana"
+      },
       "gridPos": {
         "h": 1,
         "w": 24,
@@ -154,6 +164,15 @@
       },
       "id": 79,
       "panels": [],
+      "targets": [
+        {
+          "datasource": {
+            "type": "datasource",
+            "uid": "grafana"
+          },
+          "refId": "A"
+        }
+      ],
       "title": "$networks tvl",
       "type": "row"
     },
@@ -196,7 +215,9 @@
         "justifyMode": "auto",
         "orientation": "auto",
         "reduceOptions": {
-          "calcs": ["lastNotNull"],
+          "calcs": [
+            "lastNotNull"
+          ],
           "fields": "",
           "values": false
         },
@@ -205,15 +226,16 @@
         },
         "textMode": "auto"
       },
-      "pluginVersion": "8.3.1",
+      "pluginVersion": "9.2.0",
       "targets": [
         {
           "datasource": {
             "type": "prometheus",
             "uid": "DS_PROMETHEUS"
           },
+          "editorMode": "code",
           "exemplar": true,
-          "expr": "(sum(yearn_vault{network=\"$networks\", param=\"tvl\", experimental=\"false\"}) or vector(0)) - (sum((yearn_strategy{network=\"$networks\", param=\"delegatedAssets\", experimental=\"false\"} / 1000000000000000000 > 0) * on(vault, version) group_left yearn_vault{network=\"$networks\", param=\"token price\", experimental=\"false\"}) or vector(0))",
+          "expr": "sum(sum by (network, vault, address, version) (yearn_vault{param=\"tvl\", experimental=\"false\", network=\"$networks\", version=\"v2\"}))",
           "instant": false,
           "interval": "",
           "legendFormat": "{{vault}}",
@@ -221,26 +243,7 @@
         }
       ],
       "title": "V2 TVL",
-      "transformations": [
-        {
-          "id": "filterByValue",
-          "options": {
-            "filters": [
-              {
-                "config": {
-                  "id": "lower",
-                  "options": {
-                    "value": 50000000
-                  }
-                },
-                "fieldName": "Value"
-              }
-            ],
-            "match": "any",
-            "type": "exclude"
-          }
-        }
-      ],
+      "transformations": [],
       "transparent": true,
       "type": "stat"
     },
@@ -257,7 +260,7 @@
           },
           "decimals": 2,
           "mappings": [],
-          "noValue": "Not on ftm network",
+          "noValue": "Only on Eth",
           "thresholds": {
             "mode": "absolute",
             "steps": [
@@ -284,7 +287,9 @@
         "justifyMode": "auto",
         "orientation": "auto",
         "reduceOptions": {
-          "calcs": ["lastNotNull"],
+          "calcs": [
+            "lastNotNull"
+          ],
           "fields": "",
           "values": false
         },
@@ -293,7 +298,7 @@
         },
         "textMode": "auto"
       },
-      "pluginVersion": "8.3.1",
+      "pluginVersion": "9.2.0",
       "targets": [
         {
           "datasource": {
@@ -345,7 +350,7 @@
           },
           "decimals": 2,
           "mappings": [],
-          "noValue": "Not on ftm network",
+          "noValue": "Only on Eth",
           "thresholds": {
             "mode": "absolute",
             "steps": [
@@ -372,7 +377,9 @@
         "justifyMode": "auto",
         "orientation": "auto",
         "reduceOptions": {
-          "calcs": ["lastNotNull"],
+          "calcs": [
+            "lastNotNull"
+          ],
           "fields": "",
           "values": false
         },
@@ -381,7 +388,7 @@
         },
         "textMode": "auto"
       },
-      "pluginVersion": "8.3.1",
+      "pluginVersion": "9.2.0",
       "targets": [
         {
           "datasource": {
@@ -459,7 +466,9 @@
         "justifyMode": "auto",
         "orientation": "auto",
         "reduceOptions": {
-          "calcs": ["mean"],
+          "calcs": [
+            "mean"
+          ],
           "fields": "",
           "values": false
         },
@@ -468,15 +477,16 @@
         },
         "textMode": "auto"
       },
-      "pluginVersion": "8.3.1",
+      "pluginVersion": "9.2.0",
       "targets": [
         {
           "datasource": {
             "type": "prometheus",
             "uid": "DS_PROMETHEUS"
           },
+          "editorMode": "code",
           "exemplar": true,
-          "expr": "sum(yearn_vault{param=\"tvl\", experimental=\"true\", network=\"$networks\"}) - (sum((yearn_strategy{param=\"delegatedAssets\", experimental=\"true\", network=\"$networks\"} / 1000000000000000000 > 0) * on(vault, version) group_left yearn_vault{param=\"token price\", experimental=\"true\", network=\"$networks\"}) or vector(0))",
+          "expr": "sum(sum by (network, vault, address, version) (yearn_vault{param=\"tvl\", experimental=\"true\", network=\"$networks\", version=\"v2\"}))",
           "instant": false,
           "interval": "",
           "legendFormat": "{{vault}}",
@@ -520,7 +530,7 @@
           },
           "decimals": 2,
           "mappings": [],
-          "noValue": "Not on ftm network",
+          "noValue": "Only on Eth",
           "thresholds": {
             "mode": "absolute",
             "steps": [
@@ -547,7 +557,9 @@
         "justifyMode": "auto",
         "orientation": "auto",
         "reduceOptions": {
-          "calcs": ["lastNotNull"],
+          "calcs": [
+            "lastNotNull"
+          ],
           "fields": "",
           "values": false
         },
@@ -556,7 +568,7 @@
         },
         "textMode": "auto"
       },
-      "pluginVersion": "8.3.1",
+      "pluginVersion": "9.2.0",
       "targets": [
         {
           "datasource": {
@@ -597,6 +609,10 @@
     },
     {
       "collapsed": false,
+      "datasource": {
+        "type": "datasource",
+        "uid": "grafana"
+      },
       "gridPos": {
         "h": 1,
         "w": 24,
@@ -605,6 +621,15 @@
       },
       "id": 29,
       "panels": [],
+      "targets": [
+        {
+          "datasource": {
+            "type": "datasource",
+            "uid": "grafana"
+          },
+          "refId": "A"
+        }
+      ],
       "title": "$tf - tvl delta",
       "type": "row"
     },
@@ -647,22 +672,25 @@
         "justifyMode": "auto",
         "orientation": "auto",
         "reduceOptions": {
-          "calcs": ["lastNotNull"],
+          "calcs": [
+            "lastNotNull"
+          ],
           "fields": "",
           "values": false
         },
         "text": {},
         "textMode": "value"
       },
-      "pluginVersion": "8.3.1",
+      "pluginVersion": "9.2.0",
       "targets": [
         {
           "datasource": {
             "type": "prometheus",
             "uid": "DS_PROMETHEUS"
           },
+          "editorMode": "code",
           "exemplar": true,
-          "expr": "sum(yearn_vault{param=\"tvl\", experimental=\"false\", network=\"$networks\"}) - sum(yearn_vault{param=\"tvl\", experimental=\"false\", network=\"$networks\"} offset $tf)",
+          "expr": "sum(sum by (network, vault, address, version) (yearn_vault{param=\"tvl\", experimental=\"false\", network=\"$networks\", version=\"v2\"})) - sum(sum by (network, vault, address, version) (yearn_vault{param=\"tvl\", experimental=\"false\", network=\"$networks\", version=\"v2\"} offset $tf))",
           "instant": false,
           "interval": "",
           "legendFormat": "{{vault}}",
@@ -711,22 +739,25 @@
         "justifyMode": "auto",
         "orientation": "auto",
         "reduceOptions": {
-          "calcs": ["lastNotNull"],
+          "calcs": [
+            "lastNotNull"
+          ],
           "fields": "",
           "values": false
         },
         "text": {},
         "textMode": "value"
       },
-      "pluginVersion": "8.3.1",
+      "pluginVersion": "9.2.0",
       "targets": [
         {
           "datasource": {
             "type": "prometheus",
             "uid": "DS_PROMETHEUS"
           },
+          "editorMode": "code",
           "exemplar": true,
-          "expr": "sum(yearn_vault{param=\"tvl\", experimental=\"false\", network=\"$networks\"}) / sum(yearn_vault{param=\"tvl\", experimental=\"false\", network=\"$networks\"} offset $tf) - 1",
+          "expr": "sum(sum by (network, vault, address, version) (yearn_vault{param=\"tvl\", experimental=\"false\", network=\"$networks\", version=\"v2\"})) / sum(sum by (network, vault, address, version) (yearn_vault{param=\"tvl\", experimental=\"false\", network=\"$networks\", version=\"v2\"} offset $tf)) - 1",
           "instant": false,
           "interval": "",
           "legendFormat": "{{vault}}",
@@ -750,7 +781,7 @@
           },
           "decimals": 2,
           "mappings": [],
-          "noValue": "Not on ftm network",
+          "noValue": "Only on Eth",
           "thresholds": {
             "mode": "absolute",
             "steps": [
@@ -777,22 +808,25 @@
         "justifyMode": "auto",
         "orientation": "auto",
         "reduceOptions": {
-          "calcs": ["lastNotNull"],
+          "calcs": [
+            "lastNotNull"
+          ],
           "fields": "",
           "values": false
         },
         "text": {},
         "textMode": "value"
       },
-      "pluginVersion": "8.3.1",
+      "pluginVersion": "9.2.0",
       "targets": [
         {
           "datasource": {
             "type": "prometheus",
             "uid": "DS_PROMETHEUS"
           },
+          "editorMode": "code",
           "exemplar": true,
-          "expr": "sum(iearn{param=\"tvl\", network=\"$networks\"}) - sum(iearn{param=\"tvl\", network=\"$networks\"} offset $tf)",
+          "expr": "(sum(iearn{param=\"tvl\", network=\"$networks\"}) or vector(0)) - (sum(iearn{param=\"tvl\", network=\"$networks\"} offset $tf))",
           "instant": false,
           "interval": "",
           "legendFormat": "{{vault}}",
@@ -815,7 +849,7 @@
             "mode": "thresholds"
           },
           "mappings": [],
-          "noValue": "Not on ftm network",
+          "noValue": "Only on Eth",
           "thresholds": {
             "mode": "absolute",
             "steps": [
@@ -842,14 +876,16 @@
         "justifyMode": "auto",
         "orientation": "auto",
         "reduceOptions": {
-          "calcs": ["lastNotNull"],
+          "calcs": [
+            "lastNotNull"
+          ],
           "fields": "",
           "values": false
         },
         "text": {},
         "textMode": "value"
       },
-      "pluginVersion": "8.3.1",
+      "pluginVersion": "9.2.0",
       "targets": [
         {
           "datasource": {
@@ -881,7 +917,7 @@
           },
           "decimals": 2,
           "mappings": [],
-          "noValue": "Not on ftm network",
+          "noValue": "Only on Eth",
           "thresholds": {
             "mode": "absolute",
             "steps": [
@@ -908,14 +944,16 @@
         "justifyMode": "auto",
         "orientation": "auto",
         "reduceOptions": {
-          "calcs": ["lastNotNull"],
+          "calcs": [
+            "lastNotNull"
+          ],
           "fields": "",
           "values": false
         },
         "text": {},
         "textMode": "value"
       },
-      "pluginVersion": "8.3.1",
+      "pluginVersion": "9.2.0",
       "targets": [
         {
           "datasource": {
@@ -946,7 +984,7 @@
             "mode": "thresholds"
           },
           "mappings": [],
-          "noValue": "Not on the ftm network",
+          "noValue": "Only on Eth",
           "thresholds": {
             "mode": "absolute",
             "steps": [
@@ -973,14 +1011,16 @@
         "justifyMode": "auto",
         "orientation": "auto",
         "reduceOptions": {
-          "calcs": ["lastNotNull"],
+          "calcs": [
+            "lastNotNull"
+          ],
           "fields": "",
           "values": false
         },
         "text": {},
         "textMode": "value"
       },
-      "pluginVersion": "8.3.1",
+      "pluginVersion": "9.2.0",
       "targets": [
         {
           "datasource": {
@@ -1038,22 +1078,25 @@
         "justifyMode": "auto",
         "orientation": "auto",
         "reduceOptions": {
-          "calcs": ["lastNotNull"],
+          "calcs": [
+            "lastNotNull"
+          ],
           "fields": "",
           "values": false
         },
         "text": {},
         "textMode": "value"
       },
-      "pluginVersion": "8.3.1",
+      "pluginVersion": "9.2.0",
       "targets": [
         {
           "datasource": {
             "type": "prometheus",
             "uid": "DS_PROMETHEUS"
           },
+          "editorMode": "code",
           "exemplar": true,
-          "expr": "sum(yearn_vault{param=\"tvl\", experimental=\"true\", network=\"$networks\"}) - sum(yearn_vault{param=\"tvl\", experimental=\"true\", network=\"$networks\"} offset $tf)",
+          "expr": "sum(sum by (network, vault, address, version) (yearn_vault{param=\"tvl\", experimental=\"true\", network=\"$networks\", version=\"v2\"})) - sum(sum by (network, vault, address, version) (yearn_vault{param=\"tvl\", experimental=\"true\", network=\"$networks\", version=\"v2\"} offset $tf))",
           "instant": false,
           "interval": "",
           "legendFormat": "{{vault}}",
@@ -1102,22 +1145,25 @@
         "justifyMode": "auto",
         "orientation": "auto",
         "reduceOptions": {
-          "calcs": ["lastNotNull"],
+          "calcs": [
+            "lastNotNull"
+          ],
           "fields": "",
           "values": false
         },
         "text": {},
         "textMode": "value"
       },
-      "pluginVersion": "8.3.1",
+      "pluginVersion": "9.2.0",
       "targets": [
         {
           "datasource": {
             "type": "prometheus",
             "uid": "DS_PROMETHEUS"
           },
+          "editorMode": "code",
           "exemplar": true,
-          "expr": "sum(yearn_vault{param=\"tvl\", experimental=\"true\", network=\"$networks\"}) / sum(yearn_vault{param=\"tvl\", experimental=\"true\", network=\"$networks\"} offset $tf) - 1",
+          "expr": "sum(sum by (network, vault, address, version) (yearn_vault{param=\"tvl\", experimental=\"true\", network=\"$networks\", version=\"v2\"})) / sum(sum by (network, vault, address, version) (yearn_vault{param=\"tvl\", experimental=\"true\", network=\"$networks\", version=\"v2\"} offset $tf)) - 1",
           "instant": false,
           "interval": "",
           "legendFormat": "{{vault}}",
@@ -1141,7 +1187,7 @@
           },
           "decimals": 2,
           "mappings": [],
-          "noValue": "Not on ftm network",
+          "noValue": "Only on Eth",
           "thresholds": {
             "mode": "absolute",
             "steps": [
@@ -1168,14 +1214,16 @@
         "justifyMode": "auto",
         "orientation": "auto",
         "reduceOptions": {
-          "calcs": ["lastNotNull"],
+          "calcs": [
+            "lastNotNull"
+          ],
           "fields": "",
           "values": false
         },
         "text": {},
         "textMode": "value"
       },
-      "pluginVersion": "8.3.1",
+      "pluginVersion": "9.2.0",
       "targets": [
         {
           "datasource": {
@@ -1206,7 +1254,7 @@
             "mode": "thresholds"
           },
           "mappings": [],
-          "noValue": "Not on ftm network",
+          "noValue": "Only on Eth",
           "thresholds": {
             "mode": "absolute",
             "steps": [
@@ -1233,14 +1281,16 @@
         "justifyMode": "auto",
         "orientation": "auto",
         "reduceOptions": {
-          "calcs": ["lastNotNull"],
+          "calcs": [
+            "lastNotNull"
+          ],
           "fields": "",
           "values": false
         },
         "text": {},
         "textMode": "value"
       },
-      "pluginVersion": "8.3.1",
+      "pluginVersion": "9.2.0",
       "targets": [
         {
           "datasource": {
@@ -1260,7 +1310,11 @@
       "type": "stat"
     },
     {
-      "collapsed": false,
+      "collapsed": true,
+      "datasource": {
+        "type": "datasource",
+        "uid": "grafana"
+      },
       "gridPos": {
         "h": 1,
         "w": 24,
@@ -1268,888 +1322,903 @@
         "y": 13
       },
       "id": 65,
-      "panels": [],
+      "panels": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "DS_PROMETHEUS"
+          },
+          "description": "",
+          "fieldConfig": {
+            "defaults": {
+              "color": {
+                "mode": "palette-classic"
+              },
+              "custom": {
+                "axisCenteredZero": false,
+                "axisColorMode": "text",
+                "axisLabel": "",
+                "axisPlacement": "auto",
+                "barAlignment": 0,
+                "drawStyle": "line",
+                "fillOpacity": 99,
+                "gradientMode": "opacity",
+                "hideFrom": {
+                  "legend": false,
+                  "tooltip": false,
+                  "viz": false
+                },
+                "lineInterpolation": "stepAfter",
+                "lineWidth": 1,
+                "pointSize": 5,
+                "scaleDistribution": {
+                  "type": "linear"
+                },
+                "showPoints": "never",
+                "spanNulls": true,
+                "stacking": {
+                  "group": "A",
+                  "mode": "none"
+                },
+                "thresholdsStyle": {
+                  "mode": "off"
+                }
+              },
+              "mappings": [],
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {
+                    "color": "green",
+                    "value": null
+                  },
+                  {
+                    "color": "red",
+                    "value": 80
+                  }
+                ]
+              },
+              "unit": "currencyUSD"
+            },
+            "overrides": []
+          },
+          "gridPos": {
+            "h": 11,
+            "w": 12,
+            "x": 0,
+            "y": 14
+          },
+          "id": 11,
+          "options": {
+            "legend": {
+              "calcs": [
+                "lastNotNull"
+              ],
+              "displayMode": "table",
+              "placement": "right",
+              "showLegend": true,
+              "sortBy": "Last *",
+              "sortDesc": true
+            },
+            "tooltip": {
+              "mode": "multi",
+              "sort": "desc"
+            }
+          },
+          "pluginVersion": "9.2.0",
+          "targets": [
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "DS_PROMETHEUS"
+              },
+              "editorMode": "code",
+              "exemplar": true,
+              "expr": "yearn_vault{param=\"tvl\", experimental=\"false\", network=\"$networks\"}",
+              "interval": "",
+              "legendFormat": "{{vault}}",
+              "range": true,
+              "refId": "A"
+            }
+          ],
+          "title": "v2 TVL",
+          "transformations": [],
+          "transparent": true,
+          "type": "timeseries"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "DS_PROMETHEUS"
+          },
+          "description": "",
+          "fieldConfig": {
+            "defaults": {
+              "color": {
+                "mode": "palette-classic"
+              },
+              "custom": {
+                "axisCenteredZero": false,
+                "axisColorMode": "text",
+                "axisLabel": "",
+                "axisPlacement": "auto",
+                "barAlignment": 0,
+                "drawStyle": "line",
+                "fillOpacity": 100,
+                "gradientMode": "opacity",
+                "hideFrom": {
+                  "legend": false,
+                  "tooltip": false,
+                  "viz": false
+                },
+                "lineInterpolation": "stepAfter",
+                "lineWidth": 1,
+                "pointSize": 5,
+                "scaleDistribution": {
+                  "type": "linear"
+                },
+                "showPoints": "never",
+                "spanNulls": true,
+                "stacking": {
+                  "group": "A",
+                  "mode": "none"
+                },
+                "thresholdsStyle": {
+                  "mode": "off"
+                }
+              },
+              "mappings": [],
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {
+                    "color": "green",
+                    "value": null
+                  },
+                  {
+                    "color": "red",
+                    "value": 80
+                  }
+                ]
+              },
+              "unit": "currencyUSD"
+            },
+            "overrides": []
+          },
+          "gridPos": {
+            "h": 11,
+            "w": 12,
+            "x": 12,
+            "y": 14
+          },
+          "id": 12,
+          "links": [
+            {
+              "targetBlank": true,
+              "title": "v2 Vaults",
+              "url": "https://yearn.finance/vaults"
+            }
+          ],
+          "options": {
+            "legend": {
+              "calcs": [
+                "lastNotNull"
+              ],
+              "displayMode": "list",
+              "placement": "bottom",
+              "showLegend": true
+            },
+            "tooltip": {
+              "mode": "multi",
+              "sort": "desc"
+            }
+          },
+          "pluginVersion": "9.2.0",
+          "targets": [
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "DS_PROMETHEUS"
+              },
+              "editorMode": "code",
+              "exemplar": true,
+              "expr": "sum(sum by (network, vault, address, version) (yearn_vault{param=\"tvl\", experimental=\"false\", network=\"$networks\", version=\"v2\"}))",
+              "interval": "",
+              "legendFormat": "v2 Total Value Locked",
+              "range": true,
+              "refId": "A"
+            }
+          ],
+          "title": "v2 TVL",
+          "transformations": [
+            {
+              "id": "filterByValue",
+              "options": {
+                "filters": [
+                  {
+                    "config": {
+                      "id": "lowerOrEqual",
+                      "options": {
+                        "value": 50000000
+                      }
+                    },
+                    "fieldName": "Value"
+                  }
+                ],
+                "match": "any",
+                "type": "exclude"
+              }
+            }
+          ],
+          "transparent": true,
+          "type": "timeseries"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "DS_PROMETHEUS"
+          },
+          "description": "Experimental v2 vaults on $network use at your own risk. ",
+          "fieldConfig": {
+            "defaults": {
+              "color": {
+                "mode": "palette-classic"
+              },
+              "custom": {
+                "axisCenteredZero": false,
+                "axisColorMode": "text",
+                "axisLabel": "",
+                "axisPlacement": "auto",
+                "barAlignment": 0,
+                "drawStyle": "line",
+                "fillOpacity": 100,
+                "gradientMode": "opacity",
+                "hideFrom": {
+                  "legend": false,
+                  "tooltip": false,
+                  "viz": false
+                },
+                "lineInterpolation": "stepAfter",
+                "lineWidth": 1,
+                "pointSize": 5,
+                "scaleDistribution": {
+                  "type": "linear"
+                },
+                "showPoints": "never",
+                "spanNulls": true,
+                "stacking": {
+                  "group": "A",
+                  "mode": "none"
+                },
+                "thresholdsStyle": {
+                  "mode": "off"
+                }
+              },
+              "mappings": [],
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {
+                    "color": "green",
+                    "value": null
+                  },
+                  {
+                    "color": "red",
+                    "value": 80
+                  }
+                ]
+              },
+              "unit": "currencyUSD"
+            },
+            "overrides": []
+          },
+          "gridPos": {
+            "h": 11,
+            "w": 12,
+            "x": 0,
+            "y": 25
+          },
+          "id": 15,
+          "options": {
+            "legend": {
+              "calcs": [
+                "lastNotNull"
+              ],
+              "displayMode": "table",
+              "placement": "right",
+              "showLegend": true,
+              "sortBy": "Last *",
+              "sortDesc": true
+            },
+            "tooltip": {
+              "mode": "multi",
+              "sort": "desc"
+            }
+          },
+          "pluginVersion": "9.2.0",
+          "targets": [
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "DS_PROMETHEUS"
+              },
+              "exemplar": true,
+              "expr": "yearn_vault{param=\"tvl\", experimental=\"true\", network=\"$networks\"}",
+              "interval": "",
+              "legendFormat": "{{vault}}",
+              "refId": "A"
+            }
+          ],
+          "title": "Ape.Tax TVL",
+          "transformations": [],
+          "transparent": true,
+          "type": "timeseries"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "DS_PROMETHEUS"
+          },
+          "description": "Experimental v2 vaults on $network use at your own risk. ",
+          "fieldConfig": {
+            "defaults": {
+              "color": {
+                "mode": "palette-classic"
+              },
+              "custom": {
+                "axisCenteredZero": false,
+                "axisColorMode": "text",
+                "axisLabel": "",
+                "axisPlacement": "auto",
+                "barAlignment": 0,
+                "drawStyle": "line",
+                "fillOpacity": 100,
+                "gradientMode": "opacity",
+                "hideFrom": {
+                  "legend": false,
+                  "tooltip": false,
+                  "viz": false
+                },
+                "lineInterpolation": "stepAfter",
+                "lineWidth": 1,
+                "pointSize": 5,
+                "scaleDistribution": {
+                  "type": "linear"
+                },
+                "showPoints": "never",
+                "spanNulls": true,
+                "stacking": {
+                  "group": "A",
+                  "mode": "none"
+                },
+                "thresholdsStyle": {
+                  "mode": "off"
+                }
+              },
+              "mappings": [],
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {
+                    "color": "green",
+                    "value": null
+                  }
+                ]
+              },
+              "unit": "currencyUSD"
+            },
+            "overrides": []
+          },
+          "gridPos": {
+            "h": 11,
+            "w": 12,
+            "x": 12,
+            "y": 25
+          },
+          "id": 16,
+          "links": [
+            {
+              "targetBlank": true,
+              "title": "Experimental Vaults",
+              "url": "https://ape.tax/"
+            }
+          ],
+          "options": {
+            "legend": {
+              "calcs": [
+                "lastNotNull"
+              ],
+              "displayMode": "list",
+              "placement": "bottom",
+              "showLegend": true
+            },
+            "tooltip": {
+              "mode": "multi",
+              "sort": "desc"
+            }
+          },
+          "pluginVersion": "9.2.0",
+          "targets": [
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "DS_PROMETHEUS"
+              },
+              "editorMode": "code",
+              "exemplar": true,
+              "expr": "sum(sum by (network, vault, address, version) (yearn_vault{param=\"tvl\", experimental=\"true\", network=\"$networks\", version=\"v2\"}))",
+              "instant": false,
+              "interval": "",
+              "legendFormat": "Experimental Total Value Locked -",
+              "refId": "A"
+            }
+          ],
+          "title": "Ape.Tax TVL",
+          "transformations": [],
+          "transparent": true,
+          "type": "timeseries"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "DS_PROMETHEUS"
+          },
+          "description": "Earn v2 and v3 tvl",
+          "fieldConfig": {
+            "defaults": {
+              "color": {
+                "mode": "palette-classic"
+              },
+              "custom": {
+                "axisCenteredZero": false,
+                "axisColorMode": "text",
+                "axisLabel": "",
+                "axisPlacement": "auto",
+                "barAlignment": 0,
+                "drawStyle": "line",
+                "fillOpacity": 100,
+                "gradientMode": "opacity",
+                "hideFrom": {
+                  "legend": false,
+                  "tooltip": false,
+                  "viz": false
+                },
+                "lineInterpolation": "stepAfter",
+                "lineWidth": 1,
+                "pointSize": 5,
+                "scaleDistribution": {
+                  "type": "linear"
+                },
+                "showPoints": "never",
+                "spanNulls": false,
+                "stacking": {
+                  "group": "A",
+                  "mode": "none"
+                },
+                "thresholdsStyle": {
+                  "mode": "off"
+                }
+              },
+              "mappings": [],
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {
+                    "color": "green",
+                    "value": null
+                  },
+                  {
+                    "color": "red",
+                    "value": 80
+                  }
+                ]
+              },
+              "unit": "currencyUSD"
+            },
+            "overrides": []
+          },
+          "gridPos": {
+            "h": 11,
+            "w": 12,
+            "x": 0,
+            "y": 36
+          },
+          "id": 18,
+          "options": {
+            "legend": {
+              "calcs": [
+                "lastNotNull"
+              ],
+              "displayMode": "table",
+              "placement": "right",
+              "showLegend": true
+            },
+            "tooltip": {
+              "mode": "multi",
+              "sort": "desc"
+            }
+          },
+          "pluginVersion": "9.2.0",
+          "targets": [
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "DS_PROMETHEUS"
+              },
+              "exemplar": true,
+              "expr": "iearn{param=\"tvl\", network=\"$networks\"}",
+              "interval": "",
+              "legendFormat": "{{vault}}",
+              "refId": "A"
+            }
+          ],
+          "title": "Earn TVL",
+          "transformations": [],
+          "transparent": true,
+          "type": "timeseries"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "DS_PROMETHEUS"
+          },
+          "description": "Earn v2 and v3 aggregated tvl",
+          "fieldConfig": {
+            "defaults": {
+              "color": {
+                "mode": "palette-classic"
+              },
+              "custom": {
+                "axisCenteredZero": false,
+                "axisColorMode": "text",
+                "axisLabel": "",
+                "axisPlacement": "auto",
+                "barAlignment": 0,
+                "drawStyle": "line",
+                "fillOpacity": 100,
+                "gradientMode": "opacity",
+                "hideFrom": {
+                  "legend": false,
+                  "tooltip": false,
+                  "viz": false
+                },
+                "lineInterpolation": "stepAfter",
+                "lineWidth": 1,
+                "pointSize": 5,
+                "scaleDistribution": {
+                  "type": "linear"
+                },
+                "showPoints": "never",
+                "spanNulls": true,
+                "stacking": {
+                  "group": "A",
+                  "mode": "none"
+                },
+                "thresholdsStyle": {
+                  "mode": "off"
+                }
+              },
+              "mappings": [],
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {
+                    "color": "green",
+                    "value": null
+                  }
+                ]
+              },
+              "unit": "currencyUSD"
+            },
+            "overrides": []
+          },
+          "gridPos": {
+            "h": 11,
+            "w": 12,
+            "x": 12,
+            "y": 36
+          },
+          "id": 19,
+          "links": [
+            {
+              "targetBlank": true,
+              "title": "Earn",
+              "url": "https://v1.yearn.finance/earn"
+            }
+          ],
+          "options": {
+            "legend": {
+              "calcs": [
+                "lastNotNull"
+              ],
+              "displayMode": "list",
+              "placement": "bottom",
+              "showLegend": true
+            },
+            "tooltip": {
+              "mode": "multi",
+              "sort": "desc"
+            }
+          },
+          "pluginVersion": "9.2.0",
+          "targets": [
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "DS_PROMETHEUS"
+              },
+              "exemplar": true,
+              "expr": "sum(iearn{param=\"tvl\", network=\"$networks\"})",
+              "interval": "",
+              "legendFormat": "Earn Total Value Locked",
+              "refId": "A"
+            }
+          ],
+          "title": "Earn TVL",
+          "transformations": [
+            {
+              "id": "filterByValue",
+              "options": {
+                "filters": [
+                  {
+                    "config": {
+                      "id": "lowerOrEqual",
+                      "options": {
+                        "value": 50000000
+                      }
+                    },
+                    "fieldName": "Value"
+                  }
+                ],
+                "match": "any",
+                "type": "exclude"
+              }
+            }
+          ],
+          "transparent": true,
+          "type": "timeseries"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "DS_PROMETHEUS"
+          },
+          "description": "",
+          "fieldConfig": {
+            "defaults": {
+              "color": {
+                "mode": "palette-classic"
+              },
+              "custom": {
+                "axisCenteredZero": false,
+                "axisColorMode": "text",
+                "axisLabel": "",
+                "axisPlacement": "auto",
+                "barAlignment": 0,
+                "drawStyle": "line",
+                "fillOpacity": 100,
+                "gradientMode": "opacity",
+                "hideFrom": {
+                  "legend": false,
+                  "tooltip": false,
+                  "viz": false
+                },
+                "lineInterpolation": "stepAfter",
+                "lineWidth": 1,
+                "pointSize": 5,
+                "scaleDistribution": {
+                  "type": "linear"
+                },
+                "showPoints": "never",
+                "spanNulls": true,
+                "stacking": {
+                  "group": "A",
+                  "mode": "none"
+                },
+                "thresholdsStyle": {
+                  "mode": "off"
+                }
+              },
+              "mappings": [],
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {
+                    "color": "green",
+                    "value": null
+                  },
+                  {
+                    "color": "red",
+                    "value": 80
+                  }
+                ]
+              },
+              "unit": "short"
+            },
+            "overrides": []
+          },
+          "gridPos": {
+            "h": 11,
+            "w": 12,
+            "x": 0,
+            "y": 47
+          },
+          "id": 2,
+          "options": {
+            "legend": {
+              "calcs": [
+                "lastNotNull"
+              ],
+              "displayMode": "table",
+              "placement": "right",
+              "showLegend": true
+            },
+            "tooltip": {
+              "mode": "multi",
+              "sort": "desc"
+            }
+          },
+          "pluginVersion": "9.2.0",
+          "targets": [
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "DS_PROMETHEUS"
+              },
+              "exemplar": true,
+              "expr": "yearn{param=\"tvl\", network=\"$networks\"}",
+              "interval": "",
+              "legendFormat": "{{vault}}",
+              "refId": "A"
+            }
+          ],
+          "title": "v1 TVL",
+          "transformations": [],
+          "transparent": true,
+          "type": "timeseries"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "DS_PROMETHEUS"
+          },
+          "description": "",
+          "fieldConfig": {
+            "defaults": {
+              "color": {
+                "mode": "palette-classic"
+              },
+              "custom": {
+                "axisCenteredZero": false,
+                "axisColorMode": "text",
+                "axisLabel": "",
+                "axisPlacement": "auto",
+                "barAlignment": 0,
+                "drawStyle": "line",
+                "fillOpacity": 100,
+                "gradientMode": "opacity",
+                "hideFrom": {
+                  "legend": false,
+                  "tooltip": false,
+                  "viz": false
+                },
+                "lineInterpolation": "stepAfter",
+                "lineWidth": 1,
+                "pointSize": 5,
+                "scaleDistribution": {
+                  "type": "linear"
+                },
+                "showPoints": "never",
+                "spanNulls": true,
+                "stacking": {
+                  "group": "A",
+                  "mode": "none"
+                },
+                "thresholdsStyle": {
+                  "mode": "off"
+                }
+              },
+              "mappings": [],
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {
+                    "color": "green",
+                    "value": null
+                  }
+                ]
+              },
+              "unit": "currencyUSD"
+            },
+            "overrides": []
+          },
+          "gridPos": {
+            "h": 11,
+            "w": 12,
+            "x": 12,
+            "y": 47
+          },
+          "id": 9,
+          "links": [
+            {
+              "targetBlank": true,
+              "title": "v1 Vaults",
+              "url": "https://yearn.finance/vaults"
+            }
+          ],
+          "options": {
+            "legend": {
+              "calcs": [
+                "lastNotNull"
+              ],
+              "displayMode": "list",
+              "placement": "bottom",
+              "showLegend": true
+            },
+            "tooltip": {
+              "mode": "multi",
+              "sort": "desc"
+            }
+          },
+          "pluginVersion": "9.2.0",
+          "targets": [
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "DS_PROMETHEUS"
+              },
+              "exemplar": true,
+              "expr": "sum(yearn{param=\"tvl\", network=\"$networks\"})",
+              "instant": false,
+              "interval": "",
+              "legendFormat": "v1 Total Value Locked",
+              "refId": "A"
+            }
+          ],
+          "title": "v1 TVL",
+          "transformations": [
+            {
+              "id": "filterByValue",
+              "options": {
+                "filters": [
+                  {
+                    "config": {
+                      "id": "lowerOrEqual",
+                      "options": {
+                        "value": 350000000
+                      }
+                    },
+                    "fieldName": "Value"
+                  }
+                ],
+                "match": "any",
+                "type": "exclude"
+              }
+            }
+          ],
+          "transparent": true,
+          "type": "timeseries"
+        }
+      ],
+      "targets": [
+        {
+          "datasource": {
+            "type": "datasource",
+            "uid": "grafana"
+          },
+          "refId": "A"
+        }
+      ],
       "title": "Charts",
       "type": "row"
-    },
-    {
-      "aliasColors": {},
-      "bars": false,
-      "dashLength": 10,
-      "dashes": false,
-      "datasource": {
-        "type": "prometheus",
-        "uid": "DS_PROMETHEUS"
-      },
-      "decimals": 2,
-      "description": "",
-      "fill": 6,
-      "fillGradient": 3,
-      "gridPos": {
-        "h": 11,
-        "w": 12,
-        "x": 0,
-        "y": 14
-      },
-      "hiddenSeries": false,
-      "id": 11,
-      "legend": {
-        "alignAsTable": true,
-        "avg": false,
-        "current": true,
-        "hideEmpty": false,
-        "hideZero": false,
-        "max": false,
-        "min": false,
-        "rightSide": true,
-        "show": true,
-        "sort": "current",
-        "sortDesc": true,
-        "total": false,
-        "values": true
-      },
-      "lines": true,
-      "linewidth": 2,
-      "nullPointMode": "connected",
-      "options": {
-        "alertThreshold": false
-      },
-      "percentage": false,
-      "pluginVersion": "8.3.1",
-      "pointradius": 2,
-      "points": false,
-      "renderer": "flot",
-      "seriesOverrides": [],
-      "spaceLength": 10,
-      "stack": false,
-      "steppedLine": true,
-      "targets": [
-        {
-          "datasource": {
-            "type": "prometheus",
-            "uid": "DS_PROMETHEUS"
-          },
-          "exemplar": true,
-          "expr": "yearn_vault{param=\"tvl\", experimental=\"false\", network=\"$networks\"}",
-          "interval": "",
-          "legendFormat": "{{vault}}",
-          "refId": "A"
-        }
-      ],
-      "thresholds": [],
-      "timeRegions": [],
-      "title": "v2 TVL",
-      "tooltip": {
-        "shared": true,
-        "sort": 2,
-        "value_type": "individual"
-      },
-      "transformations": [],
-      "transparent": true,
-      "type": "graph",
-      "xaxis": {
-        "mode": "time",
-        "show": true,
-        "values": []
-      },
-      "yaxes": [
-        {
-          "$$hashKey": "object:532",
-          "format": "short",
-          "logBase": 1,
-          "show": true
-        },
-        {
-          "$$hashKey": "object:533",
-          "format": "short",
-          "logBase": 1,
-          "show": false
-        }
-      ],
-      "yaxis": {
-        "align": false
-      }
-    },
-    {
-      "aliasColors": {},
-      "bars": false,
-      "dashLength": 10,
-      "dashes": false,
-      "datasource": {
-        "type": "prometheus",
-        "uid": "DS_PROMETHEUS"
-      },
-      "description": "",
-      "fill": 6,
-      "fillGradient": 3,
-      "gridPos": {
-        "h": 11,
-        "w": 12,
-        "x": 12,
-        "y": 14
-      },
-      "hiddenSeries": false,
-      "id": 12,
-      "legend": {
-        "alignAsTable": false,
-        "avg": false,
-        "current": true,
-        "hideEmpty": false,
-        "hideZero": false,
-        "max": false,
-        "min": false,
-        "rightSide": false,
-        "show": true,
-        "sort": "current",
-        "sortDesc": true,
-        "total": false,
-        "values": true
-      },
-      "lines": true,
-      "linewidth": 2,
-      "links": [
-        {
-          "targetBlank": true,
-          "title": "v2 Vaults",
-          "url": "https://yearn.finance/vaults"
-        }
-      ],
-      "nullPointMode": "connected",
-      "options": {
-        "alertThreshold": true
-      },
-      "percentage": false,
-      "pluginVersion": "8.3.1",
-      "pointradius": 2,
-      "points": false,
-      "renderer": "flot",
-      "seriesOverrides": [],
-      "spaceLength": 10,
-      "stack": false,
-      "steppedLine": true,
-      "targets": [
-        {
-          "datasource": {
-            "type": "prometheus",
-            "uid": "DS_PROMETHEUS"
-          },
-          "exemplar": true,
-          "expr": "(sum(yearn_vault{network=\"$networks\", param=\"tvl\"})) - (sum((yearn_strategy{network=\"$networks\", param=\"delegatedAssets\", experimental=\"false\"} / 1000000000000000000 > 0) * on(vault, version) group_left yearn_vault{network=\"$networks\", param=\"token price\", experimental=\"false\"} or vector(0)))",
-          "interval": "",
-          "legendFormat": "v2 Total Value Locked",
-          "refId": "A"
-        }
-      ],
-      "thresholds": [],
-      "timeRegions": [],
-      "title": "v2 TVL",
-      "tooltip": {
-        "shared": true,
-        "sort": 2,
-        "value_type": "individual"
-      },
-      "transformations": [
-        {
-          "id": "filterByValue",
-          "options": {
-            "filters": [
-              {
-                "config": {
-                  "id": "lowerOrEqual",
-                  "options": {
-                    "value": 50000000
-                  }
-                },
-                "fieldName": "Value"
-              }
-            ],
-            "match": "any",
-            "type": "exclude"
-          }
-        }
-      ],
-      "transparent": true,
-      "type": "graph",
-      "xaxis": {
-        "mode": "time",
-        "show": true,
-        "values": []
-      },
-      "yaxes": [
-        {
-          "$$hashKey": "object:532",
-          "format": "short",
-          "logBase": 1,
-          "show": true
-        },
-        {
-          "$$hashKey": "object:533",
-          "decimals": 2,
-          "format": "short",
-          "label": "",
-          "logBase": 1,
-          "show": false
-        }
-      ],
-      "yaxis": {
-        "align": false
-      }
-    },
-    {
-      "aliasColors": {},
-      "bars": false,
-      "dashLength": 10,
-      "dashes": false,
-      "datasource": {
-        "type": "prometheus",
-        "uid": "DS_PROMETHEUS"
-      },
-      "decimals": 2,
-      "description": "Experimental v2 vaults on $network use at your own risk. ",
-      "fill": 6,
-      "fillGradient": 3,
-      "gridPos": {
-        "h": 11,
-        "w": 12,
-        "x": 0,
-        "y": 25
-      },
-      "hiddenSeries": false,
-      "id": 15,
-      "legend": {
-        "alignAsTable": true,
-        "avg": false,
-        "current": true,
-        "hideEmpty": false,
-        "hideZero": false,
-        "max": false,
-        "min": false,
-        "rightSide": true,
-        "show": true,
-        "sort": "current",
-        "sortDesc": true,
-        "total": false,
-        "values": true
-      },
-      "lines": true,
-      "linewidth": 2,
-      "nullPointMode": "connected",
-      "options": {
-        "alertThreshold": true
-      },
-      "percentage": false,
-      "pluginVersion": "8.3.1",
-      "pointradius": 2,
-      "points": false,
-      "renderer": "flot",
-      "seriesOverrides": [],
-      "spaceLength": 10,
-      "stack": false,
-      "steppedLine": true,
-      "targets": [
-        {
-          "datasource": {
-            "type": "prometheus",
-            "uid": "DS_PROMETHEUS"
-          },
-          "exemplar": true,
-          "expr": "yearn_vault{param=\"tvl\", experimental=\"true\", network=\"$networks\"}",
-          "interval": "",
-          "legendFormat": "{{vault}}",
-          "refId": "A"
-        }
-      ],
-      "thresholds": [],
-      "timeRegions": [],
-      "title": "Ape.Tax TVL",
-      "tooltip": {
-        "shared": true,
-        "sort": 2,
-        "value_type": "individual"
-      },
-      "transformations": [],
-      "transparent": true,
-      "type": "graph",
-      "xaxis": {
-        "mode": "time",
-        "show": true,
-        "values": []
-      },
-      "yaxes": [
-        {
-          "$$hashKey": "object:532",
-          "format": "short",
-          "label": "",
-          "logBase": 1,
-          "show": true
-        },
-        {
-          "$$hashKey": "object:533",
-          "format": "short",
-          "logBase": 1,
-          "show": false
-        }
-      ],
-      "yaxis": {
-        "align": false
-      }
-    },
-    {
-      "aliasColors": {},
-      "bars": false,
-      "dashLength": 10,
-      "dashes": false,
-      "datasource": {
-        "type": "prometheus",
-        "uid": "DS_PROMETHEUS"
-      },
-      "decimals": 2,
-      "description": "Experimental v2 vaults on $network use at your own risk. ",
-      "fill": 6,
-      "fillGradient": 3,
-      "gridPos": {
-        "h": 11,
-        "w": 12,
-        "x": 12,
-        "y": 25
-      },
-      "hiddenSeries": false,
-      "id": 16,
-      "legend": {
-        "alignAsTable": false,
-        "avg": false,
-        "current": true,
-        "hideEmpty": false,
-        "hideZero": false,
-        "max": false,
-        "min": false,
-        "rightSide": false,
-        "show": true,
-        "sort": "current",
-        "sortDesc": true,
-        "total": false,
-        "values": true
-      },
-      "lines": true,
-      "linewidth": 2,
-      "links": [
-        {
-          "targetBlank": true,
-          "title": "Experimental Vaults",
-          "url": "https://ape.tax/"
-        }
-      ],
-      "nullPointMode": "connected",
-      "options": {
-        "alertThreshold": true
-      },
-      "percentage": false,
-      "pluginVersion": "8.3.1",
-      "pointradius": 2,
-      "points": false,
-      "renderer": "flot",
-      "seriesOverrides": [],
-      "spaceLength": 10,
-      "stack": false,
-      "steppedLine": true,
-      "targets": [
-        {
-          "datasource": {
-            "type": "prometheus",
-            "uid": "DS_PROMETHEUS"
-          },
-          "exemplar": true,
-          "expr": "sum(yearn_vault{param=\"tvl\", experimental=\"true\", network=\"$networks\"})",
-          "instant": false,
-          "interval": "",
-          "legendFormat": "Experimental Total Value Locked -",
-          "refId": "A"
-        }
-      ],
-      "thresholds": [],
-      "timeRegions": [],
-      "title": "Ape.Tax TVL",
-      "tooltip": {
-        "shared": true,
-        "sort": 2,
-        "value_type": "individual"
-      },
-      "transformations": [],
-      "transparent": true,
-      "type": "graph",
-      "xaxis": {
-        "mode": "time",
-        "show": true,
-        "values": []
-      },
-      "yaxes": [
-        {
-          "$$hashKey": "object:532",
-          "format": "short",
-          "logBase": 1,
-          "show": true
-        },
-        {
-          "$$hashKey": "object:533",
-          "format": "short",
-          "logBase": 1,
-          "show": false
-        }
-      ],
-      "yaxis": {
-        "align": false
-      }
-    },
-    {
-      "aliasColors": {},
-      "bars": false,
-      "dashLength": 10,
-      "dashes": false,
-      "datasource": {
-        "type": "prometheus",
-        "uid": "DS_PROMETHEUS"
-      },
-      "decimals": 2,
-      "description": "Earn v2 and v3 tvl",
-      "fill": 6,
-      "fillGradient": 3,
-      "gridPos": {
-        "h": 11,
-        "w": 12,
-        "x": 0,
-        "y": 36
-      },
-      "hiddenSeries": false,
-      "id": 18,
-      "legend": {
-        "alignAsTable": true,
-        "avg": false,
-        "current": true,
-        "hideEmpty": false,
-        "hideZero": false,
-        "max": false,
-        "min": false,
-        "rightSide": true,
-        "show": true,
-        "sort": "current",
-        "sortDesc": true,
-        "total": false,
-        "values": true
-      },
-      "lines": true,
-      "linewidth": 2,
-      "nullPointMode": "null as zero",
-      "options": {
-        "alertThreshold": true
-      },
-      "percentage": false,
-      "pluginVersion": "8.3.1",
-      "pointradius": 2,
-      "points": false,
-      "renderer": "flot",
-      "seriesOverrides": [],
-      "spaceLength": 10,
-      "stack": false,
-      "steppedLine": true,
-      "targets": [
-        {
-          "datasource": {
-            "type": "prometheus",
-            "uid": "DS_PROMETHEUS"
-          },
-          "exemplar": true,
-          "expr": "iearn{param=\"tvl\", network=\"$networks\"}",
-          "interval": "",
-          "legendFormat": "{{vault}}",
-          "refId": "A"
-        }
-      ],
-      "thresholds": [],
-      "timeRegions": [],
-      "title": "Earn TVL",
-      "tooltip": {
-        "shared": true,
-        "sort": 2,
-        "value_type": "individual"
-      },
-      "transformations": [],
-      "transparent": true,
-      "type": "graph",
-      "xaxis": {
-        "mode": "time",
-        "show": true,
-        "values": []
-      },
-      "yaxes": [
-        {
-          "$$hashKey": "object:532",
-          "format": "short",
-          "logBase": 1,
-          "show": true
-        },
-        {
-          "$$hashKey": "object:533",
-          "format": "short",
-          "logBase": 1,
-          "show": false
-        }
-      ],
-      "yaxis": {
-        "align": false
-      }
-    },
-    {
-      "aliasColors": {},
-      "bars": false,
-      "dashLength": 10,
-      "dashes": false,
-      "datasource": {
-        "type": "prometheus",
-        "uid": "DS_PROMETHEUS"
-      },
-      "decimals": 2,
-      "description": "Earn v2 and v3 aggregated tvl",
-      "fill": 6,
-      "fillGradient": 3,
-      "gridPos": {
-        "h": 11,
-        "w": 12,
-        "x": 12,
-        "y": 36
-      },
-      "hiddenSeries": false,
-      "id": 19,
-      "legend": {
-        "alignAsTable": false,
-        "avg": false,
-        "current": true,
-        "hideEmpty": false,
-        "hideZero": false,
-        "max": false,
-        "min": false,
-        "rightSide": false,
-        "show": true,
-        "sort": "current",
-        "sortDesc": true,
-        "total": false,
-        "values": true
-      },
-      "lines": true,
-      "linewidth": 2,
-      "links": [
-        {
-          "targetBlank": true,
-          "title": "Earn",
-          "url": "https://v1.yearn.finance/earn"
-        }
-      ],
-      "nullPointMode": "connected",
-      "options": {
-        "alertThreshold": true
-      },
-      "percentage": false,
-      "pluginVersion": "8.3.1",
-      "pointradius": 2,
-      "points": false,
-      "renderer": "flot",
-      "seriesOverrides": [],
-      "spaceLength": 10,
-      "stack": false,
-      "steppedLine": true,
-      "targets": [
-        {
-          "datasource": {
-            "type": "prometheus",
-            "uid": "DS_PROMETHEUS"
-          },
-          "exemplar": true,
-          "expr": "sum(iearn{param=\"tvl\", network=\"$networks\"})",
-          "interval": "",
-          "legendFormat": "Earn Total Value Locked",
-          "refId": "A"
-        }
-      ],
-      "thresholds": [],
-      "timeRegions": [],
-      "title": "Earn TVL",
-      "tooltip": {
-        "shared": true,
-        "sort": 2,
-        "value_type": "individual"
-      },
-      "transformations": [
-        {
-          "id": "filterByValue",
-          "options": {
-            "filters": [
-              {
-                "config": {
-                  "id": "lowerOrEqual",
-                  "options": {
-                    "value": 50000000
-                  }
-                },
-                "fieldName": "Value"
-              }
-            ],
-            "match": "any",
-            "type": "exclude"
-          }
-        }
-      ],
-      "transparent": true,
-      "type": "graph",
-      "xaxis": {
-        "mode": "time",
-        "show": true,
-        "values": []
-      },
-      "yaxes": [
-        {
-          "$$hashKey": "object:532",
-          "format": "short",
-          "logBase": 1,
-          "show": true
-        },
-        {
-          "$$hashKey": "object:533",
-          "format": "short",
-          "logBase": 1,
-          "show": false
-        }
-      ],
-      "yaxis": {
-        "align": false
-      }
-    },
-    {
-      "aliasColors": {},
-      "bars": false,
-      "dashLength": 10,
-      "dashes": false,
-      "datasource": {
-        "type": "prometheus",
-        "uid": "DS_PROMETHEUS"
-      },
-      "decimals": 2,
-      "description": "",
-      "fill": 6,
-      "fillGradient": 3,
-      "gridPos": {
-        "h": 11,
-        "w": 12,
-        "x": 0,
-        "y": 47
-      },
-      "hiddenSeries": false,
-      "id": 2,
-      "legend": {
-        "alignAsTable": true,
-        "avg": false,
-        "current": true,
-        "hideEmpty": false,
-        "hideZero": false,
-        "max": false,
-        "min": false,
-        "rightSide": true,
-        "show": true,
-        "sort": "current",
-        "sortDesc": true,
-        "total": false,
-        "values": true
-      },
-      "lines": true,
-      "linewidth": 2,
-      "nullPointMode": "connected",
-      "options": {
-        "alertThreshold": true
-      },
-      "percentage": false,
-      "pluginVersion": "8.3.1",
-      "pointradius": 2,
-      "points": false,
-      "renderer": "flot",
-      "seriesOverrides": [],
-      "spaceLength": 10,
-      "stack": false,
-      "steppedLine": true,
-      "targets": [
-        {
-          "datasource": {
-            "type": "prometheus",
-            "uid": "DS_PROMETHEUS"
-          },
-          "exemplar": true,
-          "expr": "yearn{param=\"tvl\", network=\"$networks\"}",
-          "interval": "",
-          "legendFormat": "{{vault}}",
-          "refId": "A"
-        }
-      ],
-      "thresholds": [],
-      "timeRegions": [],
-      "title": "v1 TVL",
-      "tooltip": {
-        "shared": true,
-        "sort": 2,
-        "value_type": "individual"
-      },
-      "transformations": [],
-      "transparent": true,
-      "type": "graph",
-      "xaxis": {
-        "mode": "time",
-        "show": true,
-        "values": []
-      },
-      "yaxes": [
-        {
-          "$$hashKey": "object:532",
-          "format": "short",
-          "logBase": 1,
-          "show": true
-        },
-        {
-          "$$hashKey": "object:533",
-          "format": "short",
-          "logBase": 1,
-          "show": true
-        }
-      ],
-      "yaxis": {
-        "align": false
-      }
-    },
-    {
-      "aliasColors": {},
-      "bars": false,
-      "dashLength": 10,
-      "dashes": false,
-      "datasource": {
-        "type": "prometheus",
-        "uid": "DS_PROMETHEUS"
-      },
-      "decimals": 2,
-      "description": "",
-      "fill": 6,
-      "fillGradient": 3,
-      "gridPos": {
-        "h": 11,
-        "w": 12,
-        "x": 12,
-        "y": 47
-      },
-      "hiddenSeries": false,
-      "id": 9,
-      "legend": {
-        "alignAsTable": false,
-        "avg": false,
-        "current": true,
-        "hideEmpty": false,
-        "hideZero": false,
-        "max": false,
-        "min": false,
-        "rightSide": false,
-        "show": true,
-        "sort": "current",
-        "sortDesc": true,
-        "total": false,
-        "values": true
-      },
-      "lines": true,
-      "linewidth": 2,
-      "links": [
-        {
-          "targetBlank": true,
-          "title": "v1 Vaults",
-          "url": "https://yearn.finance/vaults"
-        }
-      ],
-      "nullPointMode": "connected",
-      "options": {
-        "alertThreshold": true
-      },
-      "percentage": false,
-      "pluginVersion": "8.3.1",
-      "pointradius": 2,
-      "points": false,
-      "renderer": "flot",
-      "seriesOverrides": [],
-      "spaceLength": 10,
-      "stack": false,
-      "steppedLine": true,
-      "targets": [
-        {
-          "datasource": {
-            "type": "prometheus",
-            "uid": "DS_PROMETHEUS"
-          },
-          "exemplar": true,
-          "expr": "sum(yearn{param=\"tvl\", network=\"$networks\"})",
-          "instant": false,
-          "interval": "",
-          "legendFormat": "v1 Total Value Locked",
-          "refId": "A"
-        }
-      ],
-      "thresholds": [],
-      "timeRegions": [],
-      "title": "v1 TVL",
-      "tooltip": {
-        "shared": true,
-        "sort": 2,
-        "value_type": "individual"
-      },
-      "transformations": [
-        {
-          "id": "filterByValue",
-          "options": {
-            "filters": [
-              {
-                "config": {
-                  "id": "lowerOrEqual",
-                  "options": {
-                    "value": 350000000
-                  }
-                },
-                "fieldName": "Value"
-              }
-            ],
-            "match": "any",
-            "type": "exclude"
-          }
-        }
-      ],
-      "transparent": true,
-      "type": "graph",
-      "xaxis": {
-        "mode": "time",
-        "show": true,
-        "values": []
-      },
-      "yaxes": [
-        {
-          "$$hashKey": "object:532",
-          "format": "short",
-          "logBase": 1,
-          "show": true
-        },
-        {
-          "$$hashKey": "object:533",
-          "format": "short",
-          "logBase": 1,
-          "show": false
-        }
-      ],
-      "yaxis": {
-        "align": false
-      }
     }
   ],
   "refresh": "1m",
-  "schemaVersion": 33,
+  "schemaVersion": 37,
   "style": "dark",
-  "tags": ["Overview"],
+  "tags": [
+    "Overview"
+  ],
   "templating": {
     "list": [
       {
@@ -2223,13 +2292,13 @@
     ]
   },
   "time": {
-    "from": "now-24h",
+    "from": "now-90d",
     "to": "now"
   },
   "timepicker": {},
   "timezone": "",
   "title": "Total Value Locked in the Yearn Ecosystem",
-  "uid": "cKTtuhb7k",
-  "version": 6,
+  "uid": "oHS1u8S4k",
+  "version": 16,
   "weekStart": ""
 }

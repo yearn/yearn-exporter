@@ -9,32 +9,35 @@
       "pluginName": "Prometheus"
     }
   ],
-  "__elements": [],
+  "__elements": {},
   "__requires": [
     {
       "type": "grafana",
       "id": "grafana",
       "name": "Grafana",
-      "version": "8.3.1"
-    },
-    {
-      "type": "panel",
-      "id": "graph",
-      "name": "Graph (old)",
-      "version": ""
+      "version": "9.2.0"
     },
     {
       "type": "datasource",
       "id": "prometheus",
       "name": "Prometheus",
       "version": "1.0.0"
+    },
+    {
+      "type": "panel",
+      "id": "timeseries",
+      "name": "Time series",
+      "version": ""
     }
   ],
   "annotations": {
     "list": [
       {
         "builtIn": 1,
-        "datasource": "-- Grafana --",
+        "datasource": {
+          "type": "datasource",
+          "uid": "grafana"
+        },
         "enable": true,
         "hide": true,
         "iconColor": "rgba(0, 211, 255, 1)",
@@ -53,84 +56,158 @@
   "fiscalYearStartMonth": 0,
   "graphTooltip": 0,
   "id": null,
-  "iteration": 1639129188636,
   "links": [],
   "liveNow": false,
   "panels": [
     {
-      "aliasColors": {},
-      "bars": false,
-      "dashLength": 10,
-      "dashes": false,
       "datasource": {
         "type": "prometheus",
         "uid": "DS_PROMETHEUS"
       },
       "description": "Amount of the deposit token in the vault. This includes funds in all strategies + idle funds yet to be deployed.",
-      "fill": 3,
-      "fillGradient": 6,
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisCenteredZero": false,
+            "axisColorMode": "series",
+            "axisLabel": "tvl $",
+            "axisPlacement": "auto",
+            "barAlignment": 0,
+            "drawStyle": "line",
+            "fillOpacity": 60,
+            "gradientMode": "opacity",
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            },
+            "lineInterpolation": "stepAfter",
+            "lineWidth": 1,
+            "pointSize": 5,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "showPoints": "never",
+            "spanNulls": true,
+            "stacking": {
+              "group": "A",
+              "mode": "none"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              }
+            ]
+          },
+          "unit": "short"
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Token Price $"
+            },
+            "properties": [
+              {
+                "id": "color",
+                "value": {
+                  "fixedColor": "rgba(218, 218, 232, 1)",
+                  "mode": "fixed"
+                }
+              },
+              {
+                "id": "custom.fillOpacity",
+                "value": 0
+              },
+              {
+                "id": "custom.lineWidth",
+                "value": 1
+              },
+              {
+                "id": "custom.axisLabel",
+                "value": "Token Price $"
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "tvl"
+            },
+            "properties": [
+              {
+                "id": "unit",
+                "value": "currencyUSD"
+              },
+              {
+                "id": "custom.axisPlacement",
+                "value": "left"
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byFrameRefID",
+              "options": "A"
+            },
+            "properties": [
+              {
+                "id": "custom.axisLabel",
+                "value": "TVL in Deposit Token"
+              }
+            ]
+          }
+        ]
+      },
       "gridPos": {
         "h": 11,
         "w": 24,
         "x": 0,
         "y": 0
       },
-      "hiddenSeries": false,
       "id": 2,
-      "legend": {
-        "alignAsTable": true,
-        "avg": false,
-        "current": true,
-        "max": false,
-        "min": false,
-        "rightSide": true,
-        "show": true,
-        "sort": "current",
-        "sortDesc": true,
-        "total": false,
-        "values": true
-      },
-      "lines": true,
-      "linewidth": 2,
-      "nullPointMode": "connected",
       "options": {
-        "alertThreshold": false
-      },
-      "percentage": false,
-      "pluginVersion": "8.3.1",
-      "pointradius": 2,
-      "points": false,
-      "renderer": "flot",
-      "seriesOverrides": [
-        {
-          "$$hashKey": "object:302",
-          "alias": "Token Price $",
-          "color": "rgba(218, 218, 232, 1)",
-          "fill": 0,
-          "fillGradient": 0,
-          "linewidth": 1,
-          "yaxis": 2
+        "legend": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "displayMode": "table",
+          "placement": "right",
+          "showLegend": true
         },
-        {
-          "$$hashKey": "object:644",
-          "alias": "tvl",
-          "hiddenSeries": true
+        "timezone": [
+          "browser"
+        ],
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
         }
-      ],
-      "spaceLength": 10,
-      "stack": false,
-      "steppedLine": true,
+      },
+      "pluginVersion": "9.2.0",
       "targets": [
         {
           "datasource": {
             "type": "prometheus",
             "uid": "DS_PROMETHEUS"
           },
-          "exemplar": true,
-          "expr": "yearn_vault{param=\"totalAssets\", experimental=\"false\", vault=~\"$vault\", network=\"$networks\"}",
+          "editorMode": "code",
+          "exemplar": false,
+          "expr": "yearn_vault{param=\"totalAssets\", experimental=\"$exp\", vault=~\"$vault\", network=\"$networks\", address=\"$address\", version=\"$version\", experimental=\"$exp\"}",
           "interval": "",
           "legendFormat": "{{vault}}",
           "queryType": "randomWalk",
+          "range": true,
           "refId": "A"
         },
         {
@@ -138,11 +215,13 @@
             "type": "prometheus",
             "uid": "DS_PROMETHEUS"
           },
-          "exemplar": true,
-          "expr": "yearn_vault{param=\"token price\",vault=~\"$vault\", network=\"$networks\"}",
+          "editorMode": "code",
+          "exemplar": false,
+          "expr": "yearn_vault{param=\"token price\", vault=~\"$vault\", network=\"$networks\", address=\"$address\", version=\"$version\", experimental=\"$exp\"}",
           "hide": false,
           "interval": "",
           "legendFormat": "Token Price $",
+          "range": true,
           "refId": "B"
         },
         {
@@ -150,53 +229,20 @@
             "type": "prometheus",
             "uid": "DS_PROMETHEUS"
           },
-          "exemplar": true,
-          "expr": "yearn_vault{param=\"tvl\", experimental=\"false\", vault=~\"$vault\", network=\"$networks\"}",
+          "editorMode": "code",
+          "exemplar": false,
+          "expr": "yearn_vault{param=\"tvl\", experimental=\"false\", vault=~\"$vault\", network=\"$networks\", address=\"$address\", version=\"$version\", experimental=\"$exp\"}",
           "hide": false,
           "interval": "",
-          "legendFormat": "{{param}}",
+          "legendFormat": "tvl",
+          "range": true,
           "refId": "C"
         }
       ],
-      "thresholds": [],
-      "timeRegions": [],
       "title": "Total Assets - In Deposit Token",
-      "tooltip": {
-        "shared": true,
-        "sort": 2,
-        "value_type": "individual"
-      },
-      "type": "graph",
-      "xaxis": {
-        "mode": "time",
-        "show": true,
-        "values": []
-      },
-      "yaxes": [
-        {
-          "$$hashKey": "object:4760",
-          "format": "short",
-          "label": "TVL in deposit token amount",
-          "logBase": 1,
-          "show": true
-        },
-        {
-          "$$hashKey": "object:4761",
-          "format": "short",
-          "label": "Token Price $",
-          "logBase": 1,
-          "show": true
-        }
-      ],
-      "yaxis": {
-        "align": false
-      }
+      "type": "timeseries"
     },
     {
-      "aliasColors": {},
-      "bars": false,
-      "dashLength": 10,
-      "dashes": false,
       "datasource": {
         "type": "prometheus",
         "uid": "DS_PROMETHEUS"
@@ -204,99 +250,97 @@
       "description": "This looks at the share price rate of change and factors in compounding on a weekly basis. ",
       "fieldConfig": {
         "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisCenteredZero": false,
+            "axisColorMode": "text",
+            "axisLabel": "",
+            "axisPlacement": "auto",
+            "barAlignment": 0,
+            "drawStyle": "line",
+            "fillOpacity": 99,
+            "gradientMode": "opacity",
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            },
+            "lineInterpolation": "stepAfter",
+            "lineWidth": 1,
+            "pointSize": 5,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "showPoints": "never",
+            "spanNulls": true,
+            "stacking": {
+              "group": "A",
+              "mode": "none"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              }
+            ]
+          },
           "unit": "percentunit"
         },
         "overrides": []
       },
-      "fill": 2,
-      "fillGradient": 3,
       "gridPos": {
         "h": 10,
         "w": 24,
         "x": 0,
         "y": 11
       },
-      "hiddenSeries": false,
       "id": 3,
-      "legend": {
-        "alignAsTable": true,
-        "avg": false,
-        "current": true,
-        "hideEmpty": false,
-        "hideZero": false,
-        "max": false,
-        "min": false,
-        "rightSide": true,
-        "show": true,
-        "sort": "current",
-        "sortDesc": true,
-        "total": false,
-        "values": true
-      },
-      "lines": true,
-      "linewidth": 2,
-      "nullPointMode": "connected",
       "options": {
-        "alertThreshold": false
+        "legend": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "displayMode": "table",
+          "placement": "right",
+          "showLegend": true
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
       },
-      "percentage": false,
-      "pluginVersion": "8.3.1",
-      "pointradius": 2,
-      "points": false,
-      "renderer": "flot",
-      "seriesOverrides": [],
-      "spaceLength": 10,
-      "stack": false,
-      "steppedLine": true,
+      "pluginVersion": "9.2.0",
       "targets": [
         {
           "datasource": {
             "type": "prometheus",
             "uid": "DS_PROMETHEUS"
           },
+          "editorMode": "code",
           "exemplar": true,
-          "expr": "((delta(yearn_vault{param=\"pricePerShare\", experimental=\"false\", vault=~\"$vault\", network=\"$networks\"}[1w]) + 1) ^ (1/7)) ^ 365 - 1",
+          "expr": "(((((delta(yearn_vault{param=\"pricePerShare\", vault=~\"$vault\", network=\"$networks\", address=\"$address\", version=\"$version\", experimental=\"$exp\"}[$tf])) / yearn_vault{param=\"pricePerShare\", vault=~\"$vault\", network=\"$networks\", address=\"$address\", version=\"$version\", experimental=\"$exp\"} offset $tf)  + 1) ^ (365.2425 / $tf) - 1 ) * 100000) ",
           "interval": "",
           "legendFormat": "{{vault}}",
+          "range": true,
           "refId": "A"
         }
       ],
-      "thresholds": [],
-      "timeRegions": [],
       "title": "v2 Net APY - Weekly Compouding",
-      "tooltip": {
-        "shared": true,
-        "sort": 2,
-        "value_type": "individual"
-      },
       "transformations": [],
-      "type": "graph",
-      "xaxis": {
-        "mode": "time",
-        "show": true,
-        "values": []
-      },
-      "yaxes": [
-        {
-          "$$hashKey": "object:532",
-          "format": "percentunit",
-          "logBase": 1,
-          "show": true
-        },
-        {
-          "$$hashKey": "object:533",
-          "format": "short",
-          "logBase": 1,
-          "show": false
-        }
-      ],
-      "yaxis": {
-        "align": false
-      }
+      "type": "timeseries"
     }
   ],
   "refresh": false,
-  "schemaVersion": 33,
+  "schemaVersion": 37,
   "style": "dark",
   "tags": [],
   "templating": {
@@ -331,7 +375,7 @@
           "type": "prometheus",
           "uid": "DS_PROMETHEUS"
         },
-        "definition": "yearn_vault{param=\"totalAssets\", experimental=\"false\", network=\"$networks\"}",
+        "definition": "yearn_vault{param=\"totalAssets\", experimental=\"$exp\", network=\"$networks\"}",
         "hide": 0,
         "includeAll": false,
         "label": "vault",
@@ -339,7 +383,7 @@
         "name": "vault",
         "options": [],
         "query": {
-          "query": "yearn_vault{param=\"totalAssets\", experimental=\"false\", network=\"$networks\"}",
+          "query": "yearn_vault{param=\"totalAssets\", experimental=\"$exp\", network=\"$networks\"}",
           "refId": "StandardVariableQuery"
         },
         "refresh": 2,
@@ -347,6 +391,145 @@
         "skipUrlSync": false,
         "sort": 1,
         "type": "query"
+      },
+      {
+        "current": {
+          "selected": true,
+          "text": "true",
+          "value": "false"
+        },
+        "description": "Do you want to view production or ape.tax vaults?",
+        "hide": 0,
+        "includeAll": false,
+        "label": "production",
+        "multi": false,
+        "name": "exp",
+        "options": [
+          {
+            "selected": true,
+            "text": "true",
+            "value": "false"
+          },
+          {
+            "selected": false,
+            "text": "false",
+            "value": "true"
+          }
+        ],
+        "query": "true : false, false : true",
+        "queryValue": "",
+        "skipUrlSync": false,
+        "type": "custom"
+      },
+      {
+        "current": {},
+        "datasource": {
+          "type": "prometheus",
+          "uid": "DS_PROMETHEUS"
+        },
+        "definition": "yearn_vault{network=\"$networks\", param=\"tvl\", vault=~\"$vault\", experimental=\"$exp\"}",
+        "hide": 0,
+        "includeAll": false,
+        "label": "address",
+        "multi": false,
+        "name": "address",
+        "options": [],
+        "query": {
+          "query": "yearn_vault{network=\"$networks\", param=\"tvl\", vault=~\"$vault\", experimental=\"$exp\"}",
+          "refId": "StandardVariableQuery"
+        },
+        "refresh": 1,
+        "regex": "/.*address=\"([^\"]*).*/",
+        "skipUrlSync": false,
+        "sort": 1,
+        "type": "query"
+      },
+      {
+        "current": {},
+        "datasource": {
+          "type": "prometheus",
+          "uid": "DS_PROMETHEUS"
+        },
+        "definition": "yearn_vault{network=\"$networks\", param=\"tvl\", vault=~\"$vault\", experimental=\"$exp\", address=\"$address\"}",
+        "hide": 0,
+        "includeAll": false,
+        "label": "version",
+        "multi": false,
+        "name": "version",
+        "options": [],
+        "query": {
+          "query": "yearn_vault{network=\"$networks\", param=\"tvl\", vault=~\"$vault\", experimental=\"$exp\", address=\"$address\"}",
+          "refId": "StandardVariableQuery"
+        },
+        "refresh": 1,
+        "regex": "/.*version=\"([^/\"]*).*/",
+        "skipUrlSync": false,
+        "sort": 0,
+        "type": "query"
+      },
+      {
+        "current": {
+          "selected": true,
+          "text": "Once a Week",
+          "value": "7d"
+        },
+        "description": "Daily, Weekly, or Monthly ect",
+        "hide": 0,
+        "includeAll": false,
+        "label": "Frequency of harvests",
+        "multi": false,
+        "name": "tf",
+        "options": [
+          {
+            "selected": false,
+            "text": "Daily harvest",
+            "value": "1d"
+          },
+          {
+            "selected": false,
+            "text": "Twice a Week",
+            "value": "2d"
+          },
+          {
+            "selected": false,
+            "text": "Thrice a Week",
+            "value": "3d"
+          },
+          {
+            "selected": false,
+            "text": "Four times per Week",
+            "value": "4d"
+          },
+          {
+            "selected": false,
+            "text": "Five times per Week",
+            "value": "5d"
+          },
+          {
+            "selected": false,
+            "text": "Six times per Week",
+            "value": "6d"
+          },
+          {
+            "selected": true,
+            "text": "Once a Week",
+            "value": "7d"
+          },
+          {
+            "selected": false,
+            "text": "Once a Month",
+            "value": "30d"
+          },
+          {
+            "selected": false,
+            "text": "Once every Three Months",
+            "value": "90d"
+          }
+        ],
+        "query": "Daily harvest : 1d, Twice a Week : 2d, Thrice a Week : 3d, Four times per Week : 4d, Five times per Week : 5d, Six times per Week : 6d,Once a Week : 7d,Once a Month : 30d,Once every Three Months : 90d",
+        "queryValue": "",
+        "skipUrlSync": false,
+        "type": "custom"
       }
     ]
   },
@@ -357,7 +540,7 @@
   "timepicker": {},
   "timezone": "",
   "title": "Vault Growth",
-  "uid": "mHLNggvnk",
-  "version": 13,
+  "uid": "DfZes2I4z",
+  "version": 26,
   "weekStart": ""
 }

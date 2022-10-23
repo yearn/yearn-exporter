@@ -1,0 +1,955 @@
+{
+  "__inputs": [
+    {
+      "name": "DS_PROMETHEUS",
+      "label": "Prometheus",
+      "description": "",
+      "type": "datasource",
+      "pluginId": "prometheus",
+      "pluginName": "Prometheus"
+    }
+  ],
+  "__elements": {},
+  "__requires": [
+    {
+      "type": "panel",
+      "id": "bargauge",
+      "name": "Bar gauge",
+      "version": ""
+    },
+    {
+      "type": "grafana",
+      "id": "grafana",
+      "name": "Grafana",
+      "version": "9.2.0"
+    },
+    {
+      "type": "datasource",
+      "id": "prometheus",
+      "name": "Prometheus",
+      "version": "1.0.0"
+    },
+    {
+      "type": "panel",
+      "id": "stat",
+      "name": "Stat",
+      "version": ""
+    },
+    {
+      "type": "panel",
+      "id": "timeseries",
+      "name": "Time series",
+      "version": ""
+    }
+  ],
+  "annotations": {
+    "list": [
+      {
+        "builtIn": 1,
+        "datasource": {
+          "type": "datasource",
+          "uid": "grafana"
+        },
+        "enable": true,
+        "hide": true,
+        "iconColor": "rgba(0, 211, 255, 1)",
+        "name": "Annotations & Alerts",
+        "target": {
+          "limit": 100,
+          "matchAny": false,
+          "tags": [],
+          "type": "dashboard"
+        },
+        "type": "dashboard"
+      }
+    ]
+  },
+  "description": "This dashboard give you an overview of net apy for vaults",
+  "editable": true,
+  "fiscalYearStartMonth": 0,
+  "graphTooltip": 0,
+  "id": null,
+  "links": [],
+  "liveNow": false,
+  "panels": [
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "DS_PROMETHEUS"
+      },
+      "description": "Avg summed apy for all production vaults. This is with weekly compounding taking the share price difference over a week.",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              }
+            ]
+          },
+          "unit": "percentunit"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 5,
+        "x": 2,
+        "y": 0
+      },
+      "id": 39,
+      "options": {
+        "colorMode": "value",
+        "graphMode": "none",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "textMode": "auto"
+      },
+      "pluginVersion": "9.2.0",
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "DS_PROMETHEUS"
+          },
+          "exemplar": true,
+          "expr": "\r\navg(((((delta(yearn_vault{network=\"$networks\", param=\"pricePerShare\", experimental=\"$experimental\", vault!~\"yvUSDC 0.2.2|yvDAI 0.2.2|yvWBTC 0.3.1|yvHEGIC 0.3.0\"}[$tf])) / yearn_vault{network=\"$networks\", param=\"pricePerShare\", experimental=\"$experimental\"} offset $tf)  + 1) ^ (365.2425 / $tf) - 1 ) * 100000)",
+          "instant": false,
+          "interval": "",
+          "legendFormat": "APY (avg) (%)",
+          "refId": "A"
+        }
+      ],
+      "title": "Avg APY",
+      "transparent": true,
+      "type": "stat"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "DS_PROMETHEUS"
+      },
+      "description": "Current Standard Deviation of summed APY ",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 80
+              }
+            ]
+          },
+          "unit": "none"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 5,
+        "x": 18,
+        "y": 0
+      },
+      "id": 40,
+      "options": {
+        "colorMode": "value",
+        "graphMode": "none",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "textMode": "auto"
+      },
+      "pluginVersion": "9.2.0",
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "DS_PROMETHEUS"
+          },
+          "exemplar": true,
+          "expr": "avg((((delta(yearn_vault{param=\"pricePerShare\", experimental=\"false\", vault!~\"yvUSDC 0.2.2|yvDAI 0.2.2|yvWBTC 0.3.1|yvHEGIC 0.3.0\"}[7d]) + 1) ^ (1/7)) ^ 365 - 1) < 1000)",
+          "hide": true,
+          "interval": "",
+          "legendFormat": "APY (avg) (%)",
+          "refId": "A"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "DS_PROMETHEUS"
+          },
+          "exemplar": true,
+          "expr": "stddev((((delta(yearn_vault{param=\"pricePerShare\", experimental=\"false\", vault!~\"yvUSDC 0.2.2|yvDAI 0.2.2|yvWBTC 0.3.1|yvHEGIC 0.3.0\"}[7d]) + 1) ^ (1/7)) ^ 365 - 1) < 1000)",
+          "hide": false,
+          "interval": "",
+          "legendFormat": "APY (std)",
+          "refId": "B"
+        }
+      ],
+      "title": "σ APY",
+      "transparent": true,
+      "type": "stat"
+    },
+    {
+      "collapsed": false,
+      "datasource": {
+        "type": "datasource",
+        "uid": "grafana"
+      },
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 4
+      },
+      "id": 16,
+      "panels": [],
+      "targets": [
+        {
+          "datasource": {
+            "type": "datasource",
+            "uid": "grafana"
+          },
+          "refId": "A"
+        }
+      ],
+      "title": "yVaults",
+      "type": "row"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "DS_PROMETHEUS"
+      },
+      "description": "This looks at the share price rate of change over $tf and factors in compounding on a $cr day(s) per week basis. ",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "continuous-BlPu"
+          },
+          "mappings": [],
+          "noValue": "0",
+          "thresholds": {
+            "mode": "percentage",
+            "steps": [
+              {
+                "color": "super-light-blue",
+                "value": null
+              }
+            ]
+          },
+          "unit": "percentunit"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 6,
+        "w": 24,
+        "x": 0,
+        "y": 5
+      },
+      "id": 6,
+      "options": {
+        "displayMode": "basic",
+        "minVizHeight": 10,
+        "minVizWidth": 0,
+        "orientation": "horizontal",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "showUnfilled": false,
+        "text": {}
+      },
+      "pluginVersion": "9.2.0",
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "DS_PROMETHEUS"
+          },
+          "exemplar": true,
+          "expr": "sort_desc((((((delta(yearn_vault{network=\"$networks\", param=\"pricePerShare\", experimental=\"$experimental\"}[$tf])) / yearn_vault{network=\"$networks\", param=\"pricePerShare\", experimental=\"$experimental\"} offset $tf)  + 1) ^ (365.2425 / $tf) - 1 ) * 100000) )",
+          "instant": false,
+          "interval": "",
+          "legendFormat": "{{vault}}",
+          "refId": "A"
+        }
+      ],
+      "title": "Net APY",
+      "transformations": [],
+      "transparent": true,
+      "type": "bargauge"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "DS_PROMETHEUS"
+      },
+      "description": "",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisCenteredZero": false,
+            "axisColorMode": "text",
+            "axisLabel": "",
+            "axisPlacement": "auto",
+            "barAlignment": 0,
+            "drawStyle": "line",
+            "fillOpacity": 30,
+            "gradientMode": "opacity",
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            },
+            "lineInterpolation": "stepAfter",
+            "lineWidth": 2,
+            "pointSize": 5,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "showPoints": "never",
+            "spanNulls": true,
+            "stacking": {
+              "group": "A",
+              "mode": "none"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
+          },
+          "decimals": 3,
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              }
+            ]
+          },
+          "unit": "percentunit"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 9,
+        "w": 12,
+        "x": 0,
+        "y": 11
+      },
+      "id": 32,
+      "options": {
+        "legend": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "displayMode": "table",
+          "placement": "right",
+          "showLegend": true,
+          "sortBy": "Last *",
+          "sortDesc": true
+        },
+        "tooltip": {
+          "mode": "single",
+          "sort": "none"
+        }
+      },
+      "pluginVersion": "8.3.1",
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "DS_PROMETHEUS"
+          },
+          "exemplar": true,
+          "expr": "(((((delta(yearn_vault{network=\"$networks\", param=\"pricePerShare\", experimental=\"$experimental\"}[$tf])) / yearn_vault{network=\"$networks\", param=\"pricePerShare\", experimental=\"$experimental\"} offset $tf)  + 1) ^ (365.2425 / $tf) - 1 ) * 100000) ",
+          "interval": "",
+          "legendFormat": "{{vault}}",
+          "refId": "A"
+        }
+      ],
+      "title": "Net APY",
+      "transformations": [],
+      "transparent": true,
+      "type": "timeseries"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "DS_PROMETHEUS"
+      },
+      "description": "This is the Share Price over time.",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisCenteredZero": false,
+            "axisColorMode": "text",
+            "axisGridShow": true,
+            "axisLabel": "",
+            "axisPlacement": "auto",
+            "barAlignment": 0,
+            "drawStyle": "line",
+            "fillOpacity": 16,
+            "gradientMode": "hue",
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            },
+            "lineInterpolation": "stepAfter",
+            "lineWidth": 1,
+            "pointSize": 5,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "showPoints": "never",
+            "spanNulls": true,
+            "stacking": {
+              "group": "A",
+              "mode": "none"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
+          },
+          "decimals": 6,
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              }
+            ]
+          },
+          "unit": "none"
+        },
+        "overrides": [
+          {
+            "__systemRef": "hideSeriesFrom",
+            "matcher": {
+              "id": "byNames",
+              "options": {
+                "mode": "exclude",
+                "names": [
+                  "yvCurve-UST 0.4.3",
+                  "yvCurve-HUSD 0.3.5",
+                  "yvCurve-EURT 0.4.3",
+                  "yvCurve-ibAUD-USDC 0.4.3",
+                  "yvCurve-ankrETH 0.3.5",
+                  "yvCurve-CVXETH 0.4.3",
+                  "yvCurve-d3pool 0.4.3",
+                  "yvDAI 0.3.0",
+                  "yvCurve-UST 0.3.5",
+                  "yvCurve-ibAUD 0.4.3",
+                  "yvCurve-tBTC 0.3.5",
+                  "yvCurve-EURS 0.3.5",
+                  "st-yCRV 0.4.3",
+                  "yvCurve-IronBank 0.3.2",
+                  "yvCurve-USDT 0.3.5",
+                  "yvCurve-RAI 0.4.3",
+                  "yvCurve-MIM 0.4.3",
+                  "yvCurve-GUSD 0.3.5",
+                  "yvCurve-ibCHF-USDC 0.4.3",
+                  "yvCurve-DUSD 0.3.5",
+                  "yvCurve-STG-USDC 0.4.3",
+                  "yvLUSD 0.4.3",
+                  "yvCurve-Aave 0.3.5",
+                  "yvUSDT 0.4.3",
+                  "yvCurve-USDN 0.3.5",
+                  "yvCurve-USDK 0.3.5",
+                  "yvCurve-triCrypto 0.4.2",
+                  "yvCurve-pBTC 0.3.5",
+                  "yvBalancer-BoostedAaveUSD 0.4.3",
+                  "yvCurve-cvxCRV 0.4.3",
+                  "yvCurve-ibCHF 0.4.3",
+                  "yvCOMP 0.4.3",
+                  "yUSD 0.3.5",
+                  "yvCurve-ibKRW 0.4.3",
+                  "yvCurve-ibJPY 0.4.3",
+                  "yvCurve-ibGBP 0.4.3",
+                  "yvCurve-3EUR 0.4.3",
+                  "yvCurve-sUSD 0.3.5",
+                  "yvCurve-rETHwstETH 0.4.3",
+                  "yvCurve-ibBTC 0.4.3",
+                  "yvUSDC 0.3.0",
+                  "yvCurve-LUSD 0.3.5",
+                  "yvCurve-stETH-WETH 0.4.3",
+                  "yvCurve-HBTC 0.3.3",
+                  "yvLINK 0.4.2",
+                  "yvCurve-ibEUR 0.4.3",
+                  "yvCurve-CRVETH 0.4.3",
+                  "yvCurve-ibGBP-USDC 0.4.3",
+                  "yvCurve-BUSD 0.3.5",
+                  "yvSUSHI 0.4.3",
+                  "yvCurve-renBTC 0.3.5",
+                  "yvCurve-alETH 0.4.3",
+                  "yvCurve-YFIETH 0.4.3",
+                  "yvUSDT 0.3.5",
+                  "yvCurve-EURSUSDC 0.4.3",
+                  "yvCurve-Pax 0.3.5",
+                  "yvCurve-sBTC 0.3.5",
+                  "yvCurve-3pool 0.3.5",
+                  "yvRAI 0.4.2",
+                  "yvCurve-EURN 0.4.3",
+                  "yvCurve-mUSD 0.3.5",
+                  "yvCurve-yBUSD 0.3.5",
+                  "yvCurve-BBTC 0.3.5",
+                  "yvCurve-ibJPY-USDC 0.4.3",
+                  "yvWBTC 0.3.5",
+                  "yvCurve-alUSD 0.3.5",
+                  "yvCurve-FRAX 0.3.5",
+                  "yv1INCH 0.3.2",
+                  "yvCurve-EURTUSD 0.4.3",
+                  "yvDAI 0.2.2",
+                  "yvCurve-rETH 0.3.5",
+                  "yvCurve-RSV 0.3.5",
+                  "yvCurve-USDP 0.3.5",
+                  "yvCurve-Compound 0.3.5",
+                  "yvYFI 0.3.2",
+                  "yvCurve-3Crypto 0.4.3",
+                  "yvCurve-ibEUR-USDC 0.4.3",
+                  "yvSNX 0.3.5",
+                  "yvCurve-OUSD 0.4.3",
+                  "yvCurve-ibKRW-USDC 0.4.3",
+                  "yvUNI 0.3.5",
+                  "yvTUSD 0.4.3",
+                  "yvWETH 0.4.2",
+                  "yvUSDC 0.4.3",
+                  "yvsUSD 0.3.3",
+                  "yvWETH 0.3.2",
+                  "yvKP3RETH-f 0.4.3",
+                  "yvCurve-sAave 0.3.5",
+                  "lp-yCRV 0.4.3",
+                  "yvCurve-USDP 0.4.3",
+                  "yvWBTC 0.3.1",
+                  "yvCurve-DOLA 0.4.3",
+                  "yvCurve-MIMUST 0.4.3",
+                  "yvAAVE 0.4.3",
+                  "yvDAI 0.4.3",
+                  "yvCurve-stETH 0.3.0",
+                  "yvYFI 0.4.3",
+                  "yvHEGIC 0.3.0",
+                  "yvUSDC 0.2.2",
+                  "yvCurve-oBTC 0.3.5",
+                  "yvCurve-LINK 0.3.5",
+                  "yvCurve-TUSD 0.3.5"
+                ],
+                "prefix": "All except:",
+                "readOnly": true
+              }
+            },
+            "properties": [
+              {
+                "id": "custom.hideFrom",
+                "value": {
+                  "legend": false,
+                  "tooltip": false,
+                  "viz": true
+                }
+              }
+            ]
+          }
+        ]
+      },
+      "gridPos": {
+        "h": 9,
+        "w": 12,
+        "x": 12,
+        "y": 11
+      },
+      "id": 23,
+      "options": {
+        "legend": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "displayMode": "table",
+          "placement": "right",
+          "showLegend": true,
+          "sortBy": "Last *",
+          "sortDesc": true
+        },
+        "tooltip": {
+          "mode": "single",
+          "sort": "none"
+        }
+      },
+      "pluginVersion": "8.3.1",
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "DS_PROMETHEUS"
+          },
+          "exemplar": true,
+          "expr": "yearn_vault{network=\"$networks\", param=\"pricePerShare\", experimental=\"$experimental\"}",
+          "interval": "",
+          "legendFormat": "{{vault}}",
+          "refId": "A"
+        }
+      ],
+      "title": "Share Price",
+      "transformations": [],
+      "transparent": true,
+      "type": "timeseries"
+    },
+    {
+      "collapsed": false,
+      "datasource": {
+        "type": "datasource",
+        "uid": "grafana"
+      },
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 20
+      },
+      "id": 27,
+      "panels": [],
+      "targets": [
+        {
+          "datasource": {
+            "type": "datasource",
+            "uid": "grafana"
+          },
+          "refId": "A"
+        }
+      ],
+      "title": "Total APY",
+      "type": "row"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "DS_PROMETHEUS"
+      },
+      "description": "Avg summed apy for all production vaults. This is with weekly compunding taking the share price difference over a week. ",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisCenteredZero": false,
+            "axisColorMode": "text",
+            "axisLabel": "",
+            "axisPlacement": "auto",
+            "barAlignment": 0,
+            "drawStyle": "line",
+            "fillOpacity": 20,
+            "gradientMode": "opacity",
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            },
+            "lineInterpolation": "linear",
+            "lineWidth": 1,
+            "pointSize": 5,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "showPoints": "auto",
+            "spanNulls": true,
+            "stacking": {
+              "group": "A",
+              "mode": "none"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 80
+              }
+            ]
+          },
+          "unit": "percentunit"
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "APY (σ)"
+            },
+            "properties": [
+              {
+                "id": "color",
+                "value": {
+                  "fixedColor": "#FFF899",
+                  "mode": "fixed"
+                }
+              },
+              {
+                "id": "custom.fillOpacity",
+                "value": 0
+              },
+              {
+                "id": "unit",
+                "value": "short"
+              },
+              {
+                "id": "custom.axisLabel",
+                "value": "Standard Deviation"
+              },
+              {
+                "id": "custom.lineStyle",
+                "value": {
+                  "dash": [
+                    7,
+                    7
+                  ],
+                  "fill": "dash"
+                }
+              }
+            ]
+          }
+        ]
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 24,
+        "x": 0,
+        "y": 21
+      },
+      "id": 38,
+      "options": {
+        "legend": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "mode": "single",
+          "sort": "none"
+        }
+      },
+      "pluginVersion": "8.3.1",
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "DS_PROMETHEUS"
+          },
+          "editorMode": "code",
+          "exemplar": true,
+          "expr": "(avg(((((delta(yearn_vault{network=\"$networks\", param=\"pricePerShare\", experimental=\"$experimental\"}[$tf])) / yearn_vault{network=\"$networks\", param=\"pricePerShare\", experimental=\"$experimental\"} offset $tf)  + 1) ^ (365.2425 / $tf) - 1 ) * 100000) < 10000)",
+          "interval": "",
+          "legendFormat": "APY (avg) (%)",
+          "range": true,
+          "refId": "A"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "DS_PROMETHEUS"
+          },
+          "editorMode": "code",
+          "exemplar": true,
+          "expr": "stddev(((((delta(yearn_vault{network=\"$networks\", param=\"pricePerShare\", experimental=\"$experimental\"}[$tf])) / yearn_vault{network=\"$networks\", param=\"pricePerShare\", experimental=\"$experimental\"} offset $tf)  + 1) ^ (365.2425 / $tf) - 1 ) * 100000) ",
+          "hide": false,
+          "interval": "",
+          "legendFormat": "APY (σ)",
+          "range": true,
+          "refId": "B"
+        }
+      ],
+      "title": "Avg APY",
+      "transparent": true,
+      "type": "timeseries"
+    }
+  ],
+  "refresh": false,
+  "schemaVersion": 37,
+  "style": "dark",
+  "tags": [
+    "APY",
+    "Overview"
+  ],
+  "templating": {
+    "list": [
+      {
+        "current": {},
+        "datasource": {
+          "type": "prometheus",
+          "uid": "DS_PROMETHEUS"
+        },
+        "definition": "yearn_strategy{experimental=\"false\", param=\"totalLoss\"}",
+        "description": "Choose which network you want to view",
+        "hide": 0,
+        "includeAll": false,
+        "label": "network",
+        "multi": false,
+        "name": "networks",
+        "options": [],
+        "query": {
+          "query": "yearn_strategy{experimental=\"false\", param=\"totalLoss\"}",
+          "refId": "StandardVariableQuery"
+        },
+        "refresh": 1,
+        "regex": "/.*network=\"([^/\"]*).*/",
+        "skipUrlSync": false,
+        "sort": 0,
+        "type": "query"
+      },
+      {
+        "current": {
+          "selected": true,
+          "text": "Yes",
+          "value": "false"
+        },
+        "description": "Do you want to view production or ape.tax vaults?",
+        "hide": 0,
+        "includeAll": false,
+        "label": "production?",
+        "multi": false,
+        "name": "experimental",
+        "options": [
+          {
+            "selected": false,
+            "text": "No",
+            "value": "true"
+          },
+          {
+            "selected": true,
+            "text": "Yes",
+            "value": "false"
+          }
+        ],
+        "query": "No : true, Yes : false",
+        "queryValue": "",
+        "skipUrlSync": false,
+        "type": "custom"
+      },
+      {
+        "current": {
+          "selected": true,
+          "text": "Once a Week",
+          "value": "7d"
+        },
+        "description": "Daily, Weekly, or Monthly ect",
+        "hide": 0,
+        "includeAll": false,
+        "label": "Frequency of harvests",
+        "multi": false,
+        "name": "tf",
+        "options": [
+          {
+            "selected": false,
+            "text": "Daily harvest",
+            "value": "1d"
+          },
+          {
+            "selected": false,
+            "text": "Twice a Week",
+            "value": "2d"
+          },
+          {
+            "selected": false,
+            "text": "Thrice a Week",
+            "value": "3d"
+          },
+          {
+            "selected": false,
+            "text": "Four times per Week",
+            "value": "4d"
+          },
+          {
+            "selected": false,
+            "text": "Five times per Week",
+            "value": "5d"
+          },
+          {
+            "selected": false,
+            "text": "Six times per Week",
+            "value": "6d"
+          },
+          {
+            "selected": true,
+            "text": "Once a Week",
+            "value": "7d"
+          },
+          {
+            "selected": false,
+            "text": "Once a Month",
+            "value": "30d"
+          },
+          {
+            "selected": false,
+            "text": "Once every Three Months",
+            "value": "90d"
+          }
+        ],
+        "query": "Daily harvest : 1d, Twice a Week : 2d, Thrice a Week : 3d, Four times per Week : 4d, Five times per Week : 5d, Six times per Week : 6d,Once a Week : 7d,Once a Month : 30d,Once every Three Months : 90d",
+        "queryValue": "",
+        "skipUrlSync": false,
+        "type": "custom"
+      }
+    ]
+  },
+  "time": {
+    "from": "now-24h",
+    "to": "now"
+  },
+  "timepicker": {},
+  "timezone": "",
+  "title": "APY Technical",
+  "uid": "ISg-T2S4z",
+  "version": 3,
+  "weekStart": ""
+}
