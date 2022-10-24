@@ -423,12 +423,21 @@ def compute_apr(report, previous_report):
     seconds_between_reports = report.timestamp - previous_report.timestamp
     pre_fee_apr = 0
     post_fee_apr = 0
-    if int(previous_report.total_debt) == 0 or seconds_between_reports == 0:
-        return 0, 0
-    else:
-        pre_fee_apr = report.gain / int(previous_report.total_debt) * (SECONDS_IN_A_YEAR / seconds_between_reports)
+
+    if report.vault_address == '0x27B5739e22ad9033bcBf192059122d163b60349D':
+        vault = Contract(report.vault_address)
+        if vault.totalAssets() == 0 or seconds_between_reports == 0:
+            return 0, 0
+        pre_fee_apr = report.gain / int(vault.totalAssets()/10**vault.decimals()) * (SECONDS_IN_A_YEAR / seconds_between_reports)
         if report.gain_post_fees != 0:
-            post_fee_apr = report.gain_post_fees / int(previous_report.total_debt) * (SECONDS_IN_A_YEAR / seconds_between_reports)
+            post_fee_apr = report.gain_post_fees / int(vault.totalAssets()/10**vault.decimals()) * (SECONDS_IN_A_YEAR / seconds_between_reports)
+    else:
+        if int(previous_report.total_debt) == 0 or seconds_between_reports == 0:
+            return 0, 0
+        else:
+            pre_fee_apr = report.gain / int(previous_report.total_debt) * (SECONDS_IN_A_YEAR / seconds_between_reports)
+            if report.gain_post_fees != 0:
+                post_fee_apr = report.gain_post_fees / int(previous_report.total_debt) * (SECONDS_IN_A_YEAR / seconds_between_reports)
     return pre_fee_apr, post_fee_apr
 
 def parse_fees(tx, vault_address, strategy_address, decimals, gain, vault_version):
