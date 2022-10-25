@@ -1,7 +1,7 @@
 from collections import defaultdict
 from math import ceil
 
-from brownie import chain
+from brownie import Contract, chain
 from toolz import last
 from yearn.events import decode_logs, get_logs_asap
 from yearn.networks import Network
