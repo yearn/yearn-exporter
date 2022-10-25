@@ -1,9 +1,11 @@
 import logging
 import threading
 import time
+import inflection
 from typing import List
 
 from brownie import Contract, chain, web3
+from collections import OrderedDict
 from joblib import Parallel, delayed
 from web3._utils.abi import filter_by_name
 from web3._utils.events import construct_event_topic_set
@@ -51,7 +53,7 @@ class Registry(metaclass=Singleton):
         elif chain.id == Network.Arbitrum:
             return [contract('0x3199437193625DCcD6F9C9e98BDf93582200Eb1f')]
         elif chain.id == Network.Optimism:
-            return [contract('0x79286Dd38C9017E5423073bAc11F53357Fc5C128')]
+            return [contract('0x79286Dd38C9017E5423073bAc11F53357Fc5C128'), contract('0x81291ceb9bB265185A9D07b91B5b50Df94f005BF')]
         else:
             raise UnsupportedNetwork('yearn v2 is not available on this network')
 
@@ -106,6 +108,8 @@ class Registry(metaclass=Singleton):
 
     def process_events(self, events):
         for event in events:
+            # hack to make camels to snakes
+            event._ordered = [OrderedDict({inflection.underscore(k): v for k, v in od.items()}) for od in event._ordered]
             logger.debug("%s %s %s", event.address, event.name, dict(event))
             if event.name == "NewGovernance":
                 self.governance = event["governance"]

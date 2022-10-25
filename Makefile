@@ -132,7 +132,7 @@ debug-apy: get-network-name
 	make logs filter=debug
 
 list-networks:
-	@echo "supported networks: $(networks)"
+	@echo "supported networks: $(supported_networks)"
 
 list-commands:
 	@echo "supported exporter commands: $(exporter_scripts)"
