@@ -1,11 +1,21 @@
+import json
 from collections import defaultdict
 from math import ceil
 
-from brownie import chain
+from brownie import Contract, chain
 from toolz import last
 from yearn.events import decode_logs, get_logs_asap
 from yearn.networks import Network
 from yearn.utils import contract
+
+# workaround for issues loading the partner tracker contract on arbitrum
+if chain.id == Network.Arbitrum:
+    # cache it for the next calls
+    Contract.from_abi(
+        name='YearnPartnerTracker',
+        address='0x0e5b46E4b2a05fd53F5a4cD974eb98a9a613bcb7',
+        abi=json.load(open('interfaces/yearn/partner_tracker_arbitrum.json'))
+    )
 
 YEARN_PARTNER_TRACKER = contract({
     Network.Mainnet: "0x8ee392a4787397126C163Cb9844d7c447da419D8",
