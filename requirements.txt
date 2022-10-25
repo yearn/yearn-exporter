@@ -22,3 +22,4 @@ pytest-bdd>=5.0.0
 eth_retry>=0.1.1
 eth-hash[pysha3]
 python-telegram-bot>=13.14
+ypricemagic>=1.8.2
