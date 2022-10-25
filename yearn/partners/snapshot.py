@@ -12,7 +12,7 @@ from brownie import chain, convert, multicall, web3
 from joblib.parallel import Parallel, delayed
 from pandas import DataFrame
 from pandas.core.tools.datetimes import DatetimeScalar
-from pony.orm import OperationalError, db_session, commit
+from pony.orm import OperationalError, commit, db_session
 from rich import print
 from rich.progress import track
 from web3._utils.abi import filter_by_name
@@ -292,6 +292,10 @@ class Partner:
     wrappers: List[Wrapper]
     treasury: str = None
     retired_treasuries: List[str] = field(default_factory=list)
+
+    def __post_init__(self) -> None:
+        # Format attributes as desired
+        self.name = self.name.lower()
 
     @cached_property
     def flat_wrappers(self) -> List[Wrapper]:

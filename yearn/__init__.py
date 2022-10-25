@@ -1,3 +1,4 @@
+import json
 from brownie import network, chain, Contract
 from y import Contract_erc20
 from yearn.networks import Network
@@ -17,3 +18,10 @@ if network.is_connected():
     elif chain.id == Network.Arbitrum:
         # PHP Philippine Peso stablecoin is not verified. Force init it with ERC20 abi.
         Contract_erc20("0xFa247d0D55a324ca19985577a2cDcFC383D87953")
+        
+        # workaround for issues loading the partner tracker contract on arbitrum
+        Contract.from_abi(
+            name='YearnPartnerTracker',
+            address='0x0e5b46E4b2a05fd53F5a4cD974eb98a9a613bcb7',
+            abi=json.load(open('interfaces/yearn/partner_tracker_arbitrum.json'))
+        )

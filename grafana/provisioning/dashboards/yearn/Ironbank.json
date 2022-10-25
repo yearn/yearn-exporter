@@ -9,7 +9,7 @@
       "pluginName": "Prometheus"
     }
   ],
-  "__elements": [],
+  "__elements": {},
   "__requires": [
     {
       "type": "panel",
@@ -21,7 +21,7 @@
       "type": "grafana",
       "id": "grafana",
       "name": "Grafana",
-      "version": "8.3.1"
+      "version": "9.2.0"
     },
     {
       "type": "panel",
@@ -40,13 +40,22 @@
       "id": "stat",
       "name": "Stat",
       "version": ""
+    },
+    {
+      "type": "panel",
+      "id": "timeseries",
+      "name": "Time series",
+      "version": ""
     }
   ],
   "annotations": {
     "list": [
       {
         "builtIn": 1,
-        "datasource": "-- Grafana --",
+        "datasource": {
+          "type": "datasource",
+          "uid": "grafana"
+        },
         "enable": true,
         "hide": true,
         "iconColor": "rgba(0, 211, 255, 1)",
@@ -65,7 +74,6 @@
   "fiscalYearStartMonth": 0,
   "graphTooltip": 0,
   "id": null,
-  "iteration": 1643208734474,
   "links": [],
   "liveNow": false,
   "panels": [
@@ -118,26 +126,30 @@
       "interval": "",
       "options": {
         "colorMode": "value",
-        "graphMode": "none",
+        "graphMode": "area",
         "justifyMode": "auto",
         "orientation": "auto",
         "reduceOptions": {
-          "calcs": ["last"],
+          "calcs": [
+            "last"
+          ],
           "fields": "",
           "values": false
         },
         "text": {},
         "textMode": "auto"
       },
-      "pluginVersion": "8.3.1",
+      "pluginVersion": "9.2.0",
       "targets": [
         {
           "datasource": {
             "type": "prometheus",
             "uid": "DS_PROMETHEUS"
           },
+          "editorMode": "code",
           "exemplar": true,
-          "expr": "(sum(ironbank_own{network=\"$networks\", param=\"tvl\"})) OR (sum(ironbank{network=\"$networks\", param=\"tvl\"}) or vector(0))",
+          "expr": "(sum(ironbank_own{network=\"$networks\", param=\"tvl\"})) + (sum(ironbank{network=\"$networks\", param=\"tvl\"} > 0) or vector(0))",
+          "hide": false,
           "instant": false,
           "interval": "",
           "legendFormat": "{{vault}}",
@@ -201,14 +213,16 @@
         "justifyMode": "auto",
         "orientation": "auto",
         "reduceOptions": {
-          "calcs": ["lastNotNull"],
+          "calcs": [
+            "lastNotNull"
+          ],
           "fields": "",
           "values": false
         },
         "text": {},
         "textMode": "auto"
       },
-      "pluginVersion": "8.3.1",
+      "pluginVersion": "9.2.0",
       "targets": [
         {
           "datasource": {
@@ -280,14 +294,16 @@
         "justifyMode": "auto",
         "orientation": "auto",
         "reduceOptions": {
-          "calcs": ["lastNotNull"],
+          "calcs": [
+            "lastNotNull"
+          ],
           "fields": "",
           "values": false
         },
         "text": {},
         "textMode": "auto"
       },
-      "pluginVersion": "8.3.1",
+      "pluginVersion": "9.2.0",
       "targets": [
         {
           "datasource": {
@@ -359,14 +375,16 @@
         "justifyMode": "auto",
         "orientation": "auto",
         "reduceOptions": {
-          "calcs": ["lastNotNull"],
+          "calcs": [
+            "lastNotNull"
+          ],
           "fields": "",
           "values": false
         },
         "text": {},
         "textMode": "auto"
       },
-      "pluginVersion": "8.3.1",
+      "pluginVersion": "9.2.0",
       "targets": [
         {
           "datasource": {
@@ -388,6 +406,10 @@
     },
     {
       "collapsed": false,
+      "datasource": {
+        "type": "datasource",
+        "uid": "grafana"
+      },
       "gridPos": {
         "h": 1,
         "w": 24,
@@ -396,79 +418,145 @@
       },
       "id": 37,
       "panels": [],
+      "targets": [
+        {
+          "datasource": {
+            "type": "datasource",
+            "uid": "grafana"
+          },
+          "refId": "A"
+        }
+      ],
       "title": "TVL - Graph",
       "type": "row"
     },
     {
-      "aliasColors": {},
-      "bars": false,
-      "dashLength": 10,
-      "dashes": false,
       "datasource": {
         "type": "prometheus",
         "uid": "DS_PROMETHEUS"
       },
-      "decimals": 4,
       "description": "Ironbank TVL and Daily inflow/outflow. ",
       "fieldConfig": {
         "defaults": {
-          "links": [
-            {
-              "targetBlank": true,
-              "title": "Ironbank",
-              "url": "https://v1.yearn.finance/lending"
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisCenteredZero": false,
+            "axisColorMode": "series",
+            "axisLabel": "",
+            "axisPlacement": "auto",
+            "barAlignment": 0,
+            "drawStyle": "line",
+            "fillOpacity": 15,
+            "gradientMode": "none",
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            },
+            "lineInterpolation": "stepAfter",
+            "lineWidth": 1,
+            "pointSize": 5,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "showPoints": "never",
+            "spanNulls": true,
+            "stacking": {
+              "group": "A",
+              "mode": "none"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
             }
-          ],
-          "unit": "short"
+          },
+          "decimals": 2,
+          "links": [],
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              }
+            ]
+          },
+          "unit": "currencyUSD"
         },
-        "overrides": []
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "net inflow/outflow - daily"
+            },
+            "properties": [
+              {
+                "id": "custom.lineWidth",
+                "value": 1
+              },
+              {
+                "id": "custom.axisPlacement",
+                "value": "right"
+              },
+              {
+                "id": "custom.lineInterpolation",
+                "value": "smooth"
+              },
+              {
+                "id": "custom.lineWidth",
+                "value": 1
+              },
+              {
+                "id": "custom.fillOpacity",
+                "value": 60
+              },
+              {
+                "id": "custom.gradientMode",
+                "value": "none"
+              },
+              {
+                "id": "custom.lineStyle",
+                "value": {
+                  "fill": "solid"
+                }
+              },
+              {
+                "id": "custom.spanNulls",
+                "value": true
+              },
+              {
+                "id": "custom.axisLabel",
+                "value": "Net inflow/outflow daily"
+              }
+            ]
+          }
+        ]
       },
-      "fill": 2,
-      "fillGradient": 0,
       "gridPos": {
         "h": 9,
         "w": 24,
         "x": 0,
         "y": 10
       },
-      "hiddenSeries": false,
       "id": 35,
       "interval": "",
-      "legend": {
-        "avg": false,
-        "current": true,
-        "hideEmpty": true,
-        "hideZero": true,
-        "max": false,
-        "min": false,
-        "show": true,
-        "total": false,
-        "values": true
-      },
-      "lines": true,
-      "linewidth": 2,
-      "nullPointMode": "connected",
       "options": {
-        "alertThreshold": true
-      },
-      "percentage": false,
-      "pluginVersion": "8.3.1",
-      "pointradius": 2,
-      "points": false,
-      "renderer": "flot",
-      "seriesOverrides": [
-        {
-          "$$hashKey": "object:111",
-          "alias": "net inflow/outflow - daily",
-          "legend": true,
-          "lines": false,
-          "nullPointMode": "connected",
-          "yaxis": 2
+        "legend": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
         }
-      ],
-      "spaceLength": 10,
-      "stack": false,
-      "steppedLine": true,
+      },
+      "pluginVersion": "9.2.0",
       "targets": [
         {
           "datasource": {
@@ -495,43 +583,17 @@
           "refId": "B"
         }
       ],
-      "thresholds": [],
-      "timeRegions": [],
       "title": "TVL",
-      "tooltip": {
-        "shared": true,
-        "sort": 2,
-        "value_type": "individual"
-      },
       "transformations": [],
       "transparent": true,
-      "type": "graph",
-      "xaxis": {
-        "mode": "time",
-        "show": true,
-        "values": []
-      },
-      "yaxes": [
-        {
-          "$$hashKey": "object:83",
-          "decimals": 2,
-          "format": "short",
-          "logBase": 1,
-          "show": true
-        },
-        {
-          "$$hashKey": "object:84",
-          "format": "short",
-          "logBase": 1,
-          "show": false
-        }
-      ],
-      "yaxis": {
-        "align": false
-      }
+      "type": "timeseries"
     },
     {
       "collapsed": true,
+      "datasource": {
+        "type": "datasource",
+        "uid": "grafana"
+      },
       "gridPos": {
         "h": 1,
         "w": 24,
@@ -541,79 +603,108 @@
       "id": 52,
       "panels": [
         {
-          "aliasColors": {},
-          "bars": false,
-          "dashLength": 10,
-          "dashes": false,
           "datasource": {
             "type": "prometheus",
             "uid": "DS_PROMETHEUS"
           },
-          "decimals": 4,
           "description": "Ironbank TVL and Daily inflow/outflow. ",
           "fieldConfig": {
             "defaults": {
-              "links": [
-                {
-                  "targetBlank": true,
-                  "title": "Ironbank",
-                  "url": "https://v1.yearn.finance/lending"
+              "color": {
+                "mode": "palette-classic"
+              },
+              "custom": {
+                "axisCenteredZero": false,
+                "axisColorMode": "text",
+                "axisLabel": "",
+                "axisPlacement": "auto",
+                "barAlignment": 0,
+                "drawStyle": "line",
+                "fillOpacity": 20,
+                "gradientMode": "hue",
+                "hideFrom": {
+                  "legend": false,
+                  "tooltip": false,
+                  "viz": false
+                },
+                "lineInterpolation": "linear",
+                "lineWidth": 1,
+                "pointSize": 5,
+                "scaleDistribution": {
+                  "type": "linear"
+                },
+                "showPoints": "never",
+                "spanNulls": true,
+                "stacking": {
+                  "group": "A",
+                  "mode": "none"
+                },
+                "thresholdsStyle": {
+                  "mode": "off"
                 }
-              ],
-              "unit": "short"
+              },
+              "links": [],
+              "mappings": [],
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {
+                    "color": "green",
+                    "value": null
+                  }
+                ]
+              },
+              "unit": "currencyUSD"
             },
-            "overrides": []
+            "overrides": [
+              {
+                "matcher": {
+                  "id": "byName",
+                  "options": "net inflow/outflow - daily"
+                },
+                "properties": [
+                  {
+                    "id": "color",
+                    "value": {
+                      "fixedColor": "rgb(204, 204, 220)",
+                      "mode": "fixed"
+                    }
+                  },
+                  {
+                    "id": "custom.fillOpacity",
+                    "value": 100
+                  },
+                  {
+                    "id": "custom.gradientMode",
+                    "value": "opacity"
+                  }
+                ]
+              }
+            ]
           },
-          "fill": 2,
-          "fillGradient": 3,
           "gridPos": {
             "h": 12,
             "w": 24,
             "x": 0,
-            "y": 20
+            "y": 11
           },
-          "hiddenSeries": false,
           "id": 50,
           "interval": "",
-          "legend": {
-            "alignAsTable": true,
-            "avg": false,
-            "current": true,
-            "max": false,
-            "min": false,
-            "rightSide": true,
-            "show": true,
-            "sort": "current",
-            "sortDesc": true,
-            "total": false,
-            "values": true
-          },
-          "lines": true,
-          "linewidth": 2,
-          "nullPointMode": "connected",
           "options": {
-            "alertThreshold": true
-          },
-          "percentage": false,
-          "pluginVersion": "8.3.1",
-          "pointradius": 2,
-          "points": false,
-          "renderer": "flot",
-          "seriesOverrides": [
-            {
-              "$$hashKey": "object:111",
-              "alias": "net inflow/outflow - daily",
-              "color": "rgb(204, 204, 220)",
-              "fillGradient": 10,
-              "legend": true,
-              "nullPointMode": "connected",
-              "yaxis": 2,
-              "zindex": -3
+            "legend": {
+              "calcs": [
+                "lastNotNull"
+              ],
+              "displayMode": "table",
+              "placement": "right",
+              "showLegend": true
+            },
+            "tooltip": {
+              "mode": "multi",
+              "sort": "desc"
             }
-          ],
-          "spaceLength": 10,
-          "stack": false,
-          "steppedLine": false,
+          },
+          "pluginVersion": "9.2.0",
           "targets": [
             {
               "datasource": {
@@ -640,39 +731,19 @@
               "refId": "B"
             }
           ],
-          "thresholds": [],
-          "timeRegions": [],
           "title": "Ironbank - TVL",
-          "tooltip": {
-            "shared": true,
-            "sort": 2,
-            "value_type": "individual"
-          },
           "transformations": [],
           "transparent": true,
-          "type": "graph",
-          "xaxis": {
-            "mode": "time",
-            "show": true,
-            "values": []
+          "type": "timeseries"
+        }
+      ],
+      "targets": [
+        {
+          "datasource": {
+            "type": "datasource",
+            "uid": "grafana"
           },
-          "yaxes": [
-            {
-              "$$hashKey": "object:83",
-              "format": "short",
-              "logBase": 1,
-              "show": true
-            },
-            {
-              "$$hashKey": "object:84",
-              "format": "short",
-              "logBase": 1,
-              "show": true
-            }
-          ],
-          "yaxis": {
-            "align": false
-          }
+          "refId": "A"
         }
       ],
       "title": "TVL - Graph Detailed",
@@ -680,6 +751,10 @@
     },
     {
       "collapsed": true,
+      "datasource": {
+        "type": "datasource",
+        "uid": "grafana"
+      },
       "gridPos": {
         "h": 1,
         "w": 24,
@@ -721,31 +796,41 @@
             "h": 8,
             "w": 12,
             "x": 0,
-            "y": 21
+            "y": 12
           },
           "id": 6,
           "options": {
             "displayMode": "lcd",
+            "minVizHeight": 10,
+            "minVizWidth": 0,
             "orientation": "horizontal",
             "reduceOptions": {
-              "calcs": ["lastNotNull"],
+              "calcs": [
+                "lastNotNull"
+              ],
               "fields": "",
               "values": false
             },
             "showUnfilled": true,
             "text": {}
           },
-          "pluginVersion": "8.3.1",
+          "pluginVersion": "9.2.0",
           "targets": [
             {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "DS_PROMETHEUS"
+              },
+              "editorMode": "code",
               "exemplar": false,
               "expr": "sort_desc(ironbank{network=\"$networks\", param=\"supply apy\"} > 0)",
               "format": "time_series",
-              "instant": true,
+              "instant": false,
               "interval": "",
               "intervalFactor": 1,
               "legendFormat": "{{vault}}",
               "queryType": "randomWalk",
+              "range": true,
               "refId": "A"
             }
           ],
@@ -786,31 +871,41 @@
             "h": 8,
             "w": 12,
             "x": 12,
-            "y": 21
+            "y": 12
           },
           "id": 28,
           "options": {
             "displayMode": "lcd",
+            "minVizHeight": 10,
+            "minVizWidth": 0,
             "orientation": "horizontal",
             "reduceOptions": {
-              "calcs": ["lastNotNull"],
+              "calcs": [
+                "lastNotNull"
+              ],
               "fields": "",
               "values": false
             },
             "showUnfilled": true,
             "text": {}
           },
-          "pluginVersion": "8.3.1",
+          "pluginVersion": "9.2.0",
           "targets": [
             {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "DS_PROMETHEUS"
+              },
+              "editorMode": "code",
               "exemplar": false,
               "expr": "sort_desc(ironbank{network=\"$networks\", param=\"borrow apy\"} > 0)",
               "format": "time_series",
-              "instant": true,
+              "instant": false,
               "interval": "",
               "intervalFactor": 1,
               "legendFormat": "{{vault}}",
               "queryType": "randomWalk",
+              "range": true,
               "refId": "A"
             }
           ],
@@ -848,7 +943,7 @@
             "h": 8,
             "w": 12,
             "x": 0,
-            "y": 29
+            "y": 20
           },
           "hiddenSeries": false,
           "id": 10,
@@ -874,7 +969,7 @@
             "alertThreshold": false
           },
           "percentage": false,
-          "pluginVersion": "8.3.1",
+          "pluginVersion": "9.2.0",
           "pointradius": 2,
           "points": false,
           "renderer": "flot",
@@ -884,6 +979,10 @@
           "steppedLine": true,
           "targets": [
             {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "DS_PROMETHEUS"
+              },
               "expr": "ironbank{network=\"$networks\", param=\"supply apy\"}",
               "interval": "",
               "legendFormat": "{{vault}}",
@@ -955,7 +1054,7 @@
             "h": 8,
             "w": 12,
             "x": 12,
-            "y": 29
+            "y": 20
           },
           "hiddenSeries": false,
           "id": 43,
@@ -981,7 +1080,7 @@
             "alertThreshold": false
           },
           "percentage": false,
-          "pluginVersion": "8.3.1",
+          "pluginVersion": "9.2.0",
           "pointradius": 2,
           "points": false,
           "renderer": "flot",
@@ -991,6 +1090,10 @@
           "steppedLine": true,
           "targets": [
             {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "DS_PROMETHEUS"
+              },
               "expr": "ironbank{network=\"$networks\", param=\"borrow apy\"}",
               "interval": "",
               "legendFormat": "{{vault}}",
@@ -1033,11 +1136,24 @@
           }
         }
       ],
+      "targets": [
+        {
+          "datasource": {
+            "type": "datasource",
+            "uid": "grafana"
+          },
+          "refId": "A"
+        }
+      ],
       "title": "Annual Percentage Yield",
       "type": "row"
     },
     {
       "collapsed": true,
+      "datasource": {
+        "type": "datasource",
+        "uid": "grafana"
+      },
       "gridPos": {
         "h": 1,
         "w": 24,
@@ -1076,7 +1192,7 @@
             "h": 8,
             "w": 12,
             "x": 0,
-            "y": 22
+            "y": 13
           },
           "hiddenSeries": false,
           "id": 40,
@@ -1102,7 +1218,7 @@
             "alertThreshold": false
           },
           "percentage": false,
-          "pluginVersion": "8.3.1",
+          "pluginVersion": "9.2.0",
           "pointradius": 2,
           "points": false,
           "renderer": "flot",
@@ -1112,6 +1228,10 @@
           "steppedLine": false,
           "targets": [
             {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "DS_PROMETHEUS"
+              },
               "exemplar": true,
               "expr": "delta(ironbank{network=\"$networks\", param=\"supply apy\"}[5m])",
               "interval": "",
@@ -1184,7 +1304,7 @@
             "h": 8,
             "w": 12,
             "x": 12,
-            "y": 22
+            "y": 13
           },
           "hiddenSeries": false,
           "id": 44,
@@ -1210,7 +1330,7 @@
             "alertThreshold": false
           },
           "percentage": false,
-          "pluginVersion": "8.3.1",
+          "pluginVersion": "9.2.0",
           "pointradius": 2,
           "points": false,
           "renderer": "flot",
@@ -1220,6 +1340,10 @@
           "steppedLine": false,
           "targets": [
             {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "DS_PROMETHEUS"
+              },
               "exemplar": true,
               "expr": "delta(ironbank{network=\"$networks\", param=\"borrow apy\"}[5m])",
               "interval": "",
@@ -1263,11 +1387,24 @@
           }
         }
       ],
+      "targets": [
+        {
+          "datasource": {
+            "type": "datasource",
+            "uid": "grafana"
+          },
+          "refId": "A"
+        }
+      ],
       "title": "Annual Percentage Yield - Delta",
       "type": "row"
     },
     {
       "collapsed": true,
+      "datasource": {
+        "type": "datasource",
+        "uid": "grafana"
+      },
       "gridPos": {
         "h": 1,
         "w": 24,
@@ -1307,31 +1444,41 @@
             "h": 7,
             "w": 24,
             "x": 0,
-            "y": 23
+            "y": 14
           },
           "id": 29,
           "options": {
             "displayMode": "lcd",
+            "minVizHeight": 10,
+            "minVizWidth": 0,
             "orientation": "horizontal",
             "reduceOptions": {
-              "calcs": ["lastNotNull"],
+              "calcs": [
+                "lastNotNull"
+              ],
               "fields": "",
               "values": false
             },
             "showUnfilled": true,
             "text": {}
           },
-          "pluginVersion": "8.3.1",
+          "pluginVersion": "9.2.0",
           "targets": [
             {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "DS_PROMETHEUS"
+              },
+              "editorMode": "code",
               "exemplar": false,
               "expr": "sort_desc(ironbank{network=\"$networks\", param=\"utilization\"} > 0)",
               "format": "time_series",
-              "instant": true,
+              "instant": false,
               "interval": "",
               "intervalFactor": 1,
               "legendFormat": "{{vault}}",
               "queryType": "randomWalk",
+              "range": true,
               "refId": "A"
             }
           ],
@@ -1362,7 +1509,7 @@
             "h": 8,
             "w": 24,
             "x": 0,
-            "y": 30
+            "y": 21
           },
           "hiddenSeries": false,
           "id": 25,
@@ -1390,7 +1537,7 @@
             "alertThreshold": false
           },
           "percentage": false,
-          "pluginVersion": "8.3.1",
+          "pluginVersion": "9.2.0",
           "pointradius": 2,
           "points": false,
           "renderer": "flot",
@@ -1400,6 +1547,10 @@
           "steppedLine": true,
           "targets": [
             {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "DS_PROMETHEUS"
+              },
               "expr": "ironbank{network=\"$networks\", param=\"utilization\"}",
               "interval": "",
               "legendFormat": "{{vault}}",
@@ -1443,11 +1594,24 @@
           }
         }
       ],
+      "targets": [
+        {
+          "datasource": {
+            "type": "datasource",
+            "uid": "grafana"
+          },
+          "refId": "A"
+        }
+      ],
       "title": "Utilization",
       "type": "row"
     },
     {
       "collapsed": true,
+      "datasource": {
+        "type": "datasource",
+        "uid": "grafana"
+      },
       "gridPos": {
         "h": 1,
         "w": 24,
@@ -1473,7 +1637,7 @@
             "h": 8,
             "w": 12,
             "x": 0,
-            "y": 24
+            "y": 15
           },
           "hiddenSeries": false,
           "id": 4,
@@ -1500,7 +1664,7 @@
             "alertThreshold": false
           },
           "percentage": false,
-          "pluginVersion": "8.3.1",
+          "pluginVersion": "9.2.0",
           "pointradius": 2,
           "points": false,
           "renderer": "flot",
@@ -1510,6 +1674,10 @@
           "steppedLine": true,
           "targets": [
             {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "DS_PROMETHEUS"
+              },
               "expr": "ironbank{network=\"$networks\", param=\"total supplied\"}",
               "interval": "",
               "legendFormat": "{{vault}}",
@@ -1570,7 +1738,7 @@
             "h": 8,
             "w": 12,
             "x": 12,
-            "y": 24
+            "y": 15
           },
           "hiddenSeries": false,
           "id": 23,
@@ -1598,7 +1766,7 @@
             "alertThreshold": false
           },
           "percentage": false,
-          "pluginVersion": "8.3.1",
+          "pluginVersion": "9.2.0",
           "pointradius": 2,
           "points": false,
           "renderer": "flot",
@@ -1608,6 +1776,10 @@
           "steppedLine": true,
           "targets": [
             {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "DS_PROMETHEUS"
+              },
               "expr": "ironbank{network=\"$networks\", param=\"total borrows\"}",
               "interval": "",
               "legendFormat": "{{vault}}",
@@ -1653,11 +1825,24 @@
           }
         }
       ],
+      "targets": [
+        {
+          "datasource": {
+            "type": "datasource",
+            "uid": "grafana"
+          },
+          "refId": "A"
+        }
+      ],
       "title": "Supplied / Borrowed",
       "type": "row"
     },
     {
       "collapsed": true,
+      "datasource": {
+        "type": "datasource",
+        "uid": "grafana"
+      },
       "gridPos": {
         "h": 1,
         "w": 24,
@@ -1683,7 +1868,7 @@
             "h": 7,
             "w": 12,
             "x": 0,
-            "y": 25
+            "y": 16
           },
           "hiddenSeries": false,
           "id": 26,
@@ -1710,7 +1895,7 @@
             "alertThreshold": false
           },
           "percentage": false,
-          "pluginVersion": "8.3.1",
+          "pluginVersion": "9.2.0",
           "pointradius": 2,
           "points": false,
           "renderer": "flot",
@@ -1720,6 +1905,10 @@
           "steppedLine": true,
           "targets": [
             {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "DS_PROMETHEUS"
+              },
               "expr": "ironbank{network=\"$networks\", param=\"total cash\"}",
               "interval": "",
               "legendFormat": "{{vault}}",
@@ -1791,7 +1980,7 @@
             "h": 7,
             "w": 12,
             "x": 12,
-            "y": 25
+            "y": 16
           },
           "hiddenSeries": false,
           "id": 27,
@@ -1818,7 +2007,7 @@
             "alertThreshold": false
           },
           "percentage": false,
-          "pluginVersion": "8.3.1",
+          "pluginVersion": "9.2.0",
           "pointradius": 2,
           "points": false,
           "renderer": "flot",
@@ -1828,6 +2017,10 @@
           "steppedLine": true,
           "targets": [
             {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "DS_PROMETHEUS"
+              },
               "expr": "ironbank{network=\"$networks\", param=\"total reserves\"}",
               "interval": "",
               "legendFormat": "{{vault}}",
@@ -1886,7 +2079,7 @@
             "h": 7,
             "w": 12,
             "x": 0,
-            "y": 32
+            "y": 23
           },
           "hiddenSeries": false,
           "id": 53,
@@ -1913,7 +2106,7 @@
             "alertThreshold": false
           },
           "percentage": false,
-          "pluginVersion": "8.3.1",
+          "pluginVersion": "9.2.0",
           "pointradius": 2,
           "points": false,
           "renderer": "flot",
@@ -1987,7 +2180,7 @@
             "h": 7,
             "w": 12,
             "x": 12,
-            "y": 32
+            "y": 23
           },
           "hiddenSeries": false,
           "id": 54,
@@ -2014,7 +2207,7 @@
             "alertThreshold": false
           },
           "percentage": false,
-          "pluginVersion": "8.3.1",
+          "pluginVersion": "9.2.0",
           "pointradius": 2,
           "points": false,
           "renderer": "flot",
@@ -2088,7 +2281,7 @@
             "h": 7,
             "w": 24,
             "x": 0,
-            "y": 39
+            "y": 30
           },
           "hiddenSeries": false,
           "id": 49,
@@ -2115,7 +2308,7 @@
             "alertThreshold": false
           },
           "percentage": false,
-          "pluginVersion": "8.3.1",
+          "pluginVersion": "9.2.0",
           "pointradius": 2,
           "points": false,
           "renderer": "flot",
@@ -2173,14 +2366,26 @@
           }
         }
       ],
+      "targets": [
+        {
+          "datasource": {
+            "type": "datasource",
+            "uid": "grafana"
+          },
+          "refId": "A"
+        }
+      ],
       "title": "Overview",
       "type": "row"
     }
   ],
   "refresh": false,
-  "schemaVersion": 33,
+  "schemaVersion": 37,
   "style": "dark",
-  "tags": ["Ironbank", "Cream v2"],
+  "tags": [
+    "Ironbank",
+    "Cream v2"
+  ],
   "templating": {
     "list": [
       {
@@ -2210,13 +2415,13 @@
     ]
   },
   "time": {
-    "from": "now-1y",
+    "from": "now-30d",
     "to": "now"
   },
   "timepicker": {},
   "timezone": "",
   "title": "Ironbank",
-  "uid": "6n3HB1hMz21111",
-  "version": 17,
+  "uid": "pFpgl8I4z",
+  "version": 4,
   "weekStart": ""
 }

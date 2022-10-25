@@ -9,13 +9,13 @@
       "pluginName": "Prometheus"
     }
   ],
-  "__elements": [],
+  "__elements": {},
   "__requires": [
     {
       "type": "grafana",
       "id": "grafana",
       "name": "Grafana",
-      "version": "8.3.1"
+      "version": "9.2.0"
     },
     {
       "type": "panel",
@@ -46,7 +46,10 @@
     "list": [
       {
         "builtIn": 1,
-        "datasource": "-- Grafana --",
+        "datasource": {
+          "type": "datasource",
+          "uid": "grafana"
+        },
         "enable": true,
         "hide": true,
         "iconColor": "rgba(0, 211, 255, 1)",
@@ -65,7 +68,6 @@
   "fiscalYearStartMonth": 0,
   "graphTooltip": 0,
   "id": null,
-  "iteration": 1652369093458,
   "links": [],
   "liveNow": false,
   "panels": [
@@ -100,12 +102,10 @@
         "current": true,
         "hideEmpty": true,
         "hideZero": true,
-        "max": false,
-        "min": false,
+        "max": true,
+        "min": true,
         "rightSide": true,
         "show": true,
-        "sort": "current",
-        "sortDesc": true,
         "total": false,
         "values": true
       },
@@ -116,7 +116,7 @@
         "alertThreshold": false
       },
       "percentage": false,
-      "pluginVersion": "8.3.1",
+      "pluginVersion": "9.2.0",
       "pointradius": 2,
       "points": false,
       "renderer": "flot",
@@ -137,7 +137,7 @@
             "uid": "DS_PROMETHEUS"
           },
           "exemplar": true,
-          "expr": "export_duration{direction=\"forwards\"}",
+          "expr": "export_duration{direction=\"mighty_exporter\"}",
           "interval": "",
           "intervalFactor": 1,
           "legendFormat": "{{network}} - {{direction}} - {{pool_size}}",
@@ -149,71 +149,12 @@
             "uid": "DS_PROMETHEUS"
           },
           "exemplar": true,
-          "expr": "export_duration{direction=\"sms_forwards\"}",
+          "expr": "export_duration{direction=\"partners\"}",
           "hide": false,
           "interval": "",
-          "legendFormat": "{{network}} - {{direction}} - {{pool_size}}",
-          "refId": "C"
-        },
-        {
-          "datasource": {
-            "type": "prometheus",
-            "uid": "DS_PROMETHEUS"
-          },
-          "exemplar": true,
-          "expr": "export_duration{direction=\"treasury_forwards\"}",
-          "hide": false,
-          "interval": "",
-          "legendFormat": "{{network}} - {{direction}} - {{pool_size}}",
-          "refId": "D"
-        },
-        {
-          "datasource": {
-            "type": "prometheus",
-            "uid": "DS_PROMETHEUS"
-          },
-          "exemplar": true,
-          "expr": "export_duration{direction=\"wallets\"}",
-          "hide": false,
-          "interval": "",
-          "legendFormat": "{{network}} - {{direction}} - {{pool_size}}",
-          "refId": "E"
-        },
-        {
-          "datasource": {
-            "type": "prometheus",
-            "uid": "DS_PROMETHEUS"
-          },
-          "exemplar": true,
-          "expr": "export_duration{direction=\"historical\"}",
-          "hide": false,
-          "interval": "",
+          "intervalFactor": 1,
           "legendFormat": "{{network}} - {{direction}} - {{pool_size}}",
           "refId": "B"
-        },
-        {
-          "datasource": {
-            "type": "prometheus",
-            "uid": "DS_PROMETHEUS"
-          },
-          "exemplar": true,
-          "expr": "export_duration{direction=\"historical_sms\"}",
-          "hide": false,
-          "interval": "",
-          "legendFormat": "{{network}} - {{direction}} - {{pool_size}}",
-          "refId": "G"
-        },
-        {
-          "datasource": {
-            "type": "prometheus",
-            "uid": "DS_PROMETHEUS"
-          },
-          "exemplar": true,
-          "expr": "export_duration{direction=\"historical_treasury\"}",
-          "hide": false,
-          "interval": "",
-          "legendFormat": "{{network}} - {{direction}} - {{pool_size}}",
-          "refId": "H"
         }
       ],
       "thresholds": [],
@@ -251,7 +192,11 @@
       }
     },
     {
-      "collapsed": true,
+      "collapsed": false,
+      "datasource": {
+        "type": "datasource",
+        "uid": "grafana"
+      },
       "gridPos": {
         "h": 1,
         "w": 24,
@@ -259,171 +204,199 @@
         "y": 18
       },
       "id": 6,
-      "panels": [
+      "panels": [],
+      "targets": [
         {
           "datasource": {
-            "type": "prometheus",
-            "uid": "DS_PROMETHEUS"
+            "type": "datasource",
+            "uid": "grafana"
           },
-          "description": "",
-          "fieldConfig": {
-            "defaults": {
-              "color": {
-                "mode": "palette-classic"
-              },
-              "custom": {
-                "axisLabel": "",
-                "axisPlacement": "auto",
-                "barAlignment": 0,
-                "drawStyle": "line",
-                "fillOpacity": 0,
-                "gradientMode": "none",
-                "hideFrom": {
-                  "legend": false,
-                  "tooltip": false,
-                  "viz": false
-                },
-                "lineInterpolation": "linear",
-                "lineWidth": 1,
-                "pointSize": 5,
-                "scaleDistribution": {
-                  "type": "linear"
-                },
-                "showPoints": "auto",
-                "spanNulls": false,
-                "stacking": {
-                  "group": "A",
-                  "mode": "none"
-                },
-                "thresholdsStyle": {
-                  "mode": "off"
-                }
-              },
-              "mappings": [],
-              "thresholds": {
-                "mode": "absolute",
-                "steps": [
-                  {
-                    "color": "green",
-                    "value": null
-                  }
-                ]
-              },
-              "unit": "s"
-            },
-            "overrides": []
-          },
-          "gridPos": {
-            "h": 10,
-            "w": 24,
-            "x": 0,
-            "y": 19
-          },
-          "id": 12,
-          "options": {
-            "legend": {
-              "calcs": [
-                "lastNotNull",
-                "mean"
-              ],
-              "displayMode": "table",
-              "placement": "right"
-            },
-            "tooltip": {
-              "mode": "single"
-            }
-          },
-          "targets": [
-            {
-              "datasource": {
-                "type": "prometheus",
-                "uid": "DS_PROMETHEUS"
-              },
-              "exemplar": true,
-              "expr": "delta(export_duration{} ) ",
-              "interval": "",
-              "legendFormat": "{{direction}} - {{network}} - {{pool_size}}",
-              "refId": "A"
-            }
-          ],
-          "title": "Delta Exporter Duration",
-          "type": "timeseries"
-        },
-        {
-          "datasource": {
-            "type": "prometheus",
-            "uid": "DS_PROMETHEUS"
-          },
-          "description": "",
-          "fieldConfig": {
-            "defaults": {
-              "color": {
-                "mode": "thresholds"
-              },
-              "mappings": [],
-              "thresholds": {
-                "mode": "absolute",
-                "steps": [
-                  {
-                    "color": "green",
-                    "value": null
-                  }
-                ]
-              },
-              "unit": "s"
-            },
-            "overrides": []
-          },
-          "gridPos": {
-            "h": 43,
-            "w": 24,
-            "x": 0,
-            "y": 29
-          },
-          "id": 4,
-          "options": {
-            "colorMode": "value",
-            "graphMode": "none",
-            "justifyMode": "center",
-            "orientation": "horizontal",
-            "reduceOptions": {
-              "calcs": [
-                "lastNotNull"
-              ],
-              "fields": "",
-              "values": false
-            },
-            "text": {},
-            "textMode": "value_and_name"
-          },
-          "pluginVersion": "8.3.1",
-          "targets": [
-            {
-              "exemplar": true,
-              "expr": "avg_over_time(export_duration)",
-              "instant": false,
-              "interval": "",
-              "legendFormat": "{{network}} - {{direction}} - {{pool_size}}",
-              "refId": "A"
-            }
-          ],
-          "title": "Last: Export Duration",
-          "type": "stat"
+          "refId": "A"
         }
       ],
       "title": "Last Duration",
       "type": "row"
     },
     {
-      "collapsed": false,
+      "datasource": {
+        "type": "prometheus",
+        "uid": "DS_PROMETHEUS"
+      },
+      "description": "",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisCenteredZero": false,
+            "axisColorMode": "text",
+            "axisLabel": "",
+            "axisPlacement": "auto",
+            "barAlignment": 0,
+            "drawStyle": "line",
+            "fillOpacity": 0,
+            "gradientMode": "none",
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            },
+            "lineInterpolation": "linear",
+            "lineWidth": 1,
+            "pointSize": 5,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "showPoints": "auto",
+            "spanNulls": false,
+            "stacking": {
+              "group": "A",
+              "mode": "none"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              }
+            ]
+          },
+          "unit": "s"
+        },
+        "overrides": []
+      },
       "gridPos": {
-        "h": 1,
+        "h": 10,
         "w": 24,
         "x": 0,
         "y": 19
       },
+      "id": 12,
+      "options": {
+        "legend": {
+          "calcs": [
+            "lastNotNull",
+            "mean"
+          ],
+          "displayMode": "table",
+          "placement": "right",
+          "showLegend": true
+        },
+        "tooltip": {
+          "mode": "single",
+          "sort": "none"
+        }
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "DS_PROMETHEUS"
+          },
+          "exemplar": true,
+          "expr": "delta(export_duration{} ) ",
+          "interval": "",
+          "legendFormat": "{{direction}} - {{network}} - {{pool_size}}",
+          "refId": "A"
+        }
+      ],
+      "title": "Delta Exporter Duration",
+      "type": "timeseries"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "DS_PROMETHEUS"
+      },
+      "description": "",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green"
+              }
+            ]
+          },
+          "unit": "s"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 43,
+        "w": 24,
+        "x": 0,
+        "y": 29
+      },
+      "id": 4,
+      "options": {
+        "colorMode": "value",
+        "graphMode": "none",
+        "justifyMode": "center",
+        "orientation": "horizontal",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "text": {},
+        "textMode": "value_and_name"
+      },
+      "pluginVersion": "8.3.1",
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "DS_PROMETHEUS"
+          },
+          "exemplar": true,
+          "expr": "avg_over_time(export_duration)",
+          "instant": false,
+          "interval": "",
+          "legendFormat": "{{network}} - {{direction}} - {{pool_size}}",
+          "refId": "A"
+        }
+      ],
+      "title": "Last: Export Duration",
+      "type": "stat"
+    },
+    {
+      "collapsed": false,
+      "datasource": {
+        "type": "datasource",
+        "uid": "grafana"
+      },
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 72
+      },
       "id": 8,
       "panels": [],
+      "targets": [
+        {
+          "datasource": {
+            "type": "datasource",
+            "uid": "grafana"
+          },
+          "refId": "A"
+        }
+      ],
       "title": "Individual Stats",
       "type": "row"
     },
@@ -474,8 +447,7 @@
             "mode": "absolute",
             "steps": [
               {
-                "color": "green",
-                "value": null
+                "color": "green"
               }
             ]
           },
@@ -487,14 +459,15 @@
         "h": 10,
         "w": 24,
         "x": 0,
-        "y": 20
+        "y": 73
       },
       "id": 10,
       "options": {
         "legend": {
           "calcs": [],
           "displayMode": "list",
-          "placement": "bottom"
+          "placement": "bottom",
+          "showLegend": true
         },
         "tooltip": {
           "mode": "single"
@@ -517,8 +490,8 @@
       "type": "timeseries"
     }
   ],
-  "refresh": "5s",
-  "schemaVersion": 33,
+  "refresh": "5m",
+  "schemaVersion": 37,
   "style": "dark",
   "tags": [
     "Exporter"
@@ -599,13 +572,13 @@
     ]
   },
   "time": {
-    "from": "now-30m",
+    "from": "now-6M",
     "to": "now"
   },
   "timepicker": {},
   "timezone": "",
   "title": "Exporter Durations",
-  "uid": "R46N4IQ7k",
-  "version": 18,
+  "uid": "d2VXs4n4k",
+  "version": 2,
   "weekStart": ""
 }

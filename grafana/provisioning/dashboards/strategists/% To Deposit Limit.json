@@ -64,7 +64,7 @@
         "type": "prometheus",
         "uid": "DS_PROMETHEUS"
       },
-      "description": "in usd",
+      "description": "",
       "fieldConfig": {
         "defaults": {
           "color": {
@@ -73,18 +73,18 @@
           "custom": {
             "axisCenteredZero": false,
             "axisColorMode": "text",
-            "axisLabel": "",
+            "axisLabel": "% to deposit limit",
             "axisPlacement": "auto",
             "barAlignment": 0,
             "drawStyle": "line",
-            "fillOpacity": 10,
+            "fillOpacity": 0,
             "gradientMode": "none",
             "hideFrom": {
               "legend": false,
               "tooltip": false,
               "viz": false
             },
-            "lineInterpolation": "linear",
+            "lineInterpolation": "stepAfter",
             "lineWidth": 1,
             "pointSize": 5,
             "scaleDistribution": {
@@ -100,21 +100,31 @@
               "mode": "off"
             }
           },
-          "mappings": [],
+          "decimals": 2,
+          "mappings": [
+            {
+              "options": {
+                "match": "null+nan",
+                "result": {
+                  "index": 0,
+                  "text": "0"
+                }
+              },
+              "type": "special"
+            }
+          ],
+          "max": 1.001,
+          "noValue": "0",
           "thresholds": {
             "mode": "absolute",
             "steps": [
               {
                 "color": "green",
                 "value": null
-              },
-              {
-                "color": "red",
-                "value": 80
               }
             ]
           },
-          "unit": "short"
+          "unit": "percentunit"
         },
         "overrides": []
       },
@@ -137,7 +147,7 @@
           "sortDesc": true
         },
         "tooltip": {
-          "mode": "multi",
+          "mode": "single",
           "sort": "desc"
         }
       },
@@ -150,16 +160,15 @@
           },
           "editorMode": "code",
           "exemplar": true,
-          "expr": "topk(5, ((yearn_strategy{network=\"$networks\", param=\"totalDebt\", experimental=\"$exp\"}) * on(vault, version, experimental) group_left yearn_vault{network=\"$networks\", param=\"token price\", experimental=\"$exp\"}))",
-          "hide": false,
-          "instant": false,
+          "expr": "yearn_vault{network=\"$networks\", param=\"totalAssets\", experimental=\"$exp\"} / on(vault, address, version) yearn_vault{network=\"$networks\", param=\"depositLimit\", experimental=\"$exp\"} < 10000000",
           "interval": "",
-          "legendFormat": "{{strategy}} - {{vault}}",
+          "legendFormat": "{{vault}}",
           "queryType": "randomWalk",
+          "range": true,
           "refId": "A"
         }
       ],
-      "title": "Top TVL for the 5 largest strategies on $networks",
+      "title": "% to deposit limit",
       "type": "timeseries"
     }
   ],
@@ -176,6 +185,7 @@
           "uid": "DS_PROMETHEUS"
         },
         "definition": "yearn_strategy{experimental=\"false\", param=\"totalLoss\"}",
+        "description": "Choose which network you want to view",
         "hide": 0,
         "includeAll": false,
         "label": "network",
@@ -189,7 +199,7 @@
         "refresh": 1,
         "regex": "/.*network=\"([^/\"]*).*/",
         "skipUrlSync": false,
-        "sort": 1,
+        "sort": 2,
         "type": "query"
       },
       {
@@ -198,6 +208,7 @@
           "text": "true",
           "value": "false"
         },
+        "description": "Is this a production vault?",
         "hide": 0,
         "includeAll": false,
         "label": "production",
@@ -223,13 +234,13 @@
     ]
   },
   "time": {
-    "from": "now-24h",
+    "from": "now-6M",
     "to": "now"
   },
   "timepicker": {},
   "timezone": "",
-  "title": "Top 5 Strategies",
-  "uid": "k0kTEUIVz",
-  "version": 5,
+  "title": "% to deposit limit",
+  "uid": "62VTs2I4k",
+  "version": 8,
   "weekStart": ""
 }

@@ -9,13 +9,13 @@
       "pluginName": "Prometheus"
     }
   ],
-  "__elements": [],
+  "__elements": {},
   "__requires": [
     {
       "type": "grafana",
       "id": "grafana",
       "name": "Grafana",
-      "version": "8.3.1"
+      "version": "9.2.0"
     },
     {
       "type": "panel",
@@ -34,7 +34,10 @@
     "list": [
       {
         "builtIn": 1,
-        "datasource": "-- Grafana --",
+        "datasource": {
+          "type": "datasource",
+          "uid": "grafana"
+        },
         "enable": true,
         "hide": true,
         "iconColor": "rgba(0, 211, 255, 1)",
@@ -53,7 +56,6 @@
   "fiscalYearStartMonth": 0,
   "graphTooltip": 0,
   "id": null,
-  "iteration": 1639126898712,
   "links": [],
   "liveNow": false,
   "panels": [
@@ -100,7 +102,7 @@
         "alertThreshold": true
       },
       "percentage": false,
-      "pluginVersion": "8.3.1",
+      "pluginVersion": "9.2.0",
       "pointradius": 2,
       "points": false,
       "renderer": "flot",
@@ -119,11 +121,17 @@
       "steppedLine": true,
       "targets": [
         {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "DS_PROMETHEUS"
+          },
+          "editorMode": "code",
           "exemplar": true,
-          "expr": "(yearn_strategy{network=\"$networks\", param=\"delegatedAssets\", experimental=\"false\"} / 1000000000000000000 > 0)",
+          "expr": "(yearn_strategy{network=\"$networks\", param=\"delegatedAssets\", experimental=\"$exp\"} / 1000000000000000000 > 0)",
           "interval": "",
           "legendFormat": "{{strategy}}",
           "queryType": "randomWalk",
+          "range": true,
           "refId": "A"
         }
       ],
@@ -205,7 +213,7 @@
         "alertThreshold": true
       },
       "percentage": false,
-      "pluginVersion": "8.3.1",
+      "pluginVersion": "9.2.0",
       "pointradius": 2,
       "points": false,
       "renderer": "flot",
@@ -224,19 +232,31 @@
       "steppedLine": true,
       "targets": [
         {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "DS_PROMETHEUS"
+          },
+          "editorMode": "code",
           "exemplar": true,
-          "expr": "(yearn_strategy{network=\"$networks\", param=\"delegatedAssets\", experimental=\"false\"} / 1000000000000000000 > 0) * on(vault, version) group_left yearn_vault{network=\"$networks\", param=\"token price\", experimental=\"false\"}",
+          "expr": "(yearn_strategy{network=\"$networks\", param=\"delegatedAssets\", experimental=\"$exp\"} / 1000000000000000000 > 0) * on(vault, version) group_left yearn_vault{network=\"$networks\", param=\"token price\", experimental=\"$exp\"}",
           "interval": "",
           "legendFormat": "{{strategy}}",
           "queryType": "randomWalk",
+          "range": true,
           "refId": "A"
         },
         {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "DS_PROMETHEUS"
+          },
+          "editorMode": "code",
           "exemplar": true,
-          "expr": "sum((yearn_strategy{network=\"$networks\", param=\"delegatedAssets\", experimental=\"false\"} / 1000000000000000000 > 0) * on(vault, version) group_left yearn_vault{network=\"$networks\", param=\"token price\", experimental=\"false\"})",
+          "expr": "sum((yearn_strategy{network=\"$networks\", param=\"delegatedAssets\", experimental=\"$exp\"} / 1000000000000000000 > 0) * on(vault, version) group_left yearn_vault{network=\"$networks\", param=\"token price\", experimental=\"$exp\"})",
           "hide": false,
           "interval": "",
           "legendFormat": "Delegated Asset TVL",
+          "range": true,
           "refId": "B"
         }
       ],
@@ -276,7 +296,7 @@
     }
   ],
   "refresh": "",
-  "schemaVersion": 33,
+  "schemaVersion": 37,
   "style": "dark",
   "tags": [],
   "templating": {
@@ -304,6 +324,34 @@
         "skipUrlSync": false,
         "sort": 2,
         "type": "query"
+      },
+      {
+        "current": {
+          "selected": true,
+          "text": "true",
+          "value": "false"
+        },
+        "hide": 0,
+        "includeAll": false,
+        "label": "production",
+        "multi": false,
+        "name": "exp",
+        "options": [
+          {
+            "selected": true,
+            "text": "true",
+            "value": "false"
+          },
+          {
+            "selected": false,
+            "text": "false",
+            "value": "true"
+          }
+        ],
+        "query": "true : false, false : true",
+        "queryValue": "",
+        "skipUrlSync": false,
+        "type": "custom"
       }
     ]
   },
@@ -314,7 +362,7 @@
   "timepicker": {},
   "timezone": "",
   "title": "Delegated Deposit",
-  "uid": "biuacIDnk",
-  "version": 4,
+  "uid": "CkPobUI4z",
+  "version": 3,
   "weekStart": ""
 }

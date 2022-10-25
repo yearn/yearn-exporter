@@ -101,9 +101,7 @@ logs: get-network-name
 
 .ONESHELL:
 .SILENT:
-up: get-network-name
-	$(eval commands = $(if $(commands),$(commands),$(exporter_scripts)))
-	$(eval with_logs = $(if $(with_logs),$(with_logs),true))
+up: up-no-logs
 	if [ "$(NETWORK)" != "" ]; then
 		if [ "$(with_logs)" == "true" ]; then
 			make single-network network=$(NETWORK) commands="$(commands)" logs
@@ -118,6 +116,9 @@ up: get-network-name
 		fi
 	fi
 
+up-no-logs: get-network-name
+	$(eval commands = $(if $(commands),$(commands),$(exporter_scripts)))
+
 console: get-network-name
 	$(eval BROWNIE_NETWORK = $(if $(BROWNIE_NETWORK),$(BROWNIE_NETWORK),mainnet))
 	docker-compose --file services/dashboard/docker-compose.yml --project-directory . run --rm --entrypoint "brownie console --network $(BROWNIE_NETWORK)" exporter
@@ -131,7 +132,7 @@ debug-apy: get-network-name
 	make logs filter=debug
 
 list-networks:
-	@echo "supported networks: $(networks)"
+	@echo "supported networks: $(supported_networks)"
 
 list-commands:
 	@echo "supported exporter commands: $(exporter_scripts)"
@@ -200,19 +201,47 @@ gnosis:
 # Exporter-specifc recipes #
 ############################
 
+# Vault Exporters
+vaults:
+	make up filter=vaults commands="exporters/vaults"
+logs-vaults:
+	make logs filter=vaults commands="exporters/vaults"
+
 # Treasury Exporters
 treasury:
 	make up filter=treasury commands="exporters/treasury"
-
 logs-treasury:
 	make logs filter=treasury
 
 # Treasury TX Exporters
 treasury-tx:
 	make up filter=treasury_transactions commands="exporters/treasury_transactions"
-
 logs-treasury-tx:
 	make logs filter=treasury_transactions
+
+# Wallet Stats Exporters
+wallets:
+	make up filter=wallets commands="exporters/wallets"
+logs-wallets:
+	make logs filter=wallets commands="exporters/wallets"
+
+# Partners Exporters
+partners:
+	make up filter=partners commands="exporters/partners"
+logs-partners:
+	make logs filter=partners commands="exporters/partners"
+
+# Strategist Multisig Exporters
+sms:
+	make up filter=sms commands="exporters/sms"
+logs-sms:
+	make logs filter=sms commands="exporters/sms"
+
+# Transactions Exporters
+transactions:
+	make up filter=transactions commands="exporters/transactions"
+logs-transactions:
+	make logs filter=transactions commands="exporters/transactions"
 
 # apy scripts
 apy: commands=s3
