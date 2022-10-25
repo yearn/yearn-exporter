@@ -101,7 +101,9 @@ logs: get-network-name
 
 .ONESHELL:
 .SILENT:
-up: up-no-logs
+up: get-network-name
+	$(eval commands = $(if $(commands),$(commands),$(exporter_scripts)))
+	$(eval with_logs = $(if $(with_logs),$(with_logs),true))
 	if [ "$(NETWORK)" != "" ]; then
 		if [ "$(with_logs)" == "true" ]; then
 			make single-network network=$(NETWORK) commands="$(commands)" logs
@@ -115,9 +117,6 @@ up: up-no-logs
 			make all-networks commands="$(commands)"
 		fi
 	fi
-
-up-no-logs: get-network-name
-	$(eval commands = $(if $(commands),$(commands),$(exporter_scripts)))
 
 console: get-network-name
 	$(eval BROWNIE_NETWORK = $(if $(BROWNIE_NETWORK),$(BROWNIE_NETWORK),mainnet))
