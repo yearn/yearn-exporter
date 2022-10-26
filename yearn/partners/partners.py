@@ -472,6 +472,38 @@ partners = {
                 ),
             ],
         ),
+        Partner(
+            name = 'Phuture',
+            start_block=0,
+            treasury='0x237a4d2166Eb65cB3f9fabBe55ef2eb5ed56bdb9',
+            wrappers=[
+                Wrapper(
+                    name='UNI Vault Controller',
+                    vault='0xFBEB78a723b8087fD2ea7Ef1afEc93d35E8Bed42',
+                    wrapper='0xA75425382590468346a58F7bE0801713Eb117546'
+                ),
+                Wrapper(
+                    name='AAVE Vault Controller',
+                    vault='0xd9788f3931Ede4D5018184E198699dC6d66C1915',
+                    wrapper='0xFaC5b964d0A51ECf437f5C8D48EA685188f2e070'
+                ),
+                Wrapper(
+                    name='YFI Vault Controller',
+                    vault='0xdb25cA703181E7484a155DD612b06f57E12Be5F0',
+                    wrapper='0x673Aa111acd33F6e4A406A3A02A8B94E3dBa00F1'
+                ),
+                Wrapper(
+                    name='SUSHI Vault Controller',
+                    vault='0x6d765CbE5bC922694afE112C140b8878b9FB0390',
+                    wrapper='0x97c3a96c1BC8f3220A6B77312c8E88c715d3C501'
+                ),
+                Wrapper(
+                    name='SNX Vault Controller',
+                    vault='0xF29AE508698bDeF169B89834F76704C3B205aedf',
+                    wrapper='0x34B19E5381235D72e92Feb1a0E594d665a0805c3'
+                )
+            ]
+        ),
     ],
     Network.Fantom: [
         Partner(
