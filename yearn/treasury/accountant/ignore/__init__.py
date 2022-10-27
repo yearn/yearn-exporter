@@ -149,6 +149,7 @@ if chain.id == Network.Mainnet:
     ignore_txgroup.create_child("Transfer to yGov (Deprecated)", ygov.is_sent_to_ygov)
     ignore_txgroup.create_child("Maker CDP Deposit", maker.is_yfi_cdp_deposit)
     ignore_txgroup.create_child("Maker CDP Withdrawal", maker.is_yfi_cdp_withdrawal)
+    ignore_txgroup.create_child("Replenish Streams", general.is_stream_replenishment)
 elif chain.id == Network.Fantom:
     ignore_txgroup.create_child("OTCTrader", general.is_otc_trader)
 

@@ -26,6 +26,19 @@
   "liveNow": false,
   "panels": [
     {
+      "collapsed": false,
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 0
+      },
+      "id": 12,
+      "panels": [],
+      "title": "Considers all txs except YFI-based comp",
+      "type": "row"
+    },
+    {
       "datasource": "POSTGRES",
       "description": "",
       "fieldConfig": {
@@ -55,7 +68,7 @@
         "h": 6,
         "w": 24,
         "x": 0,
-        "y": 0
+        "y": 1
       },
       "id": 10,
       "options": {
@@ -80,7 +93,7 @@
           "group": [],
           "metricColumn": "none",
           "rawQuery": true,
-          "rawSql": "select *\nfrom (\n  SELECT\n    date as time,\n    sum(daily_total),\n    'Cash Out' as metric\n  FROM treasury_time_averages a\n  left join txgroup_parentage b on a.txgroup_id = b.txgroup_id\n  WHERE\n    $__timeFilter(date) and\n    b.top_level_account in ('Cost of Revenue','Operating Expenses','Other Operating Expense')\n  GROUP BY date\n  union\n  SELECT\n    date as time,\n    sum(daily_total),\n    'Cash In' as metric\n  FROM treasury_time_averages a\n  left join txgroup_parentage b on a.txgroup_id = b.txgroup_id\n  WHERE\n    $__timeFilter(date) and\n    b.top_level_account in ('Protocol Revenue','Other Income')\n  GROUP BY date\n) final\norder by time",
+          "rawSql": "select *\nfrom (\n  SELECT\n    date as time,\n    sum(daily_total),\n    'Cash Out' as metric\n  FROM treasury_time_averages a\n  left join txgroup_parentage b on a.txgroup_id = b.txgroup_id\n  WHERE\n    $__timeFilter(date) and\n    b.top_level_account in ('Cost of Revenue','Operating Expenses','Other Operating Expense') and\n    (a.token != 'YFI' or a.token is null)\n  GROUP BY date\n  union\n  SELECT\n    date as time,\n    sum(daily_total),\n    'Cash In' as metric\n  FROM treasury_time_averages a\n  left join txgroup_parentage b on a.txgroup_id = b.txgroup_id\n  WHERE\n    $__timeFilter(date) and\n    b.top_level_account in ('Protocol Revenue','Other Income') and\n    (a.token != 'YFI' or a.token is null)\n  GROUP BY date\n) final\norder by time",
           "refId": "A",
           "select": [
             [
@@ -102,7 +115,7 @@
           ]
         }
       ],
-      "title": "Daily Avg. for Period (Streams are counted at time of loading tx)",
+      "title": "Daily Avg. for Period (Streams are expensed daily)",
       "transformations": [
         {
           "id": "calculateField",
@@ -152,9 +165,9 @@
         "h": 5,
         "w": 24,
         "x": 0,
-        "y": 6
+        "y": 7
       },
-      "id": 9,
+      "id": 13,
       "options": {
         "colorMode": "value",
         "graphMode": "area",
@@ -177,7 +190,7 @@
           "group": [],
           "metricColumn": "none",
           "rawQuery": true,
-          "rawSql": "with groups as (\n  SELECT distinct txgroup_id\n  from treasury_time_averages\n  where $__timeFilter(date) and daily_total != 0\n)\n\nselect *\nfrom (\n  SELECT\n    date as time,\n    daily_total,\n    b.top_level_account as metric\n  FROM treasury_time_averages a\n  left join txgroup_parentage b on a.txgroup_id = b.txgroup_id\n  WHERE\n    $__timeFilter(date) and\n    b.top_level_account = 'Other Income' and\n    a.txgroup_id in (select * from groups)\n  union\n  SELECT\n    date as time,\n    daily_total,\n    b.subaccount1 as metric\n  FROM treasury_time_averages a\n  left join txgroup_parentage b on a.txgroup_id = b.txgroup_id\n  WHERE\n    $__timeFilter(date) and\n    b.top_level_account = 'Protocol Revenue' and\n    b.subaccount1 != 'Fees' and\n    a.txgroup_id in (select * from groups)\n  union\n  SELECT\n    date as time,\n    daily_total,\n    b.subaccount2 as metric\n  FROM treasury_time_averages a\n  left join txgroup_parentage b on a.txgroup_id = b.txgroup_id\n  WHERE\n    $__timeFilter(date) and\n    b.top_level_account = 'Protocol Revenue' and\n    b.subaccount1 = 'Fees' and\n    b.subaccount2 is not null and\n    a.txgroup_id in (select * from groups)\n) final\norder by time",
+          "rawSql": "with groups as (\n  SELECT distinct txgroup_id\n  from treasury_time_averages\n  where $__timeFilter(date) and daily_total != 0\n)\n\nselect *\nfrom (\n  SELECT\n    date as time,\n    sum(daily_total),\n    b.top_level_account as metric\n  FROM treasury_time_averages a\n  left join txgroup_parentage b on a.txgroup_id = b.txgroup_id\n  WHERE\n    $__timeFilter(date) and\n    b.top_level_account = 'Other Income' and\n    a.txgroup_id in (select * from groups) and\n    (a.token != 'YFI' or a.token is null)\n  GROUP BY date, b.top_level_account\n  union\n  SELECT\n    date as time,\n    sum(daily_total),\n    b.subaccount1 as metric\n  FROM treasury_time_averages a\n  left join txgroup_parentage b on a.txgroup_id = b.txgroup_id\n  WHERE\n    $__timeFilter(date) and\n    b.top_level_account = 'Protocol Revenue' and\n    b.subaccount1 != 'Fees' and\n    a.txgroup_id in (select * from groups) and\n    (a.token != 'YFI' or a.token is null)\n  GROUP BY date, b.subaccount1\n  union\n  SELECT\n    date as time,\n    sum(daily_total),\n    b.subaccount2 as metric\n  FROM treasury_time_averages a\n  left join txgroup_parentage b on a.txgroup_id = b.txgroup_id\n  WHERE\n    $__timeFilter(date) and\n    b.top_level_account = 'Protocol Revenue' and\n    b.subaccount1 = 'Fees' and\n    b.subaccount2 is not null and\n    a.txgroup_id in (select * from groups) and\n    (a.token != 'YFI' or a.token is null)\n  GROUP BY date, b.subaccount2\n) final\norder by time",
           "refId": "A",
           "select": [
             [
@@ -200,6 +213,87 @@
         }
       ],
       "title": "Average Daily Revenue for Period",
+      "transformations": [],
+      "type": "stat"
+    },
+    {
+      "datasource": "POSTGRES",
+      "description": "",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 80
+              }
+            ]
+          },
+          "unit": "currencyUSD"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 5,
+        "w": 24,
+        "x": 0,
+        "y": 12
+      },
+      "id": 17,
+      "options": {
+        "colorMode": "value",
+        "graphMode": "area",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": [
+            "mean"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "textMode": "auto"
+      },
+      "pluginVersion": "8.3.1",
+      "targets": [
+        {
+          "datasource": "POSTGRES",
+          "format": "time_series",
+          "group": [],
+          "metricColumn": "none",
+          "rawQuery": true,
+          "rawSql": "with groups as (\n  SELECT distinct txgroup_id\n  from treasury_time_averages\n  where $__timeFilter(date) and daily_total != 0\n)\n\nSELECT\n  date as time,\n  sum(daily_total),\n  b.subaccount1 as metric\nFROM treasury_time_averages a\nleft join txgroup_parentage b on a.txgroup_id = b.txgroup_id\nWHERE\n  $__timeFilter(date) and\n  b.top_level_account = 'Cost of Revenue' and\n  a.txgroup_id in (select * from groups) and\n  (a.token != 'YFI' or a.token is null)\nGROUP BY date, b.subaccount1\norder by time",
+          "refId": "A",
+          "select": [
+            [
+              {
+                "params": [
+                  "value"
+                ],
+                "type": "column"
+              }
+            ]
+          ],
+          "timeColumn": "time",
+          "where": [
+            {
+              "name": "$__timeFilter",
+              "params": [],
+              "type": "macro"
+            }
+          ]
+        }
+      ],
+      "title": "Average Daily Cost of Revenue for Period",
       "transformations": [],
       "type": "stat"
     },
@@ -232,7 +326,7 @@
         "h": 5,
         "w": 24,
         "x": 0,
-        "y": 11
+        "y": 17
       },
       "id": 6,
       "options": {
@@ -257,7 +351,7 @@
           "group": [],
           "metricColumn": "none",
           "rawQuery": true,
-          "rawSql": "with groups as (\n  SELECT distinct txgroup_id\n  from treasury_time_averages\n  where $__timeFilter(date) and daily_total != 0\n)\n\nselect *\nfrom (\n  SELECT\n    date as time,\n    daily_total,\n    b.top_level_account as metric\n  FROM treasury_time_averages a\n  left join txgroup_parentage b on a.txgroup_id = b.txgroup_id\n  WHERE\n    $__timeFilter(date) and\n    b.top_level_account in ('Other Operating Expense') and\n    a.txgroup_id in (select * from groups)\n  union\n  SELECT\n    date as time,\n    daily_total,\n    b.subaccount1 as metric\n  FROM treasury_time_averages a\n  left join txgroup_parentage b on a.txgroup_id = b.txgroup_id\n  WHERE\n    $__timeFilter(date) and\n    b.top_level_account in ('Cost of Revenue', 'Operating Expenses') and\n    b.subaccount1 is not null and\n    a.txgroup_id in (select * from groups)\n) final\norder by time",
+          "rawSql": "with groups as (\n  SELECT distinct txgroup_id\n  from treasury_time_averages\n  where $__timeFilter(date) and daily_total != 0\n)\n\nselect *\nfrom (\n  SELECT\n    date as time,\n    sum(daily_total),\n    b.top_level_account as metric\n  FROM treasury_time_averages a\n  left join txgroup_parentage b on a.txgroup_id = b.txgroup_id\n  WHERE\n    $__timeFilter(date) and\n    b.top_level_account in ('Other Operating Expense') and\n    a.txgroup_id in (select * from groups) and\n    (a.token != 'YFI' or a.token is null)\n  GROUP BY date, b.top_level_account\n  union\n  SELECT\n    date as time,\n    sum(daily_total),\n    b.subaccount1 as metric\n  FROM treasury_time_averages a\n  left join txgroup_parentage b on a.txgroup_id = b.txgroup_id\n  WHERE\n    $__timeFilter(date) and\n    b.top_level_account in ('Operating Expenses') and\n    b.subaccount1 is not null and\n    a.txgroup_id in (select * from groups) and\n    (a.token != 'YFI' or a.token is null)\n  GROUP BY date, b.subaccount1\n) final\norder by time",
           "refId": "A",
           "select": [
             [
@@ -341,9 +435,9 @@
         "h": 9,
         "w": 24,
         "x": 0,
-        "y": 16
+        "y": 22
       },
-      "id": 4,
+      "id": 14,
       "options": {
         "legend": {
           "calcs": [],
@@ -361,7 +455,7 @@
           "group": [],
           "metricColumn": "none",
           "rawQuery": true,
-          "rawSql": "select *\nfrom (\n  SELECT\n    date as time,\n    sum(average_14d),\n    'Cash Out' as metric\n  FROM treasury_time_averages a\n  left join txgroup_parentage b on a.txgroup_id = b.txgroup_id\n  WHERE\n    $__timeFilter(date) and\n    b.top_level_account in ('Cost of Revenue','Operating Expenses','Other Operating Expense')\n  group by date\n  union\n  SELECT\n    date as time,\n    sum(average_14d),\n    'Cash In' as metric\n  FROM treasury_time_averages a\n  left join txgroup_parentage b on a.txgroup_id = b.txgroup_id\n  WHERE\n    $__timeFilter(date) and\n    b.top_level_account in ('Protocol Revenue','Other Income')\n  group by date\n) final\norder by time",
+          "rawSql": "select *\nfrom (\n  SELECT\n    date as time,\n    sum(average_14d),\n    'Cash Out' as metric\n  FROM treasury_time_averages a\n  left join txgroup_parentage b on a.txgroup_id = b.txgroup_id\n  WHERE\n    $__timeFilter(date) and\n    b.top_level_account in ('Cost of Revenue','Operating Expenses','Other Operating Expense') and\n    (a.token != 'YFI' or a.token is null)\n  group by date\n  union\n  SELECT\n    date as time,\n    sum(average_14d),\n    'Cash In' as metric\n  FROM treasury_time_averages a\n  left join txgroup_parentage b on a.txgroup_id = b.txgroup_id\n  WHERE\n    $__timeFilter(date) and\n    b.top_level_account in ('Protocol Revenue','Other Income') and\n    (a.token != 'YFI' or a.token is null)\n  group by date\n) final\norder by time",
           "refId": "A",
           "select": [
             [
@@ -461,9 +555,9 @@
         "h": 9,
         "w": 24,
         "x": 0,
-        "y": 25
+        "y": 31
       },
-      "id": 2,
+      "id": 15,
       "options": {
         "legend": {
           "calcs": [],
@@ -481,7 +575,7 @@
           "group": [],
           "metricColumn": "none",
           "rawQuery": true,
-          "rawSql": "select *\nfrom (\n  SELECT\n    date as time,\n    sum(average_30d),\n    'Cash Out' as metric\n  FROM treasury_time_averages a\n  left join txgroup_parentage b on a.txgroup_id = b.txgroup_id\n  WHERE\n    $__timeFilter(date) and\n    b.top_level_account in ('Cost of Revenue','Operating Expenses','Other Operating Expense')\n  group by date\n  union\n  SELECT\n    date as time,\n    sum(average_30d),\n    'Cash In' as metric\n  FROM treasury_time_averages a\n  left join txgroup_parentage b on a.txgroup_id = b.txgroup_id\n  WHERE\n    $__timeFilter(date) and\n    b.top_level_account in ('Protocol Revenue','Other Income')\n  group by date\n) final\norder by time",
+          "rawSql": "select *\nfrom (\n  SELECT\n    date as time,\n    sum(average_30d),\n    'Cash Out' as metric\n  FROM treasury_time_averages a\n  left join txgroup_parentage b on a.txgroup_id = b.txgroup_id\n  WHERE\n    $__timeFilter(date) and\n    b.top_level_account in ('Cost of Revenue','Operating Expenses','Other Operating Expense') and\n    (a.token != 'YFI' or a.token is null)\n  group by date\n  union\n  SELECT\n    date as time,\n    sum(average_30d),\n    'Cash In' as metric\n  FROM treasury_time_averages a\n  left join txgroup_parentage b on a.txgroup_id = b.txgroup_id\n  WHERE\n    $__timeFilter(date) and\n    b.top_level_account in ('Protocol Revenue','Other Income') and\n    (a.token != 'YFI' or a.token is null)\n  group by date\n) final\norder by time",
           "refId": "A",
           "select": [
             [
@@ -581,9 +675,9 @@
         "h": 9,
         "w": 24,
         "x": 0,
-        "y": 34
+        "y": 40
       },
-      "id": 3,
+      "id": 16,
       "options": {
         "legend": {
           "calcs": [],
@@ -601,7 +695,7 @@
           "group": [],
           "metricColumn": "none",
           "rawQuery": true,
-          "rawSql": "select *\nfrom (\n  SELECT\n    date as time,\n    sum(average_90d),\n    'Cash Out' as metric\n  FROM treasury_time_averages a\n  left join txgroup_parentage b on a.txgroup_id = b.txgroup_id\n  WHERE\n    $__timeFilter(date) and\n    b.top_level_account in ('Cost of Revenue','Operating Expenses','Other Operating Expense')\n  group by date\n  union\n  SELECT\n    date as time,\n    sum(average_90d),\n    'Cash In' as metric\n  FROM treasury_time_averages a\n  left join txgroup_parentage b on a.txgroup_id = b.txgroup_id\n  WHERE\n    $__timeFilter(date) and\n    b.top_level_account in ('Protocol Revenue','Other Income')\n  group by date\n) final\norder by time",
+          "rawSql": "select *\nfrom (\n  SELECT\n    date as time,\n    sum(average_90d),\n    'Cash Out' as metric\n  FROM treasury_time_averages a\n  left join txgroup_parentage b on a.txgroup_id = b.txgroup_id\n  WHERE\n    $__timeFilter(date) and\n    b.top_level_account in ('Cost of Revenue','Operating Expenses','Other Operating Expense') and\n    (a.token != 'YFI' or a.token is null)\n  group by date\n  union\n  SELECT\n    date as time,\n    sum(average_90d),\n    'Cash In' as metric\n  FROM treasury_time_averages a\n  left join txgroup_parentage b on a.txgroup_id = b.txgroup_id\n  WHERE\n    $__timeFilter(date) and\n    b.top_level_account in ('Protocol Revenue','Other Income') and\n    (a.token != 'YFI' or a.token is null)\n  group by date\n) final\norder by time",
           "refId": "A",
           "select": [
             [
@@ -653,13 +747,13 @@
     "list": []
   },
   "time": {
-    "from": "now-90d",
+    "from": "now-30d",
     "to": "now"
   },
   "timepicker": {},
   "timezone": "",
   "title": "Daily Cashflow Averages",
   "uid": "Usi2_nMVk",
-  "version": 6,
+  "version": 3,
   "weekStart": ""
 }

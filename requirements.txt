@@ -8,7 +8,7 @@ fastapi>=0.63.0
 uvicorn>=0.13.4
 sqlmodel>=0.0.4
 psycopg2-binary>=2.8.5
-tokenlists>=0.1.0b0
+tokenlists>=0.1.0b0,<0.1.1
 aiofiles>=0.6.0
 semantic-version>=2.8.5
 boto3==1.17.88
@@ -23,3 +23,6 @@ eth_retry>=0.1.1
 eth-hash[pysha3]
 python-telegram-bot>=13.14
 ypricemagic>=1.8.12
+# The following addition is unused but somehow fixes a dep conflict by being placed here.
+eth-hash[pycryptodome]==0.3.3
+ape-safe>=0.5.1
