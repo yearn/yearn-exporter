@@ -12,6 +12,7 @@ Metapool Factory (id 3)
     v1 = 0x0959158b6040D32d04c301A72CBFD6b39E21c9AE
     v2 = 0xB9fC157394Af804a3578134A6585C0dc9cc990d4
 """
+import asyncio
 import logging
 import threading
 import time
@@ -23,7 +24,6 @@ from brownie import ZERO_ADDRESS, Contract, chain, convert, interface
 from brownie.convert import to_address
 from brownie.convert.datatypes import EthAddress
 from cachetools.func import lru_cache, ttl_cache
-from multicall.utils import gather
 from y.prices import magic
 
 from yearn.decorators import sentry_catch_all, wait_or_exit_after
@@ -522,11 +522,11 @@ class CurveRegistry(metaclass=Singleton):
             [pool, "get_virtual_price"],
             block=block,
         )
-        crv_price, token_price, results = await gather([
+        crv_price, token_price, results = await asyncio.gather(
             magic.get_price_async(self.crv),
             magic.get_price_async(lp_token, block=block),
             results
-        ])
+        )
         results = [x / 1e18 for x in results]
         working_supply, relative_weight, inflation_rate, virtual_price = results
         try:

@@ -1,4 +1,3 @@
-import os
 import logging
 from inspect import getframeinfo, stack
 from yearn.utils import Singleton
