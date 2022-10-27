@@ -2,11 +2,11 @@ import logging
 from collections import defaultdict
 from concurrent.futures import ThreadPoolExecutor
 from dataclasses import dataclass, field
-from datetime import date, datetime, timedelta
+from datetime import date, timedelta
 from decimal import Decimal
 from functools import cached_property
 from pathlib import Path
-from typing import Dict, List, Tuple, Union
+from typing import Dict, List, Optional, Tuple, Union
 
 import pandas as pd
 from brownie import chain, convert, multicall, web3
@@ -52,7 +52,7 @@ def get_timestamps(blocks: Tuple[int,...]) -> DatetimeScalar:
     return pd.to_datetime([x * 1e9 for x in data])
 
 
-def get_protocol_fees(address: str, start_block: int = None) -> Dict[int,Decimal]:
+def get_protocol_fees(address: str, start_block: Optional[int] = None) -> Dict[int,Decimal]:
     """
     Get all protocol fee payouts for a given vault.
 
@@ -60,8 +60,7 @@ def get_protocol_fees(address: str, start_block: int = None) -> Dict[int,Decimal
     """
     vault = Vault.from_address(address)
     rewards = vault.vault.rewards()
-
-    start_block = start_block if start_block else None
+    
     topics = construct_event_topic_set(
         filter_by_name('Transfer', vault.vault.abi)[0],
         web3.codec,
@@ -308,7 +307,7 @@ class Partner:
         # Format attributes as desired
         self.name = self.name.lower()
         if self.start_date is None and self.name in NO_START_DATE:
-            self.start_block = 0
+            self.start_block = None
         elif self.start_date is None:
             raise ValueError("You must provide a `start_date`.")
         elif isinstance(self.start_date, date):
@@ -337,7 +336,7 @@ class Partner:
                 try:
                     max_cached_block = int(cache['block'].max())
                     logger.debug(f'{self.name} {wrapper.name} is cached thru block {max_cached_block}')
-                    start_block = max(self.start_block, max_cached_block + 1)
+                    start_block = max_cached_block + 1 if self.start_block is None else max(self.start_block, max_cached_block + 1)
                 except KeyError:
                     start_block = self.start_block
                     logger.debug(f'no harvests cached for {self.name} {wrapper.name}')
