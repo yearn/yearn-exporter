@@ -2,6 +2,7 @@ import logging
 from collections import defaultdict
 from concurrent.futures import ThreadPoolExecutor
 from dataclasses import dataclass, field
+from datetime import date, datetime, timedelta
 from decimal import Decimal
 from functools import cached_property
 from pathlib import Path
@@ -17,6 +18,7 @@ from rich import print
 from rich.progress import track
 from web3._utils.abi import filter_by_name
 from web3._utils.events import construct_event_topic_set
+from y.time import last_block_on_date
 from yearn.events import decode_logs, get_logs_asap
 from yearn.exceptions import UnsupportedNetwork
 from yearn.multicall2 import batch_call
@@ -285,10 +287,19 @@ class DelegatedDepositWildcardWrapper:
         return wrappers
 
 
+NO_START_DATE = [
+    # NOTE Do not edit this list.
+    #   All new partners must define a start_date.
+    "abracadabra", "akropolis", "alchemix", "ambire", "badger", "basketdao",
+    "beethovenx", "chfry", "cofi", "coinomo", "deus", "donutapp", "element",
+    "frax", "gb", "gearbox", "inverse", "", "mover", "pickle", "popcorndao",
+    "qidao", "shapeshiftdao", "sturdy", "tempus", "wido", "yapeswap", "yieldster"
+]
+
 @dataclass
 class Partner:
     name: str
-    start_block: int
+    start_date: date
     wrappers: List[Wrapper]
     treasury: str = None
     retired_treasuries: List[str] = field(default_factory=list)
@@ -296,6 +307,15 @@ class Partner:
     def __post_init__(self) -> None:
         # Format attributes as desired
         self.name = self.name.lower()
+        if self.start_date is None and self.name in NO_START_DATE:
+            self.start_block = 0
+        elif self.start_date is None:
+            raise ValueError("You must provide a `start_date`.")
+        elif isinstance(self.start_date, date):
+            self.start_block = last_block_on_date(self.start_date - timedelta(days=1)) + 1
+        else:
+            raise TypeError("`start_date` must be a `datetime.date` object.")
+            
 
     @cached_property
     def flat_wrappers(self) -> List[Wrapper]:
