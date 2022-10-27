@@ -5,11 +5,15 @@ from typing import Optional
 
 from brownie import ZERO_ADDRESS, interface
 from brownie.network.contract import InterfaceContainer
-from yearn import apy
+from dank_mids.brownie_patch import patch_contract
+from multicall.utils import gather
+from y.prices import magic
+from y.utils.dank_mids import dank_w3
+from yearn import apy, constants
 from yearn.apy.common import ApySamples
 from yearn.common import Tvl
 from yearn.exceptions import PriceError
-from yearn.multicall2 import fetch_multicall
+from yearn.multicall2 import fetch_multicall_async
 from yearn.prices import magic
 from yearn.prices.curve import curve
 from yearn.utils import contract
@@ -41,21 +45,21 @@ class VaultV1:
         self.decimals = self.vault.decimals()  # vaults inherit decimals from token
         self.scale = 10 ** self.decimals
 
-    def get_price(self, block=None):
+    async def get_price(self, block=None):
         if self.name == "aLINK":
-            return magic.get_price(self.vault.underlying(), block=block)
-        return magic.get_price(self.token, block=block)
+            return await magic.get_price_async(self.vault.underlying.coroutine(), block=block)
+        return await magic.get_price_async(self.token, block=block)
 
-    def get_strategy(self, block=None):
+    async def get_strategy(self, block=None):
         if self.name in ["aLINK", "LINK"] or block is None:
             return self.strategy
         
-        controller = self.get_controller(block)
+        controller = await self.get_controller(block)
         strategy = controller.strategies(self.token, block_identifier=block)
         if strategy != ZERO_ADDRESS:
             return contract(strategy)
 
-    def get_controller(self, block=None):
+    async def get_controller(self, block=None):
         if block is None:
             return self.controller
         return contract(self.vault.controller(block_identifier=block))
@@ -64,11 +68,11 @@ class VaultV1:
     def is_curve_vault(self):
         return curve.get_pool(str(self.token)) is not None
 
-    def describe(self, block=None):
+    async def describe(self, block=None):
         info = {}
         strategy = self.strategy
         if block is not None:
-            strategy = self.get_strategy(block=block)
+            strategy = await self.get_strategy(block=block)
 
         # attrs are fetches as multicall and populate info
         attrs = {
@@ -88,7 +92,7 @@ class VaultV1:
 
         # new curve voter proxy vaults
         if self.is_curve_vault and hasattr(strategy, "proxy"):
-            vote_proxy, gauge = fetch_multicall(
+            vote_proxy, gauge = await fetch_multicall_async(
                 [strategy, "voter"],  # voter is static, can pin
                 [strategy, "gauge"],  # gauge is static per strategy, can cache
                 block=block,
@@ -96,24 +100,30 @@ class VaultV1:
             # guard historical queries where there are no vote_proxy and gauge
             # for block <= 10635293 (2020-08-11)
             if vote_proxy and gauge:
-                vote_proxy = interface.CurveYCRVVoter(vote_proxy)
+                vote_proxy = patch_contract(interface.CurveYCRVVoter(vote_proxy), dank_w3)
                 gauge = contract(gauge)
-                info.update(curve.calculate_boost(gauge, vote_proxy, block=block))
-                info.update(curve.calculate_apy(gauge, self.token, block=block))
+                #boost = await curve.calculate_boost(gauge, vote_proxy, block=block),
+                #_apy = await curve.calculate_apy(gauge, self.token, block=block),
+                boost, _apy = await gather([
+                    curve.calculate_boost(gauge, vote_proxy, block=block),
+                    curve.calculate_apy(gauge, self.token, block=block),
+                ])
+                info.update(boost)
+                info.update(_apy)
                 attrs["earned"] = [gauge, "claimable_tokens", vote_proxy]  # / scale
 
         if hasattr(strategy, "earned"):
             attrs["lifetime earned"] = [strategy, "earned"]  # /scale
 
         if strategy._name == "StrategyYFIGovernance":
-            ygov = interface.YearnGovernance(strategy.gov())
+            ygov = patch_contract(interface.YearnGovernance(await strategy.gov.coroutine()), dank_w3)
             attrs["earned"] = [ygov, "earned", strategy]
             attrs["reward rate"] = [ygov, "rewardRate"]
             attrs["ygov balance"] = [ygov, "balanceOf", strategy]
             attrs["ygov total"] = [ygov, "totalSupply"]
 
         # fetch attrs as multicall
-        results = fetch_multicall(*attrs.values(), block=block)
+        results = await fetch_multicall_async(*attrs.values(), block=block)
         scale_overrides = {"share price": 1e18}
         for name, attr in zip(attrs, results):
             if attr is not None:
@@ -126,7 +136,7 @@ class VaultV1:
             info["strategy buffer"] = info.pop("min") / info.pop("max")
 
         if "token price" not in info:
-            info["token price"] = self.get_price(block=block) if info["vault total"] > 0 else 0
+            info["token price"] = await self.get_price(block=block) if info["vault total"] > 0 else 0
 
         info["tvl"] = info["vault balance"] * info["token price"]
             

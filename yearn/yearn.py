@@ -5,6 +5,7 @@ from time import time
 
 from brownie import chain
 from joblib import Parallel, delayed
+from multicall.utils import await_awaitable, gather
 
 import yearn.iearn
 import yearn.ironbank
@@ -82,10 +83,11 @@ class Yearn:
         return active
     
     
-    def describe(self, block=None):
-        desc = Parallel(4, "threading")(
-            delayed(self.registries[key].describe)(block=block)
-            for key in self.registries
+    async def describe(self, block=None):
+        if block is None:
+            block = chain.height
+        desc = await gather(
+            self.registries[key].describe(block=block) for key in self.registries
         )
         return dict(zip(self.registries, desc))
 
@@ -112,9 +114,9 @@ class Yearn:
         return data
 
 
-    def total_value_at(self, block=None):
-        desc = Parallel(4, "threading")(
-            delayed(self.registries[key].total_value_at)(block=block)
+    async def total_value_at(self, block=None):
+        desc = await gather(
+            self.registries[key].total_value_at(block=block)
             for key in self.registries
         )
         return dict(zip(self.registries, desc))
@@ -122,12 +124,17 @@ class Yearn:
 
     def export(self, block, ts):
         start = time()
-        data = self.describe(block)
+        data = await_awaitable(self.describe(block))
         output_base.export(block, ts, data)
         products = list(data.keys())
         if 'ib' in products and self.exclude_ib_tvl and block > constants.ib_snapshot_block:
             products.remove('ib')
-        tvl = sum(vault['tvl'] for (product, product_values) in data.items() if product in products for vault in product_values.values() if type(vault) == dict)
+        tvl = sum(
+            vault['tvl']
+            for (product, product_values) in data.items()
+            if product in products
+            for vault in product_values.values() if type(vault) == dict
+        )
         logger.info('exported block=%d tvl=%.0f took=%.3fs', block, tvl, time() - start)
 
     

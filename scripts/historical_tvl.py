@@ -2,6 +2,7 @@ import logging
 import time
 from datetime import datetime, timedelta, timezone
 from itertools import count
+from multicall.utils import await_awaitable
 
 import sentry_sdk
 from brownie import chain
@@ -49,7 +50,7 @@ def main():
             logger.debug("inserting snapshot=%s", snapshot)
             block = closest_block_after_timestamp(snapshot.timestamp())
             assert block is not None, "no block after timestamp found"
-            assets = yearn.total_value_at(block)
+            assets = await_awaitable(yearn.total_value_at(block))
 
             new_block = Block(
                 chain_id=chain.id,
