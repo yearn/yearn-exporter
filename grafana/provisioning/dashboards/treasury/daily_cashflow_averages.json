@@ -103,7 +103,7 @@
           "group": [],
           "metricColumn": "none",
           "rawQuery": true,
-          "rawSql": "select *\nfrom (\n  SELECT\n    date as time,\n    sum(average_14d),\n    'Cash Out' as metric\n  FROM treasury_time_averages a\n  left join txgroup_parentage b on a.parent_txgroup_id = b.txgroup_id\n  WHERE\n    $__timeFilter(date) and\n    b.top_level_account in ('Cost of Revenue','Operating Expenses','Other Operating Expense')\n  group by date\n  union\n  SELECT\n    date as time,\n    sum(average_14d),\n    'Cash In' as metric\n  FROM treasury_time_averages a\n  left join txgroup_parentage b on a.parent_txgroup_id = b.txgroup_id\n  WHERE\n    $__timeFilter(date) and\n    b.top_level_account in ('Protocol Revenue','Other Income')\n  group by date\n) final\norder by time",
+          "rawSql": "select *\nfrom (\n  SELECT\n    date as time,\n    sum(average_14d),\n    'Cash Out' as metric\n  FROM treasury_time_averages a\n  left join txgroup_parentage b on a.txgroup_id = b.txgroup_id\n  WHERE\n    $__timeFilter(date) and\n    b.top_level_account in ('Cost of Revenue','Operating Expenses','Other Operating Expense')\n  group by date\n  union\n  SELECT\n    date as time,\n    sum(average_14d),\n    'Cash In' as metric\n  FROM treasury_time_averages a\n  left join txgroup_parentage b on a.txgroup_id = b.txgroup_id\n  WHERE\n    $__timeFilter(date) and\n    b.top_level_account in ('Protocol Revenue','Other Income')\n  group by date\n) final\norder by time",
           "refId": "A",
           "select": [
             [
@@ -223,7 +223,7 @@
           "group": [],
           "metricColumn": "none",
           "rawQuery": true,
-          "rawSql": "select *\nfrom (\n  SELECT\n    date as time,\n    sum(average_30d),\n    'Cash Out' as metric\n  FROM treasury_time_averages a\n  left join txgroup_parentage b on a.parent_txgroup_id = b.txgroup_id\n  WHERE\n    $__timeFilter(date) and\n    b.top_level_account in ('Cost of Revenue','Operating Expenses','Other Operating Expense')\n  group by date\n  union\n  SELECT\n    date as time,\n    sum(average_30d),\n    'Cash In' as metric\n  FROM treasury_time_averages a\n  left join txgroup_parentage b on a.parent_txgroup_id = b.txgroup_id\n  WHERE\n    $__timeFilter(date) and\n    b.top_level_account in ('Protocol Revenue','Other Income')\n  group by date\n) final\norder by time",
+          "rawSql": "select *\nfrom (\n  SELECT\n    date as time,\n    sum(average_30d),\n    'Cash Out' as metric\n  FROM treasury_time_averages a\n  left join txgroup_parentage b on a.txgroup_id = b.txgroup_id\n  WHERE\n    $__timeFilter(date) and\n    b.top_level_account in ('Cost of Revenue','Operating Expenses','Other Operating Expense')\n  group by date\n  union\n  SELECT\n    date as time,\n    sum(average_30d),\n    'Cash In' as metric\n  FROM treasury_time_averages a\n  left join txgroup_parentage b on a.txgroup_id = b.txgroup_id\n  WHERE\n    $__timeFilter(date) and\n    b.top_level_account in ('Protocol Revenue','Other Income')\n  group by date\n) final\norder by time",
           "refId": "A",
           "select": [
             [
@@ -343,7 +343,7 @@
           "group": [],
           "metricColumn": "none",
           "rawQuery": true,
-          "rawSql": "select *\nfrom (\n  SELECT\n    date as time,\n    sum(average_90d),\n    'Cash Out' as metric\n  FROM treasury_time_averages a\n  left join txgroup_parentage b on a.parent_txgroup_id = b.txgroup_id\n  WHERE\n    $__timeFilter(date) and\n    b.top_level_account in ('Cost of Revenue','Operating Expenses','Other Operating Expense')\n  group by date\n  union\n  SELECT\n    date as time,\n    sum(average_90d),\n    'Cash In' as metric\n  FROM treasury_time_averages a\n  left join txgroup_parentage b on a.parent_txgroup_id = b.txgroup_id\n  WHERE\n    $__timeFilter(date) and\n    b.top_level_account in ('Protocol Revenue','Other Income')\n  group by date\n) final\norder by time",
+          "rawSql": "select *\nfrom (\n  SELECT\n    date as time,\n    sum(average_90d),\n    'Cash Out' as metric\n  FROM treasury_time_averages a\n  left join txgroup_parentage b on a.txgroup_id = b.txgroup_id\n  WHERE\n    $__timeFilter(date) and\n    b.top_level_account in ('Cost of Revenue','Operating Expenses','Other Operating Expense')\n  group by date\n  union\n  SELECT\n    date as time,\n    sum(average_90d),\n    'Cash In' as metric\n  FROM treasury_time_averages a\n  left join txgroup_parentage b on a.txgroup_id = b.txgroup_id\n  WHERE\n    $__timeFilter(date) and\n    b.top_level_account in ('Protocol Revenue','Other Income')\n  group by date\n) final\norder by time",
           "refId": "A",
           "select": [
             [
