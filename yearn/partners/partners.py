@@ -610,7 +610,7 @@ partners = {
         ),
         Partner(
             name='SpoolFi',
-            start_block=14636355,
+            start_date=date(2022, 10, 2),
             treasury='0xF6Bc2E3b1F939C435D9769D078a6e5048AaBD463',
             wrappers=[
                 WildcardWrapper(
