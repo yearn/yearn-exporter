@@ -2,10 +2,8 @@ import logging
 import re
 import threading
 import time
-import inflection
 from typing import Dict, List
 
-from collections import OrderedDict
 from brownie import chain
 from eth_utils import encode_hex, event_abi_to_log_topic
 from joblib import Parallel, delayed
@@ -164,8 +162,6 @@ class Vault:
 
     def process_events(self, events):
         for event in events:
-            # hack to make camels to snakes
-            event._ordered = [OrderedDict({inflection.underscore(k): v for k, v in od.items()}) for od in event._ordered]
             # some issues during the migration of this strat prevented it from being verified so we skip it here...
             if chain.id == Network.Optimism:
                 failed_migration = False
