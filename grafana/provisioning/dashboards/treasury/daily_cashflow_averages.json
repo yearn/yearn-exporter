@@ -31,6 +31,264 @@
       "fieldConfig": {
         "defaults": {
           "color": {
+            "mode": "thresholds"
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 80
+              }
+            ]
+          },
+          "unit": "currencyUSD"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 6,
+        "w": 24,
+        "x": 0,
+        "y": 0
+      },
+      "id": 10,
+      "options": {
+        "colorMode": "value",
+        "graphMode": "area",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": [
+            "mean"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "textMode": "auto"
+      },
+      "pluginVersion": "8.3.1",
+      "targets": [
+        {
+          "datasource": "POSTGRES",
+          "format": "time_series",
+          "group": [],
+          "metricColumn": "none",
+          "rawQuery": true,
+          "rawSql": "select *\nfrom (\n  SELECT\n    date as time,\n    sum(daily_total),\n    'Cash Out' as metric\n  FROM treasury_time_averages a\n  left join txgroup_parentage b on a.txgroup_id = b.txgroup_id\n  WHERE\n    $__timeFilter(date) and\n    b.top_level_account in ('Cost of Revenue','Operating Expenses','Other Operating Expense')\n  GROUP BY date\n  union\n  SELECT\n    date as time,\n    sum(daily_total),\n    'Cash In' as metric\n  FROM treasury_time_averages a\n  left join txgroup_parentage b on a.txgroup_id = b.txgroup_id\n  WHERE\n    $__timeFilter(date) and\n    b.top_level_account in ('Protocol Revenue','Other Income')\n  GROUP BY date\n) final\norder by time",
+          "refId": "A",
+          "select": [
+            [
+              {
+                "params": [
+                  "value"
+                ],
+                "type": "column"
+              }
+            ]
+          ],
+          "timeColumn": "time",
+          "where": [
+            {
+              "name": "$__timeFilter",
+              "params": [],
+              "type": "macro"
+            }
+          ]
+        }
+      ],
+      "title": "Daily Avg. for Period (Streams are counted at time of loading tx)",
+      "transformations": [
+        {
+          "id": "calculateField",
+          "options": {
+            "alias": "Net",
+            "binary": {
+              "left": "Cash In",
+              "operator": "-",
+              "reducer": "sum",
+              "right": "Cash Out"
+            },
+            "mode": "binary",
+            "reduce": {
+              "reducer": "sum"
+            }
+          }
+        }
+      ],
+      "type": "stat"
+    },
+    {
+      "datasource": "POSTGRES",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 80
+              }
+            ]
+          },
+          "unit": "currencyUSD"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 5,
+        "w": 24,
+        "x": 0,
+        "y": 6
+      },
+      "id": 9,
+      "options": {
+        "colorMode": "value",
+        "graphMode": "area",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": [
+            "mean"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "textMode": "auto"
+      },
+      "pluginVersion": "8.3.1",
+      "targets": [
+        {
+          "datasource": "POSTGRES",
+          "format": "time_series",
+          "group": [],
+          "metricColumn": "none",
+          "rawQuery": true,
+          "rawSql": "with groups as (\n  SELECT distinct txgroup_id\n  from treasury_time_averages\n  where $__timeFilter(date) and daily_total != 0\n)\n\nselect *\nfrom (\n  SELECT\n    date as time,\n    daily_total,\n    b.top_level_account as metric\n  FROM treasury_time_averages a\n  left join txgroup_parentage b on a.txgroup_id = b.txgroup_id\n  WHERE\n    $__timeFilter(date) and\n    b.top_level_account = 'Other Income' and\n    a.txgroup_id in (select * from groups)\n  union\n  SELECT\n    date as time,\n    daily_total,\n    b.subaccount1 as metric\n  FROM treasury_time_averages a\n  left join txgroup_parentage b on a.txgroup_id = b.txgroup_id\n  WHERE\n    $__timeFilter(date) and\n    b.top_level_account = 'Protocol Revenue' and\n    b.subaccount1 != 'Fees' and\n    a.txgroup_id in (select * from groups)\n  union\n  SELECT\n    date as time,\n    daily_total,\n    b.subaccount2 as metric\n  FROM treasury_time_averages a\n  left join txgroup_parentage b on a.txgroup_id = b.txgroup_id\n  WHERE\n    $__timeFilter(date) and\n    b.top_level_account = 'Protocol Revenue' and\n    b.subaccount1 = 'Fees' and\n    b.subaccount2 is not null and\n    a.txgroup_id in (select * from groups)\n) final\norder by time",
+          "refId": "A",
+          "select": [
+            [
+              {
+                "params": [
+                  "value"
+                ],
+                "type": "column"
+              }
+            ]
+          ],
+          "timeColumn": "time",
+          "where": [
+            {
+              "name": "$__timeFilter",
+              "params": [],
+              "type": "macro"
+            }
+          ]
+        }
+      ],
+      "title": "Average Daily Revenue for Period",
+      "transformations": [],
+      "type": "stat"
+    },
+    {
+      "datasource": "POSTGRES",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 80
+              }
+            ]
+          },
+          "unit": "currencyUSD"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 5,
+        "w": 24,
+        "x": 0,
+        "y": 11
+      },
+      "id": 6,
+      "options": {
+        "colorMode": "value",
+        "graphMode": "area",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": [
+            "mean"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "textMode": "auto"
+      },
+      "pluginVersion": "8.3.1",
+      "targets": [
+        {
+          "datasource": "POSTGRES",
+          "format": "time_series",
+          "group": [],
+          "metricColumn": "none",
+          "rawQuery": true,
+          "rawSql": "with groups as (\n  SELECT distinct txgroup_id\n  from treasury_time_averages\n  where $__timeFilter(date) and daily_total != 0\n)\n\nselect *\nfrom (\n  SELECT\n    date as time,\n    daily_total,\n    b.top_level_account as metric\n  FROM treasury_time_averages a\n  left join txgroup_parentage b on a.txgroup_id = b.txgroup_id\n  WHERE\n    $__timeFilter(date) and\n    b.top_level_account in ('Other Operating Expense') and\n    a.txgroup_id in (select * from groups)\n  union\n  SELECT\n    date as time,\n    daily_total,\n    b.subaccount1 as metric\n  FROM treasury_time_averages a\n  left join txgroup_parentage b on a.txgroup_id = b.txgroup_id\n  WHERE\n    $__timeFilter(date) and\n    b.top_level_account in ('Cost of Revenue', 'Operating Expenses') and\n    b.subaccount1 is not null and\n    a.txgroup_id in (select * from groups)\n) final\norder by time",
+          "refId": "A",
+          "select": [
+            [
+              {
+                "params": [
+                  "value"
+                ],
+                "type": "column"
+              }
+            ]
+          ],
+          "timeColumn": "time",
+          "where": [
+            {
+              "name": "$__timeFilter",
+              "params": [],
+              "type": "macro"
+            }
+          ]
+        }
+      ],
+      "title": "Average Daily Spend for Period",
+      "transformations": [],
+      "type": "stat"
+    },
+    {
+      "datasource": "POSTGRES",
+      "description": "",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
             "mode": "palette-classic"
           },
           "custom": {
@@ -83,7 +341,7 @@
         "h": 9,
         "w": 24,
         "x": 0,
-        "y": 0
+        "y": 16
       },
       "id": 4,
       "options": {
@@ -203,7 +461,7 @@
         "h": 9,
         "w": 24,
         "x": 0,
-        "y": 9
+        "y": 25
       },
       "id": 2,
       "options": {
@@ -323,7 +581,7 @@
         "h": 9,
         "w": 24,
         "x": 0,
-        "y": 18
+        "y": 34
       },
       "id": 3,
       "options": {
@@ -395,13 +653,13 @@
     "list": []
   },
   "time": {
-    "from": "now-2y",
+    "from": "now-90d",
     "to": "now"
   },
   "timepicker": {},
   "timezone": "",
   "title": "Daily Cashflow Averages",
   "uid": "Usi2_nMVk",
-  "version": 2,
+  "version": 6,
   "weekStart": ""
 }
