@@ -142,11 +142,13 @@ def find_price(
         return price * get_price(underlying, block=block)
     
     if price is None and token in curve.curve.coin_to_pools:
+        logger.debug(f'Curve.get_coin_price -> {price}')
         price = curve.curve.get_coin_price(token, block = block)
 
     if price is None and return_price_during_vault_downtime:
         for incident in INCIDENTS[token]:
             if incident['start'] <= block <= incident['end']:
+                logger.debug(f"incidents -> {price}")
                 return incident['result']
 
     if price is None:
