@@ -12,4 +12,4 @@ Related issue: #
 - [ ] I have included any relevant documentation for the repo maintainers
 
 ### Other templates
-- New network template [here](https://github.com/yearn/yearn-exporter/blob/master/.github/workflows/PULL_REQUEST_TEMPLATE/new_network.md)
+- New network template [here](https://github.com/yearn/yearn-exporter/blob/master/.github/new_network.md)
