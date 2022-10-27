@@ -1,10 +1,8 @@
 import logging
 import threading
 import time
-import inflection
 from typing import List
 
-from collections import OrderedDict
 from eth_utils import encode_hex, event_abi_to_log_topic
 from yearn.decorators import sentry_catch_all, wait_or_exit_after
 from yearn.events import create_filter, decode_logs
@@ -90,8 +88,6 @@ class Strategy:
 
     def process_events(self, events):
         for event in events:
-            # hack to make camels to snakes
-            event._ordered = [OrderedDict({inflection.underscore(k): v for k, v in od.items()}) for od in event._ordered]
             if event.name == "Harvested":
                 block = event.block_number
                 logger.debug("%s harvested on %d", self.name, block)
