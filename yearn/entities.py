@@ -224,6 +224,27 @@ db.generate_mapping(create_tables=True)
 
 
 @db_session
+def create_txgroup_parentage_view() -> None:
+    try:
+        db.execute(
+            """
+            CREATE VIEW txgroup_parentage as
+            SELECT a.txgroup_id,
+                COALESCE(d.name,c.name, b.name, a.name) top_level_account,
+                CASE WHEN d.name is not null THEN c.name when c.name is not null THEN b.name when b.name IS not NULL THEN a.name else null end subaccount1,
+                CASE when d.name is not null THEN b.name when c.name IS not NULL THEN a.name else null end subaccount2,
+                CASE when d.name IS not NULL THEN a.name else null end subaccount3
+            FROM txgroups a
+            LEFT JOIN txgroups b ON a.parent_txgroup = b.txgroup_id
+            LEFT JOIN txgroups c ON b.parent_txgroup = c.txgroup_id
+            LEFT JOIN txgroups d ON c.parent_txgroup = d.txgroup_id
+            """
+        )
+    except ProgrammingError as e:
+        if str(e).strip() != 'relation "txgroup_parentage" already exists':
+            raise
+
+@db_session
 def create_general_ledger_view() -> None:
     try:
         db.execute(
@@ -295,6 +316,7 @@ def create_treasury_time_averages_view() -> None:
             raise
 
 def create_views() -> None:
+    create_txgroup_parentage_view()
     create_general_ledger_view()
     create_unsorted_txs_view()
     create_treasury_time_averages_view()
