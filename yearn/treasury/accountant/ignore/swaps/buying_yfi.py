@@ -28,7 +28,7 @@ VYPER_BUYERS = [
 ]
 
 def is_buyer_top_up(tx: TreasuryTx) -> bool:
-    if chain.id == Network.Mainnet and tx._symbol == "DAI" and tx.to_address and (tx._to_nickname == "asdfg" or tx.to_address.address in VYPER_BUYERS):
+    if chain.id == Network.Mainnet and tx._symbol == "DAI" and tx.to_address and tx.to_address.address in VYPER_BUYERS:
         return True
 
 def is_buying_with_buyer(tx: TreasuryTx) -> bool:
