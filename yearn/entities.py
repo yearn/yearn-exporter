@@ -290,7 +290,7 @@ def create_treasury_time_averages_view() -> None:
             WITH base AS (
                 SELECT gs as DATE, txgroup_id
                 FROM txgroups a
-                LEFT JOIN generate_series('2020-07-21', '2022-09-03', interval '1 day') gs ON 1=1
+                LEFT JOIN generate_series('2020-07-21', CURRENT_DATE, interval '1 day') gs ON 1=1
             ), summed AS (
                 SELECT DATE,
                     a.txgroup_id,
