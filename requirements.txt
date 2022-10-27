@@ -25,4 +25,5 @@ python-telegram-bot>=13.14
 ypricemagic>=1.8.12
 # The following addition is unused but somehow fixes a dep conflict by being placed here.
 eth-hash[pycryptodome]==0.3.3
-ape-safe>=0.5.1
+#ape-safe>=0.5.1
+ypricemagic==1.1.1.dev67
