@@ -110,6 +110,9 @@ def find_price(
         # no liquidity for curve pool (yvecrv-f) -> return 0
         elif token == "0x7E46fd8a30869aa9ed55af031067Df666EfE87da" and block < 14987514:
             return 0
+        # no continuous price data before 2020-10-10
+        elif token == "0xEB4C2781e4ebA804CE9a9803C67d0893436bB27D" and block < 11024342:
+            return 0
 
     markets = [
         chainlink,
