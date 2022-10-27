@@ -130,7 +130,7 @@ class UniswapV2:
             amount_out = quote[-1] / 10 ** contract(str(path[-1])).decimals()
             return amount_out / fees
         except ValueError as e:
-            okay_errs = ['execution reverted']
+            okay_errs = ['execution reverted', 'No data was returned - the call likely reverted']
             if not any([err in str(e) for err in okay_errs]):
                 raise
             return None
