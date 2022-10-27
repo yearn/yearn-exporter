@@ -608,5 +608,16 @@ partners = {
                 ),
             ],
         ),
+        Partner(
+            name='SpoolFi',
+            start_block=14636355,
+            treasury='0xF6Bc2E3b1F939C435D9769D078a6e5048AaBD463',
+            wrappers=[
+                WildcardWrapper(
+                    name='MasterSpool',
+                    wrapper='0xe140bB5F424A53e0687bfC10F6845a5672D7e242',
+                ),
+            ],
+        ),
     ],
 }.get(chain.id, [])
