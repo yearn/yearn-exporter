@@ -1,6 +1,7 @@
 
 import asyncio
 import logging
+import os
 import time
 from collections import defaultdict
 from datetime import datetime, timezone
@@ -8,6 +9,7 @@ from typing import Awaitable, Callable, Literal, NoReturn, Optional, TypeVar
 
 import eth_retry
 from brownie import chain
+from dank_mids.controller import instances
 from eth_portfolio.utils import get_buffered_chain_height
 from y.datatypes import Block
 from y.time import closest_block_after_timestamp
@@ -82,6 +84,9 @@ class Exporter:
         self._concurrency = max_concurrent_runs
         self._semaphore = asyncio.Semaphore(self._concurrency)
         self._res_semaphore = defaultdict(lambda: asyncio.Semaphore(max_concurrent_runs_per_resolution))
+
+        self._snapshots_fetched = 0
+        self._snapshots_exported = 0
     
     def run(self, direction: Optional[Literal["forward","historical"]] = None) -> NoReturn:
         loop = asyncio.get_event_loop()
@@ -135,7 +140,14 @@ class Exporter:
             ts = snapshot.timestamp()
             data = await self._data_fn(block, ts)
         duration = time.time() - start
+        self._snapshots_fetched += 1
+        if bool(os.environ.get("SHOW_STATS")):
+            snapshots = self._snapshots_fetched
+            requests = instances[0].worker.request_uid.latest
+            logger.info(f"exported {snapshots} snapshots in {requests} requests")
+            logger.info(f"Avg rate of {round(requests/snapshots, 2)} requests per snapshot. Currently only considers eth_calls.")
         await self._export_data(data)
+        self._snapshots_exported += 1
         logger.info(f"exported {self.name} snapshot %s block=%d took=%.3fs", snapshot, block, duration)
         await self._export_duration(duration, ts)
     

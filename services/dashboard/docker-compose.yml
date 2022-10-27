@@ -20,6 +20,7 @@ x-envs: &envs
   - RESOLUTION:
   - REORG_BUFFER:
   - JSONRPC_BATCH_MAX_SIZE:
+  - SHOW_STATS:
   - AIOHTTP_TIMEOUT: ${AIOHTTP_TIMEOUT:-1800}
   # dank-mids (optional)
   - DANK_MIDS_DEMO_MODE:
