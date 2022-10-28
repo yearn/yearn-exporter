@@ -72,9 +72,8 @@ async def _post(metrics_to_export: List[Dict]) -> None:
             if not isinstance(e, aiohttp.ClientError):
                 raise e
             attempts += 1
-            logger.warning(f'You had a ClientError: {e}')
+            logger.debug(f'You had a ClientError: {e}')
             if attempts >= 10:
-                logger.warning(metrics_to_export)
                 raise e
 
 def _sanitize(value):
