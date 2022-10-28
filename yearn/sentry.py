@@ -1,11 +1,17 @@
+import functools
 import os
 import re
+from asyncio import iscoroutinefunction
+from typing import Awaitable, Callable
 
 from brownie import chain, web3
-from sentry_sdk import Hub, capture_message, init, set_tag, utils
+from sentry_sdk import (Hub, capture_exception, capture_message, init, set_tag,
+                        utils)
 from sentry_sdk.integrations.threading import ThreadingIntegration
 
 from yearn.networks import Network
+
+SENTRY_DSN = os.getenv('SENTRY_DSN')
 
 
 def before_send(event, hint):
@@ -19,12 +25,11 @@ def set_custom_tags():
     set_tag("provider", _clean_creds_from_uri(web3.provider.endpoint_uri))
 
 def setup_sentry():
-    sentry_dsn = os.getenv('SENTRY_DSN')
-    if sentry_dsn:
+    if SENTRY_DSN:
         # give remote backtraces a bit more space
         utils.MAX_STRING_LENGTH = 8192
         init(
-            sentry_dsn,
+            SENTRY_DSN,
             # Set traces_sample_rate to 1.0 to capture 100%
             # of transactions for performance monitoring.
             # We recommend adjusting this value in production.
@@ -44,3 +49,22 @@ def _clean_creds_from_uri(endpoint: str) -> str:
     This will help devs more easily debug provider-specific issues without revealing anybody's creds.
     """
     return re.sub(pattern=r"(https?:\/\/)[^@]+@(.+)", repl=r"\2", string=endpoint)
+
+def log_task_exceptions(func: Callable[..., Awaitable[None]]) -> Callable[..., Awaitable[None]]:
+    """
+    Decorate functions with log_task_exceptions if you will be submitting the coroutines to an asyncio event loop as task objects.
+    """
+    if not iscoroutinefunction(func):
+        raise RuntimeError("log_task_exceptions decorator should only be applied to coroutine functions you will submit to the event loop as task objects.")
+
+    @functools.wraps(func)
+    async def wrap(*args, **kwargs) -> None:
+        try:
+            await func(*args, **kwargs)
+        except Exception as e:
+            if SENTRY_DSN is None:
+                # Raise the exception so the user sees it on their logs.
+                # Since it is raised inside of a task it will not impact behavior.
+                raise e
+            capture_exception(e)
+    return wrap
