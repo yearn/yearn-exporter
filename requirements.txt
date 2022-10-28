@@ -27,5 +27,5 @@ ypricemagic>=1.8.12
 # The following addition is unused but somehow fixes a dep conflict by being placed here.
 eth-hash[pycryptodome]==0.3.3
 #ape-safe>=0.5.1
-git+https://www.github.com/BobTheBuidler/eth-portfolio@ba1e35dd805754ef6a8184098ba8b79c0fbaefd1
+git+https://www.github.com/BobTheBuidler/eth-portfolio@6215cffbafa960bc6aa416d7e02157c13f9bf105
 git+https://www.github.com/BobTheBuidler/toolcache@e37b53cec64556d2b35df66767fca4c8f366a2fa
