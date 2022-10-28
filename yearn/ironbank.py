@@ -135,7 +135,7 @@ class Registry:
         return dict(output)
 
     async def total_value_at(self, block=None):
-        markets = await run_in_thread(self.active_vaults_at(block))
+        markets = await run_in_thread(self.active_vaults_at, block)
         data_coro = multicall_matrix_async(
             [market.vault for market in markets],
             ["getCash", "totalBorrows", "totalReserves", "totalSupply"],
