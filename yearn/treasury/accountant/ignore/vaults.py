@@ -79,7 +79,7 @@ def is_vault_withdrawal(tx: TreasuryTx) -> bool:
     }.get(chain.id, [])):
         return True
 
-    if not tx.to_address or tx.to_address.address not in treasury.addresses + [ZERO_ADDRESS]:
+    if not tx.to_address or tx.to_address.address not in list(treasury.addresses) + [ZERO_ADDRESS]:
         return False
 
     # vault side
