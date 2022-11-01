@@ -8,6 +8,7 @@ from sqlalchemy import desc, asc
 telegram_key = os.environ.get('HARVEST_TRACKER_BOT_KEY')
 mainnet_public_channel = os.environ.get('TELEGRAM_CHANNEL_1_PUBLIC')
 ftm_public_channel = os.environ.get('TELEGRAM_CHANNEL_250_PUBLIC')
+opti_public_channel = os.environ.get('TELEGRAM_CHANNEL_10_PUBLIC')
 dev_channel = os.environ.get('TELEGRAM_CHANNEL_DEV')
 discord_mainnet = os.environ.get('DISCORD_CHANNEL_1')
 discord_ftm = os.environ.get('DISCORD_CHANNEL_250')
@@ -21,6 +22,16 @@ RESULTS = {
         "network_symbol": "ETH",
         "network_name": "Ethereum",
         "telegram_channel": mainnet_public_channel,
+        "profit_usd": 0,
+        "num_harvests": 0,
+        "txn_cost_eth": 0,
+        "txn_cost_usd": 0,
+        "message": ""
+    },
+    10: {
+        "network_symbol": "OPT",
+        "network_name": "Optimism",
+        "telegram_channel": opti_public_channel,
         "profit_usd": 0,
         "num_harvests": 0,
         "txn_cost_eth": 0,
