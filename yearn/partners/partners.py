@@ -414,15 +414,35 @@ partners = {
             treasury='0x7b065Fcb0760dF0CEA8CFd144e08554F3CeA73D1',
             wrappers=[            
                 GearboxWrapper(
-                    name='gearbox usdc v1',
+                    name='gearbox usdc v2',
                     vault='0xa354F35829Ae975e850e23e9615b11Da1B3dC4DE',
                     wrapper='0x444CD42BaEdDEB707eeD823f7177b9ABcC779C04',
                 ),
                 GearboxWrapper(
-                    name='gearbox dai v1',
+                    name='gearbox dai v2',
                     vault='0xdA816459F1AB5631232FE5e97a05BBBb94970c95',
                     wrapper='0x444CD42BaEdDEB707eeD823f7177b9ABcC779C04',
-                ),                
+                ),
+                GearboxWrapper(
+                    name='gearbox weth v2',
+                    vault='0xa258C4606Ca8206D8aA700cE2143D7db854D168c',
+                    wrapper='0x444CD42BaEdDEB707eeD823f7177b9ABcC779C04',
+                ),
+                GearboxWrapper(
+                    name='gearbox wbtc v2',
+                    vault='0xA696a63cc78DfFa1a63E9E50587C197387FF6C7E',
+                    wrapper='0x444CD42BaEdDEB707eeD823f7177b9ABcC779C04',
+                ),
+                GearboxWrapper(
+                    name='gearbox steth v2',
+                    vault='0xdCD90C7f6324cfa40d7169ef80b12031770B4325',
+                    wrapper='0x444CD42BaEdDEB707eeD823f7177b9ABcC779C04',
+                ),
+                GearboxWrapper(
+                    name='gearbox frax v2',
+                    vault='0xB4AdA607B9d6b2c9Ee07A275e9616B84AC560139',
+                    wrapper='0x444CD42BaEdDEB707eeD823f7177b9ABcC779C04',
+                ),                        
             ],     
         ),         
         Partner(
