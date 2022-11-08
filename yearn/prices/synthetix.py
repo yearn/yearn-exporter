@@ -27,7 +27,7 @@ class Synthetix(metaclass=Singleton):
         self.synths = self.load_synths()
         logger.info(f'loaded {len(self.synths)} synths')
 
-    @lru_cache(maxsize=None)
+    @lru_cache(maxsize=128)
     def get_address(self, name: str, block: Block = None) -> EthAddress:
         """
         Get contract from Synthetix registry.
@@ -73,9 +73,9 @@ class Synthetix(metaclass=Singleton):
         """
         Get a price of a synth in dollars.
         """
-        rates = self.get_address('ExchangeRates', block=block)
         key = self.get_currency_key(token)
         try:
+            rates = self.get_address('ExchangeRates', block=block)
             return rates.rateForCurrency(key, block_identifier=block) / 1e18
         except ValueError:
             return None
