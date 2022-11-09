@@ -27,14 +27,14 @@ class Synthetix(metaclass=Singleton):
         self.synths = self.load_synths()
         logger.info(f'loaded {len(self.synths)} synths')
 
-    @lru_cache(maxsize=None)
-    def get_address(self, name: str) -> EthAddress:
+    @lru_cache(maxsize=128)
+    def get_address(self, name: str, block: Block = None) -> EthAddress:
         """
         Get contract from Synthetix registry.
         See also https://docs.synthetix.io/addresses/
         """
         address_resolver = contract(addresses[chain.id])
-        address = address_resolver.getAddress(encode_single('bytes32', name.encode()))
+        address = address_resolver.getAddress(encode_single('bytes32', name.encode()), block_identifier=block)
         proxy = contract(address)
         return contract(proxy.target()) if hasattr(proxy, 'target') else proxy
 
@@ -73,9 +73,9 @@ class Synthetix(metaclass=Singleton):
         """
         Get a price of a synth in dollars.
         """
-        rates = self.get_address('ExchangeRates')
         key = self.get_currency_key(token)
         try:
+            rates = self.get_address('ExchangeRates', block=block)
             return rates.rateForCurrency(key, block_identifier=block) / 1e18
         except ValueError:
             return None
