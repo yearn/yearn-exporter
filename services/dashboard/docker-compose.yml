@@ -76,6 +76,6 @@ services:
     networks:
       - infra_yearn-exporter
     external_links:
-      - infra_postgres_1:postgres
-      - infra_victoria-metrics_1:victoria-metrics
+      - infra-postgres-1:postgres
+      - infra-victoria-metrics-1:victoria-metrics
     restart: on-failure
