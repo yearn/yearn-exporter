@@ -9,59 +9,59 @@ networks:
     external: true
 
 x-envs: &envs
-  - SKIP_WALLET_STATS:
-  - SENTRY_ENVIRONMENT: ${SENTRY_ENVIRONMENT:-development}
-  - SENTRY_RELEASE:
-  - SENTRY_DSN:
-  - LOG_LEVEL:
-  - DEBUG:
-  - POOL_SIZE:
-  - TX_POOL_SIZE:
-  - RESOLUTION:
-  - REORG_BUFFER:
-  - JSONRPC_BATCH_MAX_SIZE:
+  - SKIP_WALLET_STATS
+  - SENTRY_ENVIRONMENT=${SENTRY_ENVIRONMENT:-development}
+  - SENTRY_RELEASE
+  - SENTRY_DSN
+  - LOG_LEVEL
+  - DEBUG
+  - POOL_SIZE
+  - TX_POOL_SIZE
+  - RESOLUTION
+  - REORG_BUFFER
+  - JSONRPC_BATCH_MAX_SIZE
   # eth-retry (optional)
-  - MAX_RETRIES:
-  - MIN_SLEEP_TIME:
-  - MAX_SLEEP_TIME:
+  - MAX_RETRIES
+  - MIN_SLEEP_TIME
+  - MAX_SLEEP_TIME
   # This is a temporary hack that can be removed once deps support eth_hash==0.5.0. Creds to bunny for finding this.
-  - ETH_HASH_BACKEND: ${ETH_HASH_BACKEND:-pysha3}
+  - ETH_HASH_BACKEND=${ETH_HASH_BACKEND:-pysha3}
 
-x-apy-envs: &apy-envs
-  - AWS_ACCESS_KEY:
-  - AWS_ACCESS_SECRET:
-  - AWS_BUCKET:
-  - TG_YFIREBOT_GROUP_INTERNAL:
-  - TG_YFIREBOT_GROUP_EXTERNAL:
-  - TG_YFIREBOT:
-  - EXPORT_MODE:
-  - DEBUG_ADDRESS:
+  # APY ENVS
+  - AWS_ACCESS_KEY
+  - AWS_ACCESS_SECRET
+  - AWS_BUCKET
+  - TG_YFIREBOT_GROUP_INTERNAL
+  - TG_YFIREBOT_GROUP_EXTERNAL
+  - TG_YFIREBOT
+  - EXPORT_MODE
+  - DEBUG_ADDRESS
 
-x-revenues-envs: &revenues-envs
-  - REVENUES_AWS_KEY_ID:
-  - REVENUES_AWS_SECRET_ACCESS_KEY:
-  - REVENUES_S3_BUCKET:
-  - REVENUES_S3_PATH:
-  - REVENUES_FROM:
-  - REVENUES_TO:
+  # REVENUES ENVS
+  - REVENUES_AWS_KEY_ID
+  - REVENUES_AWS_SECRET_ACCESS_KEY
+  - REVENUES_S3_BUCKET
+  - REVENUES_S3_PATH
+  - REVENUES_FROM
+  - REVENUES_TO
 
-x-network-envs: &network-envs
-  - BROWNIE_NETWORK:
-  - WEB3_PROVIDER:
-  - EXPLORER:
-  - DEFAULT_EXPLORER:
-  - ETHERSCAN_TOKEN:
-  - XDAISCAN_TOKEN:
-  - FTMSCAN_TOKEN:
-  - ARBISCAN_TOKEN:
-  - OPTISCAN_TOKEN:
+  # NETWORK ENVS
+  - BROWNIE_NETWORK
+  - WEB3_PROVIDER
+  - EXPLORER
+  - DEFAULT_EXPLORER
+  - ETHERSCAN_TOKEN
+  - XDAISCAN_TOKEN
+  - FTMSCAN_TOKEN
+  - ARBISCAN_TOKEN
+  - OPTISCAN_TOKEN
 
-x-postgres-envs: &postgres-envs
-  - PGHOST: postgres
-  - PGPORT: 5432
-  - PGDATABASE: postgres
-  - PGUSER: postgres
-  - PGPASSWORD: yearn-exporter
+  # POSTGRES ENVS
+  - PGHOST=postgres
+  - PGPORT=5432
+  - PGDATABASE=postgres
+  - PGUSER=postgres
+  - PGPASSWORD=yearn-exporter
 
 x-volumes: &volumes
   - brownie:/root/.brownie
@@ -70,14 +70,9 @@ x-volumes: &volumes
 services:
   exporter:
     build: .
-    image: yearn-exporter
+    image: ghcr.io/yearn/yearn-exporter
     volumes: *volumes
-    environment:
-      <<: *envs
-      <<: *postgres-envs
-      <<: *network-envs
-      <<: *apy-envs
-      <<: *revenues-envs
+    environment: *envs
     networks:
       - infra_yearn-exporter
     external_links:
