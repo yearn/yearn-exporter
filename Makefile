@@ -120,6 +120,7 @@ up: get-network-name
 
 console: get-network-name
 	$(eval BROWNIE_NETWORK = $(if $(BROWNIE_NETWORK),$(BROWNIE_NETWORK),mainnet))
+	docker build -f Dockerfile -f Dockerfile.dev -t ghcr.io/yearn/yearn-exporter .
 	docker-compose --file services/dashboard/docker-compose.yml --project-directory . run --rm --entrypoint "brownie console --network $(BROWNIE_NETWORK)" exporter
 
 shell: get-network-name
