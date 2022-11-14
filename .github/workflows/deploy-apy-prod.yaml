@@ -15,6 +15,11 @@ jobs:
   deployment:
     runs-on: ubuntu-latest
     steps:
+      - name: extract docker image tag
+        id: extract_tag
+        run: |
+          TAG=${{ github.event.inputs.docker_image_tag }}
+          echo "value=${TAG:-latest}" >> $GITHUB_OUTPUT
       - name: Deploy to apy production
         uses: appleboy/ssh-action@master
         with:
