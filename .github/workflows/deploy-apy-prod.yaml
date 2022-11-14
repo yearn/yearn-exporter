@@ -1,0 +1,25 @@
+name: 📈 Deploy apy-script PRODUCTION
+on:
+  workflow_dispatch:
+    inputs:
+      docker_image_tag:
+        description: Docker image tag
+        required: true
+        default: latest
+  workflow_run:
+    workflows: ["☃ Build & publish docker image"]
+    types:
+      - completed
+
+jobs:
+  deployment:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Deploy to apy production
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ secrets.APY_PRODUCTION_HOST }}
+          username: ${{ secrets.APY_PRODUCTION_USERNAME }}
+          key: ${{ secrets.APY_PRODUCTION_KEY }}
+          port: ${{ secrets.APY_PRODUCTION_PORT }}
+          script: docker pull ghcr.io/yearn/yearn-exporter:${{ steps.extract_tag.outputs.value }}

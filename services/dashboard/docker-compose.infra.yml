@@ -46,7 +46,7 @@ services:
     environment:
       - GF_SECURITY_ADMIN_USER=${GF_SECURITY_ADMIN_USER:-admin}
       - GF_SECURITY_ADMIN_PASSWORD=${GF_SECURITY_ADMIN_PASSWORD:-admin}
-      - GF_AUTH_ANONYMOUS_ENABLED="true"
+      - GF_AUTH_ANONYMOUS_ENABLED=true
       - GF_DASHBOARDS_DEFAULT_HOME_DASHBOARD_PATH=/etc/grafana/provisioning/dashboards/yearn/Overview.json
       - GF_SERVER_ROOT_URL=https://yearn.vision
       - GF_RENDERING_SERVER_URL=http://renderer:8091/render

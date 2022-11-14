@@ -104,15 +104,16 @@ logs: get-network-name
 up: get-network-name
 	$(eval commands = $(if $(commands),$(commands),$(exporter_scripts)))
 	$(eval with_logs = $(if $(with_logs),$(with_logs),true))
+	$(eval filter = $(if $(filter),$(filter),$(if $(NETWORK),$(NETWORK),exporter)))
 	if [ "$(NETWORK)" != "" ]; then
 		if [ "$(with_logs)" == "true" ]; then
-			make single-network network=$(NETWORK) commands="$(commands)" logs
+			make single-network network=$(NETWORK) commands="$(commands)" logs filter="$(filter)"
 		else
 			make single-network network=$(NETWORK) commands="$(commands)"
 		fi
 	else
 		if [ "$(with_logs)" == "true" ]; then
-			make all-networks commands="$(commands)" logs
+			make all-networks commands="$(commands)" logs filter="$(filter)"
 		else
 			make all-networks commands="$(commands)"
 		fi
@@ -244,8 +245,8 @@ logs-transactions:
 	make logs filter=transactions commands="exporters/transactions"
 
 # apy scripts
-apy: commands=s3
-apy: up
+apy:
+	make up commands=s3 filter=s3
 
 # revenue scripts
 revenues:

@@ -1,0 +1,21 @@
+name: 🎻 Deploy yv-STAGING
+on:
+  workflow_dispatch:
+    inputs:
+      docker_image_tag:
+        description: Docker image tag
+        required: true
+        default: latest
+
+jobs:
+  deployment:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Deploy to yv-staging
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ secrets.YV_STAGING_HOST }}
+          username: ${{ secrets.YV_STAGING_USERNAME }}
+          key: ${{ secrets.YV_STAGING_KEY }}
+          port: ${{ secrets.YV_STAGING_PORT }}
+          script: curl "https://raw.githubusercontent.com/yearn/yearn-exporter/master/deploy.sh" -o deploy.sh && chmod +x deploy.sh && ./deploy.sh "${{ github.event.inputs.docker_image_tag }}" "$HOME/.env" "up" "https://staging.yearn.vision"

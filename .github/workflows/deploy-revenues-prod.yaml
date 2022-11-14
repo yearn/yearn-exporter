@@ -1,0 +1,33 @@
+name: 💰 Deploy revenues-script PRODUCTION
+on:
+  workflow_dispatch:
+    inputs:
+      docker_image_tag:
+        description: Docker image tag
+        required: true
+        default: latest
+  workflow_run:
+    workflows: ["☃ Build & publish docker image"]
+    types:
+      - completed
+
+jobs:
+  print_context:
+    runs-on: ubuntu-latest
+    steps:
+      - env:
+          EVENT_CONTEXT: ${{ toJSON(github.event) }}
+        run: |
+          echo $EVENT_CONTEXT
+
+  deployment:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Deploy to revenues production
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ secrets.REVENUES_PRODUCTION_HOST }}
+          username: ${{ secrets.REVENUES_PRODUCTION_USERNAME }}
+          key: ${{ secrets.REVENUES_PRODUCTION_KEY }}
+          port: ${{ secrets.REVENUES_PRODUCTION_PORT }}
+          script: docker pull ghcr.io/yearn/yearn-exporter:${{ steps.extract_tag.outputs.value }}
