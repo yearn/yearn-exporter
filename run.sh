@@ -47,7 +47,7 @@ fi
 
 export SENTRY_RELEASE=$(git rev-parse --short HEAD)
 
-IFS=', ' read -r -a commands <<< "$COMMANDS"
+IFS=',' read -r -a commands <<< "$COMMANDS"
 #TODO add --detach
 for CMD in "${commands[@]}"; do
   NAME=$(echo $CMD | sed -e 's/\//_/g')

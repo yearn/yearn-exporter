@@ -44,7 +44,7 @@ supported_networks := ethereum fantom arbitrum optimism gnosis
 ###############################################
 # specify all supported exporter scripts here #
 ###############################################
-exporter_scripts := exporters/vaults exporters/treasury exporters/treasury_transactions exporters/sms exporters/transactions exporters/wallets exporters/partners
+exporter_scripts := exporters/vaults,exporters/treasury,exporters/treasury_transactions,exporters/sms,exporters/transactions,exporters/wallets,exporters/partners
 
 # docker-compose commands
 dashboards_command := docker-compose --file services/dashboard/docker-compose.yml --project-directory .
@@ -104,15 +104,16 @@ logs: get-network-name
 up: get-network-name
 	$(eval commands = $(if $(commands),$(commands),$(exporter_scripts)))
 	$(eval with_logs = $(if $(with_logs),$(with_logs),true))
+	$(eval filter = $(if $(filter),$(filter),$(if $(NETWORK),$(NETWORK),exporter)))
 	if [ "$(NETWORK)" != "" ]; then
 		if [ "$(with_logs)" == "true" ]; then
-			make single-network network=$(NETWORK) commands="$(commands)" logs
+			make single-network network=$(NETWORK) commands="$(commands)" logs filter="$(filter)"
 		else
 			make single-network network=$(NETWORK) commands="$(commands)"
 		fi
 	else
 		if [ "$(with_logs)" == "true" ]; then
-			make all-networks commands="$(commands)" logs
+			make all-networks commands="$(commands)" logs filter="$(filter)"
 		else
 			make all-networks commands="$(commands)"
 		fi
@@ -120,6 +121,7 @@ up: get-network-name
 
 console: get-network-name
 	$(eval BROWNIE_NETWORK = $(if $(BROWNIE_NETWORK),$(BROWNIE_NETWORK),mainnet))
+	docker build -f Dockerfile -f Dockerfile.dev -t ghcr.io/yearn/yearn-exporter .
 	docker-compose --file services/dashboard/docker-compose.yml --project-directory . run --rm --entrypoint "brownie console --network $(BROWNIE_NETWORK)" exporter
 
 shell: get-network-name
@@ -243,8 +245,8 @@ logs-transactions:
 	make logs filter=transactions commands="exporters/transactions"
 
 # apy scripts
-apy: commands=s3
-apy: up
+apy:
+	make up commands="s3 with_monitoring" filter=s3
 
 # revenue scripts
 revenues:
