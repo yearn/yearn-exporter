@@ -51,7 +51,7 @@ It's possible to specify multiple Makefile args that control which exporters are
 The available args to control the startup sequence of containers are the following:
 
 - `network`: one of `ethereum`, `fantom`, `arbitrum`, `optimism`, `gnosis`, see `make list-networks`
-- `commands`: a list of strings delimited with whitespace pointing to brownie scripts in `./scripts/` e.g. `exporters/partners exporters/vaults`, see `make list-commands`
+- `commands`: a list of strings delimited with comma pointing to brownie scripts in `./scripts/` e.g. `exporters/partners,exporters/vaults`, see `make list-commands`
 - `filter`: used for `make logs` and `make down` to match the container name substring.
 
 This is a flexible approach to start multiple containers on multiple networks which can be used for a given network or given exporters of a certain type and a combination of both.

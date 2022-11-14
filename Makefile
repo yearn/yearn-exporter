@@ -44,7 +44,7 @@ supported_networks := ethereum fantom arbitrum optimism gnosis
 ###############################################
 # specify all supported exporter scripts here #
 ###############################################
-exporter_scripts := exporters/vaults exporters/treasury exporters/treasury_transactions exporters/sms exporters/transactions exporters/wallets exporters/partners
+exporter_scripts := exporters/vaults,exporters/treasury,exporters/treasury_transactions,exporters/sms,exporters/transactions,exporters/wallets,exporters/partners
 
 # docker-compose commands
 dashboards_command := docker-compose --file services/dashboard/docker-compose.yml --project-directory .
@@ -246,7 +246,7 @@ logs-transactions:
 
 # apy scripts
 apy:
-	make up commands=s3 filter=s3
+	make up commands="s3 with_monitoring" filter=s3
 
 # revenue scripts
 revenues:
