@@ -129,8 +129,8 @@ shell: get-network-name
 
 .ONESHELL:
 debug-apy: get-network-name
+	docker build -f Dockerfile -f Dockerfile.dev -t ghcr.io/yearn/yearn-exporter .
 	DEBUG=true docker-compose --file services/dashboard/docker-compose.yml --project-directory . run --rm --entrypoint "brownie run --network $(BROWNIE_NETWORK) debug_apy with_exception_handling -I" exporter
-	make logs filter=debug
 
 list-networks:
 	@echo "supported networks: $(supported_networks)"
