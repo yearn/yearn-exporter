@@ -40,12 +40,6 @@ elif [[ $NETWORK == "optimism" ]]; then
   export EXPLORER=$OPTI_EXPLORER
   export DEFAULT_EXPLORER=https://api-optimistic.etherscan.io/api
 
-elif [[ $NETWORK == "goerli" ]]; then
-  export BROWNIE_NETWORK=goerli
-  export WEB3_PROVIDER=$GTH_WEB3_PROVIDER
-  export EXPLORER=$GTH_EXPLORER
-  export DEFAULT_EXPLORER=https://api-goerli.etherscan.io/api
-
 else
   echo "unsupported network $NETWORK specified!"
   exit 1

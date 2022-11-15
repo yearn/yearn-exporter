@@ -6,7 +6,6 @@ from time import sleep
 from typing import List
 
 import eth_retry
-from web3.middleware import geth_poa_middleware
 from brownie import Contract, chain, convert, interface, web3
 from brownie.network.contract import _fetch_from_explorer, _resolve_address
 
@@ -23,7 +22,6 @@ BINARY_SEARCH_BARRIER = {
     Network.Fantom: 4_564_024,  # fantom returns "missing trie node" before that
     Network.Arbitrum: 0,
     Network.Optimism: 0,
-    Network.Goerli: 0,
 }
 
 # XXX: add PoA middleware for Goerli
