@@ -17,8 +17,7 @@ sentry_sdk.set_tag('script','veyfi_exporter')
 logger = logging.getLogger('yearn.veyfi_exporter')
 
 VEYFI = {
-    Network.Goerli: '0xd281F1C9f8B7A673D0556d5b44edE0e54CD27074',
-    Network.Optimism: '0xfc82d83144403b107BF1D95818d01E2dbc47F82a',
+    Network.Mainnet: '0x90c1f9220d90d3966FbeE24045EDd73E1d588aD5',
 }
 
 
@@ -45,14 +44,11 @@ class VotingYFI:
 
 
 def main():
-    if chain.id == Network.Goerli:
-        start = datetime(2022, 9, 9, 1, tzinfo=timezone.utc)
-        data_query = 'veyfi{network="GTH"}'
-    elif chain.id == Network.Optimism:
-        start = datetime(2022, 10, 6, 22, tzinfo=timezone.utc)
-        data_query = 'veyfi{network="OPT"}'
+    if chain.id == Network.Mainnet:
+        start = datetime(2022, 11, 15, 0, tzinfo=timezone.utc)
+        data_query = 'veyfi{network="ETH"}'
     else:
-        raise NotImplementedError("Only Goerli and Optimism are supported")
+        raise NotImplementedError("Only Mainnet is supported")
 
     start_bidirectional_export(start, export_snapshot, data_query)
 
