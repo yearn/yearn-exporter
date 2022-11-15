@@ -26,7 +26,8 @@ CHAIN_MAX_BATCH_SIZE = {
     Network.Gnosis: 20_000,  # 1.15 days
     Network.Fantom: 100_000,  # 1.03 days
     Network.Arbitrum: 20_000, # 0.34 days
-    Network.Optimism: 800_000, # 10.02 days
+    Network.Optimism: 80_000, # 1.02 days
+    Network.Goerli: 10_000,  # 1.74 days
 }
 
 def _get_batch_size() -> int:
