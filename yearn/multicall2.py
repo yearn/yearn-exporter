@@ -153,6 +153,18 @@ async def multicall_matrix_async(contracts, params, block="latest"):
 
     return dict(output)
 
+async def multicall_matrix_async(contracts, params, block="latest"):
+    matrix = list(product(contracts, params))
+    calls = [[contract, param] for contract, param in matrix]
+
+    results = await fetch_multicall_async(*calls, block=block)
+
+    output = defaultdict(dict)
+    for (contract, param), value in zip(matrix, results):
+        output[contract][param] = value
+
+    return dict(output)
+
 @eth_retry.auto_retry
 def batch_call(calls):
     """

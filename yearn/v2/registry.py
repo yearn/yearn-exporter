@@ -20,7 +20,7 @@ from yearn.decorators import (sentry_catch_all, wait_or_exit_after,
                               wait_or_exit_before)
 from yearn.events import create_filter, decode_logs, get_logs_asap
 from yearn.exceptions import UnsupportedNetwork
-from yearn.multicall2 import fetch_multicall, fetch_multicall_async
+from yearn.multicall2 import fetch_multicall_async
 from yearn.utils import Singleton, contract
 from yearn.v2.vaults import Vault
 

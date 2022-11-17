@@ -2,6 +2,7 @@ import logging
 import time
 from datetime import datetime, timedelta, timezone
 from itertools import count
+from multicall.utils import await_awaitable
 
 import sentry_sdk
 from brownie import chain

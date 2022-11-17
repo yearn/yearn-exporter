@@ -10,6 +10,7 @@ from dank_mids.brownie_patch import patch_contract
 from y.exceptions import PriceError
 from y.prices import magic
 from y.utils.dank_mids import dank_w3
+
 from yearn import apy, constants
 from yearn.apy.common import ApySamples
 from yearn.common import Tvl

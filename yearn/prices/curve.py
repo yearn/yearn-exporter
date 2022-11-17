@@ -26,11 +26,14 @@ from brownie.convert.datatypes import EthAddress
 from cachetools.func import lru_cache, ttl_cache
 from y.exceptions import PriceError
 from y.networks import Network
+from multicall.utils import gather
 from y.prices import magic
 
 from yearn.decorators import sentry_catch_all, wait_or_exit_after
 from yearn.events import create_filter, decode_logs
 from yearn.exceptions import UnsupportedNetwork
+from yearn.multicall2 import fetch_multicall, fetch_multicall_async
+from yearn.exceptions import PriceError, UnsupportedNetwork
 from yearn.multicall2 import fetch_multicall, fetch_multicall_async
 from yearn.typing import Address, AddressOrContract, Block
 from yearn.utils import Singleton, contract
