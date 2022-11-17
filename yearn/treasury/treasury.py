@@ -1,7 +1,7 @@
 
 import asyncio
 import logging
-from typing import Dict, List, Optional, Set
+from typing import Dict, List, Optional
 
 from brownie import chain
 from eth_portfolio import Portfolio
@@ -77,6 +77,29 @@ class ExportablePortfolio(Portfolio):
             items.append(_build_item(f"{self.label}_{section}", label_names, label_values, value, ts))
         return items
 
+        return metrics_to_export
+    
+    async def _process_token(self, ts, section: str, wallet: str, token: str, bals: Balance, protocol: Optional[str] = None):
+        # TODO wallet nicknames in grafana
+        #wallet = KNOWN_ADDRESSES[wallet] if wallet in KNOWN_ADDRESSES else wallet
+        if protocol is not None:
+            wallet = f'{protocol} | {wallet}'
+
+        symbol, bucket = await asyncio.gather(
+            _get_symbol(token),
+            get_token_bucket(token),
+        )
+        
+        items = []           
+
+        # build items
+        for key, value in bals.items():
+            label_names = ['param','wallet','token_address','token','bucket']
+            if key == "usd_value":
+                key = "usd value"
+            label_values = [key, wallet, token, symbol, bucket]
+            items.append(_build_item(f"{self.label}_{section}", label_names, label_values, value, ts))
+        return items
 
 class YearnTreasury(ExportablePortfolio):
     def __init__(self, asynchronous: bool = False, load_prices: bool = False) -> None:

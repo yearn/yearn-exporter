@@ -6,6 +6,9 @@ import time
 from collections import defaultdict
 from datetime import datetime, timezone
 from functools import cached_property
+import time
+from collections import defaultdict
+from datetime import datetime, timezone
 from typing import Awaitable, Callable, Literal, NoReturn, Optional, TypeVar
 
 import eth_retry
@@ -16,20 +19,22 @@ from y.networks import Network
 from y.time import closest_block_after_timestamp_async
 from y.utils.dank_mids import dank_w3
 from yearn.helpers.snapshots import (RESOLUTION, SLEEP_TIME, Resolution,
+from eth_portfolio.utils import get_buffered_chain_height
+from y.datatypes import Block
+from y.time import closest_block_after_timestamp
+from y.utils.dank_mids import dank_w3
+from yearn.helpers.snapshots import (RESOLUTION, SLEEP_TIME,
                                      _generate_snapshot_range_forward,
                                      _generate_snapshot_range_historical,
                                      _get_intervals)
 from yearn.outputs.victoria.victoria import _build_item, _post, has_data
-from yearn.sentry import log_task_exceptions
 
 logger = logging.getLogger(__name__)
-
-SHOW_STATS = bool(os.environ.get("SHOW_STATS"))
 
 @eth_retry.auto_retry
 async def _wait_for_block(timestamp: int) -> Block:
     while True:
-        block = await dank_w3.eth.get_block("latest")
+        block = await dank_w3.eth.get_block(await get_buffered_chain_height())
         while timestamp < block.timestamp:
             try:
                 prev_block = await dank_w3.eth.get_block(block.number - 1)
@@ -43,6 +48,7 @@ async def _wait_for_block(timestamp: int) -> Block:
 
 T = TypeVar('T')
 Direction = Literal["forward", "historical"]
+vm_semaphore = asyncio.Semaphore(1)
 
 class Exporter:
     """ Currently can only be used to output to victoria metrics. Can be extended for other data sources. """

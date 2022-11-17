@@ -7,7 +7,6 @@ from typing import List
 from brownie import chain
 from y.contracts import contract_creation_block_async
 from y.networks import Network
-from multicall.utils import await_awaitable, gather
 
 import yearn.iearn
 import yearn.ironbank
@@ -131,6 +130,8 @@ class Yearn:
             if product in products
             for vault in product_values.values() if type(vault) == dict
         )
+        if tvl == 0:
+            print(data)
         logger.info('exported block=%d tvl=%.0f took=%.3fs', block, tvl, time() - start)
 
         metrics_to_export = []

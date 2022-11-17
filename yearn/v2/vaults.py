@@ -4,7 +4,6 @@ import re
 import threading
 import time
 from typing import Any, Dict, List, Union
-from typing import Any, Dict, List
 
 from brownie import chain
 from eth_utils import encode_hex, event_abi_to_log_topic
@@ -16,9 +15,6 @@ from y.exceptions import PriceError
 from y.networks import Network
 from y.prices import magic
 
-from multicall.utils import gather, run_in_subprocess
-from semantic_version.base import Version
-from y.prices import magic
 from yearn import apy
 from yearn.apy.common import ApySamples
 from yearn.common import Tvl
@@ -29,11 +25,6 @@ from yearn.prices.curve import curve
 from yearn.special import Ygov
 from yearn.typing import Address
 from yearn.utils import run_in_thread, safe_views
-from yearn.multicall2 import fetch_multicall_async
-from yearn.prices.curve import curve
-from yearn.special import Ygov
-from yearn.typing import Address
-from yearn.utils import contract, safe_views
 from yearn.v2.strategies import Strategy
 
 VAULT_VIEWS_SCALED = [

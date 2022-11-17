@@ -32,7 +32,6 @@ x-envs: &envs
   - MIN_SLEEP_TIME
   - MAX_SLEEP_TIME
   # ypricemagic (optional)
-  - DOP=128
   - YPRICEMAGIC_RECURSION_TIMEOUT=${YPRICEMAGIC_RECURSION_TIMEOUT:-7200}  # 2 hours
   # This is a temporary hack that can be removed once deps support eth_hash==0.5.0. Creds to bunny for finding this.
   - ETH_HASH_BACKEND=${ETH_HASH_BACKEND:-pysha3}

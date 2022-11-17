@@ -8,14 +8,14 @@ from typing import List
 from brownie import chain
 from brownie.network.contract import InterfaceContainer
 from cachetools.func import ttl_cache
+from y.datatypes import Address
 from y.networks import Network
-from multicall.utils import gather
 from y.prices import magic
 
 from yearn.exceptions import UnsupportedNetwork
 from yearn.multicall2 import multicall_matrix, multicall_matrix_async
 from yearn.prices.compound import get_fantom_ironbank
-from y.datatypes import Address
+from yearn.typing import Address
 from yearn.utils import contract
 
 logger = logging.getLogger(__name__)

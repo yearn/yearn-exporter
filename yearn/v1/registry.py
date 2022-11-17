@@ -18,6 +18,12 @@ from y.utils.dank_mids import dank_w3
 from yearn.exceptions import UnsupportedNetwork
 from yearn.multicall2 import fetch_multicall_async
 from yearn.utils import contract, run_in_thread
+from y.utils.dank_mids import dank_w3
+from yearn.exceptions import UnsupportedNetwork
+from yearn.multicall2 import fetch_multicall_async
+from yearn.networks import Network
+from yearn.typing import Block
+from yearn.utils import contract, contract_creation_block, run_in_thread
 from yearn.v1.vaults import VaultV1
 
 logger = logging.getLogger(__name__)
