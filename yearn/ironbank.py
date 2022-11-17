@@ -15,7 +15,6 @@ from y.prices import magic
 from yearn.exceptions import UnsupportedNetwork
 from yearn.multicall2 import multicall_matrix, multicall_matrix_async
 from yearn.prices.compound import get_fantom_ironbank
-from yearn.typing import Address
 from yearn.utils import contract
 
 logger = logging.getLogger(__name__)

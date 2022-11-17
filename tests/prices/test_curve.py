@@ -11,9 +11,6 @@ from y.exceptions import PriceError
 from y.networks import Network
 from y.prices.magic import get_price
 
-# This import fixes a circular import issue with the curve import below.
-# TODO Resolve circular import issue
-from yearn.prices import curve, magic
 from yearn.utils import contract
 
 if chain.id == Network.Mainnet:

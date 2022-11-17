@@ -5,9 +5,6 @@ from brownie import Contract, chain
 from y import Contract_erc20
 from y.constants import STABLECOINS
 from y.networks import Network
-from brownie import Contract, chain
-from y import Contract_erc20
-from y.constants import STABLECOINS
 
 
 def force_init_problematic_contracts() -> None:

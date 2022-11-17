@@ -3,8 +3,8 @@ from random import randint
 import pytest
 from brownie import chain
 from multicall.utils import await_awaitable
-from y.networks import Network
 from y.contracts import contract_creation_block
+from y.networks import Network
 
 from yearn.v2.registry import Registry
 from yearn.v2.vaults import Vault

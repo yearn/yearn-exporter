@@ -10,7 +10,6 @@ from y.networks import Network
 from yearn.helpers.exporter import Exporter
 from yearn.outputs.victoria.victoria import _build_item, _post
 from yearn.partners.partners import partners
-from yearn.treasury.buckets import get_token_bucket
 from yearn.treasury.treasury import _get_symbol
 
 sentry_sdk.set_tag('script','partners_exporter')
