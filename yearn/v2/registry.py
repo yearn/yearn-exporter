@@ -5,6 +5,7 @@ import time
 from collections import OrderedDict
 from typing import List
 
+import dask
 import inflection
 from brownie import Contract, chain, web3
 from dank_mids.brownie_patch import patch_contract
@@ -167,6 +168,14 @@ class Registry(metaclass=Singleton):
     def load_harvests(self):
         vaults = self.vaults + self.experiments
         Parallel(8, "threading")(delayed(vault.load_harvests)() for vault in vaults)
+
+    @dask.delayed
+    async def _describe_delayed(self, vaults, results):
+        return {vault.name: result for vault, result in zip(vaults, results)}
+
+    async def describe_delayed(self, block):
+        vaults = await self.active_vaults_at(block)
+        return self._describe_delayed(vaults, [dask.delayed(vault.describe)(block=block) for vault in vaults])
 
     async def describe(self, block=None):
         vaults = await self.active_vaults_at(block)

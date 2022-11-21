@@ -58,30 +58,30 @@ class Singleton(type):
 
 
 # cached Contract instance, saves about 20ms of init time
-_contract_lock = threading.Lock()
+#_contract_lock = threading.Lock()
 _contract = lru_cache(maxsize=None)(Contract)
 
 @eth_retry.auto_retry
 def contract(address: AddressOrContract) -> Contract:
-    with _contract_lock:
-        address = web3.toChecksumAddress(str(address))
+#with _contract_lock:
+    address = web3.toChecksumAddress(str(address))
 
-        if chain.id in PREFER_INTERFACE:
-            if address in PREFER_INTERFACE[chain.id]:
-                _interface = PREFER_INTERFACE[chain.id][address]
-                i = _interface(address)
-                return _squeeze(patch_contract(i, dank_w3))
+    if chain.id in PREFER_INTERFACE:
+        if address in PREFER_INTERFACE[chain.id]:
+            _interface = PREFER_INTERFACE[chain.id][address]
+            i = _interface(address)
+            return _squeeze(patch_contract(i, dank_w3))
 
-        # autofetch-sources: false
-        # Try to fetch the contract from the local sqlite db.
-        try:
-            c = _contract(address)
-        # If we don't already have the contract in the db, we'll try to fetch it from the explorer.
-        except ValueError as e:
-            c = _resolve_proxy(address)
+    # autofetch-sources: false
+    # Try to fetch the contract from the local sqlite db.
+    try:
+        c = _contract(address)
+    # If we don't already have the contract in the db, we'll try to fetch it from the explorer.
+    except ValueError as e:
+        c = _resolve_proxy(address)
 
-        # Lastly, get rid of unnecessary memory-hog properties
-        return _squeeze(patch_contract(c, dank_w3))
+    # Lastly, get rid of unnecessary memory-hog properties
+    return _squeeze(patch_contract(c, dank_w3))
 
 
 # These tokens have trouble when resolving the implementation via the chain.

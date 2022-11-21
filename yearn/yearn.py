@@ -4,6 +4,7 @@ from collections import Counter
 from time import time
 from typing import List
 
+import dask
 from brownie import chain
 from y.contracts import contract_creation_block_async
 from y.networks import Network
@@ -81,6 +82,12 @@ class Yearn:
 
         return active
     
+    @dask.delayed
+    async def _describe_delayed(self, data) -> dict:
+        return dict(zip(self.registries, data))
+    
+    async def describe_delayed(self, block):
+        return self._describe_delayed([self.registries[key]._describe_delayed(block=block) for key in self.registries])
     
     async def describe(self, block=None):
         if block is None:
@@ -116,11 +123,9 @@ class Yearn:
     async def total_value_at(self, block=None):
         desc = await asyncio.gather(*[self.registries[key].total_value_at(block=block) for key in self.registries])
         return dict(zip(self.registries, desc))
-        
-
-    async def data_for_export(self, block, timestamp) -> List:
-        start = time()
-        data = await self.describe(block)
+    
+    @dask.delayed
+    async def _data_for_export(self, block, timestamp, start, data) -> List:
         products = list(data.keys())
         if 'ib' in products and self.exclude_ib_tvl and block > constants.ib_snapshot_block:
             products.remove('ib')
@@ -195,6 +200,10 @@ class Yearn:
 
         return metrics_to_export
 
+    async def data_for_export(self, block, timestamp) -> List:
+        start = time()
+        data = self.describe_delayed(block)
+        return self._data_for_export(block, timestamp, start, data)
     
     async def wallet_data_for_export(self, block: int, timestamp: int):
         data = await self.describe_wallets(block)

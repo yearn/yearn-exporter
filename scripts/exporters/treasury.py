@@ -4,7 +4,7 @@ import sentry_sdk
 from y.networks import Network
 
 from yearn.helpers.exporter import Exporter
-from yearn.outputs.victoria.victoria import _post
+from yearn.treasury.dask_helpers import treasury_data_for_export
 from yearn.treasury.treasury import YearnTreasury
 
 sentry_sdk.set_tag('script','treasury_exporter')
@@ -16,8 +16,7 @@ treasury = YearnTreasury(asynchronous=True)
 exporter = Exporter(
     name = 'treasury',
     data_query = 'treasury_assets{network="' + Network.label() + '"}',
-    data_fn = treasury.data_for_export,
-    export_fn = _post,
+    data_fn = treasury_data_for_export,
     start_block = treasury._start_block,
 )
 

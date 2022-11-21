@@ -5,6 +5,7 @@ from dataclasses import dataclass
 from functools import cached_property
 from typing import List
 
+import dask
 from brownie import chain
 from brownie.network.contract import InterfaceContainer
 from cachetools.func import ttl_cache
@@ -86,6 +87,10 @@ class Registry:
     def ironbank(self):
         addr = addresses[chain.id]
         return contract(addr) if isinstance(addr, str) else addr()
+
+    @dask.delayed
+    async def describe_delayed(self, block=None):
+        return await self.describe(block=block)
 
     async def describe(self, block=None):
         markets = await self.active_vaults_at(block)

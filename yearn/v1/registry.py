@@ -3,6 +3,7 @@ import logging
 from functools import cached_property
 from typing import Dict, List, Optional
 
+import dask
 from brownie import chain, interface, web3
 from dank_mids.brownie_patch import patch_contract
 from y.contracts import contract_creation_block_async
@@ -35,6 +36,16 @@ class Registry:
             
     def __repr__(self) -> str:
         return f"<Registry V1 vaults={len(self.vaults)}>"
+    
+    @dask.delayed
+    async def _describe_delayed(self, vaults, data):
+        return {vault.name: desc for vault, desc in zip(vaults, data)}
+        
+    async def describe_delayed(self, block: Optional[Block] = None) -> Dict[str, Dict]:
+        vaults = await self.active_vaults_at(block)
+        share_prices = await fetch_multicall_async(*[[vault.vault, "getPricePerFullShare"] for vault in vaults], block=block)
+        vaults = [vault for vault, share_price in zip(vaults, share_prices) if share_price]
+        return self._describe_delayed(vaults, [dask.delayed(vault.describe)(block=block) for vault in vaults])
 
     async def describe(self, block: Optional[Block] = None) -> Dict[str, Dict]:
         vaults = await self.active_vaults_at(block)

@@ -12,6 +12,7 @@ node_modules/
 static/*
 !static/.gitkeep
 env/
+jupyter_env/
 .env
 secrets/*
 !secrets/.gitkeep

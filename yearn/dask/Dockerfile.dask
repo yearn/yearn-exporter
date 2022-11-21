@@ -1,0 +1,13 @@
+
+FROM daskdev/dask:latest
+ENV TZ=US
+RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone
+RUN apt-get update && \
+    apt-get install -y gcc git python3.9
+ADD requirements.txt  ./
+RUN pip3 install -r requirements.txt
+RUN mkdir -p /app/yearn-exporter
+WORKDIR /app/yearn-exporter
+ADD . /app/yearn-exporter
+
+ENTRYPOINT ["yearn/dask/entrypoint.sh"]

@@ -1,4 +1,6 @@
 
+from decimal import Decimal
+
 from brownie import ZERO_ADDRESS, chain
 from brownie.exceptions import RPCRequestError
 from pony.orm import commit, select
@@ -11,7 +13,7 @@ from yearn.events import decode_logs, get_logs_asap
 from yearn.outputs.postgres.utils import (cache_address, cache_chain,
                                           cache_token, cache_txgroup)
 from yearn.prices import constants
-from yearn.treasury.accountant.classes import HashMatcher
+from yearn.treasury.accountant.classes import HashMatcher, IterFilter
 from yearn.treasury.accountant.constants import (DISPERSE_APP, PENDING_LABEL,
                                                  treasury)
 from yearn.utils import contract
@@ -39,8 +41,9 @@ def is_disperse_dot_app(tx: TreasuryTx) -> bool:
             for transfer in transfers:
                 sender, receiver, amount = decode_logs([transfer])["Transfer"][0].values()
                 if sender == DISPERSE_APP and transfer.address == tx.token.address.address:
+                    amount = Decimal(amount)
                     amount /= tx.token.scale
-                    price = magic.get_price(transfer.address, block=tx.block)
+                    price = Decimal(magic.get_price(transfer.address, block=tx.block))
                     TreasuryTx(
                         chain = cache_chain(),
                         timestamp = chain[tx.block].timestamp,
@@ -66,8 +69,8 @@ def is_disperse_dot_app(tx: TreasuryTx) -> bool:
             # find internal txs and add to pg
             for int_tx in chain.get_transaction(tx.hash).internal_transfers:
                 if int_tx['from'] == tx.to_address.address:
-                    amount = int_tx['value'] / tx.token.scale
-                    price = magic.get_price(eee_address, tx.block)
+                    amount = Decimal(int_tx['value']) / tx.token.scale
+                    price = Decimal(magic.get_price(eee_address, tx.block))
                     TreasuryTx(
                         chain = cache_chain(),
                         timestamp = chain[tx.block].timestamp,
@@ -140,3 +143,10 @@ def is_otc_trader(tx: TreasuryTx) -> bool:
     OTC_TRADER_ADDRESS = "0xfa42022707f02cFfC80557B166d625D52346dd6d"
     if tx.to_address:
         return OTC_TRADER_ADDRESS in [tx.from_address.address, tx.to_address.address]
+
+def is_strategy_migration(tx: TreasuryTx) -> bool:
+    return tx in HashMatcher({
+        Network.Mainnet: [
+            ["0x1621ba5c9b57930c97cc43d5d6d401ee9c69fed435b0b458ee031544a10bfa75", IterFilter("_symbol", ["AURA", "BAL", "CRV", "CVX"])],
+        ],
+    }.get(chain.id, []))

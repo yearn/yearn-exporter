@@ -3,6 +3,7 @@ import math
 from time import time
 from typing import Tuple
 
+import dask
 import eth_retry
 import requests
 from y.contracts import contract_creation_block_async
@@ -152,6 +153,10 @@ class Registry(metaclass = Singleton):
             Backscratcher(),
             Ygov(),
         ]
+    
+    @dask.delayed
+    async def describe_delayed(self, block=None):
+        return await self.describe(block=block)
 
     async def describe(self, block=None):
         # not supported yet

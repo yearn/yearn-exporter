@@ -74,6 +74,7 @@ infra:
 
 # exporter specifc scripts
 single-network: infra
+	$(dashboards_command) build
 	NETWORK=$(network) COMMANDS="$(commands)" DEBUG=$(DEBUG) ./run.sh
 
 .ONESHELL:

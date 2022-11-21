@@ -1,5 +1,7 @@
-import logging
+
+import logging, dask
 from datetime import datetime, timezone
+from time import time
 
 import sentry_sdk
 from brownie import chain
@@ -7,14 +9,14 @@ from y.networks import Network
 from y.time import closest_block_after_timestamp
 
 from yearn.helpers.exporter import Exporter
-from yearn.outputs.victoria.victoria import _post
-from yearn.yearn import Yearn
+
+#from yearn.outputs.victoria.victoria import _post
 
 sentry_sdk.set_tag('script','vaults_exporter')
 
 logger = logging.getLogger('yearn.vaults_exporter')
 
-yearn = Yearn()
+
 
 if Network(chain.id) == Network.Fantom:
     # end: 2021-04-30 first possible date after the Fantom network upgrade
@@ -40,12 +42,20 @@ elif Network(chain.id) == Network.Mainnet:
 else:
     raise NotImplementedError()
 
+@dask.delayed
+async def data_for_export(block, timestamp):
+    from yearn.utils import Singleton
+    from yearn.yearn import Yearn as _Yearn
+    class Yearn(_Yearn, metaclass=Singleton):
+        pass
+    start = time()
+    data = Yearn().describe_delayed(block)
+    return Yearn()._data_for_export(block, timestamp, start, data)
 
 exporter = Exporter(
     name = 'vaults',
     data_query = data_query,
-    data_fn = yearn.data_for_export, 
-    export_fn = _post,
+    data_fn = data_for_export, 
     start_block = closest_block_after_timestamp(int(start.timestamp())) - 1,
 )
 

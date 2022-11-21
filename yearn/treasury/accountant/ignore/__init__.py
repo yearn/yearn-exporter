@@ -63,37 +63,48 @@ def is_bridged(tx: TreasuryTx) -> bool:
     if tx._symbol and tx._symbol.startswith("any") and "LogAnySwapOut" in tx._events:
         for event in tx._events["LogAnySwapOut"]:
             token, sender, receiver, amount, from_chainid, to_chainid = event.values()
-            if from_chainid == chain.id and tx.token.address.address == token and Decimal(amount) / tx.token.scale == tx.amount:
-                return True
+            if from_chainid == chain.id and tx.token.address.address == token:
+                print(Decimal(amount) / tx.token.scale)
+                print(tx.amount)
+                if Decimal(amount) / tx.token.scale == tx.amount:
+                    return True
     
     # Anyswap out - token part
     elif tx.to_address and tx.to_address.token and tx.to_address.token.symbol and tx.to_address.token.symbol.startswith("any") and "LogAnySwapOut" in tx._events:
         for event in tx._events["LogAnySwapOut"]:
             token, sender, receiver, amount, from_chainid, to_chainid = event.values()
-            if from_chainid == chain.id and sender == tx.from_address.address and tx.token.address.address == contract(token).underlying() and Decimal(amount) / tx.token.scale == tx.amount:
-                return True
+            if from_chainid == chain.id and sender == tx.from_address.address and tx.token.address.address == contract(token).underlying():
+                print(Decimal(amount) / tx.token.scale)
+                print(tx.amount)
+                if Decimal(amount) / tx.token.scale == tx.amount:
+                    return True
     
     # Anyswap in - anyToken part
     elif tx._symbol and tx._symbol.startswith("any") and "LogAnySwapIn" in tx._events:
         for event in tx._events["LogAnySwapIn"]:
             txhash, token, receiver, amount, from_chainid, to_chainid = event.values()
-            if to_chainid == chain.id and tx.token.address.address == token and Decimal(amount) / tx.token.scale == tx.amount:
-                return True
+            if to_chainid == chain.id and tx.token.address.address == token:
+                print(Decimal(amount) / tx.token.scale)
+                print(tx.amount)
+                if Decimal(amount) / tx.token.scale == tx.amount:
+                    return True
     
     # Anyswap in - token part
     elif tx.from_address and tx.from_address.token and tx.from_address.token.symbol and tx.from_address.token.symbol.startswith("any") and "LogAnySwapIn" in tx._events:
         for event in tx._events["LogAnySwapIn"]:
             txhash, token, receiver, amount, from_chainid, to_chainid = event.values()
-            if to_chainid == chain.id and receiver == tx.to_address.address and tx.token.address.address == contract(token).underlying() and Decimal(amount) / tx.token.scale == tx.amount:
-                return True
+            if to_chainid == chain.id and receiver == tx.to_address.address and tx.token.address.address == contract(token).underlying():
+                print(Decimal(amount) / tx.token.scale)
+                print(tx.amount)
+                if Decimal(amount) / tx.token.scale == tx.amount:
+                    return True
+    
+    # Multichain: Fantom Bridge
+    ## To Mainnet
+    elif chain.id == Network.Mainnet and tx.from_address and tx.from_address.address == "0xC564EE9f21Ed8A2d8E7e76c085740d5e4c5FaFbE":
+        return True
 
     return tx in HashMatcher({
-        Network.Mainnet: [
-            "0x2dbd613f0047ee14fff45649a0b15d794b38f855117abaa2432f64e36e797928",
-            "0xa33aac01e36b0e27d2a401e012f45870d75bfa2dedc99fc6d953c7462c709157",
-            "0xe3d2212f27ece6d04249d8e46c5518194398a7cb95aedd0d1b1afd2b7524bc36",
-            "0x3002fa18063bf659f74996b2d34fc6455bc9d2e4d812c5e539dd5c935ba8e11b",
-        ],
         Network.Fantom: [
             "0xf6b3d70fed6a472dfda1926e1b509a478e29dcb6c481f32358cafb46d4a1c565",
             "0x034a36cc39d6e75f21ea9624602e503eee826a81e4a29639752c66a3f3e29dbc",
@@ -144,9 +155,10 @@ ignore_txgroup.create_child("DOLA Fed Withdrawal", vaults.is_dolla_fed_withdrawa
 
 ignore_txgroup.create_child("Bonding KP3R", is_kp3r)
 ignore_txgroup.create_child("Gnosis Safe Execution", general.is_gnosis_execution)
-ignore_txgroup.create_child("Bridged to Other Chain", is_bridged)
+ignore_txgroup.create_child("Bridged to/from Other Chain", is_bridged)
 ignore_txgroup.create_child("Wrapping/Unwrapping Gas Tokens", general.is_weth)
 ignore_txgroup.create_child("Scam Airdrop", general.is_scam_airdrop)
+ignore_txgroup.create_child("Strategy Migration", general.is_strategy_migration)
 if chain.id == Network.Mainnet:
     ignore_txgroup.create_child("Transfer to yGov (Deprecated)", ygov.is_sent_to_ygov)
     ignore_txgroup.create_child("Maker CDP Deposit", maker.is_yfi_cdp_deposit)

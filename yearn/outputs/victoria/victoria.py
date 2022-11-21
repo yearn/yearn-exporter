@@ -55,7 +55,7 @@ def _to_jsonl_gz(metrics_to_export: List[Dict]):
     return gzip.compress(bytes(jsonlines, "utf-8"))
 
 
-async def _post(metrics_to_export: List[Dict]) -> None:
+async def _post(metrics_to_export: List[Dict]) -> List[Dict]:
     """ Post all metrics at once."""
     data = _to_jsonl_gz(metrics_to_export)
     attempts = 0
@@ -67,7 +67,7 @@ async def _post(metrics_to_export: List[Dict]) -> None:
                     headers = VM_REQUEST_HEADERS,
                     data = data,
                 )
-            return
+            return data
         except Exception as e:
             if not isinstance(e, aiohttp.ClientError):
                 raise e

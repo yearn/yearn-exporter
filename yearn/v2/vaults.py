@@ -106,7 +106,7 @@ class Vault:
         self.scale = 10 ** self.vault.decimals()
         # multicall-safe views with 0 inputs and numeric output.
         self._views = safe_views(self.vault.abi)
-
+        
         # load strategies from events and watch for freshly attached strategies
         self._topics = [
             [

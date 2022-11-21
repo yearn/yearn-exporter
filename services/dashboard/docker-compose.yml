@@ -16,7 +16,7 @@ x-envs: &envs
   - LOG_LEVEL
   - DEBUG
   - SHOW_STATS
-  - POOL_SIZE
+  - POOL_SIZE=${POOL_SIZE:-2} # If no pool size is specified, we will assume you're a noob on a consumer craptop and can only handle 2 workers.
   - TX_POOL_SIZE
   - RESOLUTION
   - REORG_BUFFER
@@ -32,6 +32,7 @@ x-envs: &envs
   - MIN_SLEEP_TIME
   - MAX_SLEEP_TIME
   # ypricemagic (optional)
+  - BROWNIE_NETWORK_ID=${BROWNIE_NETWORK}
   - YPRICEMAGIC_RECURSION_TIMEOUT=${YPRICEMAGIC_RECURSION_TIMEOUT:-7200}  # 2 hours
   # This is a temporary hack that can be removed once deps support eth_hash==0.5.0. Creds to bunny for finding this.
   - ETH_HASH_BACKEND=${ETH_HASH_BACKEND:-pysha3}
@@ -87,4 +88,16 @@ services:
     external_links:
       - infra-postgres-1:postgres
       - infra-victoria-metrics-1:victoria-metrics
+      - infra-scheduler-1:scheduler
     restart: on-failure
+  
+  workers:
+    #image: yearn/dask #uncomment this when merged to master
+    build:
+      context: .
+      dockerfile: yearn/dask/Dockerfile.dask
+    hostname: dask-worker
+    environment: *envs
+    volumes: *volumes
+    networks:
+      - infra_yearn-exporter

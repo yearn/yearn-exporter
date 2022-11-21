@@ -46,6 +46,9 @@ class Registry:
 
     def __repr__(self):
         return f"<Earn vaults={len(self.vaults)}>"
+    
+    async def describe_delayed(self, block=None):
+        return await self.describe(block=block)
 
     async def describe(self, block=None) -> dict:
         vaults = await self.active_vaults_at(block)

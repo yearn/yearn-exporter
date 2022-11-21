@@ -99,3 +99,23 @@ services:
     volumes:
       - postgres_data_new:/var/lib/postgresql/data
     restart: always
+  
+  scheduler:
+    image: daskdev/dask
+    hostname: dask-scheduler
+    command: ["dask", "scheduler"]
+    ports:
+      - "8786:8786"
+      - "8787:8787"
+    networks:
+      - yearn-exporter
+
+  notebook:
+    image: daskdev/dask-notebook
+    hostname: notebook
+    ports:
+      - "8888:8888"
+    environment:
+      - DASK_SCHEDULER_ADDRESS="tcp://scheduler:8786"
+    networks:
+      - yearn-exporter

@@ -1,6 +1,7 @@
 
 from yearn.entities import TreasuryTx
 from pony.orm import select
+from yearn.treasury.accountant.classes import HashMatcher
 from yearn.treasury.accountant.constants import treasury
 from yearn.treasury.accountant.ignore.swaps.skip_tokens import SKIP_TOKENS
 
@@ -23,3 +24,7 @@ def is_cowswap_swap(tx: TreasuryTx) -> bool:
                     )
                     if len(other_side_query) > 0:
                         return True
+    # TODO figure out why hueristics above didn't catch these:
+    return tx in HashMatcher([
+        "0xc72f39e4f4a5f125edecbb6d1273b9f0f6f533ad039a5c7f71005f5811fb7480",
+    ])

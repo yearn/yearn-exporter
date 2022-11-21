@@ -48,6 +48,19 @@ fi
 export SENTRY_RELEASE=$(git rev-parse --short HEAD)
 
 IFS=',' read -r -a commands <<< "$COMMANDS"
+
+### Ensure workers are running for `BROWNIE_NETWORK`
+WORKER_NAME=${NETWORK}_workers
+CONTAINER_NAME=${WORKER_NAME}_1
+docker rm -f $CONTAINER_NAME 2> /dev/null || true
+
+docker-compose \
+  --file services/dashboard/docker-compose.yml \
+  --project-directory . run \
+  --name $CONTAINER_NAME \
+  --detach \
+  workers 
+
 #TODO add --detach
 for CMD in "${commands[@]}"; do
   NAME=$(echo $CMD | sed -e 's/[/ ]/_/g')

@@ -32,7 +32,8 @@ jobs:
           python-version: "3.9"
         
       - name: Install dependencies
-        run: pip install -r requirements.txt
+      # Tg bot is separate because it causes conflicts with requirements.py and isn't needed in docker.
+        run: pip install python-telegram-bot>=13.14 -r requirements.txt
       
       - name: Setup brownie networks
         run: brownie networks modify ${{ matrix.network }} host=${{ secrets[matrix.provider] }}

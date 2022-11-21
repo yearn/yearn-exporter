@@ -13,7 +13,7 @@ def is_minting_ycrv(tx: TreasuryTx) -> bool:
     new_wrappers = ["st-yCRV","lp-yCRV"]
     # Zapping old-to-new
     # yCRV side
-    if tx.from_address.address == ZERO_ADDRESS and tx._symbol == "yCRV" and tx.to_address and tx.to_address.address in treasury.addresses:
+    if tx.from_address.address == ZERO_ADDRESS and tx._symbol in ["yCRV", "st-yCRV","lp-yCRV"] and tx.to_address and tx.to_address.address in treasury.addresses:
         return True
     # Input side
     elif tx._symbol in old_wrappers and tx.to_address and tx.to_address.address in [MINTER, ZAP, YCRV]:
