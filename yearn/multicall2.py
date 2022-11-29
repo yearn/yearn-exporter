@@ -4,6 +4,7 @@ from itertools import count, product
 from operator import itemgetter
 from typing import Any, List, Optional
 
+import eth_retry
 import requests
 from brownie import chain, web3
 from eth_abi.exceptions import InsufficientDataBytes
@@ -104,6 +105,7 @@ def multicall_matrix(contracts, params, block="latest"):
     return dict(output)
 
 
+@eth_retry.auto_retry
 def batch_call(calls):
     """
     Similar interface but block height as last param. Uses JSON-RPC batch.
