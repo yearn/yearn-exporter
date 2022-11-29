@@ -1,8 +1,10 @@
 from datetime import date
 
 from brownie import chain
+
 from yearn.networks import Network
 from yearn.partners.snapshot import (BentoboxWrapper, DegenboxWrapper,
+                                     DelegatedDepositWildcardWrapper,
                                      ElementWrapper, GearboxWrapper, Partner,
                                      WildcardWrapper, Wrapper,
                                      YApeSwapFactoryWrapper)
@@ -526,6 +528,17 @@ partners = {
                 )
             ]
         ),
+        Partner(
+            name="ledger",
+            start_date=date(2022, 11, 24),
+            treasury="0x558247e365be655f9144e1a0140d793984372ef3",
+            wrappers=[
+                DelegatedDepositWildcardWrapper(
+                    name="ledger",
+                    partnerId="0x558247e365be655f9144e1a0140d793984372ef3",
+                )
+            ]
+        )
     ],
     Network.Fantom: [
         Partner(
