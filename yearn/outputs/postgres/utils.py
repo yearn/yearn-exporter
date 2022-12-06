@@ -44,6 +44,8 @@ def cache_token(address: str) -> Token:
             symbol, name = {
                 Network.Mainnet: ("ETH","Ethereum"),
                 Network.Fantom: ("FTM","Fantom"),
+                Network.Arbitrum: ("ETH", "Ethereum"),
+                Network.Optimism: ("ETH", "Ethereum"),
             }[chain.id]
             decimals = 18
         else:
