@@ -404,15 +404,26 @@ class CurveRegistry(metaclass=Singleton):
 
     def get_coin_price(self, token: AddressOrContract, block: Optional[Block] = None) -> Optional[float]:
 
-        # Get the pool
-        if token in self.coin_to_pools and len(self.coin_to_pools[token]) > 0:
-            pools = self.coin_to_pools[token]
-            if len(pools) > 1:
-                logger.warn(f'Found >1 pools for token {token}: {pools}, picking first pool: {pools[0]}')
+        # Select the most appropriate pool
+        pools = self.coin_to_pools[token]
+        if not pools:
+            return
+        elif len(pools) == 1:
             pool = pools[0]
         else:
-            # TODO: handle this sitch if necessary
-            return
+            # We need to find the pool with the deepest liquidity
+            balances = [self.get_balances(pool, block) for pool in pools]
+            deepest_pool, deepest_bal = None, 0
+            for pool, pool_bals in zip(pools, balances):
+                if isinstance(pool_bals, Exception):
+                    if str(pool_bals).startswith("could not fetch balances"):
+                        continue
+                    raise pool_bals
+                for token, bal in pool_bals.items():
+                    if token == token_in and bal > deepest_bal:
+                        deepest_pool = pool
+                        deepest_bal = bal
+            pool = deepest_pool
         
         # Get the index for `token`
         coins = self.get_coins(pool)
