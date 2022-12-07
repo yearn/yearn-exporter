@@ -424,8 +424,11 @@ class CurveRegistry(metaclass=Singleton):
     def get_coin_price(self, token: AddressOrContract, block: Optional[Block] = None) -> Optional[float]:
 
         # Get the pool
-        if len(self.coin_to_pools[token]) == 1:
-            pool = self.coin_to_pools[token][0]
+        if token in self.coin_to_pools and len(self.coin_to_pools[token]) > 0:
+            pools = self.coin_to_pools[token]
+            if len(pools) > 1:
+                logger.warn(f'Found >1 pools for token {token}: {pools}, picking first pool: {pools[0]}')
+            pool = pools[0]
         else:
             # TODO: handle this sitch if necessary
             return
