@@ -419,8 +419,8 @@ class CurveRegistry(metaclass=Singleton):
                     if str(pool_bals).startswith("could not fetch balances"):
                         continue
                     raise pool_bals
-                for token, bal in pool_bals.items():
-                    if token == token_in and bal > deepest_bal:
+                for _token, bal in pool_bals.items():
+                    if _token == token and bal > deepest_bal:
                         deepest_pool = pool
                         deepest_bal = bal
             pool = deepest_pool
