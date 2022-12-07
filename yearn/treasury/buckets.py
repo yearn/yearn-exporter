@@ -55,7 +55,7 @@ def _unwrap_token(token) -> str:
         # should only be YLA # TODO figure this out
         bal_for_pool = bal.selector.get_balancer_for_pool(token)
         pool_tokens = set(
-            str(_unwrap_token(coin)) for coin in bal_for_pool.get_tokens(token)
+            str(_unwrap_token(coin)) for coin in bal_for_pool.get_tokens(token) if coin != token
         )
         return _pool_bucket(pool_tokens)
     if aave and token in aave:
