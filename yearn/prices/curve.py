@@ -402,25 +402,6 @@ class CurveRegistry(metaclass=Singleton):
             return 0
         return tvl / supply
 
-        # approximate by using the most common base token we find
-        coins = self.get_underlying_coins(pool)
-        try:
-            coin = (set(coins) & BASIC_TOKENS).pop()
-        except KeyError:
-            coin = coins[0]
-
-        try:
-            virtual_price = self.get_virtual_price(pool, block)
-            if virtual_price:
-                return virtual_price * magic.get_price(coin, block)
-            return sum([balance * magic.get_price(coin, block) for coin, balance in self.get_balances(pool, block).items()])
-        except ValueError as e:
-            logger.warn(f'ValueError: {str(e)}')
-            if 'No data was returned' in str(e):
-                return None
-            else:
-                raise
-    
     def get_coin_price(self, token: AddressOrContract, block: Optional[Block] = None) -> Optional[float]:
 
         # Get the pool
