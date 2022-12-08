@@ -14,7 +14,6 @@ from pony.orm import db_session
 from web3._utils.abi import filter_by_name
 from web3._utils.events import construct_event_topic_set
 from y.networks import Network
-from y.prices.magic import get_price_async
 from y.utils.events import get_logs_asap_async
 
 from yearn.entities import UserTx
@@ -23,6 +22,7 @@ from yearn.exceptions import BatchSizeError
 from yearn.outputs.postgres.utils import (cache_address, cache_chain,
                                           cache_token, last_recorded_block)
 from yearn.prices.incidents import INCIDENTS
+from yearn.prices.magic import _get_price
 from yearn.typing import Block
 from yearn.yearn import Yearn
 
@@ -73,7 +73,8 @@ def process_and_cache_user_txs(last_saved_block=None):
     )
     if start_block and start_block > end_block:
         end_block = start_block
-    df = pd.concat(await_awaitable(asyncio.gather(*[get_token_transfers(vault.vault, start_block, end_block) for vault in yearn.active_vaults_at(end_block)])))
+    vaults = await_awaitable(yearn.active_vaults_at(end_block))
+    df = pd.concat(await_awaitable(asyncio.gather(*[get_token_transfers(vault.vault, start_block, end_block) for vault in vaults])))
     if len(df):
         # NOTE: We want to insert txs in the order they took place, so wallet exporter
         #       won't have issues in the event that transactions exporter fails mid-run.
@@ -123,7 +124,7 @@ async def _process_transfer_event(event, token_entity) -> dict:
     sender, receiver, amount = event.values()
     cache_address(sender)
     cache_address(receiver)
-    price = await _get_price(token_entity.address.address, event.block_number)
+    price = await get_price(token_entity.address.address, event.block_number)
     if (
         # NOTE magic.get_price() returns erroneous price due to erroneous ppfs
         token_entity.address.address == '0x7F83935EcFe4729c4Ea592Ab2bC1A32588409797'
@@ -149,13 +150,10 @@ async def _process_transfer_event(event, token_entity) -> dict:
     }
 
 
-async def _get_price(token_address, block):
+async def get_price(token_address, block):
     try:
-        return await get_price_async(token_address, block)
+        return await _get_price(token_address, block)
     except Exception as e:
-        for incident in INCIDENTS[token_address]:
-            if incident['start'] <= block <= incident['end']:
-                return incident['result']
         logger.warn(f'{e.__class__.__name__}: {str(e)}')
         logger.warn(f'vault: {token_address} block: {block}')
         raise e
