@@ -8,7 +8,7 @@ from tqdm import tqdm
 from yearn.treasury import accountant
 
 pd.set_option('display.max_rows', 1000)
-pd.set_option('display.max_colwidth', -1)
+pd.set_option('display.max_colwidth', None)
 
 @db_session
 def main():
