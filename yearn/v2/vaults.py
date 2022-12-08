@@ -1,27 +1,29 @@
+import asyncio
 import logging
 import re
 import threading
 import time
-from typing import Dict, List
+from typing import Any, Dict, List
 
 from brownie import chain
 from eth_utils import encode_hex, event_abi_to_log_topic
 from joblib import Parallel, delayed
+from multicall.utils import gather, run_in_subprocess
 from semantic_version.base import Version
+from y.prices import magic
 from yearn import apy
 from yearn.apy.common import ApySamples
 from yearn.common import Tvl
+from yearn.decorators import sentry_catch_all, wait_or_exit_after
 from yearn.events import create_filter, decode_logs
-from yearn.multicall2 import fetch_multicall
-from yearn.prices import magic
+from yearn.exceptions import PriceError
+from yearn.multicall2 import fetch_multicall_async
+from yearn.networks import Network
 from yearn.prices.curve import curve
 from yearn.special import Ygov
 from yearn.typing import Address
-from yearn.utils import safe_views, contract
+from yearn.utils import contract, safe_views, thread_pool
 from yearn.v2.strategies import Strategy
-from yearn.exceptions import PriceError
-from yearn.decorators import sentry_catch_all, wait_or_exit_after
-from yearn.networks import Network
 
 VAULT_VIEWS_SCALED = [
     "totalAssets",
@@ -48,6 +50,27 @@ STRATEGY_EVENTS = [
 ]
 
 logger = logging.getLogger(__name__)
+
+def __unpack_results(vault: Address, is_experiment: bool, _views: List[str], results: List[Any], scale: int, price: float, strategies: List[str], strategy_descs: List[Dict]) -> Dict[str,Any]:
+    try:
+        info = dict(zip(_views, results))
+        for name in info:
+            if name in VAULT_VIEWS_SCALED:
+                info[name] /= scale
+        info["strategies"] = {}
+    except ValueError as e:
+        info = {"strategies": {}}
+
+    info["token price"] = price
+    if "totalAssets" in info:
+        info["tvl"] = info["token price"] * info["totalAssets"]
+
+    for strategy_name, desc in zip(strategies, strategy_descs):
+        info["strategies"][strategy_name] = desc
+
+    info["experimental"] = is_experiment
+    info["address"] = vault
+    info["version"] = "v2"
 
 
 class Vault:
@@ -192,29 +215,29 @@ class Vault:
             elif event.name == "StrategyReported":
                 self._reports.append(event)
 
-    def describe(self, block=None):
-        try:
-            results = fetch_multicall(*[[self.vault, view] for view in self._views], block=block)
-            info = dict(zip(self._views, results))
-            for name in info:
-                if name in VAULT_VIEWS_SCALED:
-                    info[name] /= self.scale
-            info["strategies"] = {}
-        except ValueError as e:
-            info = {"strategies": {}}
+    async def _unpack_results(self, results):
+        results, strategy_descs, price = results
+        return await run_in_subprocess(
+            __unpack_results,
+            self.vault.address,
+            self.is_experiment,
+            self._views,
+            results,
+            self.scale,
+            price,
+            # must be picklable.
+            [strategy.unique_name for strategy in self.strategies],
+            strategy_descs,
+        )
 
-        for strategy in self.strategies:
-            info["strategies"][strategy.unique_name] = strategy.describe(block=block)
-
-        info["token price"] = magic.get_price(self.token, block=block) if info['totalSupply'] > 0 else 0
-        if "totalAssets" in info:
-            info["tvl"] = info["token price"] * info["totalAssets"]
-
-        info["experimental"] = self.is_experiment
-        info["address"] = self.vault
-        info["version"] = "v2"
-        
-        return info
+    async def describe(self, block=None):
+        await asyncio.get_event_loop().run_in_executor(thread_pool, self.load_strategies)
+        results = await gather([
+            fetch_multicall_async(*[[self.vault, view] for view in self._views], block=block),
+            gather(strategy.describe(block=block) for strategy in self.strategies),
+            magic.get_price_async(self.token, block=block)
+        ])
+        return await self._unpack_results(results)
 
     def apy(self, samples: ApySamples):
         if self._needs_curve_simple():
@@ -232,7 +255,6 @@ class Vault:
             price = None
         tvl = total_assets * price / 10 ** self.vault.decimals(block_identifier=block) if price else None
         return Tvl(total_assets, price, tvl)
-
 
     def _needs_curve_simple(self):
         # not able to calculate gauge weighting on chains other than mainnet
