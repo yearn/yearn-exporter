@@ -18,6 +18,7 @@ from rich import print
 from rich.progress import track
 from web3._utils.abi import filter_by_name
 from web3._utils.events import construct_event_topic_set
+from y.prices import magic
 from y.time import last_block_on_date
 from yearn.events import decode_logs, get_logs_asap
 from yearn.exceptions import UnsupportedNetwork

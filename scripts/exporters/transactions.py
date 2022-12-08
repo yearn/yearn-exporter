@@ -17,7 +17,7 @@ from yearn.exceptions import BatchSizeError
 from yearn.networks import Network
 from yearn.outputs.postgres.utils import (cache_address, cache_chain, cache_token,
                                           last_recorded_block)
-from yearn.prices import magic
+from y.prices import magic
 from yearn.typing import Block
 from yearn.yearn import Yearn
 
