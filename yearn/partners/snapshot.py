@@ -21,8 +21,9 @@ from tqdm import tqdm
 from web3._utils.abi import filter_by_name
 from web3._utils.events import construct_event_topic_set
 from y import Contract, get_price_async
+from y.contracts import contract_creation_block
 from y.networks import Network
-from y.time import last_block_on_date
+from y.time import last_block_on_date, get_block_timestamp
 
 from yearn.events import decode_logs, get_logs_asap
 from yearn.exceptions import UnsupportedNetwork
@@ -30,8 +31,7 @@ from yearn.partners.charts import make_partner_charts
 from yearn.partners.constants import OPEX_COST, get_tier
 from yearn.partners.delegated import DELEGATED_BALANCES
 from yearn.typing import Address, Block
-from yearn.utils import (contract, contract_creation_block,
-                         get_block_timestamp, run_in_thread)
+from yearn.utils import contract, run_in_thread
 from yearn.v2.registry import Registry
 from yearn.v2.vaults import Vault
 

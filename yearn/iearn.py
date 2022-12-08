@@ -2,12 +2,13 @@ import asyncio
 from collections import defaultdict
 
 from brownie import chain
+from y.contracts import contract_creation_block
 from y.networks import Network
 from y.prices import magic
 
 from yearn.exceptions import UnsupportedNetwork
 from yearn.multicall2 import fetch_multicall_async, multicall_matrix_async
-from yearn.utils import contract, contract_creation_block, run_in_thread
+from yearn.utils import contract, run_in_thread
 
 IEARN = {
     # v1 - deprecated

@@ -4,10 +4,10 @@ from random import randint
 import pytest
 from brownie import chain
 from tests.fixtures.decorators import ib_chains_only
+from y.contracts import contract_creation_block
 
 from yearn.exceptions import UnsupportedNetwork
 from yearn.ironbank import Registry
-from yearn.utils import contract_creation_block
 
 try:
     registry = Registry()
