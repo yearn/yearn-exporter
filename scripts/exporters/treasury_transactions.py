@@ -7,7 +7,7 @@ import pandas
 import sentry_sdk
 from brownie import chain
 from brownie.exceptions import BrownieEnvironmentWarning
-from pony.orm import TransactionIntegrityError, db_session
+from pony.orm import TransactionIntegrityError, db_session, commit
 from tqdm import tqdm
 from y.constants import EEE_ADDRESS
 from yearn.entities import TreasuryTx
@@ -34,11 +34,9 @@ def main() -> NoReturn:
             time.sleep(10)
             continue
             
-        df = treasury.ledger.df(start_block, end_block)
-        logger.warning(df)
-        logger.warning(df.columns)
+        df = treasury.ledger.df(start_block, end_block, full=True)
         if len(df) > 0:
-            for index, row in tqdm(df.iterrows()):
+            for index, row in tqdm(list(df.iterrows()), desc="Insert Txs to Postgres"):
                 insert_treasury_tx(row)
             sort()
         else:
@@ -67,6 +65,7 @@ def insert_treasury_tx(row: pandas.Series) -> bool:
             gas_price = row.gasPrice if hasattr(row, 'gasPrice') and str(row.gasPrice) != "nan" else None,
             txgroup = accountant.pending_txgroup(),
         )
+        commit()
     except TransactionIntegrityError:
         _validate_integrity_error(row, log_index)
 
@@ -76,12 +75,9 @@ def _validate_integrity_error(row, log_index: int) -> None:
     existing_object = TreasuryTx.get(hash=row.hash, log_index=log_index, chain=cache_chain())
     assert row['to'] == existing_object.to_address.address, (row['to'],existing_object.to_address.address)
     assert row['from'] == existing_object.from_address.address, (row['from'], existing_object.from_address.address)
-    assert row['token'] == existing_object.token.address.address, (row['token'], existing_object.token.address.address)
-    assert row['amount'] == float(existing_object.amount), (row['amount'], existing_object.amount)
-    assert round(row['price'],18) == float(existing_object.price) or str(row['price']) == 'nan' and str(existing_object.price).lower() == 'nan', (row['price'], existing_object.price)
-    assert round(row['value_usd'],18) == float(existing_object.value_usd) or str(row['value_usd']) == 'nan' and str(existing_object.value_usd).lower() == 'nan', (row['value_usd'], existing_object.value_usd)
-    assert row['block'] == existing_object.block, (row['value_usd'], existing_object.value_usd)
-    assert row['timestamp'] == existing_object.timestamp, (row['timestamp'], existing_object.timestamp)
+    assert row['token_address'] == existing_object.token.address.address, (row['token_address'], existing_object.token.address.address)
+    assert row['value'] == existing_object.amount, (row['value'], existing_object.amount)
+    assert row['blockNumber'] == existing_object.block, (row['blockNumber'], existing_object.block)
     # NOTE All good!
 
 @db_session
