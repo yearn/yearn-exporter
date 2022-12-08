@@ -10,11 +10,10 @@ from typing import Awaitable, Callable, Literal, NoReturn, Optional, TypeVar
 
 import eth_retry
 from brownie import chain
-from concurrent.futures import ThreadPoolExecutor
 from dank_mids.controller import instances
 from y.datatypes import Block
 from y.networks import Network
-from y.time import closest_block_after_timestamp
+from y.time import closest_block_after_timestamp_async
 from y.utils.dank_mids import dank_w3
 from yearn.helpers.snapshots import (RESOLUTION, SLEEP_TIME, Resolution,
                                      _generate_snapshot_range_forward,
@@ -90,8 +89,7 @@ class Exporter:
         self._res_semaphore = defaultdict(lambda: asyncio.Semaphore(max_concurrent_runs_per_resolution))
         self._has_data_semaphore = asyncio.Semaphore(2)
         self._export_semaphore = asyncio.Semaphore(2)
-        self._sync_threads = ThreadPoolExecutor(2)
-
+        
         self._snapshots_fetched = 0
         self._snapshots_exported = 0
     
@@ -172,8 +170,7 @@ class Exporter:
     async def export_historical_snapshot_if_missing(self, snapshot: datetime, resolution: Resolution) -> None:
         if not await self._has_data(snapshot):
             timestamp = int(snapshot.timestamp())
-            block = await asyncio.get_event_loop().run_in_executor(self._sync_threads, closest_block_after_timestamp, timestamp)
-            assert block is not None, "no block after timestamp found. timestamp: %s" % timestamp
+            block = await closest_block_after_timestamp_async(timestamp)
             await self.export_snapshot(block, snapshot, resolution)
     
     # Datastore Methods
