@@ -74,7 +74,7 @@ def process_and_cache_user_txs(last_saved_block=None):
     if start_block and start_block > end_block:
         end_block = start_block
     vaults = await_awaitable(yearn.active_vaults_at(end_block))
-    df = pd.concat(await_awaitable(asyncio.gather(*[get_token_transfers(vault.vault, start_block, end_block) for vault in vaults])))
+    df = pd.concat(await_awaitable(asyncio.gather(*[get_token_transfers(vault.vault, start_block, end_block) for vault in vaults]))) if vaults else pd.DataFrame()
     if len(df):
         # NOTE: We want to insert txs in the order they took place, so wallet exporter
         #       won't have issues in the event that transactions exporter fails mid-run.
