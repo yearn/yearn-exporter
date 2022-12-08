@@ -54,7 +54,11 @@ def _clean_creds_from_uri(endpoint: str) -> str:
     return re.sub(pattern=r"(https?:\/\/)[^@]+@(.+)", repl=r"\2", string=endpoint)
 
 async def capture_exception(e: Exception) -> None:
-    await asyncio.get_event_loop().run_in_executor(sentry_executor, _capture_exception, e)
+    try:
+        await asyncio.get_event_loop().run_in_executor(sentry_executor, _capture_exception, e)
+    except RuntimeError:
+        # This happens when you're using PYTHONASYNCIODEBUG=True, don't worry about it. Prod will not be impacted.
+        pass
 
 def log_task_exceptions(func: Callable[..., Awaitable[None]]) -> Callable[..., Awaitable[None]]:
     """
