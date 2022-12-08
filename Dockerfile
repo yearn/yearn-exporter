@@ -10,7 +10,5 @@ COPY --from=builder /install /usr/local
 RUN mkdir -p /app/yearn-exporter
 WORKDIR /app/yearn-exporter
 ADD . /app/yearn-exporter
-# This is for the accountant module
-RUN brownie pm install OpenZeppelin/openzeppelin-contracts@3.2.0
 
 ENTRYPOINT ["./entrypoint.sh"]
