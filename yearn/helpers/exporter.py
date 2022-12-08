@@ -130,7 +130,7 @@ class Exporter:
     
     async def export_history(self) -> None:
         """ Exports all historical data. This coroutine runs for a finite duration. """
-        logger.info(f"exporting {self.name} snapshots for resolution {RESOLUTION}")
+        logger.info(f"exporting {Network.name()} {self.name} snapshots for resolution {RESOLUTION}")
         start = datetime.now(tz=timezone.utc)
         intervals = _get_intervals(start)
         loop = self.loop
@@ -183,7 +183,7 @@ class Exporter:
         async with self._has_data_semaphore:
             response = await has_data(ts, self.data_query)
         if response:
-            logger.info(f"data already present for {self.name} snapshot {snapshot}, ts {ts}")
+            logger.info(f"data already present for {Network.name()} {self.name} snapshot {snapshot}, ts {ts}")
         return bool(response)
 
     async def _export_data(self, data: T) -> None:
