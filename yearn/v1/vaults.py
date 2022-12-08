@@ -1,3 +1,4 @@
+import asyncio
 import logging
 from dataclasses import dataclass
 from functools import cached_property
@@ -6,7 +7,6 @@ from typing import Optional
 from brownie import ZERO_ADDRESS, interface
 from brownie.network.contract import InterfaceContainer
 from dank_mids.brownie_patch import patch_contract
-from multicall.utils import gather
 from y.prices import magic
 from y.utils.dank_mids import dank_w3
 from yearn import apy, constants
@@ -46,7 +46,8 @@ class VaultV1:
 
     async def get_price(self, block=None):
         if self.name == "aLINK":
-            return await magic.get_price_async(self.vault.underlying.coroutine(), block=block)
+            underlying = await self.vault.underlying.coroutine()
+            return await magic.get_price_async(underlying, block=block)
         return await magic.get_price_async(self.token, block=block)
 
     async def get_strategy(self, block=None):
@@ -103,10 +104,10 @@ class VaultV1:
                 gauge = contract(gauge)
                 #boost = await curve.calculate_boost(gauge, vote_proxy, block=block),
                 #_apy = await curve.calculate_apy(gauge, self.token, block=block),
-                boost, _apy = await gather([
+                boost, _apy = await asyncio.gather(
                     curve.calculate_boost(gauge, vote_proxy, block=block),
                     curve.calculate_apy(gauge, self.token, block=block),
-                ])
+                )
                 info.update(boost)
                 info.update(_apy)
                 attrs["earned"] = [gauge, "claimable_tokens", vote_proxy]  # / scale

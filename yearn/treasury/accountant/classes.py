@@ -58,7 +58,7 @@ class ChildTxGroup(_TxGroup):
             if hasattr(self, 'check') and self.check(tx):
                 return self.txgroup
         except Exception as e:
-            logger.error(f"{e.__repr__()} when sorting {tx} with {self.label}.")
+            logger.warning(f"{e.__repr__()} when sorting {tx} with {self.label}.")
             sentry_sdk.capture_exception(e)
             return None
         return super().sort(tx)

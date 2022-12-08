@@ -6,7 +6,6 @@ from brownie import chain, convert
 from yearn.constants import WRAPPED_GAS_COIN
 from yearn.networks import Network
 from yearn.prices import constants
-from yearn.prices.chainlink import chainlink
 from yearn.prices.uniswap.v1 import UniswapV1, uniswap_v1
 from yearn.prices.uniswap.v2 import UniswapV2Multiplexer, uniswap_v2
 from yearn.prices.uniswap.v3 import UniswapV3, uniswap_v3
@@ -38,9 +37,7 @@ class UniswapVersionMultiplexer:
 
         # NOTE Following our usual logic with WETH is a big no-no. Too many calls.
         if token in [constants.weth, WRAPPED_GAS_COIN]:
-            # try to use chainlink if it's available on the current network
-            if chainlink and block <= contract_creation_block(chainlink.get_feed(token)):
-                return self._early_exit_for_gas_coin(token, block=block)
+            return self._early_exit_for_gas_coin(token, block=block)
 
         deepest_uniswap = self.deepest_uniswap(token, block)
         if deepest_uniswap:

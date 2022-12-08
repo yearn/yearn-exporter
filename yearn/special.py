@@ -1,17 +1,18 @@
+import asyncio
 import math
 from time import time
 from typing import Tuple
 
 import eth_retry
 import requests
-from multicall.utils import gather
 from y.prices import magic
 
 from yearn.apy.common import Apy, ApyFees, ApyPoints, ApySamples
 from yearn.common import Tvl
 from yearn.exceptions import PriceError
 from yearn.prices.curve import curve
-from yearn.utils import Singleton, contract, contract_creation_block, run_in_thread
+from yearn.utils import (Singleton, contract, contract_creation_block,
+                         run_in_thread)
 
 
 class YveCRVJar(metaclass = Singleton):
@@ -55,10 +56,10 @@ class Backscratcher(metaclass = Singleton):
         self.proxy = contract("0xF147b8125d2ef93FB6965Db97D6746952a133934")
     
     async def _locked(self, block=None) -> Tuple[float,float]:
-        crv_locked, crv_price = await gather([
+        crv_locked, crv_price = await asyncio.gather(
             curve.voting_escrow.balanceOf["address"].coroutine(self.proxy, block_identifier=block),
             magic.get_price_async(curve.crv, block=block),
-        ])
+        )
         crv_locked /= 1e18
         return crv_locked, crv_price
 
@@ -125,10 +126,10 @@ class Ygov(metaclass = Singleton):
         self.token = contract("0x0bc529c00C6401aEF6D220BE8C6Ea1667F6Ad93e")
     
     async def _locked(self, block=None):
-        yfi_locked, yfi_price = await gather([
+        yfi_locked, yfi_price = await asyncio.gather(
             self.token.balanceOf.coroutine(self.vault, block_identifier=block),
             magic.get_price_async(str(self.token), block=block)
-        ])
+        )
         yfi_locked /= 1e18
         return yfi_locked, yfi_price
 
@@ -155,12 +156,12 @@ class Registry(metaclass = Singleton):
     async def describe(self, block=None):
         # not supported yet
         vaults = self.active_vaults_at(block)
-        data = await gather(vault.describe(block=block) for vault in vaults)
+        data = await asyncio.gather(*[vault.describe(block=block) for vault in vaults])
         return {vault.name: desc for vault, desc in zip(vaults, data)}
 
     async def total_value_at(self, block=None):
         vaults = await run_in_thread(self.active_vaults_at, block)
-        tvls = await gather(vault.total_value_at(block=block) for vault in vaults)
+        tvls = await asyncio.gather(*[vault.total_value_at(block=block) for vault in vaults])
         return {vault.name: tvl for vault, tvl in zip(vaults, tvls)}
 
     def active_vaults_at(self, block=None):
