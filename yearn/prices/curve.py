@@ -147,6 +147,8 @@ class CurveRegistry(metaclass=Singleton):
                 registries = _registries
                 registries_filter = create_filter(registries)
                 registry_logs = registries_filter.get_all_entries()
+            
+            registry_logs = [log for log in registry_logs if chain.id != Network.Gnosis or log.address != "0x8A4694401bE8F8FCCbC542a3219aF1591f87CE17"]
 
             # fetch pools from the latest registries
             for event in decode_logs(registry_logs):
