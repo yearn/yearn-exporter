@@ -11,19 +11,19 @@ from joblib import Parallel, delayed
 from multicall.utils import run_in_subprocess
 from semantic_version.base import Version
 from y import Contract
+from y.exceptions import PriceError
 from y.prices import magic
 from yearn import apy
 from yearn.apy.common import ApySamples
 from yearn.common import Tvl
 from yearn.decorators import sentry_catch_all, wait_or_exit_after
 from yearn.events import create_filter, decode_logs
-from yearn.exceptions import PriceError
 from yearn.multicall2 import fetch_multicall_async
 from yearn.networks import Network
 from yearn.prices.curve import curve
 from yearn.special import Ygov
 from yearn.typing import Address
-from yearn.utils import safe_views, thread_pool
+from yearn.utils import run_in_thread, safe_views
 from yearn.v2.strategies import Strategy
 
 VAULT_VIEWS_SCALED = [
@@ -249,7 +249,7 @@ class Vault:
         )
 
     async def describe(self, block=None):
-        await asyncio.get_event_loop().run_in_executor(thread_pool, self.load_strategies)
+        await run_in_thread(self.load_strategies)
         results = await asyncio.gather(
             fetch_multicall_async(*[[self.vault, view] for view in self._views], block=block),
             asyncio.gather(*[strategy.describe(block=block) for strategy in self.strategies]),

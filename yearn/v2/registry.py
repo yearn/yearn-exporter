@@ -173,7 +173,7 @@ class Registry(metaclass=Singleton):
         return {vault.name: result for vault, result in zip(vaults, results)}
 
     async def total_value_at(self, block=None):
-        vaults = self.active_vaults_at(block)
+        vaults = await run_in_thread(self.active_vaults_at, block)
         prices, results = await asyncio.gather(
             asyncio.gather(*[magic.get_price_async(str(vault.token), block=block) for vault in vaults]),
             fetch_multicall_async(*[[vault.vault, "totalAssets"] for vault in vaults], block=block),

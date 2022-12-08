@@ -35,7 +35,7 @@ class Registry:
         return f"<Registry V1 vaults={len(self.vaults)}>"
 
     async def describe(self, block: Optional[Block] = None) -> Dict[str, Dict]:
-        vaults = self.active_vaults_at(block)
+        vaults = await run_in_thread(self.active_vaults_at, block)
         share_prices = await fetch_multicall_async(*[[vault.vault, "getPricePerFullShare"] for vault in vaults], block=block)
         vaults = [vault for vault, share_price in zip(vaults, share_prices) if share_price]
         data = await asyncio.gather(*[vault.describe(block=block) for vault in vaults])
