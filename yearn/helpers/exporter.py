@@ -11,7 +11,6 @@ from typing import Awaitable, Callable, Literal, NoReturn, Optional, TypeVar
 import eth_retry
 from brownie import chain
 from dank_mids.controller import instances
-from eth_portfolio.constants import sync_threads
 from y.datatypes import Block
 from y.time import closest_block_after_timestamp
 from y.utils.dank_mids import dank_w3
@@ -20,6 +19,7 @@ from yearn.helpers.snapshots import (RESOLUTION, SLEEP_TIME, Resolution,
                                      _generate_snapshot_range_historical,
                                      _get_intervals)
 from yearn.outputs.victoria.victoria import _build_item, _post, has_data
+from yearn.sentry import log_task_exceptions
 from yearn.utils import run_in_thread
 
 logger = logging.getLogger(__name__)
@@ -143,6 +143,7 @@ class Exporter:
     
     # Export Methods
     
+    @log_task_exceptions
     async def export_snapshot(self, block: int, snapshot: datetime, resolution: Optional[Resolution] = None) -> None:
         # Fetch data
         async with self._res_semaphore[resolution]:
@@ -165,6 +166,7 @@ class Exporter:
         logger.info(f"exported {self.name} snapshot %s block=%d took=%.3fs", snapshot, block, duration)
         await self._export_duration(duration, ts)
     
+    @log_task_exceptions
     async def export_historical_snapshot_if_missing(self, snapshot: datetime, resolution: Resolution) -> None:
         if not await self._has_data(snapshot):
             timestamp = int(snapshot.timestamp())
