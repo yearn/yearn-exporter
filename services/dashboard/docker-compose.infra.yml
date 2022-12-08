@@ -1,9 +1,9 @@
 version: "3.7"
 
 volumes:
-  grafana_data_new: {}
-  victoria_metrics_data_new: {}
-  postgres_data_new: {}
+  grafana_data: {}
+  victoria_metrics_data: {}
+  postgres_data: {}
 
 networks:
   yearn-exporter:
@@ -27,7 +27,7 @@ services:
   victoria-metrics:
     image: victoriametrics/victoria-metrics
     volumes:
-      - victoria_metrics_data_new:/victoria-metrics-data
+      - victoria_metrics_data:/victoria-metrics-data
     command:
       - "-retentionPeriod=10y"
     ports:
@@ -57,7 +57,7 @@ services:
       - PGUSER=postgres
       - PGPASSWORD=yearn-exporter
     volumes:
-      - grafana_data_new:/var/lib/grafana
+      - grafana_data:/var/lib/grafana
       - ./grafana/provisioning/:/etc/grafana/provisioning/
     networks:
       - yearn-exporter
@@ -89,7 +89,7 @@ services:
   postgres:
     image: postgres
     ports:
-      - 5432:5432
+      - 127.0.0.1:5432:5432
     environment:
       - POSTGRES_USER=${PGUSER:-postgres}
       - POSTGRES_PASSWORD=${PGPASSWORD:-yearn-exporter}
@@ -97,5 +97,5 @@ services:
     networks:
       - yearn-exporter
     volumes:
-      - postgres_data_new:/var/lib/postgresql/data
+      - postgres_data:/var/lib/postgresql/data
     restart: always
