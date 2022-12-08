@@ -1,6 +1,7 @@
 
 from brownie import chain
-from yearn.networks import Network
+from y.networks import Network
+
 from yearn.prices.constants import weth
 
 # The buyback contract

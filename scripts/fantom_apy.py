@@ -3,8 +3,9 @@ import json
 
 import sentry_sdk
 from brownie import chain
+from y.networks import Network
+
 from yearn.apy import get_samples
-from yearn.networks import Network
 from yearn.v2.vaults import Vault as VaultV2
 
 sentry_sdk.set_tag('script','fantom_apy')

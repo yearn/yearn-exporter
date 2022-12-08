@@ -1,9 +1,10 @@
 
 from brownie import chain
-from yearn.networks import Network
-from yearn.treasury.accountant.classes import TopLevelTxGroup
-from yearn.treasury.accountant.other_income import robovault, dust, other, airdrop
+from y.networks import Network
 
+from yearn.treasury.accountant.classes import TopLevelTxGroup
+from yearn.treasury.accountant.other_income import (airdrop, dust, other,
+                                                    robovault)
 
 OTHER_INCOME_LABEL = "Other Income"
 

@@ -1,11 +1,12 @@
 import asyncio
 from typing import List, Tuple
-from pandas import DataFrame
 
 import sentry_sdk
 from brownie import chain
+from pandas import DataFrame
+from y.networks import Network
+
 from yearn.helpers.exporter import Exporter
-from yearn.networks import Network
 from yearn.outputs.victoria.victoria import _build_item, _post
 from yearn.partners.partners import partners
 from yearn.treasury.buckets import get_token_bucket

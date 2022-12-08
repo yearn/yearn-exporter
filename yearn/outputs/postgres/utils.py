@@ -3,10 +3,11 @@ from typing import Optional
 
 from brownie import ZERO_ADDRESS, chain, convert
 from pony.orm import db_session, select
+from y.networks import Network
+
 from yearn.entities import (Address, Chain, Token, TreasuryTx, TxGroup, UserTx,
                             db)
 from yearn.multicall2 import fetch_multicall
-from yearn.networks import Network
 from yearn.utils import contract, is_contract
 
 logger = logging.getLogger(__name__)

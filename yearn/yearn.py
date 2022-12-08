@@ -5,6 +5,7 @@ from time import time
 from typing import List
 
 from brownie import chain
+from y.networks import Network
 
 import yearn.iearn
 import yearn.ironbank
@@ -13,7 +14,6 @@ import yearn.v1.registry
 import yearn.v2.registry
 from yearn.exceptions import UnsupportedNetwork
 from yearn.ironbank import addresses as ironbank_registries
-from yearn.networks import Network
 from yearn.outputs.victoria.output_helper import (_flatten_dict,
                                                   _get_label_values, mapping)
 from yearn.outputs.victoria.victoria import _build_item

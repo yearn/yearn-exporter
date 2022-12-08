@@ -4,9 +4,10 @@ from brownie import ZERO_ADDRESS, Contract, chain, interface
 from brownie.convert.datatypes import EthAddress
 from brownie.exceptions import ContractNotFound
 from cachetools.func import ttl_cache
+from y.networks import Network
+
 from yearn.cache import memory
 from yearn.exceptions import UnsupportedNetwork
-from yearn.networks import Network
 from yearn.prices.constants import usdc
 from yearn.typing import Address, AddressOrContract, Block
 from yearn.utils import Singleton, contract

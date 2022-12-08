@@ -1,10 +1,11 @@
 from collections import defaultdict
 from math import ceil
 
-from brownie import Contract, chain
+from brownie import chain
 from toolz import last
+from y.networks import Network
+
 from yearn.events import decode_logs, get_logs_asap
-from yearn.networks import Network
 from yearn.utils import contract
 
 YEARN_PARTNER_TRACKER = contract({

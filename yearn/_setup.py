@@ -1,10 +1,10 @@
 
 import json
+
 from brownie import Contract, chain
 from y import Contract_erc20
 from y.constants import STABLECOINS
-
-from yearn.networks import Network
+from y.networks import Network
 
 
 def force_init_problematic_contracts() -> None:

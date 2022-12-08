@@ -1,19 +1,13 @@
 from bisect import bisect_left
 from datetime import datetime, timedelta
+
 from brownie import chain
-from yearn.networks import Network
-
 from semantic_version.base import Version
+from y.networks import Network
 
-from yearn.apy.common import (
-    Apy,
-    ApyError,
-    ApyPoints,
-    ApyFees,
-    ApySamples,
-    SharePricePoint,
-    calculate_roi,
-)
+from yearn.apy.common import (Apy, ApyError, ApyFees, ApyPoints, ApySamples,
+                              SharePricePoint, calculate_roi)
+
 
 def closest(haystack, needle):
     pos = bisect_left(sorted(haystack), needle)

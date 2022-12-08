@@ -1,10 +1,11 @@
-import os
 import logging
+import os
 from typing import Any, Dict, Optional, Union
 
 from brownie import chain, convert
+from y.networks import Network
+
 from yearn.constants import WRAPPED_GAS_COIN
-from yearn.networks import Network
 from yearn.prices import constants
 from yearn.prices.uniswap.v1 import UniswapV1, uniswap_v1
 from yearn.prices.uniswap.v2 import UniswapV2Multiplexer, uniswap_v2

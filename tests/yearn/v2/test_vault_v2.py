@@ -2,7 +2,8 @@ from random import randint
 
 import pytest
 from brownie import chain
-from yearn.networks import Network
+from y.networks import Network
+
 from yearn.utils import contract_creation_block
 from yearn.v2.registry import Registry
 from yearn.v2.vaults import Vault

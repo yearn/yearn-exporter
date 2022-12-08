@@ -1,6 +1,7 @@
-from yearn.networks import Network
-import telebot
 import os
+
+import telebot
+from y.networks import Network
 
 chat_id = os.getenv('B2B_TELEGRAM_ID')
 token = os.getenv('TELEGRAM_TOKEN')

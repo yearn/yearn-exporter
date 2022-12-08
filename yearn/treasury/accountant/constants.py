@@ -1,6 +1,7 @@
 
 from brownie import chain
-from yearn.networks import Network
+from y.networks import Network
+
 from yearn.treasury.treasury import YearnTreasury
 from yearn.v1.registry import Registry as RegistryV1
 from yearn.v2.registry import Registry as RegistryV2

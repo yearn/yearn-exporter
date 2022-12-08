@@ -1,6 +1,7 @@
 from brownie import chain
+from y.networks import Network
+
 from tests.fixtures.decorators import aave_chains_only
-from yearn.networks import Network
 from yearn.prices.aave import aave
 
 aDAI = {

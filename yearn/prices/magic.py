@@ -4,8 +4,8 @@ from typing import Optional
 from brownie import chain
 from cachetools.func import ttl_cache
 from y.exceptions import PriceError
+from y.networks import Network
 
-from yearn.networks import Network
 from yearn.prices import constants, curve
 from yearn.prices.aave import aave
 from yearn.prices.balancer import balancer as bal

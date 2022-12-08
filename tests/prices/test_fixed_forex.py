@@ -1,7 +1,8 @@
 import pytest
 from brownie import chain
+from y.networks import Network
+
 from tests.fixtures.decorators import ff_chains_only
-from yearn.networks import Network
 from yearn.prices.fixed_forex import fixed_forex
 
 MARKETS = {

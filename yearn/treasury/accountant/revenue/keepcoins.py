@@ -2,8 +2,9 @@
 # keepCOINS: excludes keepCRV as the CRV are locked forever.
 
 from brownie import chain
+from y.networks import Network
+
 from yearn.entities import TreasuryTx
-from yearn.networks import Network
 from yearn.treasury.accountant.constants import treasury
 
 angle_strats_with_non_specific_names = {

@@ -11,14 +11,15 @@ from dank_mids.brownie_patch import patch_contract
 from joblib import Parallel, delayed
 from web3._utils.abi import filter_by_name
 from web3._utils.events import construct_event_topic_set
+from y.networks import Network
 from y.prices import magic
 from y.utils.dank_mids import dank_w3
+
 from yearn.decorators import (sentry_catch_all, wait_or_exit_after,
                               wait_or_exit_before)
 from yearn.events import create_filter, decode_logs, get_logs_asap
 from yearn.exceptions import UnsupportedNetwork
 from yearn.multicall2 import fetch_multicall, fetch_multicall_async
-from yearn.networks import Network
 from yearn.utils import (Singleton, contract, contract_creation_block,
                          run_in_thread)
 from yearn.v2.vaults import Vault

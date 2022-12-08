@@ -4,9 +4,9 @@ from typing import List, Optional
 from brownie import Contract, chain
 from brownie.convert.datatypes import EthAddress
 from cachetools.func import ttl_cache
+from y.networks import Network
 
 from yearn.exceptions import UnsupportedNetwork
-from yearn.networks import Network
 from yearn.typing import AddressOrContract, Block
 from yearn.utils import Singleton, contract, contract_creation_block
 

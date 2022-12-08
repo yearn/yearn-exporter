@@ -12,14 +12,15 @@ from multicall.utils import run_in_subprocess
 from semantic_version.base import Version
 from y import Contract
 from y.exceptions import PriceError
+from y.networks import Network
 from y.prices import magic
+
 from yearn import apy
 from yearn.apy.common import ApySamples
 from yearn.common import Tvl
 from yearn.decorators import sentry_catch_all, wait_or_exit_after
 from yearn.events import create_filter, decode_logs
 from yearn.multicall2 import fetch_multicall_async
-from yearn.networks import Network
 from yearn.prices.curve import curve
 from yearn.special import Ygov
 from yearn.typing import Address

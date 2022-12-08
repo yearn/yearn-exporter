@@ -7,9 +7,9 @@ from brownie import Contract, chain
 from brownie.convert.datatypes import EthAddress
 from brownie.network.contract import ContractContainer
 from cachetools.func import ttl_cache
+from y.networks import Network
 
 from yearn.exceptions import UnsupportedNetwork
-from yearn.networks import Network
 from yearn.prices.constants import usdc, weth
 from yearn.typing import Address, AddressOrContract, Block
 from yearn.utils import Singleton, contract
