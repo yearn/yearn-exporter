@@ -6,8 +6,8 @@ import pytest
 import requests
 from brownie import ZERO_ADDRESS, chain, multicall, web3
 from tabulate import tabulate
+from y.exceptions import PriceError
 from y.prices.magic import get_price
-from yearn.exceptions import PriceError
 from yearn.networks import Network
 # This import fixes a circular import issue with the curve import below.
 # TODO Resolve circular import issue
