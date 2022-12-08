@@ -3,9 +3,10 @@ from datetime import datetime, timezone
 
 import sentry_sdk
 from brownie import chain
+from y.networks import Network
 from y.time import closest_block_after_timestamp
+
 from yearn.helpers.exporter import Exporter
-from yearn.networks import Network
 from yearn.outputs.victoria.victoria import _post
 from yearn.yearn import Yearn
 
@@ -20,14 +21,14 @@ if Network(chain.id) == Network.Fantom:
     start = datetime(2021, 4, 30, tzinfo=timezone.utc)
     # ironbank first product deployed on Fantom
     data_query = 'ironbank{network="FTM"}'
-elif Network(chain.id) == Network.Gnosis:
+elif Network(chain.id) == Network.xDai:
     # end: yvUSDC vault January-20-2022 06:10:45 AM +-6 UTC
     start = datetime(2022, 1, 20, tzinfo=timezone.utc)
     data_query = 'yearn_vault{network="GNO"}'
 elif Network(chain.id) == Network.Arbitrum:
     # end: yvUSDC 4.3 Sep-05-2021 09:05:50 PM +UTC
     start = datetime(2021, 9, 5, tzinfo=timezone.utc)
-    data_query = 'yearn_vault{network="ARBB"}'
+    data_query = 'yearn_vault{network="ARB"}'
 elif Network(chain.id) == Network.Optimism:
     # end: yvDAI Aug-06-2022 10:50:49 PM +UTC block 18111485
     start = datetime(2022, 8, 6, tzinfo=timezone.utc)
