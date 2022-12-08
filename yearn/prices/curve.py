@@ -332,7 +332,7 @@ class CurveRegistry(metaclass=Singleton):
 
         return [dec for dec in decimals if dec != 0]
 
-    def get_balances(self, pool: AddressOrContract, block: Optional[Block] = None) -> Dict[EthAddress,float]:
+    def get_balances(self, pool: AddressOrContract, block: Optional[Block] = None, should_raise_err: bool = True) -> Optional[Dict[EthAddress,float]]:
         """
         Get {token: balance} of liquidity in the pool.
         """
@@ -358,7 +358,9 @@ class CurveRegistry(metaclass=Singleton):
             )
 
         if not any(balances):
-            raise ValueError(f'could not fetch balances {pool} at {block}')
+            if should_raise_err:
+                raise ValueError(f'could not fetch balances {pool} at {block}')
+            return None
 
         return {
             coin: balance / 10 ** dec
@@ -412,7 +414,8 @@ class CurveRegistry(metaclass=Singleton):
             pool = pools[0]
         else:
             # We need to find the pool with the deepest liquidity
-            balances = [self.get_balances(pool, block) for pool in pools]
+            balances = [self.get_balances(pool, block, should_raise_err=False) for pool in pools]
+            balances = [bal for bal in balances if bal]
             deepest_pool, deepest_bal = None, 0
             for pool, pool_bals in zip(pools, balances):
                 if isinstance(pool_bals, Exception):
