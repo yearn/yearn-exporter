@@ -122,6 +122,9 @@ def is_weth(tx: TreasuryTx) -> bool:
     if tx.from_address.address == constants.weth and tx.to_address and tx.to_address.address in treasury.addresses and tx.token.address.address == "0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE":
         return True
 
+def is_stream_replenishment(tx: TreasuryTx) -> bool:
+    return tx._to_nickname == "Contract: LlamaPay"
+
 def is_scam_airdrop(tx: TreasuryTx) -> bool:
     hashes = {
         Network.Mainnet: [

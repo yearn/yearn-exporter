@@ -11,7 +11,6 @@ expenses_txgroup = TopLevelTxGroup(OPEX_LABEL)
 
 if chain.id == Network.Mainnet:
     team = expenses_txgroup.create_child("Team Payments", people.is_team_payment)
-    team.create_child("Replenish Streams", people.is_stream_replenishment)
 
     expenses_txgroup.create_child("Coordinape", people.is_coordinape)
     expenses_txgroup.create_child("The 0.03%", people.is_0_03_percent)

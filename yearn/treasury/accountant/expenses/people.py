@@ -35,14 +35,6 @@ def is_team_payment(tx: TreasuryTx) -> bool:
     if tx.hash == '0x91656eb3246a560498e808cbfb00af0518ec12f50effda42fc1496d0b0fb080a' and tx.log_index == 421:
         return False
 
-    llamapay_hashes = [
-        "0xd268946b6937df798e965a98b3f9348f7fc8519a2df9ba124210e4ce6c3fecaf",
-        "0x9d8fc48fe2f552a424fa2e4fa35f2ddbe73eb9f1eae33bb3b7b27466b8dbb62f",
-        "0x7979a77ab8a30bc6cd12e1df92e5ba0478a8907caf6e100317b7968668d0d4a2",
-        "0x91656eb3246a560498e808cbfb00af0518ec12f50effda42fc1496d0b0fb080a",
-        "0x16c193b8891af35ec811ebe8416f25addc0c4ffe39e074b5820577f1d8be72ec",
-    ]
-
     zerox_splits_hashes = [
         "0x38dbe0e943d978483439d4dec9e29f71fc4690e790261661ef3b2d179dee26b9"
     ]
@@ -50,8 +42,6 @@ def is_team_payment(tx: TreasuryTx) -> bool:
     if tx in HashMatcher(hashes):
         return True
     elif tx in HashMatcher(disperse_app_hashes) and tx._from_nickname == 'Disperse.app':
-        return True
-    elif tx in HashMatcher(llamapay_hashes) and tx._to_nickname == "Contract: LlamaPay":
         return True
     elif tx in HashMatcher(zerox_splits_hashes) and tx._to_nickname == "Non-Verified Contract: 0x426eF4C1d57b4772BcBE23979f4bbb236c135e1C":
         return True
@@ -109,9 +99,6 @@ def is_other_grant(tx: TreasuryTx) -> bool:
     if tx._from_nickname == "Disperse.app":
         return tx in HashMatcher(disperse_hashes)
     return tx in HashMatcher(hashes)
-
-def is_stream_replenishment(tx: TreasuryTx) -> bool:
-    pass
 
 def is_0_03_percent(tx: TreasuryTx) -> bool:
     return tx in HashMatcher([["0xe56521d79b0b87425e90c08ed3da5b4fa3329a40fe31597798806db07f68494e", Filter('_from_nickname', 'Disperse.app')]])
