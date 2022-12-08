@@ -15,6 +15,9 @@ def force_init_problematic_contracts() -> None:
         # PHP Philippine Peso stablecoin is not verified. Force starndard ERC-20 abi.
         Contract_erc20("0xFa247d0D55a324ca19985577a2cDcFC383D87953")
 
+        # CREAM unitroller
+        Contract.from_explorer("0xbadaC56c9aca307079e8B8FC699987AAc89813ee")
+
         # workaround for issues loading the partner tracker contract on arbitrum
         Contract.from_abi(
             name='YearnPartnerTracker',
