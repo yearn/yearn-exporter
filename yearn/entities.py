@@ -348,7 +348,7 @@ class StreamedFunds(db.Entity):
         amount_streamed_today = stream.amount_per_second * seconds_active_today / stream.scale
         
         # We only need this for this function so we import in this function to save time where this function isn't needed.
-        from yearn.prices import magic
+        from y.prices import magic
 
         price = Decimal(magic.get_price(stream.token.address.address, block))
 

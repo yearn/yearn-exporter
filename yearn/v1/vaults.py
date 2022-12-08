@@ -14,7 +14,6 @@ from yearn.apy.common import ApySamples
 from yearn.common import Tvl
 from yearn.exceptions import PriceError
 from yearn.multicall2 import fetch_multicall_async
-from yearn.prices import magic
 from yearn.prices.curve import curve
 from yearn.utils import contract
 from yearn.v1 import constants
