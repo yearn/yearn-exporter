@@ -10,8 +10,10 @@ from typing import Awaitable, Callable, Literal, NoReturn, Optional, TypeVar
 
 import eth_retry
 from brownie import chain
+from concurrent.futures import ThreadPoolExecutor
 from dank_mids.controller import instances
 from y.datatypes import Block
+from y.networks import Network
 from y.time import closest_block_after_timestamp
 from y.utils.dank_mids import dank_w3
 from yearn.helpers.snapshots import (RESOLUTION, SLEEP_TIME, Resolution,
@@ -20,7 +22,6 @@ from yearn.helpers.snapshots import (RESOLUTION, SLEEP_TIME, Resolution,
                                      _get_intervals)
 from yearn.outputs.victoria.victoria import _build_item, _post, has_data
 from yearn.sentry import log_task_exceptions
-from yearn.utils import run_in_thread
 
 logger = logging.getLogger(__name__)
 
@@ -54,7 +55,7 @@ class Exporter:
         data_fn: Callable[[int, int], Awaitable[T]], 
         export_fn: Callable[[T], Awaitable[None]],
         start_block: int,
-        max_concurrent_runs: int = 10,
+        max_concurrent_runs: int = 12,
         max_concurrent_runs_per_resolution: int = 5
     ) -> None:
         """
@@ -89,6 +90,7 @@ class Exporter:
         self._res_semaphore = defaultdict(lambda: asyncio.Semaphore(max_concurrent_runs_per_resolution))
         self._has_data_semaphore = asyncio.Semaphore(2)
         self._export_semaphore = asyncio.Semaphore(2)
+        self._sync_threads = ThreadPoolExecutor(2)
 
         self._snapshots_fetched = 0
         self._snapshots_exported = 0
@@ -163,14 +165,14 @@ class Exporter:
         
         # Export to datastore
         await self._export_data(data)
-        logger.info(f"exported {self.name} snapshot %s block=%d took=%.3fs", snapshot, block, duration)
+        logger.info(f"exported {Network.name()} {self.name} snapshot %s block=%d took=%.3fs", snapshot, block, duration)
         await self._export_duration(duration, ts)
     
     @log_task_exceptions
     async def export_historical_snapshot_if_missing(self, snapshot: datetime, resolution: Resolution) -> None:
         if not await self._has_data(snapshot):
             timestamp = int(snapshot.timestamp())
-            block = await run_in_thread(closest_block_after_timestamp, timestamp)
+            block = await asyncio.get_event_loop().run_in_executor(self._sync_threads, closest_block_after_timestamp, timestamp)
             assert block is not None, "no block after timestamp found. timestamp: %s" % timestamp
             await self.export_snapshot(block, snapshot, resolution)
     
