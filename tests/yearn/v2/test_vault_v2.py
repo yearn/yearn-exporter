@@ -2,6 +2,7 @@ from random import randint
 
 import pytest
 from brownie import chain
+from multicall.utils import await_awaitable
 from y.networks import Network
 from y.contracts import contract_creation_block
 
@@ -46,12 +47,12 @@ def test_active_vaults_at_v2_current():
         Network.Fantom: 18,
     }[chain.id]
 
-    assert len(registry.active_vaults_at()) >= MIN_CT_VAULTS, "One or more vaults are missing from v2.Registry().active_vaults_at(None)"
+    assert len(await_awaitable(registry.active_vaults_at())) >= MIN_CT_VAULTS, "One or more vaults are missing from v2.Registry().active_vaults_at(None)"
 
 
 @pytest.mark.parametrize('block',blocks)
 def test_active_vaults_at_v2(block):
-    assert registry.active_vaults_at(block=block), f"Unable to fetch active v2 vaults at block {block}."
+    assert await_awaitable(registry.active_vaults_at(block=block)), f"Unable to fetch active v2 vaults at block {block}."
 
 
 @pytest.mark.parametrize('block',blocks)

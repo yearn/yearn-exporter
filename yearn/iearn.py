@@ -2,13 +2,13 @@ import asyncio
 from collections import defaultdict
 
 from brownie import chain
-from y.contracts import contract_creation_block
+from y.contracts import contract_creation_block_async
 from y.networks import Network
 from y.prices import magic
 
 from yearn.exceptions import UnsupportedNetwork
 from yearn.multicall2 import fetch_multicall_async, multicall_matrix_async
-from yearn.utils import contract, run_in_thread
+from yearn.utils import contract
 
 IEARN = {
     # v1 - deprecated
@@ -48,7 +48,7 @@ class Registry:
         return f"<Earn vaults={len(self.vaults)}>"
 
     async def describe(self, block=None) -> dict:
-        vaults = await run_in_thread(self.active_vaults_at, block)
+        vaults = await self.active_vaults_at(block)
         contracts = [vault.vault for vault in vaults]
         results, prices = await asyncio.gather(
             multicall_matrix_async(contracts, ["totalSupply", "pool", "getPricePerFullShare", "balance"], block=block),
@@ -74,14 +74,15 @@ class Registry:
         return dict(output)
 
     async def total_value_at(self, block=None):
-        vaults = await run_in_thread(self.active_vaults_at, block)
+        vaults = await self.active_vaults_at(block)
         prices, results = await asyncio.gather(
             asyncio.gather(*[magic.get_price_async(vault.token, block=block) for vault in vaults]),
             fetch_multicall_async(*[[vault.vault, "pool"] for vault in vaults], block=block),
         )
         return {vault.name: assets * price / vault.scale for vault, assets, price in zip(vaults, results, prices)}
 
-    def active_vaults_at(self, block=None):
+    async def active_vaults_at(self, block=None):
         if block is None:
             return self.vaults
-        return [vault for vault in self.vaults if contract_creation_block(str(vault.vault)) < block]
+        blocks = await asyncio.gather(*[contract_creation_block_async(str(vault.vault)) for vault in self.vaults])
+        return [vault for vault, deployed in zip(self.vaults, blocks) if deployed < block]

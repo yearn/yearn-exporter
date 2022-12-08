@@ -5,14 +5,14 @@ from typing import Tuple
 
 import eth_retry
 import requests
-from y.contracts import contract_creation_block
+from y.contracts import contract_creation_block_async
 from y.exceptions import PriceError
 from y.prices import magic
 
 from yearn.apy.common import Apy, ApyFees, ApyPoints, ApySamples
 from yearn.common import Tvl
 from yearn.prices.curve import curve
-from yearn.utils import Singleton, contract, run_in_thread
+from yearn.utils import Singleton, contract
 
 
 class YveCRVJar(metaclass = Singleton):
@@ -155,17 +155,18 @@ class Registry(metaclass = Singleton):
 
     async def describe(self, block=None):
         # not supported yet
-        vaults = self.active_vaults_at(block)
+        vaults = await self.active_vaults_at(block)
         data = await asyncio.gather(*[vault.describe(block=block) for vault in vaults])
         return {vault.name: desc for vault, desc in zip(vaults, data)}
 
     async def total_value_at(self, block=None):
-        vaults = await run_in_thread(self.active_vaults_at, block)
+        vaults = await self.active_vaults_at(block)
         tvls = await asyncio.gather(*[vault.total_value_at(block=block) for vault in vaults])
         return {vault.name: tvl for vault, tvl in zip(vaults, tvls)}
 
-    def active_vaults_at(self, block=None):
+    async def active_vaults_at(self, block=None):
         vaults = list(self.vaults)
         if block:
-            vaults = [vault for vault in self.vaults if contract_creation_block(str(vault.vault)) <= block]
+            blocks = await asyncio.gather(*[contract_creation_block_async(str(vault.vault)) for vault in self.vaults])
+            vaults = [vault for vault, deploy_block in zip(self.vaults, blocks) if deploy_block <= block]
         return vaults
