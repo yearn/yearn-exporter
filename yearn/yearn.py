@@ -133,8 +133,6 @@ class Yearn:
             if product in products
             for vault in product_values.values() if type(vault) == dict
         )
-        if tvl == 0:
-            print(data)
         logger.info('exported block=%d tvl=%.0f took=%.3fs', block, tvl, time() - start)
 
         metrics_to_export = []
@@ -250,3 +248,5 @@ class Yearn:
 
                     item = _build_item(metric, label_names, label_values, v, timestamp)
                     metrics_to_export.append(item)
+                    
+        return metrics_to_export
