@@ -1,14 +1,16 @@
 from collections import defaultdict
 from math import ceil
 
+from async_lru import alru_cache
 from brownie import chain
 from toolz import last
+from y import Contract
 from y.networks import Network
 
 from yearn.events import decode_logs, get_logs_asap
-from yearn.utils import contract
+from yearn.utils import run_in_thread
 
-YEARN_PARTNER_TRACKER = contract({
+YEARN_PARTNER_TRACKER = Contract({
     Network.Mainnet: "0x8ee392a4787397126C163Cb9844d7c447da419D8",
     Network.Fantom: "0x086865B2983320b36C42E48086DaDc786c9Ac73B",
     Network.Arbitrum: "0x0e5b46E4b2a05fd53F5a4cD974eb98a9a613bcb7",
@@ -29,9 +31,12 @@ class AsOfDict(dict):
     def __getitem__(self, key):
         return super().__getitem__(last(item for item in sorted(self) if item <= key))
 
-def delegated_deposit_totals():
+@alru_cache(maxsize=1)
+async def delegated_deposit_totals():
     delegated_deposits = defaultdict(lambda: defaultdict(lambda: defaultdict(AsOfDict)))
-    for deposit in decode_logs(get_logs_asap(str(YEARN_PARTNER_TRACKER), [YEARN_PARTNER_TRACKER.topics['ReferredBalanceIncreased']])):
+    logs = await run_in_thread(get_logs_asap, str(YEARN_PARTNER_TRACKER), [YEARN_PARTNER_TRACKER.topics['ReferredBalanceIncreased']])
+    decoded = await run_in_thread(decode_logs, logs)
+    for deposit in decoded:
         partnerId, vault, depositor, amount_added, total_deposited = deposit.values()
         partner_deposits = _unwrap(delegated_deposits, vault, depositor, partnerId)
 
@@ -39,11 +44,14 @@ def delegated_deposit_totals():
         partner_deposits[deposit.block_number] = pre_value + amount_added
     return delegated_deposits
 
-def proportional_withdrawal_totals(delegated_deposits):
+@alru_cache(maxsize=1)
+async def proportional_withdrawal_totals(delegated_deposits):
     proportional_withdrawals = defaultdict(lambda: defaultdict(lambda: defaultdict(AsOfDict)))
     for vault in list(delegated_deposits.keys()):
-        vault = contract(vault)
-        for transfer in decode_logs(get_logs_asap(str(vault), [vault.topics['Transfer']])):
+        vault = await Contract.coroutine(vault)
+        logs = await run_in_thread(get_logs_asap, str(vault), vault.topics["Transfer"])
+        decoded = await run_in_thread(decode_logs, logs)
+        for transfer in decoded:
             sender, receiver, amount = transfer.values()
             vault_deposits = delegated_deposits[vault.address]
             if sender not in vault_deposits:
@@ -70,20 +78,20 @@ def proportional_withdrawal_totals(delegated_deposits):
                 partner_withdrawals = _unwrap(proportional_withdrawals, vault.address, sender, partner)
                 partner_withdrawals[transfer.block_number] += ceil(amount * balance / total)
     return proportional_withdrawals
-    
-def delegated_deposit_balances():
+   
+@alru_cache(maxsize=1) 
+async def delegated_deposit_balances():
     """
     Returns a dict used to lookup the delegated balance of each `partner` for each `depositor` to each `vault` at `block`.
         {vault: {depositor: {partner: AsOfDict({block: amount})}}}
     """
-    deposits = delegated_deposit_totals()
-    withdrawals = proportional_withdrawal_totals(deposits)
+    deposits = await delegated_deposit_totals()
+    withdrawals = await proportional_withdrawal_totals(deposits)
 
     balances = defaultdict(lambda: defaultdict(lambda: defaultdict(AsOfDict)))
     for vault, vdeets in deposits.items():
         for depositor, ddeets in vdeets.items():
             for partner, pdeets in ddeets.items():
-
                 partner_balances = _unwrap(balances, vault, depositor, partner)
                 partner_withdrawals = _unwrap(withdrawals, vault, depositor, partner)
 
@@ -102,6 +110,3 @@ def _unwrap(root_dict, vault, depositor, partner):
     depositor_based = vault_based[depositor]
     partner_based = depositor_based[partner]
     return partner_based
-
-
-DELEGATED_BALANCES = delegated_deposit_balances()

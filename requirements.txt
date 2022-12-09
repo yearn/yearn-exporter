@@ -24,7 +24,6 @@ nest_asyncio
 dank_mids>=4.20.19
 eth_retry>=0.1.15
 eth-hash[pysha3]
-python-telegram-bot>=13.14
 ypricemagic>=1.10.8
 # The following addition is unused but somehow fixes a dep conflict by being placed here.
 eth-hash[pycryptodome]==0.3.2

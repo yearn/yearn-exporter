@@ -18,6 +18,7 @@ import threading
 import time
 from collections import defaultdict
 from enum import IntEnum
+from functools import cached_property
 from typing import Dict, List, Optional
 
 from brownie import ZERO_ADDRESS, Contract, chain, convert, interface
@@ -113,9 +114,13 @@ class CurveRegistry(metaclass=Singleton):
         self.address_provider = contract(addrs['address_provider'])
 
         self._done = threading.Event()
-        self._thread = threading.Thread(target=self.watch_events, daemon=True)
         self._has_exception = False
-        self._thread.start()
+    
+    @cached_property
+    def _thread(self) -> threading.Thread:
+        thread = threading.Thread(target=self.watch_events, daemon=True)
+        thread.start()
+        return thread
 
     @sentry_catch_all
     def watch_events(self) -> None:

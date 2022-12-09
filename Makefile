@@ -87,6 +87,9 @@ down: get-network-name
 	$(eval filter = $(if $(filter),$(filter),$(if $(NETWORK),$(NETWORK),exporter)))
 	echo "stopping containers for filter: $(filter)"
 	docker ps -a -q --filter="name=$(filter)" | xargs -L 1 docker rm -f 2> /dev/null || true
+	$(eval filter = $(if $(NETWORK),$(NETWORK),worker))
+	echo "stopping containers for filter: $(filter)"
+	docker ps -a -q --filter="name=$(filter)" | xargs -L 1 docker rm -f 2> /dev/null || true
 	echo "running containers:"
 	docker ps
 
@@ -97,6 +100,7 @@ build:
 logs: get-network-name
 	$(eval filter = $(if $(filter),$(filter),$(if $(NETWORK),$(NETWORK),exporter)))
 	$(eval since = $(if $(since),$(since),30s))
+	echo $(filter)
 	docker ps -a -q --filter="name=$(filter)"| xargs -L 1 -P $$(docker ps --filter="name=$(filter)" | wc -l) docker logs --since $(since) -ft
 
 

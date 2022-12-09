@@ -1,6 +1,7 @@
 import asyncio
 from collections import defaultdict
 
+import dask
 from brownie import chain
 from y.contracts import contract_creation_block_async
 from y.networks import Network
@@ -47,6 +48,7 @@ class Registry:
     def __repr__(self):
         return f"<Earn vaults={len(self.vaults)}>"
     
+    @dask.delayed
     async def describe_delayed(self, block=None):
         return await self.describe(block=block)
 

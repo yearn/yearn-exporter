@@ -9,6 +9,9 @@ if [[ -z "${COMMANDS}" ]]; then
   echo "please provide a list of commands to run via \$COMMANDS."
   exit 1
 fi
+if [[ -z "${POOL_SIZE}" ]]; then
+  POOL_SIZE=2
+fi
 
 if [[ $NETWORK == "ethereum" ]]; then
   export BROWNIE_NETWORK=mainnet
@@ -50,16 +53,22 @@ export SENTRY_RELEASE=$(git rev-parse --short HEAD)
 IFS=',' read -r -a commands <<< "$COMMANDS"
 
 ### Ensure workers are running for `BROWNIE_NETWORK`
-WORKER_NAME=${NETWORK}_workers
-CONTAINER_NAME=${WORKER_NAME}_1
+REPLICA=$((0))
+while [ $REPLICA -lt $POOL_SIZE ];
+do
+CONTAINER_NAME=${NETWORK}_worker_$REPLICA
 docker rm -f $CONTAINER_NAME 2> /dev/null || true
 
+export REPLICA=${REPLICA}
 docker-compose \
   --file services/dashboard/docker-compose.yml \
-  --project-directory . run \
+  --project-directory . -p $NETWORK run \
   --name $CONTAINER_NAME \
   --detach \
-  workers 
+  workers
+
+REPLICA=$((REPLICA+1))
+done
 
 #TODO add --detach
 for CMD in "${commands[@]}"; do

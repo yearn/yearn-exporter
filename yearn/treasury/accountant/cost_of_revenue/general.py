@@ -1,5 +1,6 @@
 
 from brownie import chain, convert
+from multicall.utils import await_awaitable
 from y.networks import Network
 
 from yearn import constants
@@ -39,7 +40,7 @@ def is_partner_fees(tx: TreasuryTx) -> bool:
                 (hasattr(partner, 'retired_treasuries') and tx.to_address.address in partner.retired_treasuries)
             ):
                 continue
-            if any(tx.token.address.address == convert.to_address(wrapper.vault) for wrapper in partner.flat_wrappers):
+            if any(tx.token.address.address == convert.to_address(wrapper.vault) for wrapper in await_awaitable(partner.flat_wrappers)):
                 return True
     
     # DEV figure out why these weren't captured by the above

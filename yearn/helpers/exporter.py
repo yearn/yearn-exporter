@@ -9,28 +9,30 @@ from typing import (Any, Awaitable, Callable, Dict, List, Literal, NoReturn,
 import dask
 from brownie import chain
 from dask.delayed import Delayed
+from dask.distributed import Future
 from eth_portfolio.utils import get_buffered_chain_height
 from y.datatypes import Block
 from y.networks import Network
 from y.time import closest_block_after_timestamp_async
-from y.utils.dank_mids import dank_w3
 
-from yearn.dask import ChainAwareClient, _get_client_from_worker
+from yearn.dask import CONCURRENCY, _get_async_client, _get_sync_client
 from yearn.helpers.snapshots import (RESOLUTION, SLEEP_TIME,
                                      _generate_snapshot_range_forward,
                                      _generate_snapshot_range_historical,
                                      _get_intervals)
 from yearn.outputs.victoria.victoria import _build_item, _to_jsonl_gz, has_data
 
+
 logger = logging.getLogger(__name__)
 
 BASE_URL = os.environ.get('VM_URL', 'http://victoria-metrics:8428')
 SHOW_STATS = bool(os.environ.get("SHOW_STATS"))
 
-@dask.delayed(pure=False)
-async def _wait_for_block(timestamp: int) -> Block:
+@dask.delayed(pure=True)
+async def _wait_for_block(chainid: int, timestamp: int) -> Block:
     # eth_retry decorated functions can't be pickled.
     import eth_retry
+    from y import dank_w3
     while True:
         block = await dank_w3.eth.get_block(await get_buffered_chain_height())
         while timestamp < block.timestamp:
@@ -48,26 +50,16 @@ T = TypeVar('T')
 Direction = Literal["forward", "historical"]
 vm_semaphore = asyncio.Semaphore(1)
 
-def _clear_completed_futures(futs: list):
-    for fut in futs:
-        if fut.status == "finished":
-            futs.pop(fut)
 
-@dask.delayed
-async def get_block_if_missing(snapshot: datetime, has_data: bool) -> Optional[int]:
+
+@dask.delayed(pure=True)
+#@use_chain_semaphore(500)
+async def get_block_if_missing(chainid: int, snapshot: datetime, has_data: bool) -> Optional[int]:
+    # NOTE: While not used in the function, input `chainid` is used in dask's cache key
     if not has_data:
         timestamp = int(snapshot.timestamp())
         return await closest_block_after_timestamp_async(timestamp)
 
-#@log_task_exceptions
-def export_snapshot(self, block: int, snapshot: datetime) -> Delayed:
-    """ Assembles a dask.Delayed object containing the export logic and submits it to the scheduler. """ 
-    #data, duration = dask.delayed(get_data, name=f"get {Network.name()} {self.name} data", nout=2, pure=False)(block, snapshot, self._data_fn)
-    data, duration = self._data_fn(block, int(snapshot.timestamp()))
-    data = dask.delayed(self._export_fn, name="push to datastore")(data)    
-    duration = dask.delayed(self._export_duration, name="export duration")(block, duration, snapshot.timestamp())
-    # TODO add _print_stats in _success_msg
-    return dask.delayed(self._success_msg)(block, snapshot, duration, data) # NOTE We tuck `data` in here to force dask to confirm success before returning the log message
 
 _has_data_semaphore = asyncio.Semaphore(2)
 
@@ -79,33 +71,6 @@ async def _has_data(name: str, data_query, snapshot: datetime) -> bool:
     if response:
         logger.info(f"data already present for {Network.name()} {name} snapshot {snapshot}, ts {ts}")
     return bool(response)
-
-'''
-async def get_data(block: int, snapshot: datetime, _data_fn): # -> Tuple[T, int]:
-    if block is None:
-        return [], 0
-    start = time.time()
-    ts = snapshot.timestamp()
-    data = await _data_fn(block, ts)
-    duration = time.time() - start
-    logger.info(data)
-    #self._snapshots_fetched += 1
-    return data, duration
-'''
-_export_semaphore = asyncio.Semaphore(2)
-
-@dask.delayed(pure=False)
-async def _export_data(_export_fn, data: T) -> None:
-    from yearn.dask import _get_client_from_worker
-
-    #async with _export_semaphore:
-        #await eth_retry.auto_retry(_post if _export_fn is None else _export_fn)(url, data)
-    fut = _get_client_from_worker().submit(_post if _export_fn is None else _export_fn, BASE_URL, data, asynchronous=True)
-    await fut
-    #self._snapshots_exported += 1
-
-
-#@dask.delayed
 
 async def _post(metrics_to_export: List[Dict]) -> None:
     import aiohttp
@@ -148,11 +113,10 @@ class Exporter:
         self,
         name: str,
         data_query: str,
-        data_fn: Callable[[int, int], Awaitable[T]], 
+        data_fn: Callable[[int, int], Delayed], # When computed, the return value will be of type `T`.
         start_block: int,
-        export_fn: Callable[[T], Awaitable[None]] = _post,
-        max_concurrent_runs: int = 10 * int(os.environ.get("POOL_SIZE", 1)),
-        max_concurrent_runs_per_resolution: int = 5
+        export_fn: Callable[[T], Awaitable[T]] = _post,
+        max_concurrent_runs: int = CONCURRENCY,
     ) -> None:
         """
         Required Args:
@@ -183,11 +147,7 @@ class Exporter:
         self._data_fn = data_fn
         self._export_fn = export_fn
         self._concurrency = max_concurrent_runs
-        #self._data_semaphore = asyncio.Semaphore(self._concurrency)
-        #self._res_semaphore = defaultdict(lambda: asyncio.Semaphore(max_concurrent_runs_per_resolution))
-        #self._has_data_semaphore = asyncio.Semaphore(2)
-        #self._export_semaphore = asyncio.Semaphore(2)
-        self._futs = []
+        self._futs: List[Future] = []
         
         self._snapshots_fetched = 0
         self._snapshots_exported = 0
@@ -196,13 +156,18 @@ class Exporter:
         return self.chain_id
     
     def run(self, direction: Optional[Direction] = None) -> NoReturn:
-        client = ChainAwareClient("tcp://scheduler:8786")
+        client = _get_sync_client()
+        future_key = f"{self.name} forward {Network.name()}"
+        history_key = f"{self.name} historical {Network.name()}"
         if direction is None:
-            client.submit(self.export_full, key=f"{self.name} full {Network.name()}").result()
+            client.gather([
+                client.submit(self.export_future, key=future_key),
+                client.submit(self.export_history, key=history_key),
+            ])
         elif direction == "forward":
-            client.submit(self.export_future, key=f"{self.name} full {Network.name()}").result()
+            client.submit(self.export_future, key=future_key).result()
         elif direction == "historical":
-            client.submit(self.export_history, key=f"{self.name} full {Network.name()}").result()
+            client.submit(self.export_history, key=history_key).result()
         else:
             raise NotImplementedError(f'`direction` must be one of either `None`, `"forward"`, or `"historical"`. You passed {direction}')
     
@@ -223,19 +188,18 @@ class Exporter:
         interval = intervals[RESOLUTION]['interval']
         # Bump forward to the next snapshot, as the historical coroutine will take care of this one.
         start = start + interval
-        futs = []
+        client = await _get_async_client()
         async for snapshot in _generate_snapshot_range_forward(start, interval):
-            block = _wait_for_block(snapshot.timestamp())
-            delayed = export_snapshot(self, block, snapshot)
-            futs.append(_get_client_from_worker().compute(delayed, asynchronous=True))
-            _clear_completed_futures(futs)
+            block = _wait_for_block(chain.id, snapshot.timestamp())
+            self._futs.append(client.compute(self.export_snapshot_delayed(block, snapshot)))
+            await self._clear_completed_futures()
 
     async def export_history(self) -> None:
         """ Exports all historical data. This coroutine runs for a finite duration. """
         logger.info(f"exporting {Network.name()} {self.name} snapshots for resolution {RESOLUTION}")
         start = datetime.now(tz=timezone.utc)
         intervals = _get_intervals(start)
-        delayeds = []
+        client = await _get_async_client()
         for resolution in intervals:
             snapshots = _generate_snapshot_range_historical(
                 self.start_timestamp,
@@ -244,57 +208,23 @@ class Exporter:
             )
             async for snapshot in snapshots:
                 exists = await has_data(snapshot.timestamp(), self.data_query)
-                block = get_block_if_missing(snapshot, exists)
-                delayeds.append(export_snapshot(self, block, snapshot))
-                
-            futs = _get_client_from_worker().compute(delayeds, asynchronous=True)
-            
-            
-            #futs = _get_client_from_worker().compute(delayeds[:self._concurrency], asynchronous=True)
-            #delayeds = delayeds[self._concurrency:]
-            errd_futs = []
-            #while delayeds:
-            #    if len(futs) < self._concurrency:
-            #        futs.append(_get_client_from_worker().compute(delayeds.pop(0)))
-            while futs:    
-                for i, fut in enumerate(futs):
-                    if fut.status == "finished":
-                        self._log_future_result(fut)
-                        futs.pop(i)
-                    elif fut.status == "error":
-                        # TODO maybe raise errs? 
-                        errd_futs.append(futs.pop(i))
-                await asyncio.sleep(1)
-
-    def _log_future_result(self, fut) -> None:
-        log_msg = fut.result()
-        self._snapshots_fetched += 1
-        self._snapshots_exported += 1
-        if isinstance(log_msg, tuple):
-            logger.info(*log_msg)
-        else:
-            logger.info(log_msg)
-        
-        #batches = [delayeds[i:i+self._concurrency] for i in range(0, len(delayeds), self._concurrency)]
-        #for batch in batches:
-        #    futs = _get_client().compute(batch, asynchronous=True)
-        #    await _get_client().gather(futs, errors="skip",asynchronous=True) #errors="skip", asynchronous=True)
+                block = get_block_if_missing(chain.id, snapshot, exists)
+                self._futs.append(client.compute(self.export_snapshot_delayed(block, snapshot)))
+        while self._futs:
+            await self._clear_completed_futures()
+            await asyncio.sleep(0)
     
     # Export Methods
+
+    def export_snapshot_delayed(self, block: int, snapshot: datetime) -> Delayed:
+        """ Assembles a dask.Delayed object containing the export logic and submits it to the scheduler. """ 
+        #data, duration = dask.delayed(get_data, name=f"get {Network.name()} {self.name} data", nout=2, pure=False)(block, snapshot, self._data_fn)
+        data, duration = self._data_fn(block, int(snapshot.timestamp()))
+        data = dask.delayed(self._export_fn, name="push to datastore")(data)    
+        duration = dask.delayed(self._export_duration, name="export duration")(block, duration, snapshot.timestamp())
+        # TODO add _print_stats in _success_msg
+        return dask.delayed(self._success_msg)(block, snapshot, duration, data) # NOTE We tuck `data` in here to force dask to confirm success before returning the log message
     
-    '''
-    @dask.delayed(nout=2, pure=False)
-    async def get_data(self, block: int, snapshot: datetime) -> Tuple[T, int]:
-        start = time.time()
-        ts = snapshot.timestamp()
-        data = self._data_fn(block, ts)
-        # If `data` is a Delayed object, we can pass it thru as-is
-        if self.name != "vaults":
-            data = await data
-        duration = time.time() - start
-        self._snapshots_fetched += 1
-        return data, duration
-    '''
     # Datastore Methods
 
     async def _export_duration(self, block, duration_seconds: float, timestamp_seconds: float) -> float:
@@ -310,7 +240,20 @@ class Exporter:
         await _post([item])
         return duration_seconds
     
-    # Stats
+    # Post-processing
+
+    async def _clear_completed_futures(self) -> None:
+        await asyncio.gather(*[self._log_future_result(self._futs.pop(i)) for i, fut in enumerate(self._futs) if fut.status in ["finished", "error"]])
+    
+    async def _log_future_result(self, fut: Future) -> None:
+        log_msg = await fut
+        self._snapshots_fetched += 1
+        self._snapshots_exported += 1
+        if isinstance(log_msg, tuple):
+            logger.info(*log_msg)
+        else:
+            logger.info(log_msg)
+        
     @dask.delayed
     async def _print_stats(self, _: "dask.Delayed") -> None:  # type: ignore
         if SHOW_STATS:
@@ -320,12 +263,12 @@ class Exporter:
             #logger.info(f"exported {snapshots} snapshots in {requests} requests")
             #logger.info(f"Avg rate of {round(requests/snapshots, 2)} requests per snapshot. Currently only considers eth_calls.")
     
-    async def _success_msg(self, block: int, snapshot: datetime, duration: float, data: Any) -> Tuple[str, Optional[float]]:
+    def _success_msg(self, block: int, snapshot: datetime, duration: float, data: Any) -> Tuple[str, Optional[float]]:
         if block is None:
             return f"data already present for {Network.name()} {self.name} snapshot {snapshot}, ts {int(snapshot.timestamp())}"
         if not data:
-            logger.info(f"No data for block {block}. This shouldn't happen, you might want to move the `start_block`.")
+            return f"No data for {Network.name()} {self.name} block {block}. This shouldn't happen, you might want to move the `start_block` for this exporter."
         return f"exported {Network.name()} {self.name} snapshot {snapshot} block={block} took=%.3fs", duration
-    
+
     # Snapshot Timestamp Generators
     

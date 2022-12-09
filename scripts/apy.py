@@ -5,7 +5,9 @@ import warnings
 
 import sentry_sdk
 from brownie.exceptions import BrownieEnvironmentWarning
+from multicall.utils import await_awaitable
 from tabulate import tabulate
+
 from yearn.apy import ApyError, get_samples
 from yearn.special import Backscratcher, YveCRVJar
 from yearn.v1.registry import Registry as RegistryV1
@@ -34,7 +36,7 @@ def main():
 
     v2_registry = RegistryV2()
 
-    for vault in v2_registry.vaults:
+    for vault in await_awaitable(v2_registry.vaults):
         try:
             apy = vault.apy(samples)
             data.append({"product": apy.type, "name": vault.name, "apy": apy.net_apy})

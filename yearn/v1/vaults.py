@@ -2,7 +2,7 @@ import asyncio
 import logging
 from dataclasses import dataclass
 from functools import cached_property
-from typing import Optional
+from typing import TYPE_CHECKING, Optional
 
 from brownie import ZERO_ADDRESS, interface
 from brownie.network.contract import InterfaceContainer
@@ -11,13 +11,15 @@ from y.exceptions import PriceError
 from y.prices import magic
 from y.utils.dank_mids import dank_w3
 
-from yearn import apy, constants
+from yearn import constants
 from yearn.apy.common import ApySamples
 from yearn.common import Tvl
 from yearn.multicall2 import fetch_multicall_async
-from yearn.prices.curve import curve
 from yearn.utils import contract
 from yearn.v1 import constants
+
+if TYPE_CHECKING:
+    from yearn.apy.common import ApySamples
 
 logger = logging.getLogger(__name__)
 
@@ -67,10 +69,17 @@ class VaultV1:
 
     @cached_property
     def is_curve_vault(self):
+        # NOTE the curve object as-is is not picklable so we import it here for now.
+        from yearn.prices.curve import curve
         return curve.get_pool(str(self.token)) is not None
 
     async def describe(self, block=None):
-        info = {}
+        # NOTE the curve object as-is is not picklable so we import it here for now.
+        from yearn.prices.curve import curve
+        share_price = await self.vault.getPricePerFullShare.coroutine(block_identifier=block)
+        if not share_price:
+            return None
+        info = {"share price": share_price / 1e18}
         strategy = self.strategy
         if block is not None:
             strategy = await self.get_strategy(block=block)
@@ -80,7 +89,6 @@ class VaultV1:
             "vault balance": [self.vault, "balance"],
             "vault total": [self.vault, "totalSupply"],
             "strategy balance": [strategy, "balanceOf"],
-            "share price": [self.vault, "getPricePerFullShare"],
         }
 
         # some of the oldest vaults don't implement these methods
@@ -125,10 +133,9 @@ class VaultV1:
 
         # fetch attrs as multicall
         results = await fetch_multicall_async(*attrs.values(), block=block)
-        scale_overrides = {"share price": 1e18}
         for name, attr in zip(attrs, results):
             if attr is not None:
-                info[name] = attr / scale_overrides.get(name, self.scale)
+                info[name] = attr / self.scale
             else:
                 logger.warning("attr %s rekt %s", name, attr)
 
@@ -143,7 +150,10 @@ class VaultV1:
             
         return info
 
-    def apy(self, samples: ApySamples):
+    def apy(self, samples: "ApySamples"):
+        # NOTE the curve object as-is is not picklable so we import it here for so dask can transfer the vault object..
+        from yearn import apy, constants
+        from yearn.prices.curve import curve
         if curve.get_pool(self.token.address):
             return apy.curve.simple(self, samples)
         else:

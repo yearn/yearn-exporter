@@ -13,9 +13,9 @@ from web3.middleware.filter import block_ranges
 from web3.types import LogReceipt, RPCEndpoint
 from y.contracts import contract_creation_block
 
-from yearn.middleware.middleware import BATCH_SIZE
+import yearn.middleware.middleware as mw
 from yearn.typing import Address, Block, Topics
-from yearn.utils import contract
+import yearn.utils
 
 logger = logging.getLogger(__name__)
 
@@ -51,7 +51,7 @@ def create_filter(address: Address, topics: Optional[Topics] = None) -> RPCEndpo
 
 def __add_deployment_topics(address: Address) -> None:
     try:
-        _add_deployment_topics(address, contract(address).abi)
+        _add_deployment_topics(address, yearn.utils.contract(address).abi)
     except ContractNotFound:
         # This contract seems to have self destructed
         pass
@@ -77,7 +77,7 @@ def get_logs_asap(
     if to_block is None:
         to_block = chain.height
 
-    ranges = list(block_ranges(from_block, to_block, BATCH_SIZE))
+    ranges = list(block_ranges(from_block, to_block, mw.BATCH_SIZE))
     if verbose > 0:
         logger.info('fetching %d batches', len(ranges))
 

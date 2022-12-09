@@ -6,7 +6,9 @@ from typing import List
 
 import dask
 from brownie import chain
+from dask.delayed import Delayed
 from y.contracts import contract_creation_block_async
+from y.datatypes import Block
 from y.networks import Network
 
 import yearn.iearn
@@ -14,12 +16,14 @@ import yearn.ironbank
 import yearn.special
 import yearn.v1.registry
 import yearn.v2.registry
+from yearn.dask import CONCURRENCY, use_chain_semaphore
 from yearn.exceptions import UnsupportedNetwork
 from yearn.ironbank import addresses as ironbank_registries
 from yearn.outputs.victoria.output_helper import (_flatten_dict,
                                                   _get_label_values, mapping)
 from yearn.outputs.victoria.victoria import _build_item
 from yearn.prices import constants
+from yearn.v2.vaults import Vault
 
 logger = logging.getLogger(__name__)
 
@@ -29,7 +33,7 @@ class Yearn:
     Can describe all products.
     """
 
-    def __init__(self, load_strategies=True, load_harvests=False, load_transfers=False, watch_events_forever=True, exclude_ib_tvl=True) -> None:
+    def __init__(self, load_harvests=False, watch_events_forever=True, exclude_ib_tvl=True) -> None:
         start = time()
         if chain.id == Network.Mainnet:
             self.registries = {
@@ -63,8 +67,6 @@ class Yearn:
 
         self.exclude_ib_tvl = exclude_ib_tvl
 
-        if load_strategies:
-            self.registries["v2"].load_strategies()
         if load_harvests:
             self.registries["v2"].load_harvests()
         logger.info('loaded yearn in %.3fs', time() - start)
@@ -82,19 +84,26 @@ class Yearn:
 
         return active
     
-    @dask.delayed
+    @dask.delayed(nout=2)
+    @use_chain_semaphore(CONCURRENCY)
     async def _describe_delayed(self, data) -> dict:
-        return dict(zip(self.registries, data))
+        return dict(zip(self.registries, data)), 999
     
-    async def describe_delayed(self, block):
-        return self._describe_delayed([self.registries[key]._describe_delayed(block=block) for key in self.registries])
+    def describe_delayed(self, block: Block, v2_vaults: List[Vault]) -> Delayed:
+        # NOTE: We pre-prepare the v2 vaults because of sync/async conflict when preping delayed objects
+        delayeds = []
+        for key, registry in self.registries.items():
+            if key == "v2":
+                delayeds.append(registry.describe_delayed(v2_vaults, block=block))
+            else:
+                delayeds.append(registry.describe_delayed(block=block))
+        return self._describe_delayed(delayeds)
     
     async def describe(self, block=None):
         if block is None:
             block = chain.height
         desc = await asyncio.gather(*[self.registries[key].describe(block=block) for key in self.registries])
         return dict(zip(self.registries, desc))
-
 
     async def describe_wallets(self, block=None):
         from yearn.outputs.describers.registry import RegistryWalletDescriber
@@ -124,7 +133,7 @@ class Yearn:
         desc = await asyncio.gather(*[self.registries[key].total_value_at(block=block) for key in self.registries])
         return dict(zip(self.registries, desc))
     
-    @dask.delayed
+    @dask.delayed(nout=2)
     async def _data_for_export(self, block, timestamp, start, data) -> List:
         products = list(data.keys())
         if 'ib' in products and self.exclude_ib_tvl and block > constants.ib_snapshot_block:
@@ -198,7 +207,8 @@ class Yearn:
                     item = _build_item(metric, label_names, label_values, value or 0, timestamp)
                     metrics_to_export.append(item)
 
-        return metrics_to_export
+        duration = time() - start
+        return metrics_to_export, duration
 
     async def data_for_export(self, block, timestamp) -> List:
         start = time()

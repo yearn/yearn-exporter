@@ -1,15 +1,21 @@
+import asyncio
 import logging
-import time
 import warnings
-from typing import NoReturn
-import pandas
+from functools import lru_cache
+from typing import List, NoReturn
 
+import dask
+import pandas
 import sentry_sdk
 from brownie import chain
 from brownie.exceptions import BrownieEnvironmentWarning
-from pony.orm import TransactionIntegrityError, db_session, commit
+from dask.delayed import Delayed
+from pony.orm import TransactionIntegrityError, commit, db_session
 from tqdm import tqdm
+from y import Network, dank_w3
 from y.constants import EEE_ADDRESS
+
+from yearn.dask import ChainAwareClient, _get_async_client, _get_sync_client
 from yearn.entities import TreasuryTx
 from yearn.outputs.postgres.utils import (cache_address, cache_chain,
                                           cache_token)
@@ -22,26 +28,45 @@ warnings.simplefilter("ignore", BrownieEnvironmentWarning)
 
 logger = logging.getLogger('yearn.treasury_transactions_exporter')
 
-treasury = YearnTreasury(load_prices=True)
 
 def main() -> NoReturn:
+    fn = export_treasury_txs
+    _get_sync_client().submit(fn, key=f"{fn.__name__} {Network.name()}")
+
+@lru_cache(maxsize=1)
+def treasury_cached() -> YearnTreasury:
+    return YearnTreasury(asynchronous=True, load_prices=True)
+
+async def export_treasury_txs() -> NoReturn:
+    treasury = treasury_cached()
     cached_thru = treasury._start_block - 1
+    client: ChainAwareClient = await _get_async_client()
     while True:
         start_block = cached_thru + 1
         # NOTE: We look 50 blocks back to avoid uncles and reorgs
-        end_block = chain.height - 50
+        end_block = await dank_w3.eth.block_number - 50
         if end_block < start_block:
-            time.sleep(10)
+            await asyncio.sleep(10)
             continue
             
-        df = treasury.ledger.df(start_block, end_block, full=True)
+        df = await treasury.ledger.df(start_block, end_block, full=True)
         if len(df) > 0:
-            for index, row in tqdm(list(df.iterrows()), desc="Insert Txs to Postgres"):
-                insert_treasury_tx(row)
-            sort()
+            await client.compute(insert_delayed(df))
+            #for index, row in tqdm(list(df.iterrows()), desc="Insert Txs to Postgres"):
+            #    insert_treasury_tx(row)
+            #sort()
         else:
-            time.sleep(10)
+            await asyncio.sleep(10)
         cached_thru = end_block
+
+def insert_delayed(df: Delayed) -> Delayed:
+    inserted = [dask.delayed(insert_treasury_tx)(row) for index, row in list(df.iterrows())]
+    return sort_treasury_txs(inserted)
+
+@dask.delayed
+def sort_treasury_txs(_: List[Delayed]) -> None:
+    # NOTE: we have the unused arg here so dask knows to collect all of the treasury txs before sorting.
+    return sort()
 
 @db_session
 def insert_treasury_tx(row: pandas.Series) -> bool:

@@ -1,7 +1,6 @@
 import asyncio
 import logging
 from collections import defaultdict
-from concurrent.futures import ThreadPoolExecutor
 from dataclasses import dataclass, field
 from datetime import date, timedelta
 from decimal import Decimal
@@ -12,7 +11,8 @@ from typing import Dict, List, Optional, Tuple, Union
 import pandas as pd
 from async_lru import alru_cache
 from async_property import async_cached_property
-from brownie import chain, convert, multicall, web3
+from brownie import chain, convert, web3
+from dask.distributed import Semaphore, get_worker
 from pandas import DataFrame
 from pandas.core.tools.datetimes import DatetimeScalar
 from pony.orm import OperationalError, commit, db_session
@@ -21,7 +21,7 @@ from tqdm import tqdm
 from web3._utils.abi import filter_by_name
 from web3._utils.events import construct_event_topic_set
 from y import Contract, get_price_async
-from y.contracts import contract_creation_block
+from y.contracts import contract_creation_block_async
 from y.exceptions import continue_if_call_reverted
 from y.networks import Network
 from y.time import get_block_timestamp_async, last_block_on_date
@@ -30,9 +30,9 @@ from yearn.events import decode_logs, get_logs_asap
 from yearn.exceptions import UnsupportedNetwork
 from yearn.partners.charts import make_partner_charts
 from yearn.partners.constants import OPEX_COST, get_tier
-from yearn.partners.delegated import DELEGATED_BALANCES
+from yearn.partners.delegated import delegated_deposit_balances
 from yearn.typing import Address, Block
-from yearn.utils import contract
+from yearn.utils import run_in_thread
 from yearn.v2.registry import Registry
 from yearn.v2.vaults import Vault
 
@@ -51,27 +51,27 @@ logger = logging.getLogger(__name__)
 
 
 async def get_timestamps(blocks: Tuple[int,...]) -> DatetimeScalar:
-    loop = asyncio.get_event_loop()
     data = await asyncio.gather(*[get_block_timestamp_async(block) for block in blocks])
     return pd.to_datetime([x * 1e9 for x in data])
 
 
-def get_protocol_fees(address: str, start_block: Optional[int] = None) -> Dict[int,Decimal]:
+async def get_protocol_fees(address: str, start_block: Optional[int] = None) -> Dict[int,Decimal]:
     """
     Get all protocol fee payouts for a given vault.
 
     Fees can be found as vault share transfers to the rewards address.
     """
     vault = Vault.from_address(address)
-    rewards = vault.vault.rewards()
+    rewards = await vault.vault.rewards.coroutine()
     
     topics = construct_event_topic_set(
         filter_by_name('Transfer', vault.vault.abi)[0],
         web3.codec,
         {'sender': address, 'receiver': rewards},
     )
-    logs = decode_logs(get_logs_asap(address, topics, from_block=start_block))
-    return {log.block_number: Decimal(log['value']) / Decimal(vault.scale) for log in logs}
+    logs = await run_in_thread(get_logs_asap, address, topics, from_block=start_block)
+    decoded = await run_in_thread(decode_logs, logs)
+    return {log.block_number: Decimal(log['value']) / Decimal(vault.scale) for log in decoded}
 
 
 @dataclass
@@ -113,8 +113,8 @@ class Wrapper:
         ]
         return DataFrame(cache)
 
-    def protocol_fees(self, start_block: int = None) -> Dict[int,Decimal]:
-        return get_protocol_fees(self.vault, start_block=start_block)
+    async def protocol_fees(self, start_block: int = None) -> Dict[int,Decimal]:
+        return await get_protocol_fees(self.vault, start_block=start_block)
 
     async def balances(self, blocks: Tuple[int,...]) -> List[Decimal]:
         wrapper = self.wrapper
@@ -187,26 +187,27 @@ class WildcardWrapper:
     name: str
     wrapper: Union[str, List[str]]  # can unpack multiple wrappers
 
-    def unwrap(self) -> List[Wrapper]:
+    async def unwrap(self) -> List[Wrapper]:
         registry = Registry()
-        wrappers = [self.wrapper] if isinstance(self.wrapper, str) else self.wrapper
+        wrappers = [self.wrapper] if isinstance(self.wrapper, str) else self.wrappe
+        vaults = await registry.vaults
         topics = construct_event_topic_set(
-            filter_by_name('Transfer', registry.vaults[0].vault.abi)[0],
+            filter_by_name('Transfer', vaults[0].vault.abi)[0],
             web3.codec,
             {'receiver': wrappers},
         )
-        addresses = [str(vault.vault) for vault in registry.vaults]
-        from_block = min(ThreadPoolExecutor().map(contract_creation_block, addresses))
+        addresses = [str(vault.vault) for vault in vaults]
+        from_block = min(await asyncio.gather(*[contract_creation_block_async(address) for address in addresses]))
 
         # wrapper -> {vaults}
         deposits = defaultdict(set)
-        for log in decode_logs(get_logs_asap(addresses, topics, from_block)):
+        logs = await run_in_thread(get_logs_asap, addresses, topics, from_block)
+        for log in decode_logs(logs):
             deposits[log['receiver']].add(log.address)
-
         return [
             Wrapper(name=vault.name, vault=str(vault.vault), wrapper=wrapper)
             for wrapper in wrappers
-            for vault in registry.vaults
+            for vault in await registry.vaults
             if str(vault.vault) in deposits[wrapper]
         ]
 
@@ -219,14 +220,20 @@ class ElementWrapper(WildcardWrapper):
     name: str
     wrapper: str
 
-    def unwrap(self) -> List[Wrapper]:
-        registry = contract(self.wrapper)
-        wrappers = registry.viewRegistry()
-
+    async def unwrap(self) -> List[Wrapper]:
+        registry = await Contract.coroutine(self.wrapper)
+        wrappers = await registry.viewRegistry.coroutine()
+        details = await asyncio.gather(*[self.get_wrapper_details(wrapper) for wrapper in wrappers])
         return [
-            Wrapper(name=contract(wrapper).name(), vault=contract(wrapper).vault(), wrapper=wrapper)
-            for wrapper in wrappers
+            Wrapper(name=name, vault=vault, wrapper=wrapper)
+            for wrapper, (vault, name) in zip(wrappers, details)
         ]
+    
+    @alru_cache
+    async def get_wrapper_details(self, wrapper: str) -> Tuple[str, str]:
+        contract = await Contract.coroutine(wrapper)
+        vault, name = await asyncio.gather(contract.vault.coroutine(), contract.name.coroutine())
+        return vault, name
 
 
 @dataclass
@@ -234,16 +241,16 @@ class YApeSwapFactoryWrapper(WildcardWrapper):
     name: str
     wrapper: str
 
-    def unwrap(self) -> List[Wrapper]:
-        factory = contract(self.wrapper)
-        with multicall:
-            pairs = [factory.allPairs(i) for i in range(factory.allPairsLength())]
-            ratios = [contract(pair).farmingRatio() for pair in pairs]
+    async def unwrap(self) -> List[Wrapper]:
+        factory = await Contract.coroutine(self.wrapper)
+        pairs = await asyncio.gather(*[factory.allPairs.coroutine(i) for i in range(await factory.allPairsLength())])
+        pairs = await asyncio.gather(*[Contract.coroutine(pair) for pair in pairs])
+        ratios = await asyncio.gather(*[pair.farmingRatio() for pair in pairs])
 
         # pools with ratio.min > 0 deploy to yearn vaults
         farming = [str(pair) for pair, ratio in zip(pairs, ratios) if ratio['min'] > 0]
 
-        return WildcardWrapper(self.name, farming).unwrap()
+        return await WildcardWrapper(self.name, farming).unwrap()
 
 
 class GearboxWrapper(Wrapper):
@@ -293,7 +300,8 @@ class DelegatedDepositWrapper(Wrapper):
         return [balance / scale for balance in balances]
             
     async def get_balance_at_block(self, block: Block) -> Decimal:
-        vault_balances = DELEGATED_BALANCES[self.vault]
+        dd_balances = await run_in_thread(delegated_deposit_balances)
+        vault_balances = dd_balances[self.vault]
         wrapper = self.wrapper
         total = sum(
             asofdict[block]
@@ -313,9 +321,9 @@ class DelegatedDepositWildcardWrapper:
     name: str
     partnerId: str
 
-    def unwrap(self) -> List[Wrapper]:
+    async def unwrap(self) -> List[Wrapper]:
         wrappers = []
-        for vault in DELEGATED_BALANCES:
+        for vault in await run_in_thread(delegated_deposit_balances):
             vault = Vault.from_address(vault)
             wrappers.append(DelegatedDepositWrapper(name=vault.name, vault=vault.vault.address, wrapper=self.partnerId))
         return wrappers
@@ -349,17 +357,26 @@ class Partner:
             self.start_block = last_block_on_date(self.start_date - timedelta(days=1)) + 1
         else:
             raise TypeError("`start_date` must be a `datetime.date` object.")
+        
+        try:
+            get_worker()
+            self.semaphores = defaultdict(lambda x: Semaphore(name=f"partner wrapper {x} {Network.name()}"))
+        except ValueError as e:
+            if str(e) != "No workers found":
+                raise e
+            self.semaphores = defaultdict(lambda x: asyncio.Semaphore(1))
             
 
-    @cached_property
-    def flat_wrappers(self) -> List[Wrapper]:
+    @async_cached_property
+    async def flat_wrappers(self) -> List[Wrapper]:
         # unwrap wildcard wrappers to a flat list
-        flat_wrappers = []
-        for wrapper in self.wrappers:
-            if isinstance(wrapper, Wrapper):
-                flat_wrappers.append(wrapper)
-            elif isinstance(wrapper, WildcardWrapper) or isinstance(wrapper, DelegatedDepositWildcardWrapper):
-                flat_wrappers.extend(wrapper.unwrap())
+        flat_wrappers = [wrapper for wrapper in self.wrappers if isinstance(wrapper, Wrapper)]
+        flat_wrappers += [
+            wrapper for wrappers in await asyncio.gather(*[
+                wrapper.unwrap() for wrapper in self.wrappers if isinstance(wrapper, WildcardWrapper) or isinstance(wrapper, DelegatedDepositWildcardWrapper)
+            ])
+            for wrapper in wrappers
+        ]
         return flat_wrappers
 
     async def process(self, use_postgres_cache: bool = USE_POSTGRES_CACHE) -> Tuple[DataFrame,DataFrame]:
@@ -367,10 +384,11 @@ class Partner:
 
         # snapshot wrapper share at each harvest
         wrappers = []
-        for wrapper in tqdm(self.flat_wrappers, self.name):
+        for wrapper in tqdm(await self.flat_wrappers, self.name):
             # NOTE this is all sync code
             # TODO optimize this section
             if use_postgres_cache: 
+                await self.semaphores[wrapper].acquire()
                 cache = wrapper.read_cache()
                 try:
                     max_cached_block = int(cache['block'].max())
@@ -380,10 +398,11 @@ class Partner:
                     start_block = self.start_block
                     logger.debug(f'no harvests cached for {self.name} {wrapper.name}')
                 logger.debug(f'start block: {start_block}')
+                await self.semaphores[wrapper].release()
             else:
                 start_block = self.start_block
             
-            protocol_fees = wrapper.protocol_fees(start_block=start_block)
+            protocol_fees = await wrapper.protocol_fees(start_block=start_block)
             # NOTE end sync code
             
             try:

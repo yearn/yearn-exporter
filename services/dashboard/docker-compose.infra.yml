@@ -104,6 +104,10 @@ services:
     image: daskdev/dask
     hostname: dask-scheduler
     command: ["dask", "scheduler"]
+    environment:
+      - DASK_DISTRIBUTED__SCHEDULER__WORKER_TTL=None
+      - DASK_DISTRIBUTED__DEPLOY__LOST_WORKER_TIMEOUT=None
+      - DASK_DISTRIBUTED__ADMIN__EVENT_LOOP=asyncio
     ports:
       - "8786:8786"
       - "8787:8787"

@@ -22,6 +22,8 @@ x-envs: &envs
   - REORG_BUFFER
   - JSONRPC_BATCH_MAX_SIZE
   - AIOHTTP_TIMEOUT=${AIOHTTP_TIMEOUT:-1800}
+  # dask
+  - DASK_DISTRIBUTED__WORKER__DAEMON=False
   # asyncio (optional, debugging)
   - PYTHONASYNCIODEBUG
   # dank-mids (optional)
@@ -32,10 +34,13 @@ x-envs: &envs
   - MIN_SLEEP_TIME
   - MAX_SLEEP_TIME
   # ypricemagic (optional)
+  - DOP=128
   - BROWNIE_NETWORK_ID=${BROWNIE_NETWORK}
   - YPRICEMAGIC_RECURSION_TIMEOUT=${YPRICEMAGIC_RECURSION_TIMEOUT:-7200}  # 2 hours
   # This is a temporary hack that can be removed once deps support eth_hash==0.5.0. Creds to bunny for finding this.
   - ETH_HASH_BACKEND=${ETH_HASH_BACKEND:-pysha3}
+  # Don't set me, the Makefile will do it
+  - REPLICA
 
   # APY ENVS
   - AWS_ACCESS_KEY

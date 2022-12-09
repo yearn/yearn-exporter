@@ -1,14 +1,24 @@
 
-import logging, dask
+import asyncio
+import logging
 from datetime import datetime, timezone
+from functools import lru_cache
 from time import time
+from typing import TYPE_CHECKING, Tuple
 
+import dask
 import sentry_sdk
 from brownie import chain
+from dask.delayed import Delayed
+from dask.distributed import get_worker
 from y.networks import Network
 from y.time import closest_block_after_timestamp
 
+from yearn.dask import _get_async_client, use_chain_semaphore
 from yearn.helpers.exporter import Exporter
+
+if TYPE_CHECKING:
+    from yearn.yearn import Yearn
 
 #from yearn.outputs.victoria.victoria import _post
 
@@ -42,15 +52,11 @@ elif Network(chain.id) == Network.Mainnet:
 else:
     raise NotImplementedError()
 
-@dask.delayed
-async def data_for_export(block, timestamp):
-    from yearn.utils import Singleton
-    from yearn.yearn import Yearn as _Yearn
-    class Yearn(_Yearn, metaclass=Singleton):
-        pass
-    start = time()
-    data = Yearn().describe_delayed(block)
-    return Yearn()._data_for_export(block, timestamp, start, data)
+
+def data_for_export(block, timestamp) -> Delayed:
+    worker, yearn = _import_yearn()
+    delayed = _export_vaults(worker, yearn, block, timestamp)
+    return delayed
 
 exporter = Exporter(
     name = 'vaults',
@@ -61,3 +67,40 @@ exporter = Exporter(
 
 def main():
     exporter.run()
+
+@dask.delayed(nout=2)
+@use_chain_semaphore(1)
+def _import_yearn() -> Tuple[str, "Yearn"]:
+    """ A helper function to allow dask workers to cache the Yearn object in memory from a subthread. """
+    imported_on_worker = get_worker().id
+    return imported_on_worker, __import_yearn()
+
+@lru_cache(1)
+def __import_yearn() -> "Yearn":
+    """ You can't stack the lru_cache decorator with use_chain_semaphore. """
+    # This has trouble being imported with Yearn unless we import it first. Odd.
+    from yearn.utils import contract
+    # Importing yearn takes a while and blocks the event loop, so we do it in a thread.
+    from yearn.yearn import Yearn
+    return Yearn()
+
+
+@dask.delayed(nout=2)
+async def _export_vaults(worker: str, yearn: "Yearn", block, timestamp):
+    """ Since we import the Yearn object in a worker subthread, we want to export on the same worker so we know it has the required imports. """
+    client = await _get_async_client()
+    start = time()
+    v2_vaults = await yearn.registries["v2"].active_vaults_at(block)
+    strats = await asyncio.gather(*[vault.strategies for vault in v2_vaults])
+    v2_vaults = [(vault, strats) for vault, strats in zip(v2_vaults, strats)]
+    
+    data = yearn.describe_delayed(block, v2_vaults)
+    fut = client.compute(
+        yearn._data_for_export(block, timestamp, start, data),
+        workers=[worker],
+        asynchronous=True,
+    )
+    while not fut.status in ["finished", "error"]:
+        await asyncio.sleep(0)
+    data, duration = await fut
+    return data, duration

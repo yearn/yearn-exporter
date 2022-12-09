@@ -1,5 +1,8 @@
 
+import asyncio
+
 from brownie import ZERO_ADDRESS, chain
+from multicall.utils import await_awaitable
 from y.networks import Network
 
 from yearn.entities import TreasuryTx
@@ -7,7 +10,9 @@ from yearn.treasury.accountant.classes import HashMatcher
 from yearn.treasury.accountant.constants import treasury, v1, v2
 from yearn.utils import contract
 
-vaults = (v1.vaults + v2.vaults) if v1 else v2.vaults
+vaults = await_awaitable(v2.vaults)
+if v1:
+    vaults += v1.vaults
 
 def is_vault_deposit(tx: TreasuryTx) -> bool:
     """ This code doesn't validate amounts but so far that's not been a problem. """

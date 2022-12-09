@@ -4,18 +4,18 @@ import logging
 from typing import Dict, List, Optional
 
 import dask
+import eth_portfolio
 from brownie import chain
 from dask.delayed import Delayed
-from yearn.utils import Singleton
-import eth_portfolio
 from eth_portfolio.buckets import get_token_bucket
 from eth_portfolio.typing import Balance, RemoteTokenBalances, TokenBalances
 from y.classes.common import ERC20
 from y.exceptions import NonStandardERC20
 from y.networks import Network
 
-from yearn.constants import STRATEGIST_MULTISIG, TREASURY_WALLETS
 import yearn.utils
+from yearn.constants import STRATEGIST_MULTISIG, TREASURY_WALLETS
+from yearn.utils import Singleton
 
 logger = logging.getLogger(__name__)
 
@@ -78,6 +78,8 @@ class YearnTreasury(eth_portfolio.Portfolio):
         super().__init__(TREASURY_WALLETS, label='treasury', start_block=start_block, asynchronous=asynchronous, load_prices=load_prices)
 
     def partners_debt(self, block: int = None) -> dict:
+        from yearn.partners.partners import partners
+        from yearn.partners.snapshot import WildcardWrapper, Wrapper
         for i, partner in enumerate(partners):
             if i == 1:
                 flat_wrappers = []

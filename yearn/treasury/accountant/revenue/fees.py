@@ -1,5 +1,8 @@
 
+import asyncio
+
 from brownie import chain
+from multicall.utils import await_awaitable
 from y.networks import Network
 
 from yearn.entities import TreasuryTx
@@ -47,7 +50,8 @@ def is_fees_v2(tx: TreasuryTx) -> bool:
         and tx.token.address.address == vault.vault.address
         and tx.to_address.address in treasury.addresses
         and tx.to_address.address == vault.vault.rewards(block_identifier=tx.block)
-        for vault in v2.vaults + v2.experiments
+        for vaults in await_awaitable(asyncio.gather(v2.vaults, v2.experiments))
+        for vault in vaults
     )
 
 def is_fees_v3(tx: TreasuryTx) -> bool:

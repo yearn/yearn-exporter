@@ -4,6 +4,8 @@ from typing import (
     Union,
 )
 
+import eth_retry
+
 from eth_utils import (
     apply_key_map
 )
@@ -73,7 +75,7 @@ def local_filter_middleware(
                 return {"result": next(_filter.filter_changes)}
             elif method == RPC.eth_getFilterLogs:
                 # type ignored b/c logic prevents RequestBlocks which doesn't implement get_logs
-                return {"result": _filter.get_logs()}  # type: ignore
+                return {"result": eth_retry.auto_retry(_filter.get_logs)()}  # type: ignore
             else:
                 raise NotImplementedError(method)
         else:

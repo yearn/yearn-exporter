@@ -1,7 +1,7 @@
 import asyncio
 import math
 from time import time
-from typing import Tuple
+from typing import TYPE_CHECKING, Tuple
 
 import dask
 import eth_retry
@@ -10,10 +10,12 @@ from y.contracts import contract_creation_block_async
 from y.exceptions import PriceError
 from y.prices import magic
 
-from yearn.apy.common import Apy, ApyFees, ApyPoints, ApySamples
 from yearn.common import Tvl
-from yearn.prices.curve import curve
 from yearn.utils import Singleton, contract
+
+if TYPE_CHECKING:
+    from yearn.apy.common import Apy, ApySamples
+
 
 
 class YveCRVJar(metaclass = Singleton):
@@ -36,7 +38,9 @@ class YveCRVJar(metaclass = Singleton):
         return 'pSLP'
 
     @eth_retry.auto_retry
-    def apy(self, _: ApySamples) -> Apy:
+    def apy(self, _: "ApySamples") -> "Apy":
+        from yearn.apy.common import Apy, ApyFees, ApyPoints
+
         data = requests.get("https://api.pickle.finance/prod/protocol/pools").json()
         yvboost_eth_pool  = [pool for pool in data if pool["identifier"] == "yvboost-eth"][0]
         apy = yvboost_eth_pool["apy"]  / 100.
@@ -57,6 +61,8 @@ class Backscratcher(metaclass = Singleton):
         self.proxy = contract("0xF147b8125d2ef93FB6965Db97D6746952a133934")
     
     async def _locked(self, block=None) -> Tuple[float,float]:
+        from yearn.prices.curve import curve
+
         crv_locked, crv_price = await asyncio.gather(
             curve.voting_escrow.balanceOf["address"].coroutine(self.proxy, block_identifier=block),
             magic.get_price_async(curve.crv, block=block),
@@ -80,7 +86,9 @@ class Backscratcher(metaclass = Singleton):
     def strategies(self):
         return []
 
-    def apy(self, _: ApySamples) -> Apy:
+    def apy(self, _: "ApySamples") -> "Apy":
+        from yearn.apy.common import Apy, ApyFees
+
         curve_3_pool = contract("0xbEbc44782C7dB0a1A60Cb6fe97d0b483032FF1C7")
         curve_reward_distribution = contract("0xA464e6DCda8AC41e03616F95f4BC98a13b8922Dc")
         curve_voting_escrow = contract("0x5f3b5DfEb7B28CDbD7FAba78963EE202a494e2A2")

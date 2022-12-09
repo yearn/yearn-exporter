@@ -3,26 +3,30 @@ import logging
 import threading
 import time
 from collections import OrderedDict
-from typing import List
+from typing import List, Tuple
 
 import dask
 import inflection
+from async_property import async_property
 from brownie import Contract, chain, web3
 from dank_mids.brownie_patch import patch_contract
+from dask.delayed import Delayed
 from joblib import Parallel, delayed
+from multicall.utils import await_awaitable
 from web3._utils.abi import filter_by_name
 from web3._utils.events import construct_event_topic_set
-from y.contracts import contract_creation_block_async
+from y.contracts import contract_creation_block, contract_creation_block_async
+from y.datatypes import Block
 from y.networks import Network
 from y.prices import magic
 from y.utils.dank_mids import dank_w3
+from y.utils.events import get_logs_asap_generator
 
-from yearn.decorators import (sentry_catch_all, wait_or_exit_after,
-                              wait_or_exit_before)
-from yearn.events import create_filter, decode_logs, get_logs_asap
+from yearn.events import decode_logs, get_logs_asap
 from yearn.exceptions import UnsupportedNetwork
-from yearn.multicall2 import fetch_multicall_async
+from yearn.multicall2 import fetch_multicall, fetch_multicall_async
 from yearn.utils import Singleton, contract
+from yearn.v2.strategies import Strategy
 from yearn.v2.vaults import Vault
 
 logger = logging.getLogger(__name__)
@@ -45,10 +49,8 @@ class Registry(metaclass=Singleton):
         self.include_experimental = include_experimental
         self.registries = self.load_registry()
         # load registry state in the background
-        self._done = threading.Event()
-        self._has_exception = False
-        self._thread = threading.Thread(target=self.watch_events, daemon=True)
-        self._thread.start()
+        self._loading = asyncio.Event()
+        self._done = asyncio.Event()
 
     def load_registry(self):
         if chain.id == Network.Mainnet:
@@ -76,25 +78,50 @@ class Registry(metaclass=Singleton):
         logger.info('loaded %d registry versions', len(events))
         return [contract(event['newAddress'].hex()) for event in events]
 
-    @property
-    @wait_or_exit_before
-    def vaults(self) -> List[Vault]:
+    @async_property
+    async def vaults(self) -> List[Vault]:
+        await self.load_vaults()
         return list(self._vaults.values())
 
-    @property
-    @wait_or_exit_before
-    def experiments(self) -> List[Vault]:
+    @async_property
+    async def experiments(self) -> List[Vault]:
+        await self.load_vaults()
         return list(self._experiments.values())
 
-    @wait_or_exit_before
     def __repr__(self) -> str:
-        return f"<Registry chain={chain.id} releases={len(self.releases)} vaults={len(self.vaults)} experiments={len(self.experiments)}>"
+        try:
+            return f"<Registry chain={chain.id} releases={len(self.releases)} vaults={len(await_awaitable(self.vaults))} experiments={len(await_awaitable(self.experiments))}>"
+        except RuntimeError:
+            return f"<Registry chain={chain.id} releases={len(self.releases)}>"
 
-    @wait_or_exit_after
-    def load_vaults(self):
-        if not self._thread._started.is_set():
-            self._thread.start()
+    #@wait_or_exit_after
+    #def load_vaults(self):
+    #    if not self._thread._started.is_set():
+    #        self._thread.start()
+    
+    async def load_vaults(self):
+        if not self._loading.is_set():
+            asyncio.create_task(self.watch_events())
+        await self._done.wait()
+    
+    async def watch_events(self):
+        if self._loading.is_set():
+            # Escape hatch so we don't end up with multiple watcher tasks.
+            return
+        self._loading = True
+        block = await dank_w3.eth.block_number
+        start = time.time()
+        await asyncio.gather(*[self._watch_events_for_registry(reg, to_block=block, run_forever=False) for reg in self.registries])
+        self._done.set()
+        logger.info("loaded v2 registry in %.3fs", time.time() - start)
+        await asyncio.gather(*[self._watch_events_for_registry(reg, from_block=block+1, run_forever=self._watch_events_forever) for reg in self.registries])
 
+    async def _watch_events_for_registry(self, registry: Contract, from_block=None, to_block=None, run_forever: bool = False):
+        async for logs in get_logs_asap_generator(registry.address, from_block=from_block, to_block=to_block, chronological=True, run_forever=run_forever):
+            self.process_logs(logs)
+
+
+    '''
     @sentry_catch_all
     def watch_events(self):
         start = time.time()
@@ -111,9 +138,10 @@ class Registry(metaclass=Singleton):
             time.sleep(300)
 
             # read new logs at end of loop
-            logs = self.log_filter.get_new_entries()
+            logs = self.log_filter.get_new_entries()'''
 
-    def process_events(self, events):
+    def process_logs(self, logs):
+        events = decode_logs(logs)
         for event in events:
             # hack to make camels to snakes
             event._ordered = [OrderedDict({inflection.underscore(k): v for k, v in od.items()}) for od in event._ordered]
@@ -160,22 +188,16 @@ class Registry(metaclass=Singleton):
             watch_events_forever=self._watch_events_forever,
         )
 
-    def load_strategies(self):
-        # stagger loading strategies to not run out of connections in the pool
-        vaults = self.vaults + self.experiments
-        Parallel(8, "threading")(delayed(vault.load_strategies)() for vault in vaults)
-
+    # NOTE remove this, not used anywhere?
     def load_harvests(self):
-        vaults = self.vaults + self.experiments
+        vaults = await_awaitable(self.vaults) + await_awaitable(self.experiments)
         Parallel(8, "threading")(delayed(vault.load_harvests)() for vault in vaults)
 
-    @dask.delayed
-    async def _describe_delayed(self, vaults, results):
+    async def _describe_delayed(self, vaults, results) -> dict:
         return {vault.name: result for vault, result in zip(vaults, results)}
 
-    async def describe_delayed(self, block):
-        vaults = await self.active_vaults_at(block)
-        return self._describe_delayed(vaults, [dask.delayed(vault.describe)(block=block) for vault in vaults])
+    def describe_delayed(self, vaults: List[Tuple[Vault, List[Strategy]]], block: Block) -> Delayed:
+        return dask.delayed(self._describe_delayed, nout=len(vaults))(vaults, [(vault.describe_delayed)(strategies, block=block) for vault, strategies in vaults])
 
     async def describe(self, block=None):
         vaults = await self.active_vaults_at(block)
@@ -190,13 +212,24 @@ class Registry(metaclass=Singleton):
         )
         return {vault.name: assets * price / vault.scale for vault, assets, price in zip(vaults, results, prices)}
 
-    async def active_vaults_at(self, block=None):
-        vaults = self.vaults + self.experiments
+    async def active_vaults_at(self, block=None) -> List[Vault]:
+        vaults, experiments = await asyncio.gather(self.vaults, self.experiments)
+        vaults += experiments
         if block:
             blocks = await asyncio.gather(*[contract_creation_block_async(str(vault.vault)) for vault in vaults])
             vaults = [vault for vault, deploy_block in zip(vaults, blocks) if deploy_block <= block]
         # fixes edge case: a vault is not necessarily initialized on creation
         activations = await fetch_multicall_async(*[[vault.vault, 'activation'] for vault in vaults], block=block)
+        return [vault for vault, activation in zip(vaults, activations) if activation]
+    
+    def _active_vaults_at_sync(self, block=None):
+        vaults = await_awaitable(self.vaults) + await_awaitable(self.experiments)
+        if block:
+            blocks = Parallel(8, 'threading')(delayed(contract_creation_block)(str(vault.vault)) for vault in vaults)
+            #blocks = await asyncio.gather(*[contract_creation_block_async(str(vault.vault)) for vault in vaults])
+            vaults = [vault for vault, deploy_block in zip(vaults, blocks) if deploy_block <= block]
+        # fixes edge case: a vault is not necessarily initialized on creation
+        activations = fetch_multicall(*[[vault.vault, 'activation'] for vault in vaults], block=block)
         return [vault for vault, activation in zip(vaults, activations) if activation]
 
     def _filter_vaults(self):

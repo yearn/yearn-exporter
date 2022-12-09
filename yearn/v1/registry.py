@@ -38,14 +38,17 @@ class Registry:
         return f"<Registry V1 vaults={len(self.vaults)}>"
     
     @dask.delayed
-    async def _describe_delayed(self, vaults, data):
-        return {vault.name: desc for vault, desc in zip(vaults, data)}
-        
-    async def describe_delayed(self, block: Optional[Block] = None) -> Dict[str, Dict]:
+    async def _unpack_delayed(self, vaults, data):
+        return {vault.name: desc for vault, desc in zip(vaults, data) if data is not None}
+    
+    @dask.delayed
+    async def _describe_delayed(self, block=None):
         vaults = await self.active_vaults_at(block)
-        share_prices = await fetch_multicall_async(*[[vault.vault, "getPricePerFullShare"] for vault in vaults], block=block)
-        vaults = [vault for vault, share_price in zip(vaults, share_prices) if share_price]
-        return self._describe_delayed(vaults, [dask.delayed(vault.describe)(block=block) for vault in vaults])
+        return self._unpack_delayed(vaults, [dask.delayed(vault.describe)(block=block) for vault in vaults])
+
+    def describe_delayed(self, block: Optional[Block] = None) -> Dict[str, Dict]:
+        data = self._describe_delayed(block)
+        return self._unpack_delayed(data)
 
     async def describe(self, block: Optional[Block] = None) -> Dict[str, Dict]:
         vaults = await self.active_vaults_at(block)

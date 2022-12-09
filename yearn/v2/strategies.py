@@ -1,15 +1,16 @@
+import asyncio
 import logging
-import threading
 import time
 from functools import cached_property
-from typing import Any, List
+from typing import Any, List, NoReturn
 
 from eth_utils import encode_hex, event_abi_to_log_topic
 from multicall.utils import run_in_subprocess
-from yearn.decorators import sentry_catch_all, wait_or_exit_after
-from yearn.events import create_filter, decode_logs
+from y.utils.dank_mids import dank_w3
+from y.utils.events import decode_logs, get_logs_asap_generator
+
 from yearn.multicall2 import fetch_multicall_async
-from yearn.utils import contract, safe_views
+from yearn.utils import contract, run_in_thread, safe_views
 
 STRATEGY_VIEWS_SCALED = [
     "maxDebtPerHarvest",
@@ -60,10 +61,9 @@ class Strategy:
             ]
         ]
         self._watch_events_forever = watch_events_forever
-        self._done = threading.Event()
-        self._has_exception = False
-        self._thread = threading.Thread(target=self.watch_events, daemon=True)
-
+        self._loading = asyncio.Event()
+        self._done = asyncio.Event()
+    
     @property
     def unique_name(self):
         if [strategy.name for strategy in self.vault.strategies].count(self.name) > 1:
@@ -83,6 +83,8 @@ class Strategy:
 
         raise ValueError("Strategy is only comparable with [Strategy, str]")
 
+    # TODO use async log generator here
+    '''
     @sentry_catch_all
     def watch_events(self):
         start = time.time()
@@ -100,7 +102,24 @@ class Strategy:
 
             # read new logs at end of loop
             logs = self.log_filter.get_new_entries()
+    '''
 
+    async def load_harvests(self) -> None:
+        asyncio.create_task(self.watch_harvests())
+        await self._done.wait()
+
+    async def watch_harvests(self) -> NoReturn:
+        if self._loading.is_set():
+            return
+        self._loading.set()
+        block = await dank_w3.eth.block_number
+        async for logs in get_logs_asap_generator(str(self.strategy), self._topics, to_block=block):
+            if logs:
+                self.process_events(await run_in_thread(decode_logs, logs))
+        self._done.set()
+        async for logs in get_logs_asap_generator(str(self.strategy), self._topics, from_block=block+1, run_forever=True):
+            if logs:
+                self.process_events(await run_in_thread(decode_logs, logs))
 
     def process_events(self, events):
         for event in events:
@@ -109,11 +128,13 @@ class Strategy:
                 logger.debug("%s harvested on %d", self.name, block)
                 self._harvests.append(block)
 
+    '''
     @wait_or_exit_after
     def load_harvests(self):
         if not self._thread._started.is_set():
-            self._thread.start()
+            self._thread.start()'''
 
+    # NOTE where is this used?
     @property
     def harvests(self) -> List[int]:
         self.load_harvests()

@@ -1,6 +1,8 @@
 import sentry_sdk
 from brownie import *
+from multicall.utils import await_awaitable
 from rich import print
+
 from yearn.partners.snapshot import BentoboxWrapper
 from yearn.utils import contract
 from yearn.v2.registry import Registry
@@ -31,7 +33,7 @@ CAULDRONS = [
 
 def main():
     v2 = Registry()
-    vaults = [str(vault.vault) for vault in v2.vaults]
+    vaults = [str(vault.vault) for vault in await_awaitable(v2.vaults)]
     wrappers = []
     for cauldron in CAULDRONS:
         collateral = contract(cauldron).collateral()

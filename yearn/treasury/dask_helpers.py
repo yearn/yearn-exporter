@@ -10,6 +10,7 @@ from eth_portfolio.buckets import get_token_bucket
 from eth_portfolio.typing import (Balance, PortfolioBalances,
                                   RemoteTokenBalances, TokenBalances)
 from y import ERC20, Network
+from yearn.dask import use_chain_semaphore, CONCURRENCY
 from y.exceptions import NonStandardERC20
 
 from yearn.outputs.victoria.victoria import _build_item
@@ -24,15 +25,20 @@ Hence this file.
 
 @lru_cache(1)
 def _init_treasury():
+    import eth_portfolio
+    #from eth_portfolio import Portfolio # Fixes an import error
     from yearn.treasury.treasury import YearnTreasury
     return YearnTreasury(asynchronous=True)
 
 @lru_cache(1)
 def _init_sms():
+    import eth_portfolio
+    #from eth_portfolio import Portfolio # Fixes an import error
     from yearn.treasury.treasury import StrategistMultisig
     return StrategistMultisig(asynchronous=True)
 
 @dask.delayed(name=f"describe treasury {Network.name()}", nout=2)
+@use_chain_semaphore(CONCURRENCY)
 async def describe_treasury(block: int) -> Tuple[PortfolioBalances, float]:
     # NOTE Don't refactor these together, the fn names are shown in dask. \/
     if block is None:
@@ -43,6 +49,7 @@ async def describe_treasury(block: int) -> Tuple[PortfolioBalances, float]:
     return data, duration
 
 @dask.delayed(name=f"describe sms {Network.name()}", nout=2)
+@use_chain_semaphore(CONCURRENCY)
 async def describe_sms(block: int) -> Tuple[PortfolioBalances, float]:
     # NOTE Don't refactor these together, the fn names are shown in dask. /\
     if block is None:
@@ -96,24 +103,28 @@ async def _process_token(label: str, ts, section: str, wallet: str, token: str, 
 async def _unpack_data_for_export(label: str, ts, data) -> List[Dict]:
     if data is None:
         return []
-    metrics_to_export = []
-    for wallet, wallet_data in data.items():
-        for section, section_data in wallet_data.items():
-            if isinstance(section_data, TokenBalances):
-                items = await asyncio.gather(*[
-                    _process_token(label, ts, section, wallet, token, bals) for token, bals in section_data.items()
-                ])
-                for _items in items:
-                    metrics_to_export.extend(_items)
-            elif isinstance(section_data, RemoteTokenBalances):
-                if section == 'external':
-                    section = 'assets'
-                for protocol, token_bals in section_data.items():
+    try:
+        metrics_to_export = []
+        for wallet, wallet_data in data.items():
+            for section, section_data in wallet_data.items():
+                if isinstance(section_data, TokenBalances):
                     items = await asyncio.gather(*[
-                        _process_token(label, ts, section, wallet, token, bals, protocol=protocol) for token, bals in token_bals.items()
+                        _process_token(label, ts, section, wallet, token, bals) for token, bals in section_data.items()
                     ])
                     for _items in items:
                         metrics_to_export.extend(_items)
-            else:
-                raise NotImplementedError()
+                elif isinstance(section_data, RemoteTokenBalances):
+                    if section == 'external':
+                        section = 'assets'
+                    for protocol, token_bals in section_data.items():
+                        items = await asyncio.gather(*[
+                            _process_token(label, ts, section, wallet, token, bals, protocol=protocol) for token, bals in token_bals.items()
+                        ])
+                        for _items in items:
+                            metrics_to_export.extend(_items)
+                else:
+                    raise NotImplementedError()
+    except Exception as e:
+        logger.error(e)
+        raise e
     return metrics_to_export

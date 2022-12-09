@@ -1,10 +1,13 @@
+import asyncio
+
+from y.prices.lending.aave import aave
+from y.prices.stable_swap.curve import curve
+
 from yearn.cache import memory
 from yearn.constants import WRAPPED_GAS_COIN
 from yearn.prices.balancer import balancer as bal
-from yearn.prices.aave import aave
 from yearn.prices.compound import compound
 from yearn.prices.constants import stablecoins
-from yearn.prices.curve import curve
 from yearn.prices.fixed_forex import fixed_forex
 from yearn.prices.yearn import yearn_lens
 from yearn.treasury.constants import (BTC_LIKE, ETH_LIKE, INTL_STABLECOINS,
@@ -13,10 +16,10 @@ from yearn.typing import Address
 from yearn.utils import contract
 
 
-def get_token_bucket(token) -> str:
+async def get_token_bucket(token) -> str:
     token = str(token)
     try:
-        token = str(_unwrap_token(token))
+        token = str(await _unwrap_token(token))
     except ValueError as e:
         if str(e).startswith('Source for') and str(e).endswith('has not been verified'):
             return 'Other short term assets'
@@ -35,8 +38,8 @@ def get_token_bucket(token) -> str:
     return 'Other short term assets'
 
 
-@memory.cache()
-def _unwrap_token(token) -> str:
+#@memory.cache()
+async def _unwrap_token(token) -> str:
     '''
     Unwraps the base
     '''
@@ -44,25 +47,20 @@ def _unwrap_token(token) -> str:
         return token
 
     if yearn_lens.is_yearn_vault(token):
-        return _unwrap_token(contract(token).token())
-    if token in curve:
-        pool = curve.get_pool(token)
-        pool_tokens = set(
-            str(_unwrap_token(coin)) for coin in curve.get_underlying_coins(pool)
-        )
+        return await _unwrap_token(contract(token).token())
+    if curve and (pool:= await curve.get_pool(token)):
+        pool_tokens = set(str(coin) for coin in await asyncio.gather(_unwrap_token(coin) for coin in pool.get_underlying_coins))
         return _pool_bucket(pool_tokens)
     if bal.selector.get_balancer_for_pool(token):
         # should only be YLA # TODO figure this out
         bal_for_pool = bal.selector.get_balancer_for_pool(token)
-        pool_tokens = set(
-            str(_unwrap_token(coin)) for coin in bal_for_pool.get_tokens(token) if coin != token
-        )
+        pool_tokens = set(str(coin) for coin in await asyncio.gather(*[_unwrap_token(coin) for coin in bal_for_pool.get_tokens(token) if coin != token]))
         return _pool_bucket(pool_tokens)
     if aave and token in aave:
-        return aave.atoken_underlying(token)
+        return str(await aave.underlying_async(token))
     if compound and token in compound:
         try:
-            return contract(token).underlying()
+            return await contract(token).underlying.coroutine()
         except AttributeError:
             return WRAPPED_GAS_COIN
     return token

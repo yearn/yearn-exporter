@@ -17,7 +17,7 @@ sentry_sdk.set_tag('script','wallet_exporter')
 
 logger = logging.getLogger('yearn.wallet_exporter')
 
-yearn = Yearn(load_strategies=False, watch_events_forever=False)
+yearn = Yearn(watch_events_forever=False)
 
 # start: 2020-02-12 first iearn deployment
 start = datetime(2020, 2, 12, tzinfo=timezone.utc)
@@ -31,8 +31,9 @@ def postgres_ready(snapshot: datetime) -> bool:
         return chain[postgres_cached_thru_block].timestamp >= snapshot.timestamp()
     return False
 
+# TODO daskify this one
 class WalletExporter(Exporter):
-    async def export_historical_snapshot_if_missing(self, snapshot: datetime, resolution: str) -> None:
+    async def export_snapshot(self, snapshot: datetime, resolution: str) -> None:
         """ Override a method on Exporter so we can add an additional check. """
         if await run_in_thread(postgres_ready, snapshot):
             return await super().export_historical_snapshot_if_missing(snapshot, resolution)
@@ -44,7 +45,7 @@ exporter = WalletExporter(
     export_fn = _post,
     start_block = closest_block_after_timestamp(int(start.timestamp())) - 1,
     max_concurrent_runs = 2, # The wallet exporter uses a lot of memory, so we must limit concurrency here
-    max_concurrent_runs_per_resolution = 1,
+    stop=True
 )
 
 def main():

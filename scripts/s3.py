@@ -1,3 +1,4 @@
+import asyncio
 import dataclasses
 import itertools
 import json
@@ -15,6 +16,7 @@ import requests
 import sentry_sdk
 from brownie import chain, web3
 from brownie.exceptions import BrownieEnvironmentWarning
+from multicall.utils import await_awaitable
 from y.contracts import contract_creation_block
 from y.exceptions import PriceError
 from y.networks import Network
@@ -60,7 +62,7 @@ def wrap_vault(
             }
         ]
     else:
-        strategies = [{"address": str(strategy.strategy), "name": strategy.name} for strategy in vault.strategies]
+        strategies = [{"address": str(strategy.strategy), "name": strategy.name} for strategy in await_awaitable(vault.strategies)]
 
     inception = contract_creation_block(str(vault.vault))
 
@@ -154,18 +156,19 @@ def main():
     samples = get_samples()
 
     registry_v2 = RegistryV2(include_experimental=(export_mode == "experimental"))
+    vaults_v2, experiments_v2 = await_awaitable(asyncio.gather(registry_v2.vaults, registry_v2.experiments))
 
     if chain.id == Network.Mainnet:
         special = [YveCRVJar(), Backscratcher()]
         registry_v1 = RegistryV1()
-        vaults = list(itertools.chain(special, registry_v1.vaults, registry_v2.vaults, registry_v2.experiments))
+        vaults = list(itertools.chain(special, registry_v1.vaults, vaults_v2, experiments_v2))
     else:
-        vaults = registry_v2.vaults
+        vaults = vaults_v2
 
     if len(vaults) == 0:
         raise ValueError(f"No vaults found for chain_id: {chain.id}")
 
-    assets_metadata = get_assets_metadata(registry_v2.vaults)
+    assets_metadata = get_assets_metadata(vaults_v2)
 
     for vault in vaults:
         data.append(wrap_vault(vault, samples, aliases, icon_url, assets_metadata))
