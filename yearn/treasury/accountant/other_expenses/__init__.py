@@ -14,6 +14,9 @@ if chain.id == Network.Mainnet:
     other_expense_txgroup.create_child("Strategists' Buyout", general.is_strategist_buyout)
     other_expense_txgroup.create_child("Gitcoin Donation for Matching", general.is_gitcoin_matching_donation)
     other_expense_txgroup.create_child("YFI Story", general.is_yfi_story)
+    other_expense_txgroup.create_child("Aztek Gas Subsidy", general.is_aztek_gas_subsidy)
+    other_expense_txgroup.create_child("Devcon Event", general.is_devcon_event)
+    other_expense_txgroup.create_child("EthGlobal", general.is_eth_global)
 
 # Bugs
 if chain.id == Network.Mainnet:

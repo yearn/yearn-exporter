@@ -11,14 +11,17 @@ def is_yacademy_audit(tx: TreasuryTx) -> bool:
         "0x48e05bff53a67304593a0bff5238fd2bed01c61074937706df879fb901e9e1ba",
         "0xf3a31b7c162018f93c8485ad4e374a15e0053308148c7f9afe2f6d16b2013c19",
         ["0x3e75d22250d87c183824c3b77ddb9cb11935db2061ce7f34df4f024d0646fcfb", Filter('log_index', 116)],
+        "0x7a7117d68adf198f295277ccabdecbca244eebe0d6c59200060f80a76406567e",
     ]
     return tx in HashMatcher(hashes)
 
 def is_chainsec_audit(tx: TreasuryTx) -> bool:
     return tx in HashMatcher({
         Network.Mainnet: [
-        "0x7672b9d10b968c58525cff566a60bc8d44a6633f51a712e0eb00ecf88f86aef3",
-        "0x4a77efb6234793b6316e11b6ef7f345f26d3d1b7b8edb8efffe1c0dc4cdfb0e0",
+            "0x7672b9d10b968c58525cff566a60bc8d44a6633f51a712e0eb00ecf88f86aef3",
+            "0x4a77efb6234793b6316e11b6ef7f345f26d3d1b7b8edb8efffe1c0dc4cdfb0e0",
+            ["0x44fdf3172c73b410400718badc7801a7fc496227b5325d90ed840033e16d8366", Filter('log_index', 390)],
+            "0xfdca5bfef0061fa0cea28c04b08ac239f6cb3d708f23548cded80411575ae7ce",
         ],
     }.get(chain.id, []))
 

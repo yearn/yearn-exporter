@@ -27,3 +27,15 @@ def is_yfi_story(tx: TreasuryTx) -> bool:
     if tx.to_address and tx.to_address.address == story_dot_ychad_dot_eth:
         return True
     
+def is_aztek_gas_subsidy(tx: TreasuryTx) -> bool:
+    return tx.to_address and tx.to_address.address == "0xABc30E831B5Cc173A9Ed5941714A7845c909e7fA"
+
+def is_devcon_event(tx: TreasuryTx) -> bool:
+    return tx in HashMatcher([
+        ['0x57bc99f6007989606bdd9d1adf91c99d198de51f61d29689ee13ccf440b244df', Filter('log_index', 83)],
+    ])
+
+def is_eth_global(tx: TreasuryTx) -> bool:
+    return tx in HashMatcher([
+        "0x5b2e904506a54417c054129a01b84c43dd40050d6f8064463e2500195049a070",
+    ])

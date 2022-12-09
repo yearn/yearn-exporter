@@ -21,4 +21,8 @@ def is_yfi_cdp_withdrawal(tx: TreasuryTx) -> bool:
 
 def is_dai(tx: TreasuryTx) -> bool:
     """ Returns True when minting or burning DAI. """
-    return tx._symbol == "DAI" and ZERO_ADDRESS in [tx.from_address.address, tx.to_address.address]
+    if tx._symbol == "DAI":
+        if tx.from_address.address == ZERO_ADDRESS:
+            return True
+        elif tx.to_address.address == "0xd42e1Cb8b98382df7Db43e0F09dFE57365659D16": # DSProxy
+            return True
