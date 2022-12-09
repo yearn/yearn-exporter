@@ -332,7 +332,7 @@ class CurveRegistry(metaclass=Singleton):
 
         return [dec for dec in decimals if dec != 0]
 
-    def get_balances(self, pool: AddressOrContract, block: Optional[Block] = None) -> Dict[EthAddress,float]:
+    def get_balances(self, pool: AddressOrContract, block: Optional[Block] = None, should_raise_err: bool = True) -> Optional[Dict[EthAddress,float]]:
         """
         Get {token: balance} of liquidity in the pool.
         """
@@ -358,7 +358,9 @@ class CurveRegistry(metaclass=Singleton):
             )
 
         if not any(balances):
-            raise ValueError(f'could not fetch balances {pool} at {block}')
+            if should_raise_err:
+                raise ValueError(f'could not fetch balances {pool} at {block}')
+            return None
 
         return {
             coin: balance / 10 ** dec
@@ -402,33 +404,29 @@ class CurveRegistry(metaclass=Singleton):
             return 0
         return tvl / supply
 
-        # approximate by using the most common base token we find
-        coins = self.get_underlying_coins(pool)
-        try:
-            coin = (set(coins) & BASIC_TOKENS).pop()
-        except KeyError:
-            coin = coins[0]
-
-        try:
-            virtual_price = self.get_virtual_price(pool, block)
-            if virtual_price:
-                return virtual_price * magic.get_price(coin, block)
-            return sum([balance * magic.get_price(coin, block) for coin, balance in self.get_balances(pool, block).items()])
-        except ValueError as e:
-            logger.warn(f'ValueError: {str(e)}')
-            if 'No data was returned' in str(e):
-                return None
-            else:
-                raise
-    
     def get_coin_price(self, token: AddressOrContract, block: Optional[Block] = None) -> Optional[float]:
 
-        # Get the pool
-        if len(self.coin_to_pools[token]) == 1:
-            pool = self.coin_to_pools[token][0]
-        else:
-            # TODO: handle this sitch if necessary
+        # Select the most appropriate pool
+        pools = self.coin_to_pools[token]
+        if not pools:
             return
+        elif len(pools) == 1:
+            pool = pools[0]
+        else:
+            # We need to find the pool with the deepest liquidity
+            balances = [self.get_balances(pool, block, should_raise_err=False) for pool in pools]
+            balances = [bal for bal in balances if bal]
+            deepest_pool, deepest_bal = None, 0
+            for pool, pool_bals in zip(pools, balances):
+                if isinstance(pool_bals, Exception):
+                    if str(pool_bals).startswith("could not fetch balances"):
+                        continue
+                    raise pool_bals
+                for _token, bal in pool_bals.items():
+                    if _token == token and bal > deepest_bal:
+                        deepest_pool = pool
+                        deepest_bal = bal
+            pool = deepest_pool
         
         # Get the index for `token`
         coins = self.get_coins(pool)
