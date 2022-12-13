@@ -40,7 +40,8 @@ class YveCRVJar(metaclass = Singleton):
         apy = yvboost_eth_pool["apy"]  / 100.
         points = ApyPoints(apy, apy, apy)
         height = chain.height
-        blocks = ApyBlocks(height, height, height, height)
+        inception_block = contract_creation_block(str(self.vault))
+        blocks = ApyBlocks(height, height, height, inception_block)
         return Apy("yvecrv-jar", apy, apy, ApyFees(), points=points, blocks=blocks)
 
     @eth_retry.auto_retry
