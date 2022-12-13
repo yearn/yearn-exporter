@@ -4,8 +4,9 @@ from time import time
 import eth_retry
 import requests
 from joblib import Parallel, delayed
+from brownie import chain
 
-from yearn.apy.common import Apy, ApyFees, ApyPoints, ApySamples
+from yearn.apy.common import Apy, ApyBlocks, ApyFees, ApyPoints, ApySamples
 from yearn.common import Tvl
 from yearn.exceptions import PriceError
 from yearn.prices import magic
@@ -38,7 +39,9 @@ class YveCRVJar(metaclass = Singleton):
         yvboost_eth_pool  = [pool for pool in data if pool["identifier"] == "yvboost-eth"][0]
         apy = yvboost_eth_pool["apy"]  / 100.
         points = ApyPoints(apy, apy, apy)
-        return Apy("yvecrv-jar", apy, apy, ApyFees(), points=points)
+        height = chain.height
+        blocks = ApyBlocks(height, height, height, height)
+        return Apy("yvecrv-jar", apy, apy, ApyFees(), points=points, blocks=blocks)
 
     @eth_retry.auto_retry
     def tvl(self, block=None) -> Tvl:

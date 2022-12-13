@@ -7,6 +7,7 @@ from semantic_version.base import Version
 
 from yearn.apy.common import (
     Apy,
+    ApyBlocks,
     ApyError,
     ApyPoints,
     ApyFees,
@@ -117,8 +118,9 @@ def simple(vault, samples: ApySamples) -> Apy:
         net_apy = 0
 
     points = ApyPoints(week_ago_apy, month_ago_apy, inception_apy)
+    blocks = ApyBlocks(chain.height, samples.week_ago, samples.month_ago, inception_block)
     fees = ApyFees(performance=performance, management=management)
-    return Apy("v2:simple", gross_apr, net_apy, fees, points=points)
+    return Apy("v2:simple", gross_apr, net_apy, fees, points=points, blocks=blocks)
 
 
 def average(vault, samples: ApySamples) -> Apy:
@@ -218,5 +220,6 @@ def average(vault, samples: ApySamples) -> Apy:
         net_apy = 0
 
     points = ApyPoints(week_ago_apy, month_ago_apy, inception_apy)
+    blocks = ApyBlocks(chain.height, samples.week_ago, samples.month_ago, inception_block)
     fees = ApyFees(performance=performance, management=management)
-    return Apy("v2:averaged", gross_apr, net_apy, fees, points=points)
+    return Apy("v2:averaged", gross_apr, net_apy, fees, points=points, blocks=blocks)
