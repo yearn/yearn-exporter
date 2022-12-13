@@ -271,6 +271,10 @@ def _get_export_paths(suffix):
 
 
 def with_monitoring():
+    if os.getenv("DEBUG", None):
+        main()
+        return
+
     from telegram.ext import Updater
 
     private_group = os.environ.get('TG_YFIREBOT_GROUP_INTERNAL')
