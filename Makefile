@@ -108,7 +108,9 @@ up: get-network-name
 #####################################################
 # additional scripts which should always be started #
 #####################################################
-	make single-network network=ethereum commands="exporters/veyfi"
+	if [ "$(NETWORK)" == "ethereum" ] || [ "$(NETWORK)" == "" ]; then
+		make single-network network=ethereum commands="exporters/veyfi"
+	fi
 
 ##################################################
 # default scripts which should always be started #
