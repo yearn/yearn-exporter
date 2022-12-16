@@ -45,7 +45,7 @@ class VotingYFI:
 
 def main():
     if chain.id == Network.Mainnet:
-        start = datetime(2022, 11, 15, 0, tzinfo=timezone.utc)
+        start = datetime(2022, 12, 7, 0, tzinfo=timezone.utc)
         data_query = 'veyfi{network="ETH"}'
     else:
         raise NotImplementedError("Only Mainnet is supported")
