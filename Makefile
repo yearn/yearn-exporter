@@ -22,6 +22,9 @@ else ifneq ($(shell echo $(network) | egrep "^op$$|^OPTI$$|^opti$$|^optimism$$")
 else ifneq ($(shell echo $(network) | egrep "^gno$$|^GNO$$|^gnosis$$"),)
 	$(eval NETWORK = gnosis)
 	$(eval BROWNIE_NETWORK = xdai-main)
+else ifneq ($(shell echo $(network) | egrep "^gth$$|^GTH$$|^goerli$$"),)
+	$(eval NETWORK = goerli)
+	$(eval BROWNIE_NETWORK = goerli)
 else ifeq ($(network),)
 		@echo "No valid network specified. You can specify a network by passing network=<NETWORK>. Supported networks: '$(supported_networks)'"
 		$(eval undefine NETWORK)
@@ -268,5 +271,3 @@ partners-summary-ftm:
 # veyfi scripts
 veyfi:
 	make up network=eth commands="exporters/veyfi"
-
-

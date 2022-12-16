@@ -17,7 +17,7 @@ sentry_sdk.set_tag('script','veyfi_exporter')
 logger = logging.getLogger('yearn.veyfi_exporter')
 
 VEYFI = {
-    Network.Mainnet: '0x90c1f9220d90d3966FbeE24045EDd73E1d588aD5',
+    Network.Mainnet: '0x90c1f9220d90d3966FbeE24045EDd73E1d588aD5'
 }
 
 
@@ -49,7 +49,6 @@ def main():
         data_query = 'veyfi{network="ETH"}'
     else:
         raise NotImplementedError("Only Mainnet is supported")
-
     start_bidirectional_export(start, export_snapshot, data_query)
 
 
