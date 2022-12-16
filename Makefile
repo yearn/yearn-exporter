@@ -74,10 +74,12 @@ infra:
 
 # exporter specifc scripts
 single-network: infra
-	if [ "$(NETWORK)" == "mainnet" ]; then
-		veyfi
+	if [ "$(network)" == "ethereum" ]; then
+		if [ "$(commands)" != "exporters/veyfi" ]; then
+			with_logs=false make veyfi
+		fi
 	fi
-	network=$(network) COMMANDS="$(commands)" DEBUG=$(DEBUG) ./run.sh
+	NETWORK=$(network) COMMANDS="$(commands)" DEBUG=$(DEBUG) ./run.sh
 
 .ONESHELL:
 all-networks: infra
