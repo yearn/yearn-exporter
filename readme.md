@@ -91,6 +91,9 @@ This is a flexible approach to start multiple containers on multiple networks wh
 - stop all containers matching a string in their name, e.g. treasury:
   `make down filter=treasury`
 
+- Start veYFI exporter on ethereum:
+  `make veYFI`
+
 ### Grafana Dashboard & Exporters
 
 ```bash
