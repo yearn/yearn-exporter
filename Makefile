@@ -74,7 +74,10 @@ infra:
 
 # exporter specifc scripts
 single-network: infra
-	NETWORK=$(network) COMMANDS="$(commands)" DEBUG=$(DEBUG) ./run.sh
+	if [ "$(NETWORK)" == "mainnet" ]; then
+		veyfi
+	fi
+	network=$(network) COMMANDS="$(commands)" DEBUG=$(DEBUG) ./run.sh
 
 .ONESHELL:
 all-networks: infra
@@ -268,5 +271,3 @@ partners-summary-ftm:
 # veyfi scripts
 veyfi:
 	make up network=eth commands="exporters/veyfi"
-
-
