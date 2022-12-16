@@ -22,6 +22,7 @@ MULTICALL2 = {
     Network.Fantom: '0xD98e3dBE5950Ca8Ce5a4b59630a5652110403E5c',
     Network.Arbitrum: '0x5B5CFE992AdAC0C9D48E05854B2d91C73a003858',
     Network.Optimism: '0xcA11bde05977b3631167028862bE2a173976CA11', # Multicall 3
+    Network.Goerli: '0x5BA1e12693Dc8F9c48aAD8770482f4739bEeD696',
 }
 multicall2 = contract(MULTICALL2[chain.id])
 
