@@ -74,11 +74,6 @@ infra:
 
 # exporter specifc scripts
 single-network: infra
-	if [ "$(network)" == "ethereum" ]; then
-		if [ "$(commands)" != "exporters/veyfi" ]; then
-			with_logs=false make veyfi
-		fi
-	fi
 	NETWORK=$(network) COMMANDS="$(commands)" DEBUG=$(DEBUG) ./run.sh
 
 .ONESHELL:
@@ -110,6 +105,14 @@ up: get-network-name
 	$(eval commands = $(if $(commands),$(commands),$(exporter_scripts)))
 	$(eval with_logs = $(if $(with_logs),$(with_logs),true))
 	$(eval filter = $(if $(filter),$(filter),$(if $(NETWORK),$(NETWORK),exporter)))
+#####################################################
+# additional scripts which should always be started #
+#####################################################
+	make single-network network=ethereum commands="exporters/veyfi"
+
+##################################################
+# default scripts which should always be started #
+##################################################
 	if [ "$(NETWORK)" != "" ]; then
 		if [ "$(with_logs)" == "true" ]; then
 			make single-network network=$(NETWORK) commands="$(commands)" logs filter="$(filter)"
@@ -272,4 +275,4 @@ partners-summary-ftm:
 
 # veyfi scripts
 veyfi:
-	make up network=eth commands="exporters/veyfi"
+	make single-network network=ethereum commands="exporters/veyfi" logs
