@@ -1,14 +1,17 @@
 import json
-from brownie import network, chain, Contract
-from y import Contract_erc20
-from yearn.networks import Network
+
+from brownie import Contract, chain, network
+
 from yearn.logs import setup_logging
+from yearn.networks import Network
 from yearn.sentry import setup_sentry
 
 setup_logging()
 setup_sentry()
 
 if network.is_connected():
+    from y import Contract_erc20
+
     from yearn.middleware.middleware import setup_middleware
     setup_middleware()
 
