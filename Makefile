@@ -74,6 +74,11 @@ infra:
 
 # exporter specifc scripts
 single-network: infra
+	if [ "$(network)" == "ethereum" ]; then
+		if [ "$(commands)" != "exporters/veyfi" ]; then
+			with_logs=false make veyfi
+		fi
+	fi
 	NETWORK=$(network) COMMANDS="$(commands)" DEBUG=$(DEBUG) ./run.sh
 
 .ONESHELL:
@@ -264,3 +269,7 @@ partners-summary-eth:
 
 partners-summary-ftm:
 	make up network=ftm commands="partners_summary"
+
+# veyfi scripts
+veyfi:
+	make up network=eth commands="exporters/veyfi"
