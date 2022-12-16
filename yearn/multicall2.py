@@ -21,7 +21,7 @@ MULTICALL2 = {
     Network.Gnosis: '0xFAa296891cA6CECAF2D86eF5F7590316d0A17dA0', # maker has not yet deployed multicall2. This is from another deployment
     Network.Fantom: '0xD98e3dBE5950Ca8Ce5a4b59630a5652110403E5c',
     Network.Arbitrum: '0x5B5CFE992AdAC0C9D48E05854B2d91C73a003858',
-    Network.Optimism: '0xcA11bde05977b3631167028862bE2a173976CA11', # Multicall 3
+    Network.Optimism: '0xcA11bde05977b3631167028862bE2a173976CA11' # Multicall 3
 }
 multicall2 = contract(MULTICALL2[chain.id])
 
