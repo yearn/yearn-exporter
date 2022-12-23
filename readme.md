@@ -14,7 +14,7 @@ You will need:
 
 ## Usage
 
-Run `make up` to start the exporter.
+Run `make up` to start all of the exporters.
 
 ### Grafana Dashboard & Exporters
 
