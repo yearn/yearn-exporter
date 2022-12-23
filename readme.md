@@ -9,90 +9,12 @@ Hosted version is available at https://yearn.vision.
 
 You will need:
 
-- Erigon for querying historical data
-- Victoria-metrics to pull the metrics, persist them and make them queryable
-- Grafana if you want to set up custom dashboards and alerts
-- Etherscan API key
-- docker and docker-compose (not mandatory but easier usage, see below)
+- Etherscan API key (and API keys for other networks that you want to use)
+- [Docker](https://www.docker.com/) and [Docker Compose](https://github.com/docker/compose
 
 ## Usage
 
-### Prometheus exporter
-
-```bash
-# full info
-brownie run exporter
-# realtime tvl only
-brownie run exporter tvl
-```
-
-### Postgres exporter
-
-```bash
-# export historical tvl
-brownie run historical_tvl
-# complementary api server
-uvicorn yearn.api:app --port 8000 --reload
-```
-
-### On-demand stats
-
-```bash
-# tvl summary
-brownie run tvl
-# info about live v2 strategies
-brownie run print_strategies
-```
-
-## Docker setup
-
-The dockerized exporter is controlled via multiple docker commands which are invoked via multiple Makefile recipes.
-It's possible to specify multiple Makefile args that control which exporters are started on which network.
-The available args to control the startup sequence of containers are the following:
-
-- `network`: one of `ethereum`, `fantom`, `arbitrum`, `optimism`, `gnosis`, see `make list-networks`
-- `commands`: a list of strings delimited with comma pointing to brownie scripts in `./scripts/` e.g. `exporters/partners,exporters/vaults`, see `make list-commands`
-- `filter`: used for `make logs` and `make down` to match the container name substring.
-
-This is a flexible approach to start multiple containers on multiple networks which can be used for a given network or given exporters of a certain type and a combination of both.
-
-### Usage examples:
-
-- list supported networks:
-  `make list-networks`
-
-- list supported exporter commands:
-  `make list-commands`
-
-- build the docker image:
-  `make build`
-
-- start _all_ exporters on _all_ supported networks, NOTE: this will require at least `num_exporters x num_networks` available cpu cores on your host.
-  `make up`
-
-- stop all exporters:
-  `make down`
-
-- start only the vaults exporter for ethereum:
-  `make up network=ethereum commands="exporters/vaults"`
-
-- start only the vaults exporter for all supported networks:
-  `make up commands="exporters/vaults"`
-
-- start only the treasury exporters for all supported networks:
-  `make treasury`
-
-- start all available exporters on arbitrum:
-  `make up network=arbitrum`
-
-- show the logs of all exporters on arbitrum:
-  `make logs network=arbitrum`
-
-- stop all containers matching a string in their name, e.g. treasury:
-  `make down filter=treasury`
-
-- Start veYFI exporter on ethereum:
-  `make veYFI`
+Run `make up` to start the exporter.
 
 ### Grafana Dashboard & Exporters
 
@@ -144,3 +66,82 @@ After successful startup you can access the tvl rest endpoint at `http://localho
 Create Access Keys for `apy-exporter-service-user` user.
 
 Create a new [environment](https://github.com/numan/yearn-exporter/settings/environments) named `production` and add the newly created `AWS_ACCESS_KEY_ID` and `AWS_SECRET_ACCESS_KEY`.
+
+## Docker setup
+
+The dockerized exporter is controlled via `make up` command which is invoked via multiple Makefile recipes.
+It's possible to specify multiple Makefile args that control which exporters are started on which network.
+The available args to control the startup sequence of containers are the following:
+
+- `network`: one of `ethereum`, `fantom`, `arbitrum`, `optimism`, `gnosis`, see `make list-networks`
+- `commands`: a list of strings delimited with comma pointing to brownie scripts in `./scripts/` e.g. `exporters/partners,exporters/vaults`, see `make list-commands`
+- `filter`: used for `make logs` and `make down` to match the container name substring.
+
+This is a flexible approach to start multiple containers on multiple networks which can be used for a given network or given exporters of a certain type and a combination of both.
+
+### Usage examples:
+
+- list supported networks:  
+  `make list-networks`
+
+- list supported exporter commands:  
+  `make list-commands`
+
+- build the docker image:  
+  `make build`
+
+- start _all_ exporters on _all_ supported networks (requires at least `num_exporters x num_networks` available cpu cores)  
+  `make up`
+
+- stop all exporters:  
+  `make down`
+
+- start only the vaults exporter for ethereum:  
+  `make up network=ethereum commands="exporters/vaults"`
+
+- start only the vaults exporter for all supported networks:  
+  `make up commands="exporters/vaults"`
+
+- start only the treasury exporters for all supported networks:  
+  `make treasury`
+
+- start all available exporters on arbitrum:  
+  `make up network=arbitrum`
+
+- show the logs of all exporters on arbitrum:  
+  `make logs network=arbitrum`
+
+- stop all containers matching a string in their name, e.g. treasury:  
+  `make down filter=treasury`
+
+- Start veYFI exporter on ethereum:  
+  `make veYFI`
+  
+## Running without Docker  
+  
+### Prometheus exporter
+
+```bash
+# full info
+brownie run exporter
+# realtime tvl only
+brownie run exporter tvl
+```
+
+### Postgres exporter
+
+```bash
+# export historical tvl
+brownie run historical_tvl
+# complementary api server
+uvicorn yearn.api:app --port 8000 --reload
+```
+
+### On-demand stats
+
+```bash
+# tvl summary
+brownie run tvl
+# info about live v2 strategies
+brownie run print_strategies
+```
