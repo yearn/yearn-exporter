@@ -18,33 +18,11 @@ Run `make up` to start all of the exporters.
 
 ### Grafana Dashboard & Exporters
 
+Export the environment variables required in [.env.example](./.env.example) to run the dashboards:
+
 ```bash
-# Grafana
-export GF_SECURITY_ADMIN_USER=<YOUR_ADMIN_USER> # change this if you want to have a different admin user name, default is admin
-export GF_SECURITY_ADMIN_PASSWORD=<YOUR_ADMIN_PASSWORD> # change this if you want to have a different admin password, default is admin
-# Ethereum
-export WEB3_PROVIDER=<YOUR_WEB3_PROVIDER> # needs to be set, a custom url to an eth archive node to be used as the web3 provider
-export EXPLORER=<YOUR_ETH_EXPLORER> # optional, defaults to: https://api.etherscan.io/api
-export ETHERSCAN_TOKEN=<YOUR_ETHERSCAN_TOKEN> # this needs to be set
-# Fantom
-export FTM_WEB3_PROVIDER=<YOUR_FTM_WEB3_PROVIDER> # needs to be set, a custom url to an ftm archive node to be used as the web3 provider
-export FTM_EXPLORER=<YOUR_FTM_EXPLORER> # optional, defaults to: https://api.ftmscan.com/api
-export FTMSCAN_TOKEN=<YOUR_FTMSCAN_TOKEN> # this needs to be set
-# Arbitrum
-export ARBI_WEB3_PROVIDER=<YOUR_ARBI_WEB3_PROVIDER> # needs to be set, a custom url to an arbi archive node to be used as the web3 provider
-export ARBI_EXPLORER=<YOUR_ARBI_EXPLORER> # optional, defaults to: https://api.arbiscan.io/api
-export ARBISCAN_TOKEN=<YOUR_ARBISCAN_TOKEN> # this needs to be set
-# Gnosis
-export XDAI_WEB3_PROVIDER=<YOUR_XDAI_WEb3_PROVIDER> # needs to be set, a custom url to an xdai archive node to be used as the web3 provider
-export XDAI_EXPLORER=<YOUR_XDAI_EXPLORER> # optional, defaults to: https://blockscout.com/xdai/mainnet/api
-export XDAISCAN_TOKEN=<YOUR_XDAISCAN_TOKEN> # this needs to be set
-# Optimism
-export OPTI_WEB3_PROVIDER=<YOUR_OPTI_WEb3_PROVIDER> # needs to be set, a custom url to an xdai archive node to be used as the web3 provider
-export OPTI_EXPLORER=<YOUR_OPTI_EXPLORER> # optional, defaults to: https://api-optimistic.etherscan.io/api
-export OPTISCAN_TOKEN=<YOUR_OPTISCAN_TOKEN> # this needs to be set
-# Exporter Parameters
-export POOL_SIZE=<integer>  #1,2,... Needs to be x such that longest export time for single block / x < resolution; default is 1
-export RESOLUTION= # 1d, 1h, 30m, 15m, 5m, 1m, 30s, 15s default 1h. How often blocks are stored
+# Make sure all .env variables loaded
+export ETHERSCAN_TOKEN=<YOUR_ETHERSCAN_TOKEN> # at least this one must be set!
 make dashboards
 ```
 
@@ -53,9 +31,8 @@ After successful startup you can go directly to grafana at `http://localhost:300
 ### Historical TVL
 
 ```bash
-export WEB3_PROVIDER=<YOUR_WEB3_PROVIDER> # if this is set, it overrides Infura, and instead a custom url is used as the web3 provider
-export ETHERSCAN_TOKEN=<YOUR_ETHERSCAN_TOKEN> # this needs to be set
-export EXPLORER=<EXPLORER> # optional, default to: https://api.etherscan.io/api
+# Make sure all .env variables loaded
+export ETHERSCAN_TOKEN=<YOUR_ETHERSCAN_TOKEN> # at least this one must be set!
 make tvl
 ```
 
