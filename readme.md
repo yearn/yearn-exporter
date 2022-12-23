@@ -9,7 +9,7 @@ Hosted version is available at https://yearn.vision.
 
 You will need:
 
-- Etherscan API key (and API keys for other networks that you want to use)
+- Etherscan API key (and API keys for other networks block explorer that you want to use)
 - [Docker](https://www.docker.com/) and [Docker Compose](https://github.com/docker/compose)
 
 ## Usage
