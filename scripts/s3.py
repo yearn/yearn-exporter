@@ -13,7 +13,7 @@ from typing import Any, Union
 import boto3
 import requests
 import sentry_sdk
-from brownie import chain, web3
+from brownie import chain, web3, Contract
 from brownie.exceptions import BrownieEnvironmentWarning
 from yearn.apy import Apy, ApyFees, ApyPoints, ApySamples, get_samples
 from yearn.exceptions import EmptyS3Export, PriceError
@@ -105,17 +105,33 @@ def wrap_vault(
 
 
 def get_assets_metadata(vault_v2: list) -> dict:
-    registry_v2_adapter = registry_adapter()
-    addresses = [str(vault.vault) for vault in vault_v2]
-    addresses_chunks = chunks(addresses, 20)
+    vault_addresses = [str(vault.vault) for vault in vault_v2]
     assets_dynamic_data = []
-    for chunk in addresses_chunks:
-        dynamic = registry_v2_adapter.assetsDynamic(chunk)
-        assets_dynamic_data.extend(dynamic)
+    # if we have an address provider and factory_registry_adapter, we can split the vaults
+    if factory_address_provider() and factory_registry_adapter():
+        # factory vaults
+        factory_addresses = [str(contract(c)) for c in factory_address_provider().assetsAddresses()]
+        assets_dynamic_data += get_assets_dynamic(factory_registry_adapter(), factory_addresses)
+        # non-factory vaults
+        non_factory_addresses = [va for va in vault_addresses if va not in factory_addresses]
+        assets_dynamic_data += get_assets_dynamic(registry_adapter(), non_factory_addresses)
+
+    # normal case without any address provider
+    else:
+        assets_dynamic_data += get_assets_dynamic(registry_adapter(), vault_addresses)
+
     assets_metadata = {}
     for datum in assets_dynamic_data:
         assets_metadata[datum[0]] = datum[-1]
     return assets_metadata
+
+
+def get_assets_dynamic(registry_adapter: Contract, addresses: list) -> list:
+    assets_dynamic_data = []
+    addresses_chunks = chunks(addresses, 20)
+    for chunk in addresses_chunks:
+        assets_dynamic_data += registry_adapter.assetsDynamic(chunk)
+    return assets_dynamic_data
 
 
 def registry_adapter():
@@ -129,6 +145,19 @@ def registry_adapter():
         registry_adapter_address = "0xBcfCA75fF12E2C1bB404c2C216DBF901BE047690"
     return contract(registry_adapter_address)
 
+
+def factory_address_provider():
+    if chain.id == Network.Mainnet:
+        return contract("0xA654Be30cb4A1E25d18DA0629e48b13fb970d5bE")
+    else:
+        return None
+
+
+def factory_registry_adapter():
+    if chain.id == Network.Mainnet:
+        return contract("0x984550cE9e58A8f76184e1b41Dd08Fbf7B6d2762")
+    else:
+        return None
 
 def main():
     data = []
