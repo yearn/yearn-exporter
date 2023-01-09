@@ -70,6 +70,7 @@ SKIP_LOGS = {
         # Other:
         '0x1BA4b447d0dF64DA64024e5Ec47dA94458C1e97f', # Hegic Option Token from strategist testing, expired and worthless
         '0xeaaa790591c646b0436f02f63e8Ca56209FEDE4E', # DHR D-Horse token
+        '0x1e988ba4692e52Bc50b375bcC8585b95c48AaD77', # BBB Bufficorn Buidl Brigade
     ],
     Network.Fantom: [
         "0x630277E37fd2Ddf81e4683f3692dD817aa6225Cb", # 8bitcats
