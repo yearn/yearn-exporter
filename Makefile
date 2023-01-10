@@ -258,6 +258,9 @@ logs-transactions:
 apy:
 	make up commands="s3 with_monitoring" filter=s3
 
+curve-apy-previews:
+	make up commands=curve_apy_previews network=eth with_logs=false
+
 # revenue scripts
 revenues:
 	make up network=eth commands=revenues with_logs=false

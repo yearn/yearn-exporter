@@ -4,7 +4,7 @@ import os
 from pprint import pformat
 from time import time
 
-from brownie import ZERO_ADDRESS, chain, interface
+from brownie import ZERO_ADDRESS, chain, interface, Contract
 from semantic_version import Version
 from yearn.apy.common import (SECONDS_PER_YEAR, Apy, ApyError, ApyFees,
                               ApySamples, SharePricePoint, calculate_roi)
@@ -14,6 +14,7 @@ from yearn.prices import magic
 from yearn.prices.curve import curve
 from yearn.utils import contract, get_block_timestamp
 from yearn.debug import Debug
+from yearn.typing import Address
 
 
 @dataclass 
@@ -23,6 +24,15 @@ class ConvexDetailedApyData:
     cvx_keep_crv: float = 0
     cvx_debt_ratio: float = 0
     convex_reward_apr: float = 0
+
+@dataclass
+class Gauge:
+    lp_token: Address
+    pool: Contract
+    gauge: Contract
+    gauge_weight: int
+    gauge_inflation_rate: int
+    gauge_working_supply: int
 
 
 logger = logging.getLogger(__name__)
@@ -44,15 +54,9 @@ PER_MAX_BOOST = 1.0 / MAX_BOOST
 
 
 def simple(vault, samples: ApySamples) -> Apy:
-    if chain.id != Network.Mainnet:
-        raise ApyError("crv", "chain not supported")
-
     lp_token = vault.token.address
-
     pool_address = curve.get_pool(lp_token)
-
     gauge_address = curve.get_gauge(pool_address)
-
     if gauge_address is None:
         raise ApyError("crv", "no gauge")
 
@@ -73,20 +77,33 @@ def simple(vault, samples: ApySamples) -> Apy:
 
     gauge_inflation_rate = gauge.inflation_rate(block_identifier=block)
     pool = contract(pool_address)
-    pool_price = pool.get_virtual_price(block_identifier=block)
 
-    base_asset_price = magic.get_price(lp_token, block=block) or 1
+    return calculate_simple(
+        vault,
+        Gauge(lp_token, pool, gauge, gauge_weight, gauge_inflation_rate, gauge_working_supply),
+        samples
+    )
+
+def calculate_simple(vault, gauge: Gauge, samples: ApySamples) -> Apy:
+    if chain.id != Network.Mainnet:
+        raise ApyError("crv", "chain not supported")
+
+    block = samples.now
+
+    pool_price = gauge.pool.get_virtual_price(block_identifier=block)
+
+    base_asset_price = magic.get_price(gauge.lp_token, block=block) or 1
 
     crv_price = magic.get_price(curve.crv, block=block)
 
     yearn_voter = addresses[chain.id]['yearn_voter_proxy']
-    y_working_balance = gauge.working_balances(yearn_voter, block_identifier=block)
-    y_gauge_balance = gauge.balanceOf(yearn_voter, block_identifier=block)
+    y_working_balance = gauge.gauge.working_balances(yearn_voter, block_identifier=block)
+    y_gauge_balance = gauge.gauge.balanceOf(yearn_voter, block_identifier=block)
 
     base_apr = (
-        gauge_inflation_rate
-        * gauge_weight
-        * (SECONDS_PER_YEAR / gauge_working_supply)
+        gauge.gauge_inflation_rate
+        * gauge.gauge_weight
+        * (SECONDS_PER_YEAR / gauge.gauge_working_supply)
         * (PER_MAX_BOOST / pool_price)
         * crv_price
     ) / base_asset_price
@@ -97,26 +114,26 @@ def simple(vault, samples: ApySamples) -> Apy:
         boost = MAX_BOOST
 
     # FIXME: The HBTC v1 vault is currently still earning yield, but it is no longer boosted.
-    if vault.vault.address == "0x46AFc2dfBd1ea0c0760CAD8262A5838e803A37e5":
+    if vault and vault.vault.address == "0x46AFc2dfBd1ea0c0760CAD8262A5838e803A37e5":
         boost = 1
 
     # TODO: come up with cleaner way to deal with these new gauge rewards
     reward_apr = 0
-    if hasattr(gauge, "reward_contract"):
-        reward_address = gauge.reward_contract()
+    if hasattr(gauge.gauge, "reward_contract"):
+        reward_address = gauge.gauge.reward_contract()
         if reward_address != ZERO_ADDRESS:
             reward_apr = rewards(reward_address, pool_price, base_asset_price, block=block)
-    elif hasattr(gauge, "reward_data"): # this is how new gauges, starting with MIM, show rewards
+    elif hasattr(gauge.gauge, "reward_data"): # this is how new gauges, starting with MIM, show rewards
         # get our token
         # TODO: consider adding for loop with [gauge.reward_tokens(i) for i in range(gauge.reward_count())] for multiple rewards tokens
-        gauge_reward_token = gauge.reward_tokens(0)
+        gauge_reward_token = gauge.gauge.reward_tokens(0)
         if gauge_reward_token in [ZERO_ADDRESS]:
-            print("no reward token")
+            logger.warn(f"no reward token for gauge {str(gauge.gauge)}")
         else:
-            reward_data = gauge.reward_data(gauge_reward_token)
+            reward_data = gauge.gauge.reward_data(gauge_reward_token)
             rate = reward_data['rate']
             period_finish = reward_data['period_finish']
-            total_supply = gauge.totalSupply()
+            total_supply = gauge.gauge.totalSupply()
             token_price = _get_reward_token_price(gauge_reward_token)
             current_time = time() if block is None else get_block_timestamp(block)
             if period_finish < current_time:
@@ -126,7 +143,7 @@ def simple(vault, samples: ApySamples) -> Apy:
     else:
         reward_apr = 0
 
-    price_per_share = pool.get_virtual_price
+    price_per_share = gauge.pool.get_virtual_price
     now_price = price_per_share(block_identifier=samples.now)
     try:
         week_ago_price = price_per_share(block_identifier=samples.week_ago)
@@ -137,11 +154,11 @@ def simple(vault, samples: ApySamples) -> Apy:
     week_ago_point = SharePricePoint(samples.week_ago, week_ago_price)
 
     # FIXME: crvANKR's pool apy going crazy
-    if vault.vault.address == "0xE625F5923303f1CE7A43ACFEFd11fd12f30DbcA4":
+    if vault and vault.vault.address == "0xE625F5923303f1CE7A43ACFEFd11fd12f30DbcA4":
         pool_apy = 0
 
     # Curve USDT Pool yVault apr is way too high which fails the apy calculations with a OverflowError
-    elif vault.vault.address == "0x28a5b95C101df3Ded0C0d9074DB80C438774B6a9":
+    elif vault and vault.vault.address == "0x28a5b95C101df3Ded0C0d9074DB80C438774B6a9":
         pool_apy = 0
 
     else:
@@ -151,31 +168,37 @@ def simple(vault, samples: ApySamples) -> Apy:
     # prevent circular import for partners calculations
     from yearn.v2.vaults import Vault as VaultV2
 
-    if isinstance(vault, VaultV2):
-        vault_contract = vault.vault
-        if len(vault.strategies) > 0 and hasattr(vault.strategies[0].strategy, "keepCRV"):
-            crv_keep_crv = vault.strategies[0].strategy.keepCRV(block_identifier=block) / 1e4
-        elif len(vault.strategies) > 0 and hasattr(vault.strategies[0].strategy, "keepCrvPercent"):
-            crv_keep_crv = vault.strategies[0].strategy.keepCrvPercent(block_identifier=block) / 1e4
+    if vault:
+        if isinstance(vault, VaultV2):
+            vault_contract = vault.vault
+            if len(vault.strategies) > 0 and hasattr(vault.strategies[0].strategy, "keepCRV"):
+                crv_keep_crv = vault.strategies[0].strategy.keepCRV(block_identifier=block) / 1e4
+            elif len(vault.strategies) > 0 and hasattr(vault.strategies[0].strategy, "keepCrvPercent"):
+                crv_keep_crv = vault.strategies[0].strategy.keepCrvPercent(block_identifier=block) / 1e4
+            else:
+                crv_keep_crv = 0
+            performance = vault_contract.performanceFee(block_identifier=block) / 1e4 if hasattr(vault_contract, "performanceFee") else 0
+            management = vault_contract.managementFee(block_identifier=block) / 1e4 if hasattr(vault_contract, "managementFee") else 0
         else:
-            crv_keep_crv = 0
-        performance = vault_contract.performanceFee(block_identifier=block) / 1e4 if hasattr(vault_contract, "performanceFee") else 0
-        management = vault_contract.managementFee(block_identifier=block) / 1e4 if hasattr(vault_contract, "managementFee") else 0
-    else:
-        strategy = vault.strategy
-        strategist_performance = strategy.performanceFee(block_identifier=block) if hasattr(strategy, "performanceFee") else 0
-        strategist_reward = strategy.strategistReward(block_identifier=block) if hasattr(strategy, "strategistReward") else 0
-        treasury = strategy.treasuryFee(block_identifier=block) if hasattr(strategy, "treasuryFee") else 0
-        crv_keep_crv = strategy.keepCRV(block_identifier=block) / 1e4 if hasattr(strategy, "keepCRV") else 0
+            strategy = vault.strategy
+            strategist_performance = strategy.performanceFee(block_identifier=block) if hasattr(strategy, "performanceFee") else 0
+            strategist_reward = strategy.strategistReward(block_identifier=block) if hasattr(strategy, "strategistReward") else 0
+            treasury = strategy.treasuryFee(block_identifier=block) if hasattr(strategy, "treasuryFee") else 0
+            crv_keep_crv = strategy.keepCRV(block_identifier=block) / 1e4 if hasattr(strategy, "keepCRV") else 0
 
-        performance = (strategist_reward + strategist_performance + treasury) / 1e4
+            performance = (strategist_reward + strategist_performance + treasury) / 1e4
+            management = 0
+    else:
+        # used for APY calculation previews
+        performance = 0.1
         management = 0
+        crv_keep_crv = 0
     
     # if the vault consists of only a convex strategy then return 
     # specialized apy calculations for convex
     if _ConvexVault.is_convex_vault(vault):
         cvx_strategy = vault.strategies[0].strategy
-        cvx_vault = _ConvexVault(cvx_strategy, vault, gauge)
+        cvx_vault = _ConvexVault(cvx_strategy, vault, gauge.gauge)
         return cvx_vault.apy(base_asset_price, pool_price, base_apr, pool_apy, management, performance)
 
     # if the vault has two strategies then the first is curve and the second is convex
@@ -194,7 +217,7 @@ def simple(vault, samples: ApySamples) -> Apy:
             cvx_strategy = first_strategy
             crv_strategy = second_strategy
 
-        cvx_vault = _ConvexVault(cvx_strategy, vault, gauge)
+        cvx_vault = _ConvexVault(cvx_strategy, vault, gauge.gauge)
         crv_debt_ratio = vault.vault.strategies(crv_strategy)[2] / 1e4
         cvx_apy_data = cvx_vault.get_detailed_apy_data(base_asset_price, pool_price, base_apr)
     else:
