@@ -54,6 +54,9 @@ PER_MAX_BOOST = 1.0 / MAX_BOOST
 
 
 def simple(vault, samples: ApySamples) -> Apy:
+    if chain.id != Network.Mainnet:
+        raise ApyError("crv", "chain not supported")
+
     lp_token = vault.token.address
     pool_address = curve.get_pool(lp_token)
     gauge_address = curve.get_gauge(pool_address)
@@ -85,9 +88,6 @@ def simple(vault, samples: ApySamples) -> Apy:
     )
 
 def calculate_simple(vault, gauge: Gauge, samples: ApySamples) -> Apy:
-    if chain.id != Network.Mainnet:
-        raise ApyError("crv", "chain not supported")
-
     block = samples.now
 
     pool_price = gauge.pool.get_virtual_price(block_identifier=block)
