@@ -8,6 +8,7 @@ from typing import List
 import eth_retry
 from brownie import Contract, chain, convert, interface, web3
 from brownie.network.contract import _fetch_from_explorer, _resolve_address
+from brownie.convert.datatypes import HexString
 
 from yearn.cache import memory
 from yearn.exceptions import ArchiveNodeRequired, NodeNotSynced
@@ -254,6 +255,12 @@ def chunks(lst, n):
     for i in range(0, len(lst), n):
         yield lst[i:i + n]
 
+def hex_to_string(h: HexString) -> str:
+    '''returns a string from a HexString'''
+    h = h.hex().rstrip("0")
+    if len(h) % 2 != 0:
+        h += "0"
+    return bytes.fromhex(h).decode("utf-8")
 
 def _squeeze(it):
     """ Reduce the contract size in RAM significantly. """
