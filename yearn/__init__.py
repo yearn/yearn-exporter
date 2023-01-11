@@ -19,7 +19,11 @@ if network.is_connected():
         # compile LINK contract locally for mainnet with latest solc because the etherscan abi crashes event parsing
         Contract.from_explorer("0x514910771AF9Ca656af840dff83E8264EcF986CA")
         # XEN abi from etherscan is missing events
-        Contract.from_abi("XENCrypto", "0x06450dEe7FD2Fb8E39061434BAbCFC05599a6Fb8", interface.XEN.abi)
+        Contract.from_abi(
+            name="XENCrypto",
+            address="0x06450dEe7FD2Fb8E39061434BAbCFC05599a6Fb8",
+            abi=json.load(open("interfaces/XEN.json"))
+        )
     elif chain.id == Network.Arbitrum:
         # PHP Philippine Peso stablecoin is not verified. Force init it with ERC20 abi.
         Contract_erc20("0xFa247d0D55a324ca19985577a2cDcFC383D87953")
