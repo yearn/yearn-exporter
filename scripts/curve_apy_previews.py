@@ -41,7 +41,10 @@ def _build_data(gauges):
 
         apy_error = Apy("error", 0, 0, ApyFees(0, 0), ApyPoints(0, 0, 0))
         try:
-            apy = calculate_simple(None, gauge, samples)
+            if gauge.gauge_weight > 0:
+                apy = calculate_simple(None, gauge, samples)
+            else:
+                apy = Apy("zero_weight", 0, 0, ApyFees(0, 0), ApyPoints(0, 0, 0))
         except Exception as error:
             logger.error(error)
             logger.error(gauge)
@@ -63,18 +66,18 @@ def _build_data(gauges):
     return data
 
 def _extract_gauge(v):
-    gauge_controller = v["gauge_controller"]
-    weight = int(gauge_controller["gauge_relative_weight"])
-    if v["side_chain"] or v["is_killed"] or weight == 0:
+    if v["side_chain"] or v["is_killed"]:
         return None
 
     pool_address = v["swap"]
     gauge_address = v["gauge"]
     gauge_data = v["gauge_data"]
+    gauge_controller = v["gauge_controller"]
 
     lp_token = v["swap_token"]
     pool = contract(pool_address)
     gauge = contract(gauge_address)
+    weight = int(gauge_controller["gauge_relative_weight"])
     inflation_rate = int(gauge_data["inflation_rate"])
     working_supply = int(gauge_data["working_supply"])
 
