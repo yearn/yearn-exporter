@@ -1,8 +1,6 @@
 #!/bin/bash
 set -e
 
-echo ${BROWNIE_NETWORK}
-
 BROWNIE_NETWORK=${BROWNIE_NETWORK:-mainnet} # default to Ethereum mainnet
 EXPLORER=${EXPLORER:-$DEFAULT_EXPLORER}
 

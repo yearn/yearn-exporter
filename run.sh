@@ -7,18 +7,17 @@ if [[ -z "${COMMANDS}" ]]; then
 fi
 
 export SENTRY_RELEASE=$(git rev-parse --short HEAD)
-export CONTAINER_PREFIX="yearn-exporter-worker-${NETWORK}"
 
 IFS=',' read -r -a commands <<< "$COMMANDS"
 for CMD in "${commands[@]}"; do
   NAME=$(echo $CMD | sed -e 's/[_/ ]/-/g')
   # TODO handle multiple containers with the same name more gracefully
-  CONTAINER_NAME=${CONTAINER_PREFIX}-${NAME}-1
+  CONTAINER_NAME=${PROJECT_PREFIX}-${NAME}-1
   docker rm -f $CONTAINER_NAME 2> /dev/null || true
   docker-compose \
     --file services/dashboard/docker-compose.yml \
     --project-directory . \
-    -p $CONTAINER_PREFIX run \
+    -p $PROJECT_PREFIX run \
     --name $CONTAINER_NAME \
     --detach \
     exporter $CMD
