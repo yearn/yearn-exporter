@@ -5,7 +5,7 @@ import eth_retry
 import requests
 from joblib import Parallel, delayed
 
-from yearn.apy.common import Apy, ApyFees, ApyPoints, ApySamples
+from yearn.apy.common import Apy, ApyBlocks, ApyFees, ApyPoints, ApySamples
 from yearn.common import Tvl
 from yearn.exceptions import PriceError
 from yearn.prices import magic
@@ -38,7 +38,10 @@ class YveCRVJar(metaclass = Singleton):
         yvboost_eth_pool  = [pool for pool in data if pool["identifier"] == "yvboost-eth"][0]
         apy = yvboost_eth_pool["apy"]  / 100.
         points = ApyPoints(apy, apy, apy)
-        return Apy("yvecrv-jar", apy, apy, ApyFees(), points=points)
+        block = samples.now
+        inception_block = contract_creation_block(str(self.vault))
+        blocks = ApyBlocks(block, block, block, inception_block)
+        return Apy("yvecrv-jar", apy, apy, ApyFees(), points=points, blocks=blocks)
 
     @eth_retry.auto_retry
     def tvl(self, block=None) -> Tvl:

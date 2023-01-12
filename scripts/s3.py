@@ -15,7 +15,7 @@ import requests
 import sentry_sdk
 from brownie import chain, web3, Contract
 from brownie.exceptions import BrownieEnvironmentWarning
-from yearn.apy import Apy, ApyFees, ApyPoints, ApySamples, get_samples
+from yearn.apy import Apy, ApyBlocks, ApyFees, ApyPoints, ApySamples, get_samples
 from yearn.exceptions import EmptyS3Export, PriceError
 from yearn.graphite import send_metric
 from yearn.networks import Network
@@ -39,7 +39,7 @@ logger = logging.getLogger("yearn.apy")
 def wrap_vault(
     vault: Union[VaultV1, VaultV2], samples: ApySamples, aliases: dict, icon_url: str, assets_metadata: dict
 ) -> dict:
-    apy_error = Apy("error", 0, 0, ApyFees(0, 0), ApyPoints(0, 0, 0))
+    apy_error = Apy("error", 0, 0, ApyFees(0, 0), ApyPoints(0, 0, 0), ApyBlocks(samples.now, 0, 0, 0))
     try:
         apy = vault.apy(samples)
     except ValueError as error:
@@ -220,7 +220,7 @@ def main():
 
 
 def _export(data, file_name, s3_path):
-    print(json.dumps(data))
+    print(json.dumps(data, indent=4))
 
     with open(file_name, "w+") as f:
         json.dump(data, f)
@@ -271,6 +271,10 @@ def _get_export_paths(suffix):
 
 
 def with_monitoring():
+    if os.getenv("DEBUG", None):
+        main()
+        return
+
     from telegram.ext import Updater
 
     private_group = os.environ.get('TG_YFIREBOT_GROUP_INTERNAL')

@@ -24,6 +24,12 @@ class ApyFees:
     keep_crv: Optional[float] = None
     cvx_keep_crv: Optional[float] = None
 
+@dataclass
+class ApyBlocks:
+    now: int
+    week_ago: int
+    month_ago: int
+    inception: int
 
 @dataclass
 class ApyPoints:
@@ -39,6 +45,7 @@ class Apy:
     net_apy: float
     fees: ApyFees
     points: Optional[ApyPoints] = None
+    blocks: Optional[ApyBlocks] = None
     composite: Optional[Dict[str, float]] = None
 
 
