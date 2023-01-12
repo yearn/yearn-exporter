@@ -1,4 +1,3 @@
-from brownie import chain
 from yearn.utils import contract_creation_block
 
 from yearn.apy.common import (
@@ -77,6 +76,6 @@ def simple(vault, samples: ApySamples) -> Apy:
     gross_apr = apr_after_fees / (1 - performance)
     
     points = ApyPoints(week_ago_apy, month_ago_apy, inception_apy)
-    blocks = ApyBlocks(chain.height, samples.week_ago, samples.month_ago, inception_block)
+    blocks = ApyBlocks(samples.now, samples.week_ago, samples.month_ago, inception_block)
     fees = ApyFees(performance=performance, withdrawal=withdrawal)
     return Apy("v1:simple", gross_apr, net_apy, fees, points=points, blocks=blocks)

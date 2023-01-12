@@ -39,7 +39,7 @@ logger = logging.getLogger("yearn.apy")
 def wrap_vault(
     vault: Union[VaultV1, VaultV2], samples: ApySamples, aliases: dict, icon_url: str, assets_metadata: dict
 ) -> dict:
-    apy_error = Apy("error", 0, 0, ApyFees(0, 0), ApyPoints(0, 0, 0), ApyBlocks(chain.height, 0, 0, 0))
+    apy_error = Apy("error", 0, 0, ApyFees(0, 0), ApyPoints(0, 0, 0), ApyBlocks(samples.now, 0, 0, 0))
     try:
         apy = vault.apy(samples)
     except ValueError as error:
