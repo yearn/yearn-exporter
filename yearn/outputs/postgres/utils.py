@@ -2,12 +2,13 @@ import logging
 from typing import Optional
 
 from brownie import ZERO_ADDRESS, chain, convert
+from brownie.convert.datatypes import HexString
 from pony.orm import ObjectNotFound, db_session, select
 from yearn.entities import (Address, Chain, Token, TreasuryTx, TxGroup, UserTx,
                             db)
 from yearn.multicall2 import fetch_multicall
 from yearn.networks import Network
-from yearn.utils import contract, is_contract
+from yearn.utils import contract, is_contract, hex_to_string
 
 logger = logging.getLogger(__name__)
 
@@ -51,6 +52,13 @@ def cache_token(address: str) -> Token:
         else:
             token = contract(address)
             symbol, name, decimals = fetch_multicall([token,'symbol'],[token,'name'],[token,'decimals'])
+
+            # MKR contract returns name and symbol as bytes32 which is converted to a brownie HexString
+            # try to decode it
+            if isinstance(name, HexString):
+                name = hex_to_string(name)
+            if isinstance(symbol, HexString):
+                symbol = hex_to_string(symbol)
         try:
             token = Token(
                 address=address_entity,
