@@ -2,6 +2,7 @@
 
 Collects real-time on-chain numeric data about all Yearn products and exposes it in multiple formats. Currently, it's able to export data from the following networks:
 Ethereum, Fantom, Arbitrum, Gnosis, and Optimism.
+
 The hosted version is available at https://yearn.vision.
 
 # Installation
@@ -110,6 +111,6 @@ This is a flexible approach to start multiple containers on multiple networks wh
   `make debug-apy network=eth
     - if error unable to expand env var
       try `make shell network=eth`
-      `echo $WEB3_PROVIDER` if default network shows up add manually via brownie
+      `echo $WEB3_PROVIDER` if default network shows up add manually via Brownie
       `brownie networks modify mainnet host=xxx explorer=xxx`
       exit and retry, env var should be loaded now
