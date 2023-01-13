@@ -21,8 +21,7 @@ Run `make up` to start all of the exporters.
 Export the environment variables required in [.env.example](./.env.example) into .env to run the dashboards and exporters:
 
 ```bash
-# Make sure all .env variables loaded, check with `echo $variable_name_here`
-source .env
+# Make sure all .env variables loaded (`source .env`), check with `echo $variable_name_here`
 make build && make dashboards
 ```
 
@@ -31,8 +30,7 @@ After a successful startup, you can go directly to Grafana at `http://localhost:
 ### Historical TVL
 
 ```bash
-# Make sure all .env variables loaded, check with `echo $variable_name_here`
-source .env
+# Make sure all .env variables loaded (`source .env`), check with `echo $variable_name_here`
 make build && make tvl
 ```
 
@@ -40,11 +38,10 @@ After a successful start up you can access the tvl rest endpoint at `http://loca
 
 ### Run All
 ```bash
-# Make sure all .env variables loaded, check with `echo $variable_name_here`
-source .env
+# Make sure all .env variables loaded (`source .env`), check with `echo $variable_name_here`
 make build && make up
-
 # Optionally you can filter `make up` by `make up network=eth` or network=ftm ect for networks supported in the make file
+```
 
 ### Setting up GitHub Actions
 
@@ -75,11 +72,14 @@ This is a flexible approach to start multiple containers on multiple networks wh
 - build the docker image:  
   `make build`
 
-- start _all_ exporters on _all_ supported networks (requires at least `num_exporters x num_networks` available cpu cores)  
+- start _all_ exporters on _all_ supported networks (requires at least *num_exporters x num_networks* available cpu cores):  
   `make up`
 
 - stop all exporters:  
   `make down`
+
+- stop all docker infrastructure:   
+  `make down filter=infra`
 
 - start only the vaults exporter for ethereum:  
   `make up network=ethereum commands="exporters/vaults"`
@@ -101,19 +101,12 @@ This is a flexible approach to start multiple containers on multiple networks wh
 
 - start veYFI exporter on ethereum:  
   `make veYFI`
-# veyfi exporter is started with every make command at the moment.
 
-- start APY exporter on ethereum
+- start APY exporter on ethereum:  
   `make apy network=eth`
 
-- start APY Debug on ethereum
-  `export DEBUG_ADDRESS=vault_address_here`
-  `make debug-apy network=eth
-    - if error unable to expand env var
-      try `make shell network=eth`
-      `echo $WEB3_PROVIDER` if default network shows up add manually via Brownie
-      `brownie networks modify mainnet host=xxx explorer=xxx`
-      exit and retry, env var should be loaded now
+- start APY Debug on ethereum for a specific vault:  
+  `export DEBUG_ADDRESS=vault_address_here && make debug-apy network=eth`
 
-- start APY preview for curve pools
-  `make curve-apy-previews`
+- start APY preview for curve pools:  
+   `make curve-apy-previews`
