@@ -39,6 +39,17 @@ def _build_data(gauges):
         if not gauge:
             continue
 
+        pool_coins = []
+        for i in range(2):
+            coin_address = gauge.pool.coins(i)
+            try:
+                c = contract(coin_address)
+                pool_coins.append({"name": c.name(), "address": str(c)})
+            except (ValueError, AttributeError) as e:
+                pool_coins.append({"address": coin_address, "error": str(e)})
+                logger.error(f"error for coins({i}) for pool {str(gauge.pool)}")
+                logger.error(e)
+
         apy_error = Apy("error", 0, 0, ApyFees(0, 0), ApyPoints(0, 0, 0))
         try:
             if gauge.gauge_weight > 0:
@@ -54,6 +65,7 @@ def _build_data(gauges):
             "gauge_name": gauge_name,
             "gauge_address": str(gauge.gauge),
             "pool_address": str(gauge.pool),
+            "pool_coins": pool_coins,
             "lp_token": gauge.lp_token,
             "weight": str(gauge.gauge_weight),
             "inflation_rate": str(gauge.gauge_inflation_rate),
