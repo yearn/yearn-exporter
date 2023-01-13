@@ -66,7 +66,7 @@ def _build_data(gauges):
             "gauge_address": str(gauge.gauge),
             "pool_address": str(gauge.pool),
             "pool_coins": pool_coins,
-            "lp_token": gauge.lp_token,
+            "lp_token": str(contract(gauge.lp_token)),
             "weight": str(gauge.gauge_weight),
             "inflation_rate": str(gauge.gauge_inflation_rate),
             "working_supply": str(gauge.gauge_working_supply),
