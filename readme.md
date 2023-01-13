@@ -114,3 +114,6 @@ This is a flexible approach to start multiple containers on multiple networks wh
       `echo $WEB3_PROVIDER` if default network shows up add manually via Brownie
       `brownie networks modify mainnet host=xxx explorer=xxx`
       exit and retry, env var should be loaded now
+
+- start APY preview for curve pools
+  `make curve-apy-previews`
