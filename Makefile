@@ -239,8 +239,11 @@ logs-transactions:
 	make logs filter=transactions commands="exporters/transactions"
 
 # apy scripts
-apy:
+apy-monitoring:
 	make up commands="s3 with_monitoring" filter=s3
+
+apy:
+	make up commands="s3" filter=s3
 
 curve-apy-previews:
 	make up commands=curve_apy_previews network=eth with_logs=false
