@@ -43,9 +43,11 @@ def wrap_vault(
     try:
         apy = vault.apy(samples)
     except ValueError as error:
+        apy_error.error_reason = ":".join(error.args)
         logger.error(error)
         apy = apy_error
     except PriceError as error:
+        apy_error.error_reason = ":".join(error.args)
         logger.error(error)
         apy = apy_error
 
