@@ -182,8 +182,6 @@ def main(dynamically_find_multi_harvest=False):
     interval_seconds = 25
 
     last_reported_block, last_reported_block030 = last_harvest_block()
-    last_reported_block = 16215519
-    last_reported_block030 = 16215519
     print("latest block (v0.3.1+ API)",last_reported_block)
     print("blocks behind (v0.3.1+ API)", chain.height - last_reported_block)
     if chain.id == 1:
