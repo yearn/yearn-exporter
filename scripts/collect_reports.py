@@ -1,6 +1,6 @@
 from lib2to3.pgen2 import token
 import logging
-import time, os
+import time, os, requests,json
 import telebot
 from discordwebhook import Discord
 from dotenv import load_dotenv
@@ -28,6 +28,7 @@ warnings.filterwarnings("ignore", ".*It has been discarded*")
 
 
 inv_telegram_key = os.environ.get('WAVEY_ALERTS_BOT_KEY')
+ETHERSCANKEY = os.environ.get('ETHERSCAN_KEY')
 invbot = telebot.TeleBot(inv_telegram_key)
 env = os.environ.get('ENVIRONMENT')
 alerts_enabled = True if env == "PROD" or env == "TEST" else False
@@ -182,6 +183,8 @@ def main(dynamically_find_multi_harvest=False):
     interval_seconds = 25
 
     last_reported_block, last_reported_block030 = last_harvest_block()
+    last_reported_block = 16418897
+    last_reported_block030 = 16418897
     print("latest block (v0.3.1+ API)",last_reported_block)
     print("blocks behind (v0.3.1+ API)", chain.height - last_reported_block)
     if chain.id == 1:
@@ -241,14 +244,13 @@ def handle_event(event, multi_harvest):
     if event.address not in endorsed_vaults:
         # check if a vault from inverse partnership
         if event.address not in INVERSE_PRIVATE_VAULTS:
-            print("trying",event.address)
             print(f"skipping: not endorsed. txn hash {txn_hash}. chain id {chain.id} sync {event.block_number} / {chain.height}.")
             return
     if event.address not in INVERSE_PRIVATE_VAULTS:
         if get_vault_endorsement_block(event.address) > event.block_number:
             print(f"skipping: not endorsed yet. txn hash {txn_hash}. chain id {chain.id} sync {event.block_number} / {chain.height}.")
             return
-    
+    print(txn_hash)
     tx = web3.eth.getTransactionReceipt(txn_hash)
     gas_price = web3.eth.getTransaction(txn_hash).gasPrice
     ts = chain[event.block_number].timestamp
@@ -296,16 +298,16 @@ def handle_event(event, multi_harvest):
         txn_record_exists = True
     r.block = event.block_number
     r.txn_hash = txn_hash
-    strategy = contract(r.strategy_address)
+    strategy = get_contract(r.strategy_address)
     
     r.vault_api = vault.apiVersion()
     r.gov_fee_in_want, r.strategist_fee_in_want = parse_fees(tx, r.vault_address, r.strategy_address, r.vault_decimals, r.gain, r.vault_api)
     r.gain_post_fees = r.gain - r.loss - r.strategist_fee_in_want - r.gov_fee_in_want
-    r.token_symbol = contract(strategy.want()).symbol()
+    r.token_symbol = get_contract(strategy.want()).symbol()
     r.want_token = strategy.want()
     r.want_price_at_block = 0
     if r.want_token == "0x447Ddd4960d9fdBF6af9a790560d0AF76795CB08":
-        r.want_price_at_block = magic.get_price(constants.weth, r.block) * contract(contract(r.want_token).coins(0)).getExchangeRate() / 1e18
+        r.want_price_at_block = magic.get_price(constants.weth, r.block) * get_contract(get_contract(r.want_token).coins(0)).getExchangeRate() / 1e18
     else:
         r.want_price_at_block = magic.get_price(r.want_token, r.block)
     
@@ -500,10 +502,10 @@ def get_vault_endorsement_block(vault_address):
         pass
     registries = CHAIN_VALUES[chain.id]["REGISTRY_ADDRESSES"]
     height = chain.height
-    lo, hi = CHAIN_VALUES[chain.id]["START_BLOCK"], height
-
+    v = '0x5B8C556B8b2a78696F0B9B830B3d67623122E270'
     for r in registries:
         r = contract(r)
+        lo, hi = CHAIN_VALUES[chain.id]["START_BLOCK"], height
         while hi - lo > 1:
             mid = lo + (hi - lo) // 2
             try:
@@ -515,7 +517,6 @@ def get_vault_endorsement_block(vault_address):
             except:
                 lo = mid
         if hi < height:
-            print(f'🍿REGSITERD AT BLOCK {mid}')
             return mid
     return hi
 
@@ -660,3 +661,12 @@ def dhms_from_seconds(seconds):
 	hours, minutes = divmod(minutes, 60)
 	days, hours = divmod(hours, 24)
 	return (days, hours, minutes)
+
+def get_contract(address):
+    address = web3.toChecksumAddress(address)
+    try:
+        return contract(address)
+    except:
+        response = requests.get(f"https://api.etherscan.io/api?module=contract&action=getabi&address={address}&apikey={ETHERSCANKEY}").json()
+        return Contract.from_abi('',address, json.loads(response['result']))
+
