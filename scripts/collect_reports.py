@@ -70,9 +70,9 @@ CHAIN_VALUES = {
         "EMOJI": "🇪🇹",
         "START_DATE": datetime(2020, 2, 12, tzinfo=timezone.utc),
         "START_BLOCK": 11563389,
-        "REGISTRY_ADDRESS": "0x50c1a2eA0a861A967D9d0FFE2AE4012c2E053804",
+        "REGISTRY_ADDRESSES": ["0x50c1a2eA0a861A967D9d0FFE2AE4012c2E053804","0xaF1f5e1c19cB68B30aAD73846eFfDf78a5863319"],
         "REGISTRY_DEPLOY_BLOCK": 12045555,
-        "REGISTRY_HELPER_ADDRESS": "0x52CbF68959e082565e7fd4bBb23D9Ccfb8C8C057",
+        "REGISTRY_HELPER_ADDRESS": "0xec85C894be162268c834b784CC232398E3E89A12",
         "LENS_ADDRESS": "0x5b4F3BE554a88Bd0f8d8769B9260be865ba03B4a",
         "LENS_DEPLOY_BLOCK": 12707450,
         "VAULT_ADDRESS030": "0x19D3364A399d251E894aC732651be8B0E4e85001",
@@ -94,7 +94,7 @@ CHAIN_VALUES = {
         "EMOJI": "👻",
         "START_DATE": datetime(2021, 4, 30, tzinfo=timezone.utc),
         "START_BLOCK": 18450847,
-        "REGISTRY_ADDRESS": "0x727fe1759430df13655ddb0731dE0D0FDE929b04",
+        "REGISTRY_ADDRESSES": ["0x727fe1759430df13655ddb0731dE0D0FDE929b04"],
         "REGISTRY_DEPLOY_BLOCK": 18455565,
         "REGISTRY_HELPER_ADDRESS": "0x8CC45f739104b3Bdb98BFfFaF2423cC0f817ccc1",
         "REGISTRY_HELPER_DEPLOY_BLOCK": 18456459,
@@ -119,7 +119,7 @@ CHAIN_VALUES = {
         "EMOJI": "🤠",
         "START_DATE": datetime(2021, 9, 14, tzinfo=timezone.utc),
         "START_BLOCK": 4841854,
-        "REGISTRY_ADDRESS": "0x3199437193625DCcD6F9C9e98BDf93582200Eb1f",
+        "REGISTRY_ADDRESSES": ["0x3199437193625DCcD6F9C9e98BDf93582200Eb1f"],
         "REGISTRY_DEPLOY_BLOCK": 12045555,
         "REGISTRY_HELPER_ADDRESS": "0x237C3623bed7D115Fc77fEB08Dd27E16982d972B",
         "LENS_ADDRESS": "0xcAd10033C86B0C1ED6bfcCAa2FF6779938558E9f",
@@ -141,7 +141,7 @@ CHAIN_VALUES = {
         "EMOJI": "🔴",
         "START_DATE": datetime(2022, 8, 6, tzinfo=timezone.utc),
         "START_BLOCK": 24097341,
-        "REGISTRY_ADDRESS": "0x1ba4eB0F44AB82541E56669e18972b0d6037dfE0",
+        "REGISTRY_ADDRESSES": ["0x1ba4eB0F44AB82541E56669e18972b0d6037dfE0"],
         "REGISTRY_DEPLOY_BLOCK": 18097341,
         "REGISTRY_HELPER_ADDRESS": "0x0983b4899a3168c2509569faf1e4e75c57b4aba6",
         "LENS_ADDRESS": "0xD3A93C794ee2798D8f7906493Cd3c2A835aa0074",
@@ -182,7 +182,8 @@ def main(dynamically_find_multi_harvest=False):
     interval_seconds = 25
 
     last_reported_block, last_reported_block030 = last_harvest_block()
-
+    last_reported_block = 16215519
+    last_reported_block030 = 16215519
     print("latest block (v0.3.1+ API)",last_reported_block)
     print("blocks behind (v0.3.1+ API)", chain.height - last_reported_block)
     if chain.id == 1:
@@ -499,19 +500,25 @@ def get_vault_endorsement_block(vault_address):
         return block
     except KeyError:
         pass
-    registry = contract(CHAIN_VALUES[chain.id]["REGISTRY_ADDRESS"])
+    registries = CHAIN_VALUES[chain.id]["REGISTRY_ADDRESSES"]
     height = chain.height
     lo, hi = CHAIN_VALUES[chain.id]["START_BLOCK"], height
-    while hi - lo > 1:
-        mid = lo + (hi - lo) // 2
-        try:
-            num_vaults = registry.numVaults(token, block_identifier=mid)
-            if registry.vaults(token, num_vaults-1, block_identifier=mid) == vault_address:
-                hi = mid
-            else:
+
+    for r in registries:
+        r = contract(r)
+        while hi - lo > 1:
+            mid = lo + (hi - lo) // 2
+            try:
+                num_vaults = r.numVaults(token, block_identifier=mid)
+                if r.vaults(token, num_vaults-1, block_identifier=mid) == vault_address:
+                    hi = mid
+                else:
+                    lo = mid
+            except:
                 lo = mid
-        except:
-            lo = mid
+        if hi < height:
+            print(f'🍿REGSITERD AT BLOCK {mid}')
+            return mid
     return hi
 
 def normalize_event_values(vals, decimals):
