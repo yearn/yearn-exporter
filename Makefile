@@ -1,35 +1,5 @@
+.PHONY: all up
 SHELL := /bin/bash
-
-NETWORK ?= ethereum
-export
-BROWNIE_NETWORK ?= mainnet
-export
-
-.ONESHELL:
-get-network-name:
-ifneq ($(shell echo $(network) | egrep "^ethereum$$|^eth$$|^ETH$$|^mainnet$$"),)
-	$(eval NETWORK = ethereum)
-	$(eval BROWNIE_NETWORK = mainnet)
-else ifneq ($(shell echo $(network) | egrep "^ftm$$|^FTM$$|^fantom$$"),)
-	$(eval NETWORK = fantom)
-	$(eval BROWNIE_NETWORK = ftm-main)
-else ifneq ($(shell echo $(network) | egrep "^arrb$$|^ARRB$$|arbi$$|^arbitrum$$"),)
-	$(eval NETWORK = arbitrum)
-	$(eval BROWNIE_NETWORK = arbitrum-main)
-else ifneq ($(shell echo $(network) | egrep "^op$$|^OPTI$$|^opti$$|^optimism$$"),)
-	$(eval NETWORK = optimism)
-	$(eval BROWNIE_NETWORK = optimism-main)
-else ifneq ($(shell echo $(network) | egrep "^gno$$|^GNO$$|^gnosis$$"),)
-	$(eval NETWORK = gnosis)
-	$(eval BROWNIE_NETWORK = xdai-main)
-else ifeq ($(network),)
-		@echo "No valid network specified. You can specify a network by passing network=<NETWORK>. Supported networks: '$(supported_networks)'"
-		$(eval undefine NETWORK)
-		$(eval undefine BROWNIE_NETWORK)
-endif
-	if [[ $${NETWORK} != "" ]]; then
-		@echo "Running on network '$(NETWORK)'"
-	fi
 
 flags := --remove-orphans --detach
 ifdef FLAGS
@@ -47,9 +17,9 @@ supported_networks := ethereum fantom arbitrum optimism gnosis
 exporter_scripts := exporters/vaults,exporters/treasury,exporters/treasury_transactions,exporters/sms,exporters/transactions,exporters/wallets,exporters/partners
 
 # docker-compose commands
-dashboards_command := docker-compose --file services/dashboard/docker-compose.yml --project-directory .
-tvl_command 		   := docker-compose --file services/tvl/docker-compose.yml --project-directory .
-test_command 		   := docker-compose --file services/dashboard/docker-compose.test.yml --project-directory .
+compose_command := docker-compose --file services/dashboard/docker-compose.yml --project-directory .
+tvl_command 		:= docker-compose --file services/tvl/docker-compose.yml --project-directory .
+test_command 		:= docker-compose --file services/dashboard/docker-compose.test.yml --project-directory .
 
 # TODO integrate tvl exporters into BASE recipes below
 # tvl recipes
@@ -70,11 +40,13 @@ tvl-build:
 
 # postgres, grafana, victoria
 infra:
-	docker-compose --file services/dashboard/docker-compose.infra.yml --project-directory . -p infra up --detach
+	docker-compose --file services/dashboard/docker-compose.infra.yml --project-directory . -p yearn-exporter-infra up --detach
 
 # exporter specifc scripts
-single-network: infra
-	NETWORK=$(network) COMMANDS="$(commands)" DEBUG=$(DEBUG) ./run.sh
+.ONESHELL:
+single-network: infra setup-network
+	source set_network_envs.sh
+	COMMANDS="$(commands)" DEBUG=$(DEBUG) ./run.sh
 
 .ONESHELL:
 all-networks: infra
@@ -82,8 +54,9 @@ all-networks: infra
 		network=$$network commands="$(commands)" DEBUG=$(DEBUG) make single-network
 	done
 
-down: get-network-name
-	$(eval filter = $(if $(filter),$(filter),$(if $(NETWORK),$(NETWORK),exporter)))
+.PHONY: down
+down:
+	$(eval filter = $(if $(filter),yearn-exporter-$(filter),$(if $(network),$(network),yearn-exporter-worker)))
 	echo "stopping containers for filter: $(filter)"
 	docker ps -a -q --filter="name=$(filter)" | xargs -L 1 docker rm -f 2> /dev/null || true
 	echo "running containers:"
@@ -91,56 +64,67 @@ down: get-network-name
 
 .PHONY: build
 build:
-	$(dashboards_command) build $(BUILD_FLAGS)
+	docker build -t ghcr.io/yearn/yearn-exporter .
 
-logs: get-network-name
-	$(eval filter = $(if $(filter),$(filter),$(if $(NETWORK),$(NETWORK),exporter)))
+logs:
+	$(eval filter = $(if $(filter),yearn-exporter-$(filter),$(if $(network),$(network),yearn-exporter-worker)))
 	$(eval since = $(if $(since),$(since),30s))
 	docker ps -a -q --filter="name=$(filter)"| xargs -L 1 -P $$(docker ps --filter="name=$(filter)" | wc -l) docker logs --since $(since) -ft
 
-
 .ONESHELL:
 .SILENT:
-up: get-network-name
+up:
 	$(eval commands = $(if $(commands),$(commands),$(exporter_scripts)))
-	$(eval with_logs = $(if $(with_logs),$(with_logs),true))
-	$(eval filter = $(if $(filter),$(filter),$(if $(NETWORK),$(NETWORK),exporter)))
-#####################################################
-# additional scripts which should always be started #
-#####################################################
-	if [ "$(NETWORK)" == "ethereum" ] || [ "$(NETWORK)" == "" ]; then
-		make single-network network=ethereum commands="exporters/veyfi"
-	fi
-
+	source set_network_envs.sh
 ##################################################
 # default scripts which should always be started #
 ##################################################
-	if [ "$(NETWORK)" != "" ]; then
-		if [ "$(with_logs)" == "true" ]; then
-			make single-network network=$(NETWORK) commands="$(commands)" logs filter="$(filter)"
-		else
-			make single-network network=$(NETWORK) commands="$(commands)"
-		fi
+	if [ "$(network)" == "" ]; then
+		make all-networks commands="$(commands)"
 	else
-		if [ "$(with_logs)" == "true" ]; then
-			make all-networks commands="$(commands)" logs filter="$(filter)"
-		else
-			make all-networks commands="$(commands)"
+		make single-network network=$(network) commands="$(commands)"
+	fi
+
+#######################################################################
+# additional scripts which should be started under specifc conditions #
+#######################################################################
+	if [ "$$NETWORK" == "ethereum" ] || [ "$$NETWORK" == "" ]; then
+		if [ "$(commands)" == "exporters/veyfi" ] || [ "$(commands)" == $(exporter_scripts) ] || [ "$(commands)" == "" ]; then
+			make single-network network=ethereum commands="exporters/veyfi"
 		fi
 	fi
 
-console: get-network-name
-	$(eval BROWNIE_NETWORK = $(if $(BROWNIE_NETWORK),$(BROWNIE_NETWORK),mainnet))
-	docker build -f Dockerfile -f Dockerfile.dev -t ghcr.io/yearn/yearn-exporter .
-	docker-compose --file services/dashboard/docker-compose.yml --project-directory . run --rm --entrypoint "brownie console --network $(BROWNIE_NETWORK)" exporter
-
-shell: get-network-name
-	docker-compose --file services/dashboard/docker-compose.yml --project-directory . run --rm --entrypoint bash exporter
+# LOGGING
+	$(eval with_logs = $(if $(with_logs),$(with_logs),true))
+	$(eval filter = $(if $(filter),yearn-exporter-$(filter),yearn-exporter-worker))
+	if [ "$(with_logs)" == "true" ]; then
+		if [ "$$NETWORK" != "" ]; then
+			make logs filter=$$NETWORK
+		else
+			make logs filter=$(filter)
+		fi
+	fi
 
 .ONESHELL:
-debug-apy: get-network-name
+setup-network:
+	source set_network_envs.sh
+	$(compose_command) -p $$PROJECT_PREFIX run --entrypoint "./brownie_init.sh" exporter
+
+.ONESHELL:
+console: setup-network
+	source set_network_envs.sh
 	docker build -f Dockerfile -f Dockerfile.dev -t ghcr.io/yearn/yearn-exporter .
-	DEBUG=true docker-compose --file services/dashboard/docker-compose.yml --project-directory . run --rm --entrypoint "brownie run --network $(BROWNIE_NETWORK) debug_apy with_exception_handling -I" exporter
+	$(compose_command) -p $$PROJECT_PREFIX run --rm --entrypoint "brownie console --network $$BROWNIE_NETWORK" exporter
+
+shell: setup-network
+	source set_network_envs.sh
+	$(compose_command) -p $$PROJECT_PREFIX run --rm --entrypoint bash exporter
+
+.ONESHELL:
+debug-apy: setup-network
+	source set_network_envs.sh
+	docker build -f Dockerfile -f Dockerfile.dev -t ghcr.io/yearn/yearn-exporter .
+	DEBUG=true $(compose_command) -p $$PROJECT_PREFIX run --rm --entrypoint "brownie run --network $$BROWNIE_NETWORK debug_apy with_exception_handling -I" exporter
 
 list-networks:
 	@echo "supported networks: $(supported_networks)"
@@ -167,7 +151,7 @@ rebuild: down build up
 all: rebuild
 scratch: clean-volumes build up
 clean-volumes: down
-	$(eval filter = $(if $(filter),$(filter),$(if $(NETWORK),$(NETWORK),exporter)))
+	$(eval filter = $(if $(filter),yearn-exporter-$(filter),$(if $(network),$(network),yearn-exporter-worker)))
 	docker volume ls -q --filter="name=$(filter)" | xargs -L 1 docker volume rm 2> /dev/null || true
 clean-exporter-volumes: clean-volumes
 dashboards-clean-volumes: clean-exporter-volumes
@@ -255,8 +239,11 @@ logs-transactions:
 	make logs filter=transactions commands="exporters/transactions"
 
 # apy scripts
-apy:
+apy-monitoring:
 	make up commands="s3 with_monitoring" filter=s3
+
+apy:
+	make up commands="s3" filter=s3
 
 curve-apy-previews:
 	make up commands=curve_apy_previews network=eth with_logs=false
@@ -280,4 +267,4 @@ partners-summary-ftm:
 
 # veyfi scripts
 veyfi:
-	make single-network network=ethereum commands="exporters/veyfi" logs
+	make up network=ethereum commands="exporters/veyfi" logs
