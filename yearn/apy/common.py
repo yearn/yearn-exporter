@@ -44,10 +44,10 @@ class Apy:
     gross_apr: float
     net_apy: float
     fees: ApyFees
-    error_reason: Optional[str] = None
     points: Optional[ApyPoints] = None
     blocks: Optional[ApyBlocks] = None
     composite: Optional[Dict[str, float]] = None
+    error_reason: Optional[str] = None
 
 
 @dataclass
