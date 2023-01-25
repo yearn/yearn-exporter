@@ -57,6 +57,7 @@ def _build_data(gauges):
             else:
                 apy = Apy("zero_weight", 0, 0, ApyFees(0, 0), ApyPoints(0, 0, 0))
         except Exception as error:
+            apy_error.error_reason = ":".join(error.args)
             logger.error(error)
             logger.error(gauge)
             apy = apy_error
