@@ -415,9 +415,10 @@ class CurveRegistry(metaclass=Singleton):
         else:
             # We need to find the pool with the deepest liquidity
             balances = [self.get_balances(pool, block, should_raise_err=False) for pool in pools]
-            balances = [bal for bal in balances if bal]
             deepest_pool, deepest_bal = None, 0
             for pool, pool_bals in zip(pools, balances):
+                if pool_bals is None:
+                    continue
                 if isinstance(pool_bals, Exception):
                     if str(pool_bals).startswith("could not fetch balances"):
                         continue
