@@ -66,7 +66,6 @@ class Registry(metaclass=Singleton):
             {'node': web3.ens.namehash('v2.registry.ychad.eth')},
         )
         events = decode_logs(get_logs_asap(str(resolver), topics))
-        logger.info('loaded %d registry versions', len(events))
         registries = []
         for event in events:
             r = contract(event['newAddress'].hex())
@@ -74,6 +73,7 @@ class Registry(metaclass=Singleton):
             if hasattr(r, 'releaseRegistry'):
                 rr = contract(r.releaseRegistry())
                 registries.append(rr)
+        logger.info('loaded %d registry versions', len(registries))
         return registries
 
     @property
