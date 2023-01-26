@@ -47,6 +47,7 @@ class Apy:
     points: Optional[ApyPoints] = None
     blocks: Optional[ApyBlocks] = None
     composite: Optional[Dict[str, float]] = None
+    error_reason: Optional[str] = None
 
 
 @dataclass
