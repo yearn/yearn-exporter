@@ -19,6 +19,7 @@ import warnings
 warnings.filterwarnings("ignore", ".*Class SelectOfScalar will not make use of SQL compilation caching.*")
 warnings.filterwarnings("ignore", ".*Locally compiled and on-chain*")
 warnings.filterwarnings("ignore", ".*It has been discarded*")
+warnings.filterwarnings("ignore", ".*MismatchedABI*")
 
 
 # mainnet_public_channel = os.environ.get('TELEGRAM_CHANNEL_1_PUBLIC')
@@ -78,8 +79,9 @@ CHAIN_VALUES = {
         "LENS_DEPLOY_BLOCK": 12707450,
         "VAULT_ADDRESS030": "0x19D3364A399d251E894aC732651be8B0E4e85001",
         "VAULT_ADDRESS031": "0xdA816459F1AB5631232FE5e97a05BBBb94970c95",
-        "KEEPER_CALL_CONTRACT": "0x2150b45626199CFa5089368BDcA30cd0bfB152D6",
+        "KEEPER_CALL_CONTRACT": "0x0a61c2146A7800bdC278833F21EBf56Cd660EE2a",
         "KEEPER_TOKEN": "0x1cEB5cB57C4D4E2b2433641b95Dd330A33185A44",
+        "KEEPER_WRAPPER": "0x0D26E894C2371AB6D20d99A65E991775e3b5CAd7",
         "YEARN_TREASURY": "0x93A62dA5a14C80f265DAbC077fCEE437B1a0Efde",
         "STRATEGIST_MULTISIG": "0x16388463d60FFE0661Cf7F1f31a7D658aC790ff7",
         "GOVERNANCE_MULTISIG": "0xFEB4acf3df3cDEA7399794D0869ef76A6EfAff52",
@@ -105,6 +107,7 @@ CHAIN_VALUES = {
         "VAULT_ADDRESS031": "0x637eC617c86D24E421328e6CAEa1d92114892439",
         "KEEPER_CALL_CONTRACT": "0x57419fb50fa588fc165acc26449b2bf4c7731458",
         "KEEPER_TOKEN": "",
+        "KEEPER_WRAPPER": "0x0D26E894C2371AB6D20d99A65E991775e3b5CAd7",
         "YEARN_TREASURY": "0x89716Ad7EDC3be3B35695789C475F3e7A3Deb12a",
         "STRATEGIST_MULTISIG": "0x72a34AbafAB09b15E7191822A679f28E067C4a16",
         "GOVERNANCE_MULTISIG": "0xC0E2830724C946a6748dDFE09753613cd38f6767",
@@ -128,6 +131,7 @@ CHAIN_VALUES = {
         "VAULT_ADDRESS031": "0x239e14A19DFF93a17339DCC444f74406C17f8E67",
         "KEEPER_CALL_CONTRACT": "",
         "KEEPER_TOKEN": "",
+        "KEEPER_WRAPPER": "0x0D26E894C2371AB6D20d99A65E991775e3b5CAd7",
         "YEARN_TREASURY": "0x1DEb47dCC9a35AD454Bf7f0fCDb03c09792C08c1",
         "STRATEGIST_MULTISIG": "0x6346282DB8323A54E840c6C772B4399C9c655C0d",
         "GOVERNANCE_MULTISIG": "0xb6bc033D34733329971B938fEf32faD7e98E56aD",
@@ -150,6 +154,7 @@ CHAIN_VALUES = {
         "VAULT_ADDRESS031": "0x0fBeA11f39be912096cEc5cE22F46908B5375c19",
         "KEEPER_CALL_CONTRACT": "",
         "KEEPER_TOKEN": "",
+        "KEEPER_WRAPPER": "0x0D26E894C2371AB6D20d99A65E991775e3b5CAd7",
         "YEARN_TREASURY": "0x84654e35E504452769757AAe5a8C7C6599cBf954",
         "STRATEGIST_MULTISIG": "0xea3a15df68fCdBE44Fdb0DB675B2b3A14a148b26",
         "GOVERNANCE_MULTISIG": "0xF5d9D6133b698cE29567a90Ab35CfB874204B3A7",
@@ -183,8 +188,8 @@ def main(dynamically_find_multi_harvest=False):
     interval_seconds = 25
 
     last_reported_block, last_reported_block030 = last_harvest_block()
-    last_reported_block = 16418897
-    last_reported_block030 = 16418897
+    # last_reported_block = 16482431
+    # last_reported_block030 = 16482431
     print("latest block (v0.3.1+ API)",last_reported_block)
     print("blocks behind (v0.3.1+ API)", chain.height - last_reported_block)
     if chain.id == 1:
@@ -566,6 +571,7 @@ def format_public_telegram(r, t):
     sms = CHAIN_VALUES[chain.id]["STRATEGIST_MULTISIG"]
     gov = CHAIN_VALUES[chain.id]["GOVERNANCE_MULTISIG"]
     keeper = CHAIN_VALUES[chain.id]["KEEPER_CALL_CONTRACT"]
+    keeper_wrapper = CHAIN_VALUES[chain.id]["KEEPER_WRAPPER"]
     from_indicator = ""
 
     if t.txn_to == sms or t.txn_to == gov:
@@ -576,6 +582,9 @@ def format_public_telegram(r, t):
 
     elif t.keeper_called or t.txn_from == keeper or t.txn_to == keeper:
         from_indicator = "🤖 "
+
+    elif t.txn_to == keeper_wrapper: # Permissionlessly executed by anyone
+        from_indicator = "🧍‍♂️ "
 
     message = ""
     message += from_indicator
