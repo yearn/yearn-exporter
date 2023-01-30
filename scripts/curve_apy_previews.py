@@ -43,9 +43,18 @@ def _build_data(gauges):
 
         pool_coins = []
         for i in range(4):
-            coin_address = gauge.pool.coins(i)
+            try:
+                coin_address = gauge.pool.coins(i)
+            except ValueError as e:
+                # If the execution reverted, there is no coin with index i.
+                if str(e) == "execution reverted":
+                    continue
+                raise
+
+            # Sometimes the call returns the zero address instead of reverting. This means there is no coin with index i.
             if coin_address == ZERO_ADDRESS:
                 continue
+            
             try:
                 c = contract(coin_address)
                 pool_coins.append({"name": c.name(), "address": str(c)})
