@@ -9,7 +9,7 @@ from time import sleep, time
 import boto3
 import requests
 import sentry_sdk
-from brownie import chain
+from brownie import ZERO_ADDRESS, chain
 
 from yearn.apy import Apy, ApyFees, ApyPoints, ApySamples, get_samples
 from yearn.apy.curve.simple import Gauge, calculate_simple
@@ -42,8 +42,10 @@ def _build_data(gauges):
             continue
 
         pool_coins = []
-        for i in range(2):
+        for i in range(4):
             coin_address = gauge.pool.coins(i)
+            if coin_address == ZERO_ADDRESS:
+                continue
             try:
                 c = contract(coin_address)
                 pool_coins.append({"name": c.name(), "address": str(c)})
