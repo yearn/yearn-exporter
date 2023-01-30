@@ -24,7 +24,7 @@ class ConvexDetailedApyData:
     cvx_keep_crv: float = 0
     cvx_debt_ratio: float = 0
     convex_reward_apr: float = 0
-
+    cvx_boost: float = 0
 @dataclass
 class Gauge:
     lp_token: Address
@@ -109,13 +109,13 @@ def calculate_simple(vault, gauge: Gauge, samples: ApySamples) -> Apy:
     ) / base_asset_price
 
     if y_gauge_balance > 0:
-        boost = y_working_balance / (PER_MAX_BOOST * y_gauge_balance) or 1
+        y_boost = y_working_balance / (PER_MAX_BOOST * y_gauge_balance) or 1
     else:
-        boost = MAX_BOOST
+        y_boost = MAX_BOOST
 
-    # FIXME: The HBTC v1 vault is currently still earning yield, but it is no longer boosted.
-    if vault and vault.vault.address == "0x46AFc2dfBd1ea0c0760CAD8262A5838e803A37e5":
-        boost = 1
+    # # FIXME: The HBTC v1 vault is currently still earning yield, but it is no longer boosted.
+    # if vault and vault.vault.address == "0x46AFc2dfBd1ea0c0760CAD8262A5838e803A37e5":
+    #     boost = 1
 
     # TODO: come up with cleaner way to deal with these new gauge rewards
     reward_apr = 0
@@ -224,8 +224,8 @@ def calculate_simple(vault, gauge: Gauge, samples: ApySamples) -> Apy:
         cvx_apy_data = ConvexDetailedApyData()
         crv_debt_ratio = 1
 
-    crv_apr = base_apr * boost + reward_apr
-    crv_apr_minus_keep_crv = base_apr * boost * (1 - crv_keep_crv)
+    crv_apr = base_apr * y_boost + reward_apr
+    crv_apr_minus_keep_crv = base_apr * y_boost * (1 - crv_keep_crv)
 
     gross_apr = (1 + (crv_apr * crv_debt_ratio + cvx_apy_data.cvx_apr * cvx_apy_data.cvx_debt_ratio)) * (1 + pool_apy) - 1
 
@@ -238,6 +238,8 @@ def calculate_simple(vault, gauge: Gauge, samples: ApySamples) -> Apy:
     crv_net_apy = ((1 + crv_net_farmed_apy) * (1 + pool_apy)) - 1
 
     net_apy = crv_net_apy * crv_debt_ratio + cvx_net_apy * cvx_apy_data.cvx_debt_ratio
+
+    boost = (y_boost + crv_debt_ratio) + (cvx_apy_data.cvx_boost * cvx_apy_data.cvx_debt_ratio)
 
     # 0.3.5+ should never be < 0% because of management
     if isinstance(vault, VaultV2) and net_apy < 0 and Version(vault.api_version) >= Version("0.3.5"):
