@@ -1,19 +1,21 @@
-import requests
 import dataclasses
-import logging
 import json
-import re
+import logging
 import os
-import boto3
+import re
 import shutil
+from time import sleep, time
+
+import boto3
+import requests
 import sentry_sdk
-from time import time
-from brownie import chain
-from yearn.apy.curve.simple import Gauge, calculate_simple
+from brownie import ZERO_ADDRESS, chain
+
 from yearn.apy import Apy, ApyFees, ApyPoints, ApySamples, get_samples
+from yearn.apy.curve.simple import Gauge, calculate_simple
 from yearn.exceptions import EmptyS3Export, PriceError
-from yearn.utils import contract
 from yearn.networks import Network
+from yearn.utils import contract
 
 logger = logging.getLogger(__name__)
 sentry_sdk.set_tag('script','curve_apy_previews')
@@ -40,8 +42,19 @@ def _build_data(gauges):
             continue
 
         pool_coins = []
-        for i in range(2):
-            coin_address = gauge.pool.coins(i)
+        for i in range(4):
+            try:
+                coin_address = gauge.pool.coins(i)
+            except ValueError as e:
+                # If the execution reverted, there is no coin with index i.
+                if str(e) == "execution reverted":
+                    continue
+                raise
+
+            # Sometimes the call returns the zero address instead of reverting. This means there is no coin with index i.
+            if coin_address == ZERO_ADDRESS:
+                continue
+            
             try:
                 c = contract(coin_address)
                 pool_coins.append({"name": c.name(), "address": str(c)})
@@ -100,13 +113,19 @@ def _extract_gauge(v):
 def _get_gauges():
     if chain.id in chains:
         url = f"{CURVE_API_URL}?blockChainId={chains[chain.id]}"
-        response = requests.get(url)
-        response_json = response.json()
-        if not response_json["success"]:
+        attempts = 0
+        while attempts < 5:
+            response = requests.get(url)
+            response_json = response.json()
+            if response_json["success"]:
+                return response_json["data"]
             logger.error(response_json)
-            raise ValueError(f"Error fetching gauges from {url}")
+            if attempts >= 5:
+                raise ValueError(f"Error fetching gauges from {url}")
+            attempts += 1
+            sleep(.1)
 
-        return response_json["data"]
+        
     else:
         raise ValueError(f"can't get curve gauges for unsupported network: {chain.id}")
 
