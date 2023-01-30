@@ -102,8 +102,8 @@ def _get_gauges():
         url = f"{CURVE_API_URL}?blockChainId={chains[chain.id]}"
         response = requests.get(url)
         response_json = response.json()
-        if not response_json["success"]:
-            logger.error(response_json)
+            response = requests.get(url)
+            response_json = response.json()
             raise ValueError(f"Error fetching gauges from {url}")
 
         return response_json["data"]
