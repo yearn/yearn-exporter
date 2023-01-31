@@ -436,6 +436,9 @@ class CurveRegistry(metaclass=Singleton):
         if len(coins) == 2:
             # this works for most typical metapools
             token_out_ix = 0 if token_in_ix == 1 else 1 if token_in_ix == 0 else None
+        elif len(coins) == 3:
+            # We will just default to using token 0 until we have a reason to make this more flexible
+            token_out_ix = 0 if token_in_ix in [1, 2] else 1 if token_in_ix == 0 else None
         else:
             # TODO: handle this sitch if necessary
             return None
