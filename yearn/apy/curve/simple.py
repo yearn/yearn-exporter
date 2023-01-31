@@ -24,7 +24,6 @@ class ConvexDetailedApyData:
     cvx_keep_crv: float = 0
     cvx_debt_ratio: float = 0
     convex_reward_apr: float = 0
-    cvx_boost: float = 0
 @dataclass
 class Gauge:
     lp_token: Address
@@ -238,8 +237,9 @@ def calculate_simple(vault, gauge: Gauge, samples: ApySamples) -> Apy:
     crv_net_apy = ((1 + crv_net_farmed_apy) * (1 + pool_apy)) - 1
 
     net_apy = crv_net_apy * crv_debt_ratio + cvx_net_apy * cvx_apy_data.cvx_debt_ratio
-
-    boost = y_boost * crv_debt_ratio + cvx_apy_data.cvx_boost * cvx_apy_data.cvx_debt_ratio
+  
+    cvx_boost = self._get_cvx_boost()
+    boost = y_boost * crv_debt_ratio + cvx_boost * cvx_apy_data.cvx_debt_ratio
 
     # 0.3.5+ should never be < 0% because of management
     if isinstance(vault, VaultV2) and net_apy < 0 and Version(vault.api_version) >= Version("0.3.5"):
