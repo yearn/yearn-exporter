@@ -111,9 +111,9 @@ setup-network:
 	$(compose_command) -p $$PROJECT_PREFIX run --entrypoint "./brownie_init.sh" exporter
 
 .ONESHELL:
-console: setup-network
+console: build setup-network
 	source set_network_envs.sh
-	docker build -f Dockerfile -f Dockerfile.dev -t ghcr.io/yearn/yearn-exporter .
+	docker build -f Dockerfile.dev -t ghcr.io/yearn/yearn-exporter .
 	$(compose_command) -p $$PROJECT_PREFIX run --rm --entrypoint "brownie console --network $$BROWNIE_NETWORK" exporter
 
 shell: setup-network
@@ -121,9 +121,9 @@ shell: setup-network
 	$(compose_command) -p $$PROJECT_PREFIX run --rm --entrypoint bash exporter
 
 .ONESHELL:
-debug-apy: setup-network
+debug-apy: build setup-network
 	source set_network_envs.sh
-	docker build -f Dockerfile -f Dockerfile.dev -t ghcr.io/yearn/yearn-exporter .
+	docker build -f Dockerfile.dev -t ghcr.io/yearn/yearn-exporter .
 	DEBUG=true $(compose_command) -p $$PROJECT_PREFIX run --rm --entrypoint "brownie run --network $$BROWNIE_NETWORK debug_apy with_exception_handling -I" exporter
 
 list-networks:
