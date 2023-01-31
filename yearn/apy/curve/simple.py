@@ -24,7 +24,7 @@ class ConvexDetailedApyData:
     cvx_keep_crv: float = 0
     cvx_debt_ratio: float = 0
     convex_reward_apr: float = 0
-      
+
 @dataclass
 class Gauge:
     lp_token: Address
