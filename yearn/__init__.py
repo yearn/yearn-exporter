@@ -16,8 +16,12 @@ if network.is_connected():
     setup_middleware()
 
     if chain.id == Network.Mainnet:
-        # compile LINK contract locally for mainnet with latest solc because the etherscan abi crashes event parsing
-        Contract.from_explorer("0x514910771AF9Ca656af840dff83E8264EcF986CA")
+        # LINK abi from etherscan crashes event parsing, use a compiled one
+        Contract.from_abi(
+            name="ChainLink Token",
+            address="0x514910771AF9Ca656af840dff83E8264EcF986CA",
+            abi=json.load(open("interfaces/chainlink/LinkToken.json"))
+        )
         # XEN abi from etherscan is missing events
         Contract.from_abi(
             name="XENCrypto",
