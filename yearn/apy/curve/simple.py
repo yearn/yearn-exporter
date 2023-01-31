@@ -24,6 +24,7 @@ class ConvexDetailedApyData:
     cvx_keep_crv: float = 0
     cvx_debt_ratio: float = 0
     convex_reward_apr: float = 0
+      
 @dataclass
 class Gauge:
     lp_token: Address
@@ -112,9 +113,9 @@ def calculate_simple(vault, gauge: Gauge, samples: ApySamples) -> Apy:
     else:
         y_boost = MAX_BOOST
 
-    # # FIXME: The HBTC v1 vault is currently still earning yield, but it is no longer boosted.
-    # if vault and vault.vault.address == "0x46AFc2dfBd1ea0c0760CAD8262A5838e803A37e5":
-    #     boost = 1
+    # FIXME: The HBTC v1 vault is currently still earning yield, but it is no longer boosted.
+    if vault and vault.vault.address == "0x46AFc2dfBd1ea0c0760CAD8262A5838e803A37e5":
+        boost = 1
 
     # TODO: come up with cleaner way to deal with these new gauge rewards
     reward_apr = 0
@@ -238,7 +239,7 @@ def calculate_simple(vault, gauge: Gauge, samples: ApySamples) -> Apy:
 
     net_apy = crv_net_apy * crv_debt_ratio + cvx_net_apy * cvx_apy_data.cvx_debt_ratio
   
-    cvx_boost = self._get_cvx_boost()
+    cvx_boost = cvx_vault._get_cvx_boost()
     boost = y_boost * crv_debt_ratio + cvx_boost * cvx_apy_data.cvx_debt_ratio
 
     # 0.3.5+ should never be < 0% because of management
