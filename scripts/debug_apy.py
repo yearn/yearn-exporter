@@ -1,23 +1,23 @@
 import os
 import logging
 import traceback
-from yearn.v2.vaults import Vault
-from yearn.apy.common import get_samples
-from yearn.debug import Debug
 
 logger = logging.getLogger(__name__)
 
-def main():
-  address = os.getenv("DEBUG_ADDRESS", None)
-  if address:
+def main(address):
+    from yearn.v2.vaults import Vault
+    from yearn.apy.common import get_samples
     vault = Vault.from_address(address)
     vault.apy(get_samples())
-  else:
-    print("no address specified via $DEBUG_ADDRESS")
 
 def with_exception_handling():
+    address = os.getenv("DEBUG_ADDRESS", None)
+    if not address:
+      raise ValueError("no address specified via $DEBUG_ADDRESS")
+
+    from yearn.debug import Debug
     try:
-        main()
+        main(address)
     except Exception as e:
         traceback.print_exc()
         logger.error(e)
