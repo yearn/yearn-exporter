@@ -194,6 +194,7 @@ def calculate_simple(vault, gauge: Gauge, samples: ApySamples) -> Apy:
         management = 0
         crv_keep_crv = 0
     
+    cvx_vault = None
     # if the vault consists of only a convex strategy then return 
     # specialized apy calculations for convex
     if _ConvexVault.is_convex_vault(vault):
@@ -239,8 +240,11 @@ def calculate_simple(vault, gauge: Gauge, samples: ApySamples) -> Apy:
 
     net_apy = crv_net_apy * crv_debt_ratio + cvx_net_apy * cvx_apy_data.cvx_debt_ratio
   
-    cvx_boost = cvx_vault._get_cvx_boost()
-    boost = y_boost * crv_debt_ratio + cvx_boost * cvx_apy_data.cvx_debt_ratio
+    boost = y_boost * crv_debt_ratio
+    if cvx_vault:
+        # add more boost to the existing yearn boost based on the convex data
+        cvx_boost = cvx_vault._get_cvx_boost()
+        boost += cvx_boost * cvx_apy_data.cvx_debt_ratio
 
     # 0.3.5+ should never be < 0% because of management
     if isinstance(vault, VaultV2) and net_apy < 0 and Version(vault.api_version) >= Version("0.3.5"):
