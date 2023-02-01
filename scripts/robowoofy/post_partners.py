@@ -12,4 +12,4 @@ This script uploads the partners report to the Yearn B2B Telegram channel, where
 def main():
     bot = telebot.TeleBot(token)
     doc = open(f'./research/partners/payouts_{Network.label()}.csv', 'rb')
-    bot.send_document(chat_id, doc)
+    bot.send_document(chat_id, doc, caption=f"@milkyklim its feeding time on {Network.label()}")
