@@ -25,7 +25,7 @@ services:
     restart: always
 
   victoria-metrics:
-    image: victoriametrics/victoria-metrics
+    image: victoriametrics/victoria-metrics:v1.81.1
     volumes:
       - victoria_metrics_data:/victoria-metrics-data
     command:
