@@ -1,7 +1,7 @@
 import json
 import logging
 import threading
-from collections import OrderedDict
+import pandas as pd
 from functools import lru_cache
 from time import sleep
 from typing import List
@@ -236,14 +236,15 @@ def _resolve_proxy(address):
         # and would lack any valid methods/events from the proxy itself. 
         abi += implementation_abi
         # poor man's deduplication
-        original = [ json.dumps(a) for a in abi ]
-        deduplicated = OrderedDict.fromkeys(original)
-        if len(original) != len(deduplicated):
+        df = pd.DataFrame(abi)
+        df.drop_duplicates(subset=["name", "type"], keep="last", inplace=True)
+        deduplicated = df.to_dict("records")
+        if len(abi) != len(deduplicated):
             logger.warn(f"Warning: combined abi for contract {address} contains duplicates!")
-            logger.warn(f"original:\n{original}")
+            logger.warn(f"original:\n{abi}")
             logger.warn(f"deduplicated:\n{deduplicated}")
 
-        abi = json.loads("[" + ",".join(deduplicated) + "]")
+        abi = deduplicated
 
     return Contract.from_abi(name, address, abi)
 
