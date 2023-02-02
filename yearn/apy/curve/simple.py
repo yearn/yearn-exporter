@@ -109,13 +109,19 @@ def calculate_simple(vault, gauge: Gauge, samples: ApySamples) -> Apy:
     ) / base_asset_price
 
     if y_gauge_balance > 0:
-        boost = y_working_balance / (PER_MAX_BOOST * y_gauge_balance) or 1
+        y_boost = y_working_balance / (PER_MAX_BOOST * y_gauge_balance) or 1
     else:
-        boost = MAX_BOOST
+        y_boost = MAX_BOOST
 
     # FIXME: The HBTC v1 vault is currently still earning yield, but it is no longer boosted.
     if vault and vault.vault.address == "0x46AFc2dfBd1ea0c0760CAD8262A5838e803A37e5":
-        boost = 1
+        y_boost = 1
+        crv_debt_ratio = 1
+    
+    # The stETH vault is currently earning LDO, everyone gets max boost.
+    if vault and vault.vault.address == "0x5B8C556B8b2a78696F0B9B830B3d67623122E270":
+        y_boost = 2.5
+        crv_debt_ratio = 1
 
     # TODO: come up with cleaner way to deal with these new gauge rewards
     reward_apr = 0
@@ -194,6 +200,7 @@ def calculate_simple(vault, gauge: Gauge, samples: ApySamples) -> Apy:
         management = 0
         crv_keep_crv = 0
     
+    cvx_vault = None
     # if the vault consists of only a convex strategy then return 
     # specialized apy calculations for convex
     if _ConvexVault.is_convex_vault(vault):
@@ -224,8 +231,8 @@ def calculate_simple(vault, gauge: Gauge, samples: ApySamples) -> Apy:
         cvx_apy_data = ConvexDetailedApyData()
         crv_debt_ratio = 1
 
-    crv_apr = base_apr * boost + reward_apr
-    crv_apr_minus_keep_crv = base_apr * boost * (1 - crv_keep_crv)
+    crv_apr = base_apr * y_boost + reward_apr
+    crv_apr_minus_keep_crv = base_apr * y_boost * (1 - crv_keep_crv)
 
     gross_apr = (1 + (crv_apr * crv_debt_ratio + cvx_apy_data.cvx_apr * cvx_apy_data.cvx_debt_ratio)) * (1 + pool_apy) - 1
 
@@ -238,6 +245,12 @@ def calculate_simple(vault, gauge: Gauge, samples: ApySamples) -> Apy:
     crv_net_apy = ((1 + crv_net_farmed_apy) * (1 + pool_apy)) - 1
 
     net_apy = crv_net_apy * crv_debt_ratio + cvx_net_apy * cvx_apy_data.cvx_debt_ratio
+  
+    boost = y_boost * crv_debt_ratio
+    if cvx_vault:
+        # add more boost to the existing yearn boost based on the convex data
+        cvx_boost = cvx_vault._get_cvx_boost()
+        boost += cvx_boost * cvx_apy_data.cvx_debt_ratio
 
     # 0.3.5+ should never be < 0% because of management
     if isinstance(vault, VaultV2) and net_apy < 0 and Version(vault.api_version) >= Version("0.3.5"):
