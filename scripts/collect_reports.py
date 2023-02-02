@@ -548,15 +548,17 @@ def prepare_alerts(r, t):
     if alerts_enabled:
         if r.vault_address not in INVERSE_PRIVATE_VAULTS:
             m = format_public_telegram(r, t)
-            # Send to chain specific channels
-            bot.send_message(CHAIN_VALUES[chain.id]["TELEGRAM_CHAT_ID"], m, parse_mode="markdown", disable_web_page_preview = True)
-            discord = Discord(url=CHAIN_VALUES[chain.id]["DISCORD_CHAN"])
-            discord.post(
-                embeds=[{
-                    "title": "New harvest", 
-                    "description": m
-                }],
-            )
+            
+            # Only send to public TG and Discord on > $0 harvests
+            if r.gain != 0:
+                bot.send_message(CHAIN_VALUES[chain.id]["TELEGRAM_CHAT_ID"], m, parse_mode="markdown", disable_web_page_preview = True)
+                discord = Discord(url=CHAIN_VALUES[chain.id]["DISCORD_CHAN"])
+                discord.post(
+                    embeds=[{
+                        "title": "New harvest", 
+                        "description": m
+                    }],
+                )
             
             # Send to dev channel
             m = f'Network: {CHAIN_VALUES[chain.id]["EMOJI"]} {CHAIN_VALUES[chain.id]["NETWORK_SYMBOL"]}\n\n' + m + format_dev_telegram(r, t)
