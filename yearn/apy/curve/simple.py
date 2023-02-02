@@ -117,6 +117,11 @@ def calculate_simple(vault, gauge: Gauge, samples: ApySamples) -> Apy:
     if vault and vault.vault.address == "0x46AFc2dfBd1ea0c0760CAD8262A5838e803A37e5":
         y_boost = 1
         crv_debt_ratio = 1
+    
+    # The stETH vault is currently earning LDO, everyone gets max boost.
+    if vault and vault.vault.address == "0x5B8C556B8b2a78696F0B9B830B3d67623122E270":
+        y_boost = 2.5
+        crv_debt_ratio = 1
 
     # TODO: come up with cleaner way to deal with these new gauge rewards
     reward_apr = 0
