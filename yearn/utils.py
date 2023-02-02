@@ -1,6 +1,7 @@
 import json
 import logging
 import threading
+from collections import OrderedDict
 from functools import lru_cache
 from time import sleep
 from typing import List
@@ -234,6 +235,16 @@ def _resolve_proxy(address):
         # without doing this, we'd only get the implementation
         # and would lack any valid methods/events from the proxy itself. 
         abi += implementation_abi
+        # poor man's deduplication
+        original = [ json.dumps(a) for a in abi ]
+        deduplicated = OrderedDict.fromkeys(original)
+        if len(original) != len(deduplicated):
+            logger.warn(f"Warning: combined abi for contract {address} contains duplicates!")
+            logger.warn(f"original:\n{original}")
+            logger.warn(f"deduplicated:\n{deduplicated}")
+
+        abi = json.loads("[" + ",".join(deduplicated) + "]")
+
     return Contract.from_abi(name, address, abi)
 
 
