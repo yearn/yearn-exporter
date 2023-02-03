@@ -15,6 +15,7 @@ from yearn.events import create_filter, decode_logs
 from yearn.multicall2 import fetch_multicall
 from yearn.prices import magic
 from yearn.prices.curve import curve
+from yearn.prices.balancer.balancer import selector as balancer_selector
 from yearn.special import Ygov
 from yearn.typing import Address
 from yearn.utils import safe_views, contract
@@ -219,6 +220,8 @@ class Vault:
     def apy(self, samples: ApySamples):
         if self._needs_curve_simple():
             return apy.curve.simple(self, samples)
+        elif self._needs_balancer_simple():
+            return apy.balancer.simple(self, samples)
         elif Version(self.api_version) >= Version("0.3.2"):
             return apy.v2.average(self, samples)
         else:
@@ -254,3 +257,17 @@ class Vault:
             needs_simple = self.vault.address not in curve_simple_excludes[chain.id]
 
         return needs_simple and curve and curve.get_pool(self.token.address)
+
+    def _needs_balancer_simple(self):
+        exclusions = {
+            Network.Mainnet: [],
+            Network.Fantom: [],
+            Network.Arbitrum: []
+        }
+        needs_simple = True
+        if chain.id in exclusions:
+            needs_simple = self.vault.address not in exclusions[chain.id]
+
+        # print(balancer_selector.get_balancer_for_pool(self.token.address))
+
+        return needs_simple and balancer_selector.get_balancer_for_pool(self.token.address)
