@@ -36,6 +36,11 @@ jobs:
       
       - name: Setup brownie networks
         run: brownie networks modify ${{ matrix.network }} host=${{ secrets[matrix.provider] }}
+      
+      - uses: actions/download-artifact@v3
+        with:
+          name: joblib-cache
+          path: cache
 
       - name: Partners Summary
         env:
@@ -43,6 +48,11 @@ jobs:
           ETHERSCAN_TOKEN: ${{ secrets.ETHERSCAN_TOKEN }}
           FTMSCAN_TOKEN: ${{ secrets.FTMSCAN_TOKEN }}
         run: brownie run partners_summary --network ${{ matrix.network }}
+      
+      - uses: actions/upload-artifact@v3
+        with:
+          name: joblib-cache
+          path: cache
       
       - name: Install Telebot
         run: pip install pyTelegramBotAPI==4.6.0
