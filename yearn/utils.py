@@ -1,14 +1,18 @@
+import asyncio
 import json
 import logging
 import threading
+from concurrent.futures import ThreadPoolExecutor
 from functools import lru_cache
 from time import sleep
-from typing import List
+from typing import Any, Callable, List
 
 import eth_retry
 from brownie import Contract, chain, convert, interface, web3
-from brownie.network.contract import _fetch_from_explorer, _resolve_address
 from brownie.convert.datatypes import HexString
+from brownie.network.contract import _fetch_from_explorer, _resolve_address
+from dank_mids.brownie_patch import patch_contract
+from y.utils.dank_mids import dank_w3
 
 from yearn.cache import memory
 from yearn.exceptions import ArchiveNodeRequired, NodeNotSynced
@@ -16,6 +20,8 @@ from yearn.networks import Network
 from yearn.typing import AddressOrContract
 
 logger = logging.getLogger(__name__)
+
+thread_pool = ThreadPoolExecutor(4)
 
 BINARY_SEARCH_BARRIER = {
     Network.Mainnet: 0,
@@ -165,7 +171,7 @@ def contract(address: AddressOrContract) -> Contract:
             if address in PREFER_INTERFACE[chain.id]:
                 _interface = PREFER_INTERFACE[chain.id][address]
                 i = _interface(address)
-                return _squeeze(i)
+                return _squeeze(patch_contract(i, dank_w3))
 
         # autofetch-sources: false
         # Try to fetch the contract from the local sqlite db.
@@ -176,7 +182,7 @@ def contract(address: AddressOrContract) -> Contract:
             c = _resolve_proxy(address)
 
         # Lastly, get rid of unnecessary memory-hog properties
-        return _squeeze(c)
+        return _squeeze(patch_contract(c, dank_w3))
 
 
 # These tokens have trouble when resolving the implementation via the chain.
@@ -267,3 +273,6 @@ def _squeeze(it):
         if it._build and k in it._build.keys():
             it._build[k] = {}
     return it
+
+def run_in_thread(callable: Callable, *args, **kwargs) -> Any:
+    return asyncio.get_event_loop().run_in_executor(thread_pool, callable, *args, **kwargs)
