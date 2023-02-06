@@ -73,6 +73,7 @@ def is_curve_withdrawal(tx: TreasuryTx) -> bool:
             ["0xa888094c10003c6455f852885d932c8fa2849cbadb9fdfe3ecfc96bda6bcf340", IterFilter('log_index', [86,140,161,205])],
             # dola3pool
             ["0xc14c29fd2bf495bd27c8eb862b34a98eb34dec8e533046fc6278eb41b342cfce", IterFilter('log_index',[430,437])],
+            ["0xb760d18e25c47c89303772f8b0fbb267a1f2c8a1db71a08c9846b065d8e707a1", IterFilter('log_index',[163,170])]
         ],
     }.get(chain.id, [])
     return tx in HashMatcher(hashes)
