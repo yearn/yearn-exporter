@@ -20,5 +20,5 @@ def is_lido_grant(tx: TreasuryTx) -> bool:
 def is_portals_fees(tx: TreasuryTx) -> bool:
     return tx in HashMatcher([
         "0x7181e4956fde34580be7ebecc6b4b60ad06676b5bb88598a2d35706995bf1289",
-        "0xFBD4C3D8bE6B15b7cf428Db2838bb44C0054fCd2",
+        "0x3fd8a5995bfe7aa6bb4f502e4bd7e93f491c12f6a72f39644d2809a6eab8b57d",
     ])
