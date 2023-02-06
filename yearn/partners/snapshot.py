@@ -31,7 +31,7 @@ from yearn.partners.charts import make_partner_charts
 from yearn.partners.constants import OPEX_COST, get_tier
 from yearn.partners.delegated import DELEGATED_BALANCES
 from yearn.typing import Address, Block
-from yearn.utils import contract, contract_creation_block, get_block_timestamp
+from yearn.utils import contract, contract_creation_block, get_block_timestamp, run_in_thread
 from yearn.v2.registry import Registry
 from yearn.v2.vaults import Vault
 
@@ -51,7 +51,7 @@ logger = logging.getLogger(__name__)
 
 async def get_timestamps(blocks: Tuple[int,...]) -> DatetimeScalar:
     loop = asyncio.get_event_loop()
-    data = await asyncio.gather(*[loop.run_in_executor(thread_pool_executor, get_block_timestamp, block) for block in blocks])
+    data = await asyncio.gather(*[run_in_thread(get_block_timestamp, block) for block in blocks])
     return pd.to_datetime([x * 1e9 for x in data])
 
 
