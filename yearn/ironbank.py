@@ -1,3 +1,4 @@
+import logging
 from collections import defaultdict
 from dataclasses import dataclass
 from functools import cached_property
@@ -5,15 +6,14 @@ from functools import cached_property
 from brownie import chain
 from brownie.network.contract import InterfaceContainer
 from cachetools.func import ttl_cache
-from joblib import Parallel, delayed
-from yearn.exceptions import UnsupportedNetwork
+from multicall.utils import gather
+from y.prices import magic
 
-from yearn.multicall2 import multicall_matrix
-from yearn.prices import magic
+from yearn.exceptions import UnsupportedNetwork
+from yearn.multicall2 import multicall_matrix, multicall_matrix_async
 from yearn.networks import Network
 from yearn.prices.compound import get_fantom_ironbank
 from yearn.utils import contract
-import logging
 
 logger = logging.getLogger(__name__)
 
@@ -75,28 +75,23 @@ class Registry:
         addr = addresses[chain.id]
         return contract(addr) if isinstance(addr, str) else addr()
 
-    def describe(self, block=None):
-        markets = self.active_vaults_at(block)
+    async def describe(self, block=None):
+        markets = await run_in_thread(self.active_vaults_at(block))
         blocks_per_year = 365 * 86400 / 15
         contracts = [m.vault for m in markets]
-        results = multicall_matrix(
-            contracts,
-            [
-                "exchangeRateCurrent",
-                "getCash",
-                "totalBorrows",
-                "totalSupply",
-                "totalReserves",
-                "supplyRatePerBlock",
-                "borrowRatePerBlock",
-            ],
-            block=block,
-        )
-
-        prices = Parallel(8, "threading")(
-            delayed(magic.get_price)(market.underlying, block=block)
-            for market in markets
-        )
+        methods = [
+            "exchangeRateCurrent",
+            "getCash",
+            "totalBorrows",
+            "totalSupply",
+            "totalReserves",
+            "supplyRatePerBlock",
+            "borrowRatePerBlock",
+        ]
+        results, prices = await gather([
+            multicall_matrix_async(contracts, methods, block=block),
+            gather(magic.get_price_async(market.underlying, block=block) for market in markets),
+        ])
         output = defaultdict(dict)
         for m, price in zip(markets, prices):
             res = results[m.vault]
@@ -127,16 +122,16 @@ class Registry:
 
         return dict(output)
 
-    def total_value_at(self, block=None):
-        markets = self.active_vaults_at(block)
-        data = multicall_matrix(
+    async def total_value_at(self, block=None):
+        markets = await run_in_thread(self.active_vaults_at(block))
+        data_coro = multicall_matrix_async(
             [market.vault for market in markets],
             ["getCash", "totalBorrows", "totalReserves", "totalSupply"],
             block=block,
         )
-
-        prices = Parallel(8, "threading")(
-            delayed(magic.get_price)(market.vault, block=block) for market in markets
+        data, prices = await gather(
+            data_coro,
+            gather(magic.get_price_async(market.vault, block=block) for market in markets),
         )
         results = [data[market.vault] for market in markets]
         return {

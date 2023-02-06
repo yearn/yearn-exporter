@@ -23,13 +23,14 @@ from brownie import ZERO_ADDRESS, Contract, chain, convert, interface
 from brownie.convert import to_address
 from brownie.convert.datatypes import EthAddress
 from cachetools.func import lru_cache, ttl_cache
+from multicall.utils import gather
+from y.prices import magic
 
 from yearn.decorators import sentry_catch_all, wait_or_exit_after
 from yearn.events import create_filter, decode_logs
 from yearn.exceptions import PriceError, UnsupportedNetwork
-from yearn.multicall2 import fetch_multicall
+from yearn.multicall2 import fetch_multicall, fetch_multicall_async
 from yearn.networks import Network
-from yearn.prices import magic
 from yearn.typing import Address, AddressOrContract, Block
 from yearn.utils import Singleton, contract
 
@@ -456,8 +457,8 @@ class CurveRegistry(metaclass=Singleton):
         except PriceError:
             return None
 
-    def calculate_boost(self, gauge: Contract, addr: Address, block: Optional[Block] = None) -> Dict[str,float]:
-        results = fetch_multicall(
+    async def calculate_boost(self, gauge: Contract, addr: Address, block: Optional[Block] = None) -> Dict[str,float]:
+        results = await fetch_multicall_async(
             [gauge, "balanceOf", addr],
             [gauge, "totalSupply"],
             [gauge, "working_balances", addr],
@@ -465,7 +466,15 @@ class CurveRegistry(metaclass=Singleton):
             [self.voting_escrow, "balanceOf", addr],
             [self.voting_escrow, "totalSupply"],
             block=block,
+            require_success=True
         )
+        #old_results = results
+        #results = []
+        #for i, result in enumerate(old_results):
+        #    try:
+        #        results.append(result / 1e18)
+        #    except Exception as e:
+        #        raise Exception(i, e)
         results = [x / 1e18 for x in results]
         (
             gauge_balance,
@@ -506,19 +515,22 @@ class CurveRegistry(metaclass=Singleton):
             "min vecrv": min_vecrv,
         }
 
-    def calculate_apy(self, gauge: Contract, lp_token: AddressOrContract, block: Optional[Block] = None) -> Dict[str,float]:
-        crv_price = magic.get_price(self.crv)
+    async def calculate_apy(self, gauge: Contract, lp_token: AddressOrContract, block: Optional[Block] = None) -> Dict[str,float]:
         pool = contract(self.get_pool(lp_token))
-        results = fetch_multicall(
+        results = fetch_multicall_async(
             [gauge, "working_supply"],
             [self.gauge_controller, "gauge_relative_weight", gauge],
             [gauge, "inflation_rate"],
             [pool, "get_virtual_price"],
             block=block,
         )
+        crv_price, token_price, results = await gather([
+            magic.get_price_async(self.crv),
+            magic.get_price_async(lp_token, block=block),
+            results
+        ])
         results = [x / 1e18 for x in results]
         working_supply, relative_weight, inflation_rate, virtual_price = results
-        token_price = magic.get_price(lp_token, block=block)
         try:
             rate = (
                 inflation_rate * relative_weight * 86400 * 365 / working_supply * 0.4
