@@ -492,104 +492,92 @@ def create_stream_ledger_view() -> None:
 
 @db_session
 def create_general_ledger_view() -> None:
-    try:
-        db.execute(
-            """
-            create VIEW general_ledger as
-            select *
-            from (
-                SELECT b.chain_name, TO_TIMESTAMP(a.timestamp) AS timestamp, a.block, a.hash, a.log_index, c.symbol AS token, d.address AS "from", d.nickname as from_nickname, e.address AS "to", e.nickname as to_nickname, a.amount, a.price, a.value_usd, f.name AS txgroup, g.name AS parent_txgroup, f.txgroup_id
-                FROM treasury_txs a
-                    LEFT JOIN chains b ON a.chain = b.chain_dbid
-                    LEFT JOIN tokens c ON a.token_id = c.token_id
-                    LEFT JOIN addresses d ON a."from" = d.address_id
-                    LEFT JOIN addresses e ON a."to" = e.address_id
-                    LEFT JOIN txgroups f ON a.txgroup_id = f.txgroup_id
-                    LEFT JOIN txgroups g ON f.parent_txgroup = g.txgroup_id
-                UNION
-                SELECT chain_name, TIMESTAMP, cast(block AS integer) block, hash, CAST(log_index AS integer) as log_index, token, "from", from_nickname, "to", to_nickname, amount, price, value_usd, txgroup, parent_txgroup, txgroup_id
-                FROM stream_ledger
-            ) a
-            ORDER BY timestamp
-            """
-        )
-    except ProgrammingError as e:
-        if str(e).strip() != 'relation "general_ledger" already exists':
-            raise
+    db.execute(
+        """
+        drop VIEW IF EXISTS general_ledger CASCADE;
+        create VIEW general_ledger as
+        select *
+        from (
+            SELECT treasury_tx_id, b.chain_name, TO_TIMESTAMP(a.timestamp) AS timestamp, a.block, a.hash, a.log_index, c.symbol AS token, d.address AS "from", d.nickname as from_nickname, e.address AS "to", e.nickname as to_nickname, a.amount, a.price, a.value_usd, f.name AS txgroup, g.name AS parent_txgroup, f.txgroup_id
+            FROM treasury_txs a
+                LEFT JOIN chains b ON a.chain = b.chain_dbid
+                LEFT JOIN tokens c ON a.token_id = c.token_id
+                LEFT JOIN addresses d ON a."from" = d.address_id
+                LEFT JOIN addresses e ON a."to" = e.address_id
+                LEFT JOIN txgroups f ON a.txgroup_id = f.txgroup_id
+                LEFT JOIN txgroups g ON f.parent_txgroup = g.txgroup_id
+            UNION
+            SELECT -1, chain_name, TIMESTAMP, cast(block AS integer) block, hash, CAST(log_index AS integer) as log_index, token, "from", from_nickname, "to", to_nickname, amount, price, value_usd, txgroup, parent_txgroup, txgroup_id
+            FROM stream_ledger
+        ) a
+        ORDER BY timestamp
+        """
+    )
     
 @db_session
 def create_unsorted_txs_view() -> None:
-    try:
-        db.execute(
-            """
-            CREATE VIEW unsorted_txs as
-            SELECT *
-            FROM general_ledger
-            WHERE txgroup = 'Categorization Pending'
-            ORDER BY TIMESTAMP desc
-            """
-        )
-    except ProgrammingError as e:
-        if str(e).strip() != 'relation "unsorted_txs" already exists':
-            raise
+    db.execute(
+        """
+        DROP VIEW IF EXISTS unsorted_txs CASCADE;
+        CREATE VIEW unsorted_txs as
+        SELECT *
+        FROM general_ledger
+        WHERE txgroup = 'Categorization Pending'
+        ORDER BY TIMESTAMP desc
+        """
+    )
 
 @db_session
 def create_treasury_time_averages_view() -> None:
-    try:
-        db.execute(
-            """
-            CREATE VIEW treasury_time_averages AS
-            WITH base AS (
-                SELECT gs as DATE, txgroup_id, token
-                FROM (
-                    SELECT DISTINCT grp.txgroup_id, gl.token
-                    FROM txgroups grp
-                    LEFT JOIN general_ledger gl ON grp.txgroup_id = gl.txgroup_id
-                ) a
-                LEFT JOIN generate_series('2020-07-21', CURRENT_DATE, interval '1 day') gs ON 1=1
-            ), summed AS (
-                SELECT DATE,
-                    a.txgroup_id,
-                    a.token,
-                    coalesce(sum(value_usd), 0) daily_total
-                FROM base a
-                left join general_ledger b ON date = CAST(TIMESTAMP AS DATE) and a.txgroup_id = b.txgroup_id AND a.token = b.token
-                GROUP BY date, a.txgroup_id, a.token
-            )
-
-            SELECT *,
-                sum(daily_total) OVER (partition BY txgroup_id, token ORDER BY date ROWS 6 PRECEDING) / 7 average_7d,
-                sum(daily_total) OVER (partition BY txgroup_id, token ORDER BY date ROWS 13 PRECEDING) / 14 average_14d,
-                sum(daily_total) OVER (partition BY txgroup_id, token ORDER BY date ROWS 29 PRECEDING) / 30 average_30d,
-                sum(daily_total) OVER (partition BY txgroup_id, token ORDER BY date ROWS 89 PRECEDING) / 90 average_90d
-            FROM summed
-            ORDER BY DATE
-            """
+    db.execute(
+        """
+        DROP VIEW IF EXISTS treasury_time_averages CASCADE;
+        CREATE VIEW treasury_time_averages AS
+        WITH base AS (
+            SELECT gs as DATE, txgroup_id, token
+            FROM (
+                SELECT DISTINCT grp.txgroup_id, gl.token
+                FROM txgroups grp
+                LEFT JOIN general_ledger gl ON grp.txgroup_id = gl.txgroup_id
+            ) a
+            LEFT JOIN generate_series('2020-07-21', CURRENT_DATE, interval '1 day') gs ON 1=1
+        ), summed AS (
+            SELECT DATE,
+                a.txgroup_id,
+                a.token,
+                coalesce(sum(value_usd), 0) daily_total
+            FROM base a
+            left join general_ledger b ON date = CAST(TIMESTAMP AS DATE) and a.txgroup_id = b.txgroup_id AND a.token = b.token
+            GROUP BY date, a.txgroup_id, a.token
         )
-    except ProgrammingError as e:
-        if str(e).strip() != 'relation "treasury_time_averages" already exists':
-            raise
+
+        SELECT *,
+            sum(daily_total) OVER (partition BY txgroup_id, token ORDER BY date ROWS 6 PRECEDING) / 7 average_7d,
+            sum(daily_total) OVER (partition BY txgroup_id, token ORDER BY date ROWS 13 PRECEDING) / 14 average_14d,
+            sum(daily_total) OVER (partition BY txgroup_id, token ORDER BY date ROWS 29 PRECEDING) / 30 average_30d,
+            sum(daily_total) OVER (partition BY txgroup_id, token ORDER BY date ROWS 89 PRECEDING) / 90 average_90d
+        FROM summed
+        ORDER BY DATE
+        """
+    )
 
 @db_session
 def create_txgroup_parentage_view() -> None:
-    try:
-        db.execute(
-            """
-            CREATE VIEW txgroup_parentage as
-            SELECT a.txgroup_id,
-                COALESCE(d.name,c.name, b.name, a.name) top_level_account,
-                CASE WHEN d.name is not null THEN c.name when c.name is not null THEN b.name when b.name IS not NULL THEN a.name else null end subaccount1,
-                CASE when d.name is not null THEN b.name when c.name IS not NULL THEN a.name else null end subaccount2,
-                CASE when d.name IS not NULL THEN a.name else null end subaccount3
-            FROM txgroups a
-            LEFT JOIN txgroups b ON a.parent_txgroup = b.txgroup_id
-            LEFT JOIN txgroups c ON b.parent_txgroup = c.txgroup_id
-            LEFT JOIN txgroups d ON c.parent_txgroup = d.txgroup_id
-            """
-        )
-    except ProgrammingError as e:
-        if str(e).strip() != 'relation "txgroup_parentage" already exists':
-            raise
+    db.execute(
+        """
+        DROP VIEW IF EXISTS txgroup_parentage CASCADE;
+        CREATE VIEW txgroup_parentage as
+        SELECT a.txgroup_id,
+            COALESCE(d.name,c.name, b.name, a.name) top_level_account,
+            CASE WHEN d.name is not null THEN c.name when c.name is not null THEN b.name when b.name IS not NULL THEN a.name else null end subaccount1,
+            CASE when d.name is not null THEN b.name when c.name IS not NULL THEN a.name else null end subaccount2,
+            CASE when d.name IS not NULL THEN a.name else null end subaccount3
+        FROM txgroups a
+        LEFT JOIN txgroups b ON a.parent_txgroup = b.txgroup_id
+        LEFT JOIN txgroups c ON b.parent_txgroup = c.txgroup_id
+        LEFT JOIN txgroups d ON c.parent_txgroup = d.txgroup_id
+        """
+    )
         
 
 def create_views() -> None:
