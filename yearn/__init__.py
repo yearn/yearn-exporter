@@ -2,7 +2,6 @@
 from brownie import network
 
 from yearn.logs import setup_logging
-from yearn.networks import Network
 from yearn.sentry import setup_sentry
 
 setup_logging()
