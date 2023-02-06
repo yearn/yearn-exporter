@@ -22,8 +22,9 @@ from web3._utils.abi import filter_by_name
 from web3._utils.events import construct_event_topic_set
 from y import Contract, get_price_async
 from y.contracts import contract_creation_block
+from y.exceptions import continue_if_call_reverted
 from y.networks import Network
-from y.time import last_block_on_date, get_block_timestamp_async
+from y.time import get_block_timestamp_async, last_block_on_date
 
 from yearn.events import decode_logs, get_logs_asap
 from yearn.exceptions import UnsupportedNetwork
@@ -145,13 +146,15 @@ class BentoboxWrapper(Wrapper):
         raise UnsupportedNetwork()
 
     async def balances(self, blocks) -> List[Decimal]:
-        bentobox = await self.bentobox
-        coro_fn = bentobox.balanceOf.coroutine
-        vault = self.vault
-        wrapper = self.wrapper
-        balances = await asyncio.gather(*[coro_fn(vault, wrapper, block_identifier = block) for block in blocks])
-        scale = self.scale
-        return [Decimal(balance or 0) / Decimal(scale) for balance in balances]
+        balances = await asyncio.gather(*[self.get_balance(block) for block in blocks])
+        return [Decimal(balance or 0) / Decimal(self.scale) for balance in balances]
+    
+    async def get_balance(self, block) -> Optional[int]:
+        bento = await self.bentobox
+        try:
+            return await bento.balanceOf.coroutine(self.vault, self.wrapper, block_identifier=block)
+        except Exception as e:
+            continue_if_call_reverted(e)
 
 class DegenboxWrapper(Wrapper):
     """
@@ -164,13 +167,15 @@ class DegenboxWrapper(Wrapper):
         raise UnsupportedNetwork()
 
     async def balances(self, blocks) -> List[Decimal]:
-        vault = self.vault
-        wrapper = self.wrapper
+        balances = await asyncio.gather(*[self.get_balance(block) for block in blocks])
+        return [Decimal(balance or 0) / Decimal(self.scale) for balance in balances]
+    
+    async def get_balance(self, block) -> Optional[int]:
         degenbox = await self.degenbox
-        coro_fn = degenbox.balanceOf.coroutine
-        balances = await asyncio.gather(*[coro_fn(vault, wrapper, block_identifier=block) for block in blocks])
-        scale = self.scale
-        return [Decimal(balance or 0) / Decimal(scale) for balance in balances]
+        try:
+            return await degenbox.balanceOf.coroutine(self.vault, self.wrapper, block_identifier=block)
+        except Exception as e:
+            continue_if_call_reverted(e)
 
 
 @dataclass
