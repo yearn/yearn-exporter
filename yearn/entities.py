@@ -7,11 +7,15 @@ from functools import cached_property, lru_cache
 from brownie import Contract, chain
 from brownie.network.event import _EventItem
 from brownie.network.transaction import TransactionReceipt
+from cachetools.func import ttl_cache
 from pony.orm import *
+from y import get_price
 from y.time import closest_block_after_timestamp
+from y.contracts import contract_creation_block
+from y.utils.events import decode_logs, get_logs_asap
 
 from yearn.treasury.constants import BUYER
-from yearn.utils import contract
+from yearn.utils import contract, dates_between
 
 db = Database()
 
@@ -74,6 +78,9 @@ class Address(db.Entity):
     streams_from = Set("Stream", reverse="from_address")
     streams_to = Set("Stream", reverse="to_address")
     streams = Set("Stream", reverse="contract")
+    vesting_escrows = Set("VestingEscrow", reverse="address")
+    vests_received = Set("VestingEscrow", reverse="recipient")
+    vests_funded = Set("VestingEscrow", reverse="funder")
 
 
 class Token(db.Entity):
@@ -90,6 +97,7 @@ class Token(db.Entity):
     partner_harvest_event = Set('PartnerHarvestEvent', reverse="vault")
     address = Required(Address, column="address_id")
     streams = Set('Stream', reverse="token")
+    vesting_escrows = Set("VestingEscrow", reverse="token")
 
     @property
     def scale(self) -> int:
@@ -130,6 +138,7 @@ class TxGroup(db.Entity):
     parent_txgroup = Optional("TxGroup", reverse="child_txgroups")
     child_txgroups = Set("TxGroup", reverse="parent_txgroup")
     streams = Set("Stream", reverse="txgroup")
+    vesting_escrows = Set("VestingEscrow", reverse="txgroup")
 
     @property
     def top_txgroup(self):
@@ -397,6 +406,168 @@ class StreamedFunds(db.Entity):
         commit()
         return entity
 
+@ttl_cache(ttl=60)
+def _get_rug_pull(address: str) -> typing.Optional[_EventItem]:
+    logs = get_logs_asap(address, None)
+    decoded = decode_logs(logs)
+    for event in decoded:
+        if event.name == "RugPull":
+            return event
+
+class VestingEscrow(db.Entity):
+    _table_ = 'vesting_escrows'
+    escrow_id = PrimaryKey(int, auto=True)
+
+    address = Required(Address, reverse='vesting_escrows', unique=True)
+    funder = Required(Address, reverse='vests_funded')
+    recipient = Required(Address, reverse='vests_received')
+    token = Required(Token, reverse='vesting_escrows')
+    amount = Required(Decimal, 38, 18)
+    start_timestamp = Required(datetime)
+    end_timestamp = Required(datetime)
+    duration = Required(int)
+    cliff_length = Required(int)
+    rugged = Required(bool, default=False)
+    txgroup = Optional(TxGroup, reverse="vesting_escrows")
+    _rugged_at = Optional(datetime)
+    _rugged_on = Optional(date)
+
+    vested_funds = Set("VestedFunds", reverse="escrow")
+
+    @cached_property
+    def contract(self) -> Contract:
+        return contract(self.address.address)
+    
+    def dates(self) -> typing.List[date]:
+        return [
+            dt.date()
+            for dt in dates_between(self.start_timestamp, self.end_timestamp)
+            if self.rugged_on is None or dt.date() <= self.rugged_on
+        ]
+    
+    @cached_property
+    def deploy_block(self) -> int:
+        return contract_creation_block(self.address.address)
+    
+    def amortize_vested_funds(self) -> None:
+        for date in self.dates():
+            try:
+                VestedFunds.get_or_create_entity(self, date)
+            except VestNotActive as e:
+                print(e)
+    
+    @lru_cache
+    def get_rug_pull(self) -> typing.Optional[_EventItem]:
+        return _get_rug_pull(self.address.address)
+    
+    @property
+    def rugged_at(self) -> typing.Optional[datetime]:
+        if not self._rugged_at and (rug := self.get_rug_pull()):
+            self._rugged_at = datetime.fromtimestamp(
+                int(chain[rug.block_number].timestamp)
+            )
+        return self._rugged_at
+    
+    @property
+    def rugged_on(self) -> typing.Optional[date]:
+        if not self._rugged_on and self.rugged_at:
+            self._rugged_on = self.rugged_at.date()
+        return self._rugged_on
+
+    @staticmethod
+    def get_or_create_entity(event: _EventItem) -> "VestingEscrow":
+        from yearn.outputs.postgres.utils import cache_address, cache_token
+
+        print(event)
+        funder, token, recipient, escrow, amount, start, duration, cliff_length = event.values()
+        escrow_address_entity = cache_address(escrow)
+        escrow = VestingEscrow.get(address=escrow_address_entity)
+        if escrow is None:
+            token_entity = cache_token(token)
+            escrow = VestingEscrow(
+                address = escrow_address_entity,
+                funder = cache_address(funder),
+                recipient = cache_address(recipient),
+                token = token_entity,
+                amount = amount / token_entity.scale,
+                start_timestamp = datetime.fromtimestamp(start),
+                duration = duration,
+                end_timestamp = datetime.fromtimestamp(start + duration),
+                cliff_length = cliff_length,
+            )
+            commit()
+        return escrow
+    
+    def total_vested_at_block(self, block: int) -> Decimal:
+        try:
+            vested = Decimal(
+                self.contract.unclaimed(block_identifier=block) + self.contract.total_claimed(block_identifier=block)
+            )
+            return vested / self.token.scale
+        except ValueError as e:
+            if str(e) == "No data was returned - the call likely reverted" and block < self.deploy_block:
+                print(f'escrow {self.address.address} not yet deployed')
+                return Decimal(0)
+            raise e
+    
+    def total_vested_thru_date(self, date: "date") -> Decimal:
+        try:
+            return VestedFunds.get_or_create_entity(self, date).total_vested
+        except VestNotActive:
+            return Decimal(0)
+
+
+class VestNotActive(Exception):
+    ...
+
+class VestedFunds(db.Entity):
+    _table_ = "vested_funds"
+    vested_funds_id = PrimaryKey(int, auto=True)
+
+    escrow = Required(VestingEscrow, reverse="vested_funds")
+    date = Required(date)
+    composite_key(escrow, date)
+    amount = Required(Decimal, 38, 18)
+    price = Required(Decimal, 38, 18)
+    value_usd = Required(Decimal, 38, 18)
+    total_vested = Required(Decimal, 38, 18)
+    checked_at_timestamp = Required(datetime)
+    checked_at_block = Required(int)
+        
+    @staticmethod
+    def get_or_create_entity(escrow: VestingEscrow, date: "date"):
+        check_at = datetime(date.year, date.month, date.day) + timedelta(days=1) - timedelta(seconds=1)
+        if check_at < escrow.start_timestamp:
+            raise VestNotActive(f"[{date}] Vesting for {escrow.address.address} starts on {escrow.start_timestamp.date()}.")
+        
+        if escrow.rugged_on and date > escrow.rugged_on:
+            raise VestNotActive(f"[{date}] Vesting escrow {escrow.address.address} was rugged on {escrow.rugged_on}")
+
+        entity = VestedFunds.get(escrow=escrow, date=date)
+        if entity is None:
+            block = closest_block_after_timestamp(check_at)
+            total_unlocked = escrow.total_vested_at_block(block)
+            total_unlocked_yesterday = escrow.total_vested_thru_date(date - timedelta(days=1))
+            unlocked_today = total_unlocked - total_unlocked_yesterday
+            price = Decimal(get_price(escrow.token.address.address, block))
+
+            entity = VestedFunds(
+                escrow = escrow,
+                date = date,
+                amount = round(unlocked_today, 18),
+                price = round(price, 18),
+                value_usd = round(unlocked_today * price, 18),
+                total_vested = round(total_unlocked, 18),
+                checked_at_timestamp = check_at,
+                checked_at_block = block,
+            )
+            commit()
+
+        print(date)
+        print(f"{entity.amount}   {entity.total_vested}")
+        return entity
+
+
 # Caching for partners_summary.py
 class PartnerHarvestEvent(db.Entity):
     _table_ = 'partners_txs'
@@ -491,6 +662,38 @@ def create_stream_ledger_view() -> None:
 
 
 @db_session
+def create_vesting_ledger_view() -> None:
+    db.execute("""
+        DROP VIEW IF EXISTS vesting_ledger CASCADE;
+        CREATE VIEW vesting_ledger AS
+        SELECT  d.chain_name, 
+            CAST(date AS timestamp) AS "timestamp",
+            cast(NULL as int) AS block,
+            NULL AS "hash",
+            cast(NULL as int) AS "log_index",
+            c.symbol AS "token",
+            e.address AS "from",
+            e.nickname as from_nickname,
+            f.address AS "to",
+            f.nickname as to_nickname,
+            a.amount,
+            a.price,
+            a.value_usd,
+            g.name as txgroup,
+            h.name AS parent_txgroup,
+            g.txgroup_id
+        FROM vested_funds a 
+        LEFT JOIN vesting_escrows b ON a.escrow = b.escrow_id
+        LEFT JOIN tokens c ON b.token = c.token_id
+        LEFT JOIN chains d ON c.chain = d.chain_dbid
+        LEFT JOIN addresses e ON b.address = e.address_id
+        LEFT JOIN addresses f ON b.recipient = f.address_id
+        LEFT JOIN txgroups g ON b.txgroup = g.txgroup_id
+        left JOIN txgroups h ON g.parent_txgroup = h.txgroup_id
+    """)
+
+
+@db_session
 def create_general_ledger_view() -> None:
     db.execute(
         """
@@ -509,6 +712,9 @@ def create_general_ledger_view() -> None:
             UNION
             SELECT -1, chain_name, TIMESTAMP, cast(block AS integer) block, hash, CAST(log_index AS integer) as log_index, token, "from", from_nickname, "to", to_nickname, amount, price, value_usd, txgroup, parent_txgroup, txgroup_id
             FROM stream_ledger
+            UNION
+            SELECT -1, *
+            FROM vesting_ledger
         ) a
         ORDER BY timestamp
         """
@@ -583,6 +789,7 @@ def create_txgroup_parentage_view() -> None:
 def create_views() -> None:
     create_txgroup_parentage_view()
     create_stream_ledger_view()
+    create_vesting_ledger_view()
     create_general_ledger_view()
     create_unsorted_txs_view()
     create_treasury_time_averages_view()

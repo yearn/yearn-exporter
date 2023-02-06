@@ -3,7 +3,7 @@ import json
 import logging
 import os
 import threading
-from datetime import datetime
+from datetime import datetime, timedelta
 from functools import lru_cache, wraps
 from typing import Any, Callable, List, TypeVar
 
@@ -211,3 +211,17 @@ def use_memray_if_enabled(label: str) -> Callable[[Callable[P, T]], Callable[P, 
         return memray_wrapper
 
     return memray_decorator
+
+
+def dates_between(start: datetime, end: datetime) -> List[datetime]:
+    end = end.date()
+    dates = []
+
+    date = start.date()
+    dates.append(date)
+    while date <= end:
+        date += timedelta(days=1)
+        dates.append(date)
+        
+    # We need datetimes, not dates
+    return [datetime(date.year, date.month, date.day) for date in dates if date < datetime.utcnow().date()]
