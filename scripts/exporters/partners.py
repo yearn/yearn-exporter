@@ -18,13 +18,13 @@ async def export_partners(block, ts):
     # collect payout data
     partners_data: List[Tuple[DataFrame, DataFrame]] = await asyncio.gather(*[partner.process() for partner in partners])
 
+    # export wrapper data
+    metrics_to_export = []
     for partner, (partner_data, _) in zip(partners, partners_data):
         if len(partner_data) == 0:
             continue
         partner_data = partner_data.loc[partner_data.index <= block]
 
-        # export wrapper data
-        metrics_to_export = []
         for wrapper in set(partner_data.wrapper):
             wrapper_info = {}
 
@@ -58,7 +58,7 @@ async def export_partners(block, ts):
                     ts,
                 )
                 metrics_to_export.append(item)
-        return metrics_to_export
+    return metrics_to_export
 
 def main():
     # This is forward-only
