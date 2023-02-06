@@ -88,7 +88,7 @@ class Exporter:
         self._data_semaphore = asyncio.Semaphore(self._concurrency)
         self._res_semaphore = defaultdict(lambda: asyncio.Semaphore(max_concurrent_runs_per_resolution))
         self._has_data_semaphore = asyncio.Semaphore(2)
-        self._export_semaphore = asyncio.Semaphore(1)
+        self._export_semaphore = asyncio.Semaphore(2)
 
         self._snapshots_fetched = 0
         self._snapshots_exported = 0
