@@ -29,14 +29,29 @@ SHOW_STATS = bool(os.environ.get("SHOW_STATS"))
 
 @eth_retry.auto_retry
 async def _wait_for_block(timestamp: int) -> Block:
+    block = None
     while True:
-        block = await dank_w3.eth.get_block("latest")
+        block, latest = await asyncio.gather(
+            dank_w3.eth.get_block(block.number + 1 if block else "latest"),
+            dank_w3.eth.get_block("latest")
+        )
+        while timestamp >= block.timestamp and block.number <= latest.number:
+            # We are lagging behind chain head, likely because we are on a chain with fast block times
+            block = await dank_w3.eth.get_block(block.number + 1)
+            if timestamp < block.timestamp:
+                logger.debug(f'returning {block.number - 1}')
+                return block.number - 1
+
         while timestamp < block.timestamp:
             try:
                 prev_block = await dank_w3.eth.get_block(block.number - 1)
                 if prev_block.timestamp < timestamp:
                     return block.number
-                block = prev_block
+                if block.timestamp == prev_block.timestamp:
+                    # Some chains need bigger leaps due to fast block times
+                    block = await dank_w3.eth.get_block(block.number - 10)
+                else:
+                    block = prev_block
             except ValueError as e:
                 if 'parse error' not in str(e):
                     raise
