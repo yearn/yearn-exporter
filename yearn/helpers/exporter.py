@@ -136,6 +136,7 @@ class Exporter:
         start = datetime.now(tz=timezone.utc)
         intervals = _get_intervals(start)
         loop = self.loop
+        futs = []
         for resolution in intervals:
             snapshots = _generate_snapshot_range_historical(
                 self.start_timestamp,
@@ -143,7 +144,14 @@ class Exporter:
                 intervals,
             )
             async for snapshot in snapshots:
-                loop.create_task(self.export_historical_snapshot_if_missing(snapshot, resolution))
+                futs.append(
+                    asyncio.ensure_future(self.export_historical_snapshot_if_missing(snapshot, resolution), loop=loop)
+                )
+        while futs:
+            for fut in futs:
+                if fut.done():
+                    futs.pop(futs.index(fut))
+            await asyncio.sleep(60)
     
     # Export Methods
     

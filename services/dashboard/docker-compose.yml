@@ -26,6 +26,9 @@ x-envs: &envs
   - PROFILE_MEMORY
   # asyncio (optional, debugging)
   - PYTHONASYNCIODEBUG
+  # dank-mids (mandatory)
+  # NOTE: We do this to limit memory consumption, on a big server you can increase for faster performance.
+  - DANK_MIDS_BROWNIE_CALL_SEMAPHORE=${DANK_MIDS_BROWNIE_CALL_SEMAPHORE:-50000}
   # dank-mids (optional)
   - MAX_JSONRPC_BATCH_SIZE
   - DANK_MIDS_DEMO_MODE
@@ -34,7 +37,8 @@ x-envs: &envs
   - MIN_SLEEP_TIME
   - MAX_SLEEP_TIME
   # ypricemagic (optional)
-  - DOP=128
+  - DOP
+  - YPRICEMAGIC_RECURSION_LOGGER_LEVEL
   - YPRICEMAGIC_RECURSION_TIMEOUT=${YPRICEMAGIC_RECURSION_TIMEOUT:-7200}  # 2 hours
   # This is a temporary hack that can be removed once deps support eth_hash==0.5.0. Creds to bunny for finding this.
   - ETH_HASH_BACKEND=${ETH_HASH_BACKEND:-pysha3}

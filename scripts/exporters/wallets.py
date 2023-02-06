@@ -5,7 +5,9 @@ from datetime import datetime, timezone
 import sentry_sdk
 from brownie import chain
 from cachetools.func import ttl_cache
+from y.networks import Network
 from y.time import closest_block_after_timestamp
+
 from yearn.entities import UserTx
 from yearn.helpers.exporter import Exporter
 from yearn.outputs.postgres.utils import last_recorded_block
@@ -20,7 +22,8 @@ logger = logging.getLogger('yearn.wallet_exporter')
 yearn = Yearn(load_strategies=False, watch_events_forever=False)
 
 # start: 2020-02-12 first iearn deployment
-start = datetime(2020, 2, 12, tzinfo=timezone.utc)
+# start opti: 2022-01-01 an arbitrary start timestamp because the default start is < block 1 on opti and messes things up
+start = datetime(2022, 1, 1, tzinfo=timezone.utc) if chain.id in [Network.Arbitrum, Network.Optimism] else datetime(2020, 2, 12, tzinfo=timezone.utc)
 
 @ttl_cache(ttl=60)
 def get_last_recorded_block():
@@ -29,6 +32,7 @@ def get_last_recorded_block():
 def postgres_ready(snapshot: datetime) -> bool:
     if (postgres_cached_thru_block := get_last_recorded_block()):
         return chain[postgres_cached_thru_block].timestamp >= snapshot.timestamp()
+    logger.debug(f"postgress not yet popuated for {snapshot}")
     return False
 
 class WalletExporter(Exporter):
@@ -49,3 +53,4 @@ exporter = WalletExporter(
 
 def main():
     exporter.run("historical")
+    raise Exception("Don't mind me, just restarting the container")
