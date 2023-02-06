@@ -1,18 +1,22 @@
+import asyncio
 import functools
 import os
 import re
 from asyncio import iscoroutinefunction
+from concurrent.futures import ThreadPoolExecutor
 from typing import Awaitable, Callable
 
 from brownie import chain, web3
-from sentry_sdk import (Hub, capture_exception, capture_message, init, set_tag,
-                        utils)
+from sentry_sdk import Hub
+from sentry_sdk import capture_exception as _capture_exception
+from sentry_sdk import capture_message, init, set_tag, utils
 from sentry_sdk.integrations.threading import ThreadingIntegration
 
 from yearn.networks import Network
 
 SENTRY_DSN = os.getenv('SENTRY_DSN')
 
+sentry_executor = ThreadPoolExecutor(1)
 
 def before_send(event, hint):
     # custom event parsing goes here
@@ -50,9 +54,12 @@ def _clean_creds_from_uri(endpoint: str) -> str:
     """
     return re.sub(pattern=r"(https?:\/\/)[^@]+@(.+)", repl=r"\2", string=endpoint)
 
+async def capture_exception(e: Exception) -> None:
+    await asyncio.get_event_loop().run_in_executor(sentry_executor, _capture_exception, e)
+
 def log_task_exceptions(func: Callable[..., Awaitable[None]]) -> Callable[..., Awaitable[None]]:
     """
-    Decorate functions with log_task_exceptions if you will be submitting the coroutines to an asyncio event loop as task objects.
+    Decorate coroutine functions with log_task_exceptions if you will be submitting the coroutines to an asyncio event loop as task objects.
     """
     if not iscoroutinefunction(func):
         raise RuntimeError("log_task_exceptions decorator should only be applied to coroutine functions you will submit to the event loop as task objects.")
@@ -66,5 +73,5 @@ def log_task_exceptions(func: Callable[..., Awaitable[None]]) -> Callable[..., A
                 # Raise the exception so the user sees it on their logs.
                 # Since it is raised inside of a task it will not impact behavior.
                 raise e
-            capture_exception(e)
+            await capture_exception(e)
     return wrap
