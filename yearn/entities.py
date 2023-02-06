@@ -304,6 +304,10 @@ class Stream(db.Entity):
     
     def start_timestamp(self, block: typing.Optional[int] = None) -> int:
         return int(self.stream_contract.streamToStart('0x' + self.stream_id, block_identifier=block))
+    
+    @property
+    def start_date(self) -> date:
+        return datetime.fromtimestamp(chain[self.start_block].timestamp).date()
 
     def amount_withdrawable(self, block: int):
         return self.stream_contract.withdrawable.call(
@@ -321,6 +325,7 @@ class Stream(db.Entity):
 one_day = 60 * 60 * 24
 
 class StreamedFunds(db.Entity):
+    """ Each object represents one calendar day of tokens streamed for a particular stream. """
     _table_ = "streamed_funds"
 
     date = Required(date)
@@ -331,9 +336,10 @@ class StreamedFunds(db.Entity):
     price = Required(Decimal, 38, 18)
     value_usd = Required(Decimal, 38, 18)
     seconds_active = Required(int)
+    is_last_day = Required(bool)
 
     @classmethod
-    def get_or_create_entity(cls, stream: Stream, date: datetime) -> "StreamedFunds":
+    def get_or_create_entity(cls, stream: Stream, date: datetime) -> typing.Optional["StreamedFunds"]:
         if entity := StreamedFunds.get(date=date, stream=stream):
             return entity
 
@@ -341,26 +347,55 @@ class StreamedFunds(db.Entity):
         block = closest_block_after_timestamp(check_at.timestamp())
         start_timestamp = stream.start_timestamp(block)
         if start_timestamp == 0:
-            print("Stream cancelled. Must handle.")
-            return
-        
-        seconds_active = int(check_at.timestamp()) - start_timestamp
+            # If the stream was already closed, we can return `None`.
+            if StreamedFunds.get(stream=stream, is_last_day=True):
+                return None
+
+            while start_timestamp == 0:
+                # is active last block?
+                block -= 1
+                start_timestamp = stream.start_timestamp(block)
+
+            block_datetime = datetime.fromtimestamp(chain[block].timestamp)
+            assert block_datetime.date() == date.date()
+            seconds_active = (check_at - block_datetime).seconds
+            is_last_day = True
+        else:
+            seconds_active = int(check_at.timestamp()) - start_timestamp
+            is_last_day = False
+
+        # How many seconds was the stream active on `date`?
         seconds_active_today = seconds_active if seconds_active < one_day else one_day
-        amount_streamed_today = stream.amount_per_second * seconds_active_today / stream.scale
+        if seconds_active_today < one_day and not is_last_day:
+            if date.date() == stream.start_date:
+                print('stream started today, partial day accepted')
+            else:
+                seconds_active_today = one_day
+        print(date.date())
+        print(F"active for {seconds_active_today} seconds")
+        if is_last_day:
+            print('is last day')
+
+        # How much was streamed on `date`?
+        amount_streamed_today = round(stream.amount_per_second * seconds_active_today / stream.scale, 18)
         
         # We only need this for this function so we import in this function to save time where this function isn't needed.
         from y.prices import magic
 
         price = Decimal(magic.get_price(stream.token.address.address, block))
 
-        return StreamedFunds(
+        entity = StreamedFunds(
             date = date,
             stream = stream, 
             amount = amount_streamed_today,
-            price = price,
-            value_usd = amount_streamed_today * price,
+            price = round(price, 18),
+            value_usd = round(amount_streamed_today * price, 18),
             seconds_active = seconds_active_today,
-        )    
+            is_last_day = is_last_day,
+        )
+
+        commit()
+        return entity
 
 # Caching for partners_summary.py
 class PartnerHarvestEvent(db.Entity):
