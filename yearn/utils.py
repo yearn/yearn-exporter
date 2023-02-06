@@ -1,9 +1,11 @@
 import asyncio
 import json
 import logging
+import os
 import threading
-from functools import lru_cache
-from typing import Any, Callable, List
+from datetime import datetime
+from functools import lru_cache, wraps
+from typing import Any, Callable, List, TypeVar
 
 import eth_retry
 from brownie import Contract, chain, interface, web3
@@ -11,6 +13,7 @@ from brownie.convert.datatypes import HexString
 from brownie.network.contract import _fetch_from_explorer, _resolve_address
 from dank_mids.brownie_patch import patch_contract
 from eth_portfolio.constants import sync_threads
+from typing_extensions import ParamSpec
 from y.networks import Network
 from y.utils.dank_mids import dank_w3
 
@@ -178,3 +181,33 @@ def _squeeze(it):
 
 def run_in_thread(callable: Callable, *args, **kwargs) -> Any:
     return asyncio.get_event_loop().run_in_executor(sync_threads, callable, *args, **kwargs)
+
+
+T = TypeVar("T")
+P = ParamSpec("P")
+
+def use_memray_if_enabled(label: str) -> Callable[[Callable[P, T]], Callable[P, T]]:
+    """ outputs a decorator that will activate memray for the decorated fn. """
+
+    def memray_decorator(callable: Callable[P, T]) -> Callable[P, T]:
+        if asyncio.iscoroutinefunction(callable):
+            @wraps(callable)
+            async def memray_wrapper(*args, **kwargs) -> T:
+                if os.environ.get("PROFILE_MEMORY"):
+                    import memray
+                    with memray.tracker(f"memray/memray_output_{label}_{callable.__name__}_{datetime.utcnow()}.bin"):
+                        return await callable(*args, **kwargs)
+                else:
+                    return await callable(*args, **kwargs)
+        else:
+            @wraps(callable)
+            def memray_wrapper(*args, **kwargs) -> T:
+                if os.environ.get("PROFILE_MEMORY"):
+                    import memray
+                    with memray.tracker(f"memray/memray_output_{label}_{callable.__name__}.bin"):
+                        return callable(*args, **kwargs)
+                else:
+                    return callable(*args, **kwargs)
+        return memray_wrapper
+
+    return memray_decorator

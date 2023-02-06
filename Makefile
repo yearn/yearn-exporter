@@ -268,3 +268,12 @@ partners-summary-ftm:
 # veyfi scripts
 veyfi:
 	make up network=ethereum commands="exporters/veyfi" logs
+
+# utils
+fetch-memray:
+	mkdir reports/memray -p
+	sudo cp -r /var/lib/docker/volumes/ethereum_memray/_data/ reports/memray/ethereum
+	sudo cp -r /var/lib/docker/volumes/fantom_memray/_data/   reports/memray/fantom
+	sudo cp -r /var/lib/docker/volumes/arbitrum_memray/_data/ reports/memray/arbitrum
+	sudo cp -r /var/lib/docker/volumes/optimism_memray/_data/ reports/memray/optimism
+	sudo cp -r /var/lib/docker/volumes/gnosis_memray/_data/   reports/memray/gnosis

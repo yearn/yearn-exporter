@@ -21,6 +21,7 @@ from yearn.helpers.snapshots import (RESOLUTION, SLEEP_TIME, Resolution,
                                      _get_intervals)
 from yearn.outputs.victoria.victoria import _build_item, _post, has_data
 from yearn.sentry import log_task_exceptions
+from yearn.utils import use_memray_if_enabled
 
 logger = logging.getLogger(__name__)
 
@@ -94,6 +95,9 @@ class Exporter:
         self._snapshots_exported = 0
     
     def run(self, direction: Optional[Direction] = None) -> NoReturn:
+        use_memray_if_enabled(self.name)(self._run)(direction)
+
+    def _run(self, direction: Optional[Direction] = None) -> NoReturn:
         if direction is None:
             self.loop.run_until_complete(self.export_full())
         elif direction == "forward":
