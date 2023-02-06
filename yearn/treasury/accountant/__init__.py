@@ -105,6 +105,6 @@ def load():
     prepare_db()
     # Gnosis safes made me do this. In the future, so might other things.
     contracts = __get_contracts()
-    __ensure_topics_are_known(contracts)
-    __ensure_signatures_are_known(contracts)
+    #__ensure_topics_are_known(contracts)
+    #__ensure_signatures_are_known(contracts)
 load()
