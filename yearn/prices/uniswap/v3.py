@@ -42,7 +42,7 @@ addresses = {
     },
     Network.Optimism: {
         'factory': UNISWAP_V3_FACTORY,
-        'fee_tiers': [3000, 500, 10_000, 100]
+        'fee_tiers': [3000, 500, 10_000, 100],
     },
 }
 

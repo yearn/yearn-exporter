@@ -1,3 +1,4 @@
+import asyncio
 from collections import Counter
 
 from brownie import chain
@@ -8,6 +9,9 @@ from yearn.utils import contract
 
 
 class RegistryWalletDescriber:
+    def __init__(self):
+        self.vault_describer = VaultWalletDescriber()
+
     def active_vaults_at(self, registry: tuple, block=None):
         label, registry = registry
         active = [vault for vault in registry.active_vaults_at(block=block)]  
@@ -16,10 +20,9 @@ class RegistryWalletDescriber:
             active = [vault for vault in active if vault.vault != contract("0xBa37B002AbaFDd8E89a1995dA52740bbC013D992")]
         return active
         
-    def describe_wallets(self, registry: tuple, block=None):
-        describer = VaultWalletDescriber()
+    async def describe_wallets(self, registry: tuple, block=None):
         active_vaults = self.active_vaults_at(registry, block=block)
-        data = Parallel(8,'threading')(delayed(describer.describe_wallets)(vault.vault.address, block=block) for vault in active_vaults)
+        data = await asyncio.gather(*[self.vault_describer.describe_wallets(vault.vault.address, block=block) for vault in active_vaults])
         data = {vault.name: desc for vault,desc in zip(active_vaults,data)}
 
         wallet_balances = Counter()
