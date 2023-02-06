@@ -19,7 +19,7 @@ class YearnStreams:
     def __init__(self):
         assert chain.id == 1
         self.stream_contracts = [streams_dai, streams_yfi]
-        self.skipped_events = ["PayerDeposit", "Withdraw"]
+        self.skipped_events = ["PayerDeposit", "PayerWithdraw", "Withdraw"]
         self.handled_events = ["StreamCreated", "StreamCreatedWithReason", "StreamModified", "StreamPaused", "StreamCancelled"]
         self.get_streams()
             
