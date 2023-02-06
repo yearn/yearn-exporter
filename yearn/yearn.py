@@ -191,7 +191,7 @@ class Yearn:
                     item = _build_item(metric, label_names, label_values, value or 0, timestamp)
                     metrics_to_export.append(item)
 
-            return metrics_to_export
+        return metrics_to_export
 
     
     async def wallet_data_for_export(self, block: int, timestamp: int):
