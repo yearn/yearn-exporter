@@ -135,7 +135,7 @@ class CurveRegistry(metaclass=Singleton):
             
             # NOTE: Gnosis chain's address provider fails to provide registry via events.
             if not self.identifiers[Ids.Main_Registry]:
-                self.identifiers[Ids.Main_Registry] = self.address_provider.get_registry()
+                self.identifiers[Ids.Main_Registry] = [self.address_provider.get_registry()]
             
             # if registries were updated, recreate the filter
             _registries = [
