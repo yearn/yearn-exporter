@@ -24,6 +24,8 @@ x-envs: &envs
   - JSONRPC_BATCH_MAX_SIZE
   - AIOHTTP_TIMEOUT=${AIOHTTP_TIMEOUT:-1800}
   - PROFILE_MEMORY
+  - MAX_CONCURRENT_RUNS
+  - MAX_CONCURRENT_RUNS_PER_RESOLUTION
   # asyncio (optional, debugging)
   - PYTHONASYNCIODEBUG
   # dank-mids (mandatory)

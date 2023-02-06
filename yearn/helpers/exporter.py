@@ -55,8 +55,8 @@ class Exporter:
         data_fn: Callable[[int, int], Awaitable[T]], 
         export_fn: Callable[[T], Awaitable[None]],
         start_block: int,
-        max_concurrent_runs: int = 12,
-        max_concurrent_runs_per_resolution: int = 5
+        max_concurrent_runs: int = int(os.environ.get("MAX_CONCURRENT_RUNS", 12)),
+        max_concurrent_runs_per_resolution: int = int(os.environ.get("MAX_CONCURRENT_RUNS_PER_RESOLUTION", 5)),
     ) -> None:
         """
         Required Args:
