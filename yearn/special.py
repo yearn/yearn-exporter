@@ -6,11 +6,11 @@ from typing import Tuple
 import eth_retry
 import requests
 from brownie import chain
+from y.exceptions import PriceError
 from y.prices import magic
 
 from yearn.apy.common import Apy, ApyBlocks, ApyFees, ApyPoints, ApySamples
 from yearn.common import Tvl
-from yearn.exceptions import PriceError
 from yearn.prices.curve import curve
 from yearn.utils import (Singleton, contract, contract_creation_block,
                          run_in_thread)

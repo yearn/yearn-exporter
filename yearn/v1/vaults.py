@@ -7,12 +7,12 @@ from typing import Optional
 from brownie import ZERO_ADDRESS, interface
 from brownie.network.contract import InterfaceContainer
 from dank_mids.brownie_patch import patch_contract
+from y.exceptions import PriceError
 from y.prices import magic
 from y.utils.dank_mids import dank_w3
 from yearn import apy, constants
 from yearn.apy.common import ApySamples
 from yearn.common import Tvl
-from yearn.exceptions import PriceError
 from yearn.multicall2 import fetch_multicall_async
 from yearn.prices.curve import curve
 from yearn.utils import contract

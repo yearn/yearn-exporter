@@ -13,10 +13,13 @@ from typing import Any, Union
 import boto3
 import requests
 import sentry_sdk
-from brownie import chain, web3, Contract
+from brownie import Contract, chain, web3
 from brownie.exceptions import BrownieEnvironmentWarning
-from yearn.apy import Apy, ApyBlocks, ApyFees, ApyPoints, ApySamples, get_samples
-from yearn.exceptions import EmptyS3Export, PriceError
+from y.exceptions import PriceError
+
+from yearn.apy import (Apy, ApyBlocks, ApyFees, ApyPoints, ApySamples,
+                       get_samples)
+from yearn.exceptions import EmptyS3Export
 from yearn.graphite import send_metric
 from yearn.networks import Network
 from yearn.special import Backscratcher, YveCRVJar
