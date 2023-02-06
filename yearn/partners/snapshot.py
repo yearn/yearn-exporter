@@ -267,8 +267,9 @@ class GearboxWrapper(Wrapper):
 
     async def balances(self, blocks) -> List[Decimal]:
         count_credit_accounts = await asyncio.gather(*[self.count_credit_accounts(block) for block in blocks])
+        dead_blocks = [0 for ct_accounts in count_credit_accounts if ct_accounts is None]
         credit_accounts_by_block = await asyncio.gather(*[asyncio.gather(*[self.get_credit_account(i) for i in range(ct)]) for ct in count_credit_accounts if ct])
-        return await asyncio.gather(*[self.get_balances_for_block(block, credit_accounts) for block, credit_accounts in zip(blocks, credit_accounts_by_block)])
+        return dead_blocks + await asyncio.gather(*[self.get_balances_for_block(block, credit_accounts) for block, credit_accounts in zip(blocks, credit_accounts_by_block)])
     
     async def count_credit_accounts(self, block) -> Optional[int]:
         factory = await self.account_factory
