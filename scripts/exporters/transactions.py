@@ -156,7 +156,7 @@ async def _get_price(token_address, block):
             if incident['start'] <= block <= incident['end']:
                 return incident['result']
         logger.warn(f'{e.__class__.__name__}: {str(e)}')
-        logger.warn(f'vault: {token_address}')
+        logger.warn(f'vault: {token_address} block: {block}')
         raise e
 
 
