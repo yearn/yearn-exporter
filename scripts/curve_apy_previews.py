@@ -10,8 +10,9 @@ import boto3
 import requests
 import sentry_sdk
 from brownie import ZERO_ADDRESS, chain
-
-from y import PriceError, Network, Contract
+from brownie.exceptions import ContractNotFound
+from y import Contract, Network, PriceError
+from y.exceptions import ContractNotVerified
 
 from yearn.apy import Apy, ApyFees, ApyPoints, ApySamples, get_samples
 from yearn.apy.curve.simple import Gauge, calculate_simple
@@ -58,7 +59,7 @@ def _build_data(gauges):
             try:
                 c = Contract(coin_address)
                 pool_coins.append({"name": c.name(), "address": str(c)})
-            except (ValueError, AttributeError) as e:
+            except (ContractNotFound, ContractNotVerified, ValueError, AttributeError) as e:
                 pool_coins.append({"address": coin_address, "error": str(e)})
                 logger.error(f"error for coins({i}) for pool {str(gauge.pool)}")
                 logger.error(e)
