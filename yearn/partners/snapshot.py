@@ -266,11 +266,16 @@ class GearboxWrapper(Wrapper):
         return await factory.creditAccounts.coroutine(ix)
 
     async def balances(self, blocks) -> List[Decimal]:
-        factory = await self.account_factory
-        coro_fn = factory.countCreditAccounts.coroutine
-        count_credit_accounts = await asyncio.gather(*[coro_fn(block_identifier=block) for block in blocks])
-        credit_accounts_by_block = await asyncio.gather(*[asyncio.gather(*[self.get_credit_account(i) for i in range(ct)]) for ct in count_credit_accounts])
+        count_credit_accounts = await asyncio.gather(*[self.count_credit_accounts(block) for block in blocks])
+        credit_accounts_by_block = await asyncio.gather(*[asyncio.gather(*[self.get_credit_account(i) for i in range(ct)]) for ct in count_credit_accounts if ct])
         return await asyncio.gather(*[self.get_balances_for_block(block, credit_accounts) for block, credit_accounts in zip(blocks, credit_accounts_by_block)])
+    
+    async def count_credit_accounts(self, block) -> Optional[int]:
+        factory = await self.account_factory
+        try:
+            return await factory.countCreditAccounts.coroutine(block_identifier=block)
+        except Exception as e:
+            continue_if_call_reverted(e)
     
     async def get_balances_for_block(self, block: int, credit_accounts: List[Address]) -> Decimal:
         coro_fn = self.vault_contract.balanceOf.coroutine
