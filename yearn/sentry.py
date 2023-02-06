@@ -68,9 +68,9 @@ def log_task_exceptions(func: Callable[..., Awaitable[None]]) -> Callable[..., A
         try:
             await func(*args, **kwargs)
         except Exception as e:
-            if SENTRY_DSN is None:
-                # Raise the exception so the user sees it on their logs.
-                # Since it is raised inside of a task it will not impact behavior.
-                raise e
-            await capture_exception(e)
+            if SENTRY_DSN is not None:
+                await capture_exception(e)
+            # Raise the exception so the user sees it on their logs.
+            # Since it is raised inside of a task it will not impact behavior.            
+            raise e
     return wrap
