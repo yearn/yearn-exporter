@@ -247,6 +247,9 @@ class GearboxWrapper(Wrapper):
     """
     def __init__(self, *args, **kwargs) -> None:
         super().__init__(*args, **kwargs)
+
+    def __hash__(self) -> int:
+        return hash(self.vault + self.wrapper)
     
     @async_cached_property
     async def account_factory(self) -> Contract:
