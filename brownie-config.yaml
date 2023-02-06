@@ -8,3 +8,4 @@ compiler:
     solc:
         use_latest_patch:
             - '0x514910771AF9Ca656af840dff83E8264EcF986CA'
+            - '0x4bBA9B6B49f3dFA6615f079E9d66B0AA68B04A4d'
