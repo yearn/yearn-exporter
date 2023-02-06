@@ -27,7 +27,6 @@ from yearn.networks import Network
 from yearn.partners.charts import make_partner_charts
 from yearn.partners.constants import OPEX_COST, get_tier
 from yearn.partners.delegated import DELEGATED_BALANCES
-from yearn.prices import magic
 from yearn.utils import contract, contract_creation_block, get_block_timestamp
 from yearn.v2.registry import Registry
 from yearn.v2.vaults import Vault
