@@ -24,7 +24,7 @@ PROVIDER_MAX_BATCH_SIZE = {
 CHAIN_MAX_BATCH_SIZE = {
     Network.Mainnet: 10_000,  # 1.58 days
     Network.Gnosis: 20_000,  # 1.15 days
-    Network.Fantom: 100_000,  # 1.03 days
+    Network.Fantom: 50_000,  # 0.5 days
     Network.Arbitrum: 20_000, # 0.34 days
     Network.Optimism: 800_000, # 10.02 days
 }
