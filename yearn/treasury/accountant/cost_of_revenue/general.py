@@ -1,4 +1,6 @@
 
+import logging
+
 from brownie import chain, convert
 from y.networks import Network
 
@@ -6,6 +8,8 @@ from yearn import constants
 from yearn.entities import TreasuryTx
 from yearn.partners.partners import partners
 from yearn.treasury.accountant.classes import Filter, HashMatcher, IterFilter
+
+logger = logging.getLogger(__name__)
 
 hashes = {
     Network.Mainnet: {
@@ -22,6 +26,7 @@ hashes = {
         'ymechs': [
             '0x1ab9ff3228cf25bf2a7c1eac596e836069f8c0adc46acd46d948eb77743fbb96',
             '0xe2a6bec23d0c73b35e969bc949072f8c1768767b06d57e5602b2b95eddf41a66',
+            ["0xeed864c87f01996ead5a8315cccd0b3f22f384ef3b4e272e4751065f909b4d3d", Filter('to_address.address', "0x966Fa7ACF1b6c732458e4d3264FD2393aec840bA")]
         ],
         'ykeeper': [
             '0x1ab9ff3228cf25bf2a7c1eac596e836069f8c0adc46acd46d948eb77743fbb96',
@@ -41,6 +46,8 @@ def is_partner_fees(tx: TreasuryTx) -> bool:
                 continue
             if any(tx.token.address.address == convert.to_address(wrapper.vault) for wrapper in partner.flat_wrappers):
                 return True
+            else:
+                logger.warn(f'look at {tx}, seems odd')
     
     # DEV figure out why these weren't captured by the above
     hashes = {
