@@ -15,6 +15,7 @@ import requests
 import sentry_sdk
 from brownie import Contract, chain, web3
 from brownie.exceptions import BrownieEnvironmentWarning
+from y.contracts import contract_creation_block
 from y.exceptions import PriceError
 from y.networks import Network
 
@@ -23,7 +24,7 @@ from yearn.apy import (Apy, ApyBlocks, ApyFees, ApyPoints, ApySamples,
 from yearn.exceptions import EmptyS3Export
 from yearn.graphite import send_metric
 from yearn.special import Backscratcher, YveCRVJar
-from yearn.utils import chunks, contract, contract_creation_block
+from yearn.utils import chunks, contract
 from yearn.v1.registry import Registry as RegistryV1
 from yearn.v1.vaults import VaultV1
 from yearn.v2.registry import Registry as RegistryV2

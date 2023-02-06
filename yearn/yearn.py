@@ -5,6 +5,7 @@ from time import time
 from typing import List
 
 from brownie import chain
+from y.contracts import contract_creation_block
 from y.networks import Network
 
 import yearn.iearn
@@ -18,7 +19,6 @@ from yearn.outputs.victoria.output_helper import (_flatten_dict,
                                                   _get_label_values, mapping)
 from yearn.outputs.victoria.victoria import _build_item
 from yearn.prices import constants
-from yearn.utils import contract_creation_block
 
 logger = logging.getLogger(__name__)
 

@@ -11,10 +11,11 @@ from joblib import Parallel, delayed
 from toolz import groupby
 from web3.middleware.filter import block_ranges
 from web3.types import LogReceipt, RPCEndpoint
+from y.contracts import contract_creation_block
 
 from yearn.middleware.middleware import BATCH_SIZE
 from yearn.typing import Address, Block, Topics
-from yearn.utils import contract, contract_creation_block
+from yearn.utils import contract
 
 logger = logging.getLogger(__name__)
 

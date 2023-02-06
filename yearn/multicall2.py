@@ -10,11 +10,12 @@ import requests
 from brownie import Contract, chain, web3
 from brownie.network.contract import _ContractMethod
 from eth_abi.exceptions import InsufficientDataBytes
+from y.contracts import contract_creation_block
 from y.networks import Network
 
 from yearn.exceptions import MulticallError
 from yearn.typing import Block
-from yearn.utils import contract, contract_creation_block
+from yearn.utils import contract
 
 JSONRPC_BATCH_MAX_SIZE = int(os.environ.get("JSONRPC_BATCH_MAX_SIZE", 10_000)) # Currently set arbitrarily, necessaary for certain node-as-a-service providers.
 MULTICALL_MAX_SIZE = int(os.environ.get("MULTICALL_MAX_SIZE", 500)) # Currently set arbitrarily
