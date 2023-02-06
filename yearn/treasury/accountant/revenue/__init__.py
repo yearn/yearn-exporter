@@ -3,7 +3,7 @@ from brownie import chain
 from y.networks import Network
 
 from yearn.treasury.accountant.classes import TopLevelTxGroup
-from yearn.treasury.accountant.revenue import farming, fees, keepcoins
+from yearn.treasury.accountant.revenue import farming, fees, keepcoins, seasolver, bribes
 
 REVENUE_LABEL = "Protocol Revenue"
 revenue_txgroup = TopLevelTxGroup(REVENUE_LABEL)
@@ -14,8 +14,14 @@ fees_txgroup.create_child("Vaults V2", fees.is_fees_v2)
 fees_txgroup.create_child("Vaults V3", fees.is_fees_v3)
 
 fees_txgroup.create_child("YearnFed Fees", fees.is_yearn_fed_fees)
+fees_txgroup.create_child("DOLAFRAXBP Fees", fees.is_dolafraxbp_fees)
 fees_txgroup.create_child("TempleDAO Private Vault Fees", fees.is_temple)
 
+revenue_txgroup.create_child("SeaSolver Positive Slippage", seasolver.is_seasolver_slippage_revenue)
+
+bribes_txgroup = revenue_txgroup.create_child("Bribes")
+bribes_txgroup.create_child("yCRV Bribes", check=bribes.is_ycrv_bribe)
+bribes_txgroup.create_child("yBribe Fees", check=bribes.is_ybribe_fees)
 
 keepcoins_txgroup = revenue_txgroup.create_child("keepCOINS")
 # keepCRV is not included here as all of the CRV from keepCRV are locked in yveCRV-DAO

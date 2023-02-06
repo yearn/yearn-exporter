@@ -9,7 +9,9 @@ from yearn.treasury.accountant.constants import treasury
 
 def is_pass_thru(tx: TreasuryTx) -> bool:
     pass_thru_hashes = {
-        Network.Mainnet: [],
+        Network.Mainnet: [
+            "0xf662c68817c56a64b801181a3175c8a7e7a5add45f8242990c695d418651e50d",
+        ],
         Network.Fantom: [
             "0x411d0aff42c3862d06a0b04b5ffd91f4593a9a8b2685d554fe1fbe5dc7e4fc04",
             "0xa347da365286cc912e4590fc71e97a5bcba9e258c98a301f85918826538aa021",
@@ -77,12 +79,7 @@ def is_curve_bribe(tx: TreasuryTx) -> bool:
     elif tx._from_nickname == "Contract: yBribe" and tx._to_nickname in ["Yearn Treasury","ySwap Multisig"]:
         return True
     
-    return tx in HashMatcher({
-        Network.Mainnet: [
-            # OTC Bribe from Inverse
-            "0xd009556756488add2987609bdd7ffd027b9c467bcfee41eff8619dbc6e8acab6",
-        ],
-    }.get(chain.id, []))
+    return False
     
 def is_buying_yvboost(tx: TreasuryTx) -> bool:
     """ Bought back yvBoost is unwrapped and sent back to holders. """
@@ -96,6 +93,13 @@ def is_buying_yvboost(tx: TreasuryTx) -> bool:
     elif tx._symbol == "3Crv" and tx.from_address.address == "0xd7240B32d24B814fE52946cD44d94a2e3532E63d" and tx.to_address and tx.to_address.address in treasury.addresses:
         return True
     
+    # SPELL bribe handling
+    elif tx._symbol == "SPELL":
+        if tx._to_nickname == "Abracadabra Treasury":
+            return True
+        elif tx._to_nickname == "Contract: BribeSplitter":
+            return True
+    
     hashes = [
         "0x9eabdf110efbfb44aab7a50eb4fe187f68deae7c8f28d78753c355029f2658d3",
         "0x5a80f5ff90fc6f4f4597290b2432adbb62ab4154ead68b515accdf19b01c1086",
@@ -104,6 +108,7 @@ def is_buying_yvboost(tx: TreasuryTx) -> bool:
         "0xd8aa1e5d093a89515530b7267a9fd216b97fddb6478b3027b2f5c1d53070cd5f",
         "0x169aab84b408fce76e0b776ebf412c796240300c5610f0263d5c09d0d3f1b062",
         "0xe6fefbf061f4489cd967cdff6aa8aca616f0c709e08c3696f12b0027e9e166c9",
+        "0x10be8a3345660f3c51b695e8716f758b1a91628bd612093784f0516a604f79c1",
     ]
 
     if tx in HashMatcher(hashes):
@@ -117,7 +122,6 @@ def is_yvboost_from_elsewhere(tx: TreasuryTx) -> bool:
         "0x17e2744e2959ba380f45383bcce11ec18e0a6bdd959d09cacdc7bb34008b14aa",
         ["0x40352e7166bf5196aa1160302cfcc157facf99731af0e11741b8729dd84e131c", Filter('log_index', 125)],
         "0xa025624820105a9f6914a13d5b50bd42e599b2093c8edb105321a43a86cfeb38",
-        "0x6dc184b139f9139e1957fd13c79b88bbc3d7aaa4d1763636c3243c6034318957",
     ]
     return tx in HashMatcher(hashes)
 
@@ -200,4 +204,19 @@ def is_ycrv(tx: TreasuryTx) -> bool:
                 owner, sell_token, buy_token, sell_amount, buy_amount, fee_amount, order_uid = trade.values()
                 print(owner, sell_token, buy_token)
                 return owner == tx.from_address.address and sell_token == tx.token.address.address and buy_token == ycrv and sell_amount / 10 ** 18 == tx.amount
+    else:
+        return is_dola_bribe(tx)
         
+def is_sent_to_dinoswap(tx: TreasuryTx) -> bool:
+    """ These tokens are dumpped and the proceeds sent back to the origin strategy. """
+    if chain.id == Network.Mainnet and tx._from_nickname == "Contract: Strategy" and tx._to_nickname == "yMechs Multisig":
+        return True
+
+def is_dola_bribe(tx: TreasuryTx) -> bool:
+    if tx._from_nickname == "ySwap Multisig" and tx._to_nickname == "Contract: GPv2Settlement" and tx._symbol == "DOLA":
+        return True
+
+def is_bal(tx: TreasuryTx) -> bool:
+    return tx._symbol == "BAL" and tx in HashMatcher([
+        "0xf4677cce1a08ecd54272cdc1b23bc64693450f8bb5d6de59b8e58e288ec3b2a7",
+    ])

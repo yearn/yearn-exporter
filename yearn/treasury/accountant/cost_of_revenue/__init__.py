@@ -15,6 +15,7 @@ gas_txgroup.create_child("TheGraph", HashMatcher(general.hashes.get('thegraph',[
 gas_txgroup.create_child("yChad", HashMatcher(general.hashes.get('ychad',[])).contains)
 gas_txgroup.create_child("yMechs", HashMatcher(general.hashes.get('ymechs',[])).contains)
 gas_txgroup.create_child("yKeeper", HashMatcher(general.hashes.get('ykeeper',[])).contains)
+gas_txgroup.create_child("Other Gas", gas.is_other_gas)
 multisig_txgroup = gas_txgroup.create_child("Multisig Reimbursement", gas.is_multisig_reimbursement)
 multisig_txgroup.create_child("ySwap Signers", HashMatcher(general.hashes.get('yswap',[])).contains)
 

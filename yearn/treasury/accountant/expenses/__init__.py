@@ -45,6 +45,7 @@ if chain.id == Network.Mainnet:
     grants.create_child("Frontend Support", people.is_frontend_support)
     grants.create_child("yGift Team Grant", people.is_ygift_grant)
     grants.create_child("yCRV Dev Grant", people.is_ycrv_grant)
+    grants.create_child("Docs Grant", people.is_docs_grant)
     grants.create_child("Other Grants", people.is_other_grant)
     grants.create_child("Automation", HashMatcher([['0xacc27a97d4014107d77e14ffafdc3e9517bc5c9213fc2ba723c6737ba6cae514', Filter('log_index', 121)]]).contains)
     grants.create_child("Creative Studio (req. 77)", HashMatcher([["0xe397d5682ef780b5371f8c80670e0cd94b4f945c7b432319b24f65c288995a17", Filter('log_index', 356)]]).contains)

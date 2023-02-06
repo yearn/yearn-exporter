@@ -59,12 +59,25 @@ def is_strategist_gas(tx: TreasuryTx) -> bool:
                 "0xd700344511719054e95d260f5494266cdd950825bf577160cf5acb02d87f5a63",
                 "0xb8c71e4491a692c8d293f13e37bf03aa8487ad5306f3db8fc4e83c406f8c0746",
                 "0x96be538314a6547063a5b81ded9bda38a067528d4bcfc558eee976a684e5b44a",
-                ["0xebfff9a2fd6103d73f417c675db2dc43742bdb6f496f04d3cfd1938046001d70", Filter("_symbol", "ETH")]
+                ["0xebfff9a2fd6103d73f417c675db2dc43742bdb6f496f04d3cfd1938046001d70", Filter("_symbol", "ETH")],
+                "0x269bcda1327da47fc0be53e044540f199ffb4c3f15146e0cb61348093b43b66e",
             ],
         }.get(chain.id, []))
+    return tx in HashMatcher({
+        Network.Mainnet: [
+            "0x420cfbc7856f64e8949d4dd6d4ce9570f8270def1380ebf381376fbcd0b0d5bf",
+        ],
+    }.get(chain.id, []))
 
 def is_multisig_reimbursement(tx: TreasuryTx) -> bool:
     if tx._symbol == "ETH":
         return tx in HashMatcher([
-            ["0x19bcb28cd113896fb06f17b2e5efa86bb8bf78c26e75c633d8f1a0e48b238a86", Filter('_from_nickname', 'Yearn yChad Multisig'),]
+            ["0x19bcb28cd113896fb06f17b2e5efa86bb8bf78c26e75c633d8f1a0e48b238a86", Filter('_from_nickname', 'Yearn yChad Multisig')]
+        ])
+
+def is_other_gas(tx: TreasuryTx) -> bool:
+    if tx._symbol == "ETH":
+        return tx in HashMatcher([
+            # Reimbursement for testing
+            ["0x57bc99f6007989606bdd9d1adf91c99d198de51f61d29689ee13ccf440b244df", Filter('to_address.address', '0xB1d693B77232D88a3C9467eD5619FfE79E80BCCc')]
         ])
