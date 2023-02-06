@@ -36,6 +36,10 @@ x-envs: &envs
   - MAX_RETRIES
   - MIN_SLEEP_TIME
   - MAX_SLEEP_TIME
+  # ypriceapi (optional)
+  - YPRICEAPI_URL
+  - YPRICEAPI_USER
+  - YPRICEAPI_PASS
   # ypricemagic (optional)
   - DOP
   - YPRICEMAGIC_RECURSION_LOGGER_LEVEL

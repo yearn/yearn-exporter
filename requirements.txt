@@ -23,7 +23,7 @@ dank_mids>=4.20.24
 eth_retry>=0.1.15
 eth-hash[pysha3]
 python-telegram-bot==13.15
-ypricemagic>=1.10.14
+ypricemagic>=1.10.23
 # The following addition is unused but somehow fixes a dep conflict by being placed here.
 eth-hash[pycryptodome]==0.3.2
 git+https://www.github.com/BobTheBuidler/eth-portfolio@d67545c1ab179ab7c2ce2127b812646236e8c4e8
