@@ -12,11 +12,11 @@ from brownie.convert.datatypes import HexString
 from brownie.network.contract import _fetch_from_explorer, _resolve_address
 from dank_mids.brownie_patch import patch_contract
 from eth_portfolio.constants import sync_threads
+from y.networks import Network
 from y.utils.dank_mids import dank_w3
 
 from yearn.cache import memory
 from yearn.exceptions import ArchiveNodeRequired, NodeNotSynced
-from yearn.networks import Network
 from yearn.typing import AddressOrContract
 
 logger = logging.getLogger(__name__)

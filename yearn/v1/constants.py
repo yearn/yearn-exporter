@@ -1,8 +1,6 @@
 
 from brownie import chain
-
-from yearn.networks import Network
-
+from y.networks import Network
 
 VAULT_ALIASES = {
     Network.Mainnet: {

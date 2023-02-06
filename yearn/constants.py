@@ -1,6 +1,5 @@
 from brownie import chain, convert
-
-from yearn.networks import Network
+from y.networks import Network
 
 YFI = {
     Network.Mainnet: "0x0bc529c00C6401aEF6D220BE8C6Ea1667F6Ad93e",

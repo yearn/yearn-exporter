@@ -1,6 +1,6 @@
+import json
 import logging
 import math
-import json
 from collections import defaultdict
 from functools import cached_property
 from itertools import cycle
@@ -8,10 +8,11 @@ from typing import Any, Dict, List, Optional, Tuple, Union
 
 from brownie import Contract, chain, convert
 from eth_abi.packed import encode_abi_packed
+from y.networks import Network
+
 from yearn.events import decode_logs, get_logs_asap
 from yearn.exceptions import UnsupportedNetwork
 from yearn.multicall2 import fetch_multicall
-from yearn.networks import Network
 from yearn.prices.constants import usdc, weth
 from yearn.typing import Address, Block
 from yearn.utils import Singleton, contract, contract_creation_block

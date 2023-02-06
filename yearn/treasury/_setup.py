@@ -1,6 +1,6 @@
 from brownie import chain
 from eth_portfolio._shitcoins import SHITCOINS
-from yearn.networks import Network
+from y.networks import Network
 
 # The below tokens mess up our scripts, mean nothing for analytical purposes, and can be skipped by eth_portfolio
 skip_tokens = {

@@ -10,9 +10,9 @@ import requests
 from brownie import Contract, chain, web3
 from brownie.network.contract import _ContractMethod
 from eth_abi.exceptions import InsufficientDataBytes
+from y.networks import Network
 
 from yearn.exceptions import MulticallError
-from yearn.networks import Network
 from yearn.typing import Block
 from yearn.utils import contract, contract_creation_block
 

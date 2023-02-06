@@ -2,11 +2,11 @@ import asyncio
 from collections import defaultdict
 
 from brownie import chain
+from y.networks import Network
 from y.prices import magic
 
 from yearn.exceptions import UnsupportedNetwork
 from yearn.multicall2 import fetch_multicall_async, multicall_matrix_async
-from yearn.networks import Network
 from yearn.utils import contract, contract_creation_block, run_in_thread
 
 IEARN = {

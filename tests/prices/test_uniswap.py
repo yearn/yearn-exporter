@@ -1,7 +1,8 @@
 import pytest
 from brownie import chain
+from y.networks import Network
+
 from tests.fixtures.decorators import mainnet_only, uni_v3_chains_only
-from yearn.networks import Network
 from yearn.prices import magic
 from yearn.prices.uniswap import v1, v2, v3
 

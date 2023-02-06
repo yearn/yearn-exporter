@@ -1,9 +1,9 @@
 
-from typing import Optional
 from brownie import chain
-from yearn.entities import TreasuryTx, TxGroup
+from y.networks import Network
+
+from yearn.entities import TreasuryTx
 from yearn.multicall2 import fetch_multicall
-from yearn.networks import Network
 from yearn.treasury.accountant.constants import treasury, v1, v2
 from yearn.utils import contract
 

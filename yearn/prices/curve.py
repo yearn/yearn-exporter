@@ -24,14 +24,14 @@ from brownie import ZERO_ADDRESS, Contract, chain, convert, interface
 from brownie.convert import to_address
 from brownie.convert.datatypes import EthAddress
 from cachetools.func import lru_cache, ttl_cache
+from y.exceptions import PriceError
+from y.networks import Network
 from y.prices import magic
 
 from yearn.decorators import sentry_catch_all, wait_or_exit_after
 from yearn.events import create_filter, decode_logs
-from y.exceptions import PriceError
 from yearn.exceptions import UnsupportedNetwork
 from yearn.multicall2 import fetch_multicall, fetch_multicall_async
-from yearn.networks import Network
 from yearn.typing import Address, AddressOrContract, Block
 from yearn.utils import Singleton, contract
 

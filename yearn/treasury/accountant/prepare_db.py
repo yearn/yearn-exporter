@@ -2,9 +2,10 @@ from brownie import ZERO_ADDRESS, chain
 from brownie.exceptions import CompilerError
 from pony.orm import db_session, select
 from tqdm import tqdm
+from y.networks import Network
+
 from yearn import constants
 from yearn.entities import Address, db
-from yearn.networks import Network
 from yearn.outputs.postgres.utils import cache_address
 from yearn.partners.partners import partners
 from yearn.treasury.accountant.constants import BRIDGE_ASSISTOOOR, DISPERSE_APP

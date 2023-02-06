@@ -1,6 +1,7 @@
 
 from brownie import chain
-from yearn.networks import Network
+from y.networks import Network
+
 from yearn.treasury.accountant.classes import TopLevelTxGroup
 from yearn.treasury.accountant.revenue import farming, fees, keepcoins
 

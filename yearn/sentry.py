@@ -11,8 +11,7 @@ from sentry_sdk import Hub
 from sentry_sdk import capture_exception as _capture_exception
 from sentry_sdk import capture_message, init, set_tag, utils
 from sentry_sdk.integrations.threading import ThreadingIntegration
-
-from yearn.networks import Network
+from y.networks import Network
 
 SENTRY_DSN = os.getenv('SENTRY_DSN')
 

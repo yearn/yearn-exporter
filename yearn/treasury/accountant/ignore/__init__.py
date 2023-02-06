@@ -2,8 +2,9 @@
 from decimal import Decimal
 
 from brownie import chain
+from y.networks import Network
+
 from yearn.entities import TreasuryTx
-from yearn.networks import Network
 from yearn.treasury.accountant.classes import HashMatcher, TopLevelTxGroup
 from yearn.treasury.accountant.ignore import (general, maker, passthru,
                                               rescue_missions, staking, vaults,

@@ -1,7 +1,9 @@
 
 from brownie import chain
-from yearn.networks import Network
-from yearn.treasury.accountant.classes import Filter, HashMatcher, TopLevelTxGroup
+from y.networks import Network
+
+from yearn.treasury.accountant.classes import (Filter, HashMatcher,
+                                               TopLevelTxGroup)
 from yearn.treasury.accountant.expenses import (general, infrastructure,
                                                 people, security)
 

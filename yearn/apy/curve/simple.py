@@ -6,12 +6,13 @@ from time import time
 
 from brownie import ZERO_ADDRESS, chain, interface, Contract
 from semantic_version import Version
+from y.networks import Network
 from y.prices import magic
+
 from yearn.apy.common import (SECONDS_PER_YEAR, Apy, ApyError, ApyFees,
                               ApySamples, SharePricePoint, calculate_roi)
 from yearn.apy.curve.rewards import rewards
 from yearn.debug import Debug
-from yearn.networks import Network
 from yearn.prices.curve import curve
 from yearn.utils import contract, get_block_timestamp
 from yearn.debug import Debug

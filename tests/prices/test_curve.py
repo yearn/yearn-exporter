@@ -7,12 +7,12 @@ import requests
 from brownie import ZERO_ADDRESS, chain, multicall, web3
 from tabulate import tabulate
 from y.exceptions import PriceError
+from y.networks import Network
 from y.prices.magic import get_price
-from yearn.networks import Network
+
 # This import fixes a circular import issue with the curve import below.
 # TODO Resolve circular import issue
-from yearn.prices import magic
-from yearn.prices import curve
+from yearn.prices import curve, magic
 from yearn.utils import contract, contract_creation_block
 
 if chain.id == Network.Mainnet:

@@ -1,12 +1,13 @@
-from typing import Any, Literal, Optional, List
+from typing import Any, List, Literal, Optional
+
 from brownie import chain
 from cachetools.func import ttl_cache
+from y.networks import Network
 from y.prices import magic
 
 from yearn.cache import memory
 from yearn.exceptions import UnsupportedNetwork
 from yearn.multicall2 import fetch_multicall
-from yearn.networks import Network
 from yearn.typing import Address, Block
 from yearn.utils import Singleton, contract
 
