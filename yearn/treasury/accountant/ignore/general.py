@@ -125,7 +125,7 @@ def is_weth(tx: TreasuryTx) -> bool:
         return True
 
 def is_stream_replenishment(tx: TreasuryTx) -> bool:
-    return tx._to_nickname == "Contract: LlamaPay"
+    return tx._to_nickname in  ["Contract: LlamaPay", "Vesting Escrow Factory"]
 
 def is_scam_airdrop(tx: TreasuryTx) -> bool:
     hashes = {

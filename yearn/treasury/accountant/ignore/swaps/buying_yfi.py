@@ -46,6 +46,7 @@ def is_buying_with_buyer(tx: TreasuryTx) -> bool:
                     "0xced6de44e15b827b39cc365de3b319a30d0d23dd8d10e2d9860948d4038e178c",
                     "0xa8832faf0146d7ccaac7558b86042aa79cb6fdebd6d8988ec6f5c7533066ded9",
                     "0x25364b36e6dbb74db53d5aef7dfdad3c879da19743456260e8a89a3e8ad3d9ae",
+                    "0xdbcee8ca9beba7ec800b0b2f289358bf42fd0c1e2ea5d7650de74a5127813247",
                 ]):
                     return True
                 raise ValueError(f'from node: {amount_from_chain} from db: {amount_from_db} diff: {amount_from_chain - amount_from_db}')

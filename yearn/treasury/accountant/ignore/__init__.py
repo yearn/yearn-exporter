@@ -10,9 +10,10 @@ from yearn.treasury.accountant.ignore import (general, maker, passthru,
                                               rescue_missions, staking, vaults,
                                               ygov)
 from yearn.treasury.accountant.ignore.swaps import (aave, buying_yfi, compound,
-                                                    cowswap, curve, robovault,
-                                                    synthetix, uniswap,
-                                                    unwrapper, yla)
+                                                    cowswap, curve, otc,
+                                                    robovault, synthetix,
+                                                    uniswap, unwrapper, woofy,
+                                                    ycrv, yla)
 from yearn.utils import contract
 
 IGNORE_LABEL = "Ignore"
@@ -150,6 +151,7 @@ if chain.id == Network.Mainnet:
     ignore_txgroup.create_child("Transfer to yGov (Deprecated)", ygov.is_sent_to_ygov)
     ignore_txgroup.create_child("Maker CDP Deposit", maker.is_yfi_cdp_deposit)
     ignore_txgroup.create_child("Maker CDP Withdrawal", maker.is_yfi_cdp_withdrawal)
+    ignore_txgroup.create_child("Minting DAI", maker.is_dai)
     ignore_txgroup.create_child("Replenish Streams", general.is_stream_replenishment)
 elif chain.id == Network.Fantom:
     ignore_txgroup.create_child("OTCTrader", general.is_otc_trader)
@@ -163,9 +165,16 @@ if chain.id == Network.Mainnet:
     passthru_txgroup.create_child("Cowswap Migration", passthru.is_cowswap_migration)
     passthru_txgroup.create_child("Single Sided IB", passthru.is_single_sided_ib)
     passthru_txgroup.create_child("StrategyConvex3CrvRewardsClonable", passthru.is_cvx)
+    passthru_txgroup.create_child("StrategyIdle", passthru.is_idle)
     passthru_txgroup.create_child("stkAAVE", passthru.is_stkaave)
+    passthru_txgroup.create_child("rKP3R", passthru.is_rkp3r)
+    passthru_txgroup.create_child("SGT", passthru.is_stg)
     passthru_txgroup.create_child("yvBoost INCOMPLETE", passthru.is_buying_yvboost)
     passthru_txgroup.create_child("yvBoost from elsewhere INCOMPLETE", passthru.is_yvboost_from_elsewhere)
+    passthru_txgroup.create_child("Convex Strats", passthru.is_convex_strat)
+    passthru_txgroup.create_child("StrategyAuraUSDClonable", passthru.is_aura)
+    passthru_txgroup.create_child("Bribes for yCRV", passthru.is_ycrv)
+
 elif chain.id == Network.Fantom:
     passthru_txgroup.create_child("IB", passthru.is_ib)
     passthru_txgroup.create_child("yvUSDC STABEET", passthru.is_usdc_stabeet)
@@ -195,11 +204,14 @@ swaps_txgroup.create_child("Aave Deposit", aave.is_aave_deposit)
 swaps_txgroup.create_child("Aave Withdrawal", aave.is_aave_withdrawal)
 
 swaps_txgroup.create_child("Synthetix Swap", synthetix.is_synthetix_swap)
+swaps_txgroup.create_child("WOOFY", woofy.is_woofy)
+swaps_txgroup.create_child("OTC", otc.is_otc)
 
 if chain.id == Network.Mainnet:
     swaps_txgroup.create_child("ySwaps Swap", cowswap.is_cowswap_swap)
     swaps_txgroup.create_child("YLA", yla.is_yla_withdrawal)
     swaps_txgroup.create_child("Unwrapper", unwrapper.is_unwrapper)
+    swaps_txgroup.create_child("yCRV", ycrv.is_minting_ycrv)
 elif chain.id == Network.Fantom:
     swaps_txgroup.create_child("Reaper Vault Withdrawl", robovault.is_reaper_withdrawal)
 
