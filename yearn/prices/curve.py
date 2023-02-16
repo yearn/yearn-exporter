@@ -15,6 +15,7 @@ Metapool Factory (id 3)
 import logging
 import threading
 import time
+from y.constants import EEE_ADDRESS
 from collections import defaultdict
 from enum import IntEnum
 from typing import Dict, List, Optional
@@ -449,8 +450,12 @@ class CurveRegistry(metaclass=Singleton):
         except:
             return None
         
-        token_out = contract(coins[token_out_ix])
-        amount_out = dy / 10 ** token_out.decimals()
+        if coins[token_out_ix] == EEE_ADDRESS:
+            token_out = EEE_ADDRESS
+            amount_out = dy / 10 ** 18
+        else:
+            token_out = contract(coins[token_out_ix])
+            amount_out = dy / 10 ** token_out.decimals()
         try:
             return amount_out * magic.get_price(token_out, block = block)
         except PriceError:
