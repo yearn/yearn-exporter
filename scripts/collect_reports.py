@@ -313,6 +313,8 @@ def handle_event(event, multi_harvest):
     r.want_price_at_block = 0
     if r.want_token == "0x447Ddd4960d9fdBF6af9a790560d0AF76795CB08":
         r.want_price_at_block = magic.get_price(constants.weth, r.block) * get_contract(get_contract(r.want_token).coins(0)).getExchangeRate() / 1e18
+    elif r.want_token == "0x836A808d4828586A69364065A1e064609F5078c7":
+        r.want_price_at_block = magic.get_price(constants.weth, r.block)
     else:
         r.want_price_at_block = magic.get_price(r.want_token, r.block)
     
