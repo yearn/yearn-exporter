@@ -6,6 +6,7 @@ from brownie import chain
 from eth_portfolio.buckets import get_token_bucket
 from pandas import DataFrame
 from y.networks import Network
+from y.time import closest_block_after_timestamp
 
 from yearn.helpers.exporter import Exporter
 from yearn.outputs.victoria.victoria import _build_item, _post
@@ -13,6 +14,16 @@ from yearn.partners.partners import partners
 from yearn.treasury.treasury import _get_symbol
 
 sentry_sdk.set_tag('script','partners_exporter')
+
+if Network(chain.id) == Network.Fantom:
+    # 2021-10-26 block time of earliest block with partner_tx for Fantom network
+    start = 1635263041
+elif Network(chain.id) == Network.Mainnet:
+    # 2021-01-19 time of earliest block with partner_tx for Ethereum network
+    start = 1611017667
+else:
+    raise NotImplementedError()
+
 
 async def export_partners(block, ts):
     # collect payout data
@@ -61,11 +72,12 @@ async def export_partners(block, ts):
     return metrics_to_export
 
 def main():
-    # This is forward-only
-    Exporter(
+    exporter = Exporter(
         name = 'partners',
         data_query = 'partners{network="' + Network.label() + '"}',
         data_fn = export_partners,
         export_fn = _post,
-        start_block = chain.height
-    ).run("forward")
+        start_block = closest_block_after_timestamp(start) - 1
+    )
+    
+    exporter.run()
