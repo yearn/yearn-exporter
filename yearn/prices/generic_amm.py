@@ -6,7 +6,6 @@ from brownie.convert.datatypes import EthAddress
 from yearn.exceptions import PriceError
 
 from yearn.multicall2 import fetch_multicall
-from yearn.prices import magic
 from yearn.typing import Address, Block
 from yearn.utils import contract
 
@@ -44,6 +43,7 @@ class GenericAmm:
         prices = []
         for token in tokens:
             try:
+                from yearn.prices import magic
                 prices.append(magic.get_price(token, block = block))
             except PriceError:
                 prices.append(None)

@@ -4,7 +4,6 @@ from cachetools.func import ttl_cache
 
 from yearn.cache import memory
 from yearn.multicall2 import fetch_multicall
-from yearn.prices import magic
 from yearn.utils import contract, Singleton
 from yearn.networks import Network
 from yearn.typing import Address, Block
@@ -40,6 +39,7 @@ class BalancerV2(metaclass=Singleton):
 
     @ttl_cache(ttl=600)
     def get_price(self, token: Address, block: Optional[Block] = None) -> float:
+        from yearn.prices import magic
         pool = contract(token)
         pool_id = pool.getPoolId()
         vault = contract(pool.getVault())

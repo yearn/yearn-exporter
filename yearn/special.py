@@ -9,7 +9,6 @@ from brownie import chain
 from yearn.apy.common import Apy, ApyBlocks, ApyFees, ApyPoints, ApySamples
 from yearn.common import Tvl
 from yearn.exceptions import PriceError
-from yearn.prices import magic
 from yearn.prices.curve import curve
 from yearn.utils import Singleton, contract, contract_creation_block
 
@@ -58,6 +57,7 @@ class Backscratcher(metaclass = Singleton):
         self.proxy = contract("0xF147b8125d2ef93FB6965Db97D6746952a133934")
 
     def describe(self, block=None):
+        from yearn.prices import magic
         crv_locked = curve.voting_escrow.balanceOf["address"](self.proxy, block_identifier=block) / 1e18
         crv_price = magic.get_price(curve.crv, block=block)
         return {
@@ -67,6 +67,7 @@ class Backscratcher(metaclass = Singleton):
         }
 
     def total_value_at(self, block=None):
+        from yearn.prices import magic
         crv_locked = curve.voting_escrow.balanceOf["address"](self.proxy, block_identifier=block) / 1e18
         crv_price = magic.get_price(curve.crv, block=block)
         return crv_locked * crv_price
@@ -76,6 +77,7 @@ class Backscratcher(metaclass = Singleton):
         return []
 
     def apy(self, _: ApySamples) -> Apy:
+        from yearn.prices import magic
         curve_3_pool = contract("0xbEbc44782C7dB0a1A60Cb6fe97d0b483032FF1C7")
         curve_reward_distribution = contract("0xA464e6DCda8AC41e03616F95f4BC98a13b8922Dc")
         curve_voting_escrow = contract("0x5f3b5DfEb7B28CDbD7FAba78963EE202a494e2A2")
@@ -106,6 +108,7 @@ class Backscratcher(metaclass = Singleton):
     def tvl(self, block=None) -> Tvl:
         total_assets = self.vault.totalSupply(block_identifier=block)
         try:
+            from yearn.prices import magic
             price = magic.get_price(self.token, block=block)
         except PriceError:
             price = None
@@ -122,6 +125,7 @@ class Ygov(metaclass = Singleton):
         self.token = contract("0x0bc529c00C6401aEF6D220BE8C6Ea1667F6Ad93e")
 
     def describe(self, block=None):
+        from yearn.prices import magic
         yfi_locked = self.token.balanceOf(self.vault, block_identifier=block) / 1e18
         yfi_price = magic.get_price(str(self.token), block=block)
         return {
@@ -131,6 +135,7 @@ class Ygov(metaclass = Singleton):
         }
 
     def total_value_at(self, block=None):
+        from yearn.prices import magic
         yfi_locked = self.token.balanceOf(self.vault, block_identifier=block) / 1e18
         yfi_price = magic.get_price(str(self.token), block=block)
         return yfi_locked * yfi_price

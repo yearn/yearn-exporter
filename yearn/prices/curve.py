@@ -12,6 +12,7 @@ Metapool Factory (id 3)
     v1 = 0x0959158b6040D32d04c301A72CBFD6b39E21c9AE
     v2 = 0xB9fC157394Af804a3578134A6585C0dc9cc990d4
 """
+import os
 import logging
 import threading
 import time
@@ -30,7 +31,6 @@ from yearn.events import create_filter, decode_logs
 from yearn.exceptions import PriceError, UnsupportedNetwork
 from yearn.multicall2 import fetch_multicall
 from yearn.networks import Network
-from yearn.prices import magic
 from yearn.typing import Address, AddressOrContract, Block
 from yearn.utils import Singleton, contract
 
@@ -114,7 +114,11 @@ class CurveRegistry(metaclass=Singleton):
         self._done = threading.Event()
         self._thread = threading.Thread(target=self.watch_events, daemon=True)
         self._has_exception = False
-        self._thread.start()
+        if not os.getenv('DISABLE_CURVE', False): 
+            self._thread.start()
+        else:
+            self._done.set()
+            logger.warn('Curve exporter disabled')
 
     @sentry_catch_all
     def watch_events(self) -> None:
@@ -384,6 +388,7 @@ class CurveRegistry(metaclass=Singleton):
         pool = to_address(pool)
         balances = self.get_balances(pool, block=block)
 
+        from yearn.prices import magic
         return sum(
             amount * magic.get_price(coin, block=block)
             for coin, amount in balances.items()
@@ -457,6 +462,7 @@ class CurveRegistry(metaclass=Singleton):
             token_out = contract(coins[token_out_ix])
             amount_out = dy / 10 ** token_out.decimals()
         try:
+            from yearn.prices import magic
             return amount_out * magic.get_price(token_out, block = block)
         except PriceError:
             return None
@@ -512,6 +518,7 @@ class CurveRegistry(metaclass=Singleton):
         }
 
     def calculate_apy(self, gauge: Contract, lp_token: AddressOrContract, block: Optional[Block] = None) -> Dict[str,float]:
+        from yearn.prices import magic
         crv_price = magic.get_price(self.crv)
         pool = contract(self.get_pool(lp_token))
         results = fetch_multicall(
