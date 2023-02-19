@@ -2,10 +2,9 @@ from datetime import datetime, timedelta
 from dataclasses import dataclass
 from typing import Dict, Optional
 
-from brownie import web3, Contract
+from brownie import web3
 
 from yearn.utils import closest_block_after_timestamp
-from yearn.typing import Address
 from semantic_version.base import Version
 
 
@@ -63,16 +62,6 @@ class ApyError(ValueError):
     message: str
 
 
-@dataclass
-class Gauge:
-    lp_token: Address
-    pool: Contract
-    gauge: Contract
-    gauge_weight: int
-    gauge_inflation_rate: int
-    gauge_working_supply: int
-
-
 def calculate_roi(after: SharePricePoint, before: SharePricePoint) -> float:
     # calculate our average blocks per day in the past week
     now = web3.eth.block_number
@@ -96,12 +85,3 @@ def get_samples(now_time: Optional[datetime] = None) -> ApySamples:
     week_ago = closest_block_after_timestamp((now_time - timedelta(days=7)).timestamp(), True)
     month_ago = closest_block_after_timestamp((now_time - timedelta(days=31)).timestamp(), True)
     return ApySamples(now, week_ago, month_ago)
-
-def calculate_gauge_base_apr(gauge: Gauge, per_max_boost, reward_price, pool_price_per_share, pool_token_price) -> float:
-    return (
-        gauge.gauge_inflation_rate
-        * gauge.gauge_weight
-        * (SECONDS_PER_YEAR / gauge.gauge_working_supply)
-        * (per_max_boost / pool_price_per_share)
-        * reward_price
-    ) / pool_token_price

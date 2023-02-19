@@ -7,7 +7,8 @@ from time import time
 from brownie import ZERO_ADDRESS, chain, interface
 from semantic_version import Version
 from yearn.apy.common import (SECONDS_PER_YEAR, Apy, ApyError, ApyFees,
-                              ApySamples, Gauge, SharePricePoint, calculate_gauge_base_apr, calculate_roi)
+                              ApySamples, SharePricePoint, calculate_roi)
+from yearn.apy.gauge import Gauge
 from yearn.apy.curve.rewards import rewards
 from yearn.networks import Network
 from yearn.prices import magic
@@ -90,7 +91,7 @@ def calculate_simple(vault, gauge: Gauge, samples: ApySamples) -> Apy:
     y_working_balance = gauge.gauge.working_balances(yearn_voter, block_identifier=block)
     y_gauge_balance = gauge.gauge.balanceOf(yearn_voter, block_identifier=block)
 
-    base_apr = calculate_gauge_base_apr(gauge, PER_MAX_BOOST, crv_price, pool_price, base_asset_price)
+    base_apr = gauge.calculate_base_apr(PER_MAX_BOOST, crv_price, pool_price, base_asset_price)
 
     if y_gauge_balance > 0:
         y_boost = y_working_balance / (PER_MAX_BOOST * y_gauge_balance) or 1
