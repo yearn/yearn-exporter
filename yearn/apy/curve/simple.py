@@ -7,7 +7,7 @@ from time import time
 from brownie import ZERO_ADDRESS, chain, interface
 from semantic_version import Version
 from yearn.apy.common import (SECONDS_PER_YEAR, Apy, ApyError, ApyFees,
-                              ApySamples, SharePricePoint, calculate_roi)
+                              ApySamples, SharePricePoint, calculate_roi, get_reward_token_price)
 from yearn.apy.gauge import Gauge
 from yearn.apy.curve.rewards import rewards
 from yearn.networks import Network
@@ -87,16 +87,9 @@ def calculate_simple(vault, gauge: Gauge, samples: ApySamples) -> Apy:
 
     crv_price = magic.get_price(curve.crv, block=block)
 
-    yearn_voter = addresses[chain.id]['yearn_voter_proxy']
-    y_working_balance = gauge.gauge.working_balances(yearn_voter, block_identifier=block)
-    y_gauge_balance = gauge.gauge.balanceOf(yearn_voter, block_identifier=block)
+    base_apr = gauge.calculate_base_apr(MAX_BOOST, crv_price, pool_price, base_asset_price)
 
-    base_apr = gauge.calculate_base_apr(PER_MAX_BOOST, crv_price, pool_price, base_asset_price)
-
-    if y_gauge_balance > 0:
-        y_boost = y_working_balance / (PER_MAX_BOOST * y_gauge_balance) or 1
-    else:
-        y_boost = MAX_BOOST
+    y_boost = gauge.calculate_boost(MAX_BOOST, addresses[chain.id]['yearn_voter_proxy'], block)
 
     # FIXME: The HBTC v1 vault is currently still earning yield, but it is no longer boosted.
     if vault and vault.vault.address == "0x46AFc2dfBd1ea0c0760CAD8262A5838e803A37e5":
@@ -108,31 +101,13 @@ def calculate_simple(vault, gauge: Gauge, samples: ApySamples) -> Apy:
         y_boost = 2.5
         crv_debt_ratio = 1
 
-    # TODO: come up with cleaner way to deal with these new gauge rewards
-    reward_apr = 0
-    if hasattr(gauge.gauge, "reward_contract"):
-        reward_address = gauge.gauge.reward_contract()
-        if reward_address != ZERO_ADDRESS:
-            reward_apr = rewards(reward_address, pool_price, base_asset_price, block=block)
-    elif hasattr(gauge.gauge, "reward_data"): # this is how new gauges, starting with MIM, show rewards
-        # get our token
-        # TODO: consider adding for loop with [gauge.reward_tokens(i) for i in range(gauge.reward_count())] for multiple rewards tokens
-        gauge_reward_token = gauge.gauge.reward_tokens(0)
-        if gauge_reward_token in [ZERO_ADDRESS]:
-            logger.warn(f"no reward token for gauge {str(gauge.gauge)}")
-        else:
-            reward_data = gauge.gauge.reward_data(gauge_reward_token)
-            rate = reward_data['rate']
-            period_finish = reward_data['period_finish']
-            total_supply = gauge.gauge.totalSupply()
-            token_price = _get_reward_token_price(gauge_reward_token)
-            current_time = time() if block is None else get_block_timestamp(block)
-            if period_finish < current_time:
-                reward_apr = 0
-            else:
-                reward_apr = (SECONDS_PER_YEAR * (rate / 1e18) * token_price) / ((pool_price / 1e18) * (total_supply / 1e18) * base_asset_price)
-    else:
-        reward_apr = 0
+    reward_apr = gauge.calculate_rewards_apr(
+        pool_price,
+        base_asset_price,
+        addresses[chain.id]['kp3r'],
+        addresses[chain.id]['rkp3r_rewards'],
+        block
+    )
 
     price_per_share = gauge.pool.get_virtual_price
     now_price = price_per_share(block_identifier=samples.now)
@@ -387,7 +362,12 @@ class _ConvexVault:
                 # do this for all assets, which will duplicate much of the curve info but we don't want to miss anything
             if virtual_rewards_pool.periodFinish() > current_time:
                 reward_token = virtual_rewards_pool.rewardToken()
-                reward_token_price = _get_reward_token_price(reward_token, block)
+                reward_token_price = get_reward_token_price(
+                    reward_token,
+                    addresses[chain.id]['kp3r'],
+                    addresses[chain.id]['rkp3r_rewards'],
+                    block
+                )
 
                 reward_apr = (virtual_rewards_pool.rewardRate() * SECONDS_PER_YEAR * reward_token_price) / (base_asset_price * (pool_price / 1e18) * virtual_rewards_pool.totalSupply())
                 convex_reward_apr += reward_apr
@@ -406,15 +386,3 @@ class _ConvexVault:
     def _debt_ratio(self) -> float:
         """The debt ratio of the Convex strategy."""
         return self.vault.vault.strategies(self._cvx_strategy)[2] / 1e4
-
-
-def _get_reward_token_price(reward_token, block=None):
-    # if the reward token is rKP3R we need to calculate it's price in 
-    # terms of KP3R after the discount
-    contract_addresses = addresses[chain.id]
-    if reward_token == contract_addresses['rkp3r_rewards']:
-        rKP3R_contract = interface.rKP3R(reward_token)
-        discount = rKP3R_contract.discount(block_identifier=block)
-        return magic.get_price(contract_addresses['kp3r'], block=block) * (100 - discount) / 100
-    else:
-        return magic.get_price(reward_token, block=block)

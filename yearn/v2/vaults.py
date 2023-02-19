@@ -268,6 +268,4 @@ class Vault:
         if chain.id in exclusions:
             needs_simple = self.vault.address not in exclusions[chain.id]
 
-        # print(balancer_selector.get_balancer_for_pool(self.token.address))
-
         return needs_simple and balancer_selector.get_balancer_for_pool(self.token.address)

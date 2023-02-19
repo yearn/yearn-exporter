@@ -2,10 +2,9 @@ from datetime import datetime, timedelta
 from dataclasses import dataclass
 from typing import Dict, Optional
 
-from brownie import web3
+from brownie import interface, web3
 
 from yearn.utils import closest_block_after_timestamp
-from semantic_version.base import Version
 
 
 SECONDS_PER_YEAR = 31_556_952.0
@@ -85,3 +84,14 @@ def get_samples(now_time: Optional[datetime] = None) -> ApySamples:
     week_ago = closest_block_after_timestamp((now_time - timedelta(days=7)).timestamp(), True)
     month_ago = closest_block_after_timestamp((now_time - timedelta(days=31)).timestamp(), True)
     return ApySamples(now, week_ago, month_ago)
+
+def get_reward_token_price(self, reward_token, kp3r=None, rkp3r=None, block=None):
+    from yearn.prices import magic
+    # if the reward token is rKP3R we need to calculate it's price in 
+    # terms of KP3R after the discount
+    if reward_token == rkp3r:
+        rKP3R_contract = interface.rKP3R(reward_token)
+        discount = rKP3R_contract.discount(block_identifier=block)
+        return magic.get_price(kp3r, block=block) * (100 - discount) / 100
+    else:
+        return magic.get_price(reward_token, block=block)
