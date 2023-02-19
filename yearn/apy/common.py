@@ -2,9 +2,10 @@ from datetime import datetime, timedelta
 from dataclasses import dataclass
 from typing import Dict, Optional
 
-from brownie import web3
+from brownie import web3, Contract
 
 from yearn.utils import closest_block_after_timestamp
+from yearn.typing import Address
 from semantic_version.base import Version
 
 
@@ -60,6 +61,16 @@ class ApySamples:
 class ApyError(ValueError):
     type: str
     message: str
+
+
+@dataclass
+class Gauge:
+    lp_token: Address
+    pool: Contract
+    gauge: Contract
+    gauge_weight: int
+    gauge_inflation_rate: int
+    gauge_working_supply: int
 
 
 def calculate_roi(after: SharePricePoint, before: SharePricePoint) -> float:

@@ -4,17 +4,16 @@ import os
 from pprint import pformat
 from time import time
 
-from brownie import ZERO_ADDRESS, chain, interface, Contract
+from brownie import ZERO_ADDRESS, chain, interface
 from semantic_version import Version
 from yearn.apy.common import (SECONDS_PER_YEAR, Apy, ApyError, ApyFees,
-                              ApySamples, SharePricePoint, calculate_roi)
+                              ApySamples, Gauge, SharePricePoint, calculate_roi)
 from yearn.apy.curve.rewards import rewards
 from yearn.networks import Network
 from yearn.prices import magic
 from yearn.prices.curve import curve
 from yearn.utils import contract, get_block_timestamp
 from yearn.debug import Debug
-from yearn.typing import Address
 
 
 @dataclass 
@@ -24,15 +23,6 @@ class ConvexDetailedApyData:
     cvx_keep_crv: float = 0
     cvx_debt_ratio: float = 0
     convex_reward_apr: float = 0
-
-@dataclass
-class Gauge:
-    lp_token: Address
-    pool: Contract
-    gauge: Contract
-    gauge_weight: int
-    gauge_inflation_rate: int
-    gauge_working_supply: int
 
 
 logger = logging.getLogger(__name__)
