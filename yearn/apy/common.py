@@ -85,7 +85,7 @@ def get_samples(now_time: Optional[datetime] = None) -> ApySamples:
     month_ago = closest_block_after_timestamp((now_time - timedelta(days=31)).timestamp(), True)
     return ApySamples(now, week_ago, month_ago)
 
-def get_reward_token_price(self, reward_token, kp3r=None, rkp3r=None, block=None):
+def get_reward_token_price(reward_token, kp3r=None, rkp3r=None, block=None):
     from yearn.prices import magic
     # if the reward token is rKP3R we need to calculate it's price in 
     # terms of KP3R after the discount
@@ -95,3 +95,25 @@ def get_reward_token_price(self, reward_token, kp3r=None, rkp3r=None, block=None
         return magic.get_price(kp3r, block=block) * (100 - discount) / 100
     else:
         return magic.get_price(reward_token, block=block)
+
+def calculate_pool_apy(vault, price_per_share_function, samples) -> tuple[float, float]:
+    now_price = price_per_share_function(block_identifier=samples.now)
+    try:
+        week_ago_price = price_per_share_function(block_identifier=samples.week_ago)
+    except ValueError:
+        raise ApyError("common", "insufficient data")
+
+    now_point = SharePricePoint(samples.now, now_price)
+    week_ago_point = SharePricePoint(samples.week_ago, week_ago_price)
+
+    # FIXME: crvANKR's pool apy going crazy
+    if vault and vault.vault.address == "0xE625F5923303f1CE7A43ACFEFd11fd12f30DbcA4":
+        return 0, 0
+
+    # Curve USDT Pool yVault apr is way too high which fails the apy calculations with a OverflowError
+    elif vault and vault.vault.address == "0x28a5b95C101df3Ded0C0d9074DB80C438774B6a9":
+        return 0, 0
+
+    else:
+        pool_apr = calculate_roi(now_point, week_ago_point)
+        return pool_apr, (((pool_apr / 365) + 1) ** 365) - 1

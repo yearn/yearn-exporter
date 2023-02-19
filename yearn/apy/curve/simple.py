@@ -7,7 +7,8 @@ from time import time
 from brownie import ZERO_ADDRESS, chain, interface
 from semantic_version import Version
 from yearn.apy.common import (SECONDS_PER_YEAR, Apy, ApyError, ApyFees,
-                              ApySamples, SharePricePoint, calculate_roi, get_reward_token_price)
+                              ApySamples, SharePricePoint, calculate_roi, 
+                              get_reward_token_price, calculate_pool_apy)
 from yearn.apy.gauge import Gauge
 from yearn.apy.curve.rewards import rewards
 from yearn.networks import Network
@@ -109,27 +110,7 @@ def calculate_simple(vault, gauge: Gauge, samples: ApySamples) -> Apy:
         block
     )
 
-    price_per_share = gauge.pool.get_virtual_price
-    now_price = price_per_share(block_identifier=samples.now)
-    try:
-        week_ago_price = price_per_share(block_identifier=samples.week_ago)
-    except ValueError:
-        raise ApyError("crv", "insufficient data")
-
-    now_point = SharePricePoint(samples.now, now_price)
-    week_ago_point = SharePricePoint(samples.week_ago, week_ago_price)
-
-    # FIXME: crvANKR's pool apy going crazy
-    if vault and vault.vault.address == "0xE625F5923303f1CE7A43ACFEFd11fd12f30DbcA4":
-        pool_apy = 0
-
-    # Curve USDT Pool yVault apr is way too high which fails the apy calculations with a OverflowError
-    elif vault and vault.vault.address == "0x28a5b95C101df3Ded0C0d9074DB80C438774B6a9":
-        pool_apy = 0
-
-    else:
-        pool_apr = calculate_roi(now_point, week_ago_point)
-        pool_apy = (((pool_apr / 365) + 1) ** 365) - 1
+    _, pool_apy = calculate_pool_apy(vault, gauge.pool.get_virtual_price, samples)
 
     # prevent circular import for partners calculations
     from yearn.v2.vaults import Vault as VaultV2
