@@ -4,17 +4,17 @@ import os
 from pprint import pformat
 from time import time
 
-from brownie import ZERO_ADDRESS, chain, interface
+from brownie import chain
 from semantic_version import Version
-from yearn.apy.common import (SECONDS_PER_YEAR, Apy, ApyError, ApyFees,
-                              ApySamples, SharePricePoint, calculate_roi, 
-                              get_reward_token_price, calculate_pool_apy)
+
+from yearn.apy.booster import get_booster_fee, get_booster_reward_apr
+from yearn.apy.common import (Apy, ApyError, ApyFees,
+                              ApySamples, calculate_pool_apy)
 from yearn.apy.gauge import Gauge
-from yearn.apy.curve.rewards import rewards
 from yearn.networks import Network
 from yearn.prices import magic
 from yearn.prices.curve import curve
-from yearn.utils import contract, get_block_timestamp
+from yearn.utils import contract
 from yearn.debug import Debug
 
 
@@ -277,8 +277,8 @@ class _ConvexVault:
             cvx_keep_crv = 0
 
         cvx_booster = contract(addresses[chain.id]['convex_booster'])
-        cvx_fee = self._get_convex_fee(cvx_booster, self.block)
-        convex_reward_apr = self._get_reward_apr(self._cvx_strategy, cvx_booster, base_asset_price, pool_price, self.block)
+        cvx_fee = get_booster_fee(cvx_booster, self.block)
+        convex_reward_apr = get_booster_reward_apr(self._cvx_strategy, cvx_booster, base_asset_price, pool_price, self.block)
 
         cvx_boost = self._get_cvx_boost()
         cvx_printed_as_crv = self._get_cvx_emissions_converted_to_crv()
@@ -310,58 +310,7 @@ class _ConvexVault:
 
     def _get_cvx_boost(self) -> float:
         """The Curve boost (1-2.5x) being applied to this pool thanks to veCRV locked in Convex's voter proxy."""
-        convex_voter = addresses[chain.id]['convex_voter_proxy']
-        cvx_working_balance = self.gauge.working_balances(convex_voter, block_identifier=self.block)
-        cvx_gauge_balance = self.gauge.balanceOf(convex_voter, block_identifier=self.block)
-
-        if cvx_gauge_balance > 0:
-            return cvx_working_balance / (PER_MAX_BOOST * cvx_gauge_balance) or 1
-        else:
-            return MAX_BOOST
-
-    def _get_reward_apr(self, cvx_strategy, cvx_booster, base_asset_price, pool_price, block=None) -> float:
-        """The cumulative apr of all extra tokens that are emitted by depositing 
-        to Convex, assuming that they will be sold for profit.
-        """
-        if hasattr(cvx_strategy, "id"):
-            # Convex hBTC strategy uses id rather than pid - 0x7Ed0d52C5944C7BF92feDC87FEC49D474ee133ce
-            pid = cvx_strategy.id()
-        else:
-            pid = cvx_strategy.pid()
-            
-        # pull data from convex's virtual rewards contracts to get bonus rewards
-        rewards_contract = contract(cvx_booster.poolInfo(pid)["crvRewards"])
-        rewards_length = rewards_contract.extraRewardsLength()
-        current_time = time() if block is None else get_block_timestamp(block)
-        if rewards_length == 0:
-            return 0
-
-        convex_reward_apr = 0 # reset our rewards apr if we're calculating it via convex
-
-        for x in range(rewards_length):
-            virtual_rewards_pool = contract(rewards_contract.extraRewards(x))
-                # do this for all assets, which will duplicate much of the curve info but we don't want to miss anything
-            if virtual_rewards_pool.periodFinish() > current_time:
-                reward_token = virtual_rewards_pool.rewardToken()
-                reward_token_price = get_reward_token_price(
-                    reward_token,
-                    addresses[chain.id]['kp3r'],
-                    addresses[chain.id]['rkp3r_rewards'],
-                    block
-                )
-
-                reward_apr = (virtual_rewards_pool.rewardRate() * SECONDS_PER_YEAR * reward_token_price) / (base_asset_price * (pool_price / 1e18) * virtual_rewards_pool.totalSupply())
-                convex_reward_apr += reward_apr
-
-        return convex_reward_apr
-
-    def _get_convex_fee(self, cvx_booster, block=None) -> float:
-        """The fee % that Convex charges on all CRV yield."""
-        cvx_lock_incentive = cvx_booster.lockIncentive(block_identifier=block)
-        cvx_staker_incentive = cvx_booster.stakerIncentive(block_identifier=block)
-        cvx_earmark_incentive = cvx_booster.earmarkIncentive(block_identifier=block)
-        cvx_platform_fee = cvx_booster.platformFee(block_identifier=block)
-        return (cvx_lock_incentive + cvx_staker_incentive + cvx_earmark_incentive + cvx_platform_fee) / 1e4
+        return self.gauge.calculate_boost(MAX_BOOST, addresses[chain.id]['convex_voter_proxy'], self.block)
 
     @property
     def _debt_ratio(self) -> float:

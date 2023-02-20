@@ -25,7 +25,7 @@ class Gauge:
             self.gauge_inflation_rate
             * self.gauge_weight
             * (SECONDS_PER_YEAR / self.gauge_working_supply)
-            * (1 / (max_boost * pool_price_per_share))
+            * ((1.0 / max_boost) / pool_price_per_share)
             * reward_price
         ) / pool_token_price
 
@@ -33,7 +33,7 @@ class Gauge:
         balance = self.gauge.balanceOf(address, block_identifier=block)
         working_balance = self.gauge.working_balances(address, block_identifier=block)
         if balance > 0:
-            return (max_boost * (working_balance / balance)) or 1
+            return  working_balance / ((1.0 / max_boost) * balance) or 1
         else:
             return max_boost
 
