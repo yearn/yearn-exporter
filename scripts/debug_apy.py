@@ -11,7 +11,8 @@ def main(address):
     from yearn.v2.vaults import Vault
     from yearn.apy.common import get_samples
     vault = Vault.from_address(address)
-    vault.apy(get_samples())
+    apy = vault.apy(get_samples())
+    logger.info(f'apy {str(apy)}')
     logger.info(f' ⏱️  {time.perf_counter() - start} seconds')
 
 def with_exception_handling():
