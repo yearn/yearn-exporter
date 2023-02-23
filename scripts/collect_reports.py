@@ -318,7 +318,7 @@ def handle_event(event, multi_harvest):
         r.want_token == "0x836A808d4828586A69364065A1e064609F5078c7"): # pETH
         r.want_price_at_block = magic.get_price(constants.weth, r.block)
     elif r.want_token == '0xf7b55C3732aD8b2c2dA7c24f30A69f55c54FB717':
-        r.want_price_at_block = magic.get_price(crv, r.block)
+        r.want_price_at_block = magic.get_price('0xD533a949740bb3306d119CC777fa900bA034cd52', r.block)
     else:
         r.want_price_at_block = magic.get_price(r.want_token, r.block)
     
