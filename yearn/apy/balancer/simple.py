@@ -48,17 +48,18 @@ def simple(vault, samples: ApySamples) -> Apy:
     if chain.id != Network.Mainnet: raise ApyError('bal', 'chain not supported')
     if not is_aura_vault(vault): raise ApyError('bal', 'vault not supported')
 
+    now = samples.now
     pool = contract(vault.token.address)
     gauge_factory = contract(addresses[chain.id]['gauge_factory'])
     gauge = contract(gauge_factory.getPoolGauge(pool.address))
-    gauge_inflation_rate = gauge.inflation_rate()
-    gauge_working_supply = gauge.working_supply()
+    gauge_inflation_rate = gauge.inflation_rate(block_identifier=now)
 
+    gauge_working_supply = gauge.working_supply(block_identifier=now)
     if gauge_working_supply == 0:
         raise ApyError('bal', 'gauge working supply is zero')
 
     gauge_controller = contract(addresses[chain.id]['gauge_controller'])
-    gauge_weight = gauge_controller.gauge_relative_weight.call(gauge.address)
+    gauge_weight = gauge_controller.gauge_relative_weight.call(gauge.address, block_identifier=now)
 
     return calculate_simple(
         vault,
@@ -67,12 +68,13 @@ def simple(vault, samples: ApySamples) -> Apy:
     )
 
 def calculate_simple(vault, gauge: Gauge, samples: ApySamples) -> Apy:
-    pool_price_per_share = gauge.pool.getRate()
-    pool_token_price = magic.get_price(gauge.lp_token)
-    bal_price = magic.get_price(addresses[chain.id]['bal'])
+    now = samples.now
+    pool_price_per_share = gauge.pool.getRate(block_identifier=now)
+    pool_token_price = magic.get_price(gauge.lp_token, block=now)
+    bal_price = magic.get_price(addresses[chain.id]['bal'], block=now)
     gauge_base_apr = gauge.calculate_base_apr(MAX_BOOST, bal_price, pool_price_per_share, pool_token_price)
     _, pool_apy = calculate_pool_apy(vault, gauge.pool.getRate, samples)
-    pool_rewards_apr = gauge.calculate_rewards_apr(pool_price_per_share, pool_token_price)
+    pool_rewards_apr = gauge.calculate_rewards_apr(pool_price_per_share, pool_token_price, block=now)
 
     if vault:
         return calculate_simple_aura_apy(
@@ -87,8 +89,8 @@ def calculate_simple(vault, gauge: Gauge, samples: ApySamples) -> Apy:
 
     # currently just for apy preview, mirrors corresponding code from crv-cvx calculation
     # assumes a 2 strategy design, one for balancer with 100% dr, one for aura with 0 dr
-    performance_fee, management_fee, keep_bal = get_vault_fees(vault)
-    voter_boost = gauge.calculate_boost(MAX_BOOST, addresses[chain.id]['voter'])
+    performance_fee, management_fee, keep_bal = get_vault_fees(vault, block=now)
+    voter_boost = gauge.calculate_boost(MAX_BOOST, addresses[chain.id]['voter'], block=now)
     aura_apy_data = AuraApyData(debt_ratio=0)
     bal_debt_ratio = 1
 
@@ -143,14 +145,16 @@ def calculate_simple_aura_apy(
         pool_apy,
         samples
 ) -> Apy:
-    performance_fee, management_fee, keep_bal = get_vault_fees(vault)
+    now = samples.now
+    performance_fee, management_fee, keep_bal = get_vault_fees(vault, block=now)
 
     apy_data = get_aura_apy_data(
         vault, gauge,
         pool_price_per_share, 
         pool_token_price, 
         gauge_base_apr,
-        keep_bal
+        keep_bal,
+        block=now
     )
 
     gross_apr = (1 + (apy_data.apr * apy_data.debt_ratio)) * (1 + pool_apy) - 1
