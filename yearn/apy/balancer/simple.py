@@ -61,6 +61,9 @@ def simple(vault, samples: ApySamples) -> Apy:
     gauge_controller = contract(addresses[chain.id]['gauge_controller'])
     gauge_weight = gauge_controller.gauge_relative_weight.call(gauge.address, block_identifier=now)
 
+    if os.getenv('DEBUG', None):
+        logger.info(pformat(Debug().collect_variables(locals())))
+
     return calculate_simple(
         vault,
         Gauge(pool.address, pool, gauge, gauge_weight, gauge_inflation_rate, gauge_working_supply),
@@ -202,17 +205,17 @@ def get_aura_apy_data(
     booster_fee = get_booster_fee(booster, block)
     booster_reward_apr = get_booster_reward_apr(strategy, booster, pool_price_per_share, pool_token_price, block)
     booster_boost = gauge.calculate_boost(MAX_BOOST, addresses[chain.id]['booster_voter'], block)
-    emitted_aura_priced_in_bal = get_emitted_aura_priced_in_bal(block)
+    aura_emission_rate = get_aura_emission_rate_converted_to_bal(block)
 
     booster_apr = (
         ((1 - booster_fee) * booster_boost * gauge_base_apr) 
-        * (1 + emitted_aura_priced_in_bal) 
+        * (1 + aura_emission_rate) 
         + booster_reward_apr
     )
 
     booster_apr_minus_keep = (
         ((1 - booster_fee) * booster_boost * gauge_base_apr) 
-        * ((1 - keep_bal) + emitted_aura_priced_in_bal)
+        * ((1 - keep_bal) + aura_emission_rate)
     )
 
     if os.getenv('DEBUG', None):
@@ -245,21 +248,29 @@ def get_vault_fees(vault, block=None):
     
     return performance, management, keep_bal
 
-def get_emitted_aura_priced_in_bal(block=None) -> float:
-    """AURA emissions converted priced in BAL to ease calculation of total APY."""
+def get_aura_emission_rate_converted_to_bal(block=None) -> float:
+    """AURA emission rate converted to BAL to ease calculation of total APY."""
     bal_price = magic.get_price(addresses[chain.id]['bal'], block=block)
     aura = contract(addresses[chain.id]['aura'])
     total_cliffs = aura.totalCliffs()
-    max_supply = aura.EMISSIONS_MAX_SUPPLY()
+    initial_mint = aura.INIT_MINT_AMOUNT()
+    max_supply = initial_mint + aura.EMISSIONS_MAX_SUPPLY()
     reduction_per_cliff = aura.reductionPerCliff()
     supply = aura.totalSupply(block_identifier=block)
-    current_cliff = supply / reduction_per_cliff
+    current_cliff = (supply - initial_mint) / reduction_per_cliff
     if supply <= max_supply:
-        reduction = total_cliffs - current_cliff
+        reduction =  2.5 * (total_cliffs - current_cliff) + 700
         minted = reduction / total_cliffs
         aura_price = magic.get_price(aura, block=block)
+
+        if os.getenv('DEBUG', None):
+            logger.info(pformat(Debug().collect_variables(locals())))
+
         return minted * (aura_price / bal_price)
     else:
+        if os.getenv('DEBUG', None):
+            logger.info(pformat(Debug().collect_variables(locals())))
+
         return 0
 
 def get_debt_ratio(vault, strategy) -> float:
