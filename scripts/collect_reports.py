@@ -32,7 +32,7 @@ inv_telegram_key = os.environ.get('WAVEY_ALERTS_BOT_KEY')
 ETHERSCANKEY = os.environ.get('ETHERSCAN_KEY')
 invbot = telebot.TeleBot(inv_telegram_key)
 env = os.environ.get('ENVIRONMENT')
-alerts_enabled = True if env == "PROD" or env == "TEST" else False
+alerts_enabled = True if env == "PROD" else False #or env == "TEST" else False
 
 test_channel = os.environ.get('TELEGRAM_CHANNEL_TEST')
 if env == "TEST":
