@@ -172,7 +172,7 @@ def average(vault, samples: ApySamples) -> Apy:
     # For Fantom, prioritize the weekly APY over the monthly. 
     # The APYs on Fantom vary quickly and harvests are more frequent than on mainnet, 
     # where infrequent harvests mean showing the weekly APY results in misleading spikes
-    if chain.id == Network.Fantom:
+    if chain.id != Network.Mainnet:
         apys = [week_ago_apy, month_ago_apy]
     else:
         apys = [month_ago_apy, week_ago_apy]
