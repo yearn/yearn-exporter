@@ -538,6 +538,17 @@ partners = {
                     partnerId="0x558247e365be655f9144e1a0140d793984372ef3",
                 )
             ]
+        ),
+        Partner(
+            name='choise',
+            start_date=date(2023, 3, 1),
+            treasury='0xEf2Cdb67A09F14e466a58A3ffCE579595282c970',
+            wrappers=[
+                DelegatedDepositWildcardWrapper(
+                    name="TB",
+                    partnerId="0xEf2Cdb67A09F14e466a58A3ffCE579595282c970",
+                )
+            ]
         )
     ],
     Network.Fantom: [
