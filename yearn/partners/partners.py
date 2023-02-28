@@ -546,7 +546,7 @@ partners = {
             wrappers=[
                 DelegatedDepositWildcardWrapper(
                     name="TB",
-                    partnerId="0xEf2Cdb67A09F14e466a58A3ffCE579595282c970",
+                    partnerId="0x35b956B1d22d19Dc85A943039458743D2Fc64FF2",
                 )
             ]
         )
@@ -702,7 +702,7 @@ partners = {
             wrappers=[
                 DelegatedDepositWildcardWrapper(
                     name="TB",
-                    partnerId="0xEf2Cdb67A09F14e466a58A3ffCE579595282c970",
+                    partnerId="0x9A2E8Bc149cDB13dB60ABC108425bB388eda2F9d",
                 ),
             ],
         ),
