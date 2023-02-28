@@ -686,8 +686,14 @@ partners = {
         ),
         Partner(
             name='choise',
-            start_date=None,
+            start_date=date(2023, 3, 1),
             treasury='0xEf2Cdb67A09F14e466a58A3ffCE579595282c970',
+            wrappers=[
+                DelegatedDepositWildcardWrapper(
+                    name="TB",
+                    partnerId="0xEf2Cdb67A09F14e466a58A3ffCE579595282c970",
+                ),
+            ],
         ),
     ],
 }.get(chain.id, [])
