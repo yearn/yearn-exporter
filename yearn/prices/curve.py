@@ -56,6 +56,9 @@ BASIC_TOKENS = {
     "0x956F47F50A910163D8BF957Cf5846D573E7f87CA",  # fei
     "0xBC6DA0FE9aD5f3b0d58160288917AA56653660E9",  # alusd
 }
+# this only applies to chains != ethereum mainnet
+XCHAIN_GAUGE_FACTORY = "0xabC000d88f23Bb45525E447528DBF656A9D55bf5"
+
 curve_contracts = {
     Network.Mainnet: {
         'address_provider': ADDRESS_PROVIDER,
@@ -103,6 +106,8 @@ class CurveRegistry(metaclass=Singleton):
             self.crv = contract(addrs['crv'])
             self.voting_escrow = contract(addrs['voting_escrow'])
             self.gauge_controller = contract(addrs['gauge_controller'])
+        else:
+            self.multichain_pool_to_gauge = dict() # lp_token -> gauge
 
         self.identifiers = defaultdict(list)  # id -> versions
         self.registries = defaultdict(set)  # registry -> pools
@@ -211,6 +216,14 @@ class CurveRegistry(metaclass=Singleton):
                     if pool not in self.coin_to_pools[coin]:
                         self.coin_to_pools[coin].append(pool)
 
+        # populate { lp_token: gauge } from multichain gauge factory
+        if chain.id != Network.Mainnet:
+            xchain = contract(XCHAIN_GAUGE_FACTORY)
+            gauges = [contract(xchain.get_gauge(i)) for i in range(xchain.get_gauge_count())]
+            lp_tokens = fetch_multicall(*[[g, 'lp_token'] for g in gauges])
+            self.multichain_pool_to_gauge = dict(zip(lp_tokens, gauges))
+
+
     def get_factory(self, pool: AddressOrContract) -> EthAddress:
         """
         Get metapool factory that has spawned a pool.
@@ -255,16 +268,24 @@ class CurveRegistry(metaclass=Singleton):
         Get liquidity gauge address by pool.
         """
         pool = to_address(pool)
-        factory = self.get_factory(pool)
-        registry = self.get_registry(pool)
-        if factory and hasattr(contract(factory), 'get_gauge'):
-            gauge = contract(factory).get_gauge(pool)
-            if gauge != ZERO_ADDRESS:
-                return gauge
-        if registry:
-            gauges, _ = contract(registry).get_gauges(pool)
-            if gauges[0] != ZERO_ADDRESS:
-                return gauges[0]
+
+        # for ethereum mainnet: gauges can be retrieved from the pool factory
+        if chain.id == Network.Mainnet:
+            factory = self.get_factory(pool)
+            registry = self.get_registry(pool)
+            if factory and hasattr(contract(factory), 'get_gauge'):
+                gauge = contract(factory).get_gauge(pool)
+                if gauge != ZERO_ADDRESS:
+                    return gauge
+            if registry:
+                gauges, _ = contract(registry).get_gauges(pool)
+                if gauges[0] != ZERO_ADDRESS:
+                    return gauges[0]
+
+        # for chains != ethereum: get gauges from special XCHAIN_GAUGE_FACTORY contract
+        else:
+          if pool in self.multichain_pool_to_gauge:
+            return str(self.multichain_pool_to_gauge[pool])
 
     @lru_cache(maxsize=None)
     def get_coins(self, pool: AddressOrContract) -> List[EthAddress]:
