@@ -1,6 +1,7 @@
 import json
 import logging
 import threading
+import pandas as pd
 from functools import lru_cache
 from time import sleep
 from typing import List
@@ -229,7 +230,22 @@ def _resolve_proxy(address):
             as_proxy_for = _resolve_address(implementation)
 
     if as_proxy_for:
-        name, abi, _ = _extract_abi_data(as_proxy_for)
+        name, implementation_abi, _ = _extract_abi_data(as_proxy_for)
+        # Here we merge the proxy ABI with the implementation ABI
+        # without doing this, we'd only get the implementation
+        # and would lack any valid methods/events from the proxy itself. 
+        abi += implementation_abi
+        # poor man's deduplication
+        df = pd.DataFrame(abi)
+        df.drop_duplicates(subset=["name", "type"], keep="last", inplace=True)
+        deduplicated = df.to_dict("records")
+        if len(abi) != len(deduplicated):
+            logger.warn(f"Warning: combined abi for contract {address} contains duplicates!")
+            logger.warn(f"original:\n{abi}")
+            logger.warn(f"deduplicated:\n{deduplicated}")
+
+        abi = deduplicated
+
     return Contract.from_abi(name, address, abi)
 
 
