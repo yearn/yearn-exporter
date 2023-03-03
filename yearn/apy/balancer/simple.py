@@ -1,18 +1,21 @@
+from datetime import datetime, timedelta
 import logging
 import os
 from pprint import pformat
 
 from brownie import chain, web3
 from dataclasses import dataclass
+import requests
 from semantic_version import Version
 
-from yearn.apy.common import Apy, ApyBlocks, ApyError, ApyFees, ApySamples, calculate_pool_apy, SECONDS_PER_YEAR
+from yearn.apy.common import Apy, ApyBlocks, ApyError, ApyFees, ApySamples, SECONDS_PER_YEAR
 from yearn.apy.booster import get_booster_fee, get_booster_reward_apr
 from yearn.apy.gauge import Gauge
 from yearn.debug import Debug
+from yearn.gql import gql_post
 from yearn.networks import Network
 from yearn.prices import magic
-from yearn.utils import contract
+from yearn.utils import closest_block_after_timestamp, contract
 
 
 logger = logging.getLogger(__name__)
@@ -22,7 +25,8 @@ class AuraAprData:
     boost: float = 0
     bal_apr: float = 0
     aura_apr: float = 0
-    extra_rewards_apr: float = 0
+    swap_fees_apr: float = 0
+    bonus_rewards_apr: float = 0
     gross_apr: float = 0
     net_apr: float = 0
     debt_ratio: float = 0
@@ -37,6 +41,10 @@ addresses = {
         'booster': '0xA57b8d98dAE62B26Ec3bcC4a365338157060B234',
         'booster_voter': '0xaF52695E1bB01A16D33D7194C28C42b10e0Dbec2'
     }
+}
+
+subgraphs = {
+    Network.Mainnet: 'https://api.thegraph.com/subgraphs/name/balancer-labs/balancer-v2'
 }
 
 MAX_BOOST = 2.5
@@ -106,7 +114,8 @@ def calculate_simple(vault, gauge: Gauge, samples: ApySamples) -> Apy:
         "boost": apr_data.boost,
         "bal_rewards_apr": apr_data.bal_apr,
         "aura_rewards_apr": apr_data.aura_apr,
-        "extra_rewards_apr": apr_data.extra_rewards_apr,
+        "swap_fees_apr": apr_data.swap_fees_apr,
+        "bonus_rewards_apr": apr_data.bonus_rewards_apr,
         "aura_gross_apr": apr_data.gross_apr,
         "aura_net_apr": apr_data.net_apr,
         "booster_net_apr": net_booster_apr,
@@ -133,7 +142,6 @@ def get_current_aura_apr(
     booster = contract(addresses[chain.id]['booster'])
     booster_fee = get_booster_fee(booster, block)
     booster_boost = gauge.calculate_boost(MAX_BOOST, addresses[chain.id]['booster_voter'], block)
-    extra_rewards_apr = get_booster_reward_apr(strategy, booster, pool_price_per_share, pool_token_price, block)
 
     bal_price = magic.get_price(addresses[chain.id]['bal'], block=block)
     aura_price = magic.get_price(addresses[chain.id]['aura'], block=block)
@@ -141,7 +149,7 @@ def get_current_aura_apr(
     rewards = contract(strategy.rewardsContract())
     rewards_tvl = pool_token_price * rewards.totalSupply() / 10**rewards.decimals()
 
-    bal_rewards_per_year = (rewards.rewardRate()/10**rewards.decimals()) * SECONDS_PER_YEAR
+    bal_rewards_per_year = (rewards.rewardRate() / 10**rewards.decimals()) * SECONDS_PER_YEAR
     bal_rewards_per_year_usd =  bal_rewards_per_year * bal_price
     bal_rewards_apr = bal_rewards_per_year_usd / rewards_tvl
 
@@ -150,8 +158,12 @@ def get_current_aura_apr(
     aura_rewards_per_year_usd = aura_rewards_per_year * aura_price
     aura_rewards_apr = aura_rewards_per_year_usd / rewards_tvl
 
-    gross_apr = bal_rewards_apr + aura_rewards_apr + extra_rewards_apr
-    net_apr = (bal_rewards_apr + aura_rewards_apr) * (1 - booster_fee) + extra_rewards_apr
+    swap_fees_apr = calculate_24hr_swap_fees_apr(gauge.pool, block)
+
+    bonus_rewards_apr = get_booster_reward_apr(strategy, booster, pool_price_per_share, pool_token_price, block)
+
+    net_apr = bal_rewards_apr + aura_rewards_apr + swap_fees_apr + bonus_rewards_apr
+    gross_apr = (bal_rewards_apr / (1 - booster_fee)) + aura_rewards_apr + swap_fees_apr + bonus_rewards_apr
 
     if os.getenv('DEBUG', None):
         logger.info(pformat(Debug().collect_variables(locals())))
@@ -160,7 +172,8 @@ def get_current_aura_apr(
         booster_boost,
         bal_rewards_apr,
         aura_rewards_apr,
-        extra_rewards_apr,
+        swap_fees_apr,
+        bonus_rewards_apr,
         gross_apr,
         net_apr,
         debt_ratio
@@ -215,3 +228,22 @@ def get_aura_minter_minted(block=None) -> float:
 
 def get_debt_ratio(vault, strategy) -> float:
     return vault.vault.strategies(strategy)[2] / 1e4
+
+def calculate_24hr_swap_fees_apr(pool, block=None):
+    if not block: block = closest_block_after_timestamp(datetime.today(), True)
+    yesterday = closest_block_after_timestamp((datetime.today() - timedelta(days=1)).timestamp(), True)
+    swap_fees_now = get_total_swap_fees(pool.getPoolId(), block)
+    swap_fees_yesterday = get_total_swap_fees(pool.getPoolId(), yesterday)
+    swap_fees_delta = float(swap_fees_now['totalSwapFee']) - float(swap_fees_yesterday['totalSwapFee'])
+    return swap_fees_delta * 365 / float(swap_fees_now['totalLiquidity'])
+
+def get_total_swap_fees(pool_id, block):
+    swap_fees_gql_vars = { 'pool_id': str(pool_id), 'block': block }
+    return gql_post(subgraphs[Network.Mainnet], swap_fees_gql_vars, """
+query days {
+  pool(id: $pool_id, block: { number: $block }) {
+    totalSwapFee,
+    totalLiquidity
+  }
+}
+""")['data']['pool']
