@@ -188,9 +188,9 @@ def get_current_aura_apr(
 
 def get_bonus_rewards_apr(rewards, rewards_tvl, block=None):
     result = 0
-    for index in range(rewards.extraRewardsLength()):
+    for index in range(rewards.extraRewardsLength(block_identifier=block)):
         extra_rewards = contract(rewards.extraRewards(index))
-        extra_rewards_per_year = (extra_rewards.rewardRate() / 10**extra_rewards.decimals()) * SECONDS_PER_YEAR
+        extra_rewards_per_year = (extra_rewards.rewardRate(block_identifier=block) / 10**extra_rewards.decimals()) * SECONDS_PER_YEAR
         extra_rewards_per_year_usd = extra_rewards_per_year * magic.get_price(extra_rewards, block=block)
         result += extra_rewards_per_year_usd / rewards_tvl
     return result
