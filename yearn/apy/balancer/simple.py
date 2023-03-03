@@ -9,7 +9,7 @@ import requests
 from semantic_version import Version
 
 from yearn.apy.common import Apy, ApyBlocks, ApyError, ApyFees, ApySamples, SECONDS_PER_YEAR
-from yearn.apy.booster import get_booster_fee, get_booster_reward_apr
+from yearn.apy.booster import get_booster_fee
 from yearn.apy.gauge import Gauge
 from yearn.debug import Debug
 from yearn.gql import gql_post
@@ -83,13 +83,11 @@ def calculate_simple(vault, gauge: Gauge, samples: ApySamples) -> Apy:
     if not vault: raise ApyError('bal', 'apy preview not supported')
 
     now = samples.now
-    pool_price_per_share = gauge.pool.getRate(block_identifier=now)
     pool_token_price = magic.get_price(gauge.lp_token, block=now)
     performance_fee, management_fee, keep_bal = get_vault_fees(vault, block=now)
 
     apr_data = get_current_aura_apr(
         vault, gauge,
-        pool_price_per_share, 
         pool_token_price,
         block=now
     )
@@ -131,8 +129,7 @@ def calculate_simple(vault, gauge: Gauge, samples: ApySamples) -> Apy:
     return Apy('aura', gross_apr, net_apy, fees, composite=composite, blocks=blocks)
 
 def get_current_aura_apr(
-        vault, gauge, 
-        pool_price_per_share, 
+        vault, gauge,
         pool_token_price,
         block=None
 ) -> AuraAprData:
@@ -159,11 +156,21 @@ def get_current_aura_apr(
     aura_rewards_apr = aura_rewards_per_year_usd / rewards_tvl
 
     swap_fees_apr = calculate_24hr_swap_fees_apr(gauge.pool, block)
+    bonus_rewards_apr = get_bonus_rewards_apr(rewards, rewards_tvl)
 
-    bonus_rewards_apr = get_booster_reward_apr(strategy, booster, pool_price_per_share, pool_token_price, block)
+    net_apr = (
+        bal_rewards_apr 
+        + aura_rewards_apr 
+        + swap_fees_apr 
+        + bonus_rewards_apr
+    )
 
-    net_apr = bal_rewards_apr + aura_rewards_apr + swap_fees_apr + bonus_rewards_apr
-    gross_apr = (bal_rewards_apr / (1 - booster_fee)) + aura_rewards_apr + swap_fees_apr + bonus_rewards_apr
+    gross_apr = (
+        (bal_rewards_apr / (1 - booster_fee)) 
+        + aura_rewards_apr 
+        + swap_fees_apr 
+        + bonus_rewards_apr
+    )
 
     if os.getenv('DEBUG', None):
         logger.info(pformat(Debug().collect_variables(locals())))
@@ -178,6 +185,15 @@ def get_current_aura_apr(
         net_apr,
         debt_ratio
     )
+
+def get_bonus_rewards_apr(rewards, rewards_tvl, block=None):
+    result = 0
+    for index in range(rewards.extraRewardsLength()):
+        extra_rewards = contract(rewards.extraRewards(index))
+        extra_rewards_per_year = (extra_rewards.rewardRate() / 10**extra_rewards.decimals()) * SECONDS_PER_YEAR
+        extra_rewards_per_year_usd = extra_rewards_per_year * magic.get_price(extra_rewards, block=block)
+        result += extra_rewards_per_year_usd / rewards_tvl
+    return result
 
 def get_vault_fees(vault, block=None):
     if vault:
