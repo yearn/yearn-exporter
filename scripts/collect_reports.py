@@ -10,7 +10,9 @@ from datetime import datetime, timezone
 from brownie import chain, web3, Contract, ZERO_ADDRESS, interface
 from web3._utils.events import construct_event_topic_set
 from yearn.utils import contract, contract_creation_block
-from yearn.prices import magic, constants
+
+from yearn.prices import constants
+from ypricemagic import magic
 from yearn.db.models import Reports, Event, Transactions, Session, engine, select
 from sqlalchemy import desc, asc
 from yearn.networks import Network
@@ -312,15 +314,7 @@ def handle_event(event, multi_harvest):
     r.want_token = strategy.want()
     r.want_price_at_block = 0
     print(f'Want token = {r.want_token}')
-    if r.want_token == "0x447Ddd4960d9fdBF6af9a790560d0AF76795CB08": # Rocket Pool ETH
-        r.want_price_at_block = magic.get_price(constants.weth, r.block) * get_contract(get_contract(r.want_token).coins(0)).getExchangeRate() / 1e18
-    elif (r.want_token == "0x9848482da3Ee3076165ce6497eDA906E66bB85C5" or
-        r.want_token == "0x836A808d4828586A69364065A1e064609F5078c7"): # pETH
-        r.want_price_at_block = magic.get_price(constants.weth, r.block)
-    elif r.want_token == '0xf7b55C3732aD8b2c2dA7c24f30A69f55c54FB717':
-        r.want_price_at_block = magic.get_price('0xD533a949740bb3306d119CC777fa900bA034cd52', r.block)
-    else:
-        r.want_price_at_block = magic.get_price(r.want_token, r.block)
+    r.want_price_at_block = magic.get_price(r.want_token, r.block)
     
     r.want_gain_usd = r.gain * r.want_price_at_block
     r.vault_name = vault.name()
@@ -588,7 +582,12 @@ def format_public_telegram(r, t):
     elif t.txn_from == r.strategist and t.txn_to != sms:
         from_indicator = "🧠 "
 
-    elif t.keeper_called or t.txn_from == keeper or t.txn_to == keeper:
+    elif (
+        t.keeper_called or 
+        t.txn_from == keeper or 
+        t.txn_to == keeper or
+        t.txn_to == '0xf4F748D45E03a70a9473394B28c3C7b5572DfA82' # ETH public harvest job
+    ):
         from_indicator = "🤖 "
 
     elif t.txn_to == keeper_wrapper: # Permissionlessly executed by anyone
