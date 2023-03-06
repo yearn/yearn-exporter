@@ -22,7 +22,7 @@ x-envs: &envs
   - REORG_BUFFER
   - JSONRPC_BATCH_MAX_SIZE
   # eth-retry (optional)
-  - MAX_RETRIES
+  - MAX_RETRIES=${MAX_RETRIES:-2}
   - MIN_SLEEP_TIME
   - MAX_SLEEP_TIME
   # This is a temporary hack that can be removed once deps support eth_hash==0.5.0. Creds to bunny for finding this.
