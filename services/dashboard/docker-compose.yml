@@ -15,6 +15,7 @@ x-envs: &envs
   - SENTRY_DSN
   - LOG_LEVEL
   - DEBUG
+  - SKIP_DEEP_UNISWAPS
   - POOL_SIZE
   - TX_POOL_SIZE
   - RESOLUTION
