@@ -40,10 +40,11 @@ def unwrap_token(token: AddressOrContract) -> AddressString:
     token = str(token)
     logger.debug("unwrapping %s", token)
 
+    if token == "0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE":
+        return constants.weth
+
     if chain.id == Network.Mainnet:
-        if token == "0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE":
-            return constants.weth
-        elif token == "0x4da27a545c0c5B758a6BA100e3a049001de870f5":
+        if token == "0x4da27a545c0c5B758a6BA100e3a049001de870f5":
             return "0x7fc66500c84a76ad7e9c93437bfc5ac33e2ddae9"  # stkAAVE -> AAVE
         elif token == "0x27D22A7648e955E510a40bDb058333E9190d12D4":
             return "0x0cec1a9154ff802e7934fc916ed7ca50bde6844e"  # PPOOL -> POOL

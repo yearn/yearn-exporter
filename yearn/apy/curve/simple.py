@@ -1,17 +1,24 @@
 from dataclasses import dataclass
 import logging
+import json
 import os
+import requests
 from pprint import pformat
 from time import time
 
 from brownie import ZERO_ADDRESS, chain, interface, Contract
+from eth_utils import function_signature_to_4byte_selector as fourbyte
+from eth_abi import encode_single
+
 from semantic_version import Version
-from yearn.apy.common import (SECONDS_PER_YEAR, Apy, ApyError, ApyFees,
+from yearn.apy.common import (SECONDS_PER_YEAR, SECONDS_PER_WEEK, Apy, ApyError, ApyFees,
                               ApySamples, SharePricePoint, calculate_roi)
 from yearn.apy.curve.rewards import rewards
+from yearn.exceptions import PriceError
 from yearn.networks import Network
 from yearn.prices import magic
 from yearn.prices.curve import curve
+from yearn.prices.curve import curve_contracts
 from yearn.utils import contract, get_block_timestamp
 from yearn.debug import Debug
 from yearn.typing import Address
@@ -49,36 +56,76 @@ addresses = {
 }
 
 COMPOUNDING = 52
-MAX_BOOST = 2.5
-PER_MAX_BOOST = 1.0 / MAX_BOOST
+MAX_BOOST = {
+    Network.Mainnet: 2.5,
+    Network.Fantom: 1.0,
+    Network.Arbitrum: 1.0,
+    Network.Optimism: 1.0,
+}
+PER_MAX_BOOST = 1.0 / MAX_BOOST[chain.id]
+
+def get_gauge_relative_weight_for_sidechain(gauge_address):
+    url = os.getenv("MAINNET_PROVIDER", None)
+    if not url:
+        raise ValueError("Erorr! Can't connect to mainnet without a provider URL, please specify $MAINNET_PROVIDER!")
+
+    # some curve gauge metadata like relative_weight is managed by the gauge controller on ethereum mainnet
+    gauge_controller = curve_contracts[Network.Mainnet]["gauge_controller"]
+
+    # encode the payload to the ethereum mainnet RPC because we're connected to a sidechain
+    function_signature = fourbyte("gauge_relative_weight(address)").hex()
+    address_param = encode_single('address', gauge_address).hex()
+    data = f"0x{function_signature}{address_param}"
+
+    # hardcode block to "latest" here so it's resolved on the mainnet node,
+    # it's a different block than the chain.height this script is running
+    # but should be close enough for our calculations
+    block = "latest"
+    payload = {
+        "jsonrpc": "2.0",
+        "method": "eth_call",
+        "params": [
+            {
+                "to": gauge_controller,
+                "data": data
+            }, block
+        ],
+        "id": 1
+    }
+    headers = {'Content-type': 'application/json'}
+    res = requests.post(url, data=json.dumps(payload), headers=headers)
+    result = res.json()
+    return int(result["result"], 16)
 
 
 def simple(vault, samples: ApySamples) -> Apy:
-    if chain.id != Network.Mainnet:
-        raise ApyError("crv", "chain not supported")
-
     lp_token = vault.token.address
     pool_address = curve.get_pool(lp_token)
-    gauge_address = curve.get_gauge(pool_address)
+    gauge_address = curve.get_gauge(pool_address, lp_token)
     if gauge_address is None:
         raise ApyError("crv", "no gauge")
 
-    gauge = contract(gauge_address)
-
-    try:
-        controller = gauge.controller()
-        controller = contract(controller)
-    except:
-        # newer gauges do not have a 'controller' method
-        controller = curve.gauge_controller
-
     block = samples.now
-    gauge_weight = controller.gauge_relative_weight.call(gauge_address, block_identifier=block)
+    gauge = contract(gauge_address)
+    if chain.id == Network.Mainnet:
+        try:
+            controller = gauge.controller()
+            controller = contract(controller)
+        except:
+            # newer gauges do not have a 'controller' method
+            controller = curve.gauge_controller
+
+        gauge_weight = controller.gauge_relative_weight.call(gauge_address, block_identifier=block)
+        gauge_inflation_rate = gauge.inflation_rate(block_identifier=block)
+    else:
+        gauge_weight = get_gauge_relative_weight_for_sidechain(gauge_address)
+        epoch = int(time() / SECONDS_PER_WEEK)
+        gauge_inflation_rate = gauge.inflation_rate(epoch, block_identifier=block)
+
     gauge_working_supply = gauge.working_supply(block_identifier=block)
     if gauge_working_supply == 0:
         raise ApyError("crv", "gauge working supply is zero")
 
-    gauge_inflation_rate = gauge.inflation_rate(block_identifier=block)
     pool = contract(pool_address)
 
     return calculate_simple(
@@ -96,9 +143,13 @@ def calculate_simple(vault, gauge: Gauge, samples: ApySamples) -> Apy:
 
     crv_price = magic.get_price(curve.crv, block=block)
 
-    yearn_voter = addresses[chain.id]['yearn_voter_proxy']
-    y_working_balance = gauge.gauge.working_balances(yearn_voter, block_identifier=block)
-    y_gauge_balance = gauge.gauge.balanceOf(yearn_voter, block_identifier=block)
+    if chain.id == Network.Mainnet:
+        yearn_voter = addresses[chain.id]['yearn_voter_proxy']
+        y_working_balance = gauge.gauge.working_balances(yearn_voter, block_identifier=block)
+        y_gauge_balance = gauge.gauge.balanceOf(yearn_voter, block_identifier=block)
+    else:
+        y_working_balance = 0
+        y_gauge_balance = 0
 
     base_apr = (
         gauge.gauge_inflation_rate
@@ -111,7 +162,7 @@ def calculate_simple(vault, gauge: Gauge, samples: ApySamples) -> Apy:
     if y_gauge_balance > 0:
         y_boost = y_working_balance / (PER_MAX_BOOST * y_gauge_balance) or 1
     else:
-        y_boost = MAX_BOOST
+        y_boost = MAX_BOOST[chain.id]
 
     # FIXME: The HBTC v1 vault is currently still earning yield, but it is no longer boosted.
     if vault and vault.vault.address == "0x46AFc2dfBd1ea0c0760CAD8262A5838e803A37e5":
@@ -376,7 +427,7 @@ class _ConvexVault:
         if cvx_gauge_balance > 0:
             return cvx_working_balance / (PER_MAX_BOOST * cvx_gauge_balance) or 1
         else:
-            return MAX_BOOST
+            return MAX_BOOST[chain.id]
 
     def _get_reward_apr(self, cvx_strategy, cvx_booster, base_asset_price, pool_price, block=None) -> float:
         """The cumulative apr of all extra tokens that are emitted by depositing 
@@ -424,6 +475,9 @@ class _ConvexVault:
 
 
 def _get_reward_token_price(reward_token, block=None):
+    if chain.id not in addresses:
+        return magic.get_price(reward_token, block=block)
+
     # if the reward token is rKP3R we need to calculate it's price in 
     # terms of KP3R after the discount
     contract_addresses = addresses[chain.id]
