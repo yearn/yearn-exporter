@@ -20,8 +20,8 @@ UNISWAPS: Dict[str,Optional[Uniswap]] = {
     'v1': uniswap_v1
 }
 # disable v2 and v3 pools during debugging
-if os.getenv("DEBUG", None):
-    logger.info("DEBUG is on, disabling uniswap v2 and v3 pool generation for faster debugging.")
+if os.getenv("SKIP_DEEP_UNISWAPS", None):
+    logger.info("SKIP_DEEP_UNISWAPS is on, disabling uniswap v2 and v3 pool generation for faster debugging.")
 else:
     UNISWAPS['v2'] = uniswap_v2
     UNISWAPS['v3'] = uniswap_v3

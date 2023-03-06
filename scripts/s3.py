@@ -16,6 +16,7 @@ import sentry_sdk
 from brownie import chain, web3, Contract
 from brownie.exceptions import BrownieEnvironmentWarning
 from yearn.apy import Apy, ApyBlocks, ApyFees, ApyPoints, ApySamples, get_samples
+from yearn.common import Tvl
 from yearn.exceptions import EmptyS3Export, PriceError
 from yearn.graphite import send_metric
 from yearn.networks import Network
@@ -40,8 +41,10 @@ def wrap_vault(
     vault: Union[VaultV1, VaultV2], samples: ApySamples, aliases: dict, icon_url: str, assets_metadata: dict
 ) -> dict:
     apy_error = Apy("error", 0, 0, ApyFees(0, 0), ApyPoints(0, 0, 0), ApyBlocks(samples.now, 0, 0, 0))
+    tvl = Tvl(tvl=0)
     try:
         apy = vault.apy(samples)
+        tvl = vault.tvl()
     except ValueError as error:
         apy_error.error_reason = ":".join(error.args)
         logger.error(error)
@@ -66,7 +69,6 @@ def wrap_vault(
     token_alias = aliases[str(vault.token)]["symbol"] if str(vault.token) in aliases else vault.token.symbol()
     vault_alias = token_alias
 
-    tvl = vault.tvl()
 
     migration = None
 
