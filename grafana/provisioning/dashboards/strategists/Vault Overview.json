@@ -5399,7 +5399,7 @@
               }
             ]
           },
-          "unit": "short"
+          "unit": "s"
         },
         "overrides": []
       },
@@ -5433,7 +5433,7 @@
             "uid": "DS_PROMETHEUS"
           },
           "exemplar": true,
-          "expr": "yearn_vault{network=\"$networks\", param=\"lockedProfitDegradation\", vault=~\"$vaults\", experimental=\"$exp\"}",
+          "expr": "1e18 / yearn_vault{network=\"$networks\", param=\"lockedProfitDegradation\", vault=~\"$vaults\", experimental=\"$exp\"}",
           "instant": false,
           "interval": "",
           "legendFormat": "",
