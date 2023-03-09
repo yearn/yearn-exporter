@@ -1,5 +1,8 @@
 import pytest
-from tests.fixtures.decorators import synthetix_chains_only
+from brownie import chain
+from y.networks import Network
+
+from tests.fixtures.decorators import mainnet_only, synthetix_chains_only
 from yearn.prices.synthetix import synthetix
 from yearn.utils import contract
 
@@ -10,10 +13,13 @@ if synthetix:
 
 @synthetix_chains_only
 def test_get_synths():
-    assert len(synthetix.synths) >= 10
+    assert len(synthetix.synths) >= {
+        Network.Mainnet: 10,
+        Network.Optimism: 5,
+    }[chain.id]
 
 
-@synthetix_chains_only
+@mainnet_only
 def test_synthetix_detection():
     sLINK = '0xbBC455cb4F1B9e4bFC4B73970d360c8f032EfEE6'
     assert sLINK in synthetix
