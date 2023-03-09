@@ -16,6 +16,7 @@ logger = logging.getLogger(__name__)
 
 addresses = {
     Network.Mainnet: '0x823bE81bbF96BEc0e25CA13170F5AaCb5B79ba83',
+    Network.Optimism: '0x95A6a3f44a70172E7d50a9e28c85Dfd712756B8C',
 }
 
 
