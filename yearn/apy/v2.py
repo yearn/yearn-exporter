@@ -1,3 +1,6 @@
+import os
+import logging
+from pprint import pformat
 from bisect import bisect_left
 from datetime import datetime, timedelta
 from brownie import chain
@@ -15,6 +18,9 @@ from yearn.apy.common import (
     SharePricePoint,
     calculate_roi,
 )
+from yearn.debug import Debug
+
+logger = logging.getLogger(__name__)
 
 def closest(haystack, needle):
     pos = bisect_left(sorted(haystack), needle)
@@ -225,4 +231,6 @@ def average(vault, samples: ApySamples) -> Apy:
     points = ApyPoints(week_ago_apy, month_ago_apy, inception_apy)
     blocks = ApyBlocks(samples.now, samples.week_ago, samples.month_ago, inception_block)
     fees = ApyFees(performance=performance, management=management)
+    if os.getenv("DEBUG", None):
+        logger.info(pformat(Debug().collect_variables(locals())))
     return Apy("v2:averaged", gross_apr, net_apy, fees, points=points, blocks=blocks)
