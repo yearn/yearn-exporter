@@ -2,7 +2,7 @@ import logging
 import threading
 import time
 import inflection
-from typing import List
+from typing import List, Dict
 
 from brownie import Contract, chain, web3
 from collections import OrderedDict
@@ -32,6 +32,7 @@ class Registry(metaclass=Singleton):
         self.releases = {}  # api_version => template
         self._vaults = {}  # address -> Vault
         self._experiments = {}  # address => Vault
+        self._staking_pools = {} # vault address -> staking_pool address
         self.governance = None
         self.tags = {}
         self._watch_events_forever = watch_events_forever
@@ -53,7 +54,11 @@ class Registry(metaclass=Singleton):
         elif chain.id == Network.Arbitrum:
             return [contract('0x3199437193625DCcD6F9C9e98BDf93582200Eb1f')]
         elif chain.id == Network.Optimism:
-            return [contract('0x79286Dd38C9017E5423073bAc11F53357Fc5C128'), contract('0x81291ceb9bB265185A9D07b91B5b50Df94f005BF')]
+            return [
+                contract('0x79286Dd38C9017E5423073bAc11F53357Fc5C128'),
+                contract('0x81291ceb9bB265185A9D07b91B5b50Df94f005BF'),
+                contract('0xB54d1833ACA99B0E50dfCC7F55A9165c6805BB9f'), # StakingRewardsRegistry
+            ]
         else:
             raise UnsupportedNetwork('yearn v2 is not available on this network')
 
@@ -85,6 +90,11 @@ class Registry(metaclass=Singleton):
     @wait_or_exit_before
     def experiments(self) -> List[Vault]:
         return list(self._experiments.values())
+
+    @property
+    @wait_or_exit_before
+    def staking_pools(self) -> Dict:
+        return self._staking_pools
 
     @wait_or_exit_before
     def __repr__(self) -> str:
@@ -150,6 +160,10 @@ class Registry(metaclass=Singleton):
                     logger.debug("Removed vault %s", event["vault"])
                 else:
                     self.tags[event["vault"]] = event["tag"]
+
+            if event.name == "StakingPoolAdded":
+                self._staking_pools[event["token"]] = event["staking_pool"]
+
 
     def vault_from_event(self, event):
         return Vault(

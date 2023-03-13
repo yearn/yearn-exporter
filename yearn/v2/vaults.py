@@ -9,7 +9,7 @@ from eth_utils import encode_hex, event_abi_to_log_topic
 from joblib import Parallel, delayed
 from semantic_version.base import Version
 from yearn import apy
-from yearn.apy.common import ApySamples
+from yearn.apy.common import SECONDS_PER_YEAR, ApySamples
 from yearn.common import Tvl
 from yearn.events import create_filter, decode_logs
 from yearn.multicall2 import fetch_multicall
@@ -223,6 +223,28 @@ class Vault:
             return apy.v2.average(self, samples)
         else:
             return apy.v2.simple(self, samples)
+
+
+    def get_staking_rewards_apy(self, samples: ApySamples):
+        vault_address = str(self.vault)
+        if vault_address not in self.registry.staking_pools:
+            return 0
+
+        staking_pool = contract(self.registry.staking_pools[vault_address])
+        if staking_pool.periodFinish() < time.time():
+            return 0
+
+        rewards_vault = self.registry._vaults[staking_pool.rewardsToken()]
+        per_staking_token_rate = (staking_pool.rewardRate() / 10**rewards_vault.vault.decimals()) / (staking_pool.totalSupply() / 10**self.vault.decimals())
+
+        vault_price = magic.get_price(vault_address)
+        rewards_asset_price = magic.get_price(rewards_vault.vault)
+
+        emissions_apr = SECONDS_PER_YEAR * per_staking_token_rate * rewards_asset_price / vault_price
+        rewards_vault_apy = rewards_vault.apy(samples).net_apy
+
+        return emissions_apr * (1 + rewards_vault_apy)
+
 
     def tvl(self, block=None):
         total_assets = self.vault.totalAssets(block_identifier=block)

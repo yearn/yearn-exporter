@@ -245,6 +245,9 @@ def calculate_simple(vault, gauge: Gauge, samples: ApySamples) -> Apy:
     crv_net_apy = ((1 + crv_net_farmed_apy) * (1 + pool_apy)) - 1
 
     net_apy = crv_net_apy * crv_debt_ratio + cvx_net_apy * cvx_apy_data.cvx_debt_ratio
+    staking_rewards_apy = vault.get_staking_rewards_apy(samples)
+    if staking_rewards_apy != 0:
+        net_apy += staking_rewards_apy
   
     boost = y_boost * crv_debt_ratio
     if cvx_vault:

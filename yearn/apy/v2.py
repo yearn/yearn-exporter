@@ -184,6 +184,9 @@ def average(vault, samples: ApySamples) -> Apy:
         apys.append(inception_apy)
 
     net_apy = next((value for value in apys if value != 0), 0)
+    staking_rewards_apy = vault.get_staking_rewards_apy(samples)
+    if staking_rewards_apy != 0:
+        net_apy += staking_rewards_apy
 
     # for performance fee, half comes from strategy (strategist share) and half from the vault (treasury share)
     strategy_fees = []
