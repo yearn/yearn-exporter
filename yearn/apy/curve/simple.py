@@ -139,7 +139,9 @@ def calculate_simple(vault, gauge: Gauge, samples: ApySamples) -> Apy:
 
     pool_price = gauge.pool.get_virtual_price(block_identifier=block)
 
-    base_asset_price = magic.get_price(gauge.lp_token, block=block) or 1
+    base_asset_price = magic.get_price(gauge.lp_token, block=block)
+    if not base_asset_price:
+        raise ValueError(f"Error! Could not find price for {gauge.lp_token} at block {block}")
 
     crv_price = magic.get_price(curve.crv, block=block)
 
