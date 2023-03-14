@@ -9,6 +9,7 @@ from semantic_version import Version
 from yearn.apy.common import (SECONDS_PER_YEAR, Apy, ApyError, ApyFees,
                               ApySamples, SharePricePoint, calculate_roi)
 from yearn.apy.curve.rewards import rewards
+from yearn.apy.staking_rewards import get_staking_rewards_apy
 from yearn.networks import Network
 from yearn.prices import magic
 from yearn.prices.curve import curve
@@ -245,9 +246,7 @@ def calculate_simple(vault, gauge: Gauge, samples: ApySamples) -> Apy:
     crv_net_apy = ((1 + crv_net_farmed_apy) * (1 + pool_apy)) - 1
 
     net_apy = crv_net_apy * crv_debt_ratio + cvx_net_apy * cvx_apy_data.cvx_debt_ratio
-    staking_rewards_apy = vault.get_staking_rewards_apy(samples)
-    if staking_rewards_apy != 0:
-        net_apy += staking_rewards_apy
+    net_apy += get_staking_rewards_apy(vault, samples)
   
     boost = y_boost * crv_debt_ratio
     if cvx_vault:

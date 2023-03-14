@@ -4,6 +4,7 @@ from pprint import pformat
 from bisect import bisect_left
 from datetime import datetime, timedelta
 from brownie import chain
+from yearn.apy.staking_rewards import get_staking_rewards_apy
 from yearn.networks import Network
 
 from semantic_version.base import Version
@@ -190,9 +191,7 @@ def average(vault, samples: ApySamples) -> Apy:
         apys.append(inception_apy)
 
     net_apy = next((value for value in apys if value != 0), 0)
-    staking_rewards_apy = vault.get_staking_rewards_apy(samples)
-    if staking_rewards_apy != 0:
-        net_apy += staking_rewards_apy
+    net_apy += get_staking_rewards_apy(vault, samples)
 
     # for performance fee, half comes from strategy (strategist share) and half from the vault (treasury share)
     strategy_fees = []
