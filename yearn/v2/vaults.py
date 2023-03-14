@@ -9,7 +9,7 @@ from eth_utils import encode_hex, event_abi_to_log_topic
 from joblib import Parallel, delayed
 from semantic_version.base import Version
 from yearn import apy
-from yearn.apy.common import SECONDS_PER_YEAR, ApySamples
+from yearn.apy.common import ApySamples
 from yearn.common import Tvl
 from yearn.events import create_filter, decode_logs
 from yearn.multicall2 import fetch_multicall
@@ -223,7 +223,6 @@ class Vault:
             return apy.v2.average(self, samples)
         else:
             return apy.v2.simple(self, samples)
-
 
     def tvl(self, block=None):
         total_assets = self.vault.totalAssets(block_identifier=block)
