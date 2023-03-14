@@ -2,8 +2,12 @@ import time
 from yearn.prices import magic
 from yearn.apy.common import ApySamples, SECONDS_PER_YEAR
 from yearn.utils import contract
+from yearn.v1.vaults import VaultV1
 
 def get_staking_rewards_apy(vault, samples: ApySamples):
+    if isinstance(vault, VaultV1):
+        return 0
+
     vault_address = str(vault.vault)
     if vault_address not in vault.registry.staking_pools:
         return 0
