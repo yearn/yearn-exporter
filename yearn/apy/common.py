@@ -9,6 +9,8 @@ from semantic_version.base import Version
 
 
 SECONDS_PER_YEAR = 31_556_952.0
+SECONDS_PER_WEEK = 7 * 24 * 3600
+SECONDS_PER_MONTH = 30 * 24 * 3600
 
 @dataclass
 class SharePricePoint:

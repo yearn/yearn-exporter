@@ -4,7 +4,7 @@ from pprint import pformat
 from bisect import bisect_left
 from datetime import datetime, timedelta
 from brownie import chain
-from yearn.apy.staking_rewards import get_staking_rewards_apy
+from yearn.apy.staking_rewards import StakingRewards, get_staking_rewards
 from yearn.networks import Network
 
 from semantic_version.base import Version
@@ -169,9 +169,13 @@ def average(vault, samples: ApySamples) -> Apy:
         month_ago_price = inception_price
         month_ago_point = inception_point
 
+    staking_rewards: StakingRewards = get_staking_rewards(vault, samples, inception_block)
     week_ago_apy = calculate_roi(now_point, week_ago_point)
+    week_ago_apy += staking_rewards.weekly_apy
     month_ago_apy = calculate_roi(now_point, month_ago_point)
+    month_ago_apy += staking_rewards.monthly_apy
     inception_apy = calculate_roi(now_point, inception_point)
+    inception_apy += staking_rewards.inception_apy
     
     # we should look at a vault's harvests, age, etc to determine whether to show new APY or not
 
@@ -191,7 +195,6 @@ def average(vault, samples: ApySamples) -> Apy:
         apys.append(inception_apy)
 
     net_apy = next((value for value in apys if value != 0), 0)
-    net_apy += get_staking_rewards_apy(vault, samples)
 
     # for performance fee, half comes from strategy (strategist share) and half from the vault (treasury share)
     strategy_fees = []
