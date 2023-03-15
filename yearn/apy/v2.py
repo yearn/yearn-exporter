@@ -78,10 +78,10 @@ def simple(vault, samples: ApySamples) -> Apy:
     inception_apy = calculate_roi(now_point, inception_point)
 
     # use the first non-zero apy, ordered by precedence
-    # For Fantom, prioritize the weekly APY over the monthly. 
-    # The APYs on Fantom vary quickly and harvests are more frequent than on mainnet, 
+    # For everything that isn't ETH, prioritize the weekly APY over the monthly. 
+    # APYs on other networks are vary quickly and harvests are more frequent than on mainnet, 
     # where infrequent harvests mean showing the weekly APY results in misleading spikes
-    if chain.id == Network.Fantom:
+    if chain.id != Network.Mainnet:
         apys = [week_ago_apy, month_ago_apy, inception_apy]
     else:
         apys = [month_ago_apy, week_ago_apy, inception_apy]
@@ -169,10 +169,10 @@ def average(vault, samples: ApySamples) -> Apy:
     # we should look at a vault's harvests, age, etc to determine whether to show new APY or not
 
     # use the first non-zero apy, ordered by precedence
-    # For Fantom, prioritize the weekly APY over the monthly. 
-    # The APYs on Fantom vary quickly and harvests are more frequent than on mainnet, 
+    # For everything that isn't ETH, prioritize the weekly APY over the monthly. 
+    # APYs on other networks are vary quickly and harvests are more frequent than on mainnet, 
     # where infrequent harvests mean showing the weekly APY results in misleading spikes
-    if chain.id == Network.Fantom:
+    if chain.id != Network.Mainnet:
         apys = [week_ago_apy, month_ago_apy]
     else:
         apys = [month_ago_apy, week_ago_apy]
