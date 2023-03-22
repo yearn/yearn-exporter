@@ -55,7 +55,7 @@ The dockerized exporter is controlled via `make up` command which is invoked via
 It is possible to specify multiple Makefile args that control which exporters are started on which network.
 The available args to control the startup sequence of containers are the following:
 
-- `network`: one of `ethereum`, `fantom`, `arbitrum`, `optimism`, `gnosis`, see `make list-networks`
+- `network`: one of `ethereum`, `fantom`, `arbitrum`, `optimism`, see `make list-networks`
 - `commands`: a list of strings delimited with comma pointing to brownie scripts in `./scripts/` e.g. `exporters/partners,exporters/vaults`, see `make list-commands`
 - `filter`: used for `make logs` and `make down` to match the container name substring.
 
