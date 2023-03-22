@@ -9,7 +9,7 @@ endif
 #######################################
 # specify all supported networks here #
 #######################################
-supported_networks := ethereum fantom arbitrum optimism gnosis
+supported_networks := ethereum fantom arbitrum optimism
 
 ###############################################
 # specify all supported exporter scripts here #
