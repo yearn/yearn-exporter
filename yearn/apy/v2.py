@@ -4,7 +4,7 @@ from pprint import pformat
 from bisect import bisect_left
 from datetime import datetime, timedelta
 from brownie import chain
-from yearn.apy.staking_rewards import StakingRewards, get_staking_rewards
+from yearn.apy.staking_rewards import get_staking_rewards_apr
 from yearn.networks import Network
 
 from semantic_version.base import Version
@@ -169,13 +169,9 @@ def average(vault, samples: ApySamples) -> Apy:
         month_ago_price = inception_price
         month_ago_point = inception_point
 
-    staking_rewards: StakingRewards = get_staking_rewards(vault, samples, inception_block)
     week_ago_apy = calculate_roi(now_point, week_ago_point)
-    week_ago_apy += staking_rewards.weekly_apy
     month_ago_apy = calculate_roi(now_point, month_ago_point)
-    month_ago_apy += staking_rewards.monthly_apy
     inception_apy = calculate_roi(now_point, inception_point)
-    inception_apy += staking_rewards.inception_apy
     
     # we should look at a vault's harvests, age, etc to determine whether to show new APY or not
 
@@ -233,6 +229,7 @@ def average(vault, samples: ApySamples) -> Apy:
     points = ApyPoints(week_ago_apy, month_ago_apy, inception_apy)
     blocks = ApyBlocks(samples.now, samples.week_ago, samples.month_ago, inception_block)
     fees = ApyFees(performance=performance, management=management)
+    staking_rewards_apr = get_staking_rewards_apr(vault, samples)
     if os.getenv("DEBUG", None):
         logger.info(pformat(Debug().collect_variables(locals())))
-    return Apy("v2:averaged", gross_apr, net_apy, fees, points=points, blocks=blocks)
+    return Apy("v2:averaged", gross_apr, net_apy, fees, points=points, blocks=blocks, staking_rewards_apr=staking_rewards_apr)

@@ -50,6 +50,7 @@ class Apy:
     blocks: Optional[ApyBlocks] = None
     composite: Optional[Dict[str, float]] = None
     error_reason: Optional[str] = None
+    staking_rewards_apr: Optional[float] = 0
 
 
 @dataclass
