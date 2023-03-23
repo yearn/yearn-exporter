@@ -14,6 +14,7 @@ from semantic_version import Version
 from yearn.apy.common import (SECONDS_PER_YEAR, SECONDS_PER_WEEK, Apy, ApyError, ApyFees,
                               ApySamples, SharePricePoint, calculate_roi)
 from yearn.apy.curve.rewards import rewards
+from yearn.apy.staking_rewards import get_staking_rewards_apr
 from yearn.exceptions import PriceError
 from yearn.networks import Network
 from yearn.prices import magic
@@ -319,9 +320,10 @@ def calculate_simple(vault, gauge: Gauge, samples: ApySamples) -> Apy:
         "rewards_apr": reward_apr,
     }
 
+    staking_rewards_apr = get_staking_rewards_apr(vault, samples)
     if os.getenv("DEBUG", None):
         logger.info(pformat(Debug().collect_variables(locals())))
-    return Apy("crv", gross_apr, net_apy, fees, composite=composite)
+    return Apy("crv", gross_apr, net_apy, fees, composite=composite, staking_rewards_apr=staking_rewards_apr)
 
 class _ConvexVault:
     def __init__(self, cvx_strategy, vault, gauge, block=None) -> None:
