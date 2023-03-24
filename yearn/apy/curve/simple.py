@@ -57,13 +57,15 @@ addresses = {
 }
 
 COMPOUNDING = 52
-MAX_BOOST = {
-    Network.Mainnet: 2.5,
+MAX_BOOST = 2.5
+PER_MAX_BOOST = 1.0 / MAX_BOOST
+
+BOOST = {
+    Network.Mainnet: MAX_BOOST,
     Network.Fantom: 1.0,
     Network.Arbitrum: 1.0,
     Network.Optimism: 1.0,
 }
-PER_MAX_BOOST = 1.0 / MAX_BOOST[chain.id]
 
 def get_gauge_relative_weight_for_sidechain(gauge_address):
     url = os.getenv("MAINNET_PROVIDER", None)
@@ -138,13 +140,13 @@ def simple(vault, samples: ApySamples) -> Apy:
 def calculate_simple(vault, gauge: Gauge, samples: ApySamples) -> Apy:
     block = samples.now
 
-    pool_price = gauge.pool.get_virtual_price(block_identifier=block)
-
     base_asset_price = magic.get_price(gauge.lp_token, block=block)
     if not base_asset_price:
         raise ValueError(f"Error! Could not find price for {gauge.lp_token} at block {block}")
 
     crv_price = magic.get_price(curve.crv, block=block)
+    pool_price = gauge.pool.get_virtual_price(block_identifier=block)
+    gauge_weight = gauge.gauge_weight
 
     if chain.id == Network.Mainnet:
         yearn_voter = addresses[chain.id]['yearn_voter_proxy']
@@ -153,19 +155,22 @@ def calculate_simple(vault, gauge: Gauge, samples: ApySamples) -> Apy:
     else:
         y_working_balance = 0
         y_gauge_balance = 0
+        if gauge.gauge.reward_count() == 0:
+            gauge_weight = 1
+            pool_price = 1
 
     base_apr = (
         gauge.gauge_inflation_rate
-        * gauge.gauge_weight
+        * gauge_weight
         * (SECONDS_PER_YEAR / gauge.gauge_working_supply)
         * (PER_MAX_BOOST / pool_price)
         * crv_price
     ) / base_asset_price
 
     if y_gauge_balance > 0:
-        y_boost = y_working_balance / (PER_MAX_BOOST * y_gauge_balance) or 1
+        y_boost = y_working_balance / (PER_MAX_BOOST * y_gauge_balance)
     else:
-        y_boost = MAX_BOOST[chain.id]
+        y_boost = BOOST[chain.id]
 
     # FIXME: The HBTC v1 vault is currently still earning yield, but it is no longer boosted.
     if vault and vault.vault.address == "0x46AFc2dfBd1ea0c0760CAD8262A5838e803A37e5":
@@ -174,7 +179,7 @@ def calculate_simple(vault, gauge: Gauge, samples: ApySamples) -> Apy:
     
     # The stETH vault is currently earning LDO, everyone gets max boost.
     if vault and vault.vault.address == "0x5B8C556B8b2a78696F0B9B830B3d67623122E270":
-        y_boost = 2.5
+        y_boost = MAX_BOOST
         crv_debt_ratio = 1
 
     # TODO: come up with cleaner way to deal with these new gauge rewards
@@ -431,7 +436,7 @@ class _ConvexVault:
         if cvx_gauge_balance > 0:
             return cvx_working_balance / (PER_MAX_BOOST * cvx_gauge_balance) or 1
         else:
-            return MAX_BOOST[chain.id]
+            return BOOST[chain.id]
 
     def _get_reward_apr(self, cvx_strategy, cvx_booster, base_asset_price, pool_price, block=None) -> float:
         """The cumulative apr of all extra tokens that are emitted by depositing 
