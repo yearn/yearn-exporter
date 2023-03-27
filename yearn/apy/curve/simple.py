@@ -155,9 +155,16 @@ def calculate_simple(vault, gauge: Gauge, samples: ApySamples) -> Apy:
     else:
         y_working_balance = 0
         y_gauge_balance = 0
+
         if gauge.gauge.reward_count() == 0:
             gauge_weight = 1
             pool_price = 1
+        else:
+            reward_token = gauge.gauge.reward_tokens(0)
+            reward_data = gauge.gauge.reward_data(reward_token)
+            if time() > reward_data['period_finish']:
+                gauge_weight = 1
+                pool_price = 1
 
     base_apr = (
         gauge.gauge_inflation_rate
