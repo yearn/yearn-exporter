@@ -69,16 +69,20 @@ curve_contracts = {
     Network.Gnosis: {
         # Curve has not properly initialized the provider. contract(self.address_provider.get_address(5)) returns 0x0.
         # CurveRegistry class has extra handling to fetch registry in this case.
-        'address_provider': ADDRESS_PROVIDER, 
+        'address_provider': ADDRESS_PROVIDER,
+        'crv': '0x712b3d230f3c1c19db860d80619288b1f0bdd0bd',
     },
     Network.Fantom: {
         'address_provider': ADDRESS_PROVIDER,
+        'crv': '0x1E4F97b9f9F913c46F1632781732927B9019C68b',
     },
     Network.Arbitrum: {
         'address_provider': ADDRESS_PROVIDER,
+        'crv': '0x11cDb42B0EB46D95f990BeDD4695A6e3fA034978',
     },
     Network.Optimism: {
         'address_provider': ADDRESS_PROVIDER,
+        'crv': '0x0994206dfE8De6Ec6920FF4D779B0d950605Fb53',
     }
 }
 
@@ -103,12 +107,10 @@ class CurveRegistry(metaclass=Singleton):
 
         addrs = curve_contracts[chain.id]
         if chain.id == Network.Mainnet:
-            self.crv = contract(addrs['crv'])
             self.voting_escrow = contract(addrs['voting_escrow'])
             self.gauge_controller = contract(addrs['gauge_controller'])
-        else:
-            self.multichain_pool_to_gauge = dict() # lp_token -> gauge
 
+        self.crv = contract(addrs['crv'])
         self.identifiers = defaultdict(list)  # id -> versions
         self.registries = defaultdict(set)  # registry -> pools
         self.factories = defaultdict(set)  # factory -> pools
@@ -216,13 +218,6 @@ class CurveRegistry(metaclass=Singleton):
                     if pool not in self.coin_to_pools[coin]:
                         self.coin_to_pools[coin].append(pool)
 
-        # populate { lp_token: gauge } from multichain gauge factory
-        if chain.id != Network.Mainnet:
-            xchain = contract(XCHAIN_GAUGE_FACTORY)
-            gauges = [contract(xchain.get_gauge(i)) for i in range(xchain.get_gauge_count())]
-            lp_tokens = fetch_multicall(*[[g, 'lp_token'] for g in gauges])
-            self.multichain_pool_to_gauge = dict(zip(lp_tokens, gauges))
-
 
     def get_factory(self, pool: AddressOrContract) -> EthAddress:
         """
@@ -263,14 +258,14 @@ class CurveRegistry(metaclass=Singleton):
             return self.token_to_pool[token]
 
     @lru_cache(maxsize=None)
-    def get_gauge(self, pool: AddressOrContract) -> EthAddress:
+    def get_gauge(self, pool: AddressOrContract, lp_token: AddressOrContract) -> EthAddress:
         """
-        Get liquidity gauge address by pool.
+        Get liquidity gauge address by pool or lp_token.
         """
         pool = to_address(pool)
-
-        # for ethereum mainnet: gauges can be retrieved from the pool factory
+        lp_token = to_address(lp_token)
         if chain.id == Network.Mainnet:
+        # for ethereum mainnet: gauges can be retrieved from the pool factory
             factory = self.get_factory(pool)
             registry = self.get_registry(pool)
             if factory and hasattr(contract(factory), 'get_gauge'):
@@ -281,11 +276,13 @@ class CurveRegistry(metaclass=Singleton):
                 gauges, _ = contract(registry).get_gauges(pool)
                 if gauges[0] != ZERO_ADDRESS:
                     return gauges[0]
-
-        # for chains != ethereum: get gauges from special XCHAIN_GAUGE_FACTORY contract
         else:
-          if pool in self.multichain_pool_to_gauge:
-            return str(self.multichain_pool_to_gauge[pool])
+        # for chains != ethereum: get gauges from special XCHAIN_GAUGE_FACTORY contract
+            factory = contract(XCHAIN_GAUGE_FACTORY)
+            gauge = factory.get_gauge_from_lp_token(lp_token)
+            if gauge != ZERO_ADDRESS:
+                return gauge
+
 
     @lru_cache(maxsize=None)
     def get_coins(self, pool: AddressOrContract) -> List[EthAddress]:
