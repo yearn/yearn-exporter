@@ -6,7 +6,7 @@ from yearn.v1.vaults import VaultV1
 
 def get_staking_rewards_apr(vault, samples: ApySamples):
     now = int(time.time())
-    if isinstance(vault, VaultV1):
+    if not vault or isinstance(vault, VaultV1):
         return 0
 
     vault_address = str(vault.vault)
