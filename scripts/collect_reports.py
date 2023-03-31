@@ -314,7 +314,10 @@ def handle_event(event, multi_harvest):
     r.want_token = strategy.want()
     r.want_price_at_block = 0
     print(f'Want token = {r.want_token}')
-    r.want_price_at_block = magic.get_price(r.want_token, r.block)
+    if r.vault_address == '0x9E0E0AF468FbD041Cab7883c5eEf16D1A99a47C3':
+        r.want_price_at_block = 1
+    else:
+        r.want_price_at_block = magic.get_price(r.want_token, r.block)
     
     r.want_gain_usd = r.gain * r.want_price_at_block
     r.vault_name = vault.name()
