@@ -305,12 +305,12 @@ def handle_event(event, multi_harvest):
         txn_record_exists = True
     r.block = event.block_number
     r.txn_hash = txn_hash
-    strategy = get_contract(r.strategy_address)
+    strategy = Contract(r.strategy_address)
     
     r.vault_api = vault.apiVersion()
     r.gov_fee_in_want, r.strategist_fee_in_want = parse_fees(tx, r.vault_address, r.strategy_address, r.vault_decimals, r.gain, r.vault_api)
     r.gain_post_fees = r.gain - r.loss - r.strategist_fee_in_want - r.gov_fee_in_want
-    r.token_symbol = get_contract(strategy.want()).symbol()
+    r.token_symbol = Contract(strategy.want()).symbol()
     r.want_token = strategy.want()
     r.want_price_at_block = 0
     print(f'Want token = {r.want_token}')
