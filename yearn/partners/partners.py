@@ -538,7 +538,18 @@ partners = {
                     partnerId="0x558247e365be655f9144e1a0140d793984372ef3",
                 )
             ]
-        )
+        ),
+        Partner(
+            name='SpoolFi',
+            start_date=date(2022, 10, 2),
+            treasury='0xF6Bc2E3b1F939C435D9769D078a6e5048AaBD463',
+            wrappers=[
+                WildcardWrapper(
+                    name='MasterSpool',
+                    wrapper='0xe140bB5F424A53e0687bfC10F6845a5672D7e242',
+                )
+            ]
+        ),
     ],
     Network.Fantom: [
         Partner(
@@ -672,17 +683,6 @@ partners = {
                     wrapper='0x76b2E3c5a183970AAAD2A48cF6Ae79E3e16D3A0E',
                 ),
             ],
-        ),
-        Partner(
-            name='SpoolFi',
-            start_date=date(2022, 10, 2),
-            treasury='0xF6Bc2E3b1F939C435D9769D078a6e5048AaBD463',
-            wrappers=[
-                WildcardWrapper(
-                    name='MasterSpool',
-                    wrapper='0xe140bB5F424A53e0687bfC10F6845a5672D7e242',
-                ),
-            ],
-        ),
+        )
     ],
 }.get(chain.id, [])
