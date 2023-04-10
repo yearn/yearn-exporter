@@ -57,7 +57,7 @@ class Registry(metaclass=Singleton):
             return [
                 contract('0x79286Dd38C9017E5423073bAc11F53357Fc5C128'),
                 contract('0x81291ceb9bB265185A9D07b91B5b50Df94f005BF'),
-                contract('0xB54d1833ACA99B0E50dfCC7F55A9165c6805BB9f'), # StakingRewardsRegistry
+                contract('0x8ED9F6343f057870F1DeF47AaE7CD88dfAA049A8'), # StakingRewardsRegistry
             ]
         else:
             raise UnsupportedNetwork('yearn v2 is not available on this network')
