@@ -49,6 +49,14 @@ def unwrap_token(token: AddressOrContract) -> AddressString:
         elif token == "0x27D22A7648e955E510a40bDb058333E9190d12D4":
             return "0x0cec1a9154ff802e7934fc916ed7ca50bde6844e"  # PPOOL -> POOL
 
+        elif token in [ "0x465a5a630482f3abD6d3b84B39B29b07214d19e5",    # fUSDC -> USDC
+                        "0xe2bA8693cE7474900A045757fe0efCa900F6530b",    # fDAI  -> DAI
+                        "0x81994b9607e06ab3d5cF3AffF9a67374f05F27d7",    # fUSDT -> USDT
+                        "0x1C9A2d6b33B4826757273D47ebEe0e2DddcD978B",    # fFRAX -> FRAX
+                        "0x1dD7950c266fB1be96180a8FDb0591F70200E018" ]:  # fOUSG -> OUSG
+            asset = contract(token)
+            token = asset.underlying()
+
     if chain.id in [ Network.Mainnet, Network.Fantom ]:
         if aave:
             asset = contract(token)
