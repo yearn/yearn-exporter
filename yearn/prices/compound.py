@@ -52,6 +52,9 @@ addresses = {
             name='ironbank',
             address='0xAB1c342C7bf5Ec5F02ADEA1c2270670bCa144CbB',
         ),
+        CompoundConfig(
+            name='flux',
+            address='0x95Af143a021DF745bc78e845b54591C53a8B3A51',
     ],
     Network.Fantom: [
         CompoundConfig(
