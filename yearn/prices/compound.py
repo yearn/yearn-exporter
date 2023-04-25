@@ -55,6 +55,7 @@ addresses = {
         CompoundConfig(
             name='flux',
             address='0x95Af143a021DF745bc78e845b54591C53a8B3A51',
+        ),
     ],
     Network.Fantom: [
         CompoundConfig(
