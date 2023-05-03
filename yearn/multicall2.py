@@ -139,10 +139,14 @@ def batch_call(calls):
     responses = [requests.post(web3.provider.endpoint_uri, json=jsonrpc_batch).json() for jsonrpc_batch in chunks]
 
     for response in responses:
-        # A successful response will be a list
-        if isinstance(response, dict) and 'result' in response and isinstance(response['result'], dict) and 'message' in response['result']:
-            raise ValueError(response['result']['message'])
-            
+        # A successful response will be a list, a dict means an err.
+        if isinstance(response, dict):
+            if 'result' in response and isinstance(response['result'], dict) and 'message' in response['result']:
+                raise ValueError(response['result']['message'])
+            elif 'error' in response and isinstance(response['error'], dict) and 'message' in response['error']:
+                raise ValueError(response['error']['message'])
+            raise NotImplementedError(f"Need to code err handling for {response}")
+        
         for call_response in response:
             if 'error' in call_response:
                 raise ValueError(call_response['error']['message'])
