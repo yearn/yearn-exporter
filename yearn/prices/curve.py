@@ -96,8 +96,9 @@ class Ids(IntEnum):
     CryptoSwap_Registry = 5
     CryptoPool_Factory = 6
     MetaFactory = 7
-    crvUSD_Plain_Pools_deprecated = 8
-    crvUSD_Plain_Pools = 9
+    crvUSD_Plain_Pools_deprecated_1 = 8
+    crvUSD_Plain_Pools_deprecated_2 = 9
+    crvUSD_Plain_Pools = 10
 
 class CurveRegistry(metaclass=Singleton):
 
