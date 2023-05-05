@@ -21,7 +21,7 @@ async def export_partners(block, ts):
     for partner, (partner_data, _) in zip(partners, partners_data):
         if len(partner_data) == 0:
             continue
-        partner_data = partner_data.loc[partner_data.index <= block.number]
+        partner_data = partner_data.loc[partner_data.index <= block]
 
         # export wrapper data
         metrics_to_export = []
