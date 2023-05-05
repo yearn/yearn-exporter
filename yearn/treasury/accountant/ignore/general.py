@@ -165,8 +165,13 @@ def is_lido_dev(tx: TreasuryTx) -> bool:
     ])
 
 def is_ycrv_for_testing(tx: TreasuryTx) -> bool:
-    """Sent as yvBoost from a contributor, sent back as st-yCRV when testing complete"""
     return tx in HashMatcher([
+        # Sent as yvBoost from a contributor, sent back as st-yCRV when testing complete
         "0x6dc184b139f9139e1957fd13c79b88bbc3d7aaa4d1763636c3243c6034318957",
         "0xcca77bd81437b603c4ec06d3be355aada276bac1a93ac9a77748a67799f1cc96",
+        
+        # sent as st-yCRV, sent back as CRV when testing complete
+        "0xcbf408c7edcc9aab0d81822308009995caf12c0399da39c7d7febbf5692ea5fe",
+        "0x97216ee7b0d3b474de38e0a5b978e20e6f636cc019eac75cd591280b6b8efc80",
+        ["0x85dc73fca1a8ec500bc46cd18782b8bba4c811714597fbdaaa209ac9f0c7f253", Filter('log_index', 279)],
     ])

@@ -29,3 +29,7 @@ def is_yyfi_fee_reimbursement(tx: TreasuryTx) -> bool:
 def is_lossy_fee_reimbursement(tx: TreasuryTx) -> bool:
     """old vault code doesn't prevent fees from making harvest lossy. so here we airdrop the fee-take back to vault and do some housekeeper to prevent this from happening on other strats."""
     return tx in HashMatcher([["0x61eea3d40b2dc8586a5d20109ed962998c43cc55a37c300f283820150490eaa0", Filter('log_index', 179)]])
+
+def is_stycrv(tx: TreasuryTx) -> bool:
+    """Some user lost some funds in a minor issue, then was reimbursed."""
+    return tx in HashMatcher([["0x491f07d134f3253ef06a2b46d83b82cdf2927b13cce4d38225d92ce01799da96", Filter('log_index', 197)]])

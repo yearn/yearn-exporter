@@ -3,7 +3,7 @@ from brownie import ZERO_ADDRESS, chain
 from y.networks import Network
 
 from yearn.entities import TreasuryTx
-from yearn.treasury.accountant.classes import Filter, HashMatcher
+from yearn.treasury.accountant.classes import Filter, HashMatcher, IterFilter
 from yearn.treasury.accountant.constants import treasury, v1, v2
 from yearn.utils import contract
 
@@ -76,6 +76,7 @@ def is_vault_withdrawal(tx: TreasuryTx) -> bool:
     if tx in HashMatcher({
         Network.Mainnet: [
             "0xfa8652a888039183770ae766b855160c5e962b2963745ba0b67334dae9605348",
+            ["0x6b3ede4a134198ab6139d019be3c303755aaa5c0502ba6e469adb934471fe23f", IterFilter('log_index', [291, 292])]
         ],
     }.get(chain.id, [])):
         return True

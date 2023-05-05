@@ -50,6 +50,17 @@ def is_fees_v2(tx: TreasuryTx) -> bool:
         for vault in v2.vaults + v2.experiments
     )
 
+factory_strats = [
+    ["Contract: StrategyCurveBoostedFactoryClonable", ["CRV", "LDO"]],
+    ["Contract: StrategyConvexFactoryClonable", ["CRV", "CVX"]],
+    ["Contract: StrategyConvexFraxFactoryClonable", ["CRV", "CVX", "FXS"]],
+]
+
+def is_factory_fees_v2(tx: TreasuryTx) -> bool:
+    for strategy, tokens in factory_strats:
+        if tx._from_nickname == strategy and tx._symbol in tokens:
+            return True
+
 def is_fees_v3(tx: TreasuryTx) -> bool:
     # Stay tuned...
     return False

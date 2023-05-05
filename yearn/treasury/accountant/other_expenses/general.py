@@ -50,6 +50,7 @@ def is_veyfi_gas(tx: TreasuryTx) -> bool:
     return tx._symbol == "ETH" and tx in HashMatcher([
         "0x8ed7ee716e04096a7274188b5b371bc7c92aff305fa7b47f32ad622374fb23fc",
         "0x9b8f9dfaaedceaeb2b286db92f2aba2d2e519954b47a2d603cd4ce5fd03336fe",
+        "0xe4b770cdbc0fce9d9acec45beb02113b50cb6903c2868b89c46f5d9382a6071f",
     ])
 
 def is_vesting_packages(tx: TreasuryTx) -> bool:
@@ -80,4 +81,10 @@ def is_fix_temple_migration(tx: TreasuryTx) -> bool:
     """Temple migration transaction did not honor proper split ratios. Sent the full amount manually using proper split ratio."""
     return tx in HashMatcher([
         ["0xfdb9e1e3bfe7aead37c5c2ff4952434be6db9f37980677410e9a40eb05a1730b", Filter('log_index', 240)],
+    ])
+
+def is_ychute(tx: TreasuryTx) -> bool:
+    """Parachute incentive"""
+    return tx in HashMatcher([
+        "0x8a9a652090ab73e981c4f4563421e0c2fd589f4eb75f21d6101391f96cbfc33e", Filter('_symbol', 'DAI')
     ])

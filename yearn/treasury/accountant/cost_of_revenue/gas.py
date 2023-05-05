@@ -61,6 +61,8 @@ def is_strategist_gas(tx: TreasuryTx) -> bool:
                 "0x96be538314a6547063a5b81ded9bda38a067528d4bcfc558eee976a684e5b44a",
                 ["0xebfff9a2fd6103d73f417c675db2dc43742bdb6f496f04d3cfd1938046001d70", Filter("_symbol", "ETH")],
                 "0x269bcda1327da47fc0be53e044540f199ffb4c3f15146e0cb61348093b43b66e",
+                ["0x96728585c7b1720f2e94a3a2ff339ed6433bd6687cd680dd2534e6837271111a", Filter('_from_nickname', "Disperse.app")],
+                ["0xecbc1474610b31046124aa6323863f47d6e348385056ab80c3cc1f6b963f5d68", Filter('_from_nickname', "Disperse.app")],
             ],
         }.get(chain.id, []))
     return tx in HashMatcher({

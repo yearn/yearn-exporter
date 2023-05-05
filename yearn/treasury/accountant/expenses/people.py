@@ -83,7 +83,8 @@ def is_ygift_grant(tx: TreasuryTx) -> bool:
 def is_frontend_support(tx: TreasuryTx) -> bool:
     return tx in HashMatcher([
         ["0x213979422ec4154eb0aa0db4b03f48e1669c08fa055ab44e4006fa7d90bb8547", IterFilter('log_index', [535,536])],
-        ["0x57bc99f6007989606bdd9d1adf91c99d198de51f61d29689ee13ccf440b244df", Filter('log_index', 80)]
+        ["0x57bc99f6007989606bdd9d1adf91c99d198de51f61d29689ee13ccf440b244df", Filter('log_index', 80)],
+        "0x9323935229a0f1fcbfbd95da7eea5eb7fe151da8ac62a21e9f38b29d5abde044",
     ])
 
 def is_other_grant(tx: TreasuryTx) -> bool:
@@ -112,6 +113,7 @@ def is_other_grant(tx: TreasuryTx) -> bool:
         "0xbe856983c92200982e5fce3b362c91805886422ae858391802a613dc329e7c9b",
         "0xf63d61ae6508d9b44e3dca4edf35282ef88341b76229b0dfa121bdc0dd095457",
         "0xd9f528e15a93cfacfbcaacbfe01110083fc7d7787e94d4cae4c09b174eef543f",
+        "0xa1c1635bdd4786361b3cb39322bc78ba4511986fb517f1709ef04c7b3bfa9244",
     ]):
         # Since we want to negate an expense instead of record income, we just multiply amount and value by -1.
         tx.amount *= -1
