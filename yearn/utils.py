@@ -2,17 +2,17 @@ import asyncio
 import json
 import logging
 import threading
-import pandas as pd
-from concurrent.futures import ThreadPoolExecutor
 from functools import lru_cache
 from time import sleep
 from typing import Any, Callable, List
 
 import eth_retry
+import pandas as pd
 from brownie import Contract, chain, convert, interface, web3
 from brownie.convert.datatypes import HexString
 from brownie.network.contract import _fetch_from_explorer, _resolve_address
 from dank_mids.brownie_patch import patch_contract
+from eth_portfolio.constants import sync_threads
 from y.utils.dank_mids import dank_w3
 
 from yearn.cache import memory
@@ -22,7 +22,6 @@ from yearn.typing import AddressOrContract
 
 logger = logging.getLogger(__name__)
 
-thread_pool = ThreadPoolExecutor(4)
 
 BINARY_SEARCH_BARRIER = {
     Network.Mainnet: 0,
@@ -291,4 +290,4 @@ def _squeeze(it):
     return it
 
 def run_in_thread(callable: Callable, *args, **kwargs) -> Any:
-    return asyncio.get_event_loop().run_in_executor(thread_pool, callable, *args, **kwargs)
+    return asyncio.get_event_loop().run_in_executor(sync_threads, callable, *args, **kwargs)

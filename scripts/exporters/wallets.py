@@ -5,12 +5,12 @@ from datetime import datetime, timezone
 import sentry_sdk
 from brownie import chain
 from cachetools.func import ttl_cache
-from y.constants import thread_pool_executor
 from y.time import closest_block_after_timestamp
 from yearn.entities import UserTx
 from yearn.helpers.exporter import Exporter
 from yearn.outputs.postgres.utils import last_recorded_block
 from yearn.outputs.victoria.victoria import _post
+from yearn.utils import run_in_thread
 from yearn.yearn import Yearn
 
 sentry_sdk.set_tag('script','wallet_exporter')
@@ -34,7 +34,7 @@ def postgres_ready(snapshot: datetime) -> bool:
 class WalletExporter(Exporter):
     async def export_historical_snapshot_if_missing(self, snapshot: datetime, resolution: str) -> None:
         """ Override a method on Exporter so we can add an additional check. """
-        if await asyncio.get_event_loop().run_in_executor(thread_pool_executor, postgres_ready, snapshot):
+        if await run_in_thread(postgres_ready, snapshot):
             return await super().export_historical_snapshot_if_missing(snapshot, resolution)
 
 exporter = WalletExporter(
