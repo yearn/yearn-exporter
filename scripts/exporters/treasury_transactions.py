@@ -79,7 +79,7 @@ def _validate_integrity_error(row, log_index: int) -> None:
     assert row['to'] == existing_object.to_address.address, (row['to'],existing_object.to_address.address)
     assert row['from'] == existing_object.from_address.address, (row['from'], existing_object.from_address.address)
     assert row['token_address'] == existing_object.token.address.address, (row['token_address'], existing_object.token.address.address)
-    assert row['value'] == existing_object.amount, (row['value'], existing_object.amount)
+    assert row['value'] == existing_object.amount or row['value'] == -1 * existing_object.amount, (row['value'], existing_object.amount)
     assert row['blockNumber'] == existing_object.block, (row['blockNumber'], existing_object.block)
     # NOTE All good!
 
