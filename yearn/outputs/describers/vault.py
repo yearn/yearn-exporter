@@ -1,22 +1,12 @@
 
 import asyncio
 from concurrent.futures import ProcessPoolExecutor
-from typing import Optional
-from y.prices.magic import get_price_async
-from y.datatypes import AnyAddressType, Block
+
 from yearn.outputs.postgres.utils import fetch_balances
-from yearn.prices.incidents import INCIDENTS
+from yearn.prices.magic import _get_price
 
 data_processes = ProcessPoolExecutor(5)
 
-async def _get_price(token: AnyAddressType, block: Optional[Block]) -> float:
-    try:
-        return await get_price_async(token, block)
-    except:
-        for incident in INCIDENTS[token]:
-            if incident['start'] <= block <= incident['end']:
-                return incident['result']
-        raise
 
 class VaultWalletDescriber:
     async def wallets(self, vault_address, block=None):
