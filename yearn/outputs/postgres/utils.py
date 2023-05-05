@@ -104,7 +104,7 @@ def cache_txgroup(name: str, parent: Optional[TxGroup] = None) -> TxGroup:
     if not _txgroup:
         _txgroup = TxGroup(name=name, parent_txgroup=parent)
         logger.info(f'TxGroup {name} added to postgres')
-    if parent != _txgroup.parent_txgroup:
+    if parent and parent != _txgroup.parent_txgroup:
         _txgroup.parent_txgroup = parent
     return _txgroup
 
