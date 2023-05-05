@@ -15,7 +15,7 @@ from yearn.exceptions import UnsupportedNetwork
 from yearn.multicall2 import multicall_matrix, multicall_matrix_async
 from yearn.prices.compound import get_fantom_ironbank
 from yearn.typing import Address
-from yearn.utils import contract, run_in_thread
+from yearn.utils import contract
 
 logger = logging.getLogger(__name__)
 
@@ -88,7 +88,7 @@ class Registry:
         return contract(addr) if isinstance(addr, str) else addr()
 
     async def describe(self, block=None):
-        markets = await run_in_thread(self.active_vaults_at, block)
+        markets = await self.active_vaults_at(block)
         blocks_per_year = 365 * 86400 / 15
         contracts = [m.vault for m in markets]
         methods = [
@@ -135,7 +135,7 @@ class Registry:
         return dict(output)
 
     async def total_value_at(self, block=None):
-        markets = await run_in_thread(self.active_vaults_at, block)
+        markets = await self.active_vaults_at(block)
         data_coro = multicall_matrix_async(
             [market.vault for market in markets],
             ["getCash", "totalBorrows", "totalReserves", "totalSupply"],
@@ -152,12 +152,12 @@ class Registry:
             for market, price, res in zip(markets, prices, results)
         }
 
-    def active_vaults_at(self, block=None):
+    async def active_vaults_at(self, block=None):
         if block is None:
             return self.vaults
 
         try:
-            active_markets_at_block = self.ironbank.getAllMarkets(block_identifier=block)
+            active_markets_at_block = await self.ironbank.getAllMarkets.coroutine(block_identifier=block)
             return [market for market in self.vaults if market.vault in active_markets_at_block]
         except ValueError:
             return []

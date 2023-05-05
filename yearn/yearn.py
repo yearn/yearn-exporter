@@ -5,7 +5,7 @@ from time import time
 from typing import List
 
 from brownie import chain
-from y.contracts import contract_creation_block
+from y.contracts import contract_creation_block_async
 from y.networks import Network
 
 import yearn.iearn
@@ -69,17 +69,14 @@ class Yearn:
         logger.info('loaded yearn in %.3fs', time() - start)
 
 
-    def active_vaults_at(self, block=None):
-        active = [
-            vault
-            for registry in self.registries.values()
-            for vault in registry.active_vaults_at(block=block)
-        ]
+    async def active_vaults_at(self, block=None):
+        active_vaults_by_registry = await asyncio.gather(*[registry.active_vaults_at(block) for registry in self.registries.values()])
+        active = [vault for registry in active_vaults_by_registry for vault in registry]
         
         # [yGov] Doesn't count for this context
         if chain.id == Network.Mainnet and (
             block is None
-            or block > contract_creation_block(yearn.special.Ygov().vault.address)
+            or block > await contract_creation_block_async(yearn.special.Ygov().vault.address)
             ): active.remove(yearn.special.Ygov())
 
         return active

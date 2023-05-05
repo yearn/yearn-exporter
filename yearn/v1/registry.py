@@ -5,14 +5,14 @@ from typing import Dict, List, Optional
 
 from brownie import chain, interface, web3
 from dank_mids.brownie_patch import patch_contract
-from y.contracts import contract_creation_block
+from y.contracts import contract_creation_block_async
 from y.networks import Network
 from y.utils.dank_mids import dank_w3
 
 from yearn.exceptions import UnsupportedNetwork
 from yearn.multicall2 import fetch_multicall_async
 from yearn.typing import Block
-from yearn.utils import contract, run_in_thread
+from yearn.utils import contract
 from yearn.v1.vaults import VaultV1
 
 logger = logging.getLogger(__name__)
@@ -38,21 +38,22 @@ class Registry:
         return f"<Registry V1 vaults={len(self.vaults)}>"
 
     async def describe(self, block: Optional[Block] = None) -> Dict[str, Dict]:
-        vaults = await run_in_thread(self.active_vaults_at, block)
+        vaults = await self.active_vaults_at(block)
         share_prices = await fetch_multicall_async(*[[vault.vault, "getPricePerFullShare"] for vault in vaults], block=block)
         vaults = [vault for vault, share_price in zip(vaults, share_prices) if share_price]
         data = await asyncio.gather(*[vault.describe(block=block) for vault in vaults])
         return {vault.name: desc for vault, desc in zip(vaults, data)}
 
     async def total_value_at(self, block: Optional[Block] = None) -> Dict[str, float]:
-        vaults = await run_in_thread(self.active_vaults_at, block)
+        vaults = await self.active_vaults_at(block)
         balances = await fetch_multicall_async(*[[vault.vault, "balance"] for vault in vaults], block=block)
         # skip vaults with zero or erroneous balance
         vaults = [(vault, balance) for vault, balance in zip(vaults, balances) if balance]
         prices = await asyncio.gather(*[vault.get_price(block) for (vault, balance) in vaults])
         return {vault.name: balance * price / 10 ** vault.decimals for (vault, balance), price in zip(vaults, prices)}
 
-    def active_vaults_at(self, block: Optional[Block] = None) -> List[VaultV1]:
+    async def active_vaults_at(self, block: Optional[Block] = None) -> List[VaultV1]:
         if block:
-            return [vault for vault in self.vaults if contract_creation_block(str(vault.vault)) < block]
+            blocks = await asyncio.gather(*[contract_creation_block_async(str(vault.vault)) for vault in self.vaults])
+            return [vault for vault, deploy_block in zip(self.vaults, blocks) if deploy_block < block]
         return self.vaults

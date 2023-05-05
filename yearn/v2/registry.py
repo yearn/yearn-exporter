@@ -11,7 +11,7 @@ from dank_mids.brownie_patch import patch_contract
 from joblib import Parallel, delayed
 from web3._utils.abi import filter_by_name
 from web3._utils.events import construct_event_topic_set
-from y.contracts import contract_creation_block
+from y.contracts import contract_creation_block_async
 from y.networks import Network
 from y.prices import magic
 from y.utils.dank_mids import dank_w3
@@ -21,7 +21,7 @@ from yearn.decorators import (sentry_catch_all, wait_or_exit_after,
 from yearn.events import create_filter, decode_logs, get_logs_asap
 from yearn.exceptions import UnsupportedNetwork
 from yearn.multicall2 import fetch_multicall, fetch_multicall_async
-from yearn.utils import Singleton, contract, run_in_thread
+from yearn.utils import Singleton, contract
 from yearn.v2.vaults import Vault
 
 logger = logging.getLogger(__name__)
@@ -190,28 +190,26 @@ class Registry(metaclass=Singleton):
         Parallel(8, "threading")(delayed(vault.load_harvests)() for vault in vaults)
 
     async def describe(self, block=None):
-        vaults = await run_in_thread(self.active_vaults_at, block)
+        vaults = await self.active_vaults_at(block)
         results = await asyncio.gather(*[vault.describe(block=block) for vault in vaults])
         return {vault.name: result for vault, result in zip(vaults, results)}
 
     async def total_value_at(self, block=None):
-        vaults = await run_in_thread(self.active_vaults_at, block)
+        vaults = await self.active_vaults_at(block)
         prices, results = await asyncio.gather(
             asyncio.gather(*[magic.get_price_async(str(vault.token), block=block) for vault in vaults]),
             fetch_multicall_async(*[[vault.vault, "totalAssets"] for vault in vaults], block=block),
         )
         return {vault.name: assets * price / vault.scale for vault, assets, price in zip(vaults, results, prices)}
 
-    def active_vaults_at(self, block=None):
+    async def active_vaults_at(self, block=None):
         vaults = self.vaults + self.experiments
         if block:
-            vaults = [vault for vault in vaults if contract_creation_block(str(vault.vault)) <= block]
+            blocks = await asyncio.gather(*[contract_creation_block_async(str(vault.vault)) for vault in vaults])
+            vaults = [vault for vault, deploy_block in zip(vaults, blocks) if deploy_block <= block]
         # fixes edge case: a vault is not necessarily initialized on creation
         activations = fetch_multicall(*[[vault.vault, 'activation'] for vault in vaults], block=block)
         return [vault for vault, activation in zip(vaults, activations) if activation]
-
-    def wallets(self, block=None):
-        return set(vault.wallets(block) for vault in self.active_vaults_at(block))
 
     def _filter_vaults(self):
         if chain.id in DEPRECATED_VAULTS:

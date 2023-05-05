@@ -3,6 +3,7 @@ from random import randint
 
 import pytest
 from brownie import chain
+from multicall.utils import await_awaitable
 from tests.fixtures.decorators import ib_chains_only
 from y.contracts import contract_creation_block
 
@@ -52,7 +53,7 @@ def test_describe_ib(block):
 @ib_chains_only
 @pytest.mark.parametrize('block',blocks)
 def test_active_vaults_at_ib(block):
-    assert registry.active_vaults_at(block=block), f"Unable to fetch active ironbank deployments at block {block}."
+    assert await_awaitable(registry.active_vaults_at(block=block)), f"Unable to fetch active ironbank deployments at block {block}."
 
 
 @ib_chains_only
