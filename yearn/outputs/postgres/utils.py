@@ -34,10 +34,24 @@ def cache_address(address: str) -> Address:
     chain = cache_chain()
     address_entity = Address.get(address=address, chain=chain)
     if not address_entity:
+        if is_contract(address):
+            try:
+                nickname = f"Contract: {contract(address.address)._build['contractName']}"
+            except ValueError as e:
+                if (
+                    "Contract source code not verified" in str(e)
+                    or (str(e).startswith("Source for") and str(e).endswith("has not been verified"))
+                ):
+                    nickname = f"Non-Verified Contract: {address.address}"
+                else:
+                    raise
+        else:
+            nickname = None
         address_entity = Address(
             address=address,
             chain=chain,
-            is_contract=is_contract(address)
+            is_contract=is_contract(address),
+            nickname=nickname,
         )
     return address_entity
 
@@ -65,6 +79,11 @@ def cache_token(address: str) -> Token:
                 name = hex_to_string(name)
             if isinstance(symbol, HexString):
                 symbol = hex_to_string(symbol)
+        
+        if address_entity.nickname is None or address_entity.nickname.startswith("Contract: "):
+            # Don't overwrite any intentionally set nicknames, if applicable
+            address_entity.nickname = f"Token: {name}"
+        
         try:
             token = Token(
                 address=address_entity,
