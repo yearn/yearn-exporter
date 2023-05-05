@@ -3,7 +3,7 @@ import os
 from typing import Any, Dict, Optional, Union
 
 from brownie import chain, convert
-from y.networks import Network
+from y import Contract, Network
 
 from yearn.constants import WRAPPED_GAS_COIN
 from yearn.prices import constants
@@ -11,7 +11,6 @@ from yearn.prices.uniswap.v1 import UniswapV1, uniswap_v1
 from yearn.prices.uniswap.v2 import UniswapV2Multiplexer, uniswap_v2
 from yearn.prices.uniswap.v3 import UniswapV3, uniswap_v3
 from yearn.typing import Address, AddressOrContract, Block
-from yearn.utils import contract
 
 logger = logging.getLogger(__name__)
 Uniswap = Union[UniswapV1,UniswapV2Multiplexer,UniswapV3]
@@ -68,7 +67,7 @@ class UniswapVersionMultiplexer:
             if uni.name != best_market:
                 continue
             quote = uni.router.getAmountsOut(amount_in, path, block_identifier=block)[-1]
-            quote /= 10 ** contract(constants.usdc).decimals()
+            quote /= 10 ** Contract(constants.usdc).decimals()
             fees = 0.997 ** (len(path) - 1)
             return quote / fees
 

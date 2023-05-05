@@ -2,11 +2,12 @@ import asyncio
 from collections import Counter
 
 from brownie import chain
-from y.networks import Network
+from y import Contract, Network
 
 from yearn.outputs.describers.vault import VaultWalletDescriber
-from yearn.utils import contract
 
+if chain.id == Network.Mainnet:
+    yGov = Contract("0xBa37B002AbaFDd8E89a1995dA52740bbC013D992")
 
 class RegistryWalletDescriber:
     def __init__(self):
@@ -14,10 +15,10 @@ class RegistryWalletDescriber:
 
     async def active_vaults_at(self, registry: tuple, block=None):
         label, registry = registry
-        active = [vault for vault in await registry.active_vaults_at(block=block)]  
+        active = await registry.active_vaults_at(block=block)
         if chain.id == Network.Mainnet:
             # [yGov] Doesn't count for this context
-            active = [vault for vault in active if vault.vault != contract("0xBa37B002AbaFDd8E89a1995dA52740bbC013D992")]
+            active = [vault for vault in active if vault.vault != yGov]
         return active
         
     async def describe_wallets(self, registry: tuple, block=None):

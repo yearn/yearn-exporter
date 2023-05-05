@@ -8,14 +8,13 @@ from typing import List
 from brownie import chain
 from brownie.network.contract import InterfaceContainer
 from cachetools.func import ttl_cache
-from y.networks import Network
+from y import Contract, Network
 from y.prices import magic
 
 from yearn.exceptions import UnsupportedNetwork
 from yearn.multicall2 import multicall_matrix, multicall_matrix_async
 from yearn.prices.compound import get_fantom_ironbank
 from yearn.typing import Address
-from yearn.utils import contract
 
 logger = logging.getLogger(__name__)
 
@@ -62,9 +61,9 @@ class Registry:
     
     def load_new_markets(self) -> List[IronbankMarket]:
         new_markets = self.__all_markets[len(self._vaults):]
-        new_markets = [contract(market) for market in new_markets]
+        new_markets = [Contract(market) for market in new_markets]
         cdata = multicall_matrix(new_markets, ["symbol", "underlying", "decimals"])
-        underlying = [contract(cdata[x]["underlying"]) for x in new_markets]
+        underlying = [Contract(cdata[x]["underlying"]) for x in new_markets]
         data = multicall_matrix(underlying, ["symbol", "decimals"])
         new_markets = [
             IronbankMarket(
@@ -85,7 +84,7 @@ class Registry:
     @cached_property
     def ironbank(self):
         addr = addresses[chain.id]
-        return contract(addr) if isinstance(addr, str) else addr()
+        return Contract(addr) if isinstance(addr, str) else addr()
 
     async def describe(self, block=None):
         markets = await self.active_vaults_at(block)

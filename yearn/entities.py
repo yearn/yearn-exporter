@@ -4,18 +4,18 @@ from datetime import date, datetime, timedelta
 from decimal import Decimal
 from functools import cached_property, lru_cache
 
-from brownie import Contract, chain
+from brownie import chain
 from brownie.network.event import _EventItem
 from brownie.network.transaction import TransactionReceipt
 from cachetools.func import ttl_cache
 from pony.orm import *
-from y import get_price
+from y import Contract, get_price
 from y.time import closest_block_after_timestamp
 from y.contracts import contract_creation_block
 from y.utils.events import decode_logs, get_logs_asap
 
 from yearn.treasury.constants import BUYER
-from yearn.utils import contract, dates_between
+from yearn.utils import dates_between
 
 db = Database()
 
@@ -282,13 +282,13 @@ class Stream(db.Entity):
                                                       cache_txgroup)
 
             txgroup = {
-                BUYER: "Top-up Buyer Contract",
+                BUYER: "Top-up Buyer Contract(",
                 v3_multisig: "V3 Development",
             }.get(to_address, "Other Grants")
 
             txgroup = cache_txgroup(txgroup)
             stream_contract = cache_address(log.address)
-            token = cache_token(contract(log.address).token())
+            token = cache_token(Contract(log.address).token())
             from_address = cache_address(from_address)
             to_address = cache_address(to_address)
 
@@ -309,7 +309,7 @@ class Stream(db.Entity):
     
     @property
     def stream_contract(self) -> Contract:
-        return contract(self.contract.address)
+        return Contract(self.contract.address)
     
     def start_timestamp(self, block: typing.Optional[int] = None) -> int:
         return int(self.stream_contract.streamToStart('0x' + self.stream_id, block_identifier=block))
@@ -436,7 +436,7 @@ class VestingEscrow(db.Entity):
 
     @cached_property
     def contract(self) -> Contract:
-        return contract(self.address.address)
+        return Contract(self.address.address)
     
     def dates(self) -> typing.List[date]:
         return [

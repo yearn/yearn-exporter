@@ -7,12 +7,11 @@ import sentry_sdk
 from semantic_version import Version
 from tokenlists import TokenInfo, TokenList
 from toolz import unique
-
+from y import Contract
 from y.contracts import contract_creation_block
 from y.time import get_block_timestamp
 
 from yearn.multicall2 import multicall_matrix
-from yearn.utils import contract
 from yearn.yearn import Yearn
 
 sentry_sdk.set_tag('script','tokenlist')
@@ -48,7 +47,7 @@ def main():
 
     # Token from special / side projects
     special = [
-        contract("0xD0660cD418a64a1d44E9214ad8e459324D8157f1") # WOOFY
+        Contract("0xD0660cD418a64a1d44E9214ad8e459324D8157f1") # WOOFY
     ]
     metadata = multicall_matrix(special, ["name", "symbol", "decimals"])
     for token in special:

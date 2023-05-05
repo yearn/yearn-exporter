@@ -4,12 +4,12 @@ from typing import Optional
 from brownie import ZERO_ADDRESS, chain, convert
 from brownie.convert.datatypes import HexString
 from pony.orm import db_session, select
-from y.networks import Network
+from y import Contract, Network
 
 from yearn.entities import (Address, Chain, Token, TreasuryTx, TxGroup, UserTx,
                             db)
 from yearn.multicall2 import fetch_multicall
-from yearn.utils import contract, hex_to_string, is_contract
+from yearn.utils import hex_to_string, is_contract
 
 logger = logging.getLogger(__name__)
 
@@ -36,7 +36,7 @@ def cache_address(address: str) -> Address:
     if not address_entity:
         if is_contract(address):
             try:
-                nickname = f"Contract: {contract(address)._build['contractName']}"
+                nickname = f"Contract: {Contract(address)._build['contractName']}"
             except ValueError as e:
                 if (
                     "Contract source code not verified" in str(e)
@@ -74,7 +74,7 @@ def cache_token(address: str) -> Token:
             }[chain.id]
             decimals = 18
         else:
-            token = contract(address)
+            token = Contract(address)
             symbol, name, decimals = fetch_multicall([token,'symbol'],[token,'name'],[token,'decimals'])
 
             # MKR contract returns name and symbol as bytes32 which is converted to a brownie HexString

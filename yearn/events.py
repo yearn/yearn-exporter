@@ -11,11 +11,11 @@ from joblib import Parallel, delayed
 from toolz import groupby
 from web3.middleware.filter import block_ranges
 from web3.types import LogReceipt, RPCEndpoint
+from y import Contract
 from y.contracts import contract_creation_block
 
 from yearn.middleware.middleware import BATCH_SIZE
 from yearn.typing import Address, Block, Topics
-from yearn.utils import contract
 
 logger = logging.getLogger(__name__)
 
@@ -51,7 +51,7 @@ def create_filter(address: Address, topics: Optional[Topics] = None) -> RPCEndpo
 
 def __add_deployment_topics(address: Address) -> None:
     try:
-        _add_deployment_topics(address, contract(address).abi)
+        _add_deployment_topics(address, Contract(address).abi)
     except ContractNotFound:
         # This contract seems to have self destructed
         pass
