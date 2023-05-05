@@ -86,5 +86,5 @@ def is_fix_temple_migration(tx: TreasuryTx) -> bool:
 def is_ychute(tx: TreasuryTx) -> bool:
     """Parachute incentive"""
     return tx in HashMatcher([
-        "0x8a9a652090ab73e981c4f4563421e0c2fd589f4eb75f21d6101391f96cbfc33e", Filter('_symbol', 'DAI')
+        ["0x8a9a652090ab73e981c4f4563421e0c2fd589f4eb75f21d6101391f96cbfc33e", Filter('_symbol', 'DAI')],
     ])
