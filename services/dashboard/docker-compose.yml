@@ -31,7 +31,7 @@ x-envs: &envs
   - PYTHONASYNCIODEBUG
   # dank-mids (mandatory)
   # NOTE: We do this to limit memory consumption, on a big server you can increase for faster performance.
-  - DANK_MIDS_BROWNIE_CALL_SEMAPHORE=${DANK_MIDS_BROWNIE_CALL_SEMAPHORE:-50000}
+  - DANK_MIDS_BROWNIE_CALL_SEMAPHORE=${DANK_MIDS_BROWNIE_CALL_SEMAPHORE:-10000}
   # dank-mids (optional)
   - MAX_JSONRPC_BATCH_SIZE
   - DANK_MIDS_DEMO_MODE
