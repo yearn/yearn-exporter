@@ -4,9 +4,11 @@ import pytest
 from brownie import ZERO_ADDRESS, chain
 from brownie.exceptions import VirtualMachineError
 from tests.fixtures.decorators import mainnet_only
+from y.contracts import contract_creation_block
+
 from yearn.exceptions import UnsupportedNetwork
 from yearn.multicall2 import fetch_multicall
-from yearn.utils import contract, contract_creation_block
+from yearn.utils import contract
 from yearn.v1.registry import Registry
 from yearn.v1.vaults import VaultV1
 

@@ -11,7 +11,7 @@ from yearn.prices.uniswap.v1 import UniswapV1, uniswap_v1
 from yearn.prices.uniswap.v2 import UniswapV2Multiplexer, uniswap_v2
 from yearn.prices.uniswap.v3 import UniswapV3, uniswap_v3
 from yearn.typing import Address, AddressOrContract, Block
-from yearn.utils import contract, contract_creation_block
+from yearn.utils import contract
 
 logger = logging.getLogger(__name__)
 Uniswap = Union[UniswapV1,UniswapV2Multiplexer,UniswapV3]
