@@ -16,6 +16,7 @@ x-envs: &envs
   - LOG_LEVEL
   - DEBUG
   - SKIP_DEEP_UNISWAPS
+  - SHOW_STATS
   - POOL_SIZE
   - TX_POOL_SIZE
   - RESOLUTION
