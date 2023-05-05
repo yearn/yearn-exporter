@@ -23,6 +23,8 @@ x-envs: &envs
   - REORG_BUFFER
   - JSONRPC_BATCH_MAX_SIZE
   - AIOHTTP_TIMEOUT=${AIOHTTP_TIMEOUT:-1800}
+  # asyncio (optional, debugging)
+  - PYTHONASYNCIODEBUG
   # dank-mids (optional)
   - DANK_MIDS_DEMO_MODE
   # eth-retry (optional)
