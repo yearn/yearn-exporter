@@ -192,7 +192,7 @@ class Exporter:
             while not all(queue.empty() for queue in queues):
                 prune_completed_futs()
                 if len(running_futs) >= max_running_futs:  # Some arbitrary number
-                    await asyncio.sleep(0)
+                    await asyncio.sleep(2)
                     continue
                 with suppress(QueueEmpty):
                     work_item: WorkItem
@@ -207,7 +207,7 @@ class Exporter:
             
         while running_futs:
             prune_completed_futs()
-            await asyncio.sleep(0)
+            await asyncio.sleep(10)
     
     # Export Methods
     
