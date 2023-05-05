@@ -17,6 +17,12 @@ if chain.id == Network.Mainnet:
     other_expense_txgroup.create_child("Aztek Gas Subsidy", general.is_aztek_gas_subsidy)
     other_expense_txgroup.create_child("Devcon Event", general.is_devcon_event)
     other_expense_txgroup.create_child("EthGlobal", general.is_eth_global)
+    other_expense_txgroup.create_child("veYFI Gas Subsidy", general.is_veyfi_gas)
+    other_expense_txgroup.create_child("1 YFI for Signers", general.one_yfi_for_signers)
+    other_expense_txgroup.create_child("Vesting Packages", general.is_vesting_packages)
+    other_expense_txgroup.create_child("Strategist Buyout", general.is_strategist_buyout)
+    other_expense_txgroup.create_child("New Stream Gas Subsidy", general.is_new_stream_gas_subsidy)
+    other_expense_txgroup.create_child("Fix Temple Migration", general.is_fix_temple_migration)
 
 # Bugs
 if chain.id == Network.Mainnet:

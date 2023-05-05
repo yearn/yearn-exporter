@@ -131,3 +131,9 @@ def is_ycrv_grant(tx: TreasuryTx) -> bool:
     return tx in HashMatcher([
         "0x116a44242ffafd12a8e40a7a2dbc9f6a98580ca4d72e626ddb60d09417cab15d",
     ])
+    
+def is_docs_grant(tx: TreasuryTx) -> bool:
+    """https://github.com/yearn/budget/issues/105"""
+    return tx in HashMatcher([
+        "0x99f8e351a15e7ce7f0acbae2dea52c56cd93ef97b0a5981f79a68180ff777f00",
+    ])

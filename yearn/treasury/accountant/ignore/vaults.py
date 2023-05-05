@@ -3,7 +3,7 @@ from brownie import ZERO_ADDRESS, chain
 from y.networks import Network
 
 from yearn.entities import TreasuryTx
-from yearn.treasury.accountant.classes import HashMatcher
+from yearn.treasury.accountant.classes import Filter, HashMatcher
 from yearn.treasury.accountant.constants import treasury, v1, v2
 from yearn.utils import contract
 
@@ -110,3 +110,14 @@ def is_dolla_fed_withdrawal(tx: TreasuryTx) -> bool:
         return True
     elif tx.from_address.address in treasury.addresses and tx.to_address and tx.to_address.address == ZERO_ADDRESS and tx._symbol == "yvCurve-DOLA-U":
         return True
+
+def is_dola_frax_withdrawal(tx: TreasuryTx) -> bool:
+    if tx._symbol == "yvCurve-DOLA-FRAXBP-U" and tx._from_nickname == "Yearn yChad Multisig" and tx._to_nickname == "Zero Address":
+        return True
+    elif tx._symbol == "DOLAFRAXBP3CRV-f" and tx._from_nickname == "Token: Curve DOLA-FRAXBP Pool yVault - Unlisted" and tx._to_nickname == "Yearn yChad Multisig":
+        return True
+    return tx in HashMatcher([
+        ["0x59a3a3b9e724835958eab6d0956a3acf697191182c41403c96d39976047d7240", Filter('log_index', 232)]
+    ])
+    
+

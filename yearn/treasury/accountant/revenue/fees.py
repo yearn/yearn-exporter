@@ -62,10 +62,18 @@ def is_yearn_fed_fees(tx: TreasuryTx) -> bool:
         # Old versions
         if tx._symbol in ["yvCurve-DOLA-U", "yveCRV-DAO"] and tx.from_address.address in ["0x09F61718474e2FFB884f438275C0405E3D3559d3", "0x7928becDda70755B9ABD5eE7c7D5E267F1412042"]:
             return True
+        if tx._symbol == "INV" and tx._from_nickname == "Inverse Treasury" and tx._to_nickname == "ySwap Multisig":
+            return True
+        if tx.from_address.address == "0x9D5Df30F475CEA915b1ed4C0CCa59255C897b61B" and tx._to_nickname == "ySwap Multisig":
+            return True
+    return False
+
+def is_dolafraxbp_fees(tx: TreasuryTx) -> bool:
+    return tx._from_nickname == "Contract: StrategyConvexFraxBpRewardsClonable" and tx._to_nickname == "Yearn yChad Multisig" and tx._symbol == "yvCurve-DOLA-FRAXBP-U"
 
 def is_temple(tx: TreasuryTx) -> bool:
     if tx._to_nickname in  ["Yearn Treasury", "Yearn yChad Multisig"]: # fees have been sent to both
         if tx._from_nickname == "Contract: StrategyConvexCrvCvxPairsClonable" and tx._symbol == "CRV":
             return True
-        elif tx._from_nickname == "Contract: Splitter" and tx._symbol == "yveCRV-DAO":
+        elif tx._from_nickname == "Contract: Splitter" and tx._symbol in ["yveCRV-DAO","CRV"]:
             return True

@@ -9,11 +9,12 @@ from yearn.treasury.accountant.classes import HashMatcher, TopLevelTxGroup
 from yearn.treasury.accountant.ignore import (general, maker, passthru,
                                               rescue_missions, staking, vaults,
                                               ygov)
-from yearn.treasury.accountant.ignore.swaps import (aave, buying_yfi, compound,
-                                                    cowswap, curve, otc,
-                                                    robovault, synthetix,
-                                                    uniswap, unwrapper, woofy,
-                                                    ycrv, yla)
+from yearn.treasury.accountant.ignore.swaps import (aave, balancer, buying_yfi,
+                                                    compound, cowswap, curve,
+                                                    otc, rkper, robovault,
+                                                    synthetix, uniswap,
+                                                    unwrapper, woofy, ycrv,
+                                                    yla)
 from yearn.utils import contract
 
 IGNORE_LABEL = "Ignore"
@@ -141,6 +142,7 @@ ignore_txgroup.create_child("Vault Deposit", vaults.is_vault_deposit)
 ignore_txgroup.create_child("Vault Withdrawal", vaults.is_vault_withdrawal)
 
 ignore_txgroup.create_child("DOLA Fed Withdrawal", vaults.is_dolla_fed_withdrawal)
+ignore_txgroup.create_child("DOLAFRAX Withdrawal", vaults.is_dola_frax_withdrawal)
 
 ignore_txgroup.create_child("Bonding KP3R", is_kp3r)
 ignore_txgroup.create_child("Gnosis Safe Execution", general.is_gnosis_execution)
@@ -153,6 +155,9 @@ if chain.id == Network.Mainnet:
     ignore_txgroup.create_child("Maker CDP Withdrawal", maker.is_yfi_cdp_withdrawal)
     ignore_txgroup.create_child("Minting DAI", maker.is_dai)
     ignore_txgroup.create_child("Replenish Streams", general.is_stream_replenishment)
+    ignore_txgroup.create_child("Clawback Vesting Packages", general.is_reclaim_locked_vest)
+    ignore_txgroup.create_child("Lido Dev Expense", general.is_lido_dev)
+    ignore_txgroup.create_child("Testing with contributor funds", general.is_ycrv_for_testing)
 elif chain.id == Network.Fantom:
     ignore_txgroup.create_child("OTCTrader", general.is_otc_trader)
 
@@ -161,6 +166,7 @@ ignore_txgroup.create_child("Sent thru Disperse.app", general.is_disperse_dot_ap
 # Pass-Thru to vaults
 passthru_txgroup = ignore_txgroup.create_child("Pass-Thru to Vaults", passthru.is_pass_thru)
 passthru_txgroup.create_child("Curve Bribes for yveCRV", passthru.is_curve_bribe)
+passthru_txgroup.create_child("Sent to dinobots to dump", passthru.is_sent_to_dinoswap)
 if chain.id == Network.Mainnet:
     passthru_txgroup.create_child("Cowswap Migration", passthru.is_cowswap_migration)
     passthru_txgroup.create_child("Single Sided IB", passthru.is_single_sided_ib)
@@ -174,6 +180,7 @@ if chain.id == Network.Mainnet:
     passthru_txgroup.create_child("Convex Strats", passthru.is_convex_strat)
     passthru_txgroup.create_child("StrategyAuraUSDClonable", passthru.is_aura)
     passthru_txgroup.create_child("Bribes for yCRV", passthru.is_ycrv)
+    passthru_txgroup.create_child("BAL Rewards", passthru.is_bal)
 
 elif chain.id == Network.Fantom:
     passthru_txgroup.create_child("IB", passthru.is_ib)
@@ -203,12 +210,15 @@ swaps_txgroup.create_child("Compound Withdrawal", compound.is_compound_withdrawa
 swaps_txgroup.create_child("Aave Deposit", aave.is_aave_deposit)
 swaps_txgroup.create_child("Aave Withdrawal", aave.is_aave_withdrawal)
 
+swaps_txgroup.create_child("Balancer Swap", balancer.is_balancer_swap)
+
 swaps_txgroup.create_child("Synthetix Swap", synthetix.is_synthetix_swap)
 swaps_txgroup.create_child("WOOFY", woofy.is_woofy)
 swaps_txgroup.create_child("OTC", otc.is_otc)
 
 if chain.id == Network.Mainnet:
     swaps_txgroup.create_child("ySwaps Swap", cowswap.is_cowswap_swap)
+    swaps_txgroup.create_child("rKP3R Redemption", rkper.is_rkp3r_redemption)
     swaps_txgroup.create_child("YLA", yla.is_yla_withdrawal)
     swaps_txgroup.create_child("Unwrapper", unwrapper.is_unwrapper)
     swaps_txgroup.create_child("yCRV", ycrv.is_minting_ycrv)
