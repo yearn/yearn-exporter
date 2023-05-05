@@ -16,7 +16,6 @@ from yearn.prices.compound import compound
 from yearn.prices.fixed_forex import fixed_forex
 from yearn.prices.generic_amm import generic_amm
 from yearn.prices.incidents import INCIDENTS
-from yearn.prices.synthetix import synthetix
 from yearn.prices.uniswap.uniswap import uniswaps
 from yearn.prices.uniswap.v2 import uniswap_v2
 from yearn.prices.yearn import yearn_lens
@@ -134,7 +133,6 @@ def find_price(
         compound,
         fixed_forex,
         generic_amm,
-        synthetix,
         band,
         uniswaps
     ]
