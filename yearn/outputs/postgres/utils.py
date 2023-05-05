@@ -22,9 +22,9 @@ def cache_chain():
     _chain = Chain.get(chainid=chain.id)
     if not _chain:
         _chain = Chain(
-            chain_name = Network(chain.id).name,
+            chain_name = Network.name(),
             chainid = chain.id,
-            victoria_metrics_label = Network.label(chain.id)
+            victoria_metrics_label = Network.label(),
         )
     return _chain
 
