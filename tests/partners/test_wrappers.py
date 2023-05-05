@@ -1,7 +1,8 @@
 from brownie import chain
-from tests.fixtures.decorators import mainnet_only
 from toolz import concat
-from yearn.networks import Network
+from y.networks import Network
+
+from tests.fixtures.decorators import mainnet_only
 from yearn.partners import snapshot
 
 

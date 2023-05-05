@@ -4,8 +4,9 @@ import matplotlib.pyplot as plt
 import pandas as pd
 import sentry_sdk
 from matplotlib import colors
+from y.networks import Network
+
 from yearn.db.models import Block, Session, Snapshot, engine, select
-from yearn.networks import Network
 
 sentry_sdk.set_tag('script','science')
 

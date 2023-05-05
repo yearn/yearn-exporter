@@ -1,8 +1,9 @@
 
 import pytest
 from brownie import chain
+from y.networks import Network
+
 from yearn import ironbank
-from yearn.networks import Network
 from yearn.prices import aave, fixed_forex, synthetix
 from yearn.prices.uniswap import v3
 

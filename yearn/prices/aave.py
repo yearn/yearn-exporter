@@ -3,12 +3,12 @@ from typing import Dict, List, Literal, Optional
 from brownie import Contract, chain, web3
 from brownie.convert.datatypes import EthAddress
 from cachetools.func import ttl_cache
+from y.networks import Network
 
 from yearn.exceptions import UnsupportedNetwork
 from yearn.multicall2 import fetch_multicall
-from yearn.networks import Network
 from yearn.typing import Address, AddressOrContract
-from yearn.utils import Singleton, contract, _resolve_proxy
+from yearn.utils import Singleton, _resolve_proxy, contract
 
 address_providers = {
     Network.Mainnet: {

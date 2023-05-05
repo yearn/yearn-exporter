@@ -14,8 +14,9 @@ from y.classes.common import ERC20
 #from yearn.prices.constants import weth
 #from yearn.prices.magic import _describe_err
 from y.exceptions import NonStandardERC20
+from y.networks import Network
+
 from yearn.constants import STRATEGIST_MULTISIG, TREASURY_WALLETS
-from yearn.networks import Network
 from yearn.outputs.victoria.victoria import _build_item
 
 logger = logging.getLogger(__name__)

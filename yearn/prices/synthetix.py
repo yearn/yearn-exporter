@@ -5,10 +5,10 @@ from brownie import chain
 from brownie.convert.datatypes import EthAddress, HexString
 from cachetools.func import lru_cache, ttl_cache
 from eth_abi import encode_single
+from y.networks import Network
 
 from yearn.exceptions import UnsupportedNetwork
 from yearn.multicall2 import fetch_multicall
-from yearn.networks import Network
 from yearn.typing import Address, AddressOrContract, Block
 from yearn.utils import Singleton, contract
 

@@ -4,10 +4,10 @@ from typing import Dict, List, Optional
 from brownie import chain
 from brownie.convert.datatypes import EthAddress
 from cachetools.func import ttl_cache
+from y.networks import Network
 
 from yearn.exceptions import MulticallError, UnsupportedNetwork
 from yearn.multicall2 import fetch_multicall
-from yearn.networks import Network
 from yearn.typing import Address, AddressOrContract, Block, VaultVersion
 from yearn.utils import Singleton, contract
 

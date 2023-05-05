@@ -2,8 +2,8 @@ import asyncio
 from collections import Counter
 
 from brownie import chain
-from joblib.parallel import Parallel, delayed
-from yearn.networks import Network
+from y.networks import Network
+
 from yearn.outputs.describers.vault import VaultWalletDescriber
 from yearn.utils import contract
 

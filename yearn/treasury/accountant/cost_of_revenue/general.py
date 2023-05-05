@@ -1,8 +1,9 @@
 
 from brownie import chain, convert
+from y.networks import Network
+
 from yearn import constants
 from yearn.entities import TreasuryTx
-from yearn.networks import Network
 from yearn.partners.partners import partners
 from yearn.treasury.accountant.classes import Filter, HashMatcher, IterFilter
 

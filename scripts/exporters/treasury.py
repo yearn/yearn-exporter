@@ -1,8 +1,9 @@
 import logging
 
 import sentry_sdk
+from y.networks import Network
+
 from yearn.helpers.exporter import Exporter
-from yearn.networks import Network
 from yearn.outputs.victoria.victoria import _post
 from yearn.treasury.treasury import YearnTreasury
 

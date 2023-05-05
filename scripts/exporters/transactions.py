@@ -13,12 +13,13 @@ from multicall.utils import await_awaitable
 from pony.orm import db_session
 from web3._utils.abi import filter_by_name
 from web3._utils.events import construct_event_topic_set
+from y.networks import Network
 from y.prices.magic import get_price_async
 from y.utils.events import get_logs_asap_async
+
 from yearn.entities import UserTx
 from yearn.events import decode_logs
 from yearn.exceptions import BatchSizeError
-from yearn.networks import Network
 from yearn.outputs.postgres.utils import (cache_address, cache_chain,
                                           cache_token, last_recorded_block)
 from yearn.prices.incidents import INCIDENTS

@@ -1,8 +1,9 @@
 
 from brownie import ZERO_ADDRESS, chain
+from y.networks import Network
+
 from yearn.entities import TreasuryTx
 from yearn.multicall2 import fetch_multicall
-from yearn.networks import Network
 from yearn.treasury.accountant.classes import Filter, HashMatcher, IterFilter
 from yearn.treasury.accountant.constants import treasury
 from yearn.utils import contract

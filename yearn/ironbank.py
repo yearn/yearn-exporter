@@ -8,11 +8,11 @@ from typing import List
 from brownie import chain
 from brownie.network.contract import InterfaceContainer
 from cachetools.func import ttl_cache
+from y.networks import Network
 from y.prices import magic
 
 from yearn.exceptions import UnsupportedNetwork
 from yearn.multicall2 import multicall_matrix, multicall_matrix_async
-from yearn.networks import Network
 from yearn.prices.compound import get_fantom_ironbank
 from yearn.typing import Address
 from yearn.utils import contract, run_in_thread

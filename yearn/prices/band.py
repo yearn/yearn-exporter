@@ -3,9 +3,9 @@ from typing import Optional
 from brownie import chain
 from brownie.exceptions import VirtualMachineError
 from cachetools.func import ttl_cache
+from y.networks import Network
 
 from yearn.exceptions import UnsupportedNetwork
-from yearn.networks import Network
 from yearn.typing import Address, AddressOrContract, Block
 from yearn.utils import Singleton, contract
 

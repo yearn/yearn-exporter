@@ -1,7 +1,8 @@
 
 from brownie import ZERO_ADDRESS, chain
+from y.networks import Network
+
 from yearn.entities import TreasuryTx
-from yearn.networks import Network
 from yearn.treasury.accountant.classes import HashMatcher
 from yearn.treasury.accountant.constants import treasury, v1, v2
 from yearn.utils import contract

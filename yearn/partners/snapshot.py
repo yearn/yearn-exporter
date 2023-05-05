@@ -8,11 +8,10 @@ from decimal import Decimal
 from functools import cached_property
 from pathlib import Path
 from typing import Dict, List, Optional, Tuple, Union
-from typing import Dict, List, Tuple, Union
-from async_property import async_cached_property
 
 import pandas as pd
 from async_lru import alru_cache
+from async_property import async_cached_property
 from brownie import chain, convert, multicall, web3
 from pandas import DataFrame
 from pandas.core.tools.datetimes import DatetimeScalar
@@ -21,17 +20,18 @@ from rich import print
 from tqdm import tqdm
 from web3._utils.abi import filter_by_name
 from web3._utils.events import construct_event_topic_set
-from y.time import last_block_on_date
 from y import Contract, get_price_async
-from y.constants import thread_pool_executor
+from y.networks import Network
+from y.time import last_block_on_date
+
 from yearn.events import decode_logs, get_logs_asap
 from yearn.exceptions import UnsupportedNetwork
-from yearn.networks import Network
 from yearn.partners.charts import make_partner_charts
 from yearn.partners.constants import OPEX_COST, get_tier
 from yearn.partners.delegated import DELEGATED_BALANCES
 from yearn.typing import Address, Block
-from yearn.utils import contract, contract_creation_block, get_block_timestamp, run_in_thread
+from yearn.utils import (contract, contract_creation_block,
+                         get_block_timestamp, run_in_thread)
 from yearn.v2.registry import Registry
 from yearn.v2.vaults import Vault
 

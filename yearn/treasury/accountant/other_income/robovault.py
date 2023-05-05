@@ -3,8 +3,9 @@
 from typing import Optional
 
 from brownie import chain
+from y.networks import Network
+
 from yearn.entities import TreasuryTx, TxGroup
-from yearn.networks import Network
 from yearn.treasury.accountant.constants import treasury
 from yearn.utils import contract
 

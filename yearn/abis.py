@@ -4,8 +4,8 @@
 from typing import Dict, List
 
 from brownie import Contract, chain
+from y.networks import Network
 
-from yearn.networks import Network
 from yearn.utils import contract
 
 

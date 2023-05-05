@@ -6,9 +6,10 @@ from itertools import count
 import sentry_sdk
 from brownie import chain
 from multicall.utils import await_awaitable
+from y.networks import Network
 from y.time import closest_block_after_timestamp
+
 from yearn.db.models import Block, Session, Snapshot, engine, select
-from yearn.networks import Network
 from yearn.yearn import Yearn
 
 sentry_sdk.set_tag('script','historical_tvl')

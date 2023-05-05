@@ -9,9 +9,10 @@ from requests import Session
 from requests.adapters import HTTPAdapter
 from web3 import HTTPProvider
 from web3.middleware import filter
+from y.networks import Network
+
 from yearn.cache import memory
 from yearn.middleware import yearn_filter
-from yearn.networks import Network
 
 logger = logging.getLogger(__name__)
 
