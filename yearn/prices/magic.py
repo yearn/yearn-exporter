@@ -2,14 +2,13 @@ import logging
 from typing import Optional
 
 from brownie import chain
-from brownie.convert.datatypes import EthAddress
 from cachetools.func import ttl_cache
+from y.exceptions import PriceError
 
-from yearn.exceptions import PriceError
 from yearn.networks import Network
-from yearn.prices.balancer import balancer as bal
 from yearn.prices import constants, curve
 from yearn.prices.aave import aave
+from yearn.prices.balancer import balancer as bal
 from yearn.prices.band import band
 from yearn.prices.compound import compound
 from yearn.prices.fixed_forex import fixed_forex
