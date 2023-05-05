@@ -67,7 +67,7 @@ def calculate_roi(after: SharePricePoint, before: SharePricePoint) -> float:
     # calculate our average blocks per day in the past week
     now = web3.eth.block_number
     now_time = datetime.today()
-    blocks_per_day = int((now - closest_block_after_timestamp((now_time - timedelta(days=7)).timestamp(), True)) / 7)
+    blocks_per_day = int((now - closest_block_after_timestamp(int((now_time - timedelta(days=7)).timestamp()), True)) / 7)
     
     # calculate our annualized return for a vault
     pps_delta = (after.price - before.price) / (before.price or 1)
@@ -82,7 +82,7 @@ def get_samples(now_time: Optional[datetime] = None) -> ApySamples:
         now_time = datetime.today()
         now = web3.eth.block_number
     else:
-        now = closest_block_after_timestamp(now_time.timestamp(), True)
-    week_ago = closest_block_after_timestamp((now_time - timedelta(days=7)).timestamp(), True)
-    month_ago = closest_block_after_timestamp((now_time - timedelta(days=31)).timestamp(), True)
+        now = closest_block_after_timestamp(int(now_time.timestamp()), True)
+    week_ago = closest_block_after_timestamp(int((now_time - timedelta(days=7)).timestamp()), True)
+    month_ago = closest_block_after_timestamp(int((now_time - timedelta(days=31)).timestamp()), True)
     return ApySamples(now, week_ago, month_ago)
