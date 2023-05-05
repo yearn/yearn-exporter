@@ -208,7 +208,7 @@ class Registry(metaclass=Singleton):
             blocks = await asyncio.gather(*[contract_creation_block_async(str(vault.vault)) for vault in vaults])
             vaults = [vault for vault, deploy_block in zip(vaults, blocks) if deploy_block <= block]
         # fixes edge case: a vault is not necessarily initialized on creation
-        activations = fetch_multicall(*[[vault.vault, 'activation'] for vault in vaults], block=block)
+        activations = await fetch_multicall_async(*[[vault.vault, 'activation'] for vault in vaults], block=block)
         return [vault for vault, activation in zip(vaults, activations) if activation]
 
     def _filter_vaults(self):
