@@ -18,7 +18,6 @@ x-envs: &envs
   - DEBUG
   - SKIP_DEEP_UNISWAPS
   - SHOW_STATS
-  - POOL_SIZE
   - TX_POOL_SIZE
   - RESOLUTION
   - REORG_BUFFER
