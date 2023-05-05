@@ -13,7 +13,7 @@ class VaultWalletDescriber:
         return (await self.wallet_balances(vault_address, block=block)).keys()
 
     async def wallet_balances(self, vault_address, block=None):
-        return asyncio.get_event_loop().run_in_executor(data_processes, fetch_balances, vault_address, block=block)
+        return await asyncio.get_event_loop().run_in_executor(data_processes, fetch_balances, vault_address, block)
 
     async def describe_wallets(self, vault_address, block=None):
         balances, price = await asyncio.gather(
