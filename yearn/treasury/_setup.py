@@ -1,6 +1,7 @@
 from brownie import chain
 from eth_portfolio._shitcoins import SHITCOINS
 from y.networks import Network
+from y.prices.utils import ypriceapi
 
 # The below tokens mess up our scripts, mean nothing for analytical purposes, and can be skipped by eth_portfolio
 skip_tokens = {
@@ -20,4 +21,18 @@ skip_tokens = {
 def customize_eth_portfolio() -> None:
     for token in skip_tokens.get(chain.id, []):
         SHITCOINS[chain.id].add(token)
+
+
+skip_ypriceapi = {
+    Network.Mainnet: {
+        "0xD057B63f5E69CF1B929b356b579Cba08D7688048", # vCOW
+        "0x9aE357521153FB07bE6F5792CE7a49752638fbb7", # SAFE
+        "0x739ca6D71365a08f584c8FC4e1029045Fa8ABC4B", # anyDAI
+        "0x3f6740b5898c5D3650ec6eAce9a649Ac791e44D7", # kLP-KP3R/WETH
+    },
+}
         
+def customize_ypricemagic() -> None:
+    """We just do this to reduce unnecessary and ugly logging.""" 
+    for token in skip_ypriceapi.get(chain.id, []):
+        ypriceapi.skip_ypriceapi.add(token)
