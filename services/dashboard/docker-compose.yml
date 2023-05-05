@@ -26,6 +26,7 @@ x-envs: &envs
   # asyncio (optional, debugging)
   - PYTHONASYNCIODEBUG
   # dank-mids (optional)
+  - MAX_JSONRPC_BATCH_SIZE
   - DANK_MIDS_DEMO_MODE
   # eth-retry (optional)
   - MAX_RETRIES=${MAX_RETRIES:-2}
