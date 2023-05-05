@@ -26,7 +26,7 @@ def prepare_db() -> None:
     cache_stream_factory()
     cache_bridge_assistooor()
     cache_address_nicknames_for_tokens()
-    #cache_address_nicknames_for_contracts()
+    cache_address_nicknames_for_contracts()
 
 def cache_ychad() -> None:
     """ Label yChad in pg. """
