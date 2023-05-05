@@ -557,8 +557,8 @@ class CurveRegistry(metaclass=Singleton):
             block=block,
         )
         crv_price, token_price, results = await asyncio.gather(
-            magic.get_price_async(self.crv),
-            magic.get_price_async(lp_token, block=block),
+            magic.get_price(self.crv, block=block, sync=False),
+            magic.get_price(lp_token, block=block, sync=False),
             results
         )
         results = [x / 1e18 for x in results]

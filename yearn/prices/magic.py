@@ -3,7 +3,7 @@ from typing import Optional
 
 from brownie import chain
 from cachetools.func import ttl_cache
-from y import get_price_async
+from y import magic
 from y.datatypes import AnyAddressType
 from y.exceptions import PriceError
 from y.networks import Network
@@ -39,13 +39,14 @@ async def _get_price(token: AnyAddressType, block: Optional[Block]) -> float:
         elif token == "0xEB4C2781e4ebA804CE9a9803C67d0893436bB27D" and block < 11024342:
             return 0
     try:
-        return await get_price_async(token, block)
+        return await magic.get_price(token, block, sync=False)
     except:
         for incident in INCIDENTS[token]:
             if incident['start'] <= block <= incident['end']:
                 return incident['result']
         raise
 
+# Will delete once we're sure we don't need anymore
 def get_price(
     token: AddressOrContract,
     block: Optional[Block] = None,
@@ -114,7 +115,7 @@ def find_price(
         if token == '0xd9e28749e80D867d5d14217416BFf0e668C10645':
             logger.debug('xcredit -> unwrap')
             wrapper = contract(token)
-            price = get_price(wrapper.token(), block=block) * wrapper.getShareValue(block_identifier=block) / 1e18
+            price = magic.get_price(wrapper.token(), block=block, sync=False) * wrapper.getShareValue(block_identifier=block) / 1e18
 
     elif chain.id == Network.Mainnet:
         # no liquid market for yveCRV-DAO -> return CRV token price

@@ -21,7 +21,7 @@ async def _get_symbol(token):
     if token == 'ETH':
         return 'ETH'
     try:
-        return await ERC20(token).symbol_async
+        return await ERC20(token, asynchronous=True).symbol
     except NonStandardERC20:
         return None
 

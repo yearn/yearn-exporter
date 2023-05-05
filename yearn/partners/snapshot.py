@@ -20,7 +20,7 @@ from rich import print
 from tqdm import tqdm
 from web3._utils.abi import filter_by_name
 from web3._utils.events import construct_event_topic_set
-from y import Contract, get_price_async
+from y import Contract, get_price
 from y.contracts import contract_creation_block
 from y.exceptions import continue_if_call_reverted
 from y.networks import Network
@@ -131,7 +131,7 @@ class Wrapper:
 
     async def vault_prices(self, blocks: Tuple[int,...]) -> List[Decimal]:
         vault = self.vault
-        prices = await asyncio.gather(*[get_price_async(vault, block=block) for block in blocks])
+        prices = await asyncio.gather(*[get_price(vault, block=block, sync=False) for block in blocks])
         return [Decimal(price) for price in prices]
 
 

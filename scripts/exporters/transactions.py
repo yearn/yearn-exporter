@@ -14,7 +14,7 @@ from pony.orm import db_session
 from web3._utils.abi import filter_by_name
 from web3._utils.events import construct_event_topic_set
 from y.networks import Network
-from y.utils.events import get_logs_asap_async
+from y.utils.events import get_logs_asap
 
 from yearn.entities import UserTx
 from yearn.events import decode_logs
@@ -115,7 +115,7 @@ async def get_token_transfers(token, start_block, end_block) -> pd.DataFrame:
         web3.codec,
     )
     events = decode_logs(
-        await get_logs_asap_async(token.address, topics, from_block=start_block, to_block=end_block)
+        await get_logs_asap(token.address, topics, from_block=start_block, to_block=end_block, sync=False)
     )
     token_entity = cache_token(token.address)
     transfers = await asyncio.gather(*[_process_transfer_event(event, token_entity) for event in events])

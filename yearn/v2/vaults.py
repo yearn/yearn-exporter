@@ -55,7 +55,7 @@ logger = logging.getLogger(__name__)
 
 async def get_price_return_exceptions(token, block=None):
     try:
-        return await magic.get_price_async(token, block=block, silent=True)
+        return await magic.get_price(token, block=block, silent=True, sync=False)
     except Exception as e:
         return e
 

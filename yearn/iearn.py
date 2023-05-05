@@ -52,7 +52,7 @@ class Registry:
         contracts = [vault.vault for vault in vaults]
         results, prices = await asyncio.gather(
             multicall_matrix_async(contracts, ["totalSupply", "pool", "getPricePerFullShare", "balance"], block=block),
-            asyncio.gather(*[magic.get_price_async(vault.token, block=block) for vault in vaults])
+            asyncio.gather(*[magic.get_price(vault.token, block=block, sync=False) for vault in vaults])
         )
         output = defaultdict(dict)
         for vault, price in zip(vaults, prices):
@@ -76,7 +76,7 @@ class Registry:
     async def total_value_at(self, block=None):
         vaults = await self.active_vaults_at(block)
         prices, results = await asyncio.gather(
-            asyncio.gather(*[magic.get_price_async(vault.token, block=block) for vault in vaults]),
+            asyncio.gather(*[magic.get_price(vault.token, block=block, sync=False) for vault in vaults]),
             fetch_multicall_async(*[[vault.vault, "pool"] for vault in vaults], block=block),
         )
         return {vault.name: assets * price / vault.scale for vault, assets, price in zip(vaults, results, prices)}

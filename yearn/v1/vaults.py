@@ -47,8 +47,8 @@ class VaultV1:
     async def get_price(self, block=None):
         if self.name == "aLINK":
             underlying = await self.vault.underlying.coroutine()
-            return await magic.get_price_async(underlying, block=block)
-        return await magic.get_price_async(self.token, block=block)
+            return await magic.get_price(underlying, block=block, sync=False)
+        return await magic.get_price(self.token, block=block, sync=False)
 
     async def get_strategy(self, block=None):
         if self.name in ["aLINK", "LINK"] or block is None:

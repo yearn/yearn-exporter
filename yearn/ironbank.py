@@ -102,7 +102,7 @@ class Registry:
         ]
         results, prices = await asyncio.gather(
             multicall_matrix_async(contracts, methods, block=block),
-            asyncio.gather(*[magic.get_price_async(market.underlying, block=block) for market in markets]),
+            asyncio.gather(*[magic.get_price(market.underlying, block=block, sync=False) for market in markets]),
         )
         output = defaultdict(dict)
         for m, price in zip(markets, prices):
@@ -143,7 +143,7 @@ class Registry:
         )
         data, prices = await asyncio.gather(
             data_coro,
-            asyncio.gather(*[magic.get_price_async(market.vault, block=block) for market in markets]),
+            asyncio.gather(*[magic.get_price(market.vault, block=block, sync=False) for market in markets]),
         )
         results = [data[market.vault] for market in markets]
         return {

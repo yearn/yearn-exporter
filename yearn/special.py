@@ -62,7 +62,7 @@ class Backscratcher(metaclass = Singleton):
     async def _locked(self, block=None) -> Tuple[float,float]:
         crv_locked, crv_price = await asyncio.gather(
             curve.voting_escrow.balanceOf["address"].coroutine(self.proxy, block_identifier=block),
-            magic.get_price_async(curve.crv, block=block),
+            magic.get_price(curve.crv, block=block, sync=False),
         )
         crv_locked /= 1e18
         return crv_locked, crv_price
@@ -132,7 +132,7 @@ class Ygov(metaclass = Singleton):
     async def _locked(self, block=None):
         yfi_locked, yfi_price = await asyncio.gather(
             self.token.balanceOf.coroutine(self.vault, block_identifier=block),
-            magic.get_price_async(str(self.token), block=block)
+            magic.get_price(str(self.token), block=block, sync=False)
         )
         yfi_locked /= 1e18
         return yfi_locked, yfi_price
