@@ -1,5 +1,7 @@
 
 
+from pony.orm import commit
+
 from yearn.entities import TreasuryTx
 from yearn.treasury.accountant.classes import Filter, HashMatcher, IterFilter
 
@@ -80,7 +82,8 @@ def is_ygift_grant(tx: TreasuryTx) -> bool:
 
 def is_frontend_support(tx: TreasuryTx) -> bool:
     return tx in HashMatcher([
-        ["0x213979422ec4154eb0aa0db4b03f48e1669c08fa055ab44e4006fa7d90bb8547", IterFilter('log_index', [535,536])] 
+        ["0x213979422ec4154eb0aa0db4b03f48e1669c08fa055ab44e4006fa7d90bb8547", IterFilter('log_index', [535,536])],
+        ["0x57bc99f6007989606bdd9d1adf91c99d198de51f61d29689ee13ccf440b244df", Filter('log_index', 80)]
     ])
 
 def is_other_grant(tx: TreasuryTx) -> bool:
@@ -91,6 +94,9 @@ def is_other_grant(tx: TreasuryTx) -> bool:
         ["0x3249dac3b85f6dd9e268b4440322b2e437237d6b8a264286bd6fe97575804b00", IterFilter('log_index', [243,245,247,253,261,267,269,271,273,275,277])],
         # "May 2022 grant" ?
         ["0xca372ad75b957bfce7e7fbca879399f46f923f9ca17299e310150da8666703b9", Filter('log_index', 515)],
+        ["0x9681276a8668f5870551908fc17be3553c82cf6a9fedbd2fdb43f1c05385dca1", Filter('log_index', 181)],
+        "0xa96246a18846cd6966fc87571313a2021d8e1e38466132e2b7fe79acbbd2c589",
+        ["0x47bcb48367b5c724780b40a19eed7ba4f623de619e98c30807f52be934d28faf", Filter('_symbol', "DAI")]
     ]
     disperse_hashes = [
         "0x1e411c81fc83abfe260f58072c74bfa91e38e27e0066da07ea06f75d9c8f4a00",
@@ -98,7 +104,20 @@ def is_other_grant(tx: TreasuryTx) -> bool:
     ]
     if tx._from_nickname == "Disperse.app":
         return tx in HashMatcher(disperse_hashes)
-    return tx in HashMatcher(hashes)
+    if tx in HashMatcher(hashes):
+        return True
+    
+    # Grant overages reimbursed to yearn
+    if tx in HashMatcher([
+        "0xbe856983c92200982e5fce3b362c91805886422ae858391802a613dc329e7c9b",
+        "0xf63d61ae6508d9b44e3dca4edf35282ef88341b76229b0dfa121bdc0dd095457",
+        "0xd9f528e15a93cfacfbcaacbfe01110083fc7d7787e94d4cae4c09b174eef543f",
+    ]):
+        # Since we want to negate an expense instead of record income, we just multiply amount and value by -1.
+        tx.amount *= -1
+        tx.value_usd *= -1
+        commit()
+        return True
 
 def is_0_03_percent(tx: TreasuryTx) -> bool:
     return tx in HashMatcher([["0xe56521d79b0b87425e90c08ed3da5b4fa3329a40fe31597798806db07f68494e", Filter('_from_nickname', 'Disperse.app')]])
@@ -107,3 +126,8 @@ eoy_bonus_hashes = [
     "0xcfc2a4e538584c387ac1eca638de783f1839c2a3b0520352828b309564e23dca",
     "0x4a3716b7730ea086e5d9417bc8330808081e74862e0d9d97221a317f68d5ce43",
 ]
+
+def is_ycrv_grant(tx: TreasuryTx) -> bool:
+    return tx in HashMatcher([
+        "0x116a44242ffafd12a8e40a7a2dbc9f6a98580ca4d72e626ddb60d09417cab15d",
+    ])

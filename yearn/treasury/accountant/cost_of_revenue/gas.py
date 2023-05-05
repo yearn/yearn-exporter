@@ -59,6 +59,7 @@ def is_strategist_gas(tx: TreasuryTx) -> bool:
                 "0xd700344511719054e95d260f5494266cdd950825bf577160cf5acb02d87f5a63",
                 "0xb8c71e4491a692c8d293f13e37bf03aa8487ad5306f3db8fc4e83c406f8c0746",
                 "0x96be538314a6547063a5b81ded9bda38a067528d4bcfc558eee976a684e5b44a",
+                ["0xebfff9a2fd6103d73f417c675db2dc43742bdb6f496f04d3cfd1938046001d70", Filter("_symbol", "ETH")]
             ],
         }.get(chain.id, []))
 

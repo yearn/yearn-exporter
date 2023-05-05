@@ -74,7 +74,15 @@ def is_curve_bribe(tx: TreasuryTx) -> bool:
         return True
         
     # Bribe V3
-    return tx._from_nickname == "yBribe" and tx._to_nickname == "Yearn Treasury"
+    elif tx._from_nickname == "Contract: yBribe" and tx._to_nickname in ["Yearn Treasury","ySwap Multisig"]:
+        return True
+    
+    return tx in HashMatcher({
+        Network.Mainnet: [
+            # OTC Bribe from Inverse
+            "0xd009556756488add2987609bdd7ffd027b9c467bcfee41eff8619dbc6e8acab6",
+        ],
+    }.get(chain.id, []))
     
 def is_buying_yvboost(tx: TreasuryTx) -> bool:
     """ Bought back yvBoost is unwrapped and sent back to holders. """
@@ -105,6 +113,11 @@ def is_yvboost_from_elsewhere(tx: TreasuryTx) -> bool:
     """ where is this from? who knows, doesn't matter yet. MUST INVESTIGATE """
     hashes = [
         "0x9366b851b5d84f898962fce62356f1d020f3220ec794476eb19cd8106ca08283",
+        ["0x47bcb48367b5c724780b40a19eed7ba4f623de619e98c30807f52be934d28faf", Filter('log_index', 285)],
+        "0x17e2744e2959ba380f45383bcce11ec18e0a6bdd959d09cacdc7bb34008b14aa",
+        ["0x40352e7166bf5196aa1160302cfcc157facf99731af0e11741b8729dd84e131c", Filter('log_index', 125)],
+        "0xa025624820105a9f6914a13d5b50bd42e599b2093c8edb105321a43a86cfeb38",
+        "0x6dc184b139f9139e1957fd13c79b88bbc3d7aaa4d1763636c3243c6034318957",
     ]
     return tx in HashMatcher(hashes)
 
@@ -137,3 +150,54 @@ def is_cowswap_migration(tx: TreasuryTx) -> bool:
 def is_usdc_stabeet(tx: TreasuryTx) -> bool:
     """ USDC is sent from a strategy to fchad for unwrapping, then back to the strategy. """
     return tx in HashMatcher(["0x97fa790c34e1da6c51ebf7b0c80e08e6b231e739c949dddca3054708e43bb5d0"])
+
+def is_rkp3r(tx: TreasuryTx) -> bool:
+    # NOTE We can make better sort rules if this keeps happening
+    return tx in HashMatcher([
+        "0xe7d932173d131888308c2c572c56887086c32c9e4dd106a8337731cc8e3cb7d4",
+    ])
+
+def is_stg(tx: TreasuryTx) -> bool:
+    return tx in HashMatcher([
+        "0x06f8ab43d82468d4a8d0b6000315e2460ddeeab85d6d21a8b801e8618e1626f8",
+        "0x11ade74701b65b93ec728dccde09ca01a2c0a9a6a64fdfab5bb2a89f77fbce88",
+        "0xfb47e5006d78fd84d0af97f7a845fafe264373058bc7d6b530b1f5303a835bbe",
+        "0xbcc751d5ec29d901199b93a4618aed631e42be02a0f73cdf699844ec7e707c63",
+        ["0x1621ba5c9b57930c97cc43d5d6d401ee9c69fed435b0b458ee031544a10bfa75", Filter("_symbol", "STG")],
+        "0x192f445df3058c214802ab79ea6d20b8549212fe60f27025ea139d780b04c900",
+    ])
+
+def is_idle(tx: TreasuryTx) -> bool:
+    return tx in HashMatcher([
+        "0x59595773ee4304ba4e7e06d2c02541781d93867f74c6c83056e7295b684036c7",
+        "0x4c7685aa3dfa9f375c612a2773951b9edbe059102b505423ed28a97d2692e75a",
+        "0xb17317686b57229aeb7f06103097b47dc2eafa34489c40af70d2ac57bcf8f455",
+        "0xfd9e6fd303fdbb358207bf3ba069b7f6a21f82f6b082605056d54948127e81e8",
+    ])
+
+def is_convex_strat(tx: TreasuryTx) -> bool:
+    return tx in HashMatcher([
+        ["0x1621ba5c9b57930c97cc43d5d6d401ee9c69fed435b0b458ee031544a10bfa75", IterFilter("_symbol", ["CRV", "CVX"])],
+    ])
+
+def is_aura(tx: TreasuryTx) -> bool:
+    return tx in HashMatcher([
+        ["0x1621ba5c9b57930c97cc43d5d6d401ee9c69fed435b0b458ee031544a10bfa75", IterFilter("_symbol", ["BAL", "AURA"])],
+    ])
+
+cowswap_router = "0x9008D19f58AAbD9eD0D60971565AA8510560ab41"
+ycrv = "0xFCc5c47bE19d06BF83eB04298b026F81069ff65b"
+
+def is_ycrv(tx: TreasuryTx) -> bool:
+    """ These are routed thru cowswap with dai as the purchase token. """ 
+    yswaps = "0x7d2aB9CA511EBD6F03971Fb417d3492aA82513f0"
+    ymechs = "0x2C01B4AD51a67E2d8F02208F54dF9aC4c0B778B6"
+    if (tx.from_address.address == yswaps and tx._symbol == "DAI") or (tx.from_address.address == ymechs and tx._symbol == "3Crv"):
+        print("check for Trade event")
+        if tx.to_address.address == cowswap_router and "Trade" in tx._events:
+            for trade in tx._events["Trade"]:
+                print(trade)
+                owner, sell_token, buy_token, sell_amount, buy_amount, fee_amount, order_uid = trade.values()
+                print(owner, sell_token, buy_token)
+                return owner == tx.from_address.address and sell_token == tx.token.address.address and buy_token == ycrv and sell_amount / 10 ** 18 == tx.amount
+        
