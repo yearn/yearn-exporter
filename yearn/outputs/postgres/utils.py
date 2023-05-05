@@ -3,14 +3,19 @@ from typing import Optional
 
 from brownie import ZERO_ADDRESS, chain, convert
 from brownie.convert.datatypes import HexString
-from pony.orm import ObjectNotFound, db_session, select
+from pony.orm import db_session, select
+
 from yearn.entities import (Address, Chain, Token, TreasuryTx, TxGroup, UserTx,
                             db)
 from yearn.multicall2 import fetch_multicall
 from yearn.networks import Network
-from yearn.utils import contract, is_contract, hex_to_string
+from yearn.utils import contract, hex_to_string, is_contract
 
 logger = logging.getLogger(__name__)
+
+UNI_V3_POS = {
+    Network.Mainnet: "0xC36442b4a4522E871399CD717aBDD847Ab11FE88",
+}.get(chain.id, 'not on this chain')
 
 @db_session
 def cache_chain():
@@ -41,7 +46,8 @@ def cache_token(address: str) -> Token:
     address_entity = cache_address(address)
     token = Token.get(address=address_entity)
     if not token:
-        if convert.to_address(address) == "0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE":
+        address = convert.to_address(address)
+        if address == "0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE":
             symbol, name = {
                 Network.Mainnet: ("ETH","Ethereum"),
                 Network.Fantom: ("FTM","Fantom"),
@@ -64,7 +70,7 @@ def cache_token(address: str) -> Token:
                 address=address_entity,
                 symbol=symbol,
                 name=name,
-                decimals=decimals,
+                decimals= 0 if address == UNI_V3_POS else decimals,
                 chain=cache_chain()
             )
         except ValueError as e:
@@ -124,4 +130,4 @@ def fetch_balances(vault_address: str, block=None):
                 from user_txs where token_id = $token_dbid
                 group by "from") b on a.wallet = b.wallet
                 """)
-    return {wallet: balance for wallet,balance in balances if wallet != ZERO_ADDRESS}
+    return {wallet: balance for wallet, balance in balances if wallet != ZERO_ADDRESS}
