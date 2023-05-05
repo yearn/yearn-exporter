@@ -20,4 +20,8 @@ def is_portals_fees(tx: TreasuryTx) -> bool:
     ])
 
 def is_cowswap_gas_reimbursement(tx: TreasuryTx) -> bool:
-    return tx._symbol == "ETH" and tx._from_nickname == "Cowswap Multisig"
+    return tx._symbol == "ETH" and tx._from_nickname == "Cowswap Multisig" and tx._to_nickname == "yMechs Multisig"
+
+def is_usdn_shutdown(tx: TreasuryTx) -> bool:
+    """The USDN vault was shut down but the pool was so rekt they coulnd't even swap for want. Trace amounts of yield sent to yChad."""
+    return tx in HashMatcher(["0x12b3687f4bfbc73c11dccbd61d18c3f785e6f0f91cb46280d7df08143162ceed"])

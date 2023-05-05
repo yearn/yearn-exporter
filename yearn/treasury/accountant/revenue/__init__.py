@@ -18,7 +18,7 @@ fees_txgroup.create_child("YearnFed Fees", fees.is_yearn_fed_fees)
 fees_txgroup.create_child("DOLAFRAXBP Fees", fees.is_dolafraxbp_fees)
 fees_txgroup.create_child("TempleDAO Private Vault Fees", fees.is_temple)
 
-seasolver_txgroup = revenue_txgroup.create_child("SeaSolver Income")
+seasolver_txgroup = revenue_txgroup.create_child("SeaSolver")
 seasolver_txgroup.create_child("Positive Slippage", seasolver.is_seasolver_slippage_revenue)
 seasolver_txgroup.create_child("CowSwap Incentives", seasolver.is_cowswap_incentive)
 

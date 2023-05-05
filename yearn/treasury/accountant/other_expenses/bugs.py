@@ -33,3 +33,10 @@ def is_lossy_fee_reimbursement(tx: TreasuryTx) -> bool:
 def is_stycrv(tx: TreasuryTx) -> bool:
     """Some user lost some funds in a minor issue, then was reimbursed."""
     return tx in HashMatcher([["0x491f07d134f3253ef06a2b46d83b82cdf2927b13cce4d38225d92ce01799da96", Filter('log_index', 197)]])
+
+def is_slippage_bug_reimbursement(tx: TreasuryTx) -> bool:
+    """a swap tx was messed up so Yearn sent treasury funds to the relevant strategy to compensate"""
+    return tx in HashMatcher([
+        "0xffe3883e34ae0b6ae3a7f304f00c625a7b315a021cf38f47a932e81d3f1c371c",
+        "0x42cfcaa06beebe61547724f22fa790c763b2937ca2af8e3d5dbc680b903aad69",
+    ])

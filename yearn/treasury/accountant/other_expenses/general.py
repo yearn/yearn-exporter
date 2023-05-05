@@ -2,7 +2,7 @@
 from decimal import Decimal
 
 from yearn.entities import TreasuryTx
-from yearn.treasury.accountant.classes import Filter, HashMatcher
+from yearn.treasury.accountant.classes import Filter, HashMatcher, IterFilter
 from yearn.treasury.accountant.constants import treasury
 
 
@@ -54,9 +54,10 @@ def is_veyfi_gas(tx: TreasuryTx) -> bool:
     ])
 
 def is_vesting_packages(tx: TreasuryTx) -> bool:
-    return tx in HashMatcher([
+    return tx._symbol == "YFI" and tx in HashMatcher([
         "0x6532f364035f392cf353e1b3f77b4be6e7f2b56c1ad541d1bb8c45cb61462c3f",
         "0x9b8f9dfaaedceaeb2b286db92f2aba2d2e519954b47a2d603cd4ce5fd03336fe",
+        "0xe4b770cdbc0fce9d9acec45beb02113b50cb6903c2868b89c46f5d9382a6071f",
     ])
 
 def is_strategist_buyout(tx: TreasuryTx) -> bool:
@@ -87,4 +88,9 @@ def is_ychute(tx: TreasuryTx) -> bool:
     """Parachute incentive"""
     return tx in HashMatcher([
         ["0x8a9a652090ab73e981c4f4563421e0c2fd589f4eb75f21d6101391f96cbfc33e", Filter('_symbol', 'DAI')],
+        ["0x6f8134bcb16e47fdcc51a23afabd83046b10dc3c3b7267612a3bbed77c7e3c24", IterFilter('log_index', [167, 168])],
+        ["0x9e113dda11fcd758df2fe94a641aa7afe6329afec4097a8cb5d6fb68489cf7d8", Filter('log_index', 97)],
     ])
+    
+def is_eth_online_prizes(tx: TreasuryTx) -> bool:
+    return tx in HashMatcher(["0x200cbcd15fb934e75e0909e4752cad4e2067b9556a85660bd6980c3473721122"])

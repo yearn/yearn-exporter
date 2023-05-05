@@ -34,3 +34,7 @@ def is_cowswap_swap(tx: TreasuryTx) -> bool:
 
                         if len(other_side_query) > 0:
                             return True
+ 
+    return tx in HashMatcher([
+        "0xd41e40a0e9b49c4f06e1956066006de901a4ed8c856a43c31ac1cbd344ff0ccf",
+    ])

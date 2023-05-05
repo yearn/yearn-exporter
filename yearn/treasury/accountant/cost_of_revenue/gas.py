@@ -83,3 +83,9 @@ def is_other_gas(tx: TreasuryTx) -> bool:
             # Reimbursement for testing
             ["0x57bc99f6007989606bdd9d1adf91c99d198de51f61d29689ee13ccf440b244df", Filter('to_address.address', '0xB1d693B77232D88a3C9467eD5619FfE79E80BCCc')]
         ])
+
+def is_yearn_harvest(tx: TreasuryTx) -> bool:
+    # NOTE define hueristics for this if it occurs freuently
+    return tx in HashMatcher([
+        "0xb05494705ce91cc5e5db259ded8acaf80b645c655556ee40a85097fd9054d9b6",
+    ])

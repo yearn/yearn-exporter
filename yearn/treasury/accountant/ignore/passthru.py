@@ -37,6 +37,7 @@ def is_pass_thru(tx: TreasuryTx) -> bool:
             ["0x51baf41f9daa68ac7be8024125852f1e21a3bb954ea32e686ac25a72903a1c8e", IterFilter('_symbol',['CRV','CVX'])],
             ["0xdc4e0045901cfd5ef4c6327b846a8bd229abdbf289547cd0e969874b47124342", IterFilter('log_index',[28,29,30,31])],
             "0xae6797ad466de75731117df46ccea5c263265dd6258d596b9d6d8cf3a7b1e3c2",
+            "0x2a6191ba8426d3ae77e2a6c91de10a6e76d1abdb2d0f831c6c5aad52be3d6246",
         ],
         Network.Fantom: [
             "0x14faeac8ee0734875611e68ce0614eaf39db94a5ffb5bc6f9739da6daf58282a",
@@ -79,7 +80,10 @@ def is_curve_bribe(tx: TreasuryTx) -> bool:
     elif tx._from_nickname == "Contract: yBribe" and tx._to_nickname in ["Yearn Treasury","ySwap Multisig"]:
         return True
     
-    return False
+    # NOTE: I added this to capture tokens sent to 
+    return tx in HashMatcher([
+        "0xce45da7e3a7616ed0c0d356d6dfa8a784606c9a8034bae9faa40abf7b52be114",
+    ])
     
 def is_buying_yvboost(tx: TreasuryTx) -> bool:
     """ Bought back yvBoost is unwrapped and sent back to holders. """
@@ -156,10 +160,12 @@ def is_usdc_stabeet(tx: TreasuryTx) -> bool:
     return tx in HashMatcher(["0x97fa790c34e1da6c51ebf7b0c80e08e6b231e739c949dddca3054708e43bb5d0"])
 
 def is_rkp3r(tx: TreasuryTx) -> bool:
-    # NOTE We can make better sort rules if this keeps happening
-    return tx in HashMatcher([
-        "0xe7d932173d131888308c2c572c56887086c32c9e4dd106a8337731cc8e3cb7d4",
-    ])
+    if tx._symbol == "rKP3R":
+        if tx._from_nickname == "Contract: StrategyConvexFixedForexClonable" and tx._to_nickname == "Yearn yChad Multisig":
+            return True
+        elif tx._from_nickname == "Yearn yChad Multisig" and tx._to_nickname == "Contract: StrategyConvexFixedForexClonable":
+            return True
+    return False
 
 def is_stg(tx: TreasuryTx) -> bool:
     return tx in HashMatcher([
@@ -187,6 +193,7 @@ def is_convex_strat(tx: TreasuryTx) -> bool:
 def is_aura(tx: TreasuryTx) -> bool:
     return tx in HashMatcher([
         ["0x1621ba5c9b57930c97cc43d5d6d401ee9c69fed435b0b458ee031544a10bfa75", IterFilter("_symbol", ["BAL", "AURA"])],
+        ["0x996b5911a48319133f50f72904e70ed905c08c81e2c03770e0ccc896be873bd4", Filter("_symbol", "AURA")],
     ])
 
 cowswap_router = "0x9008D19f58AAbD9eD0D60971565AA8510560ab41"
@@ -204,6 +211,17 @@ def is_ycrv(tx: TreasuryTx) -> bool:
                 owner, sell_token, buy_token, sell_amount, buy_amount, fee_amount, order_uid = trade.values()
                 print(owner, sell_token, buy_token)
                 return owner == tx.from_address.address and sell_token == tx.token.address.address and buy_token == ycrv and sell_amount / 10 ** 18 == tx.amount
+    
+    elif tx in HashMatcher([
+        # one off exception case to correct accounting mix-up
+        "0x1578f3b0d3158d305167c39dc29ada08914e1ddb67ef9698e1b0421432f9aed6",
+        # A few donations from ySwap
+        "0xb2e335500b33b42edd8a97f57db35e0561df9a3a811d0cd73dce9767c23da0c4",
+        "0xc02aab3a84b3bbfbc18f0ee6aa742f233d97511f653b4a40e7cd8f822851e10a",
+        "0x8a2dba62eac44fdfc7ff189016ac601c9da664f5dea42d647f2e552319db2f7d",
+        "0xd2c0a137d03811c5e4c27be19c7893f7fdd5851bdd6f825ee7301f3634033035",
+    ]):
+        return True
     else:
         return is_dola_bribe(tx)
         
@@ -220,3 +238,17 @@ def is_bal(tx: TreasuryTx) -> bool:
     return tx._symbol == "BAL" and tx in HashMatcher([
         "0xf4677cce1a08ecd54272cdc1b23bc64693450f8bb5d6de59b8e58e288ec3b2a7",
     ])
+
+def is_factory_yield(tx: TreasuryTx) -> bool:
+    factory_strats = {
+        "Contract: StrategyConvexFactoryClonable",
+        "Contract: StrategyCurveBoostedFactoryClonable",
+    }
+    if tx._from_nickname in factory_strats and tx._to_nickname == "yMechs Multisig":
+        return True
+    return tx in HashMatcher({
+        Network.Mainnet: [
+            "0xefea7be3abc943d0aa0eedfbc9e3db4677e1bd92511265ad0cb619bea1763d14",
+            "0x2f9fefebde546c00a5c519e370e1205058aad8a3881d0bbd2b3d433ed9da6cb3",
+        ],
+    }.get(chain.id, []))

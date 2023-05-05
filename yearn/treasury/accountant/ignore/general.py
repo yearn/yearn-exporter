@@ -175,3 +175,7 @@ def is_ycrv_for_testing(tx: TreasuryTx) -> bool:
         "0x97216ee7b0d3b474de38e0a5b978e20e6f636cc019eac75cd591280b6b8efc80",
         ["0x85dc73fca1a8ec500bc46cd18782b8bba4c811714597fbdaaa209ac9f0c7f253", Filter('log_index', 279)],
     ])
+
+def is_vest_factory(tx: TreasuryTx) -> bool:
+    VESTING_FACTORY = "0x98d3872b4025ABE58C4667216047Fe549378d90f"
+    return tx.to_address.address == VESTING_FACTORY

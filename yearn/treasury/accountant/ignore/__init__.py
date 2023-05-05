@@ -158,6 +158,7 @@ if chain.id == Network.Mainnet:
     ignore_txgroup.create_child("Clawback Vesting Packages", general.is_reclaim_locked_vest)
     ignore_txgroup.create_child("Lido Dev Expense", general.is_lido_dev)
     ignore_txgroup.create_child("Testing with contributor funds", general.is_ycrv_for_testing)
+    ignore_txgroup.create_child("Deploy Vesting Package", general.is_vest_factory)
 elif chain.id == Network.Fantom:
     ignore_txgroup.create_child("OTCTrader", general.is_otc_trader)
 
@@ -167,6 +168,7 @@ ignore_txgroup.create_child("Sent thru Disperse.app", general.is_disperse_dot_ap
 passthru_txgroup = ignore_txgroup.create_child("Pass-Thru to Vaults", passthru.is_pass_thru)
 passthru_txgroup.create_child("Curve Bribes for yveCRV", passthru.is_curve_bribe)
 passthru_txgroup.create_child("Sent to dinobots to dump", passthru.is_sent_to_dinoswap)
+passthru_txgroup.create_child("Factory Vault Yield", passthru.is_factory_yield)
 if chain.id == Network.Mainnet:
     passthru_txgroup.create_child("Cowswap Migration", passthru.is_cowswap_migration)
     passthru_txgroup.create_child("Single Sided IB", passthru.is_single_sided_ib)

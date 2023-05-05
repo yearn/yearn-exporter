@@ -12,6 +12,7 @@ def is_yacademy_audit(tx: TreasuryTx) -> bool:
         "0xf3a31b7c162018f93c8485ad4e374a15e0053308148c7f9afe2f6d16b2013c19",
         ["0x3e75d22250d87c183824c3b77ddb9cb11935db2061ce7f34df4f024d0646fcfb", Filter('log_index', 116)],
         "0x7a7117d68adf198f295277ccabdecbca244eebe0d6c59200060f80a76406567e",
+        ["0x610941b6f2197408aabe5a8958ead79dfba44f7de39d2e9fd8a620420e0a0554", Filter('_symbol', 'USDT')],
     ]
     return tx in HashMatcher(hashes)
 
@@ -24,8 +25,14 @@ def is_chainsec_audit(tx: TreasuryTx) -> bool:
             "0xfdca5bfef0061fa0cea28c04b08ac239f6cb3d708f23548cded80411575ae7ce",
             ["0xbe95bd4f46e2933953d726a231625852caf8e707bbc16fbda33d20e7ea1f3e6a", Filter('log_index', 310)],
             "0xea937a5c5298dd5b60c8e0f193798855b2641c64ced0f92b1d9fdef673ae508d",
+            "0x410c8858b77f5810cbf7c3352d8858ec6d2e783ef7dfdefb16da5cf323fe610c",
         ],
     }.get(chain.id, []))
+
+def is_debaub_audit(tx: TreasuryTx) -> bool:
+    return tx in HashMatcher([
+        "0xb2595246e8387b80e35784aaade3a92bd3111bf9059c3b563516886d1aefcf3f",
+    ])
 
 def is_decurity_audit(tx: TreasuryTx) -> bool:
     return tx in HashMatcher([

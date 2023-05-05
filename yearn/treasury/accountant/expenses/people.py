@@ -85,7 +85,11 @@ def is_frontend_support(tx: TreasuryTx) -> bool:
         ["0x213979422ec4154eb0aa0db4b03f48e1669c08fa055ab44e4006fa7d90bb8547", IterFilter('log_index', [535,536])],
         ["0x57bc99f6007989606bdd9d1adf91c99d198de51f61d29689ee13ccf440b244df", Filter('log_index', 80)],
         "0x9323935229a0f1fcbfbd95da7eea5eb7fe151da8ac62a21e9f38b29d5abde044",
+        ["0x996b5911a48319133f50f72904e70ed905c08c81e2c03770e0ccc896be873bd4", IterFilter('log_index', [257, 258, 259])]
     ])
+
+def is_ydaemon_grant(tx: TreasuryTx) -> bool:
+    return tx in HashMatcher([["0x996b5911a48319133f50f72904e70ed905c08c81e2c03770e0ccc896be873bd4", Filter('log_index', 260)]])
 
 def is_other_grant(tx: TreasuryTx) -> bool:
     hashes = [

@@ -24,6 +24,7 @@ if chain.id == Network.Mainnet:
     other_expense_txgroup.create_child("New Stream Gas Subsidy", general.is_new_stream_gas_subsidy)
     other_expense_txgroup.create_child("Fix Temple Migration", general.is_fix_temple_migration)
     other_expense_txgroup.create_child("yChute", general.is_ychute)
+    other_expense_txgroup.create_child("EthOnline Prizes", general.is_eth_online_prizes)
 
 # Bugs
 if chain.id == Network.Mainnet:
@@ -34,3 +35,4 @@ if chain.id == Network.Mainnet:
     bug_reimbursements_txgroup.create_child("yYFI Fee Calculation Bug", bugs.is_yyfi_fee_reimbursement)
     bug_reimbursements_txgroup.create_child("yvCurve-IB Fee Calculation Bug", bugs.is_lossy_fee_reimbursement)
     bug_reimbursements_txgroup.create_child("Reimburse st-yCRV User", bugs.is_stycrv)
+    bug_reimbursements_txgroup.create_child("Slippage Bug", bugs.is_slippage_bug_reimbursement)

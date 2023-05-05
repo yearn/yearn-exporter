@@ -25,6 +25,7 @@ if chain.id == Network.Mainnet:
     audit_txgroup = security_txgroup.create_child("Audit")
     audit_txgroup.create_child("yAcademy", security.is_yacademy_audit)
     audit_txgroup.create_child("ChainSec", security.is_chainsec_audit)
+    audit_txgroup.create_child("Debaub", security.is_debaub_audit)
     audit_txgroup.create_child("Decurity", security.is_decurity_audit)
     audit_txgroup.create_child("MixBytes", security.is_mixbytes_audit)
     audit_txgroup.create_child("StateMind", security.is_statemind_audit)
@@ -55,6 +56,7 @@ if chain.id == Network.Mainnet:
     grants.create_child("veYFI UI", HashMatcher([["0x51baf41f9daa68ac7be8024125852f1e21a3bb954ea32e686ac25a72903a1c8e", Filter('log_index', 296)]]).contains)
     grants.create_child("Testing/Deploying/Domains", HashMatcher([["0x51baf41f9daa68ac7be8024125852f1e21a3bb954ea32e686ac25a72903a1c8e", Filter('log_index', 297)]]).contains)
     grants.create_child("2021 Bonus", HashMatcher(people.eoy_bonus_hashes).contains)
+    grants.create_child("yDaemon", people.is_ydaemon_grant)
 
     infrastructure_txgroup = expenses_txgroup.create_child("Infrastructure")
     infrastructure_txgroup.create_child("Server Costs", infrastructure.is_servers)
