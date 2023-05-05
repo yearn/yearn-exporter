@@ -3,6 +3,7 @@ version: "3.7"
 volumes:
   brownie: {}
   cache: {}
+  memray: {}
 
 networks:
   yearn-exporter-infra_stack:
@@ -23,6 +24,7 @@ x-envs: &envs
   - REORG_BUFFER
   - JSONRPC_BATCH_MAX_SIZE
   - AIOHTTP_TIMEOUT=${AIOHTTP_TIMEOUT:-1800}
+  - PROFILE_MEMORY
   # asyncio (optional, debugging)
   - PYTHONASYNCIODEBUG
   # dank-mids (optional)
@@ -78,6 +80,7 @@ x-envs: &envs
 x-volumes: &volumes
   - brownie:/root/.brownie
   - cache:/app/yearn-exporter/cache
+  - memray:/app/yearn-exporter/memray
 
 services:
   exporter:

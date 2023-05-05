@@ -2,19 +2,21 @@ import logging
 import time
 import warnings
 from typing import NoReturn
-import pandas
 
+import pandas
 import sentry_sdk
 from brownie import chain
 from brownie.exceptions import BrownieEnvironmentWarning
-from pony.orm import TransactionIntegrityError, db_session, commit
+from pony.orm import TransactionIntegrityError, commit, db_session
 from tqdm import tqdm
 from y.constants import EEE_ADDRESS
+
 from yearn.entities import TreasuryTx
 from yearn.outputs.postgres.utils import (cache_address, cache_chain,
                                           cache_token)
 from yearn.treasury import accountant
 from yearn.treasury.treasury import YearnTreasury
+from yearn.utils import use_memray_if_enabled
 
 sentry_sdk.set_tag('script','treasury_transactions_exporter')
 
@@ -24,6 +26,7 @@ logger = logging.getLogger('yearn.treasury_transactions_exporter')
 
 treasury = YearnTreasury(load_prices=True)
 
+@use_memray_if_enabled("treasury_transactions")
 def main() -> NoReturn:
     cached_thru = treasury._start_block - 1
     while True:
