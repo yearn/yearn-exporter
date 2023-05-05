@@ -143,6 +143,11 @@ def is_uniswap_swap(tx: TreasuryTx) -> bool:
                 if token0 in SKIP_TOKENS or token1 in SKIP_TOKENS:
                     # This will be recorded elsewhere
                     continue
+                    
+                # The below code only works for v2 swaps, let's skip v3 swaps
+                if 'sqrtPriceX96' in swap:
+                    continue
+                    
                 if tx.token.address.address == token0:
                     if round(swap['amount0In'] / tx.token.scale, 15) == round(float(tx.amount), 15):
                         return True
