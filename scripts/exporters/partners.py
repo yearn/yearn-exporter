@@ -77,7 +77,8 @@ def main():
         data_query = 'partners{network="' + Network.label() + '"}',
         data_fn = export_partners,
         export_fn = _post,
-        start_block = closest_block_after_timestamp(start) - 1
+        start_block = closest_block_after_timestamp(start) - 1,
+        max_concurrent_runs = 2,
     )
     
     exporter.run()
