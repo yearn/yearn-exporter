@@ -87,7 +87,7 @@ def setup_middleware():
         session = Session()
         session.mount("http://", adapter)
         session.mount("https://", adapter)
-        w3.provider = HTTPProvider(w3.provider.endpoint_uri, {"timeout": 600}, session)
+        w3.provider = HTTPProvider(w3.provider.endpoint_uri, {"timeout": 1800}, session)
 
         # patch and inject local filter middleware
         filter.MAX_BLOCK_REQUEST = BATCH_SIZE
