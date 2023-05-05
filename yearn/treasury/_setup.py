@@ -15,6 +15,9 @@ skip_tokens = {
         "0x9d45DAb69f1309F1F55A7280b1f6a2699ec918E8", # yFamily 2021
         "0xeaaa790591c646b0436f02f63e8Ca56209FEDE4E", # D-Horse
         "0x1e988ba4692e52Bc50b375bcC8585b95c48AaD77", # Bufficorn Buidl Brigade
+        "0x9694EED198C1b7aB81ADdaf36255Ea58acf13Fab", # DHX
+        "0x55a290f08Bb4CAe8DcF1Ea5635A3FCfd4Da60456", # BITTO
+        "0x1AbBaC88B8F47D46a3d822eFA75F64A15C25966f", # YBET
     }
 }
 
@@ -25,10 +28,14 @@ def customize_eth_portfolio() -> None:
 
 skip_ypriceapi = {
     Network.Mainnet: {
+        "0x739ca6D71365a08f584c8FC4e1029045Fa8ABC4B", # anyDAI
+        "0x7EA2be2df7BA6E54B1A9C70676f668455E329d29", # anyUSDC
+        "0xbbc4A8d076F4B1888fec42581B6fc58d242CF2D5", # anyMIM
+        "0xdf0770dF86a8034b3EFEf0A1Bb3c889B8332FF56", # S*USDC
+        "0xEdB67Ee1B171c4eC66E6c10EC43EDBbA20FaE8e9", # rKP3R
+        "0x3f6740b5898c5D3650ec6eAce9a649Ac791e44D7", # kLP-KP3R/WETH
         "0xD057B63f5E69CF1B929b356b579Cba08D7688048", # vCOW
         "0x9aE357521153FB07bE6F5792CE7a49752638fbb7", # SAFE
-        "0x739ca6D71365a08f584c8FC4e1029045Fa8ABC4B", # anyDAI
-        "0x3f6740b5898c5D3650ec6eAce9a649Ac791e44D7", # kLP-KP3R/WETH
     },
 }
         
