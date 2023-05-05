@@ -35,11 +35,10 @@ async def _wait_for_block(timestamp: int) -> Block:
             dank_w3.eth.get_block(block.number + 1 if block else "latest"),
             dank_w3.eth.get_block("latest")
         )
-        while timestamp >= block.timestamp and block.number <= latest.number:
+        while timestamp >= block.timestamp and block.number < latest.number:
             # We are lagging behind chain head, likely because we are on a chain with fast block times
             block = await dank_w3.eth.get_block(block.number + 1)
             if timestamp < block.timestamp:
-                logger.debug(f'returning {block.number - 1}')
                 return block.number - 1
 
         while timestamp < block.timestamp:
@@ -160,12 +159,12 @@ class Exporter:
                 intervals,
             )
             async for snapshot in snapshots:
-                queue.put((snapshot, resolution))
+                await queue.put((snapshot, resolution))
         
         futs = []
         while not queue.empty():
             if len(futs) < 100: # Some arbitrary number
-                snapshot, resolution = await queue.get_nowait()
+                snapshot, resolution = queue.get_nowait()
                 futs.append(
                     asyncio.ensure_future(self.export_historical_snapshot_if_missing(snapshot, resolution), loop=loop)
                 )
@@ -173,7 +172,7 @@ class Exporter:
                 for fut in futs:
                     if fut.done():
                         futs.pop(futs.index(fut))
-                await asyncio.sleep(60)
+                await asyncio.sleep(0)
     
     # Export Methods
     
