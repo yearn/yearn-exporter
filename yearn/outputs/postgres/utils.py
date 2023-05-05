@@ -4,7 +4,7 @@ from typing import Optional
 from brownie import ZERO_ADDRESS, chain, convert
 from brownie.convert.datatypes import HexString
 from pony.orm import db_session, select
-from y import Contract, Network
+from y import Contract, ContractNotVerified, Network
 
 from yearn.entities import (Address, Chain, Token, TreasuryTx, TxGroup, UserTx,
                             db)
@@ -19,14 +19,11 @@ UNI_V3_POS = {
 
 @db_session
 def cache_chain():
-    _chain = Chain.get(chainid=chain.id)
-    if not _chain:
-        _chain = Chain(
-            chain_name = Network.name(),
-            chainid = chain.id,
-            victoria_metrics_label = Network.label(),
-        )
-    return _chain
+    return Chain.get(chainid=chain.id) or Chain(
+        chain_name=Network.name(),
+        chainid=chain.id,
+        victoria_metrics_label=Network.label(),
+    )
 
 @db_session
 def cache_address(address: str) -> Address:
@@ -37,14 +34,8 @@ def cache_address(address: str) -> Address:
         if is_contract(address):
             try:
                 nickname = f"Contract: {Contract(address)._build['contractName']}"
-            except ValueError as e:
-                if (
-                    "Contract source code not verified" in str(e)
-                    or (str(e).startswith("Source for") and str(e).endswith("has not been verified"))
-                ):
-                    nickname = f"Non-Verified Contract: {address}"
-                else:
-                    raise
+            except ContractNotVerified as e:
+                nickname = f"Non-Verified Contract: {address}"
             address_entity = Address(
                 address=address,
                 chain=chain,
