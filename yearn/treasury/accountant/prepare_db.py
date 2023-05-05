@@ -26,7 +26,6 @@ def prepare_db() -> None:
     cache_stream_factory()
     cache_bridge_assistooor()
     cache_address_nicknames_for_tokens()
-    cache_address_nicknames_for_contracts()
 
 def cache_ychad() -> None:
     """ Label yChad in pg. """
@@ -99,21 +98,4 @@ def cache_address_nicknames_for_tokens() -> None:
     """ Set address.nickname for addresses belonging to tokens. """
     for address in select(a for a in Address if a.token and not a.nickname):
         address.nickname = f"Token: {address.token.name}"
-        db.commit()
-
-def cache_address_nicknames_for_contracts() -> None:
-    """ Set address.nickname for addresses belonging to non-token contracts. """
-    for address in tqdm(select(a for a in Address if a.is_contract and not a.token and (not a.nickname or a.nickname.startswith("Non-Verified")) and a.chain.chainid == chain.id)):
-        try:
-            address.nickname = f"Contract: {contract(address.address)._build['contractName']}"
-        except ValueError as e:
-            if (
-                "Contract source code not verified" in str(e)
-                or (str(e).startswith("Source for") and str(e).endswith("has not been verified"))
-            ):
-                address.nickname = f"Non-Verified Contract: {address.address}"
-            else:
-                pass
-        except (CompilerError, IndexError):
-            pass
         db.commit()

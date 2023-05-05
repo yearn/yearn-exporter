@@ -45,14 +45,18 @@ def cache_address(address: str) -> Address:
                     nickname = f"Non-Verified Contract: {address}"
                 else:
                     raise
+            address_entity = Address(
+                address=address,
+                chain=chain,
+                is_contract=True,
+                nickname=nickname,
+            )
         else:
-            nickname = None
-        address_entity = Address(
-            address=address,
-            chain=chain,
-            is_contract=is_contract(address),
-            nickname=nickname,
-        )
+            address_entity = Address(
+                address=address,
+                chain=chain,
+                is_contract=False,
+            )
     return address_entity
 
 @db_session
