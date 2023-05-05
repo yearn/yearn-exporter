@@ -1,12 +1,10 @@
-from datetime import datetime, timedelta
 from dataclasses import dataclass
+from datetime import datetime, timedelta
 from typing import Dict, Optional
 
 from brownie import web3
-
-from yearn.utils import closest_block_after_timestamp
 from semantic_version.base import Version
-
+from y.time import closest_block_after_timestamp
 
 SECONDS_PER_YEAR = 31_556_952.0
 SECONDS_PER_WEEK = 7 * 24 * 3600

@@ -8,9 +8,10 @@ from brownie import Contract, chain
 from brownie.network.event import _EventItem
 from brownie.network.transaction import TransactionReceipt
 from pony.orm import *
+from y.time import closest_block_after_timestamp
 
 from yearn.treasury.constants import BUYER
-from yearn.utils import closest_block_after_timestamp, contract
+from yearn.utils import contract
 
 db = Database()
 

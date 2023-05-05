@@ -27,7 +27,7 @@ STRATEGY_EVENTS = ["Harvested"]
 
 logger = logging.getLogger(__name__)
 
-def __unpack_results(views: List[str], results: List[Any], scale: int):
+def _unpack_results(views: List[str], results: List[Any], scale: int):
     # unpack self.vault.vault.strategies(self.strategy)
     info = dict(zip(views, results))
     info.update(results[-1].dict())
@@ -124,7 +124,7 @@ class Strategy:
         return *[[self.strategy, view] for view in self._views], [self.vault.vault, "strategies", self.strategy],
     
     async def _unpack_results(self, results):
-        return await run_in_subprocess(__unpack_results, self._views, results, self.vault.scale)
+        return await run_in_subprocess(_unpack_results, self._views, results, self.vault.scale)
     
     async def describe(self, block=None):
         results = await fetch_multicall_async(*self._calls, block=block)

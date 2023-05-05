@@ -1,3 +1,4 @@
+import asyncio
 import logging
 import threading
 import time
@@ -8,7 +9,6 @@ import inflection
 from brownie import Contract, chain, web3
 from dank_mids.brownie_patch import patch_contract
 from joblib import Parallel, delayed
-from multicall.utils import gather
 from web3._utils.abi import filter_by_name
 from web3._utils.events import construct_event_topic_set
 from y.prices import magic
@@ -191,15 +191,15 @@ class Registry(metaclass=Singleton):
 
     async def describe(self, block=None):
         vaults = await run_in_thread(self.active_vaults_at, block)
-        results = await gather(vault.describe(block=block) for vault in vaults)
+        results = await asyncio.gather(*[vault.describe(block=block) for vault in vaults])
         return {vault.name: result for vault, result in zip(vaults, results)}
 
     async def total_value_at(self, block=None):
         vaults = self.active_vaults_at(block)
-        prices, results = await gather([
-            gather(magic.get_price_async(str(vault.token), block=block) for vault in vaults),
+        prices, results = await asyncio.gather(
+            asyncio.gather(*[magic.get_price_async(str(vault.token), block=block) for vault in vaults]),
             fetch_multicall_async(*[[vault.vault, "totalAssets"] for vault in vaults], block=block),
-        ])
+        )
         return {vault.name: assets * price / vault.scale for vault, assets, price in zip(vaults, results, prices)}
 
     def active_vaults_at(self, block=None):

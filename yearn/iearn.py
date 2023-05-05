@@ -1,7 +1,7 @@
+import asyncio
 from collections import defaultdict
 
 from brownie import chain
-from multicall.utils import gather
 from y.prices import magic
 
 from yearn.exceptions import UnsupportedNetwork
@@ -49,10 +49,10 @@ class Registry:
     async def describe(self, block=None) -> dict:
         vaults = await run_in_thread(self.active_vaults_at, block)
         contracts = [vault.vault for vault in vaults]
-        results, prices = await gather([
+        results, prices = await asyncio.gather(
             multicall_matrix_async(contracts, ["totalSupply", "pool", "getPricePerFullShare", "balance"], block=block),
-            gather(magic.get_price_async(vault.token, block=block) for vault in vaults)
-        ])
+            asyncio.gather(*[magic.get_price_async(vault.token, block=block) for vault in vaults])
+        )
         output = defaultdict(dict)
         for vault, price in zip(vaults, prices):
             res = results[vault.vault]
@@ -74,10 +74,10 @@ class Registry:
 
     async def total_value_at(self, block=None):
         vaults = await run_in_thread(self.active_vaults_at(block))
-        prices, results = await gather([
-            gather(magic.get_price_async(vault.token, block=block) for vault in vaults),
+        prices, results = await asyncio.gather(
+            asyncio.gather(*[magic.get_price_async(vault.token, block=block) for vault in vaults]),
             fetch_multicall_async(*[[vault.vault, "pool"] for vault in vaults], block=block),
-        ])
+        )
         return {vault.name: assets * price / vault.scale for vault, assets, price in zip(vaults, results, prices)}
 
     def active_vaults_at(self, block=None):

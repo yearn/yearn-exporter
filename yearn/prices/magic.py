@@ -11,7 +11,6 @@ from yearn.prices.balancer import balancer as bal
 from yearn.prices import constants, curve
 from yearn.prices.aave import aave
 from yearn.prices.band import band
-from yearn.prices.chainlink import chainlink
 from yearn.prices.compound import compound
 from yearn.prices.fixed_forex import fixed_forex
 from yearn.prices.generic_amm import generic_amm
@@ -71,13 +70,6 @@ def find_price(
     assert block is not None, "You must pass a valid block number as this function is cached."
     price = None
     if token in constants.stablecoins:
-        if chainlink and token in chainlink and block >= contract_creation_block(chainlink.get_feed(token).address):
-            price = chainlink.get_price(token, block=block)
-            logger.debug("stablecoin chainlink -> %s", price)
-            # If we can't get price from chainlink but `block` is after feed
-            # deploy block,feed is probably dead and coin is possibly dead.
-            if price is not None:
-                return price
         # TODO Code better handling for stablecoin pricing
         logger.debug("stablecoin -> %s", 1)
         return 1
@@ -116,7 +108,6 @@ def find_price(
             return 0
 
     markets = [
-        chainlink,
         curve.curve,
         compound,
         fixed_forex,

@@ -2,16 +2,17 @@
 from brownie import ZERO_ADDRESS, chain
 from brownie.exceptions import RPCRequestError
 from pony.orm import commit, select
+from y.prices import magic
 from yearn.constants import ERC20_TRANSFER_EVENT_HASH
 from yearn.entities import TreasuryTx
 from yearn.events import decode_logs, get_logs_asap
 from yearn.networks import Network
 from yearn.outputs.postgres.utils import (cache_address, cache_chain,
                                           cache_token, cache_txgroup)
-from yearn.prices import constants, magic
+from yearn.prices import constants
 from yearn.treasury.accountant.classes import HashMatcher
 from yearn.treasury.accountant.constants import (DISPERSE_APP, PENDING_LABEL,
-                                                  treasury)
+                                                 treasury)
 from yearn.utils import contract
 
 

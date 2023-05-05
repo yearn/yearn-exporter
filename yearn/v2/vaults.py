@@ -3,13 +3,14 @@ import logging
 import re
 import threading
 import time
-from typing import Any, Dict, List
+from typing import Any, Dict, List, Union
 
 from brownie import chain
 from eth_utils import encode_hex, event_abi_to_log_topic
 from joblib import Parallel, delayed
-from multicall.utils import gather, run_in_subprocess
+from multicall.utils import run_in_subprocess
 from semantic_version.base import Version
+from y import Contract
 from y.prices import magic
 from yearn import apy
 from yearn.apy.common import ApySamples
@@ -22,7 +23,7 @@ from yearn.networks import Network
 from yearn.prices.curve import curve
 from yearn.special import Ygov
 from yearn.typing import Address
-from yearn.utils import contract, safe_views, thread_pool
+from yearn.utils import safe_views, thread_pool
 from yearn.v2.strategies import Strategy
 
 VAULT_VIEWS_SCALED = [
@@ -51,7 +52,13 @@ STRATEGY_EVENTS = [
 
 logger = logging.getLogger(__name__)
 
-def __unpack_results(vault: Address, is_experiment: bool, _views: List[str], results: List[Any], scale: int, price: float, strategies: List[str], strategy_descs: List[Dict]) -> Dict[str,Any]:
+async def get_price_return_exceptions(token, block=None):
+    try:
+        return await magic.get_price_async(token, block=block, silent=True)
+    except Exception as e:
+        return e
+
+def _unpack_results(vault: Address, is_experiment: bool, _views: List[str], results: List[Any], scale: int, price_or_exception: Union[float, BaseException], strategies: List[str], strategy_descs: List[Dict]) -> Dict[str,Any]:
     try:
         info = dict(zip(_views, results))
         for name in info:
@@ -60,7 +67,17 @@ def __unpack_results(vault: Address, is_experiment: bool, _views: List[str], res
         info["strategies"] = {}
     except ValueError as e:
         info = {"strategies": {}}
-
+ 
+    if isinstance(price_or_exception, BaseException):
+        # Sometimes we fail to fetch price during blocks prior to the first deposit to a vault.
+        # In this case (totalSupply == 0), missing price data is totally fine and we can set price = 0.
+        # In all other cases, missing price data indicates an issue. We must raise and debug the Exception.
+        if info["totalSupply"] > 0:
+            raise price_or_exception
+        price_or_exception = 0
+    
+    price = price_or_exception
+    
     info["token price"] = price
     if "totalAssets" in info:
         info["tvl"] = info["token price"] * info["totalAssets"]
@@ -71,18 +88,19 @@ def __unpack_results(vault: Address, is_experiment: bool, _views: List[str], res
     info["experimental"] = is_experiment
     info["address"] = vault
     info["version"] = "v2"
+    return info
 
 
 class Vault:
-    def __init__(self, vault, api_version=None, token=None, registry=None, watch_events_forever=True):
+    def __init__(self, vault: Contract, api_version=None, token=None, registry=None, watch_events_forever=True):
         self._strategies: Dict[Address, Strategy] = {}
         self._revoked: Dict[Address, Strategy] = {}
         self._reports = []
-        self.vault = vault
+        self.vault: Contract = vault
         self.api_version = api_version
         if token is None:
             token = vault.token()
-        self.token = contract(token)
+        self.token = Contract(token)
         self.registry = registry
         self.scale = 10 ** self.vault.decimals()
         # multicall-safe views with 0 inputs and numeric output.
@@ -122,7 +140,7 @@ class Vault:
 
     @classmethod
     def from_address(cls, address):
-        vault = contract(address)
+        vault = Contract(address)
         instance = cls(vault=vault, token=vault.token(), api_version=vault.apiVersion())
         instance.name = vault.name()
         return instance
@@ -218,7 +236,7 @@ class Vault:
     async def _unpack_results(self, results):
         results, strategy_descs, price = results
         return await run_in_subprocess(
-            __unpack_results,
+            _unpack_results,
             self.vault.address,
             self.is_experiment,
             self._views,
@@ -232,11 +250,11 @@ class Vault:
 
     async def describe(self, block=None):
         await asyncio.get_event_loop().run_in_executor(thread_pool, self.load_strategies)
-        results = await gather([
+        results = await asyncio.gather(
             fetch_multicall_async(*[[self.vault, view] for view in self._views], block=block),
-            gather(strategy.describe(block=block) for strategy in self.strategies),
-            magic.get_price_async(self.token, block=block)
-        ])
+            asyncio.gather(*[strategy.describe(block=block) for strategy in self.strategies]),
+            get_price_return_exceptions(self.token, block=block)
+        )
         return await self._unpack_results(results)
 
     def apy(self, samples: ApySamples):

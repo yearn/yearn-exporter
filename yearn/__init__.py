@@ -1,20 +1,18 @@
-import json
 
-from brownie import Contract, chain, network
+from brownie import network
 
 from yearn.logs import setup_logging
-from yearn.networks import Network
 from yearn.sentry import setup_sentry
 
 setup_logging()
 setup_sentry()
 
 if network.is_connected():
-    from y import Contract_erc20
-
+    from yearn._setup import (customize_ypricemagic,
+                              force_init_problematic_contracts)
     from yearn.middleware.middleware import setup_middleware
-    setup_middleware()
 
+    """
     if chain.id == Network.Mainnet:
         # LINK abi from etherscan crashes event parsing, use a compiled one
         Contract.from_abi(
@@ -64,3 +62,8 @@ if network.is_connected():
             address='0x0e5b46E4b2a05fd53F5a4cD974eb98a9a613bcb7',
             abi=json.load(open('interfaces/yearn/partner_tracker_arbitrum.json'))
         )
+    """
+    
+    setup_middleware()
+    force_init_problematic_contracts()
+    customize_ypricemagic()
