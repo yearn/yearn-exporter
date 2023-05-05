@@ -25,6 +25,6 @@ python-telegram-bot==13.15
 ypricemagic==2.2.16
 # The following addition is unused but somehow fixes a dep conflict by being placed here.
 eth-hash[pycryptodome]==0.3.2
-git+https://www.github.com/BobTheBuidler/eth-portfolio@aacdcb527343decb9c99b0a713cb99239a5ac87a
+git+https://www.github.com/BobTheBuidler/eth-portfolio@a58185f3d182b0681dafe169d8f4a99862fb8003
 git+https://www.github.com/BobTheBuidler/toolcache@e37b53cec64556d2b35df66767fca4c8f366a2fa
 memray
