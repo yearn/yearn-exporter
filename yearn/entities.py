@@ -344,7 +344,7 @@ class StreamedFunds(db.Entity):
             return entity
 
         check_at = date + timedelta(days=1) - timedelta(seconds=1)
-        block = closest_block_after_timestamp(check_at.timestamp())
+        block = closest_block_after_timestamp(int(check_at.timestamp()))
         start_timestamp = stream.start_timestamp(block)
         if start_timestamp == 0:
             # If the stream was already closed, we can return `None`.
