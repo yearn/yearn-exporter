@@ -3,10 +3,15 @@ import asyncio
 import logging
 import os
 import time
+from asyncio.queues import QueueEmpty
 from collections import defaultdict
+from contextlib import suppress
+from dataclasses import dataclass
 from datetime import datetime, timezone
 from functools import cached_property
-from typing import Awaitable, Callable, Literal, NoReturn, Optional, TypeVar
+from itertools import cycle
+from random import randint
+from typing import Awaitable, Callable, Literal, NoReturn, Optional, TypeVar, AsyncIterator
 
 import eth_retry
 from brownie import chain
@@ -15,6 +20,7 @@ from y.datatypes import Block
 from y.networks import Network
 from y.time import closest_block_after_timestamp_async
 from y.utils.dank_mids import dank_w3
+
 from yearn.helpers.snapshots import (RESOLUTION, SLEEP_TIME, Resolution,
                                      _generate_snapshot_range_forward,
                                      _generate_snapshot_range_historical,
@@ -26,6 +32,8 @@ from yearn.utils import use_memray_if_enabled
 logger = logging.getLogger(__name__)
 
 SHOW_STATS = bool(os.environ.get("SHOW_STATS"))
+
+_get_priority = lambda: randint(0, 500)
 
 @eth_retry.auto_retry
 async def _wait_for_block(timestamp: int) -> Block:
@@ -59,6 +67,14 @@ async def _wait_for_block(timestamp: int) -> Block:
 T = TypeVar('T')
 Direction = Literal["forward", "historical"]
 
+@dataclass
+class WorkItem:
+    snapshot: datetime
+    resolution: Resolution
+    
+    def __lt__(self, other):
+        return self.snapshot < other.snapshot if isinstance(other, WorkItem) else NotImplemented
+    
 class Exporter:
     """ Currently can only be used to output to victoria metrics. Can be extended for other data sources. """
     
@@ -150,29 +166,48 @@ class Exporter:
         start = datetime.now(tz=timezone.utc)
         intervals = _get_intervals(start)
         loop = self.loop
-        # Use Queue to conserve memory instead of creating all futures at once
-        queue = asyncio.Queue()
-        for resolution in intervals:
-            snapshots = _generate_snapshot_range_historical(
-                self.start_timestamp,
-                resolution,
-                intervals,
-            )
-            async for snapshot in snapshots:
-                await queue.put((snapshot, resolution))
         
-        futs = []
-        while not queue.empty():
-            if len(futs) < 100: # Some arbitrary number
-                snapshot, resolution = queue.get_nowait()
-                futs.append(
-                    asyncio.ensure_future(self.export_historical_snapshot_if_missing(snapshot, resolution), loop=loop)
-                )
-            if futs:
-                for fut in futs:
-                    if fut.done():
-                        futs.pop(futs.index(fut))
-                await asyncio.sleep(0)
+        work_items = [
+            WorkItem(snapshot, resolution)
+            for resolution in intervals
+            async for snapshot in _generate_snapshot_range_historical(self.start_timestamp, resolution, intervals)
+        ]
+        
+        # Use Queue to conserve memory instead of creating all futures at once
+        queues = defaultdict(asyncio.PriorityQueue)
+        for work_item in work_items:
+            queue_item = _get_priority(), work_item
+            queues[work_item.resolution].put_nowait(queue_item)
+        queues = cycle(queues.values())
+        
+        running_futs = []
+        
+        def prune_completed_futs() -> None:
+            for fut in running_futs:
+                if fut.done():
+                    running_futs.pop(running_futs.index(fut))
+                    
+        async def futures() -> AsyncIterator[asyncio.Future]:
+            max_running_futs = self._concurrency * 10
+            while not all(queue.empty() for queue in queues):
+                prune_completed_futs()
+                if len(running_futs) >= max_running_futs:  # Some arbitrary number
+                    await asyncio.sleep(0)
+                    continue
+                with suppress(QueueEmpty):
+                    work_item: WorkItem
+                    _, work_item = next(queues).get_nowait()
+                    yield asyncio.ensure_future(
+                        self.export_historical_snapshot_if_missing(work_item.snapshot, work_item.resolution),
+                        loop=loop,
+                    )
+        
+        async for fut in futures():
+            running_futs.append(fut)
+            
+        while running_futs:
+            prune_completed_futs()
+            await asyncio.sleep(0)
     
     # Export Methods
     
@@ -231,6 +266,4 @@ class Exporter:
                 timestamp_seconds
                 )
             await _post([item])
-    
-    # Snapshot Timestamp Generators
     

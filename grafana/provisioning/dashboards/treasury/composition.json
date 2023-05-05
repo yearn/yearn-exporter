@@ -1941,6 +1941,173 @@
       ],
       "title": "Liquid Everything Else by Wallet",
       "type": "row"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "PBFE396EC0B189D67"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "custom": {
+            "align": "auto",
+            "displayMode": "auto"
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 80
+              }
+            ]
+          },
+          "unit": "currencyUSD"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 13,
+        "w": 24,
+        "x": 0,
+        "y": 24
+      },
+      "id": 51,
+      "options": {
+        "footer": {
+          "fields": "",
+          "reducer": [
+            "sum"
+          ],
+          "show": false
+        },
+        "frameIndex": 0,
+        "showHeader": true,
+        "sortBy": [
+          {
+            "desc": true,
+            "displayName": "Period End Value ($)"
+          }
+        ]
+      },
+      "pluginVersion": "8.3.1",
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "PBFE396EC0B189D67"
+          },
+          "exemplar": true,
+          "expr": "treasury_assets{}",
+          "format": "table",
+          "interval": "",
+          "legendFormat": "",
+          "refId": "A"
+        }
+      ],
+      "title": "Panel Title",
+      "transformations": [
+        {
+          "id": "filterByValue",
+          "options": {
+            "filters": [
+              {
+                "config": {
+                  "id": "equal",
+                  "options": {
+                    "value": "usd value"
+                  }
+                },
+                "fieldName": "param"
+              }
+            ],
+            "match": "any",
+            "type": "include"
+          }
+        },
+        {
+          "id": "groupBy",
+          "options": {
+            "fields": {
+              "Value #A": {
+                "aggregations": [
+                  "first",
+                  "last"
+                ],
+                "operation": "aggregate"
+              },
+              "__name__": {
+                "aggregations": [],
+                "operation": "groupby"
+              },
+              "balance": {
+                "aggregations": []
+              },
+              "bucket": {
+                "aggregations": [],
+                "operation": "groupby"
+              },
+              "network": {
+                "aggregations": []
+              },
+              "param": {
+                "aggregations": []
+              },
+              "token": {
+                "aggregations": [],
+                "operation": "groupby"
+              },
+              "usd value": {
+                "aggregations": [
+                  "lastNotNull",
+                  "firstNotNull"
+                ],
+                "operation": "aggregate"
+              }
+            }
+          }
+        },
+        {
+          "id": "organize",
+          "options": {
+            "excludeByName": {},
+            "indexByName": {},
+            "renameByName": {
+              "Value #A (first)": "Period Start Value ($)",
+              "Value #A (last)": "Period End Value ($)",
+              "__name__": "Label",
+              "bucket": "Bucket",
+              "param": "",
+              "token": "Token"
+            }
+          }
+        },
+        {
+          "id": "calculateField",
+          "options": {
+            "alias": "+/-",
+            "binary": {
+              "left": "Period End Value ($)",
+              "operator": "-",
+              "reducer": "sum",
+              "right": "Period Start Value ($)"
+            },
+            "mode": "binary",
+            "reduce": {
+              "reducer": "sum"
+            }
+          }
+        }
+      ],
+      "type": "table"
     }
   ],
   "refresh": "30s",
