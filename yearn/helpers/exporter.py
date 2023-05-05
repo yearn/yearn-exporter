@@ -32,7 +32,7 @@ async def _wait_for_block(timestamp: int) -> Block:
     block = None
     while True:
         block, latest = await asyncio.gather(
-            dank_w3.eth.get_block(block.number + 1 if block else "latest"),
+            dank_w3.eth.get_block("latest" if block is None else block.number + 1 if block.number < latest.number else latest.number),
             dank_w3.eth.get_block("latest")
         )
         while timestamp >= block.timestamp and block.number < latest.number:
