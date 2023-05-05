@@ -1,5 +1,7 @@
 
 from brownie import ZERO_ADDRESS, chain
+from y import Network
+
 from yearn.constants import WRAPPED_GAS_COIN
 from yearn.entities import TreasuryTx
 from yearn.multicall2 import fetch_multicall
@@ -7,7 +9,6 @@ from yearn.treasury.accountant.classes import HashMatcher
 from yearn.treasury.accountant.constants import treasury
 from yearn.treasury.accountant.ignore.swaps.skip_tokens import SKIP_TOKENS
 from yearn.utils import contract
-
 
 ROUTERS = [
     "0xd9e1cE17f2641f24aE83637ab66a2cca9C378B9F",
@@ -60,7 +61,11 @@ def is_uniswap_deposit(tx: TreasuryTx) -> bool:
             elif tx.to_address.address == mint.address:
                 return True
     
-    return False
+    return tx in HashMatcher({
+        Network.Mainnet: [
+            "0x3a000d3aa5d0d83a3ff359de261bfcecdc62cd13500b8ab517802742ac918627",  # uni v3
+        ],
+    }.get(chain.id, []))
 
 def is_uniswap_withdrawal(tx: TreasuryTx) -> bool:
     if tx.to_address and "Burn" in tx._events and "Transfer" in tx._events:
@@ -104,9 +109,12 @@ def is_uniswap_withdrawal(tx: TreasuryTx) -> bool:
             # Component tokens
             elif tx.from_address.address == burn.address:
                 return True
-    return tx in HashMatcher([
-        "0xf0723677162cdf8105c0f752a8c03c53803cb9dd9a6649f3b9bc5d26822d531f",
-    ])
+    return tx in HashMatcher({
+        Network.Mainnet: [
+            "0xf0723677162cdf8105c0f752a8c03c53803cb9dd9a6649f3b9bc5d26822d531f",
+            "0xaf1b7f138fb8bf3f5e13a680cb4a9b7983ec71a75836111c03dee6ae530db176",  # v3
+        ],
+    }.get(chain.id, []))
 
 def is_uniswap_swap(tx: TreasuryTx) -> bool:
     # The LP for dumping solidSEX is not verified :( devs blz do something
@@ -115,6 +123,15 @@ def is_uniswap_swap(tx: TreasuryTx) -> bool:
         return True
     # Buy side
     elif tx._from_nickname == "Non-Verified Contract: 0xa66901D1965F5410dEeB4d0Bb43f7c1B628Cb20b" and tx.to_address and tx.to_address.address in treasury.addresses and tx._symbol == "WFTM":
+        return True
+    
+    elif tx in HashMatcher(
+        {
+            Network.Mainnet: [
+                "0x490245ef6e3c60127491415afdea23c13f4ca1a8c04de4fb3a498e7f7574b724", # uni v3
+            ],
+        }.get(chain.id, [])
+    ):
         return True
     
     # All other swaps
