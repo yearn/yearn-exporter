@@ -1,18 +1,13 @@
 
 import asyncio
 import logging
-from typing import Dict, List, Optional, Set
+from typing import Dict, List, Optional
 
 from brownie import chain
 from eth_portfolio import Portfolio
 from eth_portfolio.buckets import get_token_bucket
 from eth_portfolio.typing import Balance, RemoteTokenBalances, TokenBalances
 from y.classes.common import ERC20
-#from yearn.partners.partners import partners
-#from yearn.partners.snapshot import WildcardWrapper, Wrapper
-#from yearn.prices import compound
-#from yearn.prices.constants import weth
-#from yearn.prices.magic import _describe_err
 from y.exceptions import NonStandardERC20
 from y.networks import Network
 
@@ -99,6 +94,7 @@ class YearnTreasury(ExportablePortfolio):
         '''
         super().__init__(TREASURY_WALLETS, label='treasury', start_block=start_block, asynchronous=asynchronous, load_prices=load_prices)
 
+    # TODO link this in
     def partners_debt(self, block: int = None) -> dict:
         for i, partner in enumerate(partners):
             if i == 1:
@@ -111,9 +107,9 @@ class YearnTreasury(ExportablePortfolio):
                 for wrapper in flat_wrappers:
                     print(wrapper.protocol_fees(block=block))
 
+    # TODO:
     # def bonded_kp3r(self, block=None) -> dict:
 
-    # def debt - expends super().debt
 
 class StrategistMultisig(ExportablePortfolio):
     def __init__(self, asynchronous: bool = False, load_prices: bool = False) -> None:
