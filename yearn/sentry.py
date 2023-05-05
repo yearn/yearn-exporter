@@ -23,7 +23,7 @@ def before_send(event, hint):
 
 def set_custom_tags():
     set_tag("chain_id", chain.id)
-    set_tag("network", Network(chain.id).name)
+    set_tag("network", Network(chain.id).name())
     set_tag("web3_client_version", web3.clientVersion)
     set_tag("provider", _clean_creds_from_uri(web3.provider.endpoint_uri))
 
