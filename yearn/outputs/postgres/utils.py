@@ -36,13 +36,13 @@ def cache_address(address: str) -> Address:
     if not address_entity:
         if is_contract(address):
             try:
-                nickname = f"Contract: {contract(address.address)._build['contractName']}"
+                nickname = f"Contract: {contract(address)._build['contractName']}"
             except ValueError as e:
                 if (
                     "Contract source code not verified" in str(e)
                     or (str(e).startswith("Source for") and str(e).endswith("has not been verified"))
                 ):
-                    nickname = f"Non-Verified Contract: {address.address}"
+                    nickname = f"Non-Verified Contract: {address}"
                 else:
                     raise
         else:
