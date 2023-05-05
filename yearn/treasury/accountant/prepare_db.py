@@ -23,7 +23,9 @@ def prepare_db() -> None:
     cache_ymechs()
     cache_partners()
     cache_disperse_app()
-    #cache_address_nicknames_for_tokens()
+    cache_stream_factory()
+    cache_bridge_assistooor()
+    cache_address_nicknames_for_tokens()
     #cache_address_nicknames_for_contracts()
 
 def cache_ychad() -> None:
@@ -86,7 +88,12 @@ def cache_disperse_app() -> None:
 
 def cache_bridge_assistooor() -> None:
     """ This wallet is an EOA that has been used to assist in bridging tokens across chains. """
-    cache_address(BRIDGE_ASSISTOOOR).nickname = "Bridge Assistooor EOA"
+    if BRIDGE_ASSISTOOOR:
+        cache_address(BRIDGE_ASSISTOOOR).nickname = "Bridge Assistooor EOA"
+
+def cache_stream_factory() -> None:
+    if chain.id == Network.Mainnet:
+        cache_address('0xB93427b83573C8F27a08A909045c3e809610411a').nickname = "Vesting Escrow Factory"
 
 def cache_address_nicknames_for_tokens() -> None:
     """ Set address.nickname for addresses belonging to tokens. """
