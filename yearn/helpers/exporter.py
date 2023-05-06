@@ -35,6 +35,7 @@ SHOW_STATS = bool(os.environ.get("SHOW_STATS"))
 
 _get_priority = lambda: randint(0, 500)
 
+'''
 @eth_retry.auto_retry
 async def _wait_for_block(timestamp: int) -> Block:
     block = None
@@ -47,12 +48,16 @@ async def _wait_for_block(timestamp: int) -> Block:
             # We are lagging behind chain head, likely because we are on a chain with fast block times
             block = await dank_w3.eth.get_block(block.number + 1)
             if timestamp < block.timestamp:
+                logger.info(f'[0] returning {block.number - 1}')
                 return block.number - 1
+            logger.info(f'[0] block: {block.number}, timestamp: {block.timestamp}')
 
         while timestamp < block.timestamp:
+            logger.info(f'[1] block: {block.number}, block.timestamp: {block.timestamp}, timestamp: {timestamp}')
             try:
                 prev_block = await dank_w3.eth.get_block(block.number - 1)
                 if prev_block.timestamp < timestamp:
+                    logger.info(f'[1] returning {block.number}')
                     return block.number
                 if block.timestamp == prev_block.timestamp:
                     # Some chains need bigger leaps due to fast block times
@@ -62,7 +67,9 @@ async def _wait_for_block(timestamp: int) -> Block:
             except ValueError as e:
                 if 'parse error' not in str(e):
                     raise
+        logger.info('neither')
         await asyncio.sleep(SLEEP_TIME)
+'''
 
 T = TypeVar('T')
 Direction = Literal["forward", "historical"]
@@ -156,9 +163,11 @@ class Exporter:
         # Bump forward to the next snapshot, as the historical coroutine will take care of this one.
         start = start + interval
         loop = self.loop
+        async def task(snapshot: datetime) -> None:
+            block = await closest_block_after_timestamp_async(snapshot, wait_for_block_if_needed=True)
+            await self.export_snapshot(block, snapshot)
         async for snapshot in _generate_snapshot_range_forward(start, interval):
-            block = await _wait_for_block(snapshot.timestamp())
-            loop.create_task(self.export_snapshot(block, snapshot))
+            loop.create_task(task(snapshot))
     
     async def export_history(self) -> None:
         """ Exports all historical data. This coroutine runs for a finite duration. """
@@ -201,6 +210,7 @@ class Exporter:
                         self.export_historical_snapshot_if_missing(work_item.snapshot, work_item.resolution),
                         loop=loop,
                     )
+            logger.info('futures generator spent REMOVE ME')
         
         async for fut in futures():
             running_futs.append(fut)
@@ -208,6 +218,7 @@ class Exporter:
         while running_futs:
             prune_completed_futs()
             await asyncio.sleep(10)
+        logger.info(f'{Network.name()} {self.name} historical export completed')
     
     # Export Methods
     
