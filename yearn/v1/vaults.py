@@ -2,7 +2,7 @@ import asyncio
 import logging
 from dataclasses import dataclass
 from functools import cached_property
-from typing import Optional
+from typing import TYPE_CHECKING, Optional
 
 from brownie import ZERO_ADDRESS, interface
 from brownie.network.contract import InterfaceContainer
@@ -10,13 +10,16 @@ from dank_mids.brownie_patch import patch_contract
 from y.exceptions import PriceError
 from y.prices import magic
 from y.utils.dank_mids import dank_w3
-from yearn import apy, constants
-from yearn.apy.common import ApySamples
+
+from yearn import constants
 from yearn.common import Tvl
 from yearn.multicall2 import fetch_multicall_async
 from yearn.prices.curve import curve
 from yearn.utils import contract
 from yearn.v1 import constants
+
+if TYPE_CHECKING:
+    from yearn.apy.common import ApySamples
 
 logger = logging.getLogger(__name__)
 
@@ -142,7 +145,8 @@ class VaultV1:
             
         return info
 
-    def apy(self, samples: ApySamples):
+    def apy(self, samples: "ApySamples"):
+        from yearn import apy
         if curve.get_pool(self.token.address):
             return apy.curve.simple(self, samples)
         else:

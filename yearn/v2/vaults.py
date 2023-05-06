@@ -3,7 +3,7 @@ import logging
 import re
 import threading
 import time
-from typing import Any, Dict, List, Union
+from typing import TYPE_CHECKING, Any, Dict, List, Union
 
 from brownie import chain
 from eth_utils import encode_hex, event_abi_to_log_topic
@@ -15,8 +15,6 @@ from y.exceptions import PriceError
 from y.networks import Network
 from y.prices import magic
 
-from yearn import apy
-from yearn.apy.common import ApySamples
 from yearn.common import Tvl
 from yearn.decorators import sentry_catch_all, wait_or_exit_after
 from yearn.events import create_filter, decode_logs
@@ -26,6 +24,9 @@ from yearn.special import Ygov
 from yearn.typing import Address
 from yearn.utils import run_in_thread, safe_views
 from yearn.v2.strategies import Strategy
+
+if TYPE_CHECKING:
+    from yearn.apy.common import ApySamples
 
 VAULT_VIEWS_SCALED = [
     "totalAssets",
@@ -258,7 +259,8 @@ class Vault:
         )
         return await self._unpack_results(results)
 
-    def apy(self, samples: ApySamples):
+    def apy(self, samples: "ApySamples"):
+        from yearn import apy
         if self._needs_curve_simple():
             return apy.curve.simple(self, samples)
         elif Version(self.api_version) >= Version("0.3.2"):

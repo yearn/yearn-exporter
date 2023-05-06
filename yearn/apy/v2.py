@@ -10,7 +10,6 @@ from y.networks import Network
 
 from yearn.apy.common import (Apy, ApyBlocks, ApyError, ApyFees, ApyPoints,
                               ApySamples, SharePricePoint, calculate_roi)
-from yearn.apy.staking_rewards import get_staking_rewards_apr
 from yearn.debug import Debug
 
 logger = logging.getLogger(__name__)
@@ -221,6 +220,7 @@ def average(vault, samples: ApySamples) -> Apy:
     points = ApyPoints(week_ago_apy, month_ago_apy, inception_apy)
     blocks = ApyBlocks(samples.now, samples.week_ago, samples.month_ago, inception_block)
     fees = ApyFees(performance=performance, management=management)
+    from yearn.apy.staking_rewards import get_staking_rewards_apr
     staking_rewards_apr = get_staking_rewards_apr(vault, samples)
     if os.getenv("DEBUG", None):
         logger.info(pformat(Debug().collect_variables(locals())))
