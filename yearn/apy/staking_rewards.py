@@ -1,8 +1,11 @@
 import time
-from yearn.prices import magic
+
+from y.prices import magic
+
 from yearn.apy.common import SECONDS_PER_YEAR, ApySamples
 from yearn.utils import contract
 from yearn.v1.vaults import VaultV1
+
 
 def get_staking_rewards_apr(vault, samples: ApySamples):
     now = int(time.time())

@@ -3,11 +3,11 @@ from typing import Any, List, Literal, Optional
 from brownie import chain
 from cachetools.func import ttl_cache
 from y import Contract, Network
+from y.datatypes import Address, Block
+from y.prices import magic
 
 from yearn.cache import memory
 from yearn.exceptions import UnsupportedNetwork
-from yearn.prices import magic
-from yearn.typing import Address, Block
 from yearn.utils import Singleton
 
 networks = [ Network.Mainnet ]
