@@ -197,10 +197,10 @@ class Exporter:
                     running_futs.pop(running_futs.index(fut))
                     
         async def futures() -> AsyncIterator[asyncio.Future]:
-            max_running_futs = self._concurrency * 10
+            max_running_futs = self._concurrency * 10  # Some arbitrary number
             while not all(queue.empty() for queue in queues):
                 prune_completed_futs()
-                if len(running_futs) >= max_running_futs:  # Some arbitrary number
+                if len(running_futs) >= max_running_futs:
                     await asyncio.sleep(2)
                     continue
                 with suppress(QueueEmpty):
@@ -210,6 +210,7 @@ class Exporter:
                         self.export_historical_snapshot_if_missing(work_item.snapshot, work_item.resolution),
                         loop=loop,
                     )
+                logger.info('do we get stuck here?')
             logger.info('futures generator spent REMOVE ME')
         
         async for fut in futures():
