@@ -187,31 +187,37 @@ class Exporter:
         for work_item in work_items:
             queue_item = _get_priority(), work_item
             queues[work_item.resolution].put_nowait(queue_item)
-        queues = cycle(queues.values())
+        queues = queues.values()
+        c_queues = cycle(queues)
         
         running_futs = []
-        
+
         def prune_completed_futs() -> None:
-            for fut in running_futs:
+            fut: asyncio.Future
+            for fut in running_futs[:]:
                 if fut.done():
+                    if e := fut.exception():
+                        logger.warning(e, exc_info=True)
                     running_futs.pop(running_futs.index(fut))
                     
         async def futures() -> AsyncIterator[asyncio.Future]:
+            work_item: WorkItem
             max_running_futs = self._concurrency * 10  # Some arbitrary number
             while not all(queue.empty() for queue in queues):
                 prune_completed_futs()
+                await asyncio.sleep(0.001)
                 if len(running_futs) >= max_running_futs:
-                    await asyncio.sleep(2)
                     continue
-                with suppress(QueueEmpty):
-                    work_item: WorkItem
-                    _, work_item = next(queues).get_nowait()
+                queue = next(c_queues)
+                try:
+                    _, work_item = queue.get_nowait()
+                    logger.info(f'starting fut for {work_item.resolution} {work_item.snapshot}. {queue.qsize()} remain.')
                     yield asyncio.ensure_future(
                         self.export_historical_snapshot_if_missing(work_item.snapshot, work_item.resolution),
                         loop=loop,
                     )
-                logger.info('do we get stuck here?')
-            logger.info('futures generator spent REMOVE ME')
+                except QueueEmpty:
+                    logger.debug(queue)
         
         async for fut in futures():
             running_futs.append(fut)
