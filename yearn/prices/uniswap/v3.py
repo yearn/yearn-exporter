@@ -139,7 +139,7 @@ class UniswapV3(metaclass=Singleton):
 
         deepest_pool_balance = 0
         for pool, balance in zip(pools, reserves):
-            if balance > deepest_pool_balance:
+            if balance and balance > deepest_pool_balance:
                 deepest_pool_balance = balance
 
         return deepest_pool_balance
