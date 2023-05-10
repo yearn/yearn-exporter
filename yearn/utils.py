@@ -198,37 +198,6 @@ def _squeeze(it):
 def run_in_thread(callable: Callable, *args, **kwargs) -> Any:
     return asyncio.get_event_loop().run_in_executor(sync_threads, callable, *args, **kwargs)
 
-
-T = TypeVar("T")
-P = ParamSpec("P")
-
-def use_memray_if_enabled(label: str) -> Callable[[Callable[P, T]], Callable[P, T]]:
-    """ outputs a decorator that will activate memray for the decorated fn. """
-
-    def memray_decorator(callable: Callable[P, T]) -> Callable[P, T]:
-        if asyncio.iscoroutinefunction(callable):
-            @wraps(callable)
-            async def memray_wrapper(*args, **kwargs) -> T:
-                if os.environ.get("PROFILE_MEMORY"):
-                    import memray
-                    with memray.tracker(f"memray/memray_output_{label}_{callable.__name__}_{datetime.utcnow()}.bin"):
-                        return await callable(*args, **kwargs)
-                else:
-                    return await callable(*args, **kwargs)
-        else:
-            @wraps(callable)
-            def memray_wrapper(*args, **kwargs) -> T:
-                if os.environ.get("PROFILE_MEMORY"):
-                    import memray
-                    with memray.tracker(f"memray/memray_output_{label}_{callable.__name__}.bin"):
-                        return callable(*args, **kwargs)
-                else:
-                    return callable(*args, **kwargs)
-        return memray_wrapper
-
-    return memray_decorator
-
-
 def dates_between(start: datetime, end: datetime) -> List[datetime]:
     end = end.date()
     dates = []

@@ -25,7 +25,6 @@ from yearn.prices.incidents import INCIDENTS
 from yearn.prices.magic import _get_price
 from yearn.typing import Block
 from yearn.yearn import Yearn
-from yearn.utils import use_memray_if_enabled
 
 
 sentry_sdk.set_tag('script','transactions_exporter')
@@ -52,7 +51,6 @@ FIRST_END_BLOCK = {
     Network.Optimism: 18_111_485,
 }[chain.id]
 
-@use_memray_if_enabled("transactions")
 def main():
     _cached_thru_from_last_run = 0
     while True:

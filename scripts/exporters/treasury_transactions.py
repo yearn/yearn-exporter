@@ -16,7 +16,6 @@ from yearn.outputs.postgres.utils import (cache_address, cache_chain,
                                           cache_token)
 from yearn.treasury import accountant
 from yearn.treasury.treasury import YearnTreasury
-from yearn.utils import use_memray_if_enabled
 
 sentry_sdk.set_tag('script','treasury_transactions_exporter')
 
@@ -26,7 +25,6 @@ logger = logging.getLogger('yearn.treasury_transactions_exporter')
 
 treasury = YearnTreasury(load_prices=True)
 
-@use_memray_if_enabled("treasury_transactions")
 def main() -> NoReturn:
     cached_thru = treasury._start_block - 1
     while True:
