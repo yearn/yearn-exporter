@@ -207,7 +207,7 @@ class Exporter:
                 queue = next(c_queues)
                 try:
                     _, work_item = queue.get_nowait()
-                    logger.info(f'starting fut for {work_item.resolution} {work_item.snapshot}. {queue.qsize()} remain.')
+                    logger.debug(f'starting fut for {work_item.resolution} {work_item.snapshot}. {queue.qsize()} remain.')
                     yield asyncio.ensure_future(
                         self.export_historical_snapshot_if_missing(work_item.snapshot, work_item.resolution),
                         loop=loop,
