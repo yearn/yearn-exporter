@@ -22,7 +22,7 @@ from y.networks import Network
 from yearn.apy import (Apy, ApyBlocks, ApyFees, ApyPoints, ApySamples,
                        get_samples)
 from yearn.common import Tvl
-from yearn.exceptions import EmptyS3Export, PriceError
+from yearn.exceptions import EmptyS3Export
 from yearn.graphite import send_metric
 from yearn.special import Backscratcher, YveCRVJar
 from yearn.utils import chunks, contract
