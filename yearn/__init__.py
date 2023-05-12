@@ -34,6 +34,12 @@ if network.is_connected():
             address="0xEE586e7Eaad39207F0549BC65f19e336942C992f",
             abi=json.load(open("interfaces/ERC20.json"))
         )
+        # UST (Wormhole)
+        Contract.from_abi(
+            name="TokenBridge",
+            address="0xa693B19d2931d498c5B318dF961919BB4aee87a5",
+            abi=json.load(open("interfaces/ERC20.json"))
+        )
     elif chain.id == Network.Arbitrum:
         # PHP Philippine Peso stablecoin is not verified. Force init it with ERC20 abi.
         Contract_erc20("0xFa247d0D55a324ca19985577a2cDcFC383D87953")
