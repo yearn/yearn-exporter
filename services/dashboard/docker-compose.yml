@@ -35,6 +35,8 @@ x-envs: &envs
   - MAX_JSONRPC_BATCH_SIZE
   - DANK_MIDS_DEMO_MODE
   # eth-retry (optional)
+  - ETH_RETRY_DEBUG
+  - ETH_RETRY_DISABLED
   - MAX_RETRIES=${MAX_RETRIES:-2}
   - MIN_SLEEP_TIME
   - MAX_SLEEP_TIME
