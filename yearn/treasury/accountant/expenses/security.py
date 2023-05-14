@@ -3,7 +3,7 @@ from brownie import chain
 from y.networks import Network
 
 from yearn.entities import TreasuryTx
-from yearn.treasury.accountant.classes import Filter, HashMatcher
+from yearn.treasury.accountant.classes import Filter, HashMatcher, IterFilter
 
 
 def is_yacademy_audit(tx: TreasuryTx) -> bool:
@@ -64,10 +64,13 @@ def is_other_audit(tx: TreasuryTx) -> bool:
 def is_bug_bounty(tx: TreasuryTx) -> bool:
     hashes = [
         "0x4df2eee567ebf2a41b555fca3fed41300b12ff2dc3c79ffaee8b7bdf262f9303",
+        
+        # Immunefi
+        ["0x5deca5d6c934372c174bbef8be9a1e103e06d8b93fd3bf8d77865dfeb34fe3be", IterFilter('log_index', [100, 101])],
     ]
     return tx in HashMatcher(hashes)
 
 def is_antispam_bot(tx: TreasuryTx) -> bool:
     return tx in HashMatcher([
-        ["0xe397d5682ef780b5371f8c80670e0cd94b4f945c7b432319b24f65c288995a17", Filter('log_index',357)]
+        ["0xe397d5682ef780b5371f8c80670e0cd94b4f945c7b432319b24f65c288995a17", Filter('log_index', 357)],
     ])

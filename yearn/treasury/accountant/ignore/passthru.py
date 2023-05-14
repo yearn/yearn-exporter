@@ -38,6 +38,7 @@ def is_pass_thru(tx: TreasuryTx) -> bool:
             ["0xdc4e0045901cfd5ef4c6327b846a8bd229abdbf289547cd0e969874b47124342", IterFilter('log_index',[28,29,30,31])],
             "0xae6797ad466de75731117df46ccea5c263265dd6258d596b9d6d8cf3a7b1e3c2",
             "0x2a6191ba8426d3ae77e2a6c91de10a6e76d1abdb2d0f831c6c5aad52be3d6246",
+            "0x25b54e113e58a3a4bbffc011cdfcb8c07a0424f33b0dbda921803d82b88f1429",  # https://github.com/yearn/chief-multisig-officer/pull/924
         ],
         Network.Fantom: [
             "0x14faeac8ee0734875611e68ce0614eaf39db94a5ffb5bc6f9739da6daf58282a",
@@ -183,6 +184,7 @@ def is_idle(tx: TreasuryTx) -> bool:
         "0x4c7685aa3dfa9f375c612a2773951b9edbe059102b505423ed28a97d2692e75a",
         "0xb17317686b57229aeb7f06103097b47dc2eafa34489c40af70d2ac57bcf8f455",
         "0xfd9e6fd303fdbb358207bf3ba069b7f6a21f82f6b082605056d54948127e81e8",
+        "0x41c8428fd361c54bb80cdac752e31622915ac626dd1e9270f02af1dc2c84d1f9",
     ])
 
 def is_convex_strat(tx: TreasuryTx) -> bool:

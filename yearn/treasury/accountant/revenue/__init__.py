@@ -3,7 +3,8 @@ from brownie import chain
 from y.networks import Network
 
 from yearn.treasury.accountant.classes import TopLevelTxGroup
-from yearn.treasury.accountant.revenue import farming, fees, keepcoins, seasolver, bribes
+from yearn.treasury.accountant.revenue import (bribes, farming, fees,
+                                               keepcoins, seasolver, yacademy)
 
 REVENUE_LABEL = "Protocol Revenue"
 revenue_txgroup = TopLevelTxGroup(REVENUE_LABEL)
@@ -43,3 +44,6 @@ elif chain.id == Network.Fantom:
     farming_txgroup.create_child("SOLID Farming", farming.is_solid)
     farming_txgroup.create_child("SEX Farming", farming.is_sex)
     farming_txgroup.create_child("SOLIDsex Farming", farming.is_solidsex)
+
+if chain.id == Network.Mainnet:
+    revenue_txgroup.create_child("yAcadmy Audit Rev Share", yacademy.is_yacademy_audit_revenue)

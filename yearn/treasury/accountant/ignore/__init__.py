@@ -11,10 +11,10 @@ from yearn.treasury.accountant.ignore import (general, maker, passthru,
                                               ygov)
 from yearn.treasury.accountant.ignore.swaps import (aave, balancer, buying_yfi,
                                                     compound, cowswap, curve,
-                                                    otc, rkper, robovault,
-                                                    synthetix, uniswap,
-                                                    unwrapper, woofy, ycrv,
-                                                    yla)
+                                                    gearbox, idle, otc, rkper,
+                                                    robovault, synthetix,
+                                                    uniswap, unwrapper, woofy,
+                                                    ycrv, yla)
 from yearn.utils import contract
 
 IGNORE_LABEL = "Ignore"
@@ -219,6 +219,9 @@ swaps_txgroup.create_child("WOOFY", woofy.is_woofy)
 swaps_txgroup.create_child("OTC", otc.is_otc)
 
 if chain.id == Network.Mainnet:
+    swaps_txgroup.create_child("Gearbox Deposit", gearbox.is_gearbox_deposit)
+    swaps_txgroup.create_child("Gearbox Withdrawal", gearbox.is_gearbox_withdrawal)
+    swaps_txgroup.create_child("Idle Withdrawal", idle.is_idle_withdrawal)
     swaps_txgroup.create_child("ySwaps Swap", cowswap.is_cowswap_swap)
     swaps_txgroup.create_child("rKP3R Redemption", rkper.is_rkp3r_redemption)
     swaps_txgroup.create_child("YLA", yla.is_yla_withdrawal)
