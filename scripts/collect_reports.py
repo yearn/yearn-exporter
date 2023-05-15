@@ -10,9 +10,8 @@ from datetime import datetime, timezone
 from brownie import chain, web3, Contract, ZERO_ADDRESS, interface
 from web3._utils.events import construct_event_topic_set
 from yearn.utils import contract, contract_creation_block
-
 from yearn.prices import constants
-from ypricemagic import magic
+from y import get_price
 from yearn.db.models import Reports, Event, Transactions, Session, engine, select
 from sqlalchemy import desc, asc
 from yearn.networks import Network
@@ -23,7 +22,7 @@ warnings.filterwarnings("ignore", ".*Locally compiled and on-chain*")
 warnings.filterwarnings("ignore", ".*It has been discarded*")
 warnings.filterwarnings("ignore", ".*MismatchedABI*")
 
-
+logging.basicConfig(level=logging.DEBUG)
 # mainnet_public_channel = os.environ.get('TELEGRAM_CHANNEL_1_PUBLIC')
 # ftm_public_channel = os.environ.get('TELEGRAM_CHANNEL_250_PUBLIC')
 # discord_mainnet = os.environ.get('DISCORD_CHANNEL_1')
@@ -284,11 +283,11 @@ def handle_event(event, multi_harvest):
         t.txn_from = tx["from"]
         t.txn_gas_used = tx.gasUsed
         t.txn_gas_price = gas_price / 1e9 # Use gwei
-        t.eth_price_at_block = magic.get_price(constants.weth, t.block)
+        t.eth_price_at_block = get_price(constants.weth, t.block)
         t.call_cost_eth = gas_price * tx.gasUsed / 1e18
         t.call_cost_usd = t.eth_price_at_block * t.call_cost_eth
         if chain.id == 1:
-            t.kp3r_price_at_block = magic.get_price(CHAIN_VALUES[chain.id]["KEEPER_TOKEN"], t.block)
+            t.kp3r_price_at_block = get_price(CHAIN_VALUES[chain.id]["KEEPER_TOKEN"], t.block)
             t.kp3r_paid = get_keeper_payment(tx) / 1e18
             t.kp3r_paid_usd = t.kp3r_paid * t.kp3r_price_at_block
             t.keeper_called = t.kp3r_paid > 0
@@ -318,7 +317,7 @@ def handle_event(event, multi_harvest):
     if r.vault_address == '0x9E0E0AF468FbD041Cab7883c5eEf16D1A99a47C3':
         r.want_price_at_block = 1
     else:
-        r.want_price_at_block = magic.get_price(r.want_token, r.block)
+        r.want_price_at_block = get_price(r.want_token, r.block)
     
     r.want_gain_usd = r.gain * r.want_price_at_block
     r.vault_name = vault.name()
@@ -345,7 +344,7 @@ def handle_event(event, multi_harvest):
             _from, _to, _val = tfr.args.values()
             if tfr.address == crv and _from == r.strategy_address and (_to == voter or _to == treasury):
                 r.keep_crv = _val / 1e18
-                r.crv_price_usd = magic.get_price(crv, r.block)
+                r.crv_price_usd = get_price(crv, r.block)
                 r.keep_crv_value_usd = r.keep_crv * r.crv_price_usd
         
         if r.keep_crv > 0:
