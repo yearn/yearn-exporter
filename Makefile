@@ -58,7 +58,7 @@ all-networks: infra
 down:
 	$(eval filter = $(if $(filter),yearn-exporter-$(filter),$(if $(network),$(network),yearn-exporter-worker)))
 	echo "stopping containers for filter: $(filter)"
-	docker ps -a -q --filter="name=worker-$(filter)-exporters" | xargs -L 1 docker rm -f 2> /dev/null || true
+	docker ps -a -q --filter="name=$(filter)" | xargs -L 1 docker rm -f 2> /dev/null || true
 	echo "running containers:"
 	docker ps
 
@@ -67,7 +67,7 @@ build:
 	docker build -t ghcr.io/yearn/yearn-exporter .
 
 logs:
-	$(eval filter = $(if $(filter),yearn-exporter-$(filter),$(if $(network),$(network)-exporters,yearn-exporter-worker)))
+	$(eval filter = $(if $(filter),yearn-exporter-$(filter),$(if $(network),$(network),yearn-exporter-worker)))
 	$(eval since = $(if $(since),$(since),300s))
 	docker ps -a -q --filter="name=$(filter)"| xargs -L 1 -P $$(docker ps --filter="name=$(filter)" | wc -l) docker logs --since $(since) -ft
 
