@@ -9,9 +9,12 @@ from y.networks import Network
 
 def force_init_problematic_contracts() -> None:
     if chain.id == Network.Mainnet:
-        # compile LINK contract locally for mainnet with latest solc because the etherscan abi crashes event parsing
-        Contract.from_explorer("0x514910771AF9Ca656af840dff83E8264EcF986CA")
-
+        # LINK abi from etherscan crashes event parsing, use a compiled one
+        Contract.from_abi(
+            name="ChainLink Token",
+            address="0x514910771AF9Ca656af840dff83E8264EcF986CA",
+            abi=json.load(open("interfaces/chainlink/LinkToken.json"))
+        )
         # XEN abi from etherscan is missing events
         Contract.from_abi(
             name="XENCrypto",
@@ -20,18 +23,21 @@ def force_init_problematic_contracts() -> None:
         )
 
         # cEUR stablecoin has busted abi
-        Contract.from_abi(
-            name="TokenBridge",
-            address="0xEE586e7Eaad39207F0549BC65f19e336942C992f",
-            abi=json.load(open("interfaces/ERC20.json"))
-        )
-        
+        Contract_erc20("0xEE586e7Eaad39207F0549BC65f19e336942C992f")
+
+        # UST (Wormhole)
+        Contract_erc20("0xa693B19d2931d498c5B318dF961919BB4aee87a5")
+
     elif chain.id == Network.Arbitrum:
-        # PHP Philippine Peso stablecoin is not verified. Force starndard ERC-20 abi.
+        # PHP Philippine Peso stablecoin is not verified. Force init it with ERC20 abi.
         Contract_erc20("0xFa247d0D55a324ca19985577a2cDcFC383D87953")
 
         # CREAM unitroller
-        Contract.from_explorer("0xbadaC56c9aca307079e8B8FC699987AAc89813ee")
+        Contract.from_abi(
+            name="TripleSlopeRateModel",
+            address="0xbadaC56c9aca307079e8B8FC699987AAc89813ee",
+            abi=json.load(open("interfaces/cream/unitroller.json"))
+        )
 
         # workaround for issues loading the partner tracker contract on arbitrum
         Contract.from_abi(
