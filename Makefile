@@ -222,7 +222,10 @@ logs-wallets:
 
 # Partners Exporters
 partners:
-	make up filter=partners commands="exporters/partners"
+	make up with_logs=false filter=partners network=eth commands="exporters/partners"
+	make up with_logs=false filter=partners network=ftm commands="exporters/partners"
+	make logs filter=partners
+
 logs-partners:
 	make logs filter=partners commands="exporters/partners"
 
