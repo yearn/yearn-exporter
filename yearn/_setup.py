@@ -34,7 +34,7 @@ def force_init_problematic_contracts() -> None:
 
         # CREAM unitroller
         Contract.from_abi(
-            name="TripleSlopeRateModel",
+            name="Unitroller",
             address="0xbadaC56c9aca307079e8B8FC699987AAc89813ee",
             abi=json.load(open("interfaces/cream/unitroller.json"))
         )
