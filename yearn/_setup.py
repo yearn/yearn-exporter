@@ -50,6 +50,9 @@ def customize_ypricemagic() -> None:
             "0xbbc4A8d076F4B1888fec42581B6fc58d242CF2D5": "anyMIM",
             "0xdf0770dF86a8034b3EFEf0A1Bb3c889B8332FF56": "S*USDC"
         },
+        Network.Fantom: {
+            "0xd652776dE7Ad802be5EC7beBfafdA37600222B48", # anyDAI
+        },
     }.get(chain.id, {})
 
     for k, v in additional_stablecoins.items():

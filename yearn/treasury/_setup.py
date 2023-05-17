@@ -37,6 +37,9 @@ skip_ypriceapi = {
         "0xD057B63f5E69CF1B929b356b579Cba08D7688048", # vCOW
         "0x9aE357521153FB07bE6F5792CE7a49752638fbb7", # SAFE
     },
+    Network.Fantom: {
+        "0xd652776dE7Ad802be5EC7beBfafdA37600222B48", # anyDAI
+    },
 }
         
 def customize_ypricemagic() -> None:
