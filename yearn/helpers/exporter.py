@@ -5,24 +5,22 @@ import os
 import time
 from asyncio.queues import QueueEmpty
 from collections import defaultdict
-from contextlib import suppress
 from dataclasses import dataclass
 from datetime import datetime, timezone
 from functools import cached_property
 from itertools import cycle
 from random import randint
-from typing import Awaitable, Callable, Literal, NoReturn, Optional, TypeVar, AsyncIterator
+from typing import (AsyncIterator, Awaitable, Callable, Literal, NoReturn,
+                    Optional, TypeVar)
 
 import eth_retry
 from brownie import chain
 from dank_mids.controller import instances
-from y.datatypes import Block
 from y.networks import Network
 from y.time import closest_block_after_timestamp_async
-from y.utils.dank_mids import dank_w3
 
 from yearn import constants
-from yearn.helpers.snapshots import (RESOLUTION, SLEEP_TIME, Resolution,
+from yearn.helpers.snapshots import (RESOLUTION, Resolution,
                                      _generate_snapshot_range_forward,
                                      _generate_snapshot_range_historical,
                                      _get_intervals)
