@@ -1,4 +1,5 @@
 from brownie import chain
+from pony.orm import commit
 from y.networks import Network
 
 from yearn.entities import TreasuryTx
@@ -67,6 +68,21 @@ def is_strategist_gas(tx: TreasuryTx) -> bool:
                 ["0x7afceac28536b9b2c177302c3cfcba449e408b47ff2f0a8a3c4b0e668a4d5d4e", Filter('_from_nickname', "Disperse.app")],
             ],
         }.get(chain.id, []))
+    
+    # Returned gas
+    if tx in HashMatcher({
+        Network.Mainnet: [
+            '0x86fee63ec8efb0e7320a6d48ac3890b1089b77a3d9ed74cade389f512471c299',
+            '0xa77c4f7596968fef96565a0025cc6f9881622f62cc4c823232f9c9000ba5f981',
+            '0xac2253f1d8f78680411b353d65135d58bc880cdf9507ea7848daf05925e1443f',
+            '0xd27d4a732dd1a9ac93c7db1695a6d2aff40e007627d710da91f328b246be44bc',
+        ],
+    }.get(chain.id, [])):
+        tx.amount *= -1
+        tx.value_usd *= -1
+        commit()
+        return True
+        
     return tx in HashMatcher({
         Network.Mainnet: [
             "0x420cfbc7856f64e8949d4dd6d4ce9570f8270def1380ebf381376fbcd0b0d5bf",

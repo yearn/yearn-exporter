@@ -25,6 +25,7 @@ if chain.id == Network.Mainnet:
     other_expense_txgroup.create_child("Fix Temple Migration", general.is_fix_temple_migration)
     other_expense_txgroup.create_child("yChute", general.is_ychute)
     other_expense_txgroup.create_child("EthOnline Prizes", general.is_eth_online_prizes)
+    other_expense_txgroup.create_child("4626 Alliance Grant", general.is_4626_alliance)
 
 # Bugs
 if chain.id == Network.Mainnet:

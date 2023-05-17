@@ -94,3 +94,8 @@ def is_ychute(tx: TreasuryTx) -> bool:
     
 def is_eth_online_prizes(tx: TreasuryTx) -> bool:
     return tx in HashMatcher(["0x200cbcd15fb934e75e0909e4752cad4e2067b9556a85660bd6980c3473721122"])
+
+def is_4626_alliance(tx: TreasuryTx) -> bool:
+    return tx in HashMatcher([
+        ["0xca61496c32806ba34f0deb331c32969eda11c947fdd6235173e6fa13d9a1c288", Filter('log_index', 150)],
+    ])

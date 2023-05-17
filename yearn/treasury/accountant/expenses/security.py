@@ -49,6 +49,7 @@ def is_statemind_audit(tx: TreasuryTx) -> bool:
 def is_mixbytes_audit(tx: TreasuryTx) -> bool:
     return tx in HashMatcher([
         ["0xcb79cbe5b68d04a1a3feab3360734277020ee0536380843a8c9db3e8356b81d6", Filter('log_index', 399)],
+        ["0xca61496c32806ba34f0deb331c32969eda11c947fdd6235173e6fa13d9a1c288", Filter('_symbol', 'USDC')],
     ])
 
 def is_other_audit(tx: TreasuryTx) -> bool:
@@ -73,4 +74,10 @@ def is_bug_bounty(tx: TreasuryTx) -> bool:
 def is_antispam_bot(tx: TreasuryTx) -> bool:
     return tx in HashMatcher([
         ["0xe397d5682ef780b5371f8c80670e0cd94b4f945c7b432319b24f65c288995a17", Filter('log_index', 357)],
+    ])
+
+def is_warroom_help(tx: TreasuryTx) -> bool:
+    """A past yearner was paid a one-time payment to assist in a war room."""
+    return tx in HashMatcher([
+        ["0xca61496c32806ba34f0deb331c32969eda11c947fdd6235173e6fa13d9a1c288", Filter('log_index', 152)]
     ])

@@ -22,6 +22,7 @@ if chain.id == Network.Mainnet:
     security_txgroup = expenses_txgroup.create_child("Security")
     security_txgroup.create_child("Bug Bounty", security.is_bug_bounty)
     security_txgroup.create_child("Anti-Spam Discord Bot", security.is_antispam_bot)
+    security_txgroup.create_child("War Room Assistance", security.is_warroom_help)
     audit_txgroup = security_txgroup.create_child("Audit")
     audit_txgroup.create_child("yAcademy", security.is_yacademy_audit)
     audit_txgroup.create_child("ChainSec", security.is_chainsec_audit)

@@ -11,7 +11,10 @@ def is_tessaract_refund(tx: TreasuryTx) -> bool:
     return tx in HashMatcher(["0xe1558686856dc43ca9797f9fd7113151e51fc69be35f36db3555b9cefd74399a"])
 
 def is_lido_grant(tx: TreasuryTx) -> bool:
-    return tx in HashMatcher(["0x2193a2e98487894a30fc1fc9b913ac7a59e14f47ab72b0b53a02aede7d919795"])
+    return tx in HashMatcher([
+        "0x2193a2e98487894a30fc1fc9b913ac7a59e14f47ab72b0b53a02aede7d919795",
+        "0x64d9e139ac2b1738f4e3c1b1c2f979fc90544c9b9eed5cc8bcd960c73fc19ac8",
+    ])
 
 def is_portals_fees(tx: TreasuryTx) -> bool:
     return tx in HashMatcher([
