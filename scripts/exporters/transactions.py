@@ -37,7 +37,7 @@ logger = logging.getLogger('yearn.transactions_exporter')
 
 BATCH_SIZE = {
     Network.Mainnet: 5_000,
-    Network.Fantom: 20_000,
+    Network.Fantom: 100_000,
     Network.Gnosis: 2_000_000,
     Network.Arbitrum: 1_000_000,
     Network.Optimism: 4_000_000,
