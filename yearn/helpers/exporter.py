@@ -34,42 +34,6 @@ SHOW_STATS = bool(os.environ.get("SHOW_STATS"))
 
 _get_priority = lambda: randint(0, 500)
 
-'''
-@eth_retry.auto_retry
-async def _wait_for_block(timestamp: int) -> Block:
-    block = None
-    while True:
-        block, latest = await asyncio.gather(
-            dank_w3.eth.get_block("latest" if block is None else block.number + 1 if block.number < latest.number else latest.number),
-            dank_w3.eth.get_block("latest")
-        )
-        while timestamp >= block.timestamp and block.number < latest.number:
-            # We are lagging behind chain head, likely because we are on a chain with fast block times
-            block = await dank_w3.eth.get_block(block.number + 1)
-            if timestamp < block.timestamp:
-                logger.info(f'[0] returning {block.number - 1}')
-                return block.number - 1
-            logger.info(f'[0] block: {block.number}, timestamp: {block.timestamp}')
-
-        while timestamp < block.timestamp:
-            logger.info(f'[1] block: {block.number}, block.timestamp: {block.timestamp}, timestamp: {timestamp}')
-            try:
-                prev_block = await dank_w3.eth.get_block(block.number - 1)
-                if prev_block.timestamp < timestamp:
-                    logger.info(f'[1] returning {block.number}')
-                    return block.number
-                if block.timestamp == prev_block.timestamp:
-                    # Some chains need bigger leaps due to fast block times
-                    block = await dank_w3.eth.get_block(block.number - 10)
-                else:
-                    block = prev_block
-            except ValueError as e:
-                if 'parse error' not in str(e):
-                    raise
-        logger.info('neither')
-        await asyncio.sleep(SLEEP_TIME)
-'''
-
 T = TypeVar('T')
 Direction = Literal["forward", "historical"]
 
