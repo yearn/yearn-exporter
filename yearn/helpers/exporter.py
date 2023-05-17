@@ -155,8 +155,6 @@ class Exporter:
             fut: asyncio.Future
             for fut in running_futs[:]:
                 if fut.done():
-                    if e := fut.exception():
-                        logger.warning(e, exc_info=True)
                     running_futs.pop(running_futs.index(fut))
                     
         async def futures() -> AsyncIterator[asyncio.Future]:
