@@ -94,6 +94,13 @@ up:
 		fi
 	fi
 
+# cleanup containers which are temporarily unused or too buggy, ugly workaround until there is a better way to control this:
+	make down filter=yearn-exporter-worker-fantom-exporters-treasury-transactions
+	make down filter=yearn-exporter-worker-arbitrum-exporters-treasury-transactions
+	make down filter=yearn-exporter-worker-optimism-exporters-treasury-transactions
+	make down filter=yearn-exporter-worker-arbitrum-exporters-partners
+	make down filter=yearn-exporter-worker-optimism-exporters-partners
+
 # LOGGING
 	$(eval with_logs = $(if $(with_logs),$(with_logs),true))
 	$(eval filter = $(if $(filter),yearn-exporter-$(filter),yearn-exporter-worker))
