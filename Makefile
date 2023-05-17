@@ -98,8 +98,6 @@ up:
 	make down filter=yearn-exporter-worker-fantom-exporters-treasury-transactions
 	make down filter=yearn-exporter-worker-arbitrum-exporters-treasury-transactions
 	make down filter=yearn-exporter-worker-optimism-exporters-treasury-transactions
-	make down filter=yearn-exporter-worker-arbitrum-exporters-partners
-	make down filter=yearn-exporter-worker-optimism-exporters-partners
 
 # LOGGING
 	$(eval with_logs = $(if $(with_logs),$(with_logs),true))
@@ -229,9 +227,7 @@ logs-wallets:
 
 # Partners Exporters
 partners:
-	make up with_logs=false filter=partners network=eth commands="exporters/partners"
-	make up with_logs=false filter=partners network=ftm commands="exporters/partners"
-	make logs filter=partners
+	make up filter=partners commands="exporters/partners"
 
 logs-partners:
 	make logs filter=partners commands="exporters/partners"
