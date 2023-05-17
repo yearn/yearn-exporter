@@ -282,7 +282,7 @@ class Stream(db.Entity):
                                                       cache_txgroup)
 
             txgroup = {
-                BUYER: "Top-up Buyer Contract(",
+                BUYER: "Top-up Buyer Contract",
                 v3_multisig: "V3 Development",
             }.get(to_address, "Other Grants")
 
