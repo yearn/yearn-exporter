@@ -21,6 +21,7 @@ from y.networks import Network
 from y.time import closest_block_after_timestamp_async
 from y.utils.dank_mids import dank_w3
 
+from yearn import constants
 from yearn.helpers.snapshots import (RESOLUTION, SLEEP_TIME, Resolution,
                                      _generate_snapshot_range_forward,
                                      _generate_snapshot_range_historical,
@@ -32,7 +33,7 @@ logger = logging.getLogger(__name__)
 
 SHOW_STATS = bool(os.environ.get("SHOW_STATS"))
 
-_get_priority = lambda: randint(0, 500)
+_get_priority = lambda: randint(0, 500) if constants.RANDOMIZE_EXPORTS else 0
 
 T = TypeVar('T')
 Direction = Literal["forward", "historical"]

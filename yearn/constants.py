@@ -1,3 +1,5 @@
+import os
+
 from brownie import chain, convert
 from y.networks import Network
 
@@ -91,3 +93,5 @@ TREASURY_WALLETS = {
 }.get(chain.id,set())
 
 TREASURY_WALLETS = {convert.to_address(address) for address in TREASURY_WALLETS}
+
+RANDOMIZE_EXPORTS = bool(os.environ.get("RANDOMIZE_EXPORTS"))
