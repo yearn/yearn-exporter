@@ -48,10 +48,10 @@ def customize_ypricemagic() -> None:
             "0x739ca6D71365a08f584c8FC4e1029045Fa8ABC4B": "anyDAI",
             "0x7EA2be2df7BA6E54B1A9C70676f668455E329d29": "anyUSDC",
             "0xbbc4A8d076F4B1888fec42581B6fc58d242CF2D5": "anyMIM",
-            "0xdf0770dF86a8034b3EFEf0A1Bb3c889B8332FF56": "S*USDC"
+            "0xdf0770dF86a8034b3EFEf0A1Bb3c889B8332FF56": "S*USDC",
         },
         Network.Fantom: {
-            "0xd652776dE7Ad802be5EC7beBfafdA37600222B48", # anyDAI
+            "0xd652776dE7Ad802be5EC7beBfafdA37600222B48": "anyDAI",
         },
     }.get(chain.id, {})
 
