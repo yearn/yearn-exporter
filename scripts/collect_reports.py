@@ -200,48 +200,48 @@ def main(dynamically_find_multi_harvest=False):
     if chain.id == 1:
         event_filter_v030 = web3.eth.filter({'topics': topics_v030, "fromBlock": last_reported_block030 + 1})
     
-    while True: # Keep this as a long-running script
-        events_to_process = []
-        transaction_hashes = []
-        if dynamically_find_multi_harvest:
-            # The code below is used to populate the "multi_harvest" property #
-            for strategy_report_event in decode_logs(event_filter.get_new_entries()):
-                e = Event(False, strategy_report_event, strategy_report_event.transaction_hash.hex())
+    # while True: # Keep this as a long-running script # <--- disabled this since ypm issues
+    events_to_process = []
+    transaction_hashes = []
+    if dynamically_find_multi_harvest:
+        # The code below is used to populate the "multi_harvest" property #
+        for strategy_report_event in decode_logs(event_filter.get_new_entries()):
+            e = Event(False, strategy_report_event, strategy_report_event.transaction_hash.hex())
+            if e.txn_hash in transaction_hashes:
+                e.multi_harvest = True
+                for i in range(0, len(events_to_process)):
+                        if e.txn_hash == events_to_process[i].txn_hash:
+                            events_to_process[i].multi_harvest = True
+            else:
+                transaction_hashes.append(strategy_report_event.transaction_hash.hex())
+            events_to_process.append(e)
+            
+        if chain.id == 1: # No old vaults deployed anywhere other than mainnet
+            for strategy_report_event in decode_logs(event_filter_v030.get_new_entries()):
+                e = Event(True, strategy_report_event, strategy_report_event.transaction_hash.hex())
                 if e.txn_hash in transaction_hashes:
                     e.multi_harvest = True
                     for i in range(0, len(events_to_process)):
-                            if e.txn_hash == events_to_process[i].txn_hash:
-                                events_to_process[i].multi_harvest = True
+                        if e.txn_hash == events_to_process[i].txn_hash:
+                            events_to_process[i].multi_harvest = True
                 else:
                     transaction_hashes.append(strategy_report_event.transaction_hash.hex())
                 events_to_process.append(e)
-                
-            if chain.id == 1: # No old vaults deployed anywhere other than mainnet
-                for strategy_report_event in decode_logs(event_filter_v030.get_new_entries()):
-                    e = Event(True, strategy_report_event, strategy_report_event.transaction_hash.hex())
-                    if e.txn_hash in transaction_hashes:
-                        e.multi_harvest = True
-                        for i in range(0, len(events_to_process)):
-                            if e.txn_hash == events_to_process[i].txn_hash:
-                                events_to_process[i].multi_harvest = True
-                    else:
-                        transaction_hashes.append(strategy_report_event.transaction_hash.hex())
-                    events_to_process.append(e)
 
-            for e in events_to_process:
+        for e in events_to_process:
+            handle_event(e.event, e.multi_harvest)
+        # time.sleep(interval_seconds)
+    else:
+        for strategy_report_event in decode_logs(event_filter.get_new_entries()):
+            e = Event(False, strategy_report_event, strategy_report_event.transaction_hash.hex())
+            handle_event(e.event, e.multi_harvest)
+            
+        if chain.id == 1: # Old vault API exists only on Ethereum mainnet
+            for strategy_report_event in decode_logs(event_filter_v030.get_new_entries()):
+                e = Event(True, strategy_report_event, strategy_report_event.transaction_hash.hex())
                 handle_event(e.event, e.multi_harvest)
-            time.sleep(interval_seconds)
-        else:
-            for strategy_report_event in decode_logs(event_filter.get_new_entries()):
-                e = Event(False, strategy_report_event, strategy_report_event.transaction_hash.hex())
-                handle_event(e.event, e.multi_harvest)
-                
-            if chain.id == 1: # Old vault API exists only on Ethereum mainnet
-                for strategy_report_event in decode_logs(event_filter_v030.get_new_entries()):
-                    e = Event(True, strategy_report_event, strategy_report_event.transaction_hash.hex())
-                    handle_event(e.event, e.multi_harvest)
 
-            time.sleep(interval_seconds)
+        # time.sleep(interval_seconds)
 
 def handle_event(event, multi_harvest):
     # exception because skeletor didnt verify contract
