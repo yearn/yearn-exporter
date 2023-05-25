@@ -8,7 +8,7 @@ from brownie.exceptions import (BrownieCompilerWarning,
 
 def setup_logging():
     logging.basicConfig(
-        level=os.getenv("LOG_LEVEL", "INFO"),
+        level=os.getenv("LOG_LEVEL", "INFO").upper(),
         format="%(levelname)s %(name)s:%(lineno)d %(message)s",
         datefmt="%Y-%m-%d %H:%M:%S",
     )
