@@ -12,7 +12,6 @@ Metapool Factory (id 3)
     v1 = 0x0959158b6040D32d04c301A72CBFD6b39E21c9AE
     v2 = 0xB9fC157394Af804a3578134A6585C0dc9cc990d4
 """
-import asyncio
 import logging
 import threading
 import time
@@ -25,14 +24,13 @@ from brownie import ZERO_ADDRESS, Contract, chain, convert, interface
 from brownie.convert import to_address
 from brownie.convert.datatypes import EthAddress
 from cachetools.func import lru_cache, ttl_cache
-from y.exceptions import PriceError
-from y.networks import Network
-from y.prices import magic
 
 from yearn.decorators import sentry_catch_all, wait_or_exit_after
 from yearn.events import create_filter, decode_logs
-from yearn.exceptions import UnsupportedNetwork
-from yearn.multicall2 import fetch_multicall, fetch_multicall_async
+from yearn.exceptions import PriceError, UnsupportedNetwork
+from yearn.multicall2 import fetch_multicall
+from yearn.networks import Network
+from yearn.prices import magic
 from yearn.typing import Address, AddressOrContract, Block
 from yearn.utils import Singleton, contract
 
@@ -103,7 +101,6 @@ class Ids(IntEnum):
     crvUSD_Plain_Pools = 10
     Curve_Tricrypto_Factory = 11
 
-
 class CurveRegistry(metaclass=Singleton):
 
     @wait_or_exit_after
@@ -147,7 +144,7 @@ class CurveRegistry(metaclass=Singleton):
             
             # NOTE: Gnosis chain's address provider fails to provide registry via events.
             if not self.identifiers[Ids.Main_Registry]:
-                self.identifiers[Ids.Main_Registry] = [self.address_provider.get_registry()]
+                self.identifiers[Ids.Main_Registry] = self.address_provider.get_registry()
             
             # if registries were updated, recreate the filter
             _registries = [
@@ -159,8 +156,6 @@ class CurveRegistry(metaclass=Singleton):
                 registries = _registries
                 registries_filter = create_filter(registries)
                 registry_logs = registries_filter.get_all_entries()
-            
-            registry_logs = [log for log in registry_logs if chain.id != Network.Gnosis or log.address != "0x8A4694401bE8F8FCCbC542a3219aF1591f87CE17"]
 
             # fetch pools from the latest registries
             for event in decode_logs(registry_logs):
@@ -487,8 +482,8 @@ class CurveRegistry(metaclass=Singleton):
         except PriceError:
             return None
 
-    async def calculate_boost(self, gauge: Contract, addr: Address, block: Optional[Block] = None) -> Dict[str,float]:
-        results = await fetch_multicall_async(
+    def calculate_boost(self, gauge: Contract, addr: Address, block: Optional[Block] = None) -> Dict[str,float]:
+        results = fetch_multicall(
             [gauge, "balanceOf", addr],
             [gauge, "totalSupply"],
             [gauge, "working_balances", addr],
@@ -496,15 +491,7 @@ class CurveRegistry(metaclass=Singleton):
             [self.voting_escrow, "balanceOf", addr],
             [self.voting_escrow, "totalSupply"],
             block=block,
-            require_success=True
         )
-        #old_results = results
-        #results = []
-        #for i, result in enumerate(old_results):
-        #    try:
-        #        results.append(result / 1e18)
-        #    except Exception as e:
-        #        raise Exception(i, e)
         results = [x / 1e18 for x in results]
         (
             gauge_balance,
@@ -545,22 +532,19 @@ class CurveRegistry(metaclass=Singleton):
             "min vecrv": min_vecrv,
         }
 
-    async def calculate_apy(self, gauge: Contract, lp_token: AddressOrContract, block: Optional[Block] = None) -> Dict[str,float]:
+    def calculate_apy(self, gauge: Contract, lp_token: AddressOrContract, block: Optional[Block] = None) -> Dict[str,float]:
+        crv_price = magic.get_price(self.crv)
         pool = contract(self.get_pool(lp_token))
-        results = fetch_multicall_async(
+        results = fetch_multicall(
             [gauge, "working_supply"],
             [self.gauge_controller, "gauge_relative_weight", gauge],
             [gauge, "inflation_rate"],
             [pool, "get_virtual_price"],
             block=block,
         )
-        crv_price, token_price, results = await asyncio.gather(
-            magic.get_price(self.crv, block=block, sync=False),
-            magic.get_price(lp_token, block=block, sync=False),
-            results
-        )
         results = [x / 1e18 for x in results]
         working_supply, relative_weight, inflation_rate, virtual_price = results
+        token_price = magic.get_price(lp_token, block=block)
         try:
             rate = (
                 inflation_rate * relative_weight * 86400 * 365 / working_supply * 0.4
