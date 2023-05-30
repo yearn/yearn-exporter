@@ -99,6 +99,7 @@ class Ids(IntEnum):
     crvUSD_Plain_Pools_deprecated_1 = 8
     crvUSD_Plain_Pools_deprecated_2 = 9
     crvUSD_Plain_Pools = 10
+    Curve_Tricrypto_Factory = 11
 
 class CurveRegistry(metaclass=Singleton):
 
