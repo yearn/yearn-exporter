@@ -210,3 +210,10 @@ def dates_between(start: datetime, end: datetime) -> List[datetime]:
         
     # We need datetimes, not dates
     return [datetime(date.year, date.month, date.day) for date in dates if date < datetime.utcnow().date()]
+
+def get_event_loop() -> asyncio.BaseEventLoop:
+    try:
+        return asyncio.get_event_loop()
+    except:
+        asyncio.set_event_loop(asyncio.new_event_loop())
+        return asyncio.get_event_loop()

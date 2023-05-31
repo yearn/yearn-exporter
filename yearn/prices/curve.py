@@ -28,14 +28,13 @@ from y.constants import EEE_ADDRESS
 from y.exceptions import PriceError
 from y.networks import Network
 from y.prices import magic
-from y.utils.events import get_logs_asap
 
 from yearn.decorators import sentry_catch_all, wait_or_exit_after
-from yearn.events import create_filter, decode_logs
+from yearn.events import decode_logs, get_logs_asap
 from yearn.exceptions import UnsupportedNetwork
 from yearn.multicall2 import fetch_multicall, fetch_multicall_async
 from yearn.typing import Address, AddressOrContract, Block
-from yearn.utils import Singleton, contract
+from yearn.utils import Singleton, contract, get_event_loop
 
 logger = logging.getLogger(__name__)
 
@@ -131,15 +130,14 @@ class CurveRegistry(metaclass=Singleton):
 
     @sentry_catch_all
     def watch_events(self) -> None:
-        #address_provider_filter = create_filter(str(self.address_provider))
+        get_event_loop()
         registries = []
         registry_logs = []
 
-        #address_logs = address_provider_filter.get_all_entries()
         from_block = None
         height = chain.height
         while True:
-            address_logs = get_logs_asap(self.address_provider, None, from_block=from_block, to_block=height)
+            address_logs = get_logs_asap(str(self.address_provider), None, from_block=from_block, to_block=height, sync=True)
             # fetch all registries and factories from address provider
             for event in decode_logs(address_logs):
                 if event.name == 'NewAddressIdentifier':
@@ -160,7 +158,9 @@ class CurveRegistry(metaclass=Singleton):
             
             if _registries != registries:
                 registries = _registries
-                registry_logs = get_logs_asap(registries, None, from_block=from_block, to_block=height)
+                registry_logs = get_logs_asap(tuple(registries), None, from_block=None, to_block=height, sync=True)
+            else:
+                registry_logs = get_logs_asap(tuple(registries), None, from_block=from_block, to_block=height, sync=True)
             
             registry_logs = [log for log in registry_logs if chain.id != Network.Gnosis or log.address != "0x8A4694401bE8F8FCCbC542a3219aF1591f87CE17"]
 
