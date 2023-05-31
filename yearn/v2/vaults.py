@@ -14,6 +14,7 @@ from y import Contract
 from y.exceptions import PriceError
 from y.networks import Network
 from y.prices import magic
+from y.utils.events import get_logs_asap
 
 from yearn.common import Tvl
 from yearn.decorators import sentry_catch_all, wait_or_exit_after
@@ -187,9 +188,10 @@ class Vault:
     @sentry_catch_all
     def watch_events(self):
         start = time.time()
-        self.log_filter = create_filter(str(self.vault), topics=self._topics)
-        logs = self.log_filter.get_all_entries()
+        from_block = None
+        height = chain.height
         while True:
+            logs = get_logs_asap(str(self.vault), topics=self._topics, from_block=from_block, to_block=height)
             events = decode_logs(logs)
             self.process_events(events)
             if not self._done.is_set():
@@ -199,8 +201,9 @@ class Vault:
                 return
             time.sleep(300)
 
-            # read new logs at end of loop
-            logs = self.log_filter.get_new_entries()
+            # set vars for next loop
+            from_block = height + 1
+            height = chain.height
 
 
     def process_events(self, events):

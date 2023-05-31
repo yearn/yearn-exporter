@@ -4,8 +4,11 @@ import time
 from functools import cached_property
 from typing import Any, List
 
+from brownie import chain
 from eth_utils import encode_hex, event_abi_to_log_topic
 from multicall.utils import run_in_subprocess
+from y.utils.events import get_logs_asap
+
 from yearn.decorators import sentry_catch_all, wait_or_exit_after
 from yearn.events import create_filter, decode_logs
 from yearn.multicall2 import fetch_multicall_async
@@ -88,7 +91,10 @@ class Strategy:
         start = time.time()
         self.log_filter = create_filter(str(self.strategy), topics=self._topics)
         logs = self.log_filter.get_all_entries()
+        from_block = None
+        height = chain.height
         while True:
+            logs = get_logs_asap(str(self.strategy), topics=self._topics, from_block=from_block, to_block=height)
             events = decode_logs(logs)
             self.process_events(events)
             if not self._done.is_set():
@@ -99,7 +105,8 @@ class Strategy:
             time.sleep(300)
 
             # read new logs at end of loop
-            logs = self.log_filter.get_new_entries()
+            from_block = height + 1
+            height = chain.height
 
 
     def process_events(self, events):

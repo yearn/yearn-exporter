@@ -115,8 +115,11 @@ class Registry(metaclass=Singleton):
     def watch_events(self):
         start = time.time()
         self.log_filter = create_filter([str(addr) for addr in self.registries])
-        logs = self.log_filter.get_all_entries()
+        #logs = self.log_filter.get_all_entries()
+        from_block = None
+        height = chain.height
         while True:
+            logs = get_logs_asap([str(addr) for addr in self.registries], None, from_block=from_block, to_block=height)
             self.process_events(decode_logs(logs))
             self._filter_vaults()
             if not self._done.is_set():
@@ -126,8 +129,9 @@ class Registry(metaclass=Singleton):
                 return
             time.sleep(300)
 
-            # read new logs at end of loop
-            logs = self.log_filter.get_new_entries()
+            # set vars for next loop
+            from_block = height + 1
+            height = chain.height
 
     def process_events(self, events):
         for event in events:

@@ -16,7 +16,6 @@ import asyncio
 import logging
 import threading
 import time
-from y.constants import EEE_ADDRESS
 from collections import defaultdict
 from enum import IntEnum
 from typing import Dict, List, Optional
@@ -25,9 +24,11 @@ from brownie import ZERO_ADDRESS, Contract, chain, convert, interface
 from brownie.convert import to_address
 from brownie.convert.datatypes import EthAddress
 from cachetools.func import lru_cache, ttl_cache
+from y.constants import EEE_ADDRESS
 from y.exceptions import PriceError
 from y.networks import Network
 from y.prices import magic
+from y.utils.events import get_logs_asap
 
 from yearn.decorators import sentry_catch_all, wait_or_exit_after
 from yearn.events import create_filter, decode_logs
@@ -130,13 +131,15 @@ class CurveRegistry(metaclass=Singleton):
 
     @sentry_catch_all
     def watch_events(self) -> None:
-        address_provider_filter = create_filter(str(self.address_provider))
+        #address_provider_filter = create_filter(str(self.address_provider))
         registries = []
-        registries_filter = None
         registry_logs = []
 
-        address_logs = address_provider_filter.get_all_entries()
+        #address_logs = address_provider_filter.get_all_entries()
+        from_block = None
+        height = chain.height
         while True:
+            address_logs = get_logs_asap(self.address_provider, None, from_block=from_block, to_block=height)
             # fetch all registries and factories from address provider
             for event in decode_logs(address_logs):
                 if event.name == 'NewAddressIdentifier':
@@ -154,10 +157,10 @@ class CurveRegistry(metaclass=Singleton):
                 for i in [Ids.Main_Registry, Ids.CryptoSwap_Registry]
                 if self.identifiers[i]
             ]
+            
             if _registries != registries:
                 registries = _registries
-                registries_filter = create_filter(registries)
-                registry_logs = registries_filter.get_all_entries()
+                registry_logs = get_logs_asap(registries, None, from_block=from_block, to_block=height)
             
             registry_logs = [log for log in registry_logs if chain.id != Network.Gnosis or log.address != "0x8A4694401bE8F8FCCbC542a3219aF1591f87CE17"]
 
@@ -187,10 +190,13 @@ class CurveRegistry(metaclass=Singleton):
 
             time.sleep(600)
 
-            # read new logs at end of loop
-            address_logs = address_provider_filter.get_new_entries()
-            if registries_filter:
-                registry_logs = registries_filter.get_new_entries()
+            # set vars for next loop
+            from_block = height + 1
+            height = chain.height
+            while height <= from_block:
+                # NOTE: This is probably unnecessary but forces correctness if node desyncs
+                height = chain.height
+                time.sleep(1)
 
     def read_pools(self, registry: Address) -> List[EthAddress]:
         if registry == ZERO_ADDRESS:
