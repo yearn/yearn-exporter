@@ -88,7 +88,6 @@ class Strategy:
 
     @sentry_catch_all
     def watch_events(self):
-        get_event_loop()
         start = time.time()
         self.log_filter = create_filter(str(self.strategy), topics=self._topics)
         logs = self.log_filter.get_all_entries()

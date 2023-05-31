@@ -113,7 +113,6 @@ class Registry(metaclass=Singleton):
 
     @sentry_catch_all
     def watch_events(self):
-        get_event_loop()
         start = time.time()
         self.log_filter = create_filter([str(addr) for addr in self.registries])
         #logs = self.log_filter.get_all_entries()

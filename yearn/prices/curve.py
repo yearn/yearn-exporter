@@ -130,14 +130,13 @@ class CurveRegistry(metaclass=Singleton):
 
     @sentry_catch_all
     def watch_events(self) -> None:
-        get_event_loop()
         registries = []
         registry_logs = []
 
         from_block = None
         height = chain.height
         while True:
-            address_logs = get_logs_asap(str(self.address_provider), None, from_block=from_block, to_block=height, sync=True)
+            address_logs = get_logs_asap(str(self.address_provider), None, from_block=from_block, to_block=height)
             # fetch all registries and factories from address provider
             for event in decode_logs(address_logs):
                 if event.name == 'NewAddressIdentifier':
@@ -158,9 +157,9 @@ class CurveRegistry(metaclass=Singleton):
             
             if _registries != registries:
                 registries = _registries
-                registry_logs = get_logs_asap(tuple(registries), None, from_block=None, to_block=height, sync=True)
+                registry_logs = get_logs_asap(registries, None, from_block=None, to_block=height)
             else:
-                registry_logs = get_logs_asap(tuple(registries), None, from_block=from_block, to_block=height, sync=True)
+                registry_logs = get_logs_asap(registries, None, from_block=from_block, to_block=height)
             
             registry_logs = [log for log in registry_logs if chain.id != Network.Gnosis or log.address != "0x8A4694401bE8F8FCCbC542a3219aF1591f87CE17"]
 

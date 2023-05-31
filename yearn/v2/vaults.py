@@ -8,7 +8,7 @@ from typing import TYPE_CHECKING, Any, Dict, List, Union
 from brownie import chain
 from eth_utils import encode_hex, event_abi_to_log_topic
 from joblib import Parallel, delayed
-from multicall.utils import run_in_subprocess
+from multicall.utils import get_event_loop, run_in_subprocess
 from semantic_version.base import Version
 from y import Contract
 from y.exceptions import PriceError
@@ -23,7 +23,7 @@ from yearn.multicall2 import fetch_multicall_async
 from yearn.prices.curve import curve
 from yearn.special import Ygov
 from yearn.typing import Address
-from yearn.utils import get_event_loop, run_in_thread, safe_views
+from yearn.utils import run_in_thread, safe_views
 from yearn.v2.strategies import Strategy
 
 if TYPE_CHECKING:
@@ -187,7 +187,6 @@ class Vault:
 
     @sentry_catch_all
     def watch_events(self):
-        get_event_loop()
         start = time.time()
         from_block = None
         height = chain.height
