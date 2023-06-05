@@ -8,7 +8,7 @@ from typing import TYPE_CHECKING, Any, Dict, List, Union
 from brownie import chain
 from eth_utils import encode_hex, event_abi_to_log_topic
 from joblib import Parallel, delayed
-from multicall.utils import get_event_loop, run_in_subprocess
+from multicall.utils import run_in_subprocess
 from semantic_version.base import Version
 from y import Contract
 from y.exceptions import PriceError

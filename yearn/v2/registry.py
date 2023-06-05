@@ -18,10 +18,10 @@ from y.utils.dank_mids import dank_w3
 
 from yearn.decorators import (sentry_catch_all, wait_or_exit_after,
                               wait_or_exit_before)
-from yearn.events import create_filter, decode_logs, get_logs_asap
+from yearn.events import decode_logs, get_logs_asap
 from yearn.exceptions import UnsupportedNetwork
-from yearn.multicall2 import fetch_multicall, fetch_multicall_async
-from yearn.utils import Singleton, contract, get_event_loop
+from yearn.multicall2 import fetch_multicall_async
+from yearn.utils import Singleton, contract
 from yearn.v2.vaults import Vault
 
 logger = logging.getLogger(__name__)
@@ -114,8 +114,6 @@ class Registry(metaclass=Singleton):
     @sentry_catch_all
     def watch_events(self):
         start = time.time()
-        self.log_filter = create_filter([str(addr) for addr in self.registries])
-        #logs = self.log_filter.get_all_entries()
         from_block = None
         height = chain.height
         while True:

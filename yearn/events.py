@@ -36,19 +36,6 @@ def decode_logs(logs: List[LogReceipt]) -> EventDict:
     return decoded
 
 
-def create_filter(address: Address, topics: Optional[Topics] = None) -> RPCEndpoint:
-    """
-    Create a log filter for one or more contracts.
-    Set fromBlock as the earliest creation block.
-    """
-    if isinstance(address, list):
-        start_block = min(map(contract_creation_block, address))
-    else:
-        start_block = contract_creation_block(address)
-
-    return web3.eth.filter({"address": address, "fromBlock": start_block, "topics": topics})
-
-
 def __add_deployment_topics(address: Address) -> None:
     try:
         _add_deployment_topics(address, Contract(address).abi)

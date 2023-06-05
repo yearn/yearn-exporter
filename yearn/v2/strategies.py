@@ -10,9 +10,9 @@ from multicall.utils import run_in_subprocess
 from y.utils.events import get_logs_asap
 
 from yearn.decorators import sentry_catch_all, wait_or_exit_after
-from yearn.events import create_filter, decode_logs
+from yearn.events import decode_logs
 from yearn.multicall2 import fetch_multicall_async
-from yearn.utils import contract, get_event_loop, safe_views
+from yearn.utils import contract, safe_views
 
 STRATEGY_VIEWS_SCALED = [
     "maxDebtPerHarvest",
@@ -89,12 +89,10 @@ class Strategy:
     @sentry_catch_all
     def watch_events(self):
         start = time.time()
-        self.log_filter = create_filter(str(self.strategy), topics=self._topics)
-        logs = self.log_filter.get_all_entries()
         from_block = None
         height = chain.height
         while True:
-            logs = get_logs_asap(str(self.strategy), topics=self._topics, from_block=from_block, to_block=height, sync=True)
+            logs = get_logs_asap(str(self.strategy), topics=self._topics, from_block=from_block, to_block=height)
             events = decode_logs(logs)
             self.process_events(events)
             if not self._done.is_set():
