@@ -24,7 +24,7 @@ class Registry:
             raise UnsupportedNetwork("Vaults V1 registry is only available on Mainnet.")
 
         # TODO Fix ENS resolution for registry.ychad.eth
-        self.registry = interface.YRegistry("0x3eE41C098f9666ed2eA246f4D2558010e59d63A0")
+        self.registry = patch_contract(interface.YRegistry("0x3eE41C098f9666ed2eA246f4D2558010e59d63A0"), dank_w3)
     
     @cached_property
     def vaults(self) -> List[VaultV1]:

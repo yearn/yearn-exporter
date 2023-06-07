@@ -145,6 +145,7 @@ def get_assets_dynamic(registry_adapter: Contract, addresses: list) -> list:
 
 def registry_adapter():
     if chain.id == Network.Mainnet:
+        # TODO Fix ENS resolution for lens.ychad.eth
         registry_adapter_address = "0x240315db938d44bb124ae619f5Fd0269A02d1271"
     elif chain.id == Network.Fantom:
         registry_adapter_address = "0xF628Fb7436fFC382e2af8E63DD7ccbaa142E3cd1"
