@@ -13,6 +13,7 @@ from brownie.exceptions import BrownieEnvironmentWarning
 from dotenv import find_dotenv, load_dotenv
 from y import Contract
 
+from yearn import logs
 from yearn.apy import ApySamples, get_samples
 from yearn.prices import curve
 from yearn.special import Backscratcher
@@ -26,7 +27,7 @@ load_dotenv(find_dotenv())
 
 warnings.simplefilter("ignore", BrownieEnvironmentWarning)
 
-logging.basicConfig(level=logging.DEBUG)
+logs.basicConfig(level=logging.DEBUG)
 logger = logging.getLogger("yearn.apy")
 
 

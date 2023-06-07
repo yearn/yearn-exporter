@@ -7,7 +7,7 @@ from brownie.exceptions import (BrownieCompilerWarning,
 
 
 def setup_logging():
-    logging.basicConfig(
+    basicConfig(
         level=os.getenv("LOG_LEVEL", "INFO").upper(),
         format="%(levelname)s %(name)s:%(lineno)d %(message)s",
         datefmt="%Y-%m-%d %H:%M:%S",
@@ -30,3 +30,16 @@ def setup_logging():
         r"0x*: Locally compiled and on-chain bytecode do not match!",
         BrownieCompilerWarning
     )
+
+def basicConfig(**kwargs) -> None:
+    """Our own version of logging.basicConfig that silences logs we aren't interested in"""
+    logging.basicConfig(**kwargs)
+    if kwargs.get('level', None) in [logging.DEBUG, "DEBUG"]:
+        silence_logger('urllib3.connectionpool') # async provider uses aiohttp
+        silence_logger('y.utils.middleware') # this is only applied to sync web3 instance
+        silence_logger('web3.providers.HTTPProvider') # we use AsyncHTTPProvider
+        silence_logger('web3.RequestManager') # not really sure lol
+        silence_logger('dank_mids.should_batch') # this is only really useful when optimizing dank_mids internals
+        
+def silence_logger(name: str):
+    logging.getLogger(name).setLevel(logging.CRITICAL)

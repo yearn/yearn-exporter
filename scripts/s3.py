@@ -19,6 +19,7 @@ from y.contracts import contract_creation_block
 from y.exceptions import PriceError
 from y.networks import Network
 
+from yearn import logs
 from yearn.apy import (Apy, ApyBlocks, ApyFees, ApyPoints, ApySamples,
                        get_samples)
 from yearn.common import Tvl
@@ -37,7 +38,7 @@ warnings.simplefilter("ignore", BrownieEnvironmentWarning)
 
 METRIC_NAME = "yearn.exporter.apy"
 
-logging.basicConfig(level=logging.DEBUG)
+logs.basicConfig(level=logging.DEBUG)
 logger = logging.getLogger("yearn.apy")
 
 
