@@ -178,6 +178,10 @@ def main():
     metric_tags = {"chain": chain.id, "export_mode": export_mode}
     aliases_repo_url = "https://api.github.com/repos/yearn/yearn-assets/git/refs/heads/master"
     aliases_repo = requests.get(aliases_repo_url).json()
+    
+    if "object" not in aliases_repo:
+        raise KeyError(f"key 'object' not found in {aliases_repo}")
+    
     commit = aliases_repo["object"]["sha"]
 
     icon_url = f"https://rawcdn.githack.com/yearn/yearn-assets/{commit}/icons/multichain-tokens/{chain.id}/%s/logo-128.png"
