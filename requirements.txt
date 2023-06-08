@@ -1,5 +1,5 @@
 eth-brownie>=1.18.1
-web3>=5.23.1,<5.29
+web3>=5.23.1
 click>=7.1.2
 tabulate>=0.8.7
 joblib>=1.0.1
@@ -22,4 +22,4 @@ pytest-bdd>=5.0.0
 eth_retry>=0.1.1
 eth-hash[pysha3]
 python-telegram-bot==13.15
-ypricemagic==1.10.34
+ypricemagic==2.2.16
