@@ -1,22 +1,28 @@
 import logging
 import threading
 import time
-import inflection
-from typing import List, Dict
-
-from brownie import Contract, chain, web3
 from collections import OrderedDict
+from typing import Dict, List
+
+import inflection
+from brownie import Contract, chain, web3
+from dank_mids.brownie_patch import patch_contract
 from joblib import Parallel, delayed
+from multicall.utils import gather
 from web3._utils.abi import filter_by_name
 from web3._utils.events import construct_event_topic_set
+from y.prices import magic
+from y.utils.dank_mids import dank_w3
+
+from yearn.decorators import (sentry_catch_all, wait_or_exit_after,
+                              wait_or_exit_before)
 from yearn.events import create_filter, decode_logs, get_logs_asap
-from yearn.multicall2 import fetch_multicall
-from yearn.prices import magic
-from yearn.utils import Singleton, contract_creation_block, contract
-from yearn.v2.vaults import Vault
-from yearn.networks import Network
 from yearn.exceptions import UnsupportedNetwork
-from yearn.decorators import sentry_catch_all, wait_or_exit_before, wait_or_exit_after
+from yearn.multicall2 import fetch_multicall, fetch_multicall_async
+from yearn.networks import Network
+from yearn.utils import (Singleton, contract, contract_creation_block,
+                         run_in_thread)
+from yearn.v2.vaults import Vault
 
 logger = logging.getLogger(__name__)
 
@@ -167,7 +173,7 @@ class Registry(metaclass=Singleton):
 
     def vault_from_event(self, event):
         return Vault(
-            vault=Contract.from_abi("Vault", event["vault"], self.releases[event["api_version"]].abi),
+            vault=patch_contract(Contract.from_abi("Vault", event["vault"], self.releases[event["api_version"]].abi), dank_w3),
             token=event["token"],
             api_version=event["api_version"],
             registry=self,
@@ -183,15 +189,17 @@ class Registry(metaclass=Singleton):
         vaults = self.vaults + self.experiments
         Parallel(8, "threading")(delayed(vault.load_harvests)() for vault in vaults)
 
-    def describe(self, block=None):
-        vaults = self.active_vaults_at(block)
-        results = Parallel(8, "threading")(delayed(vault.describe)(block=block) for vault in vaults)
+    async def describe(self, block=None):
+        vaults = await run_in_thread(self.active_vaults_at, block)
+        results = await gather(vault.describe(block=block) for vault in vaults)
         return {vault.name: result for vault, result in zip(vaults, results)}
 
-    def total_value_at(self, block=None):
+    async def total_value_at(self, block=None):
         vaults = self.active_vaults_at(block)
-        prices = Parallel(8, "threading")(delayed(magic.get_price)(str(vault.token), block=block) for vault in vaults)
-        results = fetch_multicall(*[[vault.vault, "totalAssets"] for vault in vaults], block=block)
+        prices, results = await gather([
+            gather(magic.get_price_async(str(vault.token), block=block) for vault in vaults),
+            fetch_multicall_async(*[[vault.vault, "totalAssets"] for vault in vaults], block=block),
+        ])
         return {vault.name: assets * price / vault.scale for vault, assets, price in zip(vaults, results, prices)}
 
     def active_vaults_at(self, block=None):

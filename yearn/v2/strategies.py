@@ -1,12 +1,14 @@
 import logging
 import threading
 import time
-from typing import List
+from functools import cached_property
+from typing import Any, List
 
 from eth_utils import encode_hex, event_abi_to_log_topic
+from multicall.utils import run_in_subprocess
 from yearn.decorators import sentry_catch_all, wait_or_exit_after
 from yearn.events import create_filter, decode_logs
-from yearn.multicall2 import fetch_multicall
+from yearn.multicall2 import fetch_multicall_async
 from yearn.utils import contract, safe_views
 
 STRATEGY_VIEWS_SCALED = [
@@ -24,6 +26,20 @@ STRATEGY_VIEWS_SCALED = [
 STRATEGY_EVENTS = ["Harvested"]
 
 logger = logging.getLogger(__name__)
+
+def __unpack_results(views: List[str], results: List[Any], scale: int):
+    # unpack self.vault.vault.strategies(self.strategy)
+    info = dict(zip(views, results))
+    info.update(results[-1].dict())
+    # scale views
+    for view in STRATEGY_VIEWS_SCALED:
+        if view in info:
+            info[view] = (info[view] or 0) / scale
+    # unwrap structs
+    for view in info:
+        if hasattr(info[view], '_dict'):
+            info[view] = info[view].dict()
+    return info
 
 
 class Strategy:
@@ -102,21 +118,14 @@ class Strategy:
     def harvests(self) -> List[int]:
         self.load_harvests()
         return self._harvests
-
-    def describe(self, block=None):
-        results = fetch_multicall(
-            *[[self.strategy, view] for view in self._views],
-            [self.vault.vault, "strategies", self.strategy],
-            block=block,
-        )
-        info = dict(zip(self._views, results))
-        info.update(results[-1].dict())
-        for view in STRATEGY_VIEWS_SCALED:
-            if view in info:
-                info[view] = (info[view] or 0) / self.vault.scale
-        # unwrap structs
-        for view in info:
-            if hasattr(info[view], '_dict'):
-                info[view] = info[view].dict()
-
-        return info
+    
+    @cached_property
+    def _calls(self):
+        return *[[self.strategy, view] for view in self._views], [self.vault.vault, "strategies", self.strategy],
+    
+    async def _unpack_results(self, results):
+        return await run_in_subprocess(__unpack_results, self._views, results, self.vault.scale)
+    
+    async def describe(self, block=None):
+        results = await fetch_multicall_async(*self._calls, block=block)
+        return await self._unpack_results(results)

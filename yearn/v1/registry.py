@@ -1,11 +1,13 @@
 import logging
 
 from brownie import chain, interface, web3
-from joblib import Parallel, delayed
+from dank_mids.brownie_patch import patch_contract
+from multicall.utils import gather
+from y.utils.dank_mids import dank_w3
 from yearn.exceptions import UnsupportedNetwork
-from yearn.multicall2 import fetch_multicall
+from yearn.multicall2 import fetch_multicall_async
 from yearn.networks import Network
-from yearn.utils import contract, contract_creation_block
+from yearn.utils import contract, contract_creation_block, run_in_thread
 from yearn.v1.vaults import VaultV1
 
 logger = logging.getLogger(__name__)
@@ -16,6 +18,7 @@ class Registry:
         if chain.id != Network.Mainnet:
             raise UnsupportedNetwork("Vaults V1 registry is only available on Mainnet.")
 
+        # TODO Fix ENS resolution for registry.ychad.eth
         self.registry = interface.YRegistry("0x3eE41C098f9666ed2eA246f4D2558010e59d63A0")
         addresses_provider = contract("0x9be19Ee7Bc4099D62737a7255f5c227fBcd6dB93")
         addresses_generator_v1_vaults = contract(addresses_provider.addressById("ADDRESSES_GENERATOR_V1_VAULTS"))
@@ -26,19 +29,20 @@ class Registry:
     def __repr__(self) -> str:
         return f"<Registry V1 vaults={len(self.vaults)}>"
 
-    def describe(self, block=None):
+    async def describe(self, block=None):
         vaults = self.active_vaults_at(block)
-        share_prices = fetch_multicall(*[[vault.vault, "getPricePerFullShare"] for vault in vaults], block=block)
+        share_prices = await fetch_multicall_async(*[[vault.vault, "getPricePerFullShare"] for vault in vaults], block=block)
         vaults = [vault for vault, share_price in zip(vaults, share_prices) if share_price]
-        data = Parallel(8, "threading")(delayed(vault.describe)(block=block) for vault in vaults)
+        data = await gather(vault.describe(block=block) for vault in vaults)
         return {vault.name: desc for vault, desc in zip(vaults, data)}
 
-    def total_value_at(self, block=None):
-        vaults = self.active_vaults_at(block)
-        balances = fetch_multicall(*[[vault.vault, "balance"] for vault in vaults], block=block)
+    async def total_value_at(self, block=None):
+        vaults = await run_in_thread(self.active_vaults_at, block)
+        balances = await fetch_multicall_async(*[[vault.vault, "balance"] for vault in vaults], block=block)
         # skip vaults with zero or erroneous balance
         vaults = [(vault, balance) for vault, balance in zip(vaults, balances) if balance]
-        prices = Parallel(8, "threading")(delayed(vault.get_price)(block) for (vault, balance) in vaults)
+        prices = await gather(vault.get_price(block) for (vault, balance) in vaults)
+        #prices = Parallel(8, "threading")(delayed(vault.get_price)(block) for (vault, balance) in vaults)
         return {vault.name: balance * price / 10 ** vault.decimals for (vault, balance), price in zip(vaults, prices)}
 
     def active_vaults_at(self, block=None):
