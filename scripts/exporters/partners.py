@@ -15,15 +15,28 @@ from yearn.treasury.treasury import _get_symbol
 
 sentry_sdk.set_tag('script','partners_exporter')
 
-if Network(chain.id) == Network.Fantom:
-    # 2021-10-26 block time of earliest block with partner_tx for Fantom network
-    start = 1635263041
-elif Network(chain.id) == Network.Mainnet:
-    # 2021-01-19 time of earliest block with partner_tx for Ethereum network
-    start = 1611017667
-else:
-    raise NotImplementedError()
-
+def main():
+    # If there are no partners for this chain, exit with success.
+    if not partners:
+        return
+    
+    start = {
+        # 2021-01-19 time of earliest block with partner_tx for Ethereum network
+        Network.Mainnet: 1611017667,
+        # 2021-10-26 block time of earliest block with partner_tx for Fantom network
+        Network.Fantom: 1635263041,
+    }[chain.id]
+    
+    exporter = Exporter(
+        name = 'partners',
+        data_query = 'partners{network="' + Network.label() + '"}',
+        data_fn = export_partners,
+        export_fn = _post,
+        start_block = closest_block_after_timestamp(start) - 1,
+        max_concurrent_runs = 2,
+    )
+    
+    exporter.run()
 
 async def export_partners(block, ts):
     # collect payout data
@@ -70,15 +83,3 @@ async def export_partners(block, ts):
                 )
                 metrics_to_export.append(item)
     return metrics_to_export
-
-def main():
-    exporter = Exporter(
-        name = 'partners',
-        data_query = 'partners{network="' + Network.label() + '"}',
-        data_fn = export_partners,
-        export_fn = _post,
-        start_block = closest_block_after_timestamp(start) - 1,
-        max_concurrent_runs = 2,
-    )
-    
-    exporter.run()
