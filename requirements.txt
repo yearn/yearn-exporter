@@ -26,4 +26,4 @@ ypricemagic>=2.2.16
 git+https://www.github.com/BobTheBuidler/eth-portfolio@549a4f306d08f2444b53dc6a0c19c0b22585fbab
 git+https://www.github.com/BobTheBuidler/toolcache@e37b53cec64556d2b35df66767fca4c8f366a2fa
 memray
-git+https://www.github.com/BobTheBuidler/async-lru@da1bd95791755f00e834b5a0c7d636585124e47f
+git+https://www.github.com/BobTheBuidler/async-lru@650bbbce874ab436a0aac564d6d84c981e779940
