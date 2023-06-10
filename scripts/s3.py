@@ -184,11 +184,16 @@ def main():
     samples = get_samples()
 
     registry_v2 = RegistryV2(include_experimental=(export_mode == "experimental"))
+    logger.info('we made it')
 
     if chain.id == Network.Mainnet:
+        logger.info('do we get here?')
         special = [YveCRVJar(), Backscratcher()]
+        logger.info('lets fuckin gooooooo')
         registry_v1 = RegistryV1()
+        logger.info('old stuff loaded')
         vaults = list(itertools.chain(special, registry_v1.vaults, registry_v2.vaults, registry_v2.experiments))
+        logger.info('full list compiled')
     else:
         vaults = registry_v2.vaults
 
