@@ -8,6 +8,8 @@ from brownie import chain
 from eth_utils import encode_hex, event_abi_to_log_topic
 from joblib import Parallel, delayed
 from semantic_version.base import Version
+from y.utils.events import get_logs_asap
+
 from yearn import apy
 from yearn.apy.common import ApySamples
 from yearn.common import Tvl
@@ -144,9 +146,10 @@ class Vault:
     @sentry_catch_all
     def watch_events(self):
         start = time.time()
-        self.log_filter = create_filter(str(self.vault), topics=self._topics)
-        logs = self.log_filter.get_all_entries()
+        from_block = None
+        height = chain.height
         while True:
+            logs = get_logs_asap(str(self.vault), topics=self._topics, from_block=from_block, to_block=height)
             events = decode_logs(logs)
             self.process_events(events)
             if not self._done.is_set():
@@ -156,8 +159,9 @@ class Vault:
                 return
             time.sleep(300)
 
-            # read new logs at end of loop
-            logs = self.log_filter.get_new_entries()
+            # set vars for next loop
+            from_block = height + 1
+            height = chain.height
 
 
     def process_events(self, events):
