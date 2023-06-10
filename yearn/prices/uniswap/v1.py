@@ -4,7 +4,7 @@ from brownie import ZERO_ADDRESS, Contract, chain, interface
 from brownie.convert.datatypes import EthAddress
 from brownie.exceptions import ContractNotFound
 from cachetools.func import ttl_cache
-from yearn.cache import memory
+from functools import lru_cache
 from yearn.exceptions import UnsupportedNetwork
 from yearn.networks import Network
 from yearn.prices.constants import usdc
@@ -15,7 +15,7 @@ addresses = {
     Network.Mainnet: '0xc0a47dFe034B400B47bDaD5FecDa2621de6c4d95',
 }
 
-@memory.cache()
+@lru_cache
 def _get_exchange(factory: Contract, token: AddressOrContract) -> EthAddress:
     """
     I extracted this fn for caching purposes.
