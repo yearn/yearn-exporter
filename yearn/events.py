@@ -84,8 +84,10 @@ def get_logs_asap(
         delayed(web3.eth.get_logs)(_get_logs_params(addresses, topics, start, end))
         for start, end in ranges
     )
+    logger.info('logs got')
     for batch in batches:
         logs.extend(batch)
+    logger.info('logs extended')
 
     return logs
 
