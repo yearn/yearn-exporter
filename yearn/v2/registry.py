@@ -112,8 +112,13 @@ class Registry(metaclass=Singleton):
         height = chain.height
         while True:
             logs = get_logs_asap([str(addr) for addr in self.registries], None, from_block=from_block, to_block=height)
-            self.process_events(decode_logs(logs))
+            logger.info('got logs')
+            decoded = decode_logs(logs)
+            logger.info('decoded logs')
+            self.process_events(decoded)
+            logger.info('processed logs')
             self._filter_vaults()
+            logger.info('filtered vaults')
             if not self._done.is_set():
                 self._done.set()
                 logger.info("loaded v2 registry in %.3fs", time.time() - start)
