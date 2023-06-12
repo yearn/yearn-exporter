@@ -16,7 +16,7 @@ class Registry:
         if chain.id != Network.Mainnet:
             raise UnsupportedNetwork("Vaults V1 registry is only available on Mainnet.")
 
-        self.registry = interface.YRegistry(web3.ens.resolve("registry.ychad.eth"))
+        self.registry = interface.YRegistry("0x3eE41C098f9666ed2eA246f4D2558010e59d63A0")
         addresses_provider = contract("0x9be19Ee7Bc4099D62737a7255f5c227fBcd6dB93")
         addresses_generator_v1_vaults = contract(addresses_provider.addressById("ADDRESSES_GENERATOR_V1_VAULTS"))
 
