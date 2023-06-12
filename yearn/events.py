@@ -66,15 +66,19 @@ def get_logs_asap(
     logs = []
 
     if from_block is None:
+        logger.debug(f'calculating from block for addresses {addresses}')
         if type(addresses) == list:
             from_block = min(map(contract_creation_block, addresses))
         elif addresses:
             from_block = contract_creation_block(addresses)
         else:
             from_block = 0
+        logger.debug(f'from block for addresses {addresses} is {from_block}')
 
     if to_block is None:
+        logger.debug('calculating to block')
         to_block = chain.height
+        logger.debug('to block: {to_block}')
 
     ranges = list(block_ranges(from_block, to_block, BATCH_SIZE))
     if verbose > 0:
