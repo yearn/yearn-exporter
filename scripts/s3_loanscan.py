@@ -31,7 +31,7 @@ logger = logging.getLogger("yearn.apy")
 
 
 def get_assets_metadata(vault_v2: list) -> dict:
-    registry_v2_adapter = contract(web3.ens.resolve("lens.ychad.eth"))
+    registry_v2_adapter = contract("0x240315db938d44bb124ae619f5Fd0269A02d1271")
     addresses = [str(vault.vault) for vault in vault_v2]
     assets_dynamic_data = registry_v2_adapter.assetsDynamic(addresses)
     assets_metadata = {}
