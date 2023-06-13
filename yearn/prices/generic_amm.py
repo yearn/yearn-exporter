@@ -3,10 +3,10 @@ from functools import lru_cache
 from typing import List, Optional
 
 from brownie.convert.datatypes import EthAddress
-from yearn.exceptions import PriceError
+from y.exceptions import PriceError
+from y.prices import magic
 
 from yearn.multicall2 import fetch_multicall
-from yearn.prices import magic
 from yearn.typing import Address, Block
 from yearn.utils import contract
 

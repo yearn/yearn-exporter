@@ -2,8 +2,8 @@ from time import time
 from typing import Optional
 
 from brownie import ZERO_ADDRESS
+from y.prices import magic
 from yearn.apy.common import SECONDS_PER_YEAR
-from yearn.prices import magic
 from yearn.utils import contract, get_block_timestamp
 
 

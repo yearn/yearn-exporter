@@ -1,29 +1,30 @@
-from dataclasses import dataclass
-import logging
 import json
+import logging
 import os
 import requests
 from decimal import Decimal
+from dataclasses import dataclass
 from pprint import pformat
 from time import time
 
-from brownie import ZERO_ADDRESS, chain, interface, Contract
-from eth_utils import function_signature_to_4byte_selector as fourbyte
+import requests
+from brownie import ZERO_ADDRESS, Contract, chain, interface
 from eth_abi import encode_single
-
+from eth_utils import function_signature_to_4byte_selector as fourbyte
 from semantic_version import Version
-from yearn.apy.common import (SECONDS_PER_YEAR, SECONDS_PER_WEEK, Apy, ApyError, ApyFees,
-                              ApySamples, SharePricePoint, calculate_roi)
+from y import Network
+from y.prices import magic
+from y.time import get_block_timestamp
+
+from yearn.apy.common import (SECONDS_PER_WEEK, SECONDS_PER_YEAR, Apy,
+                              ApyError, ApyFees, ApySamples, SharePricePoint,
+                              calculate_roi)
 from yearn.apy.curve.rewards import rewards
 from yearn.apy.staking_rewards import get_staking_rewards_apr
-from yearn.exceptions import PriceError
-from yearn.networks import Network
-from yearn.prices import magic
-from yearn.prices.curve import curve
-from yearn.prices.curve import curve_contracts
-from yearn.utils import contract, get_block_timestamp
 from yearn.debug import Debug
+from yearn.prices.curve import curve, curve_contracts
 from yearn.typing import Address
+from yearn.utils import contract
 
 
 @dataclass 
