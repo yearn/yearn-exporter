@@ -11,8 +11,6 @@ RUN apt-get update
 RUN apt-get install python3-tk -y
 RUN mkdir -p /app/yearn-exporter
 WORKDIR /app/yearn-exporter
-# This is for the accountant module
-RUN brownie pm install OpenZeppelin/openzeppelin-contracts@3.2.0
 ADD . /app/yearn-exporter
 
 ENTRYPOINT ["./entrypoint.sh"]
