@@ -159,10 +159,10 @@ class CurveRegistry(metaclass=Singleton):
 
             # fetch pools from the latest registries
             for event in decode_logs(registry_logs):
-                if event.name in ['PoolAdded', 'TricryptoPoolDeployed']:
+                if event.name == 'PoolAdded':
+                    self.registries[event.address].add(event['pool'])
+                    lp_token = contract(event.address).get_lp_token(event['pool'])
                     pool = event['pool']
-                    self.registries[event.address].add(pool)
-                    lp_token = pool if event.name == 'TricryptoPoolDeployed' else contract(event.address).get_lp_token(pool)
                     self.token_to_pool[lp_token] = pool
                     for coin in self.get_coins(pool):
                         if pool not in self.coin_to_pools[coin]:
