@@ -105,7 +105,7 @@ def is_vault_withdrawal(tx: TreasuryTx) -> bool:
                             return True
 
 def is_dolla_fed_withdrawal(tx: TreasuryTx) -> bool:
-    if tx._from_nickname == 'Token: Curve DOLA Pool yVault - Unlisted' and tx._to_nickname == "Yearn yChad Multisig" and tx._symbol == "DOLA3POOL3CRV-f":
+    if tx._from_nickname == 'Token: Curve DOLA Pool yVault - Unlisted' and tx.to_address.address in treasury.addresses and tx._symbol == "DOLA3POOL3CRV-f":
         return True
-    elif tx._from_nickname == "Yearn yChad Multisig" and tx.to_address and tx.to_address.address == ZERO_ADDRESS and tx._symbol == "yvCurve-DOLA-U":
+    elif tx.from_address.address in treasury.addresses and tx.to_address and tx.to_address.address == ZERO_ADDRESS and tx._symbol == "yvCurve-DOLA-U":
         return True

@@ -71,6 +71,9 @@ def is_curve_bribe(tx: TreasuryTx) -> bool:
         ]
     ):
         return True
+        
+    # Bribe V3
+    return tx._from_nickname == "yBribe" and tx._to_nickname == "Yearn Treasury"
     
 def is_buying_yvboost(tx: TreasuryTx) -> bool:
     """ Bought back yvBoost is unwrapped and sent back to holders. """
