@@ -2,6 +2,10 @@ from brownie import chain, convert
 
 from yearn.networks import Network
 
+YFI = {
+    Network.Mainnet: "0x0bc529c00C6401aEF6D220BE8C6Ea1667F6Ad93e",
+}.get(chain.id, None)
+
 WRAPPED_GAS_COIN = {
     Network.Mainnet:            "0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2",
     Network.Fantom:             "0x21be370D5312f44cB42ce377BC9b8a0cEF1A4C83",
