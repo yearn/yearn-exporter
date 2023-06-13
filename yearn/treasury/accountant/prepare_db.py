@@ -22,8 +22,8 @@ def prepare_db() -> None:
     cache_ymechs()
     cache_partners()
     cache_disperse_app()
-    cache_address_nicknames_for_tokens()
-    cache_address_nicknames_for_contracts()
+    #cache_address_nicknames_for_tokens()
+    #cache_address_nicknames_for_contracts()
 
 def cache_ychad() -> None:
     """ Label yChad in pg. """

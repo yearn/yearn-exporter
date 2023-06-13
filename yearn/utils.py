@@ -58,7 +58,6 @@ def get_block_timestamp(height):
             pass
     return chain[height].timestamp
 
-
 @memory.cache()
 def closest_block_after_timestamp(timestamp: int, wait_for: bool = False) -> int:
     """
