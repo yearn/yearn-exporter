@@ -189,6 +189,8 @@ class CurveRegistry(metaclass=Singleton):
                 registry_logs = registries_filter.get_new_entries()
 
     def read_pools(self, registry: Address) -> List[EthAddress]:
+        if registry == ZERO_ADDRESS:
+            return []
         registry = interface.CurveRegistry(registry)
         return fetch_multicall(
             *[[registry, 'pool_list', i] for i in range(registry.pool_count())]
@@ -196,15 +198,16 @@ class CurveRegistry(metaclass=Singleton):
 
     def load_factories(self) -> None:
         # factory events are quite useless, so we use a different method
-        for factory in self.identifiers[Ids.Metapool_Factory]:
-            pool_list = self.read_pools(factory)
-            for pool in pool_list:
-                # for metpool factories pool is the same as lp token
-                self.token_to_pool[pool] = pool
-                self.factories[factory].add(pool)
-                for coin in self.get_coins(pool):
-                    if pool not in self.coin_to_pools[coin]:
-                        self.coin_to_pools[coin].append(pool)
+        for factory_id in [Ids.Metapool_Factory, Ids.MetaFactory, Ids.crvUSD_Plain_Pools, Ids.Curve_Tricrypto_Factory]:
+            for factory in self.identifiers[factory_id]:
+                pool_list = self.read_pools(factory)
+                for pool in pool_list:
+                    # for metpool factories pool is the same as lp token
+                    self.token_to_pool[pool] = pool
+                    self.factories[factory].add(pool)
+                    for coin in self.get_coins(pool):
+                        if pool not in self.coin_to_pools[coin]:
+                            self.coin_to_pools[coin].append(pool)
 
         # if there are factories that haven't yet been added to the on-chain address provider,
         # please refer to commit 3f70c4246615017d87602e03272b3ed18d594d3c to see how to add them manually
