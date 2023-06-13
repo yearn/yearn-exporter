@@ -55,12 +55,16 @@ def is_fees_v3(tx: TreasuryTx) -> bool:
     return False
 
 def is_yearn_fed_fees(tx: TreasuryTx) -> bool:
-    yearn_fed_strats = "0x09F61718474e2FFB884f438275C0405E3D3559d3", "0x7928becDda70755B9ABD5eE7c7D5E267F1412042", "0x09F61718474e2FFB884f438275C0405E3D3559d3"
-    if tx._symbol in ["yvCurve-DOLA-U", "yveCRV-DAO"] and tx.from_address.address in yearn_fed_strats and tx.to_address and tx.to_address.address in treasury.addresses:
-        return True
+    if tx.to_address and tx.to_address.address in treasury.addresses:
+        # New version
+        if tx._symbol in ["yvCurve-DOLA-U", "CRV"] and tx.from_address.address == "0x64e4fC597C70B26102464B7F70B1F00C77352910":
+            return True
+        # Old versions
+        if tx._symbol in ["yvCurve-DOLA-U", "yveCRV-DAO"] and tx.from_address.address in ["0x09F61718474e2FFB884f438275C0405E3D3559d3", "0x7928becDda70755B9ABD5eE7c7D5E267F1412042"]:
+            return True
 
 def is_temple(tx: TreasuryTx) -> bool:
-    if tx._to_nickname == "Yearn Treasury":
+    if tx._to_nickname in  ["Yearn Treasury", "Yearn yChad Multisig"]: # fees have been sent to both
         if tx._from_nickname == "Contract: StrategyConvexCrvCvxPairsClonable" and tx._symbol == "CRV":
             return True
         elif tx._from_nickname == "Contract: Splitter" and tx._symbol == "yveCRV-DAO":
