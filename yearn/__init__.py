@@ -45,7 +45,14 @@ if network.is_connected():
         Contract.from_abi(
             name="CurveTricryptoOptimizedWETH",
             address="0xf5f5B97624542D72A9E06f04804Bf81baA15e2B4",
-            abi=json.load(open("interfaces/curve/CurveTricryptoOptimizedWETH.json"))
+            abi=json.load(open("interfaces/curve/tricrypto-ng/CurveTricryptoOptimizedWETH.json"))
+        )
+
+        # LiquidityGauge (crvUSDCWBTCWETH-gauge) not verified on etherscan
+        Contract.from_abi(
+            name="Curve.fi crvUSDCWBTCWETH Gauge Deposit ",
+            address="0x85D44861D024CB7603Ba906F2Dc9569fC02083F6",
+            abi=json.load(open("interfaces/curve/tricrypto-ng/LiquidityGauge.json"))
         )
     elif chain.id == Network.Arbitrum:
         # PHP Philippine Peso stablecoin is not verified. Force init it with ERC20 abi.
