@@ -10,6 +10,7 @@ from brownie import chain, web3
 from sentry_sdk import Hub
 from sentry_sdk import capture_exception as _capture_exception
 from sentry_sdk import capture_message, init, set_tag, utils
+from sentry_sdk.integrations.asyncio import AsyncioIntegration
 from sentry_sdk.integrations.threading import ThreadingIntegration
 from y.networks import Network
 
@@ -40,7 +41,11 @@ def setup_sentry():
             shutdown_timeout=5,
             before_send=before_send,
             debug=False,
-            integrations=[ThreadingIntegration(propagate_hub=True)],
+            integrations=[
+                AsyncioIntegration(),
+                # NOTE: Threads are still used in some places in the codebase, we'll keep this for now.
+                ThreadingIntegration(propagate_hub=True)
+            ],
             ignore_errors=[
                 KeyboardInterrupt, # these can be created when exiting a script with ctrl+c or when an exception is raised in a child thread. Ignore in both cases
             ]
