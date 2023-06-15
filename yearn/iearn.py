@@ -52,7 +52,7 @@ class Registry:
         contracts = [vault.vault for vault in vaults]
         results, prices = await asyncio.gather(
             multicall_matrix_async(contracts, ["totalSupply", "pool", "getPricePerFullShare", "balance"], block=block),
-            await asyncio.gather(*[magic.get_price(vault.token, block=block, sync=False) for vault in vaults])
+            asyncio.gather(*[magic.get_price(vault.token, block=block, sync=False) for vault in vaults])
         )
         output = defaultdict(dict)
         for vault, price in zip(vaults, prices):
