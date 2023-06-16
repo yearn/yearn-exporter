@@ -2,14 +2,15 @@ import asyncio
 import functools
 import os
 import re
-from asyncio import iscoroutinefunction
+from asyncio import iscoroutinefunction, current_task
 from concurrent.futures import ThreadPoolExecutor
+from threading import current_thread
 from typing import Awaitable, Callable
 
 from brownie import chain, web3
 from sentry_sdk import Hub
 from sentry_sdk import capture_exception as _capture_exception
-from sentry_sdk import capture_message, init, set_tag, utils
+from sentry_sdk import capture_message, init, push_scope, set_tag, utils
 from sentry_sdk.integrations.asyncio import AsyncioIntegration
 from sentry_sdk.integrations.threading import ThreadingIntegration
 from y.networks import Network
@@ -59,11 +60,31 @@ def _clean_creds_from_uri(endpoint: str) -> str:
     return re.sub(pattern=r"(https?:\/\/)[^@]+@(.+)", repl=r"\2", string=endpoint)
 
 async def capture_exception(e: Exception) -> None:
+    # Get active task if any
     try:
-        await asyncio.get_event_loop().run_in_executor(sentry_executor, _capture_exception, e)
+        task = current_task()
+    except RuntimeError as e:
+        if str(e) != "no running event loop":
+            raise e
+        task = None
+    try:
+        await asyncio.get_event_loop().run_in_executor(
+            sentry_executor,
+            __capture_exception, 
+            e,
+            str(current_thread()),
+            str(task)
+        )
     except RuntimeError:
         # This happens when you're using PYTHONASYNCIODEBUG=True, don't worry about it. Prod will not be impacted.
         pass
+
+def __capture_exception(e: Exception, thread: str, task: str) -> None:
+    # NOTE: We have to get the task and thread info outside of this fn because this fn is called inside of a ThreadPoolExecutor.
+    with push_scope() as scope:
+        scope.set_tag("task", task)
+        scope.set_tag("thread", thread)
+        _capture_exception(e)
 
 def log_task_exceptions(func: Callable[..., Awaitable[None]]) -> Callable[..., Awaitable[None]]:
     """
