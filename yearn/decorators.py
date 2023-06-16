@@ -1,6 +1,7 @@
 import _thread
 import functools
 import logging
+import signal
 
 import sentry_sdk
 
@@ -26,7 +27,7 @@ def wait_or_exit_before(func):
         self._done.wait()
         if self._has_exception:
             logger.error(self._exception)
-            _thread.interrupt_main()
+            _thread.interrupt_main(signal=signal.SIGTERM)
         return func(self)
     return wrap
 
@@ -38,5 +39,5 @@ def wait_or_exit_after(func):
         self._done.wait()
         if self._has_exception:
             logger.error(self._exception)
-            _thread.interrupt_main()
+            _thread.interrupt_main(signal=signal.SIGTERM)
     return wrap
