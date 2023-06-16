@@ -11,7 +11,7 @@ from joblib import Parallel, delayed
 from multicall.utils import run_in_subprocess
 from semantic_version.base import Version
 from y import Contract
-from y.exceptions import PriceError
+from y.exceptions import NodeNotSynced, PriceError
 from y.networks import Network
 from y.prices import magic
 from y.utils.events import get_logs_asap
@@ -188,6 +188,7 @@ class Vault:
     @sentry_catch_all
     def watch_events(self):
         start = time.time()
+        sleep_time = 300
         from_block = None
         height = chain.height
         while True:
@@ -199,11 +200,13 @@ class Vault:
                 logger.info("loaded %d strategies %s in %.3fs", len(self._strategies), self.name, time.time() - start)
             if not self._watch_events_forever:
                 return
-            time.sleep(300)
+            time.sleep(sleep_time)
 
             # set vars for next loop
             from_block = height + 1
             height = chain.height
+            if height < from_block:
+                raise NodeNotSynced(f"No new blocks in the past {sleep_time/60} minutes.")
 
 
     def process_events(self, events):

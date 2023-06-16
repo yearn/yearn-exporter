@@ -25,7 +25,7 @@ from brownie.convert import to_address
 from brownie.convert.datatypes import EthAddress
 from cachetools.func import lru_cache, ttl_cache
 from y.constants import EEE_ADDRESS
-from y.exceptions import PriceError
+from y.exceptions import NodeNotSynced, PriceError
 from y.networks import Network
 from y.prices import magic
 
@@ -130,6 +130,7 @@ class CurveRegistry(metaclass=Singleton):
 
     @sentry_catch_all
     def watch_events(self) -> None:
+        sleep_time = 600
         registries = []
         registry_logs = []
 
@@ -187,15 +188,13 @@ class CurveRegistry(metaclass=Singleton):
                 self._done.set()
                 logger.info(f'loaded {len(self.token_to_pool)} pools from {len(self.registries)} registries and {len(self.factories)} factories')
 
-            time.sleep(600)
+            time.sleep(sleep_time)
 
             # set vars for next loop
             from_block = height + 1
             height = chain.height
-            while height <= from_block:
-                # NOTE: This is probably unnecessary but forces correctness if node desyncs
-                height = chain.height
-                time.sleep(1)
+            if height < from_block:
+                raise NodeNotSynced(f"No new blocks in the past {sleep_time/60} minutes.")
 
     def read_pools(self, registry: Address) -> List[EthAddress]:
         if registry == ZERO_ADDRESS:

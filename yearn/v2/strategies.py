@@ -7,6 +7,7 @@ from typing import Any, List
 from brownie import chain
 from eth_utils import encode_hex, event_abi_to_log_topic
 from multicall.utils import run_in_subprocess
+from y.exceptions import NodeNotSynced
 from y.utils.events import get_logs_asap
 
 from yearn.decorators import sentry_catch_all, wait_or_exit_after
@@ -89,6 +90,7 @@ class Strategy:
     @sentry_catch_all
     def watch_events(self):
         start = time.time()
+        sleep_time = 300
         from_block = None
         height = chain.height
         while True:
@@ -100,11 +102,13 @@ class Strategy:
                 logger.info("loaded %d harvests %s in %.3fs", len(self._harvests), self.name, time.time() - start)
             if not self._watch_events_forever:
                 return
-            time.sleep(300)
+            time.sleep(sleep_time)
 
             # read new logs at end of loop
             from_block = height + 1
             height = chain.height
+            if height < from_block:
+                raise NodeNotSynced(f"No new blocks in the past {sleep_time/60} minutes.")
 
 
     def process_events(self, events):
