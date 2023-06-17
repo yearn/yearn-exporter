@@ -290,9 +290,15 @@ def calculate_simple(vault, gauge: Gauge, samples: ApySamples) -> Apy:
             cvx_strategy = first_strategy
             crv_strategy = second_strategy
 
-        cvx_vault = _ConvexVault(cvx_strategy, vault, gauge.gauge)
-        crv_debt_ratio = vault.vault.strategies(crv_strategy)[2] / 1e4
-        cvx_apy_data = cvx_vault.get_detailed_apy_data(base_asset_price, pool_price, base_apr)
+        if _ConvexVault.is_convex_strategy(cvx_strategy):
+            cvx_vault = _ConvexVault(cvx_strategy, vault, gauge.gauge)
+            crv_debt_ratio = vault.vault.strategies(crv_strategy)[2] / 1e4
+            cvx_apy_data = cvx_vault.get_detailed_apy_data(base_asset_price, pool_price, base_apr)
+        else:
+            # TODO handle this case
+            logger.warn(f"no APY calculations for strategy {str(cvx_strategy)}")
+            cvx_apy_data = ConvexDetailedApyData()
+            crv_debt_ratio = 1
     else:
         cvx_apy_data = ConvexDetailedApyData()
         crv_debt_ratio = 1
@@ -358,7 +364,10 @@ class _ConvexVault:
 
     @staticmethod
     def is_convex_strategy(strategy) -> bool:
-        return "convex" in strategy.name.lower()
+        if isinstance(strategy.name, str):
+            return "convex" in strategy.name.lower()
+        else:
+            return "convex" in strategy.name().lower()
 
     def apy(self, base_asset_price, pool_price, base_apr, pool_apy: float, management_fee: float, performance_fee: float) -> Apy:
         """The standard APY data."""
