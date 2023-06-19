@@ -68,8 +68,8 @@ async def capture_exception(e: Exception) -> None:
             sentry_executor,
             _capture_exception_async_helper, 
             e,
-            task=str(current_task()),
-            thread=current_thread().name,
+            current_thread().name,
+            current_task().get_coro().__name__,
         )
     except RuntimeError:
         # This happens when you're using PYTHONASYNCIODEBUG=True, don't worry about it. Prod will not be impacted.
@@ -101,7 +101,7 @@ def _tag_scope(scope: sentry_sdk.Scope) -> None:
     # Sets some last-minute tags to the current scope before capturing an event.
     if "task" not in scope._tags:
         try:
-            task = current_task()
+            task = current_task().get_coro().__name__
         except RuntimeError as e:
             if str(e) != "no running event loop":
                 raise e
@@ -116,7 +116,6 @@ def _capture_exception_async_helper(e: Exception, thread: str, task: str) -> Non
         scope.set_tag("task", task)
         scope.set_tag("thread", thread)
         sentry_sdk.capture_exception(e)
-        #Hub.current._capture_exception_old(e)
 
 def log_task_exceptions(func: Callable[..., Awaitable[None]]) -> Callable[..., Awaitable[None]]:
     """
