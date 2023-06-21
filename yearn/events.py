@@ -68,7 +68,7 @@ def get_logs_asap(
     if verbose > 0:
         logger.info('fetching %d batches', len(ranges))
 
-    batches = Parallel(8, "threading", verbose=verbose)(
+    batches = Parallel(1, "threading", verbose=verbose)(
         delayed(web3.eth.get_logs)(_get_logs_params(addresses, topics, start, end))
         for start, end in ranges
     )

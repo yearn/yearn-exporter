@@ -183,7 +183,7 @@ class Vault:
             self._thread.start()
 
     def load_harvests(self):
-        Parallel(8, "threading")(delayed(strategy.load_harvests)() for strategy in self.strategies)
+        Parallel(1, "threading")(delayed(strategy.load_harvests)() for strategy in self.strategies)
 
     @sentry_catch_all
     def watch_events(self):

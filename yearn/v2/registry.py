@@ -189,11 +189,11 @@ class Registry(metaclass=Singleton):
     def load_strategies(self):
         # stagger loading strategies to not run out of connections in the pool
         vaults = self.vaults + self.experiments
-        Parallel(8, "threading")(delayed(vault.load_strategies)() for vault in vaults)
+        Parallel(1, "threading")(delayed(vault.load_strategies)() for vault in vaults)
 
     def load_harvests(self):
         vaults = self.vaults + self.experiments
-        Parallel(8, "threading")(delayed(vault.load_harvests)() for vault in vaults)
+        Parallel(1, "threading")(delayed(vault.load_harvests)() for vault in vaults)
 
     async def describe(self, block=None):
         vaults = await self.active_vaults_at(block)
