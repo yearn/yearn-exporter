@@ -3,6 +3,7 @@ import logging
 import json
 import os
 import requests
+from decimal import Decimal
 from pprint import pformat
 from time import time
 
@@ -235,7 +236,7 @@ def calculate_simple(vault, gauge: Gauge, samples: ApySamples) -> Apy:
 
     else:
         pool_apr = calculate_roi(now_point, week_ago_point)
-        pool_apy = (((pool_apr / 365) + 1) ** 365) - 1
+        pool_apy = float(Decimal((pool_apr / 365) + 1) ** 365) - 1
 
     # prevent circular import for partners calculations
     from yearn.v2.vaults import Vault as VaultV2
