@@ -1,4 +1,3 @@
-
 import asyncio
 import logging
 import os
@@ -46,16 +45,14 @@ class WorkItem:
     
 class Exporter:
     """ Currently can only be used to output to victoria metrics. Can be extended for other data sources. """
-    
+
     def __init__(
         self,
         name: str,
         data_query: str,
         data_fn: Callable[[int, int], Awaitable[T]], 
         export_fn: Callable[[T], Awaitable[None]],
-        start_block: int,
-        max_concurrent_runs: int = int(os.environ.get("MAX_CONCURRENT_RUNS", 12)),
-        max_concurrent_runs_per_resolution: int = int(os.environ.get("MAX_CONCURRENT_RUNS_PER_RESOLUTION", 5)),
+        start_block: int
     ) -> None:
         """
         Required Args:
@@ -84,16 +81,14 @@ class Exporter:
 
         self._data_fn = data_fn
         self._export_fn = eth_retry.auto_retry(export_fn)
-        self._concurrency = max_concurrent_runs
-        self._data_semaphore = asyncio.Semaphore(self._concurrency)
-        self._res_semaphore = defaultdict(lambda: asyncio.Semaphore(max_concurrent_runs_per_resolution))
-        self._has_data_semaphore = asyncio.Semaphore(2)
-        self._export_semaphore = asyncio.Semaphore(5)
-        
         self._snapshots_fetched = 0
         self._snapshots_exported = 0
     
     def run(self, direction: Optional[Direction] = None) -> NoReturn:
+        # smol workaround to init ypm before we dive into more async code
+        # keep here so all other things are blocked until ypm has booted
+        self.loop.run_until_complete(self.export_now())
+
         if direction is None:
             self.loop.run_until_complete(self.export_full())
         elif direction == "forward":
@@ -110,9 +105,14 @@ class Exporter:
     # Export Sequences
 
     async def export_full(self) -> NoReturn:
-        """ Exports all historical and future data. This coroutine will run forever. """
+        """ Exports all present, historical and future data. This coroutine will run forever. """
+        # the history and future exports are run concurrently
         await asyncio.gather(self.export_history(), self.export_future())
-    
+
+    async def export_now(self) -> NoReturn:
+        """ Exports the present data. This coroutine will terminate. """
+        await self.export_snapshot(datetime.now(tz=timezone.utc))
+
     async def export_future(self) -> NoReturn:
         """ Exports all future data. This coroutine will run forever. """
         start = datetime.now(tz=timezone.utc)
@@ -121,124 +121,104 @@ class Exporter:
         interval = intervals[RESOLUTION]['interval']
         # Bump forward to the next snapshot, as the historical coroutine will take care of this one.
         start = start + interval
-        loop = self.loop
-        async def task(snapshot: datetime) -> None:
-            block = await closest_block_after_timestamp_async(snapshot, wait_for_block_if_needed=True)
-            await self.export_snapshot(block, snapshot)
-        async for snapshot in _generate_snapshot_range_forward(start, interval):
-            loop.create_task(task(snapshot))
-    
+        snapshots = [ snapshot async for snapshot in _generate_snapshot_range_forward(start, interval) ]
+        await self.enqueue("future", snapshots, 1, 1)
+
     async def export_history(self) -> None:
         """ Exports all historical data. This coroutine runs for a finite duration. """
-        logger.info(f"exporting {Network.name()} {self.name} snapshots for resolution {RESOLUTION}")
         start = datetime.now(tz=timezone.utc)
         intervals = _get_intervals(start)
-        loop = self.loop
-        
-        work_items = [
-            WorkItem(snapshot, resolution)
-            for resolution in intervals
+        snapshots = [
+            snapshot for resolution in intervals
             async for snapshot in _generate_snapshot_range_historical(self.start_timestamp, resolution, intervals)
         ]
-        
-        # Use Queue to conserve memory instead of creating all futures at once
-        queues = defaultdict(asyncio.PriorityQueue)
-        for work_item in work_items:
-            queue_item = _get_priority(), work_item
-            queues[work_item.resolution].put_nowait(queue_item)
-        queues = queues.values()
-        c_queues = cycle(queues)
-        
-        running_futs = []
+        await self._enqueue("historical", snapshots, 1, 1)
 
-        def prune_completed_futs() -> None:
-            fut: asyncio.Future
-            for fut in running_futs[:]:
-                if fut.done():
-                    running_futs.pop(running_futs.index(fut))
-                    
-        async def futures() -> AsyncIterator[asyncio.Future]:
-            work_item: WorkItem
-            max_running_futs = self._concurrency * 10  # Some arbitrary number
-            while not all(queue.empty() for queue in queues):
-                prune_completed_futs()
-                await asyncio.sleep(0.001)
-                if len(running_futs) >= max_running_futs:
-                    continue
-                queue = next(c_queues)
-                try:
-                    _, work_item = queue.get_nowait()
-                    logger.debug(f'starting fut for {work_item.resolution} {work_item.snapshot}. {queue.qsize()} remain.')
-                    yield asyncio.ensure_future(
-                        self.export_historical_snapshot_if_missing(work_item.snapshot, work_item.resolution),
-                        loop=loop,
-                    )
-                except QueueEmpty:
-                    logger.debug(queue)
-        
-        async for fut in futures():
-            running_futs.append(fut)
-            
-        while running_futs:
-            prune_completed_futs()
-            await asyncio.sleep(10)
-        logger.info(f'{Network.name()} {self.name} historical export completed')
-    
-    # Export Methods
-    
     @log_task_exceptions
-    async def export_snapshot(self, block: int, snapshot: datetime, resolution: Optional[Resolution] = None) -> None:
+    async def export_snapshot(self, snapshot: datetime, resolution: Optional[Resolution] = None) -> None:
         # Fetch data
-        async with self._res_semaphore[resolution]:
-            async with self._data_semaphore:
-                start = time.time()
-                ts = snapshot.timestamp()
-                data = await self._data_fn(block, ts)
-                duration = time.time() - start
-                self._snapshots_fetched += 1
+        await self._enqueue("historical", [snapshot], 1, 1)
 
-        # Process stats
-        if SHOW_STATS:
-            snapshots = self._snapshots_fetched
-            requests = instances[0].worker.request_uid.latest
-            logger.info(f"exported {snapshots} snapshots in {requests} requests")
-            logger.info(f"Avg rate of {round(requests/snapshots, 2)} requests per snapshot. Currently only considers eth_calls.")
-        
-        # Export to datastore
-        await self._export_data(data)
-        logger.info(f"exported {Network.name()} {self.name} snapshot %s block=%d took=%.3fs", snapshot, block, duration)
-        await self._export_duration(duration, ts)
-    
     @log_task_exceptions
     async def export_historical_snapshot_if_missing(self, snapshot: datetime, resolution: Resolution) -> None:
+        logger.warn("export_historical_snapshot_if_missing() is deprecated, please use the data producers")
         if not await self._has_data(snapshot):
             timestamp = int(snapshot.timestamp())
-            block = await closest_block_after_timestamp_async(timestamp)
-            await self.export_snapshot(block, snapshot, resolution)
-    
+            await self.export_snapshot(snapshot, resolution)
+
     # Datastore Methods
 
     async def _has_data(self, snapshot: datetime) -> bool:
         ts = snapshot.timestamp()
-        async with self._has_data_semaphore:
-            response = await has_data(ts, self.data_query)
+        response = await has_data(ts, self.data_query)
         if response:
             logger.info(f"data already present for {Network.name()} {self.name} snapshot {snapshot}, ts {ts}")
         return bool(response)
 
     async def _export_data(self, data: T) -> None:
-        async with self._export_semaphore:
-            await self._export_fn(data)
+        await self._export_fn(data)
         self._snapshots_exported += 1
     
     async def _export_duration(self, duration_seconds: float, timestamp_seconds: float) -> None:
-        async with self._export_semaphore:
-            item = _build_item(
-                "export_duration",
-                [ "concurrency", "exporter" ],
-                [ self._concurrency, self.name ],
-                duration_seconds,
-                timestamp_seconds
-                )
-            await _post([item])
-    
+        item = _build_item(
+            "export_duration",
+            [ "exporter" ],
+            [ self.name ],
+            duration_seconds,
+            timestamp_seconds
+            )
+        await _post([item])
+
+    # Producer <-> Consumer methods
+    async def _enqueue(self, name, snapshots, queue_size, num_consumers):
+        queue = asyncio.Queue(queue_size)
+        _ = [asyncio.create_task(self._consumer(name, queue, i)) for i in range(num_consumers)]
+        await asyncio.create_task(self._producer(name, queue, snapshots))
+        await queue.join()
+
+    @log_task_exceptions
+    async def _producer(self, name, queue, snapshots):
+        logger.debug(f"{name} producer running")
+        for snapshot in snapshots:
+
+            try:
+                if name == "historical" and await self._has_data(snapshot):
+                    continue
+
+                start = time.time()
+                timestamp = int(snapshot.timestamp())
+                block = await closest_block_after_timestamp_async(timestamp, wait_for_block_if_needed=True)
+                data = await self._data_fn(block, timestamp)
+                duration = time.time() - start
+                logger.info(f"exported {Network.name()} {self.name} snapshot %s block=%d took=%.3fs", snapshot, block, duration)
+                await queue.put((snapshot, data, duration, block))
+                logger.debug(f"{name} produced snapshot data for {snapshot} on queue")
+                self._record_stats()
+            except Exception as e:
+                logger.error(e, exc_info=True)
+
+        logger.debug(f"{name} producer done")
+
+    @log_task_exceptions
+    async def _consumer(self, name, queue, i):
+        logger.debug(f"{name} consumer {i} running")
+        while True:
+            try:
+                snapshot, data, duration, block = await queue.get()
+                logger.debug(f"{name} consumer {i} got item ({snapshot})")
+                await self._export_data(data)
+                logger.debug(f"{name} consumer {i} is done with item ({snapshot})")
+                queue.task_done()
+                await self._export_duration(duration, snapshot.timestamp())
+            except Exception as e:
+                logger.error(e, exc_info=True)
+
+    def _record_stats(self):
+            self._snapshots_fetched += 1
+
+            # Process stats
+            if SHOW_STATS:
+                snapshots = self._snapshots_fetched
+                requests = instances[0].worker.request_uid.latest
+                logger.info(f"exported {snapshots} snapshots in {requests} requests")
+                logger.info(f"Avg rate of {round(requests/snapshots, 2)} requests per snapshot. Currently only considers eth_calls.")

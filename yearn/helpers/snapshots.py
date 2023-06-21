@@ -23,6 +23,7 @@ async def _generate_snapshot_range_forward(start: datetime, interval: timedelta)
             await asyncio.sleep(diff.total_seconds())
         yield snapshot
 
+
 async def _generate_snapshot_range_historical(end: datetime, resolution, intervals):
     start = intervals[resolution]['start']
     interval = intervals[resolution]['interval']
