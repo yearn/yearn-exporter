@@ -238,8 +238,8 @@ def calculate_simple(vault, gauge: Gauge, samples: ApySamples) -> Apy:
         try:
             pool_apr = calculate_roi(now_point, week_ago_point)
             pool_apy = (((pool_apr / 365) + 1) ** 365) - 1
-        except OverflowError as e:
-            raise ApyError("crv", e.__class__.__name__, str(e))
+        except OverflowError:
+            raise ApyError("crv", "overflow error on pool_apy")
 
     # prevent circular import for partners calculations
     from yearn.v2.vaults import Vault as VaultV2
