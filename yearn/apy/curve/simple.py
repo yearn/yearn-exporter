@@ -3,6 +3,7 @@ import logging
 import json
 import os
 import requests
+from decimal import Decimal
 from pprint import pformat
 from time import time
 
@@ -215,10 +216,10 @@ def calculate_simple(vault, gauge: Gauge, samples: ApySamples) -> Apy:
     else:
         reward_apr = 0
 
-    price_per_share = gauge.pool.get_virtual_price
-    now_price = price_per_share(block_identifier=samples.now)
+    get_virtual_price = gauge.pool.get_virtual_price
+    now_price = get_virtual_price(block_identifier=samples.now)
     try:
-        week_ago_price = price_per_share(block_identifier=samples.week_ago)
+        week_ago_price = get_virtual_price(block_identifier=samples.week_ago)
     except ValueError:
         raise ApyError("crv", "insufficient data")
 
@@ -234,8 +235,11 @@ def calculate_simple(vault, gauge: Gauge, samples: ApySamples) -> Apy:
         pool_apy = 0
 
     else:
-        pool_apr = calculate_roi(now_point, week_ago_point)
-        pool_apy = (((pool_apr / 365) + 1) ** 365) - 1
+        try:
+            pool_apr = calculate_roi(now_point, week_ago_point)
+            pool_apy = (((pool_apr / 365) + 1) ** 365) - 1
+        except OverflowError:
+            raise ApyError("crv", "overflow error on pool_apy")
 
     # prevent circular import for partners calculations
     from yearn.v2.vaults import Vault as VaultV2
