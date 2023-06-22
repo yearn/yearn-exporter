@@ -121,8 +121,8 @@ class Exporter:
         interval = intervals[RESOLUTION]['interval']
         # Bump forward to the next snapshot, as the historical coroutine will take care of this one.
         start = start + interval
-        snapshots = [ snapshot async for snapshot in _generate_snapshot_range_forward(start, interval) ]
-        await self.enqueue("future", snapshots, 1, 1)
+        async for snapshot in _generate_snapshot_range_forward(start, interval):
+            await self.export_snapshot(snapshot)
 
     async def export_history(self) -> None:
         """ Exports all historical data. This coroutine runs for a finite duration. """
@@ -132,12 +132,12 @@ class Exporter:
             snapshot for resolution in intervals
             async for snapshot in _generate_snapshot_range_historical(self.start_timestamp, resolution, intervals)
         ]
-        await self._enqueue("historical", snapshots, 1, 1)
+        await self._enqueue("historical", snapshots)
 
     @log_task_exceptions
     async def export_snapshot(self, snapshot: datetime, resolution: Optional[Resolution] = None) -> None:
         # Fetch data
-        await self._enqueue("historical", [snapshot], 1, 1)
+        await self._enqueue("snapshot", [snapshot])
 
     @log_task_exceptions
     async def export_historical_snapshot_if_missing(self, snapshot: datetime, resolution: Resolution) -> None:
@@ -170,7 +170,7 @@ class Exporter:
         await _post([item])
 
     # Producer <-> Consumer methods
-    async def _enqueue(self, name, snapshots, queue_size, num_consumers):
+    async def _enqueue(self, name, snapshots, queue_size=1, num_consumers=1):
         queue = asyncio.Queue(queue_size)
         _ = [asyncio.create_task(self._consumer(name, queue, i)) for i in range(num_consumers)]
         await asyncio.create_task(self._producer(name, queue, snapshots))
