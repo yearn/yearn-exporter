@@ -28,7 +28,7 @@ def wait_or_exit_before(func):
         self._done.wait()
         if self._has_exception:
             logger.error(self._exception)
-            _thread.interrupt_main(signum=signal.SIGTERM)
+            _thread.interrupt_main(signal.SIGTERM)
         return func(self)
     return wrap
 
@@ -40,5 +40,5 @@ def wait_or_exit_after(func):
         self._done.wait()
         if self._has_exception:
             logger.error(self._exception)
-            _thread.interrupt_main(signum=signal.SIGTERM)
+            _thread.interrupt_main(signal.SIGTERM)
     return wrap
