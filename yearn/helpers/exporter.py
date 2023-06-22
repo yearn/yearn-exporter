@@ -214,11 +214,11 @@ class Exporter:
                 logger.error(e, exc_info=True)
 
     def _record_stats(self):
-            self._snapshots_fetched += 1
+        self._snapshots_fetched += 1
 
-            # Process stats
-            if SHOW_STATS:
-                snapshots = self._snapshots_fetched
-                requests = instances[0].worker.request_uid.latest
-                logger.info(f"exported {snapshots} snapshots in {requests} requests")
-                logger.info(f"Avg rate of {round(requests/snapshots, 2)} requests per snapshot. Currently only considers eth_calls.")
+        # Process stats
+        if SHOW_STATS:
+            snapshots = self._snapshots_fetched
+            requests = instances[0].worker.request_uid.latest
+            logger.info(f"exported {snapshots} snapshots in {requests} requests")
+            logger.info(f"Avg rate of {round(requests/snapshots, 2)} requests per snapshot. Currently only considers eth_calls.")
