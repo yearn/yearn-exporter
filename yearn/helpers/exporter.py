@@ -85,10 +85,6 @@ class Exporter:
         self._snapshots_exported = 0
     
     def run(self, direction: Optional[Direction] = None) -> NoReturn:
-        # smol workaround to init ypm before we dive into more async code
-        # keep here so all other things are blocked until ypm has booted
-        self.loop.run_until_complete(self.export_now())
-
         if direction is None:
             self.loop.run_until_complete(self.export_full())
         elif direction == "forward":
@@ -108,10 +104,6 @@ class Exporter:
         """ Exports all present, historical and future data. This coroutine will run forever. """
         # the history and future exports are run concurrently
         await asyncio.gather(self.export_history(), self.export_future())
-
-    async def export_now(self) -> NoReturn:
-        """ Exports the present data. This coroutine will terminate. """
-        await self.export_snapshot(datetime.now(tz=timezone.utc))
 
     async def export_future(self) -> NoReturn:
         """ Exports all future data. This coroutine will run forever. """
