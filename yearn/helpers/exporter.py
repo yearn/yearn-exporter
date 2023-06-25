@@ -160,7 +160,7 @@ class Exporter:
             timestamp_seconds
             )
         await _post([item])
-
+    
     # Producer <-> Consumer methods
     async def _enqueue(self, name, snapshots, queue_size=1, num_consumers=1):
         queue = asyncio.Queue(queue_size)
@@ -168,7 +168,7 @@ class Exporter:
         consumers = [asyncio.create_task(self._consumer(name, queue, i)) for i in range(num_consumers)]
         await asyncio.gather(producer, *consumers)
 
-    @log_task_exceptions
+    @log_exceptions
     async def _producer(self, name, queue, snapshots) -> None:
         logger.debug(f"{name} producer running")
         for snapshot in snapshots:
@@ -189,7 +189,7 @@ class Exporter:
 
         logger.debug(f"{name} producer done")
 
-    @log_task_exceptions
+    @log_exceptions
     async def _consumer(self, name: str, queue: asyncio.Queue, i: int) -> NoReturn:
         logger.debug(f"{name} consumer {i} running")
         while True:
@@ -202,13 +202,23 @@ class Exporter:
                 await self._export_duration(duration, snapshot.timestamp())
             except Exception as e:
                 logger.error(e, exc_info=True)
-
+                
+    # Stats helpers
+    
     def _record_stats(self) -> None:
         self._snapshots_fetched += 1
-
-        # Process stats
         if SHOW_STATS:
-            snapshots = self._snapshots_fetched
-            requests = instances[0].worker.request_uid.latest
-            logger.info(f"exported {snapshots} snapshots in {requests} requests")
-            logger.info(f"Avg rate of {round(requests/snapshots, 2)} requests per snapshot. Currently only considers eth_calls.")
+            logger.info(f"exported {self._snapshots_fetched} {self.full_name} snapshots in 'TODO: FIX' requests in {self._get_runtime()}")
+            logger.info(f"avg rate of {self._get_requests_per_snapshot()} requests per snapshot. Currently only considers eth_calls.")
+            logger.info(f"avg rate of {self._get_time_per_snapshot()} per {self.full_name} snapshot")
+    
+    def _get_runtime(self, start: Optional[datetime] = None) -> timedelta:
+        return datetime.now(tz=timezone.utc) - (start or self._start_time)
+    
+    def _get_time_per_snapshot(self) -> timedelta:
+        return self._get_runtime() / self._snapshots_fetched
+    
+    def _get_requests_per_snapshot(self) -> float:
+        # TODO: Fix
+        #return round(instances[0].worker.request_uid.latest / self._snapshots_fetched, 2)
+        pass

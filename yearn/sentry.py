@@ -1,5 +1,6 @@
 import asyncio
 import functools
+import logging
 import os
 import re
 from asyncio import current_task, iscoroutinefunction
@@ -15,6 +16,8 @@ from sentry_sdk.integrations.threading import ThreadingIntegration
 from y.networks import Network
 
 SENTRY_DSN = os.getenv('SENTRY_DSN')
+
+logger = logging.getLogger(__name__)
 
 sentry_executor = ThreadPoolExecutor(1)
 
@@ -117,7 +120,7 @@ def _capture_exception_async_helper(e: Exception, thread: str, task: str) -> Non
         scope.set_tag("thread", thread)
         sentry_sdk.capture_exception(e)
 
-def log_task_exceptions(func: Callable[..., Awaitable[None]]) -> Callable[..., Awaitable[None]]:
+def log_exceptions(func: Callable[..., Awaitable[None]]) -> Callable[..., Awaitable[None]]:
     """
     Decorate coroutine functions with log_task_exceptions if you will be submitting the coroutines to an asyncio event loop as task objects.
     """
@@ -129,9 +132,11 @@ def log_task_exceptions(func: Callable[..., Awaitable[None]]) -> Callable[..., A
         try:
             await func(*args, **kwargs)
         except Exception as e:
+            logger.exception(e)
             if SENTRY_DSN is not None:
                 await capture_exception(e)
             # Raise the exception so the user sees it on their logs.
-            # Since it is raised inside of a task it will not impact behavior.            
-            raise e
+            # Since it is raised inside of a task it will not impact behavior.       
+            # NOTE: We're using this for coros now instead of tasks so we no longer raise here     
+            # raise e
     return wrap
