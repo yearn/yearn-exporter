@@ -29,6 +29,7 @@ def main():
         data_fn = VotingYFI().metrics_for_export,
         export_fn = _post,
         start_block = closest_block_after_timestamp(start[chain.id]),
+        concurrency=1000,
     ).run()
 
 

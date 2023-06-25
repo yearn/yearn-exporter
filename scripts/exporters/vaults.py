@@ -47,6 +47,7 @@ exporter = Exporter(
     data_fn = yearn.data_for_export, 
     export_fn = _post,
     start_block = closest_block_after_timestamp(int(start.timestamp())) - 1,
+    concurrency=10,
 )
 
 def main():

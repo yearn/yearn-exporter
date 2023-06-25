@@ -20,6 +20,7 @@ exporter = Exporter(
     data_fn = sms.data_for_export,
     export_fn = _post,
     start_block = sms._start_block,
+    concurrency=10,
 )
 
 def main():

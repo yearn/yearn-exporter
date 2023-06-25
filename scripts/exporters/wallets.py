@@ -36,10 +36,10 @@ def postgres_ready(snapshot: datetime) -> bool:
     return False
 
 class WalletExporter(Exporter):
-    async def export_historical_snapshot_if_missing(self, snapshot: datetime, resolution: str) -> None:
+    async def export_historical_snapshot(self, snapshot: datetime) -> None:
         """ Override a method on Exporter so we can add an additional check. """
         if await run_in_thread(postgres_ready, snapshot):
-            return await super().export_historical_snapshot_if_missing(snapshot, resolution)
+            return await super().export_historical_snapshot(snapshot)
 
 exporter = WalletExporter(
     name = "wallets",

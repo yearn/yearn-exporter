@@ -2,15 +2,9 @@ import asyncio
 import logging
 import os
 import time
-from asyncio.queues import QueueEmpty
-from collections import defaultdict
-from dataclasses import dataclass
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 from functools import cached_property
-from itertools import cycle
-from random import randint
-from typing import (AsyncIterator, Awaitable, Callable, Literal, NoReturn,
-                    Optional, TypeVar)
+from typing import Awaitable, Callable, Literal, NoReturn, Optional, TypeVar
 
 import eth_retry
 from brownie import chain
@@ -19,30 +13,20 @@ from y.networks import Network
 from y.time import closest_block_after_timestamp_async
 
 from yearn import constants
-from yearn.helpers.snapshots import (RESOLUTION, Resolution,
+from yearn.helpers.snapshots import (RESOLUTION,
                                      _generate_snapshot_range_forward,
                                      _generate_snapshot_range_historical,
                                      _get_intervals)
 from yearn.outputs.victoria.victoria import _build_item, _post, has_data
-from yearn.sentry import log_task_exceptions
+from yearn.sentry import log_exceptions
 
 logger = logging.getLogger(__name__)
 
 SHOW_STATS = bool(os.environ.get("SHOW_STATS"))
 
-_get_priority = lambda: randint(0, 500) if constants.RANDOMIZE_EXPORTS else 0
-
 T = TypeVar('T')
 Direction = Literal["forward", "historical"]
 
-@dataclass
-class WorkItem:
-    snapshot: datetime
-    resolution: Resolution
-    
-    def __lt__(self, other):
-        return self.snapshot < other.snapshot if isinstance(other, WorkItem) else NotImplemented
-    
 class Exporter:
     """ Currently can only be used to output to victoria metrics. Can be extended for other data sources. """
 
@@ -52,7 +36,8 @@ class Exporter:
         data_query: str,
         data_fn: Callable[[int, int], Awaitable[T]], 
         export_fn: Callable[[T], Awaitable[None]],
-        start_block: int
+        start_block: int,
+        concurrency: Optional[int] = 1,
     ) -> None:
         """
         Required Args:
@@ -75,6 +60,7 @@ class Exporter:
         """
 
         self.name = name
+        self.full_name = f"{Network.name()} {self.name}"
         self.data_query = data_query
         self.start_block = start_block
         self.start_timestamp = datetime.fromtimestamp(chain[start_block].timestamp, tz=timezone.utc)
@@ -83,6 +69,7 @@ class Exporter:
         self._export_fn = eth_retry.auto_retry(export_fn)
         self._snapshots_fetched = 0
         self._snapshots_exported = 0
+        self._semaphore = asyncio.Semaphore(concurrency)
     
     def run(self, direction: Optional[Direction] = None) -> NoReturn:
         if direction is None:
@@ -98,6 +85,10 @@ class Exporter:
     def loop(self) -> asyncio.AbstractEventLoop:
         return asyncio.get_event_loop()
 
+    @cached_property
+    def _start_time(self) -> datetime:
+        return datetime.now(tz=timezone.utc)
+
     # Export Sequences
 
     async def export_full(self) -> NoReturn:
@@ -107,8 +98,7 @@ class Exporter:
 
     async def export_future(self) -> NoReturn:
         """ Exports all future data. This coroutine will run forever. """
-        start = datetime.now(tz=timezone.utc)
-        intervals = _get_intervals(start)
+        intervals = _get_intervals(self._start_time)
         start = intervals[RESOLUTION]['start'] 
         interval = intervals[RESOLUTION]['interval']
         # Bump forward to the next snapshot, as the historical coroutine will take care of this one.
@@ -118,25 +108,29 @@ class Exporter:
 
     async def export_history(self) -> None:
         """ Exports all historical data. This coroutine runs for a finite duration. """
-        start = datetime.now(tz=timezone.utc)
-        intervals = _get_intervals(start)
-        snapshots = [
-            snapshot for resolution in intervals
-            async for snapshot in _generate_snapshot_range_historical(self.start_timestamp, resolution, intervals)
-        ]
-        await self._enqueue("historical", snapshots)
+        intervals = _get_intervals(self._start_time)
+        for resolution in intervals:
+            snapshot_generator = _generate_snapshot_range_historical(self.start_timestamp, resolution, intervals)
+            await asyncio.gather(*[self.export_historical_snapshot(snapshot) async for snapshot in snapshot_generator])
+        logger.info(f"historical {self.full_name} export complete in {self._get_runtime(datetime.now(tz=timezone.utc))}")
 
-    @log_task_exceptions
-    async def export_snapshot(self, snapshot: datetime, resolution: Optional[Resolution] = None) -> None:
-        # Fetch data
-        await self._enqueue("snapshot", [snapshot])
+    @log_exceptions
+    async def export_snapshot(self, snapshot: datetime) -> None:
+        start = time.time()
+        timestamp = int(snapshot.timestamp())
+        block = await closest_block_after_timestamp_async(timestamp, wait_for_block_if_needed=True)
+        data = await self._data_fn(block, timestamp)
+        duration = time.time() - start
+        logger.info(f"produced {self.full_name} snapshot %s block=%d took=%.3fs", snapshot, block, duration)
+        await asyncio.gather(self._export_data(data), self._export_duration(duration, snapshot.timestamp()))
+        logger.info(f"exported {self.full_name} snapshot %s block=%d took=%.3fs", snapshot, block, time.time() - start)
+        self._record_stats()
 
-    @log_task_exceptions
-    async def export_historical_snapshot_if_missing(self, snapshot: datetime, resolution: Resolution) -> None:
-        logger.warn("export_historical_snapshot_if_missing() is deprecated, please use the data producers")
-        if not await self._has_data(snapshot):
-            timestamp = int(snapshot.timestamp())
-            await self.export_snapshot(snapshot, resolution)
+    @log_exceptions
+    async def export_historical_snapshot(self, snapshot: datetime) -> None:
+        async with self._semaphore:
+            if not await self._has_data(snapshot):
+                await self.export_snapshot(snapshot)
 
     # Datastore Methods
 
@@ -144,7 +138,7 @@ class Exporter:
         ts = snapshot.timestamp()
         response = await has_data(ts, self.data_query)
         if response:
-            logger.info(f"data already present for {Network.name()} {self.name} snapshot {snapshot}, ts {ts}")
+            logger.info(f"data already present for {self.full_name} snapshot {snapshot}, ts {ts}")
         return bool(response)
 
     async def _export_data(self, data: T) -> None:
