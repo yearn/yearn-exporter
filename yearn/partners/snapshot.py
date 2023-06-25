@@ -30,7 +30,7 @@ from yearn.events import decode_logs, get_logs_asap
 from yearn.exceptions import UnsupportedNetwork
 from yearn.partners.charts import make_partner_charts
 from yearn.partners.constants import OPEX_COST, get_tier
-from yearn.partners.delegated import DELEGATED_BALANCES
+from yearn.partners.delegated import delegated_deposit_balances
 from yearn.typing import Address, Block
 from yearn.utils import contract
 from yearn.v2.registry import Registry
@@ -294,7 +294,7 @@ class DelegatedDepositWrapper(Wrapper):
         return [balance / scale for balance in balances]
             
     async def get_balance_at_block(self, block: Block) -> Decimal:
-        vault_balances = DELEGATED_BALANCES[self.vault]
+        vault_balances = delegated_deposit_balances()[self.vault]
         wrapper = self.wrapper
         total = sum(
             asofdict[block]
@@ -316,7 +316,7 @@ class DelegatedDepositWildcardWrapper:
 
     def unwrap(self) -> List[Wrapper]:
         wrappers = []
-        for vault in DELEGATED_BALANCES:
+        for vault in delegated_deposit_balances():
             vault = Vault.from_address(vault)
             wrappers.append(DelegatedDepositWrapper(name=vault.name, vault=vault.vault.address, wrapper=self.partnerId))
         return wrappers

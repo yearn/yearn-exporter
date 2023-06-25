@@ -1,4 +1,5 @@
 from collections import defaultdict
+from functools import lru_cache
 from math import ceil
 
 from brownie import chain
@@ -70,7 +71,8 @@ def proportional_withdrawal_totals(delegated_deposits):
                 partner_withdrawals = _unwrap(proportional_withdrawals, vault, sender, partner)
                 partner_withdrawals[transfer.block_number] += ceil(amount * balance / total)
     return proportional_withdrawals
-    
+
+@lru_cache
 def delegated_deposit_balances():
     """
     Returns a dict used to lookup the delegated balance of each `partner` for each `depositor` to each `vault` at `block`.
@@ -102,6 +104,3 @@ def _unwrap(root_dict, vault, depositor, partner):
     depositor_based = vault_based[depositor]
     partner_based = depositor_based[partner]
     return partner_based
-
-
-DELEGATED_BALANCES = delegated_deposit_balances()
