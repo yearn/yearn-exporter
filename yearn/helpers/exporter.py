@@ -172,19 +172,17 @@ class Exporter:
     # Producer <-> Consumer methods
     async def _enqueue(self, name, snapshots, queue_size=1, num_consumers=1):
         queue = asyncio.Queue(queue_size)
-        _ = [asyncio.create_task(self._consumer(name, queue, i)) for i in range(num_consumers)]
-        await asyncio.create_task(self._producer(name, queue, snapshots))
-        await queue.join()
+        producer = asyncio.create_task(self._producer(name, queue, snapshots))
+        consumers = [asyncio.create_task(self._consumer(name, queue, i)) for i in range(num_consumers)]
+        await asyncio.gather(producer, *consumers)
 
     @log_task_exceptions
-    async def _producer(self, name, queue, snapshots):
+    async def _producer(self, name, queue, snapshots) -> None:
         logger.debug(f"{name} producer running")
         for snapshot in snapshots:
-
             try:
                 if name == "historical" and await self._has_data(snapshot):
                     continue
-
                 start = time.time()
                 timestamp = int(snapshot.timestamp())
                 block = await closest_block_after_timestamp_async(timestamp, wait_for_block_if_needed=True)
@@ -200,7 +198,7 @@ class Exporter:
         logger.debug(f"{name} producer done")
 
     @log_task_exceptions
-    async def _consumer(self, name, queue, i):
+    async def _consumer(self, name: str, queue: asyncio.Queue, i: int) -> NoReturn:
         logger.debug(f"{name} consumer {i} running")
         while True:
             try:
@@ -213,7 +211,7 @@ class Exporter:
             except Exception as e:
                 logger.error(e, exc_info=True)
 
-    def _record_stats(self):
+    def _record_stats(self) -> None:
         self._snapshots_fetched += 1
 
         # Process stats
