@@ -219,6 +219,10 @@ class Exporter:
         logger.debug(f"{name} consumer {i} running")
         while True:
             with sentry_sdk.start_transaction(op="task", name="consume single snapshot"):
+                transaction = sentry_sdk.Hub.current.scope.transaction
+                transaction.set_tag("queue_size", self._queue_size)
+                transaction.set_tag("num_producers", self._num_producers)
+                transaction.set_tag("num_consumers", self._num_consumers)
                 try:
                     with sentry_sdk.start_transaction(op="task", name="push data to vic db"):
                         snapshot, data, duration, block = await self._queue.get()
