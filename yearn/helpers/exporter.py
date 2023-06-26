@@ -2,6 +2,7 @@ import asyncio
 import logging
 import os
 import time
+import sentry_sdk
 from asyncio.queues import QueueEmpty
 from collections import defaultdict
 from dataclasses import dataclass
@@ -24,7 +25,7 @@ from yearn.helpers.snapshots import (RESOLUTION, Resolution,
                                      _generate_snapshot_range_historical,
                                      _get_intervals)
 from yearn.outputs.victoria.victoria import _build_item, _post, has_data
-from yearn.sentry import log_task_exceptions
+from yearn.sentry import capture_exception, SENTRY_DSN
 
 logger = logging.getLogger(__name__)
 
@@ -83,6 +84,10 @@ class Exporter:
         self._export_fn = eth_retry.auto_retry(export_fn)
         self._snapshots_fetched = 0
         self._snapshots_exported = 0
+        self._queue_size = int(os.getenv("QUEUE_SIZE", 1))
+        self._num_producers = int(os.getenv("NUM_PRODUCERS", 1))
+        self._num_consumers = int(os.getenv("NUM_CONSUMERS", 1))
+        self._queue = asyncio.Queue(self._queue_size)
     
     def run(self, direction: Optional[Direction] = None) -> NoReturn:
         # smol workaround to init ypm before we dive into more async code
@@ -134,12 +139,10 @@ class Exporter:
         ]
         await self._enqueue("historical", snapshots)
 
-    @log_task_exceptions
     async def export_snapshot(self, snapshot: datetime, resolution: Optional[Resolution] = None) -> None:
         # Fetch data
         await self._enqueue("snapshot", [snapshot])
 
-    @log_task_exceptions
     async def export_historical_snapshot_if_missing(self, snapshot: datetime, resolution: Resolution) -> None:
         logger.warn("export_historical_snapshot_if_missing() is deprecated, please use the data producers")
         if not await self._has_data(snapshot):
@@ -170,48 +173,64 @@ class Exporter:
         await _post([item])
 
     # Producer <-> Consumer methods
-    async def _enqueue(self, name, snapshots, queue_size=1, num_consumers=1):
-        queue = asyncio.Queue(queue_size)
-        _ = [asyncio.create_task(self._consumer(name, queue, i)) for i in range(num_consumers)]
-        await asyncio.create_task(self._producer(name, queue, snapshots))
-        await queue.join()
+    async def _enqueue(self, name, snapshots):
+        consumers = [ asyncio.create_task(self._consumer(name, i)) for i in range(self._num_consumers) ]
+        producers = [ asyncio.create_task(self._producer(name, i, snapshots)) for i in range(self._num_producers) ]
+        await asyncio.gather(*producers)
+        await self._queue.join()
 
-    @log_task_exceptions
-    async def _producer(self, name, queue, snapshots):
-        logger.debug(f"{name} producer running")
+        # cleanup
+        for c in consumers:
+            c.cancel()
+
+    async def _producer(self, name, i, snapshots):
+        logger.debug(f"{name} producer {i} running")
         for snapshot in snapshots:
+            with sentry_sdk.start_transaction(op="task", name="produce single snapshot"):
+                transaction = sentry_sdk.Hub.current.scope.transaction
+                transaction.set_tag("queue_size", self._queue_size)
+                transaction.set_tag("num_producers", self._num_producers)
+                transaction.set_tag("num_consumers", self._num_consumers)
 
-            try:
-                if name == "historical" and await self._has_data(snapshot):
-                    continue
+                try:
+                    with sentry_sdk.start_transaction(op="task", name="vic db check data"):
+                        if name == "historical" and await self._has_data(snapshot):
+                            continue
 
-                start = time.time()
-                timestamp = int(snapshot.timestamp())
-                block = await closest_block_after_timestamp_async(timestamp, wait_for_block_if_needed=True)
-                data = await self._data_fn(block, timestamp)
-                duration = time.time() - start
-                logger.info(f"exported {Network.name()} {self.name} snapshot %s block=%d took=%.3fs", snapshot, block, duration)
-                await queue.put((snapshot, data, duration, block))
-                logger.debug(f"{name} produced snapshot data for {snapshot} on queue")
-                self._record_stats()
-            except Exception as e:
-                logger.error(e, exc_info=True)
+                    with sentry_sdk.start_transaction(op="task", name="node get data"):
+                        start = time.time()
+                        timestamp = int(snapshot.timestamp())
+                        block = await closest_block_after_timestamp_async(timestamp, wait_for_block_if_needed=True)
+                        data = await self._data_fn(block, timestamp)
+                        duration = time.time() - start
+                        logger.info(f"exported {Network.name()} {self.name} snapshot %s block=%d took=%.3fs", snapshot, block, duration)
+                        await self._queue.put((snapshot, data, duration, block))
+                        logger.debug(f"{name} producer {i} produced snapshot data for {snapshot} on queue")
+                        self._record_stats()
+                except Exception as e:
+                    logger.error(e, exc_info=True)
+                    if SENTRY_DSN:
+                        await capture_exception(e)
 
-        logger.debug(f"{name} producer done")
+        logger.debug(f"{name} producer {i} done")
 
-    @log_task_exceptions
-    async def _consumer(self, name, queue, i):
+
+    async def _consumer(self, name, i):
         logger.debug(f"{name} consumer {i} running")
         while True:
-            try:
-                snapshot, data, duration, block = await queue.get()
-                logger.debug(f"{name} consumer {i} got item ({snapshot})")
-                await self._export_data(data)
-                logger.debug(f"{name} consumer {i} is done with item ({snapshot})")
-                queue.task_done()
-                await self._export_duration(duration, snapshot.timestamp())
-            except Exception as e:
-                logger.error(e, exc_info=True)
+            with sentry_sdk.start_transaction(op="task", name="consume single snapshot"):
+                try:
+                    with sentry_sdk.start_transaction(op="task", name="push data to vic db"):
+                        snapshot, data, duration, block = await self._queue.get()
+                        logger.debug(f"{name} consumer {i} got item ({snapshot})")
+                        await self._export_data(data)
+                        logger.debug(f"{name} consumer {i} is done with item ({snapshot})")
+                        self._queue.task_done()
+                        await self._export_duration(duration, snapshot.timestamp())
+                except Exception as e:
+                    logger.error(e, exc_info=True)
+                    if SENTRY_DSN:
+                        await capture_exception(e)
 
     def _record_stats(self):
         self._snapshots_fetched += 1

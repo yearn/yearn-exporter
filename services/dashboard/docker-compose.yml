@@ -54,6 +54,10 @@ x-envs: &envs
   - YPRICEMAGIC_RECURSION_TIMEOUT=${YPRICEMAGIC_RECURSION_TIMEOUT:-1800}  # 0.5 hours
   # This is a temporary hack that can be removed once deps support eth_hash==0.5.0. Creds to bunny for finding this.
   - ETH_HASH_BACKEND=${ETH_HASH_BACKEND:-pysha3}
+  # Concurrency settings
+  - QUEUE_SIZE
+  - NUM_PRODUCERS
+  - NUM_CONSUMERS
 
   # APY ENVS
   - AWS_ACCESS_KEY
