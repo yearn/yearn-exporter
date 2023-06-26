@@ -46,7 +46,7 @@ def setup_sentry():
             # Set traces_sample_rate to 1.0 to capture 100%
             # of transactions for performance monitoring.
             # We recommend adjusting this value in production.
-            traces_sample_rate=1.0,
+            traces_sample_rate=float(os.getenv("SENTRY_TRACE_SAMPLE_RATE", 0.1)),
             shutdown_timeout=5,
             before_send=before_send,
             debug=False,
