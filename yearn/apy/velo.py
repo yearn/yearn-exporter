@@ -30,24 +30,24 @@ def get_staking_pool(underlying: str) -> Optional[Contract]:
         
 def staking(vault: "Vault", staking_rewards: Contract, block: Optional[int]=None) -> float:
     end = staking_rewards.periodFinish(block_identifier=block)
-
     current_time = time() if block is None else get_block_timestamp(block)
-    if end < current_time:
-        return 0
-    
-    pool_price = magic.get_price(vault.token.address, block=block)
-
-    reward_token = staking_rewards.rewardToken(block_identifier=block) if hasattr(staking_rewards, "rewardToken") else None
-
-    token = reward_token
-
     total_supply = staking_rewards.totalSupply(block_identifier=block) if hasattr(staking_rewards, "totalSupply") else 0
     rate = staking_rewards.rewardRate(block_identifier=block) if hasattr(staking_rewards, "rewardRate") else 0
-
-    token_price = magic.get_price(token, block=block)
     performance = vault.vault.performanceFee(block_identifier=block) / 1e4 if hasattr(vault.vault, "performanceFee") else 0
     management = vault.vault.managementFee(block_identifier=block) / 1e4 if hasattr(vault.vault, "managementFee") else 0
     fees = ApyFees(performance=performance, management=management)
+    
+    if end < current_time or total_supply == 0 or rate == 0:
+        return Apy("v2:velo_unpopular", gross_apr=0, net_apy=0, fees=fees)
+    
+    if vault.vault.address == "0xc2626aCEdc27cFfB418680d0307C9178955A4743":
+        pool_price = magic.get_price("0x3f42Dc59DC4dF5cD607163bC620168f7FF7aB970", block=block) # hardcode frxETH-sfrxETH to frxETH-WETH price for now
+    else:
+        pool_price = magic.get_price(vault.token.address, block=block)
+    reward_token = staking_rewards.rewardToken(block_identifier=block) if hasattr(staking_rewards, "rewardToken") else None
+    token = reward_token
+    token_price = magic.get_price(token, block=block)
+    
     gross_apr = (SECONDS_PER_YEAR * (rate / 1e18) * token_price) / (pool_price * (total_supply / 1e18))
     
     net_apr = gross_apr * (1 - performance) - management 
