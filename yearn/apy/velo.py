@@ -15,11 +15,12 @@ if TYPE_CHECKING:
 
 COMPOUNDING = 365
 
+registry = Contract("0x41c914ee0c7e1a5edcd0295623e6dc557b5abf3c") if Network(chain.id) == Network.Optimism else None
+
 @lru_cache
-def get_staking_pool(vault) -> Optional[Contract]:
+def get_staking_pool(underlying: str) -> Optional[Contract]:
     if Network(chain.id) == Network.Optimism:
-        registry = Contract("0x41c914ee0c7e1a5edcd0295623e6dc557b5abf3c")
-        staking_pool = registry.gauges(vault.token)
+        staking_pool = registry.gauges(underlying)
         return None if staking_pool == ZERO_ADDRESS else Contract(staking_pool)
         
 def staking(vault: "Vault", staking_rewards: Contract, block: Optional[int]=None) -> float:
