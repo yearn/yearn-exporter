@@ -234,8 +234,8 @@ class Vault:
             else:
                 pool_price = magic.get_price(self.vault.token, block=block) 
         except PriceError:
-            price = None
-        tvl = total_assets * price / 10 ** self.vault.decimals(block_identifier=block) if price else None
+            price = 0
+        tvl = total_assets * price / 10 ** self.vault.decimals(block_identifier=block) if price > 0 else None
         return Tvl(total_assets, price, tvl)
 
 
