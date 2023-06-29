@@ -132,7 +132,7 @@ def get_assets_metadata(vault_v2: list) -> dict:
 
 def get_assets_dynamic(registry_adapter: Contract, addresses: list) -> list:
     assets_dynamic_data = []
-    addresses_chunks = chunks(addresses, 20)
+    addresses_chunks = chunks(addresses, 2)
     for chunk in addresses_chunks:
          assets_dynamic_data += registry_adapter.assetsDynamic(chunk)
     return assets_dynamic_data
