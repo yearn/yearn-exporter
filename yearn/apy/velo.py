@@ -1,6 +1,6 @@
 from functools import lru_cache
 from time import time
-from typing import Optional
+from typing import Optional, TYPE_CHECKING
 
 from brownie import ZERO_ADDRESS, chain
 from y import Contract, Network
@@ -8,6 +8,9 @@ from y import Contract, Network
 from yearn.apy.common import SECONDS_PER_YEAR, Apy, ApyFees
 from yearn.prices import magic
 from yearn.utils import get_block_timestamp
+
+if TYPE_CHECKING:
+    from yearn.v2.vaults import Vault
 
 
 @lru_cache
@@ -17,12 +20,14 @@ def get_staking_pool(vault) -> Optional[Contract]:
         staking_pool = registry.gauges(vault.token)
         return None if staking_pool == ZERO_ADDRESS else Contract(staking_pool)
         
-def staking(vault: "Vault", staking_rewards: Contract, pool_price: int, block: Optional[int]=None) -> float:
+def staking(vault: "Vault", staking_rewards: Contract, block: Optional[int]=None) -> float:
     end = staking_rewards.periodFinish(block_identifier=block)
 
     current_time = time() if block is None else get_block_timestamp(block)
     if end < current_time:
         return 0
+    
+    pool_price = magic.get_price(vault.token.address, block=block)
 
     reward_token = staking_rewards.rewardToken(block_identifier=block) if hasattr(staking_rewards, "rewardToken") else None
 
