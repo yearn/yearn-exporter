@@ -228,11 +228,12 @@ class Vault:
 
     def tvl(self, block=None):
         total_assets = self.vault.totalAssets(block_identifier=block)
+        price = 0
         try:
             if self.vault.address == "0xc2626aCEdc27cFfB418680d0307C9178955A4743":
-                pool_price = magic.get_price("0x3f42Dc59DC4dF5cD607163bC620168f7FF7aB970", block=block) # hardcode frxETH-sfrxETH to frxETH-WETH price for now
+                price = magic.get_price("0x3f42Dc59DC4dF5cD607163bC620168f7FF7aB970", block=block) # hardcode frxETH-sfrxETH to frxETH-WETH price for now
             else:
-                pool_price = magic.get_price(self.vault.token, block=block) 
+                price = magic.get_price(self.vault.token(), block=block)
         except PriceError:
             price = 0
         tvl = total_assets * price / 10 ** self.vault.decimals(block_identifier=block)
