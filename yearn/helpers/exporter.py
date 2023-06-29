@@ -191,13 +191,18 @@ class Exporter:
                 transaction.set_tag("queue_size", self._queue_size)
                 transaction.set_tag("num_producers", self._num_producers)
                 transaction.set_tag("num_consumers", self._num_consumers)
+                transaction.set_tag("mode", "producer-consumer")
 
                 try:
-                    with sentry_sdk.start_transaction(op="task", name="vic db check data"):
+                    with sentry_sdk.start_span(description="vic db check data"):
+                        span = sentry_sdk.Hub.current.scope.span
+                        span.set_tag("mode", "producer-consumer")
                         if name == "historical" and await self._has_data(snapshot):
                             continue
 
-                    with sentry_sdk.start_transaction(op="task", name="node get data"):
+                    with sentry_sdk.start_span(description="node get data"):
+                        span = sentry_sdk.Hub.current.scope.span
+                        span.set_tag("mode", "producer-consumer")
                         start = time.time()
                         timestamp = int(snapshot.timestamp())
                         block = await closest_block_after_timestamp_async(timestamp, wait_for_block_if_needed=True)
@@ -223,8 +228,12 @@ class Exporter:
                 transaction.set_tag("queue_size", self._queue_size)
                 transaction.set_tag("num_producers", self._num_producers)
                 transaction.set_tag("num_consumers", self._num_consumers)
+                transaction.set_tag("mode", "producer-consumer")
+
                 try:
-                    with sentry_sdk.start_transaction(op="task", name="push data to vic db"):
+                    with sentry_sdk.start_span(description="push data to vic db"):
+                        span = sentry_sdk.Hub.current.scope.span
+                        span.set_tag("mode", "producer-consumer")
                         snapshot, data, duration, block = await self._queue.get()
                         logger.debug(f"{name} consumer {i} got item ({snapshot})")
                         await self._export_data(data)
