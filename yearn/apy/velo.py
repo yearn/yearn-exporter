@@ -29,6 +29,9 @@ def get_staking_pool(underlying: str) -> Optional[Contract]:
         return None if staking_pool == ZERO_ADDRESS else Contract(staking_pool)
         
 def staking(vault: "Vault", staking_rewards: Contract, block: Optional[int]=None) -> float:
+    if staking_rewards.address == "0x38Df8144d6a533be637c1100E043107fE9980f0c":
+        return Apy("v2:velo", gross_apr=0, net_apy=0, fees=ApyFees(performance=0.1, management=0))
+    
     end = staking_rewards.periodFinish(block_identifier=block)
 
     current_time = time() if block is None else get_block_timestamp(block)
