@@ -38,7 +38,7 @@ def staking(vault: "Vault", staking_rewards: Contract, block: Optional[int]=None
     fees = ApyFees(performance=performance, management=management)
     
     if end < current_time or total_supply == 0 or rate == 0:
-        return Apy("v2:velo", gross_apr=0, net_apy=0, fees=fees)
+        return Apy("v2:velo_unpopular", gross_apr=0, net_apy=0, fees=fees)
     
     pool_price = magic.get_price(vault.token.address, block=block)
     reward_token = staking_rewards.rewardToken(block_identifier=block) if hasattr(staking_rewards, "rewardToken") else None
