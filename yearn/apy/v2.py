@@ -1,25 +1,18 @@
-import os
 import logging
-from pprint import pformat
+import os
 from bisect import bisect_left
 from datetime import datetime, timedelta
+from pprint import pformat
+
 from brownie import chain
-from yearn.apy.staking_rewards import get_staking_rewards_apr
-from yearn.networks import Network
-
 from semantic_version.base import Version
+from y.contracts import contract_creation_block
 
-from yearn.apy.common import (
-    Apy,
-    ApyBlocks,
-    ApyError,
-    ApyPoints,
-    ApyFees,
-    ApySamples,
-    SharePricePoint,
-    calculate_roi,
-)
+from yearn.apy.common import (Apy, ApyBlocks, ApyError, ApyFees, ApyPoints,
+                              ApySamples, SharePricePoint, calculate_roi)
+from yearn.apy.staking_rewards import get_staking_rewards_apr
 from yearn.debug import Debug
+from yearn.networks import Network
 
 logger = logging.getLogger(__name__)
 

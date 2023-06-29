@@ -11,7 +11,7 @@ def main(address):
     registry = Registry()
     vault = Vault.from_address(address)
     vault.registry = registry
-    vault.apy(get_samples())
+    print(vault.apy(get_samples()))
 
 def with_exception_handling():
     address = os.getenv("DEBUG_ADDRESS", None)

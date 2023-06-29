@@ -1,6 +1,4 @@
-from yearn.apy import v1
-from yearn.apy import v2
-
+from yearn.apy import v1, v2, velo
+from yearn.apy.common import (Apy, ApyBlocks, ApyError, ApyFees, ApyPoints,
+                              ApySamples, get_samples)
 from yearn.apy.curve import simple as curve
-
-from yearn.apy.common import ApySamples, Apy, ApyBlocks, ApyError, get_samples, ApyFees, ApyPoints
