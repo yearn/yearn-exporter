@@ -29,31 +29,21 @@ def get_staking_pool(underlying: str) -> Optional[Contract]:
         return None if staking_pool == ZERO_ADDRESS else Contract(staking_pool)
         
 def staking(vault: "Vault", staking_rewards: Contract, block: Optional[int]=None) -> float:
-    if staking_rewards.address == "0x38Df8144d6a533be637c1100E043107fE9980f0c":
-        return Apy("v2:velo", gross_apr=0, net_apy=0, fees=ApyFees(performance=0.1, management=0))
-    
     end = staking_rewards.periodFinish(block_identifier=block)
-
     current_time = time() if block is None else get_block_timestamp(block)
-    if end < current_time:
-        return 0
-    
-    pool_price = magic.get_price(vault.token.address, block=block)
-
-    reward_token = staking_rewards.rewardToken(block_identifier=block) if hasattr(staking_rewards, "rewardToken") else None
-
-    token = reward_token
-
     total_supply = staking_rewards.totalSupply(block_identifier=block) if hasattr(staking_rewards, "totalSupply") else 0
     rate = staking_rewards.rewardRate(block_identifier=block) if hasattr(staking_rewards, "rewardRate") else 0
-
-    token_price = magic.get_price(token, block=block)
     performance = vault.vault.performanceFee(block_identifier=block) / 1e4 if hasattr(vault.vault, "performanceFee") else 0
     management = vault.vault.managementFee(block_identifier=block) / 1e4 if hasattr(vault.vault, "managementFee") else 0
     fees = ApyFees(performance=performance, management=management)
-
-    if total_supply == 0 or rate == 0:
+    
+    if end < current_time or total_supply == 0 or rate == 0:
         return Apy("v2:velo", gross_apr=0, net_apy=0, fees=fees)
+    
+    pool_price = magic.get_price(vault.token.address, block=block)
+    reward_token = staking_rewards.rewardToken(block_identifier=block) if hasattr(staking_rewards, "rewardToken") else None
+    token = reward_token
+    token_price = magic.get_price(token, block=block)
     
     gross_apr = (SECONDS_PER_YEAR * (rate / 1e18) * token_price) / (pool_price * (total_supply / 1e18))
     
