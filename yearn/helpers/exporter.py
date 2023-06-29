@@ -2,6 +2,7 @@ import asyncio
 import logging
 import os
 import time
+import sentry_sdk
 from datetime import datetime, timedelta, timezone
 from functools import cached_property
 from typing import Awaitable, Callable, Literal, NoReturn, Optional, TypeVar
@@ -104,7 +105,10 @@ class Exporter:
         # Bump forward to the next snapshot, as the historical coroutine will take care of this one.
         start = start + interval
         async for snapshot in _generate_snapshot_range_forward(start, interval):
-            await self.export_snapshot(snapshot)
+            with sentry_sdk.start_transaction(op="task", name="export snapshot"):
+                transaction = sentry_sdk.Hub.current.scope.transaction
+                transaction.set_tag("mode", "super-duper")
+                await self.export_snapshot(snapshot)
 
     async def export_history(self) -> None:
         """ Exports all historical data. This coroutine runs for a finite duration. """
@@ -116,20 +120,37 @@ class Exporter:
 
     @log_exceptions
     async def export_snapshot(self, snapshot: datetime) -> None:
-        start = time.time()
-        timestamp = int(snapshot.timestamp())
-        block = await closest_block_after_timestamp_async(timestamp, wait_for_block_if_needed=True)
-        data = await self._data_fn(block, timestamp)
-        duration = time.time() - start
-        logger.info(f"produced {self.full_name} snapshot %s block=%d took=%.3fs", snapshot, block, duration)
-        await asyncio.gather(self._export_data(data), self._export_duration(duration, snapshot.timestamp()))
-        logger.info(f"exported {self.full_name} snapshot %s block=%d took=%.3fs", snapshot, block, time.time() - start)
-        self._record_stats()
+        with sentry_sdk.start_span(description="node get data"):
+            span = sentry_sdk.Hub.current.scope.span
+            span.set_tag("mode", "super-duper")
+
+            start = time.time()
+            timestamp = int(snapshot.timestamp())
+            block = await closest_block_after_timestamp_async(timestamp, wait_for_block_if_needed=True)
+            data = await self._data_fn(block, timestamp)
+            duration = time.time() - start
+            logger.info(f"produced {self.full_name} snapshot %s block=%d took=%.3fs", snapshot, block, duration)
+        with sentry_sdk.start_span(description="push data to vic db"):
+            span = sentry_sdk.Hub.current.scope.span
+            span.set_tag("mode", "super-duper")
+
+            await asyncio.gather(self._export_data(data), self._export_duration(duration, snapshot.timestamp()))
+            logger.info(f"exported {self.full_name} snapshot %s block=%d took=%.3fs", snapshot, block, time.time() - start)
+            self._record_stats()
 
     @log_exceptions
     async def export_historical_snapshot(self, snapshot: datetime) -> None:
-        async with self._semaphore:
-            if not await self._has_data(snapshot):
+        with sentry_sdk.start_transaction(op="task", name="export snapshot"):
+            transaction = sentry_sdk.Hub.current.scope.transaction
+            transaction.set_tag("mode", "super-duper")
+
+            async with self._semaphore:
+                has_data = False
+                with sentry_sdk.start_span(description="vic db check data"):
+                    span = sentry_sdk.Hub.current.scope.span
+                    span.set_tag("mode", "super-duper")
+                    has_data = await self._has_data(snapshot)
+            if not has_data:
                 await self.export_snapshot(snapshot)
 
     # Datastore Methods
