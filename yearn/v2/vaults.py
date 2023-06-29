@@ -219,6 +219,8 @@ class Vault:
     def apy(self, samples: ApySamples):
         if self._needs_curve_simple():
             return apy.curve.simple(self, samples)
+        elif pool := apy.velo.get_staking_pool(self):
+            return apy.velo.staking(self, pool)
         elif Version(self.api_version) >= Version("0.3.2"):
             return apy.v2.average(self, samples)
         else:
