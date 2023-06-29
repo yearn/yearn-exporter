@@ -48,6 +48,10 @@ def staking(vault: "Vault", staking_rewards: Contract, block: Optional[int]=None
     performance = vault.vault.performanceFee(block_identifier=block) / 1e4 if hasattr(vault.vault, "performanceFee") else 0
     management = vault.vault.managementFee(block_identifier=block) / 1e4 if hasattr(vault.vault, "managementFee") else 0
     fees = ApyFees(performance=performance, management=management)
+
+    if total_supply == 0 or rate == 0:
+        return Apy("v2:velo", gross_apr=0, net_apy=0, fees=fees)
+    
     gross_apr = (SECONDS_PER_YEAR * (rate / 1e18) * token_price) / (pool_price * (total_supply / 1e18))
     
     net_apr = gross_apr * (1 - performance) - management 
