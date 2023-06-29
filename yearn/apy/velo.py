@@ -13,6 +13,8 @@ if TYPE_CHECKING:
     from yearn.v2.vaults import Vault
 
 
+COMPOUNDING = 365
+
 @lru_cache
 def get_staking_pool(vault) -> Optional[Contract]:
     if Network(chain.id) == Network.Optimism:
@@ -40,10 +42,8 @@ def staking(vault: "Vault", staking_rewards: Contract, block: Optional[int]=None
     performance = vault.vault.performanceFee(block_identifier=block) / 1e4 if hasattr(vault.vault, "performanceFee") else 0
     management = vault.vault.managementFee(block_identifier=block) / 1e4 if hasattr(vault.vault, "managementFee") else 0
     fees = ApyFees(performance=performance, management=management)
-    gross_apr = (SECONDS_PER_YEAR * (rate / 1e18) * token_price) / (
-        (pool_price / 1e18) * (total_supply / 1e18)
-    )
-    COMPOUNDING = 365
+    gross_apr = (SECONDS_PER_YEAR * (rate / 1e18) * token_price) / (pool_price * (total_supply / 1e18))
+    
     net_apr = gross_apr * (1 - performance) - management 
     net_apy = (1 + (net_apr / COMPOUNDING)) ** COMPOUNDING - 1
     return Apy("v2:velo", gross_apr=gross_apr, net_apy=net_apy, fees=fees)
