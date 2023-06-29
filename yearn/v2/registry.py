@@ -56,7 +56,6 @@ class Registry(metaclass=Singleton):
         elif chain.id == Network.Optimism:
             return [
                 contract('0x79286Dd38C9017E5423073bAc11F53357Fc5C128'),
-                contract('0x81291ceb9bB265185A9D07b91B5b50Df94f005BF'),
                 contract('0x8ED9F6343f057870F1DeF47AaE7CD88dfAA049A8'), # StakingRewardsRegistry
             ]
         else:
