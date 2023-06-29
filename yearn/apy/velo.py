@@ -40,7 +40,10 @@ def staking(vault: "Vault", staking_rewards: Contract, block: Optional[int]=None
     if end < current_time or total_supply == 0 or rate == 0:
         return Apy("v2:velo_unpopular", gross_apr=0, net_apy=0, fees=fees)
     
-    pool_price = magic.get_price(vault.token.address, block=block)
+    if self.address == "0xc2626aCEdc27cFfB418680d0307C9178955A4743":
+        pool_price = magic.get_price("0x3f42Dc59DC4dF5cD607163bC620168f7FF7aB970", block=block) # hardcode frxETH-sfrxETH to frxETH-WETH price for now
+    else:
+        pool_price = magic.get_price(vault.token.address, block=block)
     reward_token = staking_rewards.rewardToken(block_identifier=block) if hasattr(staking_rewards, "rewardToken") else None
     token = reward_token
     token_price = magic.get_price(token, block=block)
