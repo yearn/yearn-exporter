@@ -1,17 +1,22 @@
+import logging
+import os
 from functools import lru_cache
+from pprint import pformat
 from time import time
-from typing import Optional, TYPE_CHECKING
+from typing import TYPE_CHECKING, Optional
 
 from brownie import ZERO_ADDRESS, chain
 from y import Contract, Network
 
 from yearn.apy.common import SECONDS_PER_YEAR, Apy, ApyFees
+from yearn.debug import Debug
 from yearn.prices import magic
 from yearn.utils import get_block_timestamp
 
 if TYPE_CHECKING:
     from yearn.v2.vaults import Vault
 
+logger = logging.getLogger(__name__)
 
 COMPOUNDING = 365
 
@@ -47,4 +52,6 @@ def staking(vault: "Vault", staking_rewards: Contract, block: Optional[int]=None
     
     net_apr = gross_apr * (1 - performance) - management 
     net_apy = (1 + (net_apr / COMPOUNDING)) ** COMPOUNDING - 1
+    if os.getenv("DEBUG", None):
+        logger.info(pformat(Debug().collect_variables(locals())))
     return Apy("v2:velo", gross_apr=gross_apr, net_apy=net_apy, fees=fees)
