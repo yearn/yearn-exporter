@@ -80,6 +80,12 @@ addresses = {
             address='0xE0B57FEEd45e7D908f2d0DaCd26F113Cf26715BF',
         )
     ],
+    Network.Avalanche: [
+        CompoundConfig(
+            name='ironbank',
+            address='0x2eE80614Ccbc5e28654324a66A396458Fa5cD7Cc'
+        )
+    ]
 }
 
 
