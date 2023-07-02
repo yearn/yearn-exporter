@@ -92,6 +92,13 @@ stablecoins_by_network = {
         '0xDA10009cBd5D07dd0CeCc66161FC93D7c9000da1': 'dai',
         '0x2E3D870790dC77A83DD1d18184Acc7439A53f475': 'frax',
         '0x8c6f28f2F1A3C87F0f938b96d27520d9751ec8d9': 'susd',
+    },
+    Network.Avalanche: {
+        '0x9702230A8Ea53601f5cD2dc00fDBc13d4dF4A8c7': 'usdt',
+        '0xB97EF9Ef8734C71904D8002F8b6Bc66Dd9c48a6E': 'usdc',
+        '0xd586E7F844cEa2F87f50152665BCbc2C279D8d70': 'dai', #dai.e
+        '0x130966628846BFd36ff31a822705796e8cb8C18D': 'mim',
+        '0xD24C2Ad096400B6FBcd2ad8B24E7acBc21A1da64': 'frax',
     }
 }
 
