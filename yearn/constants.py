@@ -13,6 +13,8 @@ WRAPPED_GAS_COIN = {
     Network.Arbitrum:           "0x82aF49447D8a07e3bd95BD0d56f35241523fBab1",
     Network.Gnosis:             "0xe91D153E0b41518A2Ce8Dd3D7944Fa863463a97d",
     Network.Optimism:           "0x4200000000000000000000000000000000000006",
+    Network.Avalanche:
+    "0xB31f66AA3C1e785363F0875A1B74E27b85FD66c7"
 }.get(chain.id, None)
 
 YEARN_ADDRESSES_PROVIDER = "0x9be19Ee7Bc4099D62737a7255f5c227fBcd6dB93"
