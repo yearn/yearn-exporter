@@ -23,6 +23,7 @@ addresses = {
     Network.Fantom: get_fantom_ironbank,
     Network.Arbitrum: '0xbadaC56c9aca307079e8B8FC699987AAc89813ee',
     Network.Optimism: '0xE0B57FEEd45e7D908f2d0DaCd26F113Cf26715BF',
+    Network.Avalanche: '0x2eE80614Ccbc5e28654324a66A396458Fa5cD7Cc',
 }
 
 
