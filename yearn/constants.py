@@ -51,6 +51,7 @@ YCHAD_MULTISIG = {
     Network.Gnosis:     "0x22eAe41c7Da367b9a15e942EB6227DF849Bb498C",
     Network.Arbitrum:   "0xb6bc033d34733329971b938fef32fad7e98e56ad",
     Network.Optimism:   "0xF5d9D6133b698cE29567a90Ab35CfB874204B3A7",
+    Network.Avalanche:  ""
 }.get(chain.id, None)
 
 if YCHAD_MULTISIG:
@@ -61,6 +62,7 @@ TREASURY_MULTISIG = {
     Network.Fantom:     "0x89716Ad7EDC3be3B35695789C475F3e7A3Deb12a",
     Network.Arbitrum:   "0x1deb47dcc9a35ad454bf7f0fcdb03c09792c08c1",
     Network.Optimism:   "0x84654e35E504452769757AAe5a8C7C6599cBf954",
+    Network.Avalanche:  ""
 }.get(chain.id, None)
 
 if TREASURY_MULTISIG:
@@ -92,6 +94,10 @@ TREASURY_WALLETS = {
         YCHAD_MULTISIG,
         TREASURY_MULTISIG,
     },
+    Network.Avalanche: {
+        YCHAD_MULTISIG,
+        TREASURY_MULTISIG,
+    }
 }.get(chain.id,set())
 
 TREASURY_WALLETS = {convert.to_address(address) for address in TREASURY_WALLETS}
