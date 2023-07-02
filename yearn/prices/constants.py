@@ -26,6 +26,11 @@ tokens_by_network = {
         'weth': '0x4200000000000000000000000000000000000006',
         'usdc': '0x7F5c764cBc14f9669B88837ca1490cCa17c31607',
         'dai': '0xDA10009cBd5D07dd0CeCc66161FC93D7c9000da1',
+    },
+    Network.Avalanche: {
+        'weth': '0x49D5c2BdFfac6CE2BFdB6640F4F80f226bc10bAB', # weth.e
+        'usdc': '0xB97EF9Ef8734C71904D8002F8b6Bc66Dd9c48a6E',
+        'dai': '0xd586E7F844cEa2F87f50152665BCbc2C279D8d70' # dai.e
     }
 }
 
