@@ -41,6 +41,9 @@ STRATEGIST_MULTISIG = {
     Network.Optimism: {
         "0xea3a15df68fCdBE44Fdb0DB675B2b3A14a148b26",
     },
+    Network.Avalanche: {
+        "0x9D6553E8AaAD7b3ecCFa046F8134f94D1D710320",
+    }
 }.get(chain.id,set())
 
 STRATEGIST_MULTISIG = {convert.to_address(address) for address in STRATEGIST_MULTISIG}
