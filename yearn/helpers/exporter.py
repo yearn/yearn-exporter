@@ -154,48 +154,6 @@ class Exporter:
             timestamp_seconds
             )
         await _post([item])
-    
-    # Producer <-> Consumer methods
-    async def _enqueue(self, name, snapshots, queue_size=1, num_consumers=1):
-        queue = asyncio.Queue(queue_size)
-        producer = asyncio.create_task(self._producer(name, queue, snapshots))
-        consumers = [asyncio.create_task(self._consumer(name, queue, i)) for i in range(num_consumers)]
-        await asyncio.gather(producer, *consumers)
-
-    @log_exceptions
-    async def _producer(self, name, queue, snapshots) -> None:
-        logger.debug(f"{name} producer running")
-        for snapshot in snapshots:
-            try:
-                if name == "historical" and await self._has_data(snapshot):
-                    continue
-                start = time.time()
-                timestamp = int(snapshot.timestamp())
-                block = await closest_block_after_timestamp_async(timestamp, wait_for_block_if_needed=True)
-                data = await self._data_fn(block, timestamp)
-                duration = time.time() - start
-                #logger.info(f"exported {Network.name()} {self.name} snapshot %s block=%d took=%.3fs", snapshot, block, duration)
-                await queue.put((snapshot, data, duration, block))
-                logger.debug(f"{name} produced snapshot data for {snapshot} on queue")
-                self._record_stats()
-            except Exception as e:
-                logger.error(e, exc_info=True)
-
-        logger.debug(f"{name} producer done")
-
-    @log_exceptions
-    async def _consumer(self, name: str, queue: asyncio.Queue, i: int) -> NoReturn:
-        logger.debug(f"{name} consumer {i} running")
-        while True:
-            try:
-                snapshot, data, duration, block = await queue.get()
-                logger.debug(f"{name} consumer {i} got item ({snapshot})")
-                await self._export_data(data)
-                logger.debug(f"{name} consumer {i} is done with item ({snapshot})")
-                queue.task_done()
-                await self._export_duration(duration, snapshot.timestamp())
-            except Exception as e:
-                logger.error(e, exc_info=True)
                 
     # Stats helpers
     
