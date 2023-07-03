@@ -13,6 +13,7 @@ from brownie import chain, web3
 from sentry_sdk import Hub, capture_message, init, push_scope, set_tag, utils
 from sentry_sdk.integrations.asyncio import AsyncioIntegration
 from sentry_sdk.integrations.threading import ThreadingIntegration
+from sentry_sdk.scrubber import EventScrubber, DEFAULT_DENYLIST
 from y.networks import Network
 
 SENTRY_DSN = os.getenv('SENTRY_DSN')
@@ -44,12 +45,26 @@ def setup_sentry():
     if SENTRY_DSN:
         # give remote backtraces a bit more space
         utils.MAX_STRING_LENGTH = 8192
+
+        # Set traces_sample_rate to 1.0 to capture 100%
+        # of transactions for performance monitoring.
+        # We recommend adjusting this value in production.
+        traces_sample_rate = float(os.getenv("SENTRY_TRACES_SAMPLE_RATE", 0.1))
+        functions_to_trace = [
+            {"qualified_name": "yearn.helpers.exporter.export_snapshot"},
+            {"qualified_name": "yearn.helpers.exporter._has_data"},
+            {"qualified_name": "yearn.helpers.exporter._export_data"}
+        ]
+
+        denylist = DEFAULT_DENYLIST
+        # don't filter token vars
+        denylist.remove("token")
         init(
             SENTRY_DSN,
-            # Set traces_sample_rate to 1.0 to capture 100%
-            # of transactions for performance monitoring.
-            # We recommend adjusting this value in production.
-            traces_sample_rate=1.0,
+            send_default_pii=False,
+            event_scrubber=EventScrubber(denylist=denylist),
+            traces_sample_rate=traces_sample_rate,
+            functions_to_trace=functions_to_trace,
             shutdown_timeout=5,
             before_send=before_send,
             debug=False,
