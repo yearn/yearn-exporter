@@ -46,7 +46,8 @@ exporter = WalletExporter(
     data_query = 'aggregate{param="total wallets"}',
     data_fn = yearn.wallet_data_for_export,
     export_fn = _post,
-    start_block = closest_block_after_timestamp(int(start.timestamp())) - 1
+    start_block = closest_block_after_timestamp(int(start.timestamp())) - 1,
+    concurrency=10
 )
 
 def main():

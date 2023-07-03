@@ -123,7 +123,7 @@ class Exporter:
         duration = time.time() - start
         logger.info(f"produced {self.full_name} snapshot %s block=%d took=%.3fs", snapshot, block, duration)
         await asyncio.gather(self._export_data(data), self._export_duration(duration, snapshot.timestamp()))
-        logger.info(f"exported {self.full_name} snapshot %s block=%d took=%.3fs", snapshot, block, time.time() - start)
+        #logger.info(f"exported {self.full_name} snapshot %s block=%d took=%.3fs", snapshot, block, time.time() - start)
         self._record_stats()
 
     @log_exceptions
@@ -174,7 +174,7 @@ class Exporter:
                 block = await closest_block_after_timestamp_async(timestamp, wait_for_block_if_needed=True)
                 data = await self._data_fn(block, timestamp)
                 duration = time.time() - start
-                logger.info(f"exported {Network.name()} {self.name} snapshot %s block=%d took=%.3fs", snapshot, block, duration)
+                #logger.info(f"exported {Network.name()} {self.name} snapshot %s block=%d took=%.3fs", snapshot, block, duration)
                 await queue.put((snapshot, data, duration, block))
                 logger.debug(f"{name} produced snapshot data for {snapshot} on queue")
                 self._record_stats()

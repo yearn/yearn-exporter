@@ -3,6 +3,7 @@ import json
 import logging
 import os
 import threading
+from concurrent.futures import ThreadPoolExecutor
 from datetime import datetime, timedelta
 from functools import lru_cache, wraps
 from typing import Any, Callable, List, TypeVar
@@ -13,7 +14,6 @@ from brownie import Contract, chain, interface, web3
 from brownie.convert.datatypes import HexString
 from brownie.network.contract import _fetch_from_explorer, _resolve_address
 from dank_mids.brownie_patch import patch_contract
-from eth_portfolio.constants import sync_threads
 from typing_extensions import ParamSpec
 from y.networks import Network
 from y.utils.dank_mids import dank_w3
@@ -23,6 +23,8 @@ from yearn.typing import AddressOrContract
 
 logger = logging.getLogger(__name__)
 
+threads = ThreadPoolExecutor(8)
+run_in_thread = lambda fn, *args: asyncio.get_event_loop().run_in_executor(threads, fn, *args)
 
 BINARY_SEARCH_BARRIER = {
     Network.Mainnet: 0,
@@ -194,9 +196,6 @@ def _squeeze(it):
         if it._build and k in it._build.keys():
             it._build[k] = {}
     return it
-
-def run_in_thread(callable: Callable, *args, **kwargs) -> Any:
-    return asyncio.get_event_loop().run_in_executor(sync_threads, callable, *args, **kwargs)
 
 def dates_between(start: datetime, end: datetime) -> List[datetime]:
     end = end.date()

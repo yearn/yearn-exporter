@@ -134,7 +134,7 @@ def log_exceptions(func: Callable[..., Awaitable[None]]) -> Callable[..., Awaita
         except Exception as e:
             logger.exception(e)
             if SENTRY_DSN is not None:
-                await capture_exception(e)
+                asyncio.create_task(capture_exception(e))
             # Raise the exception so the user sees it on their logs.
             # Since it is raised inside of a task it will not impact behavior.       
             # NOTE: We're using this for coros now instead of tasks so we no longer raise here     

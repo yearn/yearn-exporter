@@ -58,7 +58,7 @@ class VaultV1:
             return self.strategy
         
         controller = await self.get_controller(block)
-        strategy = controller.strategies(self.token, block_identifier=block)
+        strategy = await controller.strategies.coroutine(self.token, block_identifier=block)
         if strategy != ZERO_ADDRESS:
             return contract(strategy)
 

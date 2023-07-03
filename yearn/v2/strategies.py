@@ -136,5 +136,5 @@ class Strategy:
         return await run_in_subprocess(_unpack_results, self._views, results, self.vault.scale)
     
     async def describe(self, block=None):
-        results = await fetch_multicall_async(*self._calls, block=block)
+        results = await fetch_multicall_async(*self._calls, block=block, require_success=True)
         return await self._unpack_results(results)
