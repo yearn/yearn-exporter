@@ -76,6 +76,7 @@ def is_strategist_gas(tx: TreasuryTx) -> bool:
             '0xa77c4f7596968fef96565a0025cc6f9881622f62cc4c823232f9c9000ba5f981',
             '0xac2253f1d8f78680411b353d65135d58bc880cdf9507ea7848daf05925e1443f',
             '0xd27d4a732dd1a9ac93c7db1695a6d2aff40e007627d710da91f328b246be44bc',
+            '0x5a828e5bde96cd8745223fe32daefaa9140a09acc69202c33f6f789228c8134b',
         ],
     }.get(chain.id, [])):
         tx.amount *= -1

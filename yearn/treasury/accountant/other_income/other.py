@@ -28,3 +28,7 @@ def is_cowswap_gas_reimbursement(tx: TreasuryTx) -> bool:
 def is_usdn_shutdown(tx: TreasuryTx) -> bool:
     """The USDN vault was shut down but the pool was so rekt they coulnd't even swap for want. Trace amounts of yield sent to yChad."""
     return tx in HashMatcher(["0x12b3687f4bfbc73c11dccbd61d18c3f785e6f0f91cb46280d7df08143162ceed"])
+
+def is_other(tx: TreasuryTx) -> bool:
+    """Some tokens showed up and nobody knew where they came from. Lucky Yearn."""
+    return tx in HashMatcher(["0x5be236c49e5c5481fc9169dbdd5759cb1542d5d8fe047083ecf2403584468e1a"])

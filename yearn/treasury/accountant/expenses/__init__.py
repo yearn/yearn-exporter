@@ -42,7 +42,7 @@ if chain.id == Network.Mainnet:
     testing = ux.create_child("Testing", HashMatcher(general.hashes["website"]["ux"]["testing"]).contains)
 
     grants.create_child("Vault Management Dashboard", HashMatcher(["0xc59b692bff01c3a364d9a1fc629dfd743c1e421f7eaee7efdca86f23d0a8a7ad"]).contains) # These is also a stream for these guys TODO figure out how to account for streams as they stream
-    grants.create_child("V3 Development")
+    grants.create_child("V3 Development", people.is_v3_team)
     grants.create_child("V3 Support", HashMatcher([["0x213979422ec4154eb0aa0db4b03f48e1669c08fa055ab44e4006fa7d90bb8547", Filter('log_index', 534)]]).contains) # These is also a stream for these guys TODO figure out how to account for streams as they stream
     grants.create_child("Frontend Support", people.is_frontend_support)
     grants.create_child("yGift Team Grant", people.is_ygift_grant)
@@ -63,3 +63,14 @@ if chain.id == Network.Mainnet:
     infrastructure_txgroup.create_child("Server Costs", infrastructure.is_servers)
     infrastructure_txgroup.create_child("Tenderly Subscription", infrastructure.is_tenderly)
     infrastructure_txgroup.create_child("Unspecified Infra", infrastructure.is_generic)
+    
+    # Previously these weren't very granularly categorized but now with the new BR system we can split out each grant
+    grants.create_child("yETH [BR#xxx]", people.is_yeth)
+    grants.create_child("Yearn Exporter [BR#xxx]", people.is_yearn_exporter)
+    grants.create_child("Xopowo [BR#xxx]", people.is_xopowo)
+    grants.create_child("S2 Team [BR#xxx]", people.is_s2_team)
+    grants.create_child("yCreative [BR#xxx]", people.is_ycreative)
+    grants.create_child("ySecurity [BR#xxx]", people.is_ysecurity)
+    grants.create_child("Zootroop [BR#xxx]", people.is_zootroop)
+    grants.create_child("Corn [BR#xxx]", people.is_corn)
+    grants.create_child("Tapir [BR#xxx]", people.is_tapir)

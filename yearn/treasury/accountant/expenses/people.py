@@ -145,3 +145,80 @@ def is_docs_grant(tx: TreasuryTx) -> bool:
     return tx in HashMatcher([
         "0x99f8e351a15e7ce7f0acbae2dea52c56cd93ef97b0a5981f79a68180ff777f00",
     ])
+    
+def is_yeth(tx: TreasuryTx) -> bool:
+    if tx.to_address.address == "0xeEEEEeeeEe274C3CCe13f77C85d8eBd9F7fd4479":
+        if tx._symbol == "YFI" and tx.amount == 4.5:
+            return True
+        elif tx._symbol == "DAI" and tx.amount == 20_000:
+            return True
+    return False
+
+def is_yearn_exporter(tx: TreasuryTx) -> bool:
+    if tx.to_address.address == "0xcD63C69f08bdDa7Fe96a87A2Ca3f56f3a6990a75":
+        if tx._symbol == "YFI" and tx.amount == 2.25:
+            return True
+        elif tx._symbol == "DAI" and tx.amount == 23_025:
+            return True
+    return False
+
+def is_xopowo(tx: TreasuryTx) -> bool:
+    if tx.to_address.address == "0x4F909396A75FE9d59F584156A851B3770f3F438a":
+        print(tx.amount)
+        print(5.1)
+        if tx._symbol == "YFI" and (tx.amount == 5.1 or tx.hash == "0x1969a5ebdedc96057feaa7a156adbdfd2e452868d0bb8258df767f12db26895d"):
+            return True
+        elif tx._symbol == "DAI" and tx.amount == 71_500:
+            return True
+    return False
+
+def is_v3_team(tx: TreasuryTx) -> bool:
+    if tx.to_address.address == "0x3333333368A1ed686392C1534e747F3e15CA286C":
+        if tx._symbol == "YFI" and tx.amount == 1.5:
+            return True
+        elif tx._symbol == "DAI" and tx.amount == 35_000:
+            return True
+    return False
+
+def is_s2_team(tx: TreasuryTx) -> bool:
+    if tx.to_address.address == "0x00520049162aa47AdA264E2f77DA6749dfaa6218":
+        if tx._symbol == "YFI" and tx.amount == 2.25:
+            return True
+        elif tx._symbol == "DAI" and tx.amount == 39_500:
+            return True
+    return False
+
+def is_ycreative(tx: TreasuryTx) -> bool:
+    if tx.to_address.address == "0x402449F51afbFC864D44133A975980179C6cD24C":
+        if tx._symbol == "YFI" and (tx.amount == 1.65 or tx.hash == "0x1969a5ebdedc96057feaa7a156adbdfd2e452868d0bb8258df767f12db26895d"):
+            return True
+        elif tx._symbol == "DAI" and tx.amount == 15_500:
+            return True
+    return False
+
+def is_ysecurity(tx: TreasuryTx) -> bool:
+    if tx.to_address.address == "0x4851C7C7163bdF04A22C9e12Ab77e184a5dB8F0E":
+        if tx._symbol == "YFI" and tx.amount == 2.5:
+            return True
+        elif tx._symbol == "DAI" and tx.amount == 20_667:
+            return True
+    return False
+
+def is_zootroop(tx: TreasuryTx) -> bool:
+    if tx.to_address.address == "0xBd5CA40C66226F53378AE06bc71784CAd6016087":
+        if tx._symbol == "YFI" and tx.amount == 1.5:
+            return True
+        elif tx._symbol == "DAI" and tx.amount == 34_500:
+            return True
+    return False
+
+def is_corn(tx: TreasuryTx) -> bool:
+    if tx.to_address.address == "0xF6411852b105042bb8bbc6Dd50C0e8F30Af63337":
+        if tx._symbol == "YFI" and tx.amount == 1.5:
+            return True
+        elif tx._symbol == "DAI" and tx.amount == 10_000:
+            return True
+    return False
+
+def is_tapir(tx: TreasuryTx) -> bool:
+    return tx.to_address.address == "0x80c9aC867b2D36B7e8D74646E074c460a008C0cb" and tx._symbol == "DAI" and tx.amount == 4_000
