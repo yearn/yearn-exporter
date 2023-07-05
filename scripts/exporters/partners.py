@@ -33,7 +33,7 @@ def main():
         data_fn = export_partners,
         export_fn = _post,
         start_block = closest_block_after_timestamp(start) - 1,
-        concurrency=5,
+        concurrency=1,
     )
     
     exporter.run()

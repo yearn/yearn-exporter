@@ -19,7 +19,7 @@ exporter = Exporter(
     data_fn = treasury.data_for_export,
     export_fn = _post,
     start_block = treasury._start_block,
-    concurrency=10,
+    concurrency=1,
 )
 
 def main():
