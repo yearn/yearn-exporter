@@ -6,6 +6,8 @@ import warnings
 import sentry_sdk
 from brownie.exceptions import BrownieEnvironmentWarning
 from tabulate import tabulate
+
+from yearn import logs
 from yearn.apy import ApyError, get_samples
 from yearn.special import Backscratcher, YveCRVJar
 from yearn.v1.registry import Registry as RegistryV1
@@ -17,7 +19,7 @@ sentry_sdk.set_tag('script','apy')
 
 warnings.simplefilter("ignore", BrownieEnvironmentWarning)
 
-logging.basicConfig(level=logging.DEBUG)
+logs.basicConfig(level=logging.DEBUG)
 logger = logging.getLogger("yearn.apy")
 
 

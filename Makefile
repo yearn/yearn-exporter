@@ -68,7 +68,7 @@ build:
 
 logs:
 	$(eval filter = $(if $(filter),yearn-exporter-$(filter),$(if $(network),$(network),yearn-exporter-worker)))
-	$(eval since = $(if $(since),$(since),30s))
+	$(eval since = $(if $(since),$(since),300s))
 	docker ps -a -q --filter="name=$(filter)"| xargs -L 1 -P $$(docker ps --filter="name=$(filter)" | wc -l) docker logs --since $(since) -ft
 
 .ONESHELL:
@@ -93,6 +93,11 @@ up:
 			make single-network network=ethereum commands="exporters/veyfi"
 		fi
 	fi
+
+# cleanup containers which are temporarily unused or too buggy, ugly workaround until there is a better way to control this:
+	make down filter=yearn-exporter-worker-fantom-exporters-treasury-transactions
+	make down filter=yearn-exporter-worker-arbitrum-exporters-treasury-transactions
+	make down filter=yearn-exporter-worker-optimism-exporters-treasury-transactions
 
 # LOGGING
 	$(eval with_logs = $(if $(with_logs),$(with_logs),true))
@@ -223,6 +228,7 @@ logs-wallets:
 # Partners Exporters
 partners:
 	make up filter=partners commands="exporters/partners"
+
 logs-partners:
 	make logs filter=partners commands="exporters/partners"
 
@@ -268,3 +274,12 @@ partners-summary-ftm:
 # veyfi scripts
 veyfi:
 	make up network=ethereum commands="exporters/veyfi" logs
+
+# utils
+fetch-memray:
+	mkdir reports/memray -p
+	sudo cp -r /var/lib/docker/volumes/yearn-exporter-worker-ethereum_memray/_data/ reports/memray/ethereum
+	sudo cp -r /var/lib/docker/volumes/yearn-exporter-worker-fantom_memray/_data/   reports/memray/fantom
+	sudo cp -r /var/lib/docker/volumes/yearn-exporter-worker-arbitrum_memray/_data/ reports/memray/arbitrum
+	sudo cp -r /var/lib/docker/volumes/yearn-exporter-worker-optimism_memray/_data/ reports/memray/optimism
+	sudo cp -r /var/lib/docker/volumes/yearn-exporter-worker-gnosis_memray/_data/   reports/memray/gnosis

@@ -1,3 +1,4 @@
+import asyncio
 import os
 from collections import defaultdict
 from itertools import count, product
@@ -6,13 +7,15 @@ from typing import Any, List, Optional
 
 import eth_retry
 import requests
-from brownie import chain, web3
+from brownie import Contract, chain, web3
+from brownie.network.contract import _ContractMethod
 from eth_abi.exceptions import InsufficientDataBytes
+from y.contracts import contract_creation_block
+from y.networks import Network
 
 from yearn.exceptions import MulticallError
-from yearn.networks import Network
 from yearn.typing import Block
-from yearn.utils import contract, contract_creation_block
+from yearn.utils import contract
 
 JSONRPC_BATCH_MAX_SIZE = int(os.environ.get("JSONRPC_BATCH_MAX_SIZE", 10_000)) # Currently set arbitrarily, necessaary for certain node-as-a-service providers.
 MULTICALL_MAX_SIZE = int(os.environ.get("MULTICALL_MAX_SIZE", 500)) # Currently set arbitrarily
@@ -40,12 +43,7 @@ def fetch_multicall(*calls, block: Optional[Block] = None, require_success: bool
 
     for i, (contract, fn_name, *fn_inputs) in enumerate(calls):
         try:
-            fn = getattr(contract, fn_name)
-
-            # check that there aren't multiple functions with the same name
-            if hasattr(fn, "_get_fn_from_args"):
-                fn = fn._get_fn_from_args(fn_inputs)
-
+            fn = _get_fn(contract, fn_name, fn_inputs)
             fn_list.append(fn)
             multicall_input.append((contract, fn.encode_input(*fn_inputs)))
         except AttributeError:
@@ -91,6 +89,45 @@ def fetch_multicall(*calls, block: Optional[Block] = None, require_success: bool
 
     return decoded
 
+async def fetch_multicall_async(*calls, block: Optional[Block] = None, require_success: bool = False) -> List[Any]:
+    # https://github.com/makerdao/multicall
+    attribute_errors = []
+    coros = []
+
+    for i, (contract, fn_name, *fn_inputs) in enumerate(calls):
+        try:
+            fn = _get_fn(contract, fn_name, fn_inputs)
+        except AttributeError as e:
+            if require_success:
+                raise AttributeError(e, contract, fn_name)
+            attribute_errors.append(i)
+            continue
+
+        try:
+            coros.append(fn.coroutine(*fn_inputs, block_identifier=block))
+        except AttributeError as e:
+            raise AttributeError(e, contract, fn_name)
+
+    results = await asyncio.gather(*coros, return_exceptions=True)
+    for i, result in enumerate(results):
+        if isinstance(result, Exception):
+            if require_success:
+                raise result
+            else:
+                results[i] = None
+
+    # NOTE this will only run if `require_success` is True
+    for i in attribute_errors:
+        results.insert(i, None)
+
+    return results
+
+def _get_fn(contract: Contract, fn_name: str, fn_inputs: Any) -> _ContractMethod:
+    fn = getattr(contract, fn_name)
+    # check that there aren't multiple functions with the same name
+    if hasattr(fn, "_get_fn_from_args"):
+        fn = fn._get_fn_from_args(fn_inputs)
+    return fn
 
 def multicall_matrix(contracts, params, block="latest"):
     matrix = list(product(contracts, params))
@@ -104,6 +141,17 @@ def multicall_matrix(contracts, params, block="latest"):
 
     return dict(output)
 
+async def multicall_matrix_async(contracts, params, block="latest"):
+    matrix = list(product(contracts, params))
+    calls = [[contract, param] for contract, param in matrix]
+
+    results = await fetch_multicall_async(*calls, block=block)
+
+    output = defaultdict(dict)
+    for (contract, param), value in zip(matrix, results):
+        output[contract][param] = value
+
+    return dict(output)
 
 @eth_retry.auto_retry
 def batch_call(calls):

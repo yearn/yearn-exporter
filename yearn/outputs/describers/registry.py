@@ -1,25 +1,29 @@
+import asyncio
 from collections import Counter
 
 from brownie import chain
-from joblib.parallel import Parallel, delayed
-from yearn.networks import Network
-from yearn.outputs.describers.vault import VaultWalletDescriber
-from yearn.utils import contract
+from y import Contract, Network
 
+from yearn.outputs.describers.vault import VaultWalletDescriber
+
+if chain.id == Network.Mainnet:
+    yGov = Contract("0xBa37B002AbaFDd8E89a1995dA52740bbC013D992")
 
 class RegistryWalletDescriber:
-    def active_vaults_at(self, registry: tuple, block=None):
+    def __init__(self):
+        self.vault_describer = VaultWalletDescriber()
+
+    async def active_vaults_at(self, registry: tuple, block=None):
         label, registry = registry
-        active = [vault for vault in registry.active_vaults_at(block=block)]  
+        active = await registry.active_vaults_at(block=block)
         if chain.id == Network.Mainnet:
             # [yGov] Doesn't count for this context
-            active = [vault for vault in active if vault.vault != contract("0xBa37B002AbaFDd8E89a1995dA52740bbC013D992")]
+            active = [vault for vault in active if vault.vault != yGov]
         return active
         
-    def describe_wallets(self, registry: tuple, block=None):
-        describer = VaultWalletDescriber()
-        active_vaults = self.active_vaults_at(registry, block=block)
-        data = Parallel(8,'threading')(delayed(describer.describe_wallets)(vault.vault.address, block=block) for vault in active_vaults)
+    async def describe_wallets(self, registry: tuple, block=None):
+        active_vaults = await self.active_vaults_at(registry, block=block)
+        data = await asyncio.gather(*[self.vault_describer.describe_wallets(vault.vault.address, block=block) for vault in active_vaults])
         data = {vault.name: desc for vault,desc in zip(active_vaults,data)}
 
         wallet_balances = Counter()

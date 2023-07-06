@@ -2,8 +2,9 @@
 from brownie import Contract
 from brownie.exceptions import ContractNotFound
 from tqdm import tqdm
+from y.networks import Network
+
 from yearn.entities import Address
-from yearn.networks import Network
 from yearn.treasury.accountant.accountant import *
 from yearn.treasury.accountant.prepare_db import prepare_db
 from yearn.utils import contract
@@ -105,6 +106,6 @@ def load():
     prepare_db()
     # Gnosis safes made me do this. In the future, so might other things.
     contracts = __get_contracts()
-    __ensure_topics_are_known(contracts)
-    __ensure_signatures_are_known(contracts)
+    #__ensure_topics_are_known(contracts)
+    #__ensure_signatures_are_known(contracts)
 load()

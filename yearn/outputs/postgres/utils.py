@@ -3,25 +3,27 @@ from typing import Optional
 
 from brownie import ZERO_ADDRESS, chain, convert
 from brownie.convert.datatypes import HexString
-from pony.orm import ObjectNotFound, db_session, select
+from pony.orm import db_session, select
+from y import Contract, ContractNotVerified, Network
+
 from yearn.entities import (Address, Chain, Token, TreasuryTx, TxGroup, UserTx,
                             db)
 from yearn.multicall2 import fetch_multicall
-from yearn.networks import Network
-from yearn.utils import contract, is_contract, hex_to_string
+from yearn.utils import hex_to_string, is_contract
 
 logger = logging.getLogger(__name__)
 
+UNI_V3_POS = {
+    Network.Mainnet: "0xC36442b4a4522E871399CD717aBDD847Ab11FE88",
+}.get(chain.id, 'not on this chain')
+
 @db_session
 def cache_chain():
-    _chain = Chain.get(chainid=chain.id)
-    if not _chain:
-        _chain = Chain(
-            chain_name = Network(chain.id).name,
-            chainid = chain.id,
-            victoria_metrics_label = Network.label(chain.id)
-        )
-    return _chain
+    return Chain.get(chainid=chain.id) or Chain(
+        chain_name=Network.name(),
+        chainid=chain.id,
+        victoria_metrics_label=Network.label(),
+    )
 
 @db_session
 def cache_address(address: str) -> Address:
@@ -29,11 +31,23 @@ def cache_address(address: str) -> Address:
     chain = cache_chain()
     address_entity = Address.get(address=address, chain=chain)
     if not address_entity:
-        address_entity = Address(
-            address=address,
-            chain=chain,
-            is_contract=is_contract(address)
-        )
+        if is_contract(address):
+            try:
+                nickname = f"Contract: {Contract(address)._build['contractName']}"
+            except ContractNotVerified as e:
+                nickname = f"Non-Verified Contract: {address}"
+            address_entity = Address(
+                address=address,
+                chain=chain,
+                is_contract=True,
+                nickname=nickname,
+            )
+        else:
+            address_entity = Address(
+                address=address,
+                chain=chain,
+                is_contract=False,
+            )
     return address_entity
 
 @db_session
@@ -41,7 +55,8 @@ def cache_token(address: str) -> Token:
     address_entity = cache_address(address)
     token = Token.get(address=address_entity)
     if not token:
-        if convert.to_address(address) == "0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE":
+        address = convert.to_address(address)
+        if address == "0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE":
             symbol, name = {
                 Network.Mainnet: ("ETH","Ethereum"),
                 Network.Fantom: ("FTM","Fantom"),
@@ -50,7 +65,7 @@ def cache_token(address: str) -> Token:
             }[chain.id]
             decimals = 18
         else:
-            token = contract(address)
+            token = Contract(address)
             symbol, name, decimals = fetch_multicall([token,'symbol'],[token,'name'],[token,'decimals'])
 
             # MKR contract returns name and symbol as bytes32 which is converted to a brownie HexString
@@ -59,12 +74,17 @@ def cache_token(address: str) -> Token:
                 name = hex_to_string(name)
             if isinstance(symbol, HexString):
                 symbol = hex_to_string(symbol)
+        
+        if address_entity.nickname is None or address_entity.nickname.startswith("Contract: "):
+            # Don't overwrite any intentionally set nicknames, if applicable
+            address_entity.nickname = f"Token: {name}"
+        
         try:
             token = Token(
                 address=address_entity,
                 symbol=symbol,
                 name=name,
-                decimals=decimals,
+                decimals= 0 if address == UNI_V3_POS else decimals,
                 chain=cache_chain()
             )
         except ValueError as e:
@@ -79,7 +99,7 @@ def cache_txgroup(name: str, parent: Optional[TxGroup] = None) -> TxGroup:
     if not _txgroup:
         _txgroup = TxGroup(name=name, parent_txgroup=parent)
         logger.info(f'TxGroup {name} added to postgres')
-    if parent != _txgroup.parent_txgroup:
+    if parent and parent != _txgroup.parent_txgroup:
         _txgroup.parent_txgroup = parent
     return _txgroup
 
@@ -124,4 +144,4 @@ def fetch_balances(vault_address: str, block=None):
                 from user_txs where token_id = $token_dbid
                 group by "from") b on a.wallet = b.wallet
                 """)
-    return {wallet: balance for wallet,balance in balances if wallet != ZERO_ADDRESS}
+    return {wallet: balance for wallet, balance in balances if wallet != ZERO_ADDRESS}

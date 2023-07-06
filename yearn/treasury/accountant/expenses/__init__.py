@@ -1,7 +1,9 @@
 
 from brownie import chain
-from yearn.networks import Network
-from yearn.treasury.accountant.classes import Filter, HashMatcher, TopLevelTxGroup
+from y.networks import Network
+
+from yearn.treasury.accountant.classes import (Filter, HashMatcher,
+                                               TopLevelTxGroup)
 from yearn.treasury.accountant.expenses import (general, infrastructure,
                                                 people, security)
 
@@ -11,7 +13,6 @@ expenses_txgroup = TopLevelTxGroup(OPEX_LABEL)
 
 if chain.id == Network.Mainnet:
     team = expenses_txgroup.create_child("Team Payments", people.is_team_payment)
-    team.create_child("Replenish Streams", people.is_stream_replenishment)
 
     expenses_txgroup.create_child("Coordinape", people.is_coordinape)
     expenses_txgroup.create_child("The 0.03%", people.is_0_03_percent)
@@ -21,14 +22,15 @@ if chain.id == Network.Mainnet:
     security_txgroup = expenses_txgroup.create_child("Security")
     security_txgroup.create_child("Bug Bounty", security.is_bug_bounty)
     security_txgroup.create_child("Anti-Spam Discord Bot", security.is_antispam_bot)
+    security_txgroup.create_child("War Room Assistance", security.is_warroom_help)
     audit_txgroup = security_txgroup.create_child("Audit")
     audit_txgroup.create_child("yAcademy", security.is_yacademy_audit)
     audit_txgroup.create_child("ChainSec", security.is_chainsec_audit)
+    audit_txgroup.create_child("Debaub", security.is_debaub_audit)
     audit_txgroup.create_child("Decurity", security.is_decurity_audit)
     audit_txgroup.create_child("MixBytes", security.is_mixbytes_audit)
     audit_txgroup.create_child("StateMind", security.is_statemind_audit)
     audit_txgroup.create_child("Unspecified Audit", security.is_other_audit)
-
 
     grants = expenses_txgroup.create_child("Grants")
 
@@ -40,9 +42,12 @@ if chain.id == Network.Mainnet:
     testing = ux.create_child("Testing", HashMatcher(general.hashes["website"]["ux"]["testing"]).contains)
 
     grants.create_child("Vault Management Dashboard", HashMatcher(["0xc59b692bff01c3a364d9a1fc629dfd743c1e421f7eaee7efdca86f23d0a8a7ad"]).contains) # These is also a stream for these guys TODO figure out how to account for streams as they stream
+    grants.create_child("V3 Development", people.is_v3_team)
     grants.create_child("V3 Support", HashMatcher([["0x213979422ec4154eb0aa0db4b03f48e1669c08fa055ab44e4006fa7d90bb8547", Filter('log_index', 534)]]).contains) # These is also a stream for these guys TODO figure out how to account for streams as they stream
     grants.create_child("Frontend Support", people.is_frontend_support)
     grants.create_child("yGift Team Grant", people.is_ygift_grant)
+    grants.create_child("yCRV Dev Grant", people.is_ycrv_grant)
+    grants.create_child("Docs Grant", people.is_docs_grant)
     grants.create_child("Other Grants", people.is_other_grant)
     grants.create_child("Automation", HashMatcher([['0xacc27a97d4014107d77e14ffafdc3e9517bc5c9213fc2ba723c6737ba6cae514', Filter('log_index', 121)]]).contains)
     grants.create_child("Creative Studio (req. 77)", HashMatcher([["0xe397d5682ef780b5371f8c80670e0cd94b4f945c7b432319b24f65c288995a17", Filter('log_index', 356)]]).contains)
@@ -52,8 +57,20 @@ if chain.id == Network.Mainnet:
     grants.create_child("veYFI UI", HashMatcher([["0x51baf41f9daa68ac7be8024125852f1e21a3bb954ea32e686ac25a72903a1c8e", Filter('log_index', 296)]]).contains)
     grants.create_child("Testing/Deploying/Domains", HashMatcher([["0x51baf41f9daa68ac7be8024125852f1e21a3bb954ea32e686ac25a72903a1c8e", Filter('log_index', 297)]]).contains)
     grants.create_child("2021 Bonus", HashMatcher(people.eoy_bonus_hashes).contains)
+    grants.create_child("yDaemon", people.is_ydaemon_grant)
 
     infrastructure_txgroup = expenses_txgroup.create_child("Infrastructure")
     infrastructure_txgroup.create_child("Server Costs", infrastructure.is_servers)
     infrastructure_txgroup.create_child("Tenderly Subscription", infrastructure.is_tenderly)
     infrastructure_txgroup.create_child("Unspecified Infra", infrastructure.is_generic)
+    
+    # Previously these weren't very granularly categorized but now with the new BR system we can split out each grant
+    grants.create_child("yETH [BR#xxx]", people.is_yeth)
+    grants.create_child("Yearn Exporter [BR#xxx]", people.is_yearn_exporter)
+    grants.create_child("Xopowo [BR#xxx]", people.is_xopowo)
+    grants.create_child("S2 Team [BR#xxx]", people.is_s2_team)
+    grants.create_child("yCreative [BR#xxx]", people.is_ycreative)
+    grants.create_child("ySecurity [BR#xxx]", people.is_ysecurity)
+    grants.create_child("Zootroop [BR#xxx]", people.is_zootroop)
+    grants.create_child("Corn [BR#xxx]", people.is_corn)
+    grants.create_child("Tapir [BR#xxx]", people.is_tapir)

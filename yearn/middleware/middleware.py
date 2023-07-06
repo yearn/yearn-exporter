@@ -1,4 +1,3 @@
-from http.client import NETWORK_AUTHENTICATION_REQUIRED
 import logging
 
 import eth_retry
@@ -10,9 +9,10 @@ from requests import Session
 from requests.adapters import HTTPAdapter
 from web3 import HTTPProvider
 from web3.middleware import filter
+from y.networks import Network
+
 from yearn.cache import memory
 from yearn.middleware import yearn_filter
-from yearn.networks import Network
 
 logger = logging.getLogger(__name__)
 
@@ -24,8 +24,8 @@ PROVIDER_MAX_BATCH_SIZE = {
 CHAIN_MAX_BATCH_SIZE = {
     Network.Mainnet: 10_000,  # 1.58 days
     Network.Gnosis: 20_000,  # 1.15 days
-    Network.Fantom: 100_000,  # 1.03 days
-    Network.Arbitrum: 200_000, # 3.4 days
+    Network.Fantom: 10_000,  # 0.1 days
+    Network.Arbitrum: 20_000, # 0.34 days
     Network.Optimism: 800_000, # 10.02 days
 }
 
@@ -57,16 +57,12 @@ def should_cache(method, params):
 
 
 def cache_middleware(make_request, w3):
+    make_request_cached = memory.cache(make_request)
     def middleware(method, params):
         logger.debug("%s %s", method, params)
-
         if should_cache(method, params):
-            response = memory.cache(make_request)(method, params)
-        else:
-            response = make_request(method, params)
-
-        return response
-
+            return make_request_cached(method, params)
+        return make_request(method, params)
     return middleware
 
 
@@ -83,11 +79,11 @@ def setup_middleware():
     # patch web3 provider with more connections and higher timeout
     if w3.provider:
         assert w3.provider.endpoint_uri.startswith("http"), "only http and https providers are supported"
-        adapter = HTTPAdapter(pool_connections=100, pool_maxsize=100)
+        adapter = HTTPAdapter(pool_connections=150, pool_maxsize=150)
         session = Session()
         session.mount("http://", adapter)
         session.mount("https://", adapter)
-        w3.provider = HTTPProvider(w3.provider.endpoint_uri, {"timeout": 600}, session)
+        w3.provider = HTTPProvider(w3.provider.endpoint_uri, {"timeout": 1800}, session)
 
         # patch and inject local filter middleware
         filter.MAX_BLOCK_REQUEST = BATCH_SIZE

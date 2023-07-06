@@ -1,9 +1,9 @@
 
-from typing import Optional
 from brownie import chain
-from yearn.entities import TreasuryTx, TxGroup
+from y.networks import Network
+
+from yearn.entities import TreasuryTx
 from yearn.multicall2 import fetch_multicall
-from yearn.networks import Network
 from yearn.treasury.accountant.constants import treasury, v1, v2
 from yearn.utils import contract
 
@@ -50,18 +50,41 @@ def is_fees_v2(tx: TreasuryTx) -> bool:
         for vault in v2.vaults + v2.experiments
     )
 
+factory_strats = [
+    ["Contract: StrategyCurveBoostedFactoryClonable", ["CRV", "LDO"]],
+    ["Contract: StrategyConvexFactoryClonable", ["CRV", "CVX"]],
+    ["Contract: StrategyConvexFraxFactoryClonable", ["CRV", "CVX", "FXS"]],
+]
+
+def is_factory_fees_v2(tx: TreasuryTx) -> bool:
+    for strategy, tokens in factory_strats:
+        if tx._from_nickname == strategy and tx._symbol in tokens:
+            return True
+
 def is_fees_v3(tx: TreasuryTx) -> bool:
     # Stay tuned...
     return False
 
 def is_yearn_fed_fees(tx: TreasuryTx) -> bool:
-    yearn_fed_strats = "0x09F61718474e2FFB884f438275C0405E3D3559d3", "0x7928becDda70755B9ABD5eE7c7D5E267F1412042", "0x09F61718474e2FFB884f438275C0405E3D3559d3"
-    if tx._symbol in ["yvCurve-DOLA-U", "yveCRV-DAO"] and tx.from_address.address in yearn_fed_strats and tx.to_address and tx.to_address.address in treasury.addresses:
-        return True
+    if tx.to_address and tx.to_address.address in treasury.addresses:
+        # New version
+        if tx._symbol in ["yvCurve-DOLA-U", "CRV"] and tx.from_address.address == "0x64e4fC597C70B26102464B7F70B1F00C77352910":
+            return True
+        # Old versions
+        if tx._symbol in ["yvCurve-DOLA-U", "yveCRV-DAO"] and tx.from_address.address in ["0x09F61718474e2FFB884f438275C0405E3D3559d3", "0x7928becDda70755B9ABD5eE7c7D5E267F1412042"]:
+            return True
+        if tx._symbol == "INV" and tx._from_nickname == "Inverse Treasury" and tx._to_nickname == "ySwap Multisig":
+            return True
+        if tx.from_address.address == "0x9D5Df30F475CEA915b1ed4C0CCa59255C897b61B" and tx._to_nickname == "ySwap Multisig":
+            return True
+    return False
+
+def is_dolafraxbp_fees(tx: TreasuryTx) -> bool:
+    return tx._from_nickname == "Contract: StrategyConvexFraxBpRewardsClonable" and tx._to_nickname == "Yearn yChad Multisig" and tx._symbol == "yvCurve-DOLA-FRAXBP-U"
 
 def is_temple(tx: TreasuryTx) -> bool:
-    if tx._to_nickname == "Yearn Treasury":
+    if tx._to_nickname in  ["Yearn Treasury", "Yearn yChad Multisig"]: # fees have been sent to both
         if tx._from_nickname == "Contract: StrategyConvexCrvCvxPairsClonable" and tx._symbol == "CRV":
             return True
-        elif tx._from_nickname == "Contract: Splitter" and tx._symbol == "yveCRV-DAO":
+        elif tx._from_nickname == "Contract: Splitter" and tx._symbol in ["yveCRV-DAO","CRV"]:
             return True

@@ -1,8 +1,8 @@
 from datetime import date
 
 from brownie import chain
+from y.networks import Network
 
-from yearn.networks import Network
 from yearn.partners.snapshot import (BentoboxWrapper, DegenboxWrapper,
                                      DelegatedDepositWildcardWrapper,
                                      ElementWrapper, GearboxWrapper, Partner,

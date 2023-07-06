@@ -1,13 +1,14 @@
+import asyncio
 from collections import defaultdict
 
 from brownie import chain
-from joblib import Parallel, delayed
+from y.contracts import contract_creation_block_async
+from y.networks import Network
+from y.prices import magic
 
 from yearn.exceptions import UnsupportedNetwork
-from yearn.multicall2 import fetch_multicall, multicall_matrix
-from yearn.networks import Network
-from yearn.prices import magic
-from yearn.utils import contract, contract_creation_block
+from yearn.multicall2 import fetch_multicall_async, multicall_matrix_async
+from yearn.utils import contract
 
 IEARN = {
     # v1 - deprecated
@@ -46,12 +47,14 @@ class Registry:
     def __repr__(self):
         return f"<Earn vaults={len(self.vaults)}>"
 
-    def describe(self, block=None) -> dict:
-        vaults = self.active_vaults_at(block)
+    async def describe(self, block=None) -> dict:
+        vaults = await self.active_vaults_at(block)
         contracts = [vault.vault for vault in vaults]
-        results = multicall_matrix(contracts, ["totalSupply", "pool", "getPricePerFullShare", "balance"], block=block)
+        results, prices = await asyncio.gather(
+            multicall_matrix_async(contracts, ["totalSupply", "pool", "getPricePerFullShare", "balance"], block=block),
+            asyncio.gather(*[magic.get_price(vault.token, block=block, sync=False) for vault in vaults])
+        )
         output = defaultdict(dict)
-        prices = Parallel(8, "threading")(delayed(magic.get_price)(vault.token, block=block) for vault in vaults)
         for vault, price in zip(vaults, prices):
             res = results[vault.vault]
             if res['getPricePerFullShare'] is None:
@@ -70,13 +73,16 @@ class Registry:
 
         return dict(output)
 
-    def total_value_at(self, block=None):
-        vaults = self.active_vaults_at(block)
-        prices = Parallel(8, "threading")(delayed(magic.get_price)(vault.token, block=block) for vault in vaults)
-        results = fetch_multicall(*[[vault.vault, "pool"] for vault in vaults], block=block)
+    async def total_value_at(self, block=None):
+        vaults = await self.active_vaults_at(block)
+        prices, results = await asyncio.gather(
+            asyncio.gather(*[magic.get_price(vault.token, block=block, sync=False) for vault in vaults]),
+            fetch_multicall_async(*[[vault.vault, "pool"] for vault in vaults], block=block),
+        )
         return {vault.name: assets * price / vault.scale for vault, assets, price in zip(vaults, results, prices)}
 
-    def active_vaults_at(self, block=None):
+    async def active_vaults_at(self, block=None):
         if block is None:
             return self.vaults
-        return [vault for vault in self.vaults if contract_creation_block(str(vault.vault)) < block]
+        blocks = await asyncio.gather(*[contract_creation_block_async(str(vault.vault)) for vault in self.vaults])
+        return [vault for vault, deployed in zip(self.vaults, blocks) if deployed < block]

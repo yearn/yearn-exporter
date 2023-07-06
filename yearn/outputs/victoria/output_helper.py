@@ -1,12 +1,3 @@
-import requests
-import os
-import gzip
-import math
-import json
-from typing import List, Dict
-from brownie import chain
-from yearn.utils import contract
-from yearn.networks import Network
 
 mapping = {
     "earn": {
@@ -39,48 +30,6 @@ mapping = {
         "agg_stats": ["total wallets","active wallets","wallets > $5k","wallets > $50k"]
     }
 }
-
-def _build_item(metric, label_names, label_values, value, timestamp):
-    ts_millis = math.floor(timestamp) * 1000
-    label_names.append("network")
-    label_values.append(Network.label(chain.id))
-    meta = dict(zip(map(_sanitize, label_names), map(str, label_values)))
-    meta["__name__"] = metric
-    return {"metric": meta, "values": [_sanitize(value)], "timestamps": [ts_millis]}
-
-
-def _to_jsonl_gz(metrics_to_export: List[Dict]):
-    lines = []
-    for item in metrics_to_export:
-        lines.append(json.dumps(item))
-
-    jsonlines = "\n".join(lines)
-    return gzip.compress(bytes(jsonlines, "utf-8"))
-
-
-def _post(metrics_to_export: List[Dict]):
-    data = _to_jsonl_gz(metrics_to_export)
-    base_url = os.environ.get('VM_URL', 'http://victoria-metrics:8428')
-    url = f'{base_url}/api/v1/import'
-    headers = {
-        'Connection': 'close',
-        'Content-Encoding': 'gzip'
-    }
-    with requests.Session() as session:
-        session.post(
-            url = url,
-            data = data,
-            headers = headers
-        )
-
-
-def _sanitize(value):
-    if isinstance(value, bool):
-        return int(value)
-    elif isinstance(value, str):
-        return value.replace('"', '')  # e.g. '"yvrenBTC" 0.3.5 0x340832'
-    
-    return value
 
 
 def _flatten_dict(d):

@@ -30,6 +30,7 @@ services:
       - victoria_metrics_data:/victoria-metrics-data
     command:
       - "-retentionPeriod=10y"
+      - "-search.disableAutoCacheReset=true"
     ports:
       - 127.0.0.1:8428:8428
     networks:
@@ -89,7 +90,7 @@ services:
   postgres:
     image: postgres:14
     ports:
-      - 127.0.0.1:5432:5432
+      - 5432:5432
     environment:
       - POSTGRES_USER=${PGUSER:-postgres}
       - POSTGRES_PASSWORD=${PGPASSWORD:-yearn-exporter}

@@ -8,20 +8,25 @@ import traceback
 import warnings
 from datetime import datetime
 from time import time
-from typing import Any, Union
+from typing import Union
 
 import boto3
 import requests
 import sentry_sdk
-from brownie import chain, web3, Contract
+from brownie import Contract, chain, web3
 from brownie.exceptions import BrownieEnvironmentWarning
-from yearn.apy import Apy, ApyBlocks, ApyFees, ApyPoints, ApySamples, get_samples
+from y.contracts import contract_creation_block
+from y.exceptions import PriceError
+from y.networks import Network
+
+from yearn import logs
+from yearn.apy import (Apy, ApyBlocks, ApyFees, ApyPoints, ApySamples,
+                       get_samples)
 from yearn.common import Tvl
-from yearn.exceptions import EmptyS3Export, PriceError
+from yearn.exceptions import EmptyS3Export
 from yearn.graphite import send_metric
-from yearn.networks import Network
 from yearn.special import Backscratcher, YveCRVJar
-from yearn.utils import chunks, contract, contract_creation_block
+from yearn.utils import chunks, contract
 from yearn.v1.registry import Registry as RegistryV1
 from yearn.v1.vaults import VaultV1
 from yearn.v2.registry import Registry as RegistryV2
@@ -33,7 +38,7 @@ warnings.simplefilter("ignore", BrownieEnvironmentWarning)
 
 METRIC_NAME = "yearn.exporter.apy"
 
-logging.basicConfig(level=logging.DEBUG)
+logs.basicConfig(level=logging.DEBUG)
 logger = logging.getLogger("yearn.apy")
 
 
@@ -140,6 +145,7 @@ def get_assets_dynamic(registry_adapter: Contract, addresses: list) -> list:
 
 def registry_adapter():
     if chain.id == Network.Mainnet:
+        # TODO Fix ENS resolution for lens.ychad.eth
         registry_adapter_address = "0x240315db938d44bb124ae619f5Fd0269A02d1271"
     elif chain.id == Network.Fantom:
         registry_adapter_address = "0xF628Fb7436fFC382e2af8E63DD7ccbaa142E3cd1"
@@ -173,6 +179,10 @@ def main():
     metric_tags = {"chain": chain.id, "export_mode": export_mode}
     aliases_repo_url = "https://api.github.com/repos/yearn/yearn-assets/git/refs/heads/master"
     aliases_repo = requests.get(aliases_repo_url).json()
+    
+    if "object" not in aliases_repo:
+        raise KeyError(f"key 'object' not found in {aliases_repo}")
+    
     commit = aliases_repo["object"]["sha"]
 
     icon_url = f"https://rawcdn.githack.com/yearn/yearn-assets/{commit}/icons/multichain-tokens/{chain.id}/%s/logo-128.png"
@@ -285,7 +295,7 @@ def with_monitoring():
     public_group = os.environ.get('TG_YFIREBOT_GROUP_EXTERNAL')
     updater = Updater(os.environ.get('TG_YFIREBOT'))
     now = datetime.now()
-    message = f"`[{now}]`\n⚙️ API (vaults) for {Network(chain.id).name} is updating..."
+    message = f"`[{now}]`\n⚙️ API (vaults) for {Network.name()} is updating..."
     ping = updater.bot.send_message(chat_id=private_group, text=message, parse_mode="Markdown")
     ping = ping.message_id
     try:
@@ -294,9 +304,9 @@ def with_monitoring():
         tb = traceback.format_exc()
         export_mode = os.getenv("EXPORT_MODE", "endorsed")
         now = datetime.now()
-        message = f"`[{now}]`\n🔥 API ({export_mode} vaults) update for {Network(chain.id).name} failed!\n```\n{tb}\n```"[:4000]
+        message = f"`[{now}]`\n🔥 API ({export_mode} vaults) update for {Network.name()} failed!\n```\n{tb}\n```"[:4000]
         updater.bot.send_message(chat_id=private_group, text=message, parse_mode="Markdown", reply_to_message_id=ping)
         updater.bot.send_message(chat_id=public_group, text=message, parse_mode="Markdown")
         raise error
-    message = f"✅ API (vaults) update for {Network(chain.id).name} successful!"
+    message = f"✅ API (vaults) update for {Network.name()} successful!"
     updater.bot.send_message(chat_id=private_group, text=message, reply_to_message_id=ping)

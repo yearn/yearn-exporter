@@ -1,8 +1,8 @@
 import sentry_sdk
-from brownie import *
 from rich import print
+from y import Contract
+
 from yearn.partners.snapshot import BentoboxWrapper
-from yearn.utils import contract
 from yearn.v2.registry import Registry
 
 sentry_sdk.set_tag('script','abracadabra_wrappers')
@@ -34,12 +34,12 @@ def main():
     vaults = [str(vault.vault) for vault in v2.vaults]
     wrappers = []
     for cauldron in CAULDRONS:
-        collateral = contract(cauldron).collateral()
+        collateral = Contract(cauldron).collateral()
         if collateral not in vaults:
             continue
         wrappers.append(
             BentoboxWrapper(
-                name=contract(collateral).symbol(),
+                name=Contract(collateral).symbol(),
                 vault=collateral,
                 wrapper=cauldron,
             )

@@ -2,8 +2,9 @@
 # keepCOINS: excludes keepCRV as the CRV are locked forever.
 
 from brownie import chain
+from y.networks import Network
+
 from yearn.entities import TreasuryTx
-from yearn.networks import Network
 from yearn.treasury.accountant.constants import treasury
 
 angle_strats_with_non_specific_names = {
@@ -22,6 +23,10 @@ def is_keep_angle(tx: TreasuryTx) -> bool:
     return False
 
 def is_keep_bal(tx: TreasuryTx) -> bool:
+    # This particular tx is pass-thru
+    if tx.hash == "0xf4677cce1a08ecd54272cdc1b23bc64693450f8bb5d6de59b8e58e288ec3b2a7":
+        return False
+
     strats = [
         "SSBv3 DAI staBAL3",
         "SSBv3 USDC staBAL3",

@@ -1,12 +1,18 @@
 import logging
 import threading
 import time
-from typing import List
+from functools import cached_property
+from typing import Any, List
 
+from brownie import chain
 from eth_utils import encode_hex, event_abi_to_log_topic
+from multicall.utils import run_in_subprocess
+from y.exceptions import NodeNotSynced
+from y.utils.events import get_logs_asap
+
 from yearn.decorators import sentry_catch_all, wait_or_exit_after
-from yearn.events import create_filter, decode_logs
-from yearn.multicall2 import fetch_multicall
+from yearn.events import decode_logs
+from yearn.multicall2 import fetch_multicall_async
 from yearn.utils import contract, safe_views
 
 STRATEGY_VIEWS_SCALED = [
@@ -24,6 +30,20 @@ STRATEGY_VIEWS_SCALED = [
 STRATEGY_EVENTS = ["Harvested"]
 
 logger = logging.getLogger(__name__)
+
+def _unpack_results(views: List[str], results: List[Any], scale: int):
+    # unpack self.vault.vault.strategies(self.strategy)
+    info = dict(zip(views, results))
+    info.update(results[-1].dict())
+    # scale views
+    for view in STRATEGY_VIEWS_SCALED:
+        if view in info:
+            info[view] = (info[view] or 0) / scale
+    # unwrap structs
+    for view in info:
+        if hasattr(info[view], '_dict'):
+            info[view] = info[view].dict()
+    return info
 
 
 class Strategy:
@@ -70,9 +90,11 @@ class Strategy:
     @sentry_catch_all
     def watch_events(self):
         start = time.time()
-        self.log_filter = create_filter(str(self.strategy), topics=self._topics)
-        logs = self.log_filter.get_all_entries()
+        sleep_time = 300
+        from_block = None
+        height = chain.height
         while True:
+            logs = get_logs_asap(str(self.strategy), topics=self._topics, from_block=from_block, to_block=height)
             events = decode_logs(logs)
             self.process_events(events)
             if not self._done.is_set():
@@ -80,10 +102,13 @@ class Strategy:
                 logger.info("loaded %d harvests %s in %.3fs", len(self._harvests), self.name, time.time() - start)
             if not self._watch_events_forever:
                 return
-            time.sleep(300)
+            time.sleep(sleep_time)
 
             # read new logs at end of loop
-            logs = self.log_filter.get_new_entries()
+            from_block = height + 1
+            height = chain.height
+            if height < from_block:
+                raise NodeNotSynced(f"No new blocks in the past {sleep_time/60} minutes.")
 
 
     def process_events(self, events):
@@ -102,21 +127,14 @@ class Strategy:
     def harvests(self) -> List[int]:
         self.load_harvests()
         return self._harvests
-
-    def describe(self, block=None):
-        results = fetch_multicall(
-            *[[self.strategy, view] for view in self._views],
-            [self.vault.vault, "strategies", self.strategy],
-            block=block,
-        )
-        info = dict(zip(self._views, results))
-        info.update(results[-1].dict())
-        for view in STRATEGY_VIEWS_SCALED:
-            if view in info:
-                info[view] = (info[view] or 0) / self.vault.scale
-        # unwrap structs
-        for view in info:
-            if hasattr(info[view], '_dict'):
-                info[view] = info[view].dict()
-
-        return info
+    
+    @cached_property
+    def _calls(self):
+        return *[[self.strategy, view] for view in self._views], [self.vault.vault, "strategies", self.strategy],
+    
+    async def _unpack_results(self, results):
+        return await run_in_subprocess(_unpack_results, self._views, results, self.vault.scale)
+    
+    async def describe(self, block=None):
+        results = await fetch_multicall_async(*self._calls, block=block)
+        return await self._unpack_results(results)

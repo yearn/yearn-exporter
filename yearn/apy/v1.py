@@ -1,4 +1,4 @@
-from yearn.utils import contract_creation_block
+from y.contracts import contract_creation_block
 
 from yearn.apy.common import (
     Apy,

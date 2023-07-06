@@ -1,8 +1,10 @@
 
 from brownie import chain
-from yearn.networks import Network
+from y.networks import Network
+
 from yearn.treasury.accountant.classes import TopLevelTxGroup
-from yearn.treasury.accountant.revenue import farming, fees, keepcoins
+from yearn.treasury.accountant.revenue import (bribes, farming, fees,
+                                               keepcoins, seasolver, yacademy)
 
 REVENUE_LABEL = "Protocol Revenue"
 revenue_txgroup = TopLevelTxGroup(REVENUE_LABEL)
@@ -10,11 +12,20 @@ revenue_txgroup = TopLevelTxGroup(REVENUE_LABEL)
 fees_txgroup = revenue_txgroup.create_child("Fees")
 fees_txgroup.create_child("Vaults V1", fees.is_fees_v1)
 fees_txgroup.create_child("Vaults V2", fees.is_fees_v2)
+fees_txgroup.create_child("Factory Vaults V2", fees.is_factory_fees_v2)
 fees_txgroup.create_child("Vaults V3", fees.is_fees_v3)
 
 fees_txgroup.create_child("YearnFed Fees", fees.is_yearn_fed_fees)
+fees_txgroup.create_child("DOLAFRAXBP Fees", fees.is_dolafraxbp_fees)
 fees_txgroup.create_child("TempleDAO Private Vault Fees", fees.is_temple)
 
+seasolver_txgroup = revenue_txgroup.create_child("SeaSolver")
+seasolver_txgroup.create_child("Positive Slippage", seasolver.is_seasolver_slippage_revenue)
+seasolver_txgroup.create_child("CowSwap Incentives", seasolver.is_cowswap_incentive)
+
+bribes_txgroup = revenue_txgroup.create_child("Bribes")
+bribes_txgroup.create_child("yCRV Bribes", check=bribes.is_ycrv_bribe)
+bribes_txgroup.create_child("yBribe Fees", check=bribes.is_ybribe_fees)
 
 keepcoins_txgroup = revenue_txgroup.create_child("keepCOINS")
 # keepCRV is not included here as all of the CRV from keepCRV are locked in yveCRV-DAO
@@ -33,3 +44,6 @@ elif chain.id == Network.Fantom:
     farming_txgroup.create_child("SOLID Farming", farming.is_solid)
     farming_txgroup.create_child("SEX Farming", farming.is_sex)
     farming_txgroup.create_child("SOLIDsex Farming", farming.is_solidsex)
+
+if chain.id == Network.Mainnet:
+    revenue_txgroup.create_child("yAcadmy Audit Rev Share", yacademy.is_yacademy_audit_revenue)

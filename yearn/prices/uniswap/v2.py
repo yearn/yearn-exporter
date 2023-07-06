@@ -7,10 +7,11 @@ from brownie import Contract, chain, convert, interface
 from brownie.convert.datatypes import EthAddress
 from brownie.exceptions import EventLookupError, VirtualMachineError
 from cachetools.func import lru_cache, ttl_cache
+from y.networks import Network
+
 from yearn.events import decode_logs, get_logs_asap
 from yearn.exceptions import UnsupportedNetwork
 from yearn.multicall2 import fetch_multicall
-from yearn.networks import Network
 from yearn.prices.constants import stablecoins, usdc, weth
 from yearn.typing import Address, AddressOrContract, Block
 from yearn.utils import Singleton, contract

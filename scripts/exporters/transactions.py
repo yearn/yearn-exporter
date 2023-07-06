@@ -1,3 +1,4 @@
+import asyncio
 import logging
 import time
 import warnings
@@ -8,18 +9,23 @@ import pandas as pd
 import sentry_sdk
 from brownie import ZERO_ADDRESS, chain, web3
 from brownie.exceptions import BrownieEnvironmentWarning
+from multicall.utils import await_awaitable
 from pony.orm import db_session
 from web3._utils.abi import filter_by_name
 from web3._utils.events import construct_event_topic_set
+from y.networks import Network
+from y.utils.events import get_logs_asap
+
 from yearn.entities import UserTx
-from yearn.events import decode_logs, get_logs_asap
+from yearn.events import decode_logs
 from yearn.exceptions import BatchSizeError
-from yearn.networks import Network
-from yearn.outputs.postgres.utils import (cache_address, cache_chain, cache_token,
-                                          last_recorded_block)
-from yearn.prices import magic
+from yearn.outputs.postgres.utils import (cache_address, cache_chain,
+                                          cache_token, last_recorded_block)
+from yearn.prices.incidents import INCIDENTS
+from yearn.prices.magic import _get_price
 from yearn.typing import Block
 from yearn.yearn import Yearn
+
 
 sentry_sdk.set_tag('script','transactions_exporter')
 
@@ -31,7 +37,7 @@ logger = logging.getLogger('yearn.transactions_exporter')
 
 BATCH_SIZE = {
     Network.Mainnet: 5_000,
-    Network.Fantom: 20_000,
+    Network.Fantom: 100_000,
     Network.Gnosis: 2_000_000,
     Network.Arbitrum: 1_000_000,
     Network.Optimism: 4_000_000,
@@ -44,7 +50,6 @@ FIRST_END_BLOCK = {
     Network.Arbitrum: 4_837_859,
     Network.Optimism: 18_111_485,
 }[chain.id]
-
 
 def main():
     _cached_thru_from_last_run = 0
@@ -68,9 +73,8 @@ def process_and_cache_user_txs(last_saved_block=None):
     )
     if start_block and start_block > end_block:
         end_block = start_block
-    df = pd.DataFrame()
-    for vault in yearn.active_vaults_at(end_block):
-        df = pd.concat([df, get_token_transfers(vault.vault, start_block, end_block)])
+    vaults = await_awaitable(yearn.active_vaults_at(end_block))
+    df = pd.concat(await_awaitable(asyncio.gather(*[get_token_transfers(vault.vault, start_block, end_block) for vault in vaults]))) if vaults else pd.DataFrame()
     if len(df):
         # NOTE: We want to insert txs in the order they took place, so wallet exporter
         #       won't have issues in the event that transactions exporter fails mid-run.
@@ -103,23 +107,24 @@ def process_and_cache_user_txs(last_saved_block=None):
 
 
 # Helper functions
-def get_token_transfers(token, start_block, end_block) -> pd.DataFrame:
+async def get_token_transfers(token, start_block, end_block) -> pd.DataFrame:
     topics = construct_event_topic_set(
         filter_by_name('Transfer', token.abi)[0],
         web3.codec,
     )
-    token_entity = cache_token(token.address)
     events = decode_logs(
-        get_logs_asap(token.address, topics, from_block=start_block, to_block=end_block)
+        await get_logs_asap(token.address, topics, from_block=start_block, to_block=end_block, sync=False)
     )
-    return pd.DataFrame([_process_transfer_event(event, token_entity) for event in events])
+    token_entity = cache_token(token.address)
+    transfers = await asyncio.gather(*[_process_transfer_event(event, token_entity) for event in events])
+    return pd.DataFrame(transfers)
 
 
-def _process_transfer_event(event, token_entity) -> dict:
+async def _process_transfer_event(event, token_entity) -> dict:
     sender, receiver, amount = event.values()
     cache_address(sender)
     cache_address(receiver)
-    price = _get_price_from_event(event, token_entity)
+    price = await get_price(token_entity.address.address, event.block_number)
     if (
         # NOTE magic.get_price() returns erroneous price due to erroneous ppfs
         token_entity.address.address == '0x7F83935EcFe4729c4Ea592Ab2bC1A32588409797'
@@ -145,23 +150,13 @@ def _process_transfer_event(event, token_entity) -> dict:
     }
 
 
-def _get_price_from_event(event, token_entity):
-    while True:
-        try:
-            return magic.get_price(token_entity.address.address, event.block_number, return_price_during_vault_downtime=True)
-        except ConnectionError as e:
-            # Try again
-            logger.warn(f'ConnectionError: {str(e)}')
-            time.sleep(1)
-        except ValueError as e:
-            logger.warn(f'ValueError: {str(e)}')
-            if 'Max rate limit reached' in str(e):
-                # Try again
-                logger.warn('trying again...')
-                time.sleep(5)
-            else:
-                logger.warn(f'vault: {token_entity.address.address}')
-                raise
+async def get_price(token_address, block):
+    try:
+        return await _get_price(token_address, block)
+    except Exception as e:
+        logger.warn(f'{e.__class__.__name__}: {str(e)}')
+        logger.warn(f'vault: {token_address} block: {block}')
+        raise e
 
 
 def _event_type(sender, receiver, vault_address) -> str:

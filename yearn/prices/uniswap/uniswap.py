@@ -1,17 +1,16 @@
-import os
 import logging
+import os
 from typing import Any, Dict, Optional, Union
 
 from brownie import chain, convert
+from y import Contract, Network
+
 from yearn.constants import WRAPPED_GAS_COIN
-from yearn.networks import Network
 from yearn.prices import constants
-from yearn.prices.chainlink import chainlink
 from yearn.prices.uniswap.v1 import UniswapV1, uniswap_v1
 from yearn.prices.uniswap.v2 import UniswapV2Multiplexer, uniswap_v2
 from yearn.prices.uniswap.v3 import UniswapV3, uniswap_v3
 from yearn.typing import Address, AddressOrContract, Block
-from yearn.utils import contract, contract_creation_block
 
 logger = logging.getLogger(__name__)
 Uniswap = Union[UniswapV1,UniswapV2Multiplexer,UniswapV3]
@@ -38,9 +37,7 @@ class UniswapVersionMultiplexer:
 
         # NOTE Following our usual logic with WETH is a big no-no. Too many calls.
         if token in [constants.weth, WRAPPED_GAS_COIN]:
-            # try to use chainlink if it's available on the current network
-            if chainlink and block <= contract_creation_block(str(chainlink.get_feed(token))):
-                return self._early_exit_for_gas_coin(token, block=block)
+            return self._early_exit_for_gas_coin(token, block=block)
 
         deepest_uniswap = self.deepest_uniswap(token, block)
         if deepest_uniswap:
@@ -70,7 +67,7 @@ class UniswapVersionMultiplexer:
             if uni.name != best_market:
                 continue
             quote = uni.router.getAmountsOut(amount_in, path, block_identifier=block)[-1]
-            quote /= 10 ** contract(constants.usdc).decimals()
+            quote /= 10 ** Contract(constants.usdc).decimals()
             fees = 0.997 ** (len(path) - 1)
             return quote / fees
 

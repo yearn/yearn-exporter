@@ -11,10 +11,11 @@ from joblib import Parallel, delayed
 from toolz import groupby
 from web3.middleware.filter import block_ranges
 from web3.types import LogReceipt, RPCEndpoint
+from y import Contract
+from y.contracts import contract_creation_block
 
 from yearn.middleware.middleware import BATCH_SIZE
 from yearn.typing import Address, Block, Topics
-from yearn.utils import contract, contract_creation_block
 
 logger = logging.getLogger(__name__)
 
@@ -35,22 +36,9 @@ def decode_logs(logs: List[LogReceipt]) -> EventDict:
     return decoded
 
 
-def create_filter(address: Address, topics: Optional[Topics] = None) -> RPCEndpoint:
-    """
-    Create a log filter for one or more contracts.
-    Set fromBlock as the earliest creation block.
-    """
-    if isinstance(address, list):
-        start_block = min(map(contract_creation_block, address))
-    else:
-        start_block = contract_creation_block(address)
-
-    return web3.eth.filter({"address": address, "fromBlock": start_block, "topics": topics})
-
-
 def __add_deployment_topics(address: Address) -> None:
     try:
-        _add_deployment_topics(address, contract(address).abi)
+        _add_deployment_topics(address, Contract(address).abi)
     except ContractNotFound:
         # This contract seems to have self destructed
         pass
@@ -80,7 +68,7 @@ def get_logs_asap(
     if verbose > 0:
         logger.info('fetching %d batches', len(ranges))
 
-    batches = Parallel(8, "threading", verbose=verbose)(
+    batches = Parallel(1, "threading", verbose=verbose)(
         delayed(web3.eth.get_logs)(_get_logs_params(addresses, topics, start, end))
         for start, end in ranges
     )

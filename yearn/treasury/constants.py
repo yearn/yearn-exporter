@@ -1,7 +1,13 @@
 
 from brownie import chain
-from yearn.networks import Network
+from y.networks import Network
+
 from yearn.prices.constants import weth
+
+# The buyback contract
+BUYER = {
+    Network.Mainnet: "0x6903223578806940bd3ff0C51f87aa43968424c8",
+}.get(chain.id, None)
 
 YFI_LIKE = {
     Network.Mainnet: {

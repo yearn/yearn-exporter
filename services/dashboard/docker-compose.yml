@@ -3,6 +3,7 @@ version: "3.7"
 volumes:
   brownie: {}
   cache: {}
+  memray: {}
 
 networks:
   yearn-exporter-infra_stack:
@@ -13,18 +14,46 @@ x-envs: &envs
   - SENTRY_ENVIRONMENT=${SENTRY_ENVIRONMENT:-development}
   - SENTRY_RELEASE
   - SENTRY_DSN
+  - SENTRY_TRACES_SAMPLE_RATE
   - LOG_LEVEL
   - DEBUG
   - SKIP_DEEP_UNISWAPS
-  - POOL_SIZE
+  - SHOW_STATS
   - TX_POOL_SIZE
   - RESOLUTION
   - REORG_BUFFER
   - JSONRPC_BATCH_MAX_SIZE
+  - AIOHTTP_TIMEOUT=${AIOHTTP_TIMEOUT:-1800}
+  - PROFILE_MEMORY
+  # asyncio (optional, debugging)
+  - PYTHONASYNCIODEBUG
+  # dank-mids (mandatory)
+  # NOTE: We do this to limit memory consumption, on a big server you can increase for faster performance.
+  - DANK_MIDS_BROWNIE_CALL_SEMAPHORE=${DANK_MIDS_BROWNIE_CALL_SEMAPHORE:-250_000}
+  # dank-mids (optional)
+  - MAX_JSONRPC_BATCH_SIZE
+  - DANK_MIDS_DEMO_MODE
   # eth-retry (optional)
+  - ETH_RETRY_DEBUG
+  - ETH_RETRY_DISABLED
   - MAX_RETRIES=${MAX_RETRIES:-2}
   - MIN_SLEEP_TIME
   - MAX_SLEEP_TIME
+  # multicall (optional)
+  - MULTICALL_CALL_SEMAPHORE=${MULTICALL_CALL_SEMAPHORE:-250_000}
+  # ypriceapi (optional)
+  - YPRICEAPI_URL
+  - YPRICEAPI_SIGNER
+  - YPRICEAPI_SIGNATURE
+  - YPRICEAPI_TIMEOUT
+  - YPRICEAPI_SEMAPHORE
+  - SKIP_YPRICEAPI
+  # ypricemagic (optional)
+  - DOP
+  - YPM_DEEPEST_ROUTER_SEMAPHORE=5
+  - YPRICEMAGIC_RECURSION_LOGGER_LEVEL
+  - YPRICEMAGIC_RECURSION_TIMEOUT=${YPRICEMAGIC_RECURSION_TIMEOUT:-1800}  # 0.5 hours
+  - YPRICEMAGIC_CACHE_TTL=${YPRICEMAGIC_CACHE_TTL:-60} # 1 minute
   # This is a temporary hack that can be removed once deps support eth_hash==0.5.0. Creds to bunny for finding this.
   - ETH_HASH_BACKEND=${ETH_HASH_BACKEND:-pysha3}
 
@@ -68,6 +97,7 @@ x-envs: &envs
 x-volumes: &volumes
   - brownie:/root/.brownie
   - cache:/app/yearn-exporter/cache
+  - memray:/app/yearn-exporter/memray
 
 services:
   exporter:

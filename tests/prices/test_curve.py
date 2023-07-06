@@ -6,15 +6,15 @@ import pytest
 import requests
 from brownie import ZERO_ADDRESS, chain, multicall, web3
 from tabulate import tabulate
-from yearn.exceptions import PriceError
-from yearn.networks import Network
+from y.contracts import contract_creation_block
+from y.exceptions import PriceError
+from y.networks import Network
+from y.prices.magic import get_price
 
 # This import fixes a circular import issue with the curve import below.
 # TODO Resolve circular import issue
-from yearn.prices import magic
-from yearn.prices import curve
-from yearn.prices.magic import get_price
-from yearn.utils import contract, contract_creation_block
+from yearn.prices import curve, magic
+from yearn.utils import contract
 
 if chain.id == Network.Mainnet:
     pooldata = json.load(open('tests/fixtures/pooldata.json'))

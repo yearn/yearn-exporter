@@ -10,12 +10,13 @@ import boto3
 import requests
 import sentry_sdk
 from brownie import ZERO_ADDRESS, chain
+from brownie.exceptions import ContractNotFound
+from y import Contract, Network, PriceError
+from y.exceptions import ContractNotVerified
 
 from yearn.apy import Apy, ApyFees, ApyPoints, ApySamples, get_samples
 from yearn.apy.curve.simple import Gauge, calculate_simple
-from yearn.exceptions import EmptyS3Export, PriceError
-from yearn.networks import Network
-from yearn.utils import contract
+from yearn.exceptions import EmptyS3Export
 
 logger = logging.getLogger(__name__)
 sentry_sdk.set_tag('script','curve_apy_previews')
@@ -56,9 +57,9 @@ def _build_data(gauges):
                 continue
             
             try:
-                c = contract(coin_address)
+                c = Contract(coin_address)
                 pool_coins.append({"name": c.name(), "address": str(c)})
-            except (ValueError, AttributeError) as e:
+            except (ContractNotFound, ContractNotVerified, ValueError, AttributeError) as e:
                 pool_coins.append({"address": coin_address, "error": str(e)})
                 logger.error(f"error for coins({i}) for pool {str(gauge.pool)}")
                 logger.error(e)
@@ -80,7 +81,7 @@ def _build_data(gauges):
             "gauge_address": str(gauge.gauge),
             "pool_address": str(gauge.pool),
             "pool_coins": pool_coins,
-            "lp_token": str(contract(gauge.lp_token)),
+            "lp_token": str(Contract(gauge.lp_token)),
             "weight": str(gauge.gauge_weight),
             "inflation_rate": str(gauge.gauge_inflation_rate),
             "working_supply": str(gauge.gauge_working_supply),
@@ -101,8 +102,8 @@ def _extract_gauge(v):
     gauge_controller = v["gauge_controller"]
 
     lp_token = v["swap_token"]
-    pool = contract(pool_address)
-    gauge = contract(gauge_address)
+    pool = Contract(pool_address)
+    gauge = Contract(gauge_address)
     weight = int(gauge_controller["gauge_relative_weight"])
     inflation_rate = int(gauge_data["inflation_rate"])
     working_supply = int(gauge_data["working_supply"])

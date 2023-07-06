@@ -1,65 +1,55 @@
+import asyncio
 import logging
 from datetime import datetime, timezone
-from itertools import count
-from time import time
 
 import sentry_sdk
 from brownie import chain
+from cachetools.func import ttl_cache
+from y.networks import Network
+from y.time import closest_block_after_timestamp
+
 from yearn.entities import UserTx
+from yearn.helpers.exporter import Exporter
 from yearn.outputs.postgres.utils import last_recorded_block
-from yearn.snapshot_range_helper import (has_data, start_bidirectional_export,
-                                         time_tracking)
-from yearn.utils import closest_block_after_timestamp
+from yearn.outputs.victoria.victoria import _post
+from yearn.utils import run_in_thread
+from yearn.yearn import Yearn
 
 sentry_sdk.set_tag('script','wallet_exporter')
 
 logger = logging.getLogger('yearn.wallet_exporter')
 
+yearn = Yearn(load_strategies=False, watch_events_forever=False)
+
+# start: 2020-02-12 first iearn deployment
+# start opti: 2022-01-01 an arbitrary start timestamp because the default start is < block 1 on opti and messes things up
+start = datetime(2022, 1, 1, tzinfo=timezone.utc) if chain.id in [Network.Arbitrum, Network.Optimism] else datetime(2020, 2, 12, tzinfo=timezone.utc)
+
+@ttl_cache(ttl=60)
+def get_last_recorded_block():
+    return last_recorded_block(UserTx)
+
+def postgres_ready(snapshot: datetime) -> bool:
+    if (postgres_cached_thru_block := get_last_recorded_block()):
+        return chain[postgres_cached_thru_block].timestamp >= snapshot.timestamp()
+    logger.debug(f"postgress not yet popuated for {snapshot}")
+    return False
+
+class WalletExporter(Exporter):
+    async def export_historical_snapshot(self, snapshot: datetime) -> None:
+        """ Override a method on Exporter so we can add an additional check. """
+        if await run_in_thread(postgres_ready, snapshot):
+            return await super().export_historical_snapshot(snapshot)
+
+exporter = WalletExporter(
+    name = "wallets",
+    data_query = 'aggregate{param="total wallets"}',
+    data_fn = yearn.wallet_data_for_export,
+    export_fn = _post,
+    start_block = closest_block_after_timestamp(int(start.timestamp())) - 1,
+    concurrency=1
+)
+
 def main():
-    while True:
-        # start: 2020-02-12 first iearn deployment
-        start = datetime(2020, 2, 12, tzinfo=timezone.utc)
-        start_bidirectional_export(
-            start,
-            export_snapshot,
-            'aggregate{param="total wallets"}',
-            _generate_snapshot_range
-        )
-
-
-@time_tracking
-def export_snapshot(snapshot, ts):
-    start = time()
-    from yearn.yearn import _yearn_lite
-    block = closest_block_after_timestamp(ts, wait_for=True)
-    assert block is not None, "no block after timestamp found"
-    _yearn_lite().export_wallets(block, ts)
-    logger.info("exported wallets snapshot %s took %.3fs", snapshot, time() - start)
-
-
-def _postgres_ready(ts):
-    postgres_cached_thru_block = last_recorded_block(UserTx)
-    postgres_cached_thru_ts = 0
-    if postgres_cached_thru_block:
-        postgres_cached_thru_ts = chain[postgres_cached_thru_block].timestamp
-
-    return postgres_cached_thru_ts >= ts
-
-
-def _generate_snapshot_range(start, end, interval, data_query):
-    for i in count():
-        snapshot = start - i * interval
-        if snapshot < end:
-            return
-        else:
-            ts = snapshot.timestamp()
-            if not _postgres_ready(ts):
-                logger.info(
-                    "txs are still being cached for snapshot %s, ts %d", snapshot, ts
-                )
-                continue
-            elif has_data(ts, data_query):
-                # logger.info("data already present for snapshot %s, ts %d", snapshot, ts)
-                continue
-            else:
-                yield snapshot
+    exporter.run("historical")
+    raise Exception("Don't mind me, just restarting the container")

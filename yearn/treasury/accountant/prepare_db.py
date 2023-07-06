@@ -2,9 +2,10 @@ from brownie import ZERO_ADDRESS, chain
 from brownie.exceptions import CompilerError
 from pony.orm import db_session, select
 from tqdm import tqdm
+from y.networks import Network
+
 from yearn import constants
 from yearn.entities import Address, db
-from yearn.networks import Network
 from yearn.outputs.postgres.utils import cache_address
 from yearn.partners.partners import partners
 from yearn.treasury.accountant.constants import BRIDGE_ASSISTOOOR, DISPERSE_APP
@@ -22,8 +23,10 @@ def prepare_db() -> None:
     cache_ymechs()
     cache_partners()
     cache_disperse_app()
+    cache_stream_factory()
+    cache_bridge_assistooor()
+    cache_cowswap_msig()
     cache_address_nicknames_for_tokens()
-    cache_address_nicknames_for_contracts()
 
 def cache_ychad() -> None:
     """ Label yChad in pg. """
@@ -85,27 +88,19 @@ def cache_disperse_app() -> None:
 
 def cache_bridge_assistooor() -> None:
     """ This wallet is an EOA that has been used to assist in bridging tokens across chains. """
-    cache_address(BRIDGE_ASSISTOOOR).nickname = "Bridge Assistooor EOA"
+    if BRIDGE_ASSISTOOOR:
+        cache_address(BRIDGE_ASSISTOOOR).nickname = "Bridge Assistooor EOA"
+
+def cache_stream_factory() -> None:
+    if chain.id == Network.Mainnet:
+        cache_address('0xB93427b83573C8F27a08A909045c3e809610411a').nickname = "Vesting Escrow Factory"
+
+def cache_cowswap_msig() -> None:
+    if chain.id == Network.Mainnet:
+        cache_address('0xA03be496e67Ec29bC62F01a428683D7F9c204930').nickname = "Cowswap Multisig"
 
 def cache_address_nicknames_for_tokens() -> None:
     """ Set address.nickname for addresses belonging to tokens. """
     for address in select(a for a in Address if a.token and not a.nickname):
         address.nickname = f"Token: {address.token.name}"
-        db.commit()
-
-def cache_address_nicknames_for_contracts() -> None:
-    """ Set address.nickname for addresses belonging to non-token contracts. """
-    for address in tqdm(select(a for a in Address if a.is_contract and not a.token and (not a.nickname or a.nickname.startswith("Non-Verified")) and a.chain.chainid == chain.id)):
-        try:
-            address.nickname = f"Contract: {contract(address.address)._build['contractName']}"
-        except ValueError as e:
-            if (
-                "Contract source code not verified" in str(e)
-                or (str(e).startswith("Source for") and str(e).endswith("has not been verified"))
-            ):
-                address.nickname = f"Non-Verified Contract: {address.address}"
-            else:
-                pass
-        except (CompilerError, IndexError):
-            pass
         db.commit()

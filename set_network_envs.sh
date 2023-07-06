@@ -30,7 +30,7 @@ elif [[ "$network" =~ ^gno$|^GNO$|^gnosis$ ]]; then
   export EXPLORER=$XDAI_EXPLORER
   export DEFAULT_EXPLORER=https://blockscout.com/xdai/mainnet/api
 
-elif [[ "$network" =~ ^arrb$|^ARRB$|^arbi$|^arbitrum$ ]]; then
+elif [[ "$network" =~ ^arb$|^ARB$|^arbi$|^arbitrum$ ]]; then
   export NETWORK=arbitrum
   export BROWNIE_NETWORK=arbitrum-main
   export WEB3_PROVIDER=$ARBI_WEB3_PROVIDER

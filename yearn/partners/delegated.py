@@ -1,13 +1,15 @@
 from collections import defaultdict
+from functools import lru_cache
 from math import ceil
 
-from brownie import Contract, chain
+from brownie import chain
+from joblib import Parallel, delayed
 from toolz import last
-from yearn.events import decode_logs, get_logs_asap
-from yearn.networks import Network
-from yearn.utils import contract
+from y import Contract, Network
 
-YEARN_PARTNER_TRACKER = contract({
+from yearn.events import decode_logs, get_logs_asap
+
+YEARN_PARTNER_TRACKER = Contract({
     Network.Mainnet: "0x8ee392a4787397126C163Cb9844d7c447da419D8",
     Network.Fantom: "0x086865B2983320b36C42E48086DaDc786c9Ac73B",
     Network.Arbitrum: "0x0e5b46E4b2a05fd53F5a4cD974eb98a9a613bcb7",
@@ -40,11 +42,11 @@ def delegated_deposit_totals():
 
 def proportional_withdrawal_totals(delegated_deposits):
     proportional_withdrawals = defaultdict(lambda: defaultdict(lambda: defaultdict(AsOfDict)))
-    for vault in list(delegated_deposits.keys()):
-        vault = contract(vault)
-        for transfer in decode_logs(get_logs_asap(str(vault), [vault.topics['Transfer']])):
+    all_logs = Parallel(16, "threading")(delayed(get_logs_asap)(vault, [Contract(vault).topics['Transfer']]) for vault in delegated_deposits)
+    for vault, logs in zip(delegated_deposits, all_logs):
+        for transfer in decode_logs(logs):
             sender, receiver, amount = transfer.values()
-            vault_deposits = delegated_deposits[vault.address]
+            vault_deposits = delegated_deposits[vault]
             if sender not in vault_deposits:
                 continue
             
@@ -66,10 +68,11 @@ def proportional_withdrawal_totals(delegated_deposits):
 
             total = sum(partner_balances.values())
             for partner, balance in partner_balances.items():
-                partner_withdrawals = _unwrap(proportional_withdrawals, vault.address, sender, partner)
+                partner_withdrawals = _unwrap(proportional_withdrawals, vault, sender, partner)
                 partner_withdrawals[transfer.block_number] += ceil(amount * balance / total)
     return proportional_withdrawals
-    
+
+@lru_cache
 def delegated_deposit_balances():
     """
     Returns a dict used to lookup the delegated balance of each `partner` for each `depositor` to each `vault` at `block`.
@@ -101,6 +104,3 @@ def _unwrap(root_dict, vault, depositor, partner):
     depositor_based = vault_based[depositor]
     partner_based = depositor_based[partner]
     return partner_based
-
-
-DELEGATED_BALANCES = delegated_deposit_balances()

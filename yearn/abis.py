@@ -3,10 +3,9 @@
 
 from typing import Dict, List
 
-from brownie import Contract, chain
-
-from yearn.networks import Network
-from yearn.utils import contract
+from brownie import chain
+from y import Contract, ContractNotVerified, Network
+from y.prices.lending import compound
 
 
 class IncorrectABI(Exception):
@@ -26,12 +25,14 @@ def _fix_problematic_abis() -> None:
 def __force_non_verified_contracts():
     for non_verified_contract, verified_contract in non_verified_contracts.items():
         try:
-            contract(non_verified_contract)
-        except:
-            verified_contract = contract(verified_contract)
-            build_name = verified_contract._build['contractName']
-            abi = verified_contract.abi
-            Contract.from_abi(build_name,non_verified_contract,abi)
+            Contract(non_verified_contract)
+        except Exception:
+            verified_contract = Contract(verified_contract)
+            Contract.from_abi(
+                verified_contract._build['contractName'],
+                non_verified_contract,
+                verified_contract.abi,
+            )
 
 def __validate_unitroller_abis() -> None:
     '''
@@ -39,22 +40,15 @@ def __validate_unitroller_abis() -> None:
     This might not always work. If it fails and your script doesn't require the `price` module, you should be fine.
     If this fails and your script does require the `price` module, you will need to manually cache the correct abi in `deployments.db`.
     '''
-    # we can't just import the list of unitrollers, the import will fail if one of their abi definitions are messed up
-    unitrollers: List[str] = {
-        Network.Mainnet: [
-            "0x3d9819210A31b4961b30EF54bE2aeD79B9c9Cd3B",
-            "0x3d5BC3c8d13dcB8bF317092d84783c2697AE9258",
-            "0xAB1c342C7bf5Ec5F02ADEA1c2270670bCa144CbB",
-        ],
-    }.get(chain.id, [])
-
     good: List[Contract] = []
     bad: List[Contract] = []
-    for address in unitrollers:
+    for address in compound.TROLLERS.values():
         # We use `Contract` instead of `contract` here so
         #  we don't cache any incorrect ABIs into memory.
         try:
             unitroller = Contract(address)
+        except ContractNotVerified:
+            pass
         except ValueError as e:
             if not str(e).startswith("Unknown contract address: "):
                 raise e

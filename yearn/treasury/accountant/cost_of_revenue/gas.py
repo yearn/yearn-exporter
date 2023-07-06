@@ -1,6 +1,8 @@
 from brownie import chain
+from pony.orm import commit
+from y.networks import Network
+
 from yearn.entities import TreasuryTx
-from yearn.networks import Network
 from yearn.treasury.accountant.classes import Filter, HashMatcher
 
 
@@ -56,11 +58,53 @@ def is_strategist_gas(tx: TreasuryTx) -> bool:
                 '0x6a9c40b8d78d9e09849a48be204f2c3072144c75cf6ca75cd39e3d78d2f4c352',
                 "0x6e32e36b13bce4c4838fc083516f1e780e303b55a26a45c0e79acf0c17e2b05f",
                 "0xd700344511719054e95d260f5494266cdd950825bf577160cf5acb02d87f5a63",
+                "0xb8c71e4491a692c8d293f13e37bf03aa8487ad5306f3db8fc4e83c406f8c0746",
+                "0x96be538314a6547063a5b81ded9bda38a067528d4bcfc558eee976a684e5b44a",
+                ["0xebfff9a2fd6103d73f417c675db2dc43742bdb6f496f04d3cfd1938046001d70", Filter("_symbol", "ETH")],
+                "0x269bcda1327da47fc0be53e044540f199ffb4c3f15146e0cb61348093b43b66e",
+                ["0x96728585c7b1720f2e94a3a2ff339ed6433bd6687cd680dd2534e6837271111a", Filter('_from_nickname', "Disperse.app")],
+                ["0xecbc1474610b31046124aa6323863f47d6e348385056ab80c3cc1f6b963f5d68", Filter('_from_nickname', "Disperse.app")],
+                ["0x5fb3320fdc41aba54743559cd4248e5cdfd8ffc67bd329c13cd3b66ce4976144", Filter('_from_nickname', "Disperse.app")],
+                ["0x7afceac28536b9b2c177302c3cfcba449e408b47ff2f0a8a3c4b0e668a4d5d4e", Filter('_from_nickname', "Disperse.app")],
             ],
         }.get(chain.id, []))
+    
+    # Returned gas
+    if tx in HashMatcher({
+        Network.Mainnet: [
+            '0x86fee63ec8efb0e7320a6d48ac3890b1089b77a3d9ed74cade389f512471c299',
+            '0xa77c4f7596968fef96565a0025cc6f9881622f62cc4c823232f9c9000ba5f981',
+            '0xac2253f1d8f78680411b353d65135d58bc880cdf9507ea7848daf05925e1443f',
+            '0xd27d4a732dd1a9ac93c7db1695a6d2aff40e007627d710da91f328b246be44bc',
+            '0x5a828e5bde96cd8745223fe32daefaa9140a09acc69202c33f6f789228c8134b',
+        ],
+    }.get(chain.id, [])):
+        tx.amount *= -1
+        tx.value_usd *= -1
+        commit()
+        return True
+        
+    return tx in HashMatcher({
+        Network.Mainnet: [
+            "0x420cfbc7856f64e8949d4dd6d4ce9570f8270def1380ebf381376fbcd0b0d5bf",
+        ],
+    }.get(chain.id, []))
 
 def is_multisig_reimbursement(tx: TreasuryTx) -> bool:
     if tx._symbol == "ETH":
         return tx in HashMatcher([
-            ["0x19bcb28cd113896fb06f17b2e5efa86bb8bf78c26e75c633d8f1a0e48b238a86", Filter('_from_nickname', 'Yearn yChad Multisig'),]
+            ["0x19bcb28cd113896fb06f17b2e5efa86bb8bf78c26e75c633d8f1a0e48b238a86", Filter('_from_nickname', 'Yearn yChad Multisig')]
         ])
+
+def is_other_gas(tx: TreasuryTx) -> bool:
+    if tx._symbol == "ETH":
+        return tx in HashMatcher([
+            # Reimbursement for testing
+            ["0x57bc99f6007989606bdd9d1adf91c99d198de51f61d29689ee13ccf440b244df", Filter('to_address.address', '0xB1d693B77232D88a3C9467eD5619FfE79E80BCCc')]
+        ])
+
+def is_yearn_harvest(tx: TreasuryTx) -> bool:
+    # NOTE define hueristics for this if it occurs freuently
+    return tx in HashMatcher([
+        "0xb05494705ce91cc5e5db259ded8acaf80b645c655556ee40a85097fd9054d9b6",
+    ])

@@ -2,30 +2,51 @@ import logging
 from typing import Optional
 
 from brownie import chain
-from brownie.convert.datatypes import EthAddress
 from cachetools.func import ttl_cache
+from y import magic
+from y.datatypes import AnyAddressType
+from y.exceptions import PriceError
+from y.networks import Network
 
-from yearn.exceptions import PriceError
-from yearn.networks import Network
-from yearn.prices.balancer import balancer as bal
 from yearn.prices import constants, curve
 from yearn.prices.aave import aave
+from yearn.prices.balancer import balancer as bal
 from yearn.prices.band import band
-from yearn.prices.chainlink import chainlink
 from yearn.prices.compound import compound
 from yearn.prices.fixed_forex import fixed_forex
 from yearn.prices.generic_amm import generic_amm
 from yearn.prices.incidents import INCIDENTS
-from yearn.prices.synthetix import synthetix
 from yearn.prices.uniswap.uniswap import uniswaps
 from yearn.prices.uniswap.v2 import uniswap_v2
 from yearn.prices.yearn import yearn_lens
 from yearn.special import Backscratcher
 from yearn.typing import Address, AddressOrContract, AddressString, Block
-from yearn.utils import contract, contract_creation_block
+from yearn.utils import contract
 
 logger = logging.getLogger(__name__)
 
+async def _get_price(token: AnyAddressType, block: Optional[Block]) -> float:
+    """ Performs some checks before deferring to ypricemagic. """ 
+
+    if chain.id == Network.Mainnet:
+        # no liquid market for yveCRV-DAO -> return CRV token price
+        if token == Backscratcher().vault.address and block < 11786563:
+            return await _get_price("0xD533a949740bb3306d119CC777fa900bA034cd52", block)
+        # no liquidity for curve pool (yvecrv-f) -> return 0
+        elif token == "0x7E46fd8a30869aa9ed55af031067Df666EfE87da" and block < 14987514:
+            return 0
+        # no continuous price data before 2020-10-10
+        elif token == "0xEB4C2781e4ebA804CE9a9803C67d0893436bB27D" and block < 11024342:
+            return 0
+    try:
+        return await magic.get_price(token, block, sync=False)
+    except:
+        for incident in INCIDENTS[token]:
+            if incident['start'] <= block <= incident['end']:
+                return incident['result']
+        raise
+
+# Will delete once we're sure we don't need anymore
 def get_price(
     token: AddressOrContract,
     block: Optional[Block] = None,
@@ -71,13 +92,6 @@ def find_price(
     assert block is not None, "You must pass a valid block number as this function is cached."
     price = None
     if token in constants.stablecoins:
-        if chainlink and token in chainlink and block >= contract_creation_block(chainlink.get_feed(token).address):
-            price = chainlink.get_price(token, block=block)
-            logger.debug("stablecoin chainlink -> %s", price)
-            # If we can't get price from chainlink but `block` is after feed
-            # deploy block,feed is probably dead and coin is possibly dead.
-            if price is not None:
-                return price
         # TODO Code better handling for stablecoin pricing
         logger.debug("stablecoin -> %s", 1)
         return 1
@@ -101,7 +115,7 @@ def find_price(
         if token == '0xd9e28749e80D867d5d14217416BFf0e668C10645':
             logger.debug('xcredit -> unwrap')
             wrapper = contract(token)
-            price = get_price(wrapper.token(), block=block) * wrapper.getShareValue(block_identifier=block) / 1e18
+            price = magic.get_price(wrapper.token(), block=block, sync=False) * wrapper.getShareValue(block_identifier=block) / 1e18
 
     elif chain.id == Network.Mainnet:
         # no liquid market for yveCRV-DAO -> return CRV token price
@@ -116,12 +130,10 @@ def find_price(
             return 0
 
     markets = [
-        chainlink,
         curve.curve,
         compound,
         fixed_forex,
         generic_amm,
-        synthetix,
         band,
         uniswaps
     ]

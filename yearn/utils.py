@@ -1,22 +1,30 @@
+import asyncio
 import json
 import logging
+import os
 import threading
-import pandas as pd
-from functools import lru_cache
-from time import sleep
-from typing import List
+from concurrent.futures import ThreadPoolExecutor
+from datetime import datetime, timedelta
+from functools import lru_cache, wraps
+from typing import Any, Callable, List, TypeVar
 
 import eth_retry
-from brownie import Contract, chain, convert, interface, web3
-from brownie.network.contract import _fetch_from_explorer, _resolve_address
+import pandas as pd
+from brownie import Contract, chain, interface, web3
 from brownie.convert.datatypes import HexString
+from brownie.network.contract import _fetch_from_explorer, _resolve_address
+from dank_mids.brownie_patch import patch_contract
+from typing_extensions import ParamSpec
+from y.networks import Network
+from y.utils.dank_mids import dank_w3
 
 from yearn.cache import memory
-from yearn.exceptions import ArchiveNodeRequired, NodeNotSynced
-from yearn.networks import Network
 from yearn.typing import AddressOrContract
 
 logger = logging.getLogger(__name__)
+
+threads = ThreadPoolExecutor(8)
+run_in_thread = lambda fn, *args: asyncio.get_event_loop().run_in_executor(threads, fn, *args)
 
 BINARY_SEARCH_BARRIER = {
     Network.Mainnet: 0,
@@ -45,102 +53,6 @@ def safe_views(abi: List) -> List[str]:
     ]
 
 
-@memory.cache()
-def get_block_timestamp(height):
-    """
-    An optimized variant of `chain[height].timestamp`
-    """
-    if chain.id == Network.Mainnet:
-        try:
-            header = web3.manager.request_blocking(f"erigon_getHeaderByNumber", [height])
-            return int(header.timestamp, 16)
-        except:
-            pass
-    return chain[height].timestamp
-
-
-@memory.cache()
-def closest_block_after_timestamp(timestamp: int, wait_for: bool = False) -> int:
-    """
-    Set `wait_for = True` to make this work for future `timestamp` values.
-    """
-
-    while wait_for:
-        try:
-            return closest_block_after_timestamp(timestamp)
-        except IndexError:
-            sleep(.2)
-            
-    logger.debug('closest block after timestamp %d', timestamp)
-    height = chain.height
-    lo, hi = 0, height
-
-    while hi - lo > 1:
-        mid = lo + (hi - lo) // 2
-        if get_block_timestamp(mid) > timestamp:
-            hi = mid
-        else:
-            lo = mid
-
-    if get_block_timestamp(hi) < timestamp:
-        raise IndexError('timestamp is in the future')
-
-    return hi
-
-
-def get_code(address, block=None):
-    try:
-        return web3.eth.get_code(address, block_identifier=block)
-    except ValueError as exc:
-        if isinstance(exc.args[0], dict) and 'missing trie node' in exc.args[0]['message']:
-            raise ArchiveNodeRequired('querying historical state requires an archive node')
-        raise exc
-
-
-@memory.cache()
-def contract_creation_block(address: AddressOrContract) -> int:
-    """
-    Find contract creation block using binary search.
-    NOTE Requires access to historical state. Doesn't account for CREATE2 or SELFDESTRUCT.
-    """
-    logger.info("contract creation block %s", address)
-    address = convert.to_address(address)
-
-    barrier = BINARY_SEARCH_BARRIER[chain.id]
-    lo = barrier
-    hi = end = chain.height
-
-    if hi == 0:
-        raise NodeNotSynced(f'''
-            `chain.height` returns 0 on your node, which means it is not fully synced.
-            You can only use contract_creation_block on a fully synced node.''')
-
-    while hi - lo > 1:
-        mid = lo + (hi - lo) // 2
-        try:
-            code = get_code(address, block=mid)
-        except ArchiveNodeRequired as exc:
-            logger.error(exc)
-            # with no access to historical state, we'll have to scan logs from start
-            return 0
-        except ValueError as exc:
-            # ValueError occurs in gnosis when there is no state for a block
-            # with no access to historical state, we'll have to scan logs from start
-            logger.error(exc) 
-            return 0
-        if code:
-            hi = mid
-        else:
-            lo = mid
-
-    # only happens on fantom
-    if hi == barrier + 1:
-        logger.warning('could not determine creation block for a contract deployed prior to barrier')
-        return 0
-
-    return hi if hi != end else None
-
-
 class Singleton(type):
     def __init__(self, *args, **kwargs):
         self.__instance = None
@@ -167,7 +79,7 @@ def contract(address: AddressOrContract) -> Contract:
             if address in PREFER_INTERFACE[chain.id]:
                 _interface = PREFER_INTERFACE[chain.id][address]
                 i = _interface(address)
-                return _squeeze(i)
+                return _squeeze(patch_contract(i, dank_w3))
 
         # autofetch-sources: false
         # Try to fetch the contract from the local sqlite db.
@@ -178,7 +90,7 @@ def contract(address: AddressOrContract) -> Contract:
             c = _resolve_proxy(address)
 
         # Lastly, get rid of unnecessary memory-hog properties
-        return _squeeze(c)
+        return _squeeze(patch_contract(c, dank_w3))
 
 
 # These tokens have trouble when resolving the implementation via the chain.
@@ -284,3 +196,23 @@ def _squeeze(it):
         if it._build and k in it._build.keys():
             it._build[k] = {}
     return it
+
+def dates_between(start: datetime, end: datetime) -> List[datetime]:
+    end = end.date()
+    dates = []
+
+    date = start.date()
+    dates.append(date)
+    while date <= end:
+        date += timedelta(days=1)
+        dates.append(date)
+        
+    # We need datetimes, not dates
+    return [datetime(date.year, date.month, date.day) for date in dates if date < datetime.utcnow().date()]
+
+def get_event_loop() -> asyncio.BaseEventLoop:
+    try:
+        return asyncio.get_event_loop()
+    except:
+        asyncio.set_event_loop(asyncio.new_event_loop())
+        return asyncio.get_event_loop()

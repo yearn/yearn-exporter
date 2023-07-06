@@ -1,11 +1,21 @@
 import os
-from datetime import datetime
+import typing
+from datetime import date, datetime, timedelta
 from decimal import Decimal
 from functools import cached_property, lru_cache
 
 from brownie import chain
+from brownie.network.event import _EventItem
 from brownie.network.transaction import TransactionReceipt
+from cachetools.func import ttl_cache
 from pony.orm import *
+from y import Contract, get_price
+from y.time import closest_block_after_timestamp
+from y.contracts import contract_creation_block
+from y.utils.events import decode_logs, get_logs_asap
+
+from yearn.treasury.constants import BUYER
+from yearn.utils import dates_between
 
 db = Database()
 
@@ -65,6 +75,12 @@ class Address(db.Entity):
     user_tx_to = Set("UserTx", reverse="to_address")
     treasury_tx_from = Set("TreasuryTx", reverse="from_address")
     treasury_tx_to = Set("TreasuryTx", reverse="to_address")
+    streams_from = Set("Stream", reverse="from_address")
+    streams_to = Set("Stream", reverse="to_address")
+    streams = Set("Stream", reverse="contract")
+    vesting_escrows = Set("VestingEscrow", reverse="address")
+    vests_received = Set("VestingEscrow", reverse="recipient")
+    vests_funded = Set("VestingEscrow", reverse="funder")
 
 
 class Token(db.Entity):
@@ -80,6 +96,8 @@ class Token(db.Entity):
     treasury_tx = Set('TreasuryTx', reverse="token")
     partner_harvest_event = Set('PartnerHarvestEvent', reverse="vault")
     address = Required(Address, column="address_id")
+    streams = Set('Stream', reverse="token")
+    vesting_escrows = Set("VestingEscrow", reverse="token")
 
     @property
     def scale(self) -> int:
@@ -119,6 +137,8 @@ class TxGroup(db.Entity):
     treasury_tx = Set('TreasuryTx', reverse="txgroup")
     parent_txgroup = Optional("TxGroup", reverse="child_txgroups")
     child_txgroups = Set("TxGroup", reverse="parent_txgroup")
+    streams = Set("Stream", reverse="txgroup")
+    vesting_escrows = Set("VestingEscrow", reverse="txgroup")
 
     @property
     def top_txgroup(self):
@@ -190,6 +210,363 @@ class TreasuryTx(db.Entity):
         return self.token.symbol
 
 
+v3_multisig = "0x16388463d60FFE0661Cf7F1f31a7D658aC790ff7"
+
+class Stream(db.Entity):
+    _table_ = 'streams'
+    stream_id = PrimaryKey(str)
+
+    contract = Required(Address, reverse="streams")
+    start_block = Required(int)
+    end_block = Optional(int)
+    token = Required(Token, reverse='streams', index=True)
+    from_address = Required(Address, reverse='streams_from')
+    to_address = Required(Address, reverse='streams_to')
+    reason = Optional(str)
+    amount_per_second = Required(Decimal, 38, 1)
+    status = Required(str, default="Active")
+    txgroup = Optional(TxGroup, reverse="streams")
+
+    streamed_funds = Set("StreamedFunds")
+    
+    # NOTE Streams always use 20 decimals
+    scale = int(1e20)
+
+    @property
+    def is_alive(self) -> bool:
+        if self.end_block is None:
+            assert self.status in ["Active", "Paused"]
+            return self.status == "Active"
+        assert self.status == "Stopped"
+        return False
+    
+    @property
+    def amount_per_minute(self) -> int:
+        return self.amount_per_second * 60
+
+    @property
+    def amount_per_hour(self) -> int:
+        return self.amount_per_minute * 60
+
+    @property
+    def amount_per_day(self) -> int:
+        return self.amount_per_hour * 24
+
+    def stop_stream(self, block: int) -> None:
+        self.end_block = block
+        self.status = "Stopped"
+    
+    def pause(self) -> None:
+        self.status = "Paused"
+    
+    @classmethod
+    def get_or_create_entity(cls, log: _EventItem) -> "Stream":
+        if log.name == "StreamCreated":
+            from_address, to_address, amount_per_second, stream_id = log.values()
+            reason = None
+        elif log.name == "StreamCreatedWithReason":
+            from_address, to_address, amount_per_second, stream_id, reason = log.values()
+        elif log.name == "StreamModified":
+            from_address, _, _, old_stream_id, to_address, amount_per_second, stream_id = log.values()
+            reason = Stream[old_stream_id.hex()].reason
+        else:
+            raise NotImplementedError("This is not an appropriate event log.")
+        
+        stream_id = stream_id.hex()
+
+        try:
+            return Stream[stream_id]
+        except ObjectNotFound:
+            from yearn.outputs.postgres.utils import (cache_address,
+                                                      cache_token,
+                                                      cache_txgroup)
+
+            txgroup = {
+                BUYER: "Top-up Buyer Contract",
+                v3_multisig: "V3 Development",
+            }.get(to_address, "Other Grants")
+
+            txgroup = cache_txgroup(txgroup)
+            stream_contract = cache_address(log.address)
+            token = cache_token(Contract(log.address).token())
+            from_address = cache_address(from_address)
+            to_address = cache_address(to_address)
+
+            entity = Stream(
+                stream_id = stream_id,
+                contract = stream_contract,
+                start_block = log.block_number,
+                token = token,
+                from_address = from_address,
+                to_address = to_address,
+                amount_per_second = amount_per_second,
+                txgroup = txgroup,
+            )
+            if reason is not None:
+                entity.reason = reason
+            commit()
+            return entity
+    
+    @property
+    def stream_contract(self) -> Contract:
+        return Contract(self.contract.address)
+    
+    def start_timestamp(self, block: typing.Optional[int] = None) -> int:
+        return int(self.stream_contract.streamToStart('0x' + self.stream_id, block_identifier=block))
+    
+    @property
+    def start_date(self) -> date:
+        return datetime.fromtimestamp(chain[self.start_block].timestamp).date()
+
+    def amount_withdrawable(self, block: int):
+        return self.stream_contract.withdrawable.call(
+            self.from_address.address,
+            self.to_address.address,
+            int(self.amount_per_second),
+            block_identifier = block,
+        )
+    
+    def print(self):
+        symbol = self.token.symbol
+        print(f'{symbol} per second: {self.amount_per_second / self.scale}')
+        print(f'{symbol} per day: {self.amount_per_day / self.scale}')
+
+one_day = 60 * 60 * 24
+
+class StreamedFunds(db.Entity):
+    """ Each object represents one calendar day of tokens streamed for a particular stream. """
+    _table_ = "streamed_funds"
+
+    date = Required(date)
+    stream = Required(Stream, reverse="streamed_funds")
+    PrimaryKey(stream, date)
+
+    amount = Required(Decimal, 38, 18)
+    price = Required(Decimal, 38, 18)
+    value_usd = Required(Decimal, 38, 18)
+    seconds_active = Required(int)
+    is_last_day = Required(bool)
+
+    @classmethod
+    def get_or_create_entity(cls, stream: Stream, date: datetime) -> typing.Optional["StreamedFunds"]:
+        if entity := StreamedFunds.get(date=date, stream=stream):
+            return entity
+
+        check_at = date + timedelta(days=1) - timedelta(seconds=1)
+        block = closest_block_after_timestamp(int(check_at.timestamp()))
+        start_timestamp = stream.start_timestamp(block)
+        if start_timestamp == 0:
+            # If the stream was already closed, we can return `None`.
+            if StreamedFunds.get(stream=stream, is_last_day=True):
+                return None
+
+            while start_timestamp == 0:
+                # is active last block?
+                block -= 1
+                start_timestamp = stream.start_timestamp(block)
+
+            block_datetime = datetime.fromtimestamp(chain[block].timestamp)
+            assert block_datetime.date() == date.date()
+            seconds_active = (check_at - block_datetime).seconds
+            is_last_day = True
+        else:
+            seconds_active = int(check_at.timestamp()) - start_timestamp
+            is_last_day = False
+
+        # How many seconds was the stream active on `date`?
+        seconds_active_today = seconds_active if seconds_active < one_day else one_day
+        if seconds_active_today < one_day and not is_last_day:
+            if date.date() == stream.start_date:
+                print('stream started today, partial day accepted')
+            else:
+                seconds_active_today = one_day
+        print(date.date())
+        print(F"active for {seconds_active_today} seconds")
+        if is_last_day:
+            print('is last day')
+
+        # How much was streamed on `date`?
+        amount_streamed_today = round(stream.amount_per_second * seconds_active_today / stream.scale, 18)
+        
+        # We only need this for this function so we import in this function to save time where this function isn't needed.
+        from y.prices import magic
+
+        price = Decimal(magic.get_price(stream.token.address.address, block))
+
+        entity = StreamedFunds(
+            date = date,
+            stream = stream, 
+            amount = amount_streamed_today,
+            price = round(price, 18),
+            value_usd = round(amount_streamed_today * price, 18),
+            seconds_active = seconds_active_today,
+            is_last_day = is_last_day,
+        )
+
+        commit()
+        return entity
+
+@ttl_cache(ttl=60)
+def _get_rug_pull(address: str) -> typing.Optional[_EventItem]:
+    logs = get_logs_asap(address, None)
+    decoded = decode_logs(logs)
+    for event in decoded:
+        if event.name == "RugPull":
+            return event
+
+class VestingEscrow(db.Entity):
+    _table_ = 'vesting_escrows'
+    escrow_id = PrimaryKey(int, auto=True)
+
+    address = Required(Address, reverse='vesting_escrows', unique=True)
+    funder = Required(Address, reverse='vests_funded')
+    recipient = Required(Address, reverse='vests_received')
+    token = Required(Token, reverse='vesting_escrows')
+    amount = Required(Decimal, 38, 18)
+    start_timestamp = Required(datetime)
+    end_timestamp = Required(datetime)
+    duration = Required(int)
+    cliff_length = Required(int)
+    rugged = Required(bool, default=False)
+    txgroup = Optional(TxGroup, reverse="vesting_escrows")
+    _rugged_at = Optional(datetime)
+    _rugged_on = Optional(date)
+
+    vested_funds = Set("VestedFunds", reverse="escrow")
+
+    @cached_property
+    def contract(self) -> Contract:
+        return Contract(self.address.address)
+    
+    def dates(self) -> typing.List[date]:
+        return [
+            dt.date()
+            for dt in dates_between(self.start_timestamp, self.end_timestamp)
+            if self.rugged_on is None or dt.date() <= self.rugged_on
+        ]
+    
+    @cached_property
+    def deploy_block(self) -> int:
+        return contract_creation_block(self.address.address)
+    
+    def amortize_vested_funds(self) -> None:
+        for date in self.dates():
+            try:
+                VestedFunds.get_or_create_entity(self, date)
+            except VestNotActive as e:
+                print(e)
+    
+    @lru_cache
+    def get_rug_pull(self) -> typing.Optional[_EventItem]:
+        return _get_rug_pull(self.address.address)
+    
+    @property
+    def rugged_at(self) -> typing.Optional[datetime]:
+        if not self._rugged_at and (rug := self.get_rug_pull()):
+            self._rugged_at = datetime.fromtimestamp(
+                int(chain[rug.block_number].timestamp)
+            )
+        return self._rugged_at
+    
+    @property
+    def rugged_on(self) -> typing.Optional[date]:
+        if not self._rugged_on and self.rugged_at:
+            self._rugged_on = self.rugged_at.date()
+        return self._rugged_on
+
+    @staticmethod
+    def get_or_create_entity(event: _EventItem) -> "VestingEscrow":
+        from yearn.outputs.postgres.utils import cache_address, cache_token
+
+        print(event)
+        funder, token, recipient, escrow, amount, start, duration, cliff_length = event.values()
+        escrow_address_entity = cache_address(escrow)
+        escrow = VestingEscrow.get(address=escrow_address_entity)
+        if escrow is None:
+            token_entity = cache_token(token)
+            escrow = VestingEscrow(
+                address = escrow_address_entity,
+                funder = cache_address(funder),
+                recipient = cache_address(recipient),
+                token = token_entity,
+                amount = amount / token_entity.scale,
+                start_timestamp = datetime.fromtimestamp(start),
+                duration = duration,
+                end_timestamp = datetime.fromtimestamp(start + duration),
+                cliff_length = cliff_length,
+            )
+            commit()
+        return escrow
+    
+    def total_vested_at_block(self, block: int) -> Decimal:
+        try:
+            vested = Decimal(
+                self.contract.unclaimed(block_identifier=block) + self.contract.total_claimed(block_identifier=block)
+            )
+            return vested / self.token.scale
+        except ValueError as e:
+            if str(e) == "No data was returned - the call likely reverted" and block < self.deploy_block:
+                print(f'escrow {self.address.address} not yet deployed')
+                return Decimal(0)
+            raise e
+    
+    def total_vested_thru_date(self, date: "date") -> Decimal:
+        try:
+            return VestedFunds.get_or_create_entity(self, date).total_vested
+        except VestNotActive:
+            return Decimal(0)
+
+
+class VestNotActive(Exception):
+    ...
+
+class VestedFunds(db.Entity):
+    _table_ = "vested_funds"
+    vested_funds_id = PrimaryKey(int, auto=True)
+
+    escrow = Required(VestingEscrow, reverse="vested_funds")
+    date = Required(date)
+    composite_key(escrow, date)
+    amount = Required(Decimal, 38, 18)
+    price = Required(Decimal, 38, 18)
+    value_usd = Required(Decimal, 38, 18)
+    total_vested = Required(Decimal, 38, 18)
+    checked_at_timestamp = Required(datetime)
+    checked_at_block = Required(int)
+        
+    @staticmethod
+    def get_or_create_entity(escrow: VestingEscrow, date: "date"):
+        check_at = datetime(date.year, date.month, date.day) + timedelta(days=1) - timedelta(seconds=1)
+        if check_at < escrow.start_timestamp:
+            raise VestNotActive(f"[{date}] Vesting for {escrow.address.address} starts on {escrow.start_timestamp.date()}.")
+        
+        if escrow.rugged_on and date > escrow.rugged_on:
+            raise VestNotActive(f"[{date}] Vesting escrow {escrow.address.address} was rugged on {escrow.rugged_on}")
+
+        entity = VestedFunds.get(escrow=escrow, date=date)
+        if entity is None:
+            block = closest_block_after_timestamp(check_at)
+            total_unlocked = escrow.total_vested_at_block(block)
+            total_unlocked_yesterday = escrow.total_vested_thru_date(date - timedelta(days=1))
+            unlocked_today = total_unlocked - total_unlocked_yesterday
+            price = Decimal(get_price(escrow.token.address.address, block))
+
+            entity = VestedFunds(
+                escrow = escrow,
+                date = date,
+                amount = round(unlocked_today, 18),
+                price = round(price, 18),
+                value_usd = round(unlocked_today * price, 18),
+                total_vested = round(total_unlocked, 18),
+                checked_at_timestamp = check_at,
+                checked_at_block = block,
+            )
+            commit()
+
+        print(date)
+        print(f"{entity.amount}   {entity.total_vested}")
+        return entity
+
 
 # Caching for partners_summary.py
 class PartnerHarvestEvent(db.Entity):
@@ -224,12 +601,107 @@ db.generate_mapping(create_tables=True)
 
 
 @db_session
-def create_general_ledger_view() -> None:
+def create_txgroup_parentage_view() -> None:
     try:
         db.execute(
             """
-            create VIEW general_ledger as
-            SELECT b.chain_name, TO_TIMESTAMP(a.timestamp) AS timestamp, a.block, a.hash, a.log_index, c.symbol AS token, d.address AS "from", d.nickname as from_nickname, e.address AS "to", e.nickname as to_nickname, a.amount, a.price, a.value_usd, f.name AS txgroup, g.name AS parent_txgroup
+            CREATE VIEW txgroup_parentage as
+            SELECT a.txgroup_id,
+                COALESCE(d.name,c.name, b.name, a.name) top_level_account,
+                CASE WHEN d.name is not null THEN c.name when c.name is not null THEN b.name when b.name IS not NULL THEN a.name else null end subaccount1,
+                CASE when d.name is not null THEN b.name when c.name IS not NULL THEN a.name else null end subaccount2,
+                CASE when d.name IS not NULL THEN a.name else null end subaccount3
+            FROM txgroups a
+            LEFT JOIN txgroups b ON a.parent_txgroup = b.txgroup_id
+            LEFT JOIN txgroups c ON b.parent_txgroup = c.txgroup_id
+            LEFT JOIN txgroups d ON c.parent_txgroup = d.txgroup_id
+            """
+        )
+    except ProgrammingError as e:
+        if str(e).strip() != 'relation "txgroup_parentage" already exists':
+            raise
+
+@db_session
+def create_stream_ledger_view() -> None:
+    """
+    Prepares daily stream data with the same structure as general_ledger view so we can combine them with a union.
+    """
+
+    try:
+        db.execute(
+            """
+            create view stream_ledger as
+            SELECT  'Mainnet' as chain_name,
+                    cast(DATE AS timestamp) as timestamp,
+                    NULL as block, 
+                    NULL as hash, 
+                    NULL as log_index, 
+                    symbol as token, 
+                    d.address AS "from", 
+                    d.nickname as from_nickname, 
+                    e.address as "to", 
+                    e.nickname as to_nickname, 
+                    amount, 
+                    price, 
+                    value_usd, 
+                    txgroup.name as txgroup, 
+                    parent.name as parent_txgroup, 
+                    txgroup.txgroup_id
+            FROM streamed_funds a
+                LEFT JOIN streams b ON a.stream = b.stream_id
+                LEFT JOIN tokens c ON b.token = c.token_id
+                LEFT JOIN addresses d ON b.from_address = d.address_id
+                LEFT JOIN addresses e ON b.to_address = e.address_id
+                LEFT JOIN txgroups txgroup ON b.txgroup = txgroup.txgroup_id
+                LEFT JOIN txgroups parent ON txgroup.parent_txgroup = parent.txgroup_id
+            """
+        )
+    except ProgrammingError as e:
+        if str(e).strip() != 'relation "stream_ledger" already exists':
+            raise
+
+
+@db_session
+def create_vesting_ledger_view() -> None:
+    db.execute("""
+        DROP VIEW IF EXISTS vesting_ledger CASCADE;
+        CREATE VIEW vesting_ledger AS
+        SELECT  d.chain_name, 
+            CAST(date AS timestamp) AS "timestamp",
+            cast(NULL as int) AS block,
+            NULL AS "hash",
+            cast(NULL as int) AS "log_index",
+            c.symbol AS "token",
+            e.address AS "from",
+            e.nickname as from_nickname,
+            f.address AS "to",
+            f.nickname as to_nickname,
+            a.amount,
+            a.price,
+            a.value_usd,
+            g.name as txgroup,
+            h.name AS parent_txgroup,
+            g.txgroup_id
+        FROM vested_funds a 
+        LEFT JOIN vesting_escrows b ON a.escrow = b.escrow_id
+        LEFT JOIN tokens c ON b.token = c.token_id
+        LEFT JOIN chains d ON c.chain = d.chain_dbid
+        LEFT JOIN addresses e ON b.address = e.address_id
+        LEFT JOIN addresses f ON b.recipient = f.address_id
+        LEFT JOIN txgroups g ON b.txgroup = g.txgroup_id
+        left JOIN txgroups h ON g.parent_txgroup = h.txgroup_id
+    """)
+
+
+@db_session
+def create_general_ledger_view() -> None:
+    db.execute(
+        """
+        drop VIEW IF EXISTS general_ledger CASCADE;
+        create VIEW general_ledger as
+        select *
+        from (
+            SELECT treasury_tx_id, b.chain_name, TO_TIMESTAMP(a.timestamp) AS timestamp, a.block, a.hash, a.log_index, c.symbol AS token, d.address AS "from", d.nickname as from_nickname, e.address AS "to", e.nickname as to_nickname, a.amount, a.price, a.value_usd, f.name AS txgroup, g.name AS parent_txgroup, f.txgroup_id
             FROM treasury_txs a
                 LEFT JOIN chains b ON a.chain = b.chain_dbid
                 LEFT JOIN tokens c ON a.token_id = c.token_id
@@ -237,64 +709,87 @@ def create_general_ledger_view() -> None:
                 LEFT JOIN addresses e ON a."to" = e.address_id
                 LEFT JOIN txgroups f ON a.txgroup_id = f.txgroup_id
                 LEFT JOIN txgroups g ON f.parent_txgroup = g.txgroup_id
-            ORDER BY TO_TIMESTAMP(a.timestamp)
-            """
-        )
-    except ProgrammingError as e:
-        if str(e).strip() != 'relation "general_ledger" already exists':
-            raise
+            UNION
+            SELECT -1, chain_name, TIMESTAMP, cast(block AS integer) block, hash, CAST(log_index AS integer) as log_index, token, "from", from_nickname, "to", to_nickname, amount, price, value_usd, txgroup, parent_txgroup, txgroup_id
+            FROM stream_ledger
+            UNION
+            SELECT -1, *
+            FROM vesting_ledger
+        ) a
+        ORDER BY timestamp
+        """
+    )
     
 @db_session
 def create_unsorted_txs_view() -> None:
-    try:
-        db.execute(
-            """
-            CREATE VIEW unsorted_txs as
-            SELECT *
-            FROM general_ledger
-            WHERE txgroup = 'Categorization Pending'
-            ORDER BY TIMESTAMP desc
-            """
-        )
-    except ProgrammingError as e:
-        if str(e).strip() != 'relation "unsorted_txs" already exists':
-            raise
+    db.execute(
+        """
+        DROP VIEW IF EXISTS unsorted_txs CASCADE;
+        CREATE VIEW unsorted_txs as
+        SELECT *
+        FROM general_ledger
+        WHERE txgroup = 'Categorization Pending'
+        ORDER BY TIMESTAMP desc
+        """
+    )
 
 @db_session
 def create_treasury_time_averages_view() -> None:
-    try:
-        db.execute(
-            """
-            CREATE VIEW treasury_time_averages AS
-            WITH base AS (
-                SELECT gs as DATE, a.NAME AS txgroup, b.name as parent_txgroup, b.txgroup_id AS parent_txgroup_id
-                FROM txgroups a
-                LEFT JOIN txgroups b ON a.parent_txgroup = b.txgroup_id
-                LEFT JOIN generate_series('2020-07-21', '2022-09-03', interval '1 day') gs ON 1=1
-            ), summed AS (
-                SELECT DATE,
-                    coalesce(sum(value_usd), 0) daily_total,
-                    a.txgroup,
-                    a.parent_txgroup,
-                    a.parent_txgroup_id
-                FROM base a
-                left join general_ledger b ON date = CAST(TIMESTAMP AS DATE) and a.txgroup = b.txgroup AND a.parent_txgroup = b.parent_txgroup
-                GROUP BY date, a.txgroup, a.parent_txgroup, a.parent_txgroup_id
-            )
-            SELECT *,
-                sum(daily_total) OVER (partition BY txgroup, parent_txgroup ORDER BY date ROWS 6 PRECEDING) / 7 average_7d,
-                sum(daily_total) OVER (partition BY txgroup, parent_txgroup ORDER BY date ROWS 13 PRECEDING) / 14 average_14d,
-                sum(daily_total) OVER (partition BY txgroup, parent_txgroup ORDER BY date ROWS 29 PRECEDING) / 30 average_30d,
-                sum(daily_total) OVER (partition BY txgroup, parent_txgroup ORDER BY date ROWS 89 PRECEDING) / 90 average_90d
-            FROM summed
-            ORDER BY DATE
-            """
+    db.execute(
+        """
+        DROP VIEW IF EXISTS treasury_time_averages CASCADE;
+        CREATE VIEW treasury_time_averages AS
+        WITH base AS (
+            SELECT gs as DATE, txgroup_id, token
+            FROM (
+                SELECT DISTINCT grp.txgroup_id, gl.token
+                FROM txgroups grp
+                LEFT JOIN general_ledger gl ON grp.txgroup_id = gl.txgroup_id
+            ) a
+            LEFT JOIN generate_series('2020-07-21', CURRENT_DATE, interval '1 day') gs ON 1=1
+        ), summed AS (
+            SELECT DATE,
+                a.txgroup_id,
+                a.token,
+                coalesce(sum(value_usd), 0) daily_total
+            FROM base a
+            left join general_ledger b ON date = CAST(TIMESTAMP AS DATE) and a.txgroup_id = b.txgroup_id AND a.token = b.token
+            GROUP BY date, a.txgroup_id, a.token
         )
-    except ProgrammingError as e:
-        if str(e).strip() != 'relation "treasury_time_averages" already exists':
-            raise
+
+        SELECT *,
+            sum(daily_total) OVER (partition BY txgroup_id, token ORDER BY date ROWS 6 PRECEDING) / 7 average_7d,
+            sum(daily_total) OVER (partition BY txgroup_id, token ORDER BY date ROWS 13 PRECEDING) / 14 average_14d,
+            sum(daily_total) OVER (partition BY txgroup_id, token ORDER BY date ROWS 29 PRECEDING) / 30 average_30d,
+            sum(daily_total) OVER (partition BY txgroup_id, token ORDER BY date ROWS 89 PRECEDING) / 90 average_90d
+        FROM summed
+        ORDER BY DATE
+        """
+    )
+
+@db_session
+def create_txgroup_parentage_view() -> None:
+    db.execute(
+        """
+        DROP VIEW IF EXISTS txgroup_parentage CASCADE;
+        CREATE VIEW txgroup_parentage as
+        SELECT a.txgroup_id,
+            COALESCE(d.name,c.name, b.name, a.name) top_level_account,
+            CASE WHEN d.name is not null THEN c.name when c.name is not null THEN b.name when b.name IS not NULL THEN a.name else null end subaccount1,
+            CASE when d.name is not null THEN b.name when c.name IS not NULL THEN a.name else null end subaccount2,
+            CASE when d.name IS not NULL THEN a.name else null end subaccount3
+        FROM txgroups a
+        LEFT JOIN txgroups b ON a.parent_txgroup = b.txgroup_id
+        LEFT JOIN txgroups c ON b.parent_txgroup = c.txgroup_id
+        LEFT JOIN txgroups d ON c.parent_txgroup = d.txgroup_id
+        """
+    )
+        
 
 def create_views() -> None:
+    create_txgroup_parentage_view()
+    create_stream_ledger_view()
+    create_vesting_ledger_view()
     create_general_ledger_view()
     create_unsorted_txs_view()
     create_treasury_time_averages_view()

@@ -5,9 +5,11 @@ from itertools import count
 
 import sentry_sdk
 from brownie import chain
+from multicall.utils import await_awaitable
+from y.networks import Network
+from y.time import closest_block_after_timestamp
+
 from yearn.db.models import Block, Session, Snapshot, engine, select
-from yearn.networks import Network
-from yearn.utils import closest_block_after_timestamp, get_block_timestamp
 from yearn.yearn import Yearn
 
 sentry_sdk.set_tag('script','historical_tvl')
@@ -49,7 +51,7 @@ def main():
             logger.debug("inserting snapshot=%s", snapshot)
             block = closest_block_after_timestamp(snapshot.timestamp())
             assert block is not None, "no block after timestamp found"
-            assets = yearn.total_value_at(block)
+            assets = await_awaitable(yearn.total_value_at(block))
 
             new_block = Block(
                 chain_id=chain.id,

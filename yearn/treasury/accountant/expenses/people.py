@@ -1,5 +1,7 @@
 
 
+from pony.orm import commit
+
 from yearn.entities import TreasuryTx
 from yearn.treasury.accountant.classes import Filter, HashMatcher, IterFilter
 
@@ -35,14 +37,6 @@ def is_team_payment(tx: TreasuryTx) -> bool:
     if tx.hash == '0x91656eb3246a560498e808cbfb00af0518ec12f50effda42fc1496d0b0fb080a' and tx.log_index == 421:
         return False
 
-    llamapay_hashes = [
-        "0xd268946b6937df798e965a98b3f9348f7fc8519a2df9ba124210e4ce6c3fecaf",
-        "0x9d8fc48fe2f552a424fa2e4fa35f2ddbe73eb9f1eae33bb3b7b27466b8dbb62f",
-        "0x7979a77ab8a30bc6cd12e1df92e5ba0478a8907caf6e100317b7968668d0d4a2",
-        "0x91656eb3246a560498e808cbfb00af0518ec12f50effda42fc1496d0b0fb080a",
-        "0x16c193b8891af35ec811ebe8416f25addc0c4ffe39e074b5820577f1d8be72ec",
-    ]
-
     zerox_splits_hashes = [
         "0x38dbe0e943d978483439d4dec9e29f71fc4690e790261661ef3b2d179dee26b9"
     ]
@@ -50,8 +44,6 @@ def is_team_payment(tx: TreasuryTx) -> bool:
     if tx in HashMatcher(hashes):
         return True
     elif tx in HashMatcher(disperse_app_hashes) and tx._from_nickname == 'Disperse.app':
-        return True
-    elif tx in HashMatcher(llamapay_hashes) and tx._to_nickname == "Contract: LlamaPay":
         return True
     elif tx in HashMatcher(zerox_splits_hashes) and tx._to_nickname == "Non-Verified Contract: 0x426eF4C1d57b4772BcBE23979f4bbb236c135e1C":
         return True
@@ -90,8 +82,16 @@ def is_ygift_grant(tx: TreasuryTx) -> bool:
 
 def is_frontend_support(tx: TreasuryTx) -> bool:
     return tx in HashMatcher([
-        ["0x213979422ec4154eb0aa0db4b03f48e1669c08fa055ab44e4006fa7d90bb8547", IterFilter('log_index', [535,536])] 
+        ["0x213979422ec4154eb0aa0db4b03f48e1669c08fa055ab44e4006fa7d90bb8547", IterFilter('log_index', [535,536])],
+        ["0x57bc99f6007989606bdd9d1adf91c99d198de51f61d29689ee13ccf440b244df", Filter('log_index', 80)],
+        "0x9323935229a0f1fcbfbd95da7eea5eb7fe151da8ac62a21e9f38b29d5abde044",
+        ["0xf7244399cbea44a32e3e5a40f9c4f42836eca4035a710af549a76c4c9ade234e", IterFilter('log_index', [218, 219, 220])],
+        ["0x996b5911a48319133f50f72904e70ed905c08c81e2c03770e0ccc896be873bd4", IterFilter('log_index', [257, 258, 259])],
+        ["0x7afceac28536b9b2c177302c3cfcba449e408b47ff2f0a8a3c4b0e668a4d5d4e", IterFilter('log_index', [31, 32, 33])],
     ])
+
+def is_ydaemon_grant(tx: TreasuryTx) -> bool:
+    return tx in HashMatcher([["0x996b5911a48319133f50f72904e70ed905c08c81e2c03770e0ccc896be873bd4", Filter('log_index', 260)]])
 
 def is_other_grant(tx: TreasuryTx) -> bool:
     hashes = [
@@ -101,6 +101,9 @@ def is_other_grant(tx: TreasuryTx) -> bool:
         ["0x3249dac3b85f6dd9e268b4440322b2e437237d6b8a264286bd6fe97575804b00", IterFilter('log_index', [243,245,247,253,261,267,269,271,273,275,277])],
         # "May 2022 grant" ?
         ["0xca372ad75b957bfce7e7fbca879399f46f923f9ca17299e310150da8666703b9", Filter('log_index', 515)],
+        ["0x9681276a8668f5870551908fc17be3553c82cf6a9fedbd2fdb43f1c05385dca1", Filter('log_index', 181)],
+        "0xa96246a18846cd6966fc87571313a2021d8e1e38466132e2b7fe79acbbd2c589",
+        ["0x47bcb48367b5c724780b40a19eed7ba4f623de619e98c30807f52be934d28faf", Filter('_symbol', "DAI")]
     ]
     disperse_hashes = [
         "0x1e411c81fc83abfe260f58072c74bfa91e38e27e0066da07ea06f75d9c8f4a00",
@@ -108,10 +111,21 @@ def is_other_grant(tx: TreasuryTx) -> bool:
     ]
     if tx._from_nickname == "Disperse.app":
         return tx in HashMatcher(disperse_hashes)
-    return tx in HashMatcher(hashes)
-
-def is_stream_replenishment(tx: TreasuryTx) -> bool:
-    pass
+    if tx in HashMatcher(hashes):
+        return True
+    
+    # Grant overages reimbursed to yearn
+    if tx in HashMatcher([
+        "0xbe856983c92200982e5fce3b362c91805886422ae858391802a613dc329e7c9b",
+        "0xf63d61ae6508d9b44e3dca4edf35282ef88341b76229b0dfa121bdc0dd095457",
+        "0xd9f528e15a93cfacfbcaacbfe01110083fc7d7787e94d4cae4c09b174eef543f",
+        "0xa1c1635bdd4786361b3cb39322bc78ba4511986fb517f1709ef04c7b3bfa9244",
+    ]):
+        # Since we want to negate an expense instead of record income, we just multiply amount and value by -1.
+        tx.amount *= -1
+        tx.value_usd *= -1
+        commit()
+        return True
 
 def is_0_03_percent(tx: TreasuryTx) -> bool:
     return tx in HashMatcher([["0xe56521d79b0b87425e90c08ed3da5b4fa3329a40fe31597798806db07f68494e", Filter('_from_nickname', 'Disperse.app')]])
@@ -120,3 +134,91 @@ eoy_bonus_hashes = [
     "0xcfc2a4e538584c387ac1eca638de783f1839c2a3b0520352828b309564e23dca",
     "0x4a3716b7730ea086e5d9417bc8330808081e74862e0d9d97221a317f68d5ce43",
 ]
+
+def is_ycrv_grant(tx: TreasuryTx) -> bool:
+    return tx in HashMatcher([
+        "0x116a44242ffafd12a8e40a7a2dbc9f6a98580ca4d72e626ddb60d09417cab15d",
+    ])
+    
+def is_docs_grant(tx: TreasuryTx) -> bool:
+    """https://github.com/yearn/budget/issues/105"""
+    return tx in HashMatcher([
+        "0x99f8e351a15e7ce7f0acbae2dea52c56cd93ef97b0a5981f79a68180ff777f00",
+    ])
+    
+def is_yeth(tx: TreasuryTx) -> bool:
+    if tx.to_address.address == "0xeEEEEeeeEe274C3CCe13f77C85d8eBd9F7fd4479":
+        if tx._symbol == "YFI" and tx.amount == 4.5:
+            return True
+        elif tx._symbol == "DAI" and tx.amount == 20_000:
+            return True
+    return False
+
+def is_yearn_exporter(tx: TreasuryTx) -> bool:
+    if tx.to_address.address == "0xcD63C69f08bdDa7Fe96a87A2Ca3f56f3a6990a75":
+        if tx._symbol == "YFI" and tx.amount == 2.25:
+            return True
+        elif tx._symbol == "DAI" and tx.amount == 23_025:
+            return True
+    return False
+
+def is_xopowo(tx: TreasuryTx) -> bool:
+    if tx.to_address.address == "0x4F909396A75FE9d59F584156A851B3770f3F438a":
+        print(tx.amount)
+        print(5.1)
+        if tx._symbol == "YFI" and (tx.amount == 5.1 or tx.hash == "0x1969a5ebdedc96057feaa7a156adbdfd2e452868d0bb8258df767f12db26895d"):
+            return True
+        elif tx._symbol == "DAI" and tx.amount == 71_500:
+            return True
+    return False
+
+def is_v3_team(tx: TreasuryTx) -> bool:
+    if tx.to_address.address == "0x3333333368A1ed686392C1534e747F3e15CA286C":
+        if tx._symbol == "YFI" and tx.amount == 1.5:
+            return True
+        elif tx._symbol == "DAI" and tx.amount == 35_000:
+            return True
+    return False
+
+def is_s2_team(tx: TreasuryTx) -> bool:
+    if tx.to_address.address == "0x00520049162aa47AdA264E2f77DA6749dfaa6218":
+        if tx._symbol == "YFI" and tx.amount == 2.25:
+            return True
+        elif tx._symbol == "DAI" and tx.amount == 39_500:
+            return True
+    return False
+
+def is_ycreative(tx: TreasuryTx) -> bool:
+    if tx.to_address.address == "0x402449F51afbFC864D44133A975980179C6cD24C":
+        if tx._symbol == "YFI" and (tx.amount == 1.65 or tx.hash == "0x1969a5ebdedc96057feaa7a156adbdfd2e452868d0bb8258df767f12db26895d"):
+            return True
+        elif tx._symbol == "DAI" and tx.amount == 15_500:
+            return True
+    return False
+
+def is_ysecurity(tx: TreasuryTx) -> bool:
+    if tx.to_address.address == "0x4851C7C7163bdF04A22C9e12Ab77e184a5dB8F0E":
+        if tx._symbol == "YFI" and tx.amount == 2.5:
+            return True
+        elif tx._symbol == "DAI" and tx.amount == 20_667:
+            return True
+    return False
+
+def is_zootroop(tx: TreasuryTx) -> bool:
+    if tx.to_address.address == "0xBd5CA40C66226F53378AE06bc71784CAd6016087":
+        if tx._symbol == "YFI" and tx.amount == 1.5:
+            return True
+        elif tx._symbol == "DAI" and tx.amount == 34_500:
+            return True
+    return False
+
+def is_corn(tx: TreasuryTx) -> bool:
+    if tx.to_address.address == "0xF6411852b105042bb8bbc6Dd50C0e8F30Af63337":
+        if tx._symbol == "YFI" and tx.amount == 1.5:
+            return True
+        elif tx._symbol == "DAI" and tx.amount == 10_000:
+            return True
+    return False
+
+def is_tapir(tx: TreasuryTx) -> bool:
+    return tx.to_address.address == "0x80c9aC867b2D36B7e8D74646E074c460a008C0cb" and tx._symbol == "DAI" and tx.amount == 4_000

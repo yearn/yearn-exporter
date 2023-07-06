@@ -4,7 +4,9 @@ from datetime import datetime
 
 import requests
 
-logging.basicConfig(level=logging.DEBUG)
+from yearn import logs
+
+logs.basicConfig(level=logging.DEBUG)
 logger = logging.getLogger("graphite.metrics")
 
 GRAFANA_URL = os.environ.get("GRAFANA_URL")

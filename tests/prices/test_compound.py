@@ -2,7 +2,8 @@ from typing import List
 
 import pytest
 from brownie import chain
-from yearn.networks import Network
+from y.networks import Network
+
 from yearn.prices.compound import Compound, CompoundMarket, compound
 
 comps: List[Compound] = [comp for comp in compound.compounds]

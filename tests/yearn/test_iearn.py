@@ -3,11 +3,12 @@ from random import randint
 
 import pytest
 from brownie import chain
-from tests.fixtures.decorators import mainnet_only
+from multicall.utils import await_awaitable
+from y.contracts import contract_creation_block
 
+from tests.fixtures.decorators import mainnet_only
 from yearn.exceptions import UnsupportedNetwork
 from yearn.iearn import Registry
-from yearn.utils import contract_creation_block
 
 try:
     registry = Registry()
@@ -36,7 +37,7 @@ def test_describe_iearn(block):
 @mainnet_only
 @pytest.mark.parametrize('block',blocks)
 def test_active_vaults_at(block):
-    assert registry.active_vaults_at(block=block)
+    assert await_awaitable(registry.active_vaults_at(block=block))
 
 @mainnet_only
 @pytest.mark.parametrize('block',blocks)

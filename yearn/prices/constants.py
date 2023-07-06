@@ -1,6 +1,5 @@
 from brownie import chain, convert
-
-from yearn.networks import Network
+from y.networks import Network
 
 tokens_by_network = {
     Network.Mainnet: {

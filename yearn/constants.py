@@ -1,6 +1,11 @@
-from brownie import chain, convert
+import os
 
-from yearn.networks import Network
+from brownie import chain, convert
+from y.networks import Network
+
+YFI = {
+    Network.Mainnet: "0x0bc529c00C6401aEF6D220BE8C6Ea1667F6Ad93e",
+}.get(chain.id, None)
 
 WRAPPED_GAS_COIN = {
     Network.Mainnet:            "0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2",
@@ -88,3 +93,5 @@ TREASURY_WALLETS = {
 }.get(chain.id,set())
 
 TREASURY_WALLETS = {convert.to_address(address) for address in TREASURY_WALLETS}
+
+RANDOMIZE_EXPORTS = bool(os.environ.get("RANDOMIZE_EXPORTS"))

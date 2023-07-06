@@ -1,27 +1,33 @@
+import asyncio
 import logging
 import re
 import threading
 import time
-from typing import Dict, List
+from typing import TYPE_CHECKING, Any, Dict, List, Union
 
 from brownie import chain
 from eth_utils import encode_hex, event_abi_to_log_topic
 from joblib import Parallel, delayed
+from multicall.utils import run_in_subprocess
 from semantic_version.base import Version
-from yearn import apy
-from yearn.apy.common import ApySamples
+from y import Contract
+from y.exceptions import NodeNotSynced, PriceError
+from y.networks import Network
+from y.prices import magic
+from y.utils.events import get_logs_asap
+
 from yearn.common import Tvl
-from yearn.events import create_filter, decode_logs
-from yearn.multicall2 import fetch_multicall
-from yearn.prices import magic
+from yearn.decorators import sentry_catch_all, wait_or_exit_after
+from yearn.events import decode_logs
+from yearn.multicall2 import fetch_multicall_async
 from yearn.prices.curve import curve
 from yearn.special import Ygov
 from yearn.typing import Address
-from yearn.utils import safe_views, contract
+from yearn.utils import run_in_thread, safe_views
 from yearn.v2.strategies import Strategy
-from yearn.exceptions import PriceError
-from yearn.decorators import sentry_catch_all, wait_or_exit_after
-from yearn.networks import Network
+
+if TYPE_CHECKING:
+    from yearn.apy.common import ApySamples
 
 VAULT_VIEWS_SCALED = [
     "totalAssets",
@@ -49,17 +55,55 @@ STRATEGY_EVENTS = [
 
 logger = logging.getLogger(__name__)
 
+async def get_price_return_exceptions(token, block=None):
+    try:
+        return await magic.get_price(token, block=block, silent=True, sync=False)
+    except Exception as e:
+        return e
+
+def _unpack_results(vault: Address, is_experiment: bool, _views: List[str], results: List[Any], scale: int, price_or_exception: Union[float, BaseException], strategies: List[str], strategy_descs: List[Dict]) -> Dict[str,Any]:
+    try:
+        info = dict(zip(_views, results))
+        for name in info:
+            if name in VAULT_VIEWS_SCALED:
+                info[name] /= scale
+        info["strategies"] = {}
+    except ValueError as e:
+        info = {"strategies": {}}
+ 
+    if isinstance(price_or_exception, BaseException):
+        # Sometimes we fail to fetch price during blocks prior to the first deposit to a vault.
+        # In this case (totalSupply == 0), missing price data is totally fine and we can set price = 0.
+        # In all other cases, missing price data indicates an issue. We must raise and debug the Exception.
+        if info["totalSupply"] > 0:
+            raise price_or_exception
+        price_or_exception = 0
+    
+    price = price_or_exception
+    
+    info["token price"] = price
+    if "totalAssets" in info:
+        info["tvl"] = info["token price"] * info["totalAssets"]
+
+    for strategy_name, desc in zip(strategies, strategy_descs):
+        info["strategies"][strategy_name] = desc
+
+    info["experimental"] = is_experiment
+    info["address"] = vault
+    info["version"] = "v2"
+    return info
+
 
 class Vault:
-    def __init__(self, vault, api_version=None, token=None, registry=None, watch_events_forever=True):
+    def __init__(self, vault: Contract, api_version=None, token=None, registry=None, watch_events_forever=True):
         self._strategies: Dict[Address, Strategy] = {}
         self._revoked: Dict[Address, Strategy] = {}
         self._reports = []
-        self.vault = vault
+        self.vault: Contract = vault
         self.api_version = api_version
         if token is None:
             token = vault.token()
-        self.token = contract(token)
+        self.token = Contract(token)
         self.registry = registry
         self.scale = 10 ** self.vault.decimals()
         # multicall-safe views with 0 inputs and numeric output.
@@ -99,7 +143,7 @@ class Vault:
 
     @classmethod
     def from_address(cls, address):
-        vault = contract(address)
+        vault = Contract(address)
         instance = cls(vault=vault, token=vault.token(), api_version=vault.apiVersion())
         instance.name = vault.name()
         return instance
@@ -139,14 +183,16 @@ class Vault:
             self._thread.start()
 
     def load_harvests(self):
-        Parallel(8, "threading")(delayed(strategy.load_harvests)() for strategy in self.strategies)
+        Parallel(1, "threading")(delayed(strategy.load_harvests)() for strategy in self.strategies)
 
     @sentry_catch_all
     def watch_events(self):
         start = time.time()
-        self.log_filter = create_filter(str(self.vault), topics=self._topics)
-        logs = self.log_filter.get_all_entries()
+        sleep_time = 300
+        from_block = None
+        height = chain.height
         while True:
+            logs = get_logs_asap(str(self.vault), topics=self._topics, from_block=from_block, to_block=height)
             events = decode_logs(logs)
             self.process_events(events)
             if not self._done.is_set():
@@ -154,10 +200,13 @@ class Vault:
                 logger.info("loaded %d strategies %s in %.3fs", len(self._strategies), self.name, time.time() - start)
             if not self._watch_events_forever:
                 return
-            time.sleep(300)
+            time.sleep(sleep_time)
 
-            # read new logs at end of loop
-            logs = self.log_filter.get_new_entries()
+            # set vars for next loop
+            from_block = height + 1
+            height = chain.height
+            if height < from_block:
+                raise NodeNotSynced(f"No new blocks in the past {sleep_time/60} minutes.")
 
 
     def process_events(self, events):
@@ -192,31 +241,32 @@ class Vault:
             elif event.name == "StrategyReported":
                 self._reports.append(event)
 
-    def describe(self, block=None):
-        try:
-            results = fetch_multicall(*[[self.vault, view] for view in self._views], block=block)
-            info = dict(zip(self._views, results))
-            for name in info:
-                if name in VAULT_VIEWS_SCALED:
-                    info[name] /= self.scale
-            info["strategies"] = {}
-        except ValueError as e:
-            info = {"strategies": {}}
+    async def _unpack_results(self, results):
+        results, strategy_descs, price = results
+        return await run_in_subprocess(
+            _unpack_results,
+            self.vault.address,
+            self.is_experiment,
+            self._views,
+            results,
+            self.scale,
+            price,
+            # must be picklable.
+            [strategy.unique_name for strategy in self.strategies],
+            strategy_descs,
+        )
 
-        for strategy in self.strategies:
-            info["strategies"][strategy.unique_name] = strategy.describe(block=block)
+    async def describe(self, block=None):
+        await run_in_thread(self.load_strategies)
+        results = await asyncio.gather(
+            fetch_multicall_async(*[[self.vault, view] for view in self._views], block=block),
+            asyncio.gather(*[strategy.describe(block=block) for strategy in self.strategies]),
+            get_price_return_exceptions(self.token, block=block)
+        )
+        return await self._unpack_results(results)
 
-        info["token price"] = magic.get_price(self.token, block=block) if info['totalSupply'] > 0 else 0
-        if "totalAssets" in info:
-            info["tvl"] = info["token price"] * info["totalAssets"]
-
-        info["experimental"] = self.is_experiment
-        info["address"] = self.vault
-        info["version"] = "v2"
-        
-        return info
-
-    def apy(self, samples: ApySamples):
+    def apy(self, samples: "ApySamples"):
+        from yearn import apy
         if self._needs_curve_simple():
             return apy.curve.simple(self, samples)
         elif pool := apy.velo.get_staking_pool(self.token.address):
@@ -238,7 +288,6 @@ class Vault:
             price = 0
         tvl = total_assets * price / 10 ** self.vault.decimals(block_identifier=block)
         return Tvl(total_assets, price, tvl)
-
 
     def _needs_curve_simple(self):
         # some curve vaults which should not be calculated with curve logic
