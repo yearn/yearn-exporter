@@ -38,7 +38,7 @@ services:
     restart: always
 
   grafana:
-    image: grafana/grafana:9.2.1
+    image: grafana/grafana:10.0.1
     depends_on:
       - victoria-metrics
       - postgres
@@ -88,7 +88,7 @@ services:
     restart: always
 
   postgres:
-    image: postgres
+    image: postgres:14
     ports:
       - 5432:5432
     environment:
