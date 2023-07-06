@@ -13,7 +13,6 @@ from yearn.apy.common import (Apy, ApyBlocks, ApyError, ApyFees, ApyPoints,
                               ApySamples, SharePricePoint, calculate_roi)
 from yearn.apy.staking_rewards import get_staking_rewards_apr
 from yearn.debug import Debug
-from yearn.networks import Network
 
 logger = logging.getLogger(__name__)
 

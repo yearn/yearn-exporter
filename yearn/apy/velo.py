@@ -7,11 +7,11 @@ from typing import TYPE_CHECKING, Optional
 
 from brownie import ZERO_ADDRESS, chain
 from y import Contract, Network
+from y.time import get_block_timestamp
 
 from yearn.apy.common import SECONDS_PER_YEAR, Apy, ApyFees
 from yearn.debug import Debug
 from yearn.prices import magic
-from yearn.utils import get_block_timestamp
 
 if TYPE_CHECKING:
     from yearn.v2.vaults import Vault

@@ -19,7 +19,6 @@ from yearn.prices.incidents import INCIDENTS
 from yearn.prices.uniswap.uniswap import uniswaps
 from yearn.prices.uniswap.v2 import uniswap_v2
 from yearn.prices.yearn import yearn_lens
-from yearn.special import Backscratcher
 from yearn.typing import Address, AddressOrContract, AddressString, Block
 from yearn.utils import contract
 
@@ -29,6 +28,8 @@ async def _get_price(token: AnyAddressType, block: Optional[Block]) -> float:
     """ Performs some checks before deferring to ypricemagic. """ 
 
     if chain.id == Network.Mainnet:
+        # fixes circular import
+        from yearn.special import Backscratcher
         # no liquid market for yveCRV-DAO -> return CRV token price
         if token == Backscratcher().vault.address and block < 11786563:
             return await _get_price("0xD533a949740bb3306d119CC777fa900bA034cd52", block)
