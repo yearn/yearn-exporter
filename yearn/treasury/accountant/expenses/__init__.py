@@ -62,6 +62,7 @@ if chain.id == Network.Mainnet:
     infrastructure_txgroup = expenses_txgroup.create_child("Infrastructure")
     infrastructure_txgroup.create_child("Server Costs", infrastructure.is_servers)
     infrastructure_txgroup.create_child("Tenderly Subscription", infrastructure.is_tenderly)
+    infrastructure_txgroup.create_child("Wonderland Jobs", infrastructure.is_wonderland)
     infrastructure_txgroup.create_child("Unspecified Infra", infrastructure.is_generic)
     
     # Previously these weren't very granularly categorized but now with the new BR system we can split out each grant
@@ -74,3 +75,6 @@ if chain.id == Network.Mainnet:
     grants.create_child("Zootroop [BR#xxx]", people.is_zootroop)
     grants.create_child("Corn [BR#xxx]", people.is_corn)
     grants.create_child("Tapir [BR#xxx]", people.is_tapir)
+    grants.create_child("ySecurity 2 [BR#xxx]", people.is_ysecurity_2)
+    grants.create_child("yBudget [BR#xxx]", people.is_ybudget)
+    grants.create_child("ySupport [BR#xxx]", people.is_ysupport)

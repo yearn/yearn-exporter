@@ -44,3 +44,6 @@ def is_slippage_bug_reimbursement(tx: TreasuryTx) -> bool:
         ["0xc179e27f0e38bca52744d71dc6ff2463ed10fa918908ce28adcf4f4c0d6d6a1e", Filter('log_index', 103)],
         ["0x51c611597574aaa3b829004363476b1c2a4dc2941dff695c26c100498b695b4f", Filter('log_index', 214)],
     ])
+
+def is_opti_zap_bug(tx: TreasuryTx) -> bool:
+    return tx in HashMatcher(["0xf1bc9683863fd7133377e618e80a7035bc9389e7abf3f650aed4df8b068a2b79"])

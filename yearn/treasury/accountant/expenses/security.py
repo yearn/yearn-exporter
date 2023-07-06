@@ -27,6 +27,8 @@ def is_chainsec_audit(tx: TreasuryTx) -> bool:
             "0xea937a5c5298dd5b60c8e0f193798855b2641c64ced0f92b1d9fdef673ae508d",
             "0x410c8858b77f5810cbf7c3352d8858ec6d2e783ef7dfdefb16da5cf323fe610c",
             "0x314243dd4b344857456b7aecfd011c9fcd03f93a7ce0cd3ac60f265cfbe3d534",
+            "0x74909f152767fc6223b6308b46085e0da7403078510ca2b751291fac64ca91d2",
+            ["0xa0aa1d29e11589350db4df09adc496102a1d9db8a778fc7108d2fb99fb40b6d0", Filter('log_index', 395)],
         ],
     }.get(chain.id, []))
 

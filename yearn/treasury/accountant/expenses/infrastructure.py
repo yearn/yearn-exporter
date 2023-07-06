@@ -14,6 +14,11 @@ def is_tenderly(tx: TreasuryTx) -> bool:
         return True
     return False
 
+def is_wonderland(tx: TreasuryTx) -> bool:
+    if tx._symbol == "DAI" and tx.from_address.address in treasury.addresses and tx.to_address and tx.to_address.address == '0x8bA72884984f669aBBc9a5a7b441AD8E3D9a4fD3':
+        return True
+    return False
+
 def is_generic(tx: TreasuryTx) -> bool:
     hashes = [
         ["0x47035f156d4e6144c144b2ac5e91497e353c9a4e23133587bbf3da2f9d7da596", Filter('_symbol', 'DAI')],
@@ -28,5 +33,6 @@ def is_generic(tx: TreasuryTx) -> bool:
         "0xeb8d642da7b4f0981aca22b747489c67b09d86e75381da5d68d6c00448e440c8",
         ["0x5deca5d6c934372c174bbef8be9a1e103e06d8b93fd3bf8d77865dfeb34fe3be", Filter('log_index', 98)],
         "0x3160b025085b17ee4bc3810c753c2d1fe9c556d2fb4cdf2ec7669cc878a94c68",
+        "0x17a72a66512aa302a4f89b7d894519abf335156deac2a4801c884283181daa83",
     ]
     return tx in HashMatcher(hashes)
