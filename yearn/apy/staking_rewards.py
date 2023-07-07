@@ -20,6 +20,9 @@ def get_staking_rewards_apr(vault, samples: ApySamples):
     if staking_pool.periodFinish() < now:
         return 0
 
+    if staking_pool.totalSupply() == 0:
+        return 0
+
     rewards_vault = vault.registry._vaults[staking_pool.rewardsToken()]
     per_staking_token_rate = (staking_pool.rewardRate() / 10**rewards_vault.vault.decimals()) / (staking_pool.totalSupply() / 10**vault.vault.decimals())
 
