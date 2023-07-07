@@ -9,7 +9,7 @@ from brownie import ZERO_ADDRESS, chain
 from y import Contract, Network
 from y.time import get_block_timestamp
 
-from yearn.apy.common import SECONDS_PER_YEAR, Apy, ApyFees
+from yearn.apy.common import SECONDS_PER_YEAR, Apy, ApyFees, ApySamples
 from yearn.debug import Debug
 from yearn.prices import magic
 
@@ -28,7 +28,7 @@ def get_staking_pool(underlying: str) -> Optional[Contract]:
         staking_pool = registry.gauges(underlying)
         return None if staking_pool == ZERO_ADDRESS else Contract(staking_pool)
         
-def staking(vault: "Vault", staking_rewards: Contract, block: Optional[int]=None) -> float:
+def staking(vault: "Vault", staking_rewards: Contract, samples: ApySamples, block: Optional[int]=None) -> float:
     end = staking_rewards.periodFinish(block_identifier=block)
     current_time = time() if block is None else get_block_timestamp(block)
     total_supply = staking_rewards.totalSupply(block_identifier=block) if hasattr(staking_rewards, "totalSupply") else 0
