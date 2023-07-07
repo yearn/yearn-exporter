@@ -52,6 +52,8 @@ def staking(vault: "Vault", staking_rewards: Contract, block: Optional[int]=None
     
     net_apr = gross_apr * (1 - performance) - management 
     net_apy = (1 + (net_apr / COMPOUNDING)) ** COMPOUNDING - 1
+    from yearn.apy.staking_rewards import get_staking_rewards_apr
+    staking_rewards_apr = get_staking_rewards_apr(vault, samples)
     if os.getenv("DEBUG", None):
         logger.info(pformat(Debug().collect_variables(locals())))
-    return Apy("v2:velo", gross_apr=gross_apr, net_apy=net_apy, fees=fees)
+    return Apy("v2:velo", gross_apr=gross_apr, net_apy=net_apy, fees=fees, staking_rewards_apr=staking_rewards_apr)
