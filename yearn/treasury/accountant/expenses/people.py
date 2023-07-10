@@ -162,11 +162,17 @@ def is_yearn_exporter(tx: TreasuryTx) -> bool:
             return True
     return False
 
+# TODO figure out why these didn't sort
+_xopowo_hashes = [
+    "0xea1ce33495faf84892826ce4d25b9010ef1b035215f38e537164237cff07c459",
+    "0x1969a5ebdedc96057feaa7a156adbdfd2e452868d0bb8258df767f12db26895d",
+]
+
 def is_xopowo(tx: TreasuryTx) -> bool:
     if tx.to_address.address == "0x4F909396A75FE9d59F584156A851B3770f3F438a":
         print(tx.amount)
         print(5.1)
-        if tx._symbol == "YFI" and (tx.amount == 5.1 or tx.hash == "0x1969a5ebdedc96057feaa7a156adbdfd2e452868d0bb8258df767f12db26895d"):
+        if tx._symbol == "YFI" and (tx.amount == 5.1 or tx.hash in _xopowo_hashes):
             return True
         elif tx._symbol == "DAI" and tx.amount == 71_500:
             return True
@@ -174,6 +180,8 @@ def is_xopowo(tx: TreasuryTx) -> bool:
 
 def is_v3_team(tx: TreasuryTx) -> bool:
     if tx.to_address.address == "0x3333333368A1ed686392C1534e747F3e15CA286C":
+        return True
+        # make sure this is good
         if tx._symbol == "YFI" and tx.amount == 1.5:
             return True
         elif tx._symbol == "DAI" and tx.amount == 35_000:
@@ -188,9 +196,15 @@ def is_s2_team(tx: TreasuryTx) -> bool:
             return True
     return False
 
+# TODO figure out why this didn't sort
+_ycreative_hashes = [
+    "0x1969a5ebdedc96057feaa7a156adbdfd2e452868d0bb8258df767f12db26895d",
+    "0xea1ce33495faf84892826ce4d25b9010ef1b035215f38e537164237cff07c459",
+]
+
 def is_ycreative(tx: TreasuryTx) -> bool:
     if tx.to_address.address == "0x402449F51afbFC864D44133A975980179C6cD24C":
-        if tx._symbol == "YFI" and (tx.amount == 1.65 or tx.hash == "0x1969a5ebdedc96057feaa7a156adbdfd2e452868d0bb8258df767f12db26895d"):
+        if tx._symbol == "YFI" and (tx.amount == 1.65 or tx.hash in _ycreative_hashes):
             return True
         elif tx._symbol == "DAI" and tx.amount == 15_500:
             return True
@@ -220,5 +234,28 @@ def is_corn(tx: TreasuryTx) -> bool:
             return True
     return False
 
+# TODO: Refactor this whole thing
+
 def is_tapir(tx: TreasuryTx) -> bool:
     return tx.to_address.address == "0x80c9aC867b2D36B7e8D74646E074c460a008C0cb" and tx._symbol == "DAI" and tx.amount == 4_000
+
+def is_hipsterman(tx: TreasuryTx) -> bool:
+    return tx.to_address.address == "0xE53D3f2B99FE0Ed6C05977bC0547127836f0D78d" and tx._symbol == "DAI" and tx.amount == 3_500
+
+def is_worms(tx: TreasuryTx) -> bool:
+    return tx.to_address.address == "0xB1d693B77232D88a3C9467eD5619FfE79E80BCCc"
+
+def is_ysecurity_2(tx: TreasuryTx) -> bool:
+    return tx.to_address.address == "0x4851C7C7163bdF04A22C9e12Ab77e184a5dB8F0E"
+
+def is_ydiscount(tx: TreasuryTx) -> bool:
+    return tx.to_address.address == "0x54991866A907891c9B85478CC1Fb0560B17D2b1D"
+
+def is_ybudget(tx: TreasuryTx) -> bool:
+    return tx.to_address.address == "0x5E97104F602648aDcB9f75F5F3B852CAc2Dc4576"
+
+def is_ysupport(tx: TreasuryTx) -> bool:
+    return tx.to_address.address == "0xbd7B3Bc2C4581Fd173362c830AE45fB9506B3dA5"
+
+def is_rantom(tx: TreasuryTx) -> bool:
+    return tx.to_address.address == "0x254b42CaCf7290e72e2C84c0337E36E645784Ce1"

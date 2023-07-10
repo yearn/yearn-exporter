@@ -37,3 +37,4 @@ if chain.id == Network.Mainnet:
     bug_reimbursements_txgroup.create_child("yvCurve-IB Fee Calculation Bug", bugs.is_lossy_fee_reimbursement)
     bug_reimbursements_txgroup.create_child("Reimburse st-yCRV User", bugs.is_stycrv)
     bug_reimbursements_txgroup.create_child("Slippage Bug", bugs.is_slippage_bug_reimbursement)
+    bug_reimbursements_txgroup.create_child("Reimburse Opti Zap Bug", bugs.is_opti_zap_bug)

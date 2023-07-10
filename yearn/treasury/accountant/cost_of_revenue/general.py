@@ -58,6 +58,7 @@ def is_partner_fees(tx: TreasuryTx) -> bool:
             ["0xe11b4e3ece520c1818ffe821c038779f87c293aa32c26115265b6b8fb23c30bd", Filter('log_index', 154)],
             ["0xdc4e0045901cfd5ef4c6327b846a8bd229abdbf289547cd0e969874b47124342", Filter('log_index', 116)],
             ["0x9681276a8668f5870551908fc17be3553c82cf6a9fedbd2fdb43f1c05385dca1", Filter('log_index', 173)],
+            ["0xa12c99e2f4e5ffec9d280528968d615ab3d58483b37e8b021865163655892ea0", IterFilter('log_index', [223, 228])]
         ],
     }.get(chain.id, [])
 
