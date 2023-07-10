@@ -13,11 +13,11 @@ from typing import Union
 import boto3
 import requests
 import sentry_sdk
-from brownie import Contract, chain
+from brownie import chain
 from brownie.exceptions import BrownieEnvironmentWarning
+from y import Contract, Network
 from y.contracts import contract_creation_block
 from y.exceptions import yPriceMagicError
-from y.networks import Network
 
 from yearn import logs
 from yearn.apy import (Apy, ApyBlocks, ApyFees, ApyPoints, ApySamples,
