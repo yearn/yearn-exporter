@@ -311,9 +311,6 @@ class Stream(db.Entity):
     def stream_contract(self) -> Contract:
         return Contract(self.contract.address)
     
-    def start_timestamp(self, block: typing.Optional[int] = None) -> int:
-        return int(self.stream_contract.streamToStart('0x' + self.stream_id, block_identifier=block))
-    
     @property
     def start_date(self) -> date:
         return datetime.fromtimestamp(chain[self.start_block].timestamp).date()
@@ -325,13 +322,11 @@ class Stream(db.Entity):
             int(self.amount_per_second),
             block_identifier = block,
         )
-    
+
     def print(self):
         symbol = self.token.symbol
         print(f'{symbol} per second: {self.amount_per_second / self.scale}')
         print(f'{symbol} per day: {self.amount_per_day / self.scale}')
-
-one_day = 60 * 60 * 24
 
 class StreamedFunds(db.Entity):
     """ Each object represents one calendar day of tokens streamed for a particular stream. """
@@ -346,64 +341,27 @@ class StreamedFunds(db.Entity):
     value_usd = Required(Decimal, 38, 18)
     seconds_active = Required(int)
     is_last_day = Required(bool)
+    
+    @db_session
+    def get_entity(stream_id: str, date: datetime) -> "StreamedFunds":
+        stream = Stream[stream_id]
+        return StreamedFunds.get(date=date, stream=stream)
 
     @classmethod
-    def get_or_create_entity(cls, stream: Stream, date: datetime) -> typing.Optional["StreamedFunds"]:
-        if entity := StreamedFunds.get(date=date, stream=stream):
-            return entity
-
-        check_at = date + timedelta(days=1) - timedelta(seconds=1)
-        block = closest_block_after_timestamp(int(check_at.timestamp()))
-        start_timestamp = stream.start_timestamp(block)
-        if start_timestamp == 0:
-            # If the stream was already closed, we can return `None`.
-            if StreamedFunds.get(stream=stream, is_last_day=True):
-                return None
-
-            while start_timestamp == 0:
-                # is active last block?
-                block -= 1
-                start_timestamp = stream.start_timestamp(block)
-
-            block_datetime = datetime.fromtimestamp(chain[block].timestamp)
-            assert block_datetime.date() == date.date()
-            seconds_active = (check_at - block_datetime).seconds
-            is_last_day = True
-        else:
-            seconds_active = int(check_at.timestamp()) - start_timestamp
-            is_last_day = False
-
-        # How many seconds was the stream active on `date`?
-        seconds_active_today = seconds_active if seconds_active < one_day else one_day
-        if seconds_active_today < one_day and not is_last_day:
-            if date.date() == stream.start_date:
-                print('stream started today, partial day accepted')
-            else:
-                seconds_active_today = one_day
-        print(date.date())
-        print(F"active for {seconds_active_today} seconds")
-        if is_last_day:
-            print('is last day')
-
+    @db_session
+    def create_entity(cls, stream_id: str, date: datetime, price, seconds_active: int, is_last_day: bool) -> "StreamedFunds":
+        stream = Stream[stream_id]
         # How much was streamed on `date`?
-        amount_streamed_today = round(stream.amount_per_second * seconds_active_today / stream.scale, 18)
-        
-        # We only need this for this function so we import in this function to save time where this function isn't needed.
-        from y.prices import magic
-
-        price = Decimal(magic.get_price(stream.token.address.address, block))
-
+        amount_streamed_today = round(stream.amount_per_second * seconds_active / stream.scale, 18)
         entity = StreamedFunds(
             date = date,
             stream = stream, 
             amount = amount_streamed_today,
             price = round(price, 18),
             value_usd = round(amount_streamed_today * price, 18),
-            seconds_active = seconds_active_today,
+            seconds_active = seconds_active,
             is_last_day = is_last_day,
         )
-
-        commit()
         return entity
 
 @ttl_cache(ttl=60)
