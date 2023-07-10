@@ -1,12 +1,11 @@
 import asyncio
 import json
 import logging
-import os
 import threading
 from concurrent.futures import ThreadPoolExecutor
 from datetime import datetime, timedelta
-from functools import lru_cache, wraps
-from typing import Any, Callable, List, TypeVar
+from functools import lru_cache
+from typing import AsyncGenerator, List
 
 import eth_retry
 import pandas as pd
@@ -18,7 +17,6 @@ from typing_extensions import ParamSpec
 from y.networks import Network
 from y.utils.dank_mids import dank_w3
 
-from yearn.cache import memory
 from yearn.typing import AddressOrContract
 
 logger = logging.getLogger(__name__)
@@ -199,16 +197,33 @@ def _squeeze(it):
 
 def dates_between(start: datetime, end: datetime) -> List[datetime]:
     end = end.date()
-    dates = []
+    dates: List[datetime] = []
 
     date = start.date()
     dates.append(date)
     while date <= end:
         date += timedelta(days=1)
         dates.append(date)
-        
+
     # We need datetimes, not dates
     return [datetime(date.year, date.month, date.day) for date in dates if date < datetime.utcnow().date()]
+
+async def dates_generator(start: datetime, end: datetime, stop_at_today: bool = True) -> AsyncGenerator[datetime, None]:
+    end = end.date()
+    dates: List[datetime] = []
+
+    date = start.date()
+    dates.append(date)
+    while date <= end:
+        date += timedelta(days=1)
+        dates.append(date)
+    
+    for date in dates:
+        while not date < datetime.utcnow().date():
+            if stop_at_today:
+                return
+            await asyncio.sleep(date.timestamp() - datetime.utcnow().timestamp())
+        yield datetime(date.year, date.month, date.day)
 
 def get_event_loop() -> asyncio.BaseEventLoop:
     try:
