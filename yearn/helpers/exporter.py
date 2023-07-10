@@ -4,7 +4,8 @@ import os
 import time
 from datetime import datetime, timedelta, timezone
 from functools import cached_property
-from typing import Awaitable, Callable, Literal, NoReturn, Optional, TypeVar
+from typing import (Awaitable, Callable, Literal, NoReturn, Optional, TypeVar,
+                    overload)
 
 import eth_retry
 from brownie import chain
@@ -71,6 +72,9 @@ class Exporter:
         self._snapshots_exported = 0
         self._semaphore = asyncio.Semaphore(concurrency)
     
+    @overload
+    def run(self, direction: Literal["historical"] = "historical") -> None:
+        ...
     def run(self, direction: Optional[Direction] = None) -> NoReturn:
         if direction is None:
             self.loop.run_until_complete(self.export_full())
