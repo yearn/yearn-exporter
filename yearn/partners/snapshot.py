@@ -1,6 +1,7 @@
 import asyncio
 import logging
 from collections import defaultdict
+from concurrent.futures import ThreadPoolExecutor
 from dataclasses import dataclass, field
 from datetime import date, timedelta
 from decimal import Decimal
@@ -12,7 +13,6 @@ import pandas as pd
 from async_lru import alru_cache
 from async_property import async_cached_property
 from brownie import chain, convert, multicall, web3
-from dank_mids.executor import PruningThreadPoolExecutor
 from pandas import DataFrame
 from pandas.core.tools.datetimes import DatetimeScalar
 from pony.orm import OperationalError, commit, db_session
@@ -196,7 +196,7 @@ class WildcardWrapper:
             {'receiver': wrappers},
         )
         addresses = [str(vault.vault) for vault in registry.vaults]
-        from_block = min(PruningThreadPoolExecutor().map(contract_creation_block, addresses))
+        from_block = min(ThreadPoolExecutor(8).map(contract_creation_block, addresses))
 
         # wrapper -> {vaults}
         deposits = defaultdict(set)
