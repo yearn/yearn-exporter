@@ -152,7 +152,8 @@ dashboards-build: build
 logs-all: logs
 
 # Maintenance
-rebuild: down build up
+rebuild: 
+	make down & make build down up
 all: rebuild
 scratch: clean-volumes build up
 clean-volumes: down
