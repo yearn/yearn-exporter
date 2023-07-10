@@ -11,7 +11,7 @@ from joblib import Parallel, delayed
 from multicall.utils import run_in_subprocess
 from semantic_version.base import Version
 from y import Contract
-from y.exceptions import NodeNotSynced, PriceError
+from y.exceptions import NodeNotSynced, PriceError, yPriceMagicError
 from y.networks import Network
 from y.prices import magic
 from y.utils.events import get_logs_asap
@@ -76,6 +76,7 @@ def _unpack_results(vault: Address, is_experiment: bool, _views: List[str], resu
         # In this case (totalSupply == 0), missing price data is totally fine and we can set price = 0.
         # In all other cases, missing price data indicates an issue. We must raise and debug the Exception.
         if info["totalSupply"] > 0:
+            logger.error(f"The exception below is for vault: {vault}")
             raise price_or_exception
         price_or_exception = 0
     
@@ -284,7 +285,9 @@ class Vault:
                 price = magic.get_price("0x3f42Dc59DC4dF5cD607163bC620168f7FF7aB970", block=block) # hardcode frxETH-sfrxETH to frxETH-WETH price for now
             else:
                 price = magic.get_price(self.vault.token(), block=block)
-        except PriceError:
+        except yPriceMagicError as e:
+            if not isinstance(e.exception, PriceError):
+                raise e
             price = 0
         tvl = total_assets * price / 10 ** self.vault.decimals(block_identifier=block)
         return Tvl(total_assets, price, tvl)

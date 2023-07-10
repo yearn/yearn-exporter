@@ -13,10 +13,10 @@ from typing import Union
 import boto3
 import requests
 import sentry_sdk
-from brownie import Contract, chain, web3
+from brownie import Contract, chain
 from brownie.exceptions import BrownieEnvironmentWarning
 from y.contracts import contract_creation_block
-from y.exceptions import PriceError
+from y.exceptions import yPriceMagicError
 from y.networks import Network
 
 from yearn import logs
@@ -54,7 +54,7 @@ def wrap_vault(
         apy_error.error_reason = ":".join(error.args)
         logger.error(error)
         apy = apy_error
-    except PriceError as error:
+    except yPriceMagicError as error:
         apy_error.error_reason = ":".join(error.args)
         logger.error(error)
         apy = apy_error

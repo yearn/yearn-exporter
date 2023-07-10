@@ -7,7 +7,7 @@ from typing import TYPE_CHECKING, Optional
 from brownie import ZERO_ADDRESS, interface
 from brownie.network.contract import InterfaceContainer
 from dank_mids.brownie_patch import patch_contract
-from y.exceptions import PriceError
+from y.exceptions import PriceError, yPriceMagicError
 from y.prices import magic
 from y.utils.dank_mids import dank_w3
 
@@ -156,7 +156,9 @@ class VaultV1:
         total_assets = self.vault.balance(block_identifier=block)
         try:
             price = magic.get_price(self.token, block=block)
-        except PriceError:
+        except yPriceMagicError as e:
+            if not isinstance(e.exception, PriceError):
+                raise e
             price = None
         tvl = total_assets * price / 10 ** self.vault.decimals(block_identifier=block) if price else None
         return Tvl(total_assets, price, tvl) 

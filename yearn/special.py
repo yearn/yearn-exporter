@@ -8,7 +8,7 @@ import requests
 from brownie import chain
 from y import Contract
 from y.contracts import contract_creation_block, contract_creation_block_async
-from y.exceptions import PriceError
+from y.exceptions import PriceError, yPriceMagicError
 from y.prices import magic
 
 from yearn.apy.common import Apy, ApyBlocks, ApyFees, ApyPoints, ApySamples
@@ -116,7 +116,9 @@ class Backscratcher(metaclass = Singleton):
         total_assets = self.vault.totalSupply(block_identifier=block)
         try:
             price = magic.get_price(self.token, block=block)
-        except PriceError:
+        except yPriceMagicError as e:
+            if not isinstance(e.exception, PriceError):
+                raise e
             price = None
         tvl = total_assets * price / 10 ** self.vault.decimals(block_identifier=block) if price else None
         return Tvl(total_assets, price, tvl)

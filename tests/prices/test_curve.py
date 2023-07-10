@@ -7,7 +7,7 @@ import requests
 from brownie import ZERO_ADDRESS, chain, multicall, web3
 from tabulate import tabulate
 from y.contracts import contract_creation_block
-from y.exceptions import PriceError
+from y.exceptions import PriceError, yPriceMagicError
 from y.networks import Network
 from y.prices.magic import get_price
 
@@ -408,7 +408,9 @@ def test_curve_lp_price_oracle_historical(name):
     for block in blocks:
         try:
             prices.append(curve.curve.get_price(token, block))
-        except PriceError:
+        except yPriceMagicError as e:
+            if not isinstance(e.exception, PriceError):
+                raise e
             prices.append(None)
 
     virtual_prices = [curve.curve.get_virtual_price(curve.curve.get_pool(token),block) for block in blocks]
