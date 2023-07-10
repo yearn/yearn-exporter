@@ -1,17 +1,19 @@
-import os
 import logging
+import os
 import traceback
+
+from multicall.utils import await_awaitable
 
 logger = logging.getLogger(__name__)
 
 def main(address):
+    from yearn.apy.common import get_samples
     from yearn.v2.registry import Registry
     from yearn.v2.vaults import Vault
-    from yearn.apy.common import get_samples
     registry = Registry()
     vault = Vault.from_address(address)
     vault.registry = registry
-    print(vault.apy(get_samples()))
+    print(await_awaitable(vault.apy(get_samples())))
 
 def with_exception_handling():
     address = os.getenv("DEBUG_ADDRESS", None)

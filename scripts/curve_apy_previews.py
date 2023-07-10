@@ -11,6 +11,7 @@ import requests
 import sentry_sdk
 from brownie import ZERO_ADDRESS, chain
 from brownie.exceptions import ContractNotFound
+from multicall.utils import await_awaitable
 from y import Contract, Network, PriceError
 from y.exceptions import ContractNotVerified
 
@@ -67,7 +68,7 @@ def _build_data(gauges):
         apy_error = Apy("error", 0, 0, ApyFees(0, 0), ApyPoints(0, 0, 0))
         try:
             if gauge.gauge_weight > 0:
-                apy = calculate_simple(None, gauge, samples)
+                apy = await_awaitable(calculate_simple(None, gauge, samples))
             else:
                 apy = Apy("zero_weight", 0, 0, ApyFees(0, 0), ApyPoints(0, 0, 0))
         except Exception as error:

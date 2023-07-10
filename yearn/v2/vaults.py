@@ -3,6 +3,7 @@ import logging
 import re
 import threading
 import time
+from functools import cached_property
 from typing import TYPE_CHECKING, Any, Dict, List, Union
 
 from brownie import chain
@@ -10,7 +11,7 @@ from eth_utils import encode_hex, event_abi_to_log_topic
 from joblib import Parallel, delayed
 from multicall.utils import run_in_subprocess
 from semantic_version.base import Version
-from y import Contract
+from y import ERC20, Contract, Network, magic
 from y.exceptions import NodeNotSynced, PriceError, yPriceMagicError
 from y.networks import Network
 from y.prices import magic
@@ -18,7 +19,7 @@ from y.utils.events import get_logs_asap
 
 from yearn.common import Tvl
 from yearn.decorators import sentry_catch_all, wait_or_exit_after
-from yearn.events import decode_logs
+from yearn.events import decode_logs, get_logs_asap
 from yearn.multicall2 import fetch_multicall_async
 from yearn.prices.curve import curve
 from yearn.special import Ygov
@@ -266,32 +267,37 @@ class Vault:
         )
         return await self._unpack_results(results)
 
-    def apy(self, samples: "ApySamples"):
+    async def apy(self, samples: "ApySamples"):
         from yearn import apy
-        if self._needs_curve_simple():
-            return apy.curve.simple(self, samples)
-        elif pool := apy.velo.get_staking_pool(self.token.address):
-            return apy.velo.staking(self, pool, samples)
+        if self._needs_curve_simple:
+            return await apy.curve.simple(self, samples)
+        elif pool := await apy.velo.get_staking_pool(self.token.address):
+            return await apy.velo.staking(self, pool, samples)
         elif Version(self.api_version) >= Version("0.3.2"):
-            return apy.v2.average(self, samples)
+            return await apy.v2.average(self, samples)
         else:
-            return apy.v2.simple(self, samples)
-
-    def tvl(self, block=None):
-        total_assets = self.vault.totalAssets(block_identifier=block)
-        price = 0
+            return await apy.v2.simple(self, samples)
+        
+    async def tvl(self, block=None):
+        total_assets = await self.vault.totalAssets.coroutine(block_identifier=block)
         try:
+            # hardcode frxETH-sfrxETH to frxETH-WETH price for now
             if self.vault.address == "0xc2626aCEdc27cFfB418680d0307C9178955A4743":
-                price = magic.get_price("0x3f42Dc59DC4dF5cD607163bC620168f7FF7aB970", block=block) # hardcode frxETH-sfrxETH to frxETH-WETH price for now
+                price = await magic.get_price("0x3f42Dc59DC4dF5cD607163bC620168f7FF7aB970", block=block, sync=False) 
             else:
-                price = magic.get_price(self.vault.token(), block=block)
+                price = await magic.get_price(self.token, block=None, sync=False)
         except yPriceMagicError as e:
             if not isinstance(e.exception, PriceError):
                 raise e
             price = 0
+            
+        # NOTE: which one of these do we use? idk, must check
         tvl = total_assets * price / 10 ** self.vault.decimals(block_identifier=block)
+        tvl = total_assets * price / await ERC20(self.vault, asynchronous=True).scale if price else None
+        
         return Tvl(total_assets, price, tvl)
 
+    @cached_property
     def _needs_curve_simple(self):
         # some curve vaults which should not be calculated with curve logic
         curve_simple_excludes = {

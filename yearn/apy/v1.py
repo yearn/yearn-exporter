@@ -1,4 +1,4 @@
-from y.contracts import contract_creation_block
+from y.contracts import contract_creation_block_async
 
 from yearn.apy.common import (
     Apy,
@@ -12,25 +12,25 @@ from yearn.apy.common import (
 )
 
 
-def simple(vault, samples: ApySamples) -> Apy:
-    inception_block = contract_creation_block(vault.vault.address)
+async def simple(vault, samples: ApySamples) -> Apy:
+    inception_block = await contract_creation_block_async(vault.vault.address)
 
     if not inception_block:
         raise ApyError("v1:blocks", "inception_block not found")
 
     contract = vault.vault
-    price_per_share = contract.getPricePerFullShare
+    price_per_share = contract.getPricePerFullShare.coroutine
 
     inception_price = 1e18
 
     try:
-        now_price = price_per_share(block_identifier=samples.now)
+        now_price = await price_per_share(block_identifier=samples.now)
     except ValueError:
         now_price = inception_price
 
     if samples.week_ago > inception_block:
         try:
-            week_ago_price = price_per_share(block_identifier=samples.week_ago)
+            week_ago_price = await price_per_share(block_identifier=samples.week_ago)
         except ValueError:
             week_ago_price = now_price
     else:
@@ -38,7 +38,7 @@ def simple(vault, samples: ApySamples) -> Apy:
 
     if samples.month_ago > inception_block:
         try:
-            month_ago_price = price_per_share(block_identifier=samples.month_ago)
+            month_ago_price = await price_per_share(block_identifier=samples.month_ago)
         except ValueError:
             month_ago_price = week_ago_price
     else:
@@ -58,10 +58,10 @@ def simple(vault, samples: ApySamples) -> Apy:
     net_apy = next((value for value in apys if value != 0), 0)
 
     strategy = vault.strategy
-    withdrawal = strategy.withdrawalFee() if hasattr(strategy, "withdrawalFee") else 0
-    strategist_performance = strategy.performanceFee() if hasattr(strategy, "performanceFee") else 0
-    strategist_reward = strategy.strategistReward() if hasattr(strategy, "strategistReward") else 0
-    treasury = strategy.treasuryFee() if hasattr(strategy, "treasuryFee") else 0
+    withdrawal = await strategy.withdrawalFee.coroutine() if hasattr(strategy, "withdrawalFee") else 0
+    strategist_performance = await strategy.performanceFee.coroutine() if hasattr(strategy, "performanceFee") else 0
+    strategist_reward = await strategy.strategistReward.coroutine() if hasattr(strategy, "strategistReward") else 0
+    treasury = await strategy.treasuryFee.coroutine() if hasattr(strategy, "treasuryFee") else 0
 
     performance = (strategist_reward + strategist_performance + treasury) / 1e4
 

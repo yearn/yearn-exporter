@@ -7,12 +7,12 @@ from pprint import pformat
 from brownie import chain
 from semantic_version.base import Version
 from y.networks import Network
-from y.contracts import contract_creation_block
 
 from yearn.apy.common import (Apy, ApyBlocks, ApyError, ApyFees, ApyPoints,
                               ApySamples, SharePricePoint, calculate_roi)
 from yearn.apy.staking_rewards import get_staking_rewards_apr
 from yearn.debug import Debug
+from yearn.utils import run_in_thread
 
 logger = logging.getLogger(__name__)
 
@@ -30,8 +30,8 @@ def closest(haystack, needle):
         return before
 
 
-def simple(vault, samples: ApySamples) -> Apy:
-    harvests = sorted([harvest for strategy in vault.strategies for harvest in strategy.harvests])
+async def simple(vault, samples: ApySamples) -> Apy:
+    harvests = sorted([harvest for strategy in vault.strategies for harvest in await run_in_thread(getattr, strategy, "harvests")])
 
     # we don't want to display APYs when vaults are ramping up
     if len(harvests) < 2:
@@ -44,27 +44,28 @@ def simple(vault, samples: ApySamples) -> Apy:
     
     # set our parameters
     contract = vault.vault
-    price_per_share = contract.pricePerShare
+    price_per_share = contract.pricePerShare.coroutine
     
     # calculate our current price
-    now_price = price_per_share(block_identifier=now)
+    now_price = await price_per_share(block_identifier=now)
 
     # get our inception data
     # the first report is when the vault first allocates funds to farm with
-    inception_block = vault.reports[0].block_number
-    inception_price = price_per_share(block_identifier=inception_block)
+    reports = await run_in_thread(getattr, vault, 'reports')
+    inception_block = reports[0].block_number
+    inception_price = await price_per_share(block_identifier=inception_block)
 
     if now_price == inception_price:
         raise ApyError("v2:inception", "no change from inception price")
     
     # check our historical data
     if samples.week_ago > inception_block:
-        week_ago_price = price_per_share(block_identifier=week_ago)
+        week_ago_price = await price_per_share(block_identifier=week_ago)
     else:
         week_ago_price = inception_price
 
     if samples.month_ago > inception_block:
-        month_ago_price = price_per_share(block_identifier=month_ago)
+        month_ago_price = await price_per_share(block_identifier=month_ago)
     else:
         month_ago_price = inception_price
 
@@ -91,14 +92,15 @@ def simple(vault, samples: ApySamples) -> Apy:
     # for performance fee, half comes from strategy (strategist share) and half from the vault (treasury share)
     strategy_fees = []
     for strategy in vault.strategies: # look at all of our strategies
-        debt_ratio = contract.strategies(strategy.strategy)['debtRatio'] / 10000
-        performance_fee = contract.strategies(strategy.strategy)['performanceFee']
+        strategy_info = await contract.strategies.coroutine(strategy.strategy)
+        debt_ratio = strategy_info['debtRatio'] / 10000
+        performance_fee = strategy_info['performanceFee']
         proportional_fee = debt_ratio * performance_fee
         strategy_fees.append(proportional_fee)
     
     strategy_performance = sum(strategy_fees)
-    vault_performance = contract.performanceFee() if hasattr(contract, "performanceFee") else 0
-    management = contract.managementFee() if hasattr(contract, "managementFee") else 0
+    vault_performance = await contract.performanceFee.coroutine() if hasattr(contract, "performanceFee") else 0
+    management = await contract.managementFee.coroutine() if hasattr(contract, "managementFee") else 0
     performance = vault_performance + strategy_performance
 
     performance /= 1e4
@@ -123,8 +125,8 @@ def simple(vault, samples: ApySamples) -> Apy:
     return Apy("v2:simple", gross_apr, net_apy, fees, points=points, blocks=blocks)
 
 
-def average(vault, samples: ApySamples) -> Apy:
-    reports = vault.reports
+async def average(vault, samples: ApySamples) -> Apy:
+    reports = await run_in_thread(getattr, vault, "reports")
 
     # we don't want to display APYs when vaults are ramping up
     if len(reports) < 2:
@@ -132,14 +134,14 @@ def average(vault, samples: ApySamples) -> Apy:
     
     # set our parameters
     contract = vault.vault
-    price_per_share = contract.pricePerShare
+    price_per_share = contract.pricePerShare.coroutine
     # calculate our current price
-    now_price = price_per_share(block_identifier=samples.now)
+    now_price = await price_per_share(block_identifier=samples.now)
 
     # get our inception data
     # the first report is when the vault first allocates funds to farm with
     inception_block = reports[0].block_number
-    inception_price = price_per_share(block_identifier=inception_block)
+    inception_price = await price_per_share(block_identifier=inception_block)
 
     if now_price == inception_price:
         raise ApyError("v2:inception", "no change from inception price")
@@ -149,14 +151,14 @@ def average(vault, samples: ApySamples) -> Apy:
 
     # check our historical data
     if samples.week_ago > inception_block:
-        week_ago_price = price_per_share(block_identifier=samples.week_ago)
+        week_ago_price = await price_per_share(block_identifier=samples.week_ago)
         week_ago_point = SharePricePoint(samples.week_ago, week_ago_price)
     else:
         week_ago_price = inception_price
         week_ago_point = inception_point
 
     if samples.month_ago > inception_block:
-        month_ago_price = price_per_share(block_identifier=samples.month_ago)
+        month_ago_price = await price_per_share(block_identifier=samples.month_ago)
         month_ago_point = SharePricePoint(samples.month_ago, month_ago_price)
     else:
         month_ago_price = inception_price
@@ -178,7 +180,7 @@ def average(vault, samples: ApySamples) -> Apy:
         apys = [month_ago_apy, week_ago_apy]
 
     two_months_ago = datetime.now() - timedelta(days=60)
-    if contract.activation() > two_months_ago.timestamp():
+    if await contract.activation.coroutine() > two_months_ago.timestamp():
         # if the vault was activated less than two months ago then it's ok to use
         # the inception apy, otherwise using it isn't representative of the current apy
         apys.append(inception_apy)
@@ -188,14 +190,15 @@ def average(vault, samples: ApySamples) -> Apy:
     # for performance fee, half comes from strategy (strategist share) and half from the vault (treasury share)
     strategy_fees = []
     for strategy in vault.strategies: # look at all of our strategies
-        debt_ratio = contract.strategies(strategy.strategy)['debtRatio'] / 10000
-        performance_fee = contract.strategies(strategy.strategy)['performanceFee']
+        strategy_info = await contract.strategies.coroutine(strategy.strategy)
+        debt_ratio = strategy_info['debtRatio'] / 10000
+        performance_fee = strategy_info['performanceFee']
         proportional_fee = debt_ratio * performance_fee
         strategy_fees.append(proportional_fee)
     
     strategy_performance = sum(strategy_fees)
-    vault_performance = contract.performanceFee() if hasattr(contract, "performanceFee") else 0
-    management = contract.managementFee() if hasattr(contract, "managementFee") else 0
+    vault_performance = await contract.performanceFee.coroutine() if hasattr(contract, "performanceFee") else 0
+    management = await contract.managementFee.coroutine() if hasattr(contract, "managementFee") else 0
     performance = vault_performance + strategy_performance
 
     performance /= 1e4
@@ -222,8 +225,7 @@ def average(vault, samples: ApySamples) -> Apy:
     points = ApyPoints(week_ago_apy, month_ago_apy, inception_apy)
     blocks = ApyBlocks(samples.now, samples.week_ago, samples.month_ago, inception_block)
     fees = ApyFees(performance=performance, management=management)
-    from yearn.apy.staking_rewards import get_staking_rewards_apr
-    staking_rewards_apr = get_staking_rewards_apr(vault, samples)
+    staking_rewards_apr = await get_staking_rewards_apr(vault, samples)
     if os.getenv("DEBUG", None):
         logger.info(pformat(Debug().collect_variables(locals())))
     return Apy("v2:averaged", gross_apr, net_apy, fees, points=points, blocks=blocks, staking_rewards_apr=staking_rewards_apr)
