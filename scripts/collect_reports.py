@@ -21,6 +21,7 @@ warnings.filterwarnings("ignore", ".*Class SelectOfScalar will not make use of S
 warnings.filterwarnings("ignore", ".*Locally compiled and on-chain*")
 warnings.filterwarnings("ignore", ".*It has been discarded*")
 warnings.filterwarnings("ignore", ".*MismatchedABI*")
+logging.basicConfig(level=logging.DEBUG) 
 
 logging.basicConfig(level=logging.DEBUG)
 # mainnet_public_channel = os.environ.get('TELEGRAM_CHANNEL_1_PUBLIC')
@@ -28,6 +29,9 @@ logging.basicConfig(level=logging.DEBUG)
 # discord_mainnet = os.environ.get('DISCORD_CHANNEL_1')
 # discord_ftm = os.environ.get('DISCORD_CHANNEL_250')
 
+VAULT_EXCEPTIONS = [
+    '0xcd68c3fC3e94C5AcC10366556b836855D96bfa93', # yvCurve-dETH-f 
+]
 
 inv_telegram_key = os.environ.get('WAVEY_ALERTS_BOT_KEY')
 ETHERSCANKEY = os.environ.get('ETHERSCAN_KEY')
@@ -244,9 +248,10 @@ def main(dynamically_find_multi_harvest=False):
         # time.sleep(interval_seconds)
 
 def handle_event(event, multi_harvest):
-    # exception because skeletor didnt verify contract
     endorsed_vaults = list(contract(CHAIN_VALUES[chain.id]["REGISTRY_HELPER_ADDRESS"]).getVaults())
     txn_hash = event.transaction_hash.hex()
+    if event.address in VAULT_EXCEPTIONS:
+        return
     if event.address not in endorsed_vaults:
         # check if a vault from inverse partnership
         if event.address not in INVERSE_PRIVATE_VAULTS:
@@ -256,6 +261,7 @@ def handle_event(event, multi_harvest):
         if get_vault_endorsement_block(event.address) > event.block_number:
             print(f"skipping: not endorsed yet. txn hash {txn_hash}. chain id {chain.id} sync {event.block_number} / {chain.height}.")
             return
+
     print(txn_hash)
     tx = web3.eth.getTransactionReceipt(txn_hash)
     gas_price = web3.eth.getTransaction(txn_hash).gasPrice
