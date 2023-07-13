@@ -3,6 +3,7 @@ import logging
 import sentry_sdk
 from y.networks import Network
 
+from yearn import constants
 from yearn.helpers.exporter import Exporter
 from yearn.outputs.victoria.victoria import _post
 from yearn.treasury.treasury import YearnTreasury
@@ -19,7 +20,7 @@ exporter = Exporter(
     data_fn = treasury.data_for_export,
     export_fn = _post,
     start_block = treasury._start_block,
-    concurrency=1,
+    concurrency=constants.CONCURRENCY,
 )
 
 def main():

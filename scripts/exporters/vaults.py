@@ -6,6 +6,7 @@ from brownie import chain
 from y.networks import Network
 from y.time import closest_block_after_timestamp
 
+from yearn import constants
 from yearn.helpers.exporter import Exporter
 from yearn.outputs.victoria.victoria import _post
 from yearn.yearn import Yearn
@@ -47,7 +48,7 @@ exporter = Exporter(
     data_fn = yearn.data_for_export, 
     export_fn = _post,
     start_block = closest_block_after_timestamp(int(start.timestamp())) - 1,
-    concurrency=1,
+    concurrency=constants.CONCURRENCY,
 )
 
 def main():

@@ -3,6 +3,8 @@ import os
 from brownie import chain, convert
 from y.networks import Network
 
+CONCURRENCY = int(os.environ.get("CONCURRENCY", 1))
+
 YFI = {
     Network.Mainnet: "0x0bc529c00C6401aEF6D220BE8C6Ea1667F6Ad93e",
 }.get(chain.id, None)
