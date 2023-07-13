@@ -8,6 +8,7 @@ from cachetools.func import ttl_cache
 from y.networks import Network
 from y.time import closest_block_after_timestamp
 
+from yearn import constants
 from yearn.entities import UserTx
 from yearn.helpers.exporter import Exporter
 from yearn.outputs.postgres.utils import last_recorded_block
@@ -47,7 +48,7 @@ exporter = WalletExporter(
     data_fn = yearn.wallet_data_for_export,
     export_fn = _post,
     start_block = closest_block_after_timestamp(int(start.timestamp())) - 1,
-    concurrency=1
+    concurrency=constants.CONCURRENCY,
 )
 
 def main():

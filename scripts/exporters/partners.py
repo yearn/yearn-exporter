@@ -8,6 +8,7 @@ from pandas import DataFrame
 from y.networks import Network
 from y.time import closest_block_after_timestamp
 
+from yearn import constants
 from yearn.helpers.exporter import Exporter
 from yearn.outputs.victoria.victoria import _build_item, _post
 from yearn.partners.partners import partners
@@ -33,7 +34,7 @@ def main():
         data_fn = export_partners,
         export_fn = _post,
         start_block = closest_block_after_timestamp(start) - 1,
-        concurrency=1,
+        concurrency=constants.CONCURRENCY,
     )
     
     exporter.run()

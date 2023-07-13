@@ -9,6 +9,7 @@ from y import Contract, Network
 from y.datatypes import Block
 from y.time import closest_block_after_timestamp
 
+from yearn import constants
 from yearn.helpers.exporter import Exporter
 from yearn.multicall2 import fetch_multicall_async
 from yearn.outputs.victoria.victoria import _build_item, _post
@@ -29,7 +30,7 @@ def main():
         data_fn = VotingYFI().metrics_for_export,
         export_fn = _post,
         start_block = closest_block_after_timestamp(start[chain.id]),
-        concurrency=1,
+        concurrency=constants.CONCURRENCY,
     ).run()
 
 
