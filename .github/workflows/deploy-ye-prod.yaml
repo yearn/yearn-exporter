@@ -6,6 +6,10 @@ on:
         description: Docker image tag
         required: true
         default: latest
+  workflow_run:
+    workflows: ["☃ Build & publish docker image"]
+    types:
+      - completed
 
 jobs:
   deployment:
