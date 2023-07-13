@@ -76,6 +76,7 @@ x-envs: &envs
   - REVENUES_TO
 
   # NETWORK ENVS
+  - NETWORK
   - BROWNIE_NETWORK
   - WEB3_PROVIDER
   - MAINNET_PROVIDER
@@ -94,6 +95,9 @@ x-envs: &envs
   - PGUSER=postgres
   - PGPASSWORD=yearn-exporter
 
+  # DOCKER CONTAINER ENVS
+  - CONTAINER_NAME
+
 x-volumes: &volumes
   - brownie:/root/.brownie
   - cache:/app/yearn-exporter/cache
@@ -109,4 +113,11 @@ services:
     external_links:
       - yearn-exporter-infra-postgres-1:postgres
       - yearn-exporter-infra-victoria-metrics-1:victoria-metrics
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "100m"
+        max-file: 3
+        env: "NETWORK,CONTAINER_NAME,SENTRY_ENVIRONMENT,SENTRY_RELEASE"
+
     restart: on-failure

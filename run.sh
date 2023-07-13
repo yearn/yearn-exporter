@@ -12,7 +12,7 @@ IFS=',' read -r -a commands <<< "$COMMANDS"
 for CMD in "${commands[@]}"; do
   NAME=$(echo $CMD | sed -e 's/[_/ ]/-/g')
   # TODO handle multiple containers with the same name more gracefully
-  CONTAINER_NAME=${PROJECT_PREFIX}-${NAME}-1
+  export CONTAINER_NAME=${PROJECT_PREFIX}-${NAME}-1
   docker rm -f $CONTAINER_NAME 2> /dev/null || true
   docker-compose \
     --file services/dashboard/docker-compose.yml \
