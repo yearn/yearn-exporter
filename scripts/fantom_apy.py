@@ -3,6 +3,7 @@ import json
 
 import sentry_sdk
 from brownie import chain
+from multicall.utils import await_awaitable
 from y.networks import Network
 
 from yearn.apy import get_samples
@@ -30,4 +31,4 @@ def fetch_apy(vault_address):
         raise Exception("run on fantom")
     samples = get_samples()
     vault = VaultV2.from_address(vault_address)
-    print(json.dumps(dataclasses.asdict(vault.apy(samples)), indent=2))
+    print(json.dumps(dataclasses.asdict(await_awaitable(vault.apy(samples))), indent=2))

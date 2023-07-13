@@ -7,9 +7,10 @@ import eth_retry
 import requests
 from brownie import chain
 from y import Contract
-from y.contracts import contract_creation_block, contract_creation_block_async
-from y.exceptions import PriceError
+from y.contracts import contract_creation_block_async
+from y.exceptions import PriceError, yPriceMagicError
 from y.prices import magic
+from y.utils.dank_mids import dank_w3
 
 from yearn.apy.common import Apy, ApyBlocks, ApyFees, ApyPoints, ApySamples
 from yearn.common import Tvl
@@ -37,18 +38,18 @@ class YveCRVJar(metaclass = Singleton):
         return 'pSLP'
 
     @eth_retry.auto_retry
-    def apy(self, _: ApySamples) -> Apy:
+    async def apy(self, _: ApySamples) -> Apy:
         data = requests.get("https://api.pickle.finance/prod/protocol/pools").json()
         yvboost_eth_pool  = [pool for pool in data if pool["identifier"] == "yvboost-eth"][0]
         apy = yvboost_eth_pool["apy"]  / 100.
         points = ApyPoints(apy, apy, apy)
         block = chain.height
-        inception_block = contract_creation_block(str(self.vault))
+        inception_block = await contract_creation_block_async(str(self.vault))
         blocks = ApyBlocks(block, block, block, inception_block)
         return Apy("yvecrv-jar", apy, apy, ApyFees(), points=points, blocks=blocks)
 
     @eth_retry.auto_retry
-    def tvl(self, block=None) -> Tvl:
+    async def tvl(self, block=None) -> Tvl:
         data = requests.get("https://api.pickle.finance/prod/protocol/value").json()
         tvl = data[self.id]
         return Tvl(tvl=tvl)
@@ -84,22 +85,28 @@ class Backscratcher(metaclass = Singleton):
     def strategies(self):
         return []
 
-    def apy(self, _: ApySamples) -> Apy:
-        curve_3_pool = Contract("0xbEbc44782C7dB0a1A60Cb6fe97d0b483032FF1C7")
-        curve_reward_distribution = Contract("0xA464e6DCda8AC41e03616F95f4BC98a13b8922Dc")
-        curve_voting_escrow = Contract("0x5f3b5DfEb7B28CDbD7FAba78963EE202a494e2A2")
-        voter = "0xF147b8125d2ef93FB6965Db97D6746952a133934"
-        crv_price = magic.get_price("0xD533a949740bb3306d119CC777fa900bA034cd52")
-        yvecrv_price = magic.get_price("0xc5bDdf9843308380375a611c18B50Fb9341f502A")
-
-        total_vecrv = curve_voting_escrow.totalSupply()
-        yearn_vecrv = curve_voting_escrow.balanceOf(voter)
-        vault_supply = self.vault.totalSupply()
-
+    async def apy(self, _: ApySamples) -> Apy:
+        curve_3_pool, curve_reward_distribution, curve_voting_escrow = await asyncio.gather(
+            Contract.coroutine("0xbEbc44782C7dB0a1A60Cb6fe97d0b483032FF1C7"),
+            Contract.coroutine("0xA464e6DCda8AC41e03616F95f4BC98a13b8922Dc"),
+            Contract.coroutine("0x5f3b5DfEb7B28CDbD7FAba78963EE202a494e2A2"),
+        )
+        
         week = 7 * 86400
         epoch = math.floor(time() / week) * week - week
-        tokens_per_week = curve_reward_distribution.tokens_per_week(epoch) / 1e18
-        virtual_price = curve_3_pool.get_virtual_price() / 1e18
+        voter = "0xF147b8125d2ef93FB6965Db97D6746952a133934"
+        crv_price, yvecrv_price, total_vecrv, yearn_vecrv, vault_supply, tokens_per_week, virtual_price = await asyncio.gather(
+            magic.get_price("0xD533a949740bb3306d119CC777fa900bA034cd52", sync=False),
+            magic.get_price("0xc5bDdf9843308380375a611c18B50Fb9341f502A", sync=False),
+            curve_voting_escrow.totalSupply.coroutine(),
+            curve_voting_escrow.balanceOf.coroutine(voter),
+            self.vault.totalSupply.coroutine(),
+            curve_reward_distribution.tokens_per_week.coroutine(epoch),
+            curve_3_pool.get_virtual_price.coroutine(),
+        )
+
+        tokens_per_week /= 1e18
+        virtual_price /= 1e18
         # although we call this APY, this is actually APR since there is no compounding
         apy = (tokens_per_week * virtual_price * 52) / ((total_vecrv / 1e18) * crv_price)
         vault_boost = (yearn_vecrv / vault_supply) * (crv_price / yvecrv_price)
@@ -112,13 +119,15 @@ class Backscratcher(metaclass = Singleton):
         }
         return Apy("backscratcher", apy, apy, ApyFees(), composite=composite)
 
-    def tvl(self, block=None) -> Tvl:
-        total_assets = self.vault.totalSupply(block_identifier=block)
+    async def tvl(self, block=None) -> Tvl:
+        total_assets = await self.vault.totalSupply.coroutine(block_identifier=block)
         try:
-            price = magic.get_price(self.token, block=block)
-        except PriceError:
+            price = await magic.get_price(self.token, block=block, sync=False)
+        except yPriceMagicError as e:
+            if not isinstance(e.exception, PriceError):
+                raise e
             price = None
-        tvl = total_assets * price / 10 ** self.vault.decimals(block_identifier=block) if price else None
+        tvl = total_assets * price / 10 ** await self.vault.decimals.coroutine(block_identifier=block) if price else None
         return Tvl(total_assets, price, tvl)
 
 
@@ -153,10 +162,7 @@ class Ygov(metaclass = Singleton):
 
 class Registry(metaclass = Singleton):
     def __init__(self) -> None:
-        self.vaults = [
-            Backscratcher(),
-            Ygov(),
-        ]
+        self.vaults = [Backscratcher(), Ygov()]
 
     async def describe(self, block=None):
         # not supported yet

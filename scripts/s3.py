@@ -1,3 +1,4 @@
+import asyncio
 import dataclasses
 import itertools
 import json
@@ -13,11 +14,12 @@ from typing import Union
 import boto3
 import requests
 import sentry_sdk
-from brownie import Contract, chain, web3
+from brownie import chain
 from brownie.exceptions import BrownieEnvironmentWarning
-from y.contracts import contract_creation_block
-from y.exceptions import PriceError
-from y.networks import Network
+from tqdm.asyncio import tqdm_asyncio
+from y import ERC20, Contract, Network
+from y.contracts import contract_creation_block_async
+from y.exceptions import yPriceMagicError
 
 from yearn import logs
 from yearn.apy import (Apy, ApyBlocks, ApyFees, ApyPoints, ApySamples,
@@ -42,19 +44,19 @@ logs.basicConfig(level=logging.DEBUG)
 logger = logging.getLogger("yearn.apy")
 
 
-def wrap_vault(
+async def wrap_vault(
     vault: Union[VaultV1, VaultV2], samples: ApySamples, aliases: dict, icon_url: str, assets_metadata: dict
 ) -> dict:
     apy_error = Apy("error", 0, 0, ApyFees(0, 0), ApyPoints(0, 0, 0), ApyBlocks(samples.now, 0, 0, 0))
     tvl = Tvl(tvl=0)
+    inception_fut = asyncio.ensure_future(contract_creation_block_async(str(vault.vault)))
     try:
-        apy = vault.apy(samples)
-        tvl = vault.tvl()
+        apy, tvl = await asyncio.gather(vault.apy(samples), vault.tvl())
     except ValueError as error:
         apy_error.error_reason = ":".join(error.args)
         logger.error(error)
         apy = apy_error
-    except PriceError as error:
+    except yPriceMagicError as error:
         apy_error.error_reason = ":".join(error.args)
         logger.error(error)
         apy = apy_error
@@ -63,15 +65,14 @@ def wrap_vault(
         strategies = [
             {
                 "address": str(vault.strategy),
-                "name": vault.strategy.getName() if hasattr(vault.strategy, "getName") else vault.strategy._name,
+                "name": await vault.strategy.getName.coroutine() if hasattr(vault.strategy, "getName") else vault.strategy._name,
             }
         ]
     else:
         strategies = [{"address": str(strategy.strategy), "name": strategy.name} for strategy in vault.strategies]
 
-    inception = contract_creation_block(str(vault.vault))
-
-    token_alias = aliases[str(vault.token)]["symbol"] if str(vault.token) in aliases else vault.token.symbol()
+    inception = await inception_fut
+    token_alias = aliases[str(vault.token)]["symbol"] if str(vault.token) in aliases else await ERC20(vault.token, asynchronous=True).symbol
     vault_alias = token_alias
 
 
@@ -83,15 +84,15 @@ def wrap_vault(
     object = {
         "inception": inception,
         "address": str(vault.vault),
-        "symbol": vault.symbol if hasattr(vault, "symbol") else vault.vault.symbol(),
+        "symbol": vault.symbol if hasattr(vault, "symbol") else await ERC20(vault.vault, asynchronous=True).symbol,
         "name": vault.name,
         "display_name": vault_alias,
         "icon": icon_url % str(vault.vault),
         "token": {
-            "name": vault.token.name() if hasattr(vault.token, "name") else vault.token._name,
-            "symbol": vault.token.symbol() if hasattr(vault.token, "symbol") else None,
+            "name": await ERC20(vault.token, asynchronous=True).name if hasattr(vault.token, "name") else vault.token._name,
+            "symbol": await ERC20(vault.token, asynchronous=True).symbol if hasattr(vault.token, "symbol") else None,
             "address": str(vault.token),
-            "decimals": vault.token.decimals() if hasattr(vault.token, "decimals") else None,
+            "decimals": await ERC20(vault.token, asynchronous=True).decimals if hasattr(vault.token, "decimals") else None,
             "display_name": token_alias,
             "icon": icon_url % str(vault.token),
         },
@@ -100,9 +101,9 @@ def wrap_vault(
         "strategies": strategies,
         "endorsed": vault.is_endorsed if hasattr(vault, "is_endorsed") else True,
         "version": vault.api_version if hasattr(vault, "api_version") else "0.1",
-        "decimals": vault.decimals if hasattr(vault, "decimals") else vault.vault.decimals(),
+        "decimals": vault.decimals if hasattr(vault, "decimals") else await ERC20(vault.vault, asynchronous=True).decimals,
         "type": "v2" if isinstance(vault, VaultV2) else "v1",
-        "emergency_shutdown": vault.vault.emergencyShutdown() if hasattr(vault.vault, "emergencyShutdown") else False,
+        "emergency_shutdown": await vault.vault.emergencyShutdown.coroutine() if hasattr(vault.vault, "emergencyShutdown") else False,
         "updated": int(time()),
         "migration": migration,
     }
@@ -113,21 +114,25 @@ def wrap_vault(
     return object
 
 
-def get_assets_metadata(vault_v2: list) -> dict:
+async def get_assets_metadata(vault_v2: list) -> dict:
     vault_addresses = [str(vault.vault) for vault in vault_v2]
     assets_dynamic_data = []
     # if we have an address provider and factory_registry_adapter, we can split the vaults
-    if factory_address_provider() and factory_registry_adapter():
+    factory_address_provider, factory_registry_adapter = await asyncio.gather(
+        get_factory_address_provider(), get_factory_registry_adapter(),
+    )
+    if factory_address_provider and factory_registry_adapter:
         # factory vaults
-        factory_addresses = [str(contract(c)) for c in factory_address_provider().assetsAddresses()]
-        assets_dynamic_data += get_assets_dynamic(factory_registry_adapter(), factory_addresses)
+        factories = await asyncio.gather(*[Contract.coroutine(c) for c in await factory_address_provider.assetsAddresses.coroutine()])
+        factory_addresses = [str(factory) for factory in factories]
+        assets_dynamic_data += await get_assets_dynamic(factory_registry_adapter, factory_addresses)
         # non-factory vaults
         non_factory_addresses = [va for va in vault_addresses if va not in factory_addresses]
-        assets_dynamic_data += get_assets_dynamic(registry_adapter(), non_factory_addresses)
+        assets_dynamic_data += await get_assets_dynamic(await get_registry_adapter(), non_factory_addresses)
 
     # normal case without any address provider
     else:
-        assets_dynamic_data += get_assets_dynamic(registry_adapter(), vault_addresses)
+        assets_dynamic_data += await get_assets_dynamic(await get_registry_adapter(), vault_addresses)
 
     assets_metadata = {}
     for datum in assets_dynamic_data:
@@ -135,15 +140,12 @@ def get_assets_metadata(vault_v2: list) -> dict:
     return assets_metadata
 
 
-def get_assets_dynamic(registry_adapter: Contract, addresses: list) -> list:
-    assets_dynamic_data = []
-    addresses_chunks = chunks(addresses, 20)
-    for address in addresses:
-        assets_dynamic_data += registry_adapter.assetsDynamic([address])
-    return assets_dynamic_data
+async def get_assets_dynamic(registry_adapter: Contract, addresses: list) -> list:
+    data = await asyncio.gather(*[registry_adapter.assetsDynamic.coroutine([address]) for address in addresses])
+    return [asset for address_data in data for asset in address_data]
 
 
-def registry_adapter():
+async def get_registry_adapter():
     if chain.id == Network.Mainnet:
         # TODO Fix ENS resolution for lens.ychad.eth
         registry_adapter_address = "0x240315db938d44bb124ae619f5Fd0269A02d1271"
@@ -153,24 +155,28 @@ def registry_adapter():
         registry_adapter_address = "0x57AA88A0810dfe3f9b71a9b179Dd8bF5F956C46A"
     elif chain.id == Network.Optimism:
         registry_adapter_address = "0xBcfCA75fF12E2C1bB404c2C216DBF901BE047690"
-    return contract(registry_adapter_address)
+    return await Contract.coroutine(registry_adapter_address)
 
 
-def factory_address_provider():
+async def get_factory_address_provider():
     if chain.id == Network.Mainnet:
-        return contract("0xA654Be30cb4A1E25d18DA0629e48b13fb970d5bE")
+        return await Contract.coroutine("0xA654Be30cb4A1E25d18DA0629e48b13fb970d5bE")
     else:
         return None
 
 
-def factory_registry_adapter():
+async def get_factory_registry_adapter():
     if chain.id == Network.Mainnet:
-        return contract("0x984550cE9e58A8f76184e1b41Dd08Fbf7B6d2762")
+        return await Contract.coroutine("0x984550cE9e58A8f76184e1b41Dd08Fbf7B6d2762")
     else:
         return None
+
 
 def main():
-    data = []
+    asyncio.get_event_loop().run_until_complete(_main())
+
+
+async def _main():
     allowed_export_modes = ["endorsed", "experimental"]
     export_mode = os.getenv("EXPORT_MODE", "endorsed")
     if export_mode not in allowed_export_modes:
@@ -205,10 +211,9 @@ def main():
     if len(vaults) == 0:
         raise ValueError(f"No vaults found for chain_id: {chain.id}")
 
-    assets_metadata = get_assets_metadata(registry_v2.vaults)
+    assets_metadata = await get_assets_metadata(registry_v2.vaults)
 
-    for vault in vaults:
-        data.append(wrap_vault(vault, samples, aliases, icon_url, assets_metadata))
+    data = await tqdm_asyncio.gather(*[wrap_vault(vault, samples, aliases, icon_url, assets_metadata) for vault in vaults])
 
     if len(data) == 0:
         raise ValueError(f"Data is empty for chain_id: {chain.id}")

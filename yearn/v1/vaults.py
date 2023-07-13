@@ -7,7 +7,7 @@ from typing import TYPE_CHECKING, Optional
 from brownie import ZERO_ADDRESS, interface
 from brownie.network.contract import InterfaceContainer
 from dank_mids.brownie_patch import patch_contract
-from y.exceptions import PriceError
+from y.exceptions import PriceError, yPriceMagicError
 from y.prices import magic
 from y.utils.dank_mids import dank_w3
 
@@ -145,18 +145,19 @@ class VaultV1:
             
         return info
 
-    def apy(self, samples: "ApySamples"):
+    async def apy(self, samples: "ApySamples"):
         from yearn import apy
         if curve.get_pool(self.token.address):
-            return apy.curve.simple(self, samples)
+            return await apy.curve.simple(self, samples)
         else:
-            return apy.v1.simple(self, samples)
+            return await apy.v1.simple(self, samples)
 
-    def tvl(self, block=None):
-        total_assets = self.vault.balance(block_identifier=block)
+    async def tvl(self, block=None):
+        total_assets = await self.vault.balance.coroutine(block_identifier=block)
         try:
-            price = magic.get_price(self.token, block=block)
-        except PriceError:
-            price = None
-        tvl = total_assets * price / 10 ** self.vault.decimals(block_identifier=block) if price else None
+            price = await magic.get_price(self.token, block=block, sync=False)
+        except yPriceMagicError as e:
+            if not isinstance(e.exception, PriceError):
+                raise e
+        tvl = total_assets * price / 10 ** await self.vault.decimals.coroutine(block_identifier=block) if price else None
         return Tvl(total_assets, price, tvl) 

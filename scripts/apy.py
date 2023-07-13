@@ -1,3 +1,4 @@
+import asyncio
 import dataclasses
 import json
 import logging
@@ -5,6 +6,7 @@ import warnings
 
 import sentry_sdk
 from brownie.exceptions import BrownieEnvironmentWarning
+from multicall.utils import await_awaitable
 from tabulate import tabulate
 
 from yearn import logs
@@ -24,36 +26,46 @@ logger = logging.getLogger("yearn.apy")
 
 
 def main():
+    asyncio.run(_main())
+
+async def _main():
     data = []
 
     samples = get_samples()
 
     v1_registry = RegistryV1()
-
-    for vault in v1_registry.vaults:
-        apy = vault.apy(samples)
-        data.append({"product": apy.type, "name": vault.name, "apy": apy.net_apy})
-
     v2_registry = RegistryV2()
 
-    for vault in v2_registry.vaults:
-        try:
-            apy = vault.apy(samples)
-            data.append({"product": apy.type, "name": vault.name, "apy": apy.net_apy})
-        except ApyError as error:
-            logger.error(error)
-        except Exception as error:
-            print(vault)
-            raise error
-
+    v1_data, v2_data = await asyncio.gather(
+        asyncio.gather(*[vault.apy(samples) for vault in v1_registry.vaults]),
+        asyncio.gather(*[_get_v2_data(vault, samples) for vault in v2_registry.vaults]),
+    )
+    
+    data.extend([
+        {"product": apy.type, "name": vault.name, "apy": apy.net_apy}
+        for vault, apy in zip(v1_registry.vaults, v1_data)
+    ])
+    
+    data.extend([data for data in v2_data if data])
+    
     data.sort(key=lambda x: -x["apy"])
     print(tabulate(data, floatfmt=",.0%"))
 
 
+async def _get_v2_data(vault, samples):
+    try:
+        apy = await vault.apy(samples)
+        return {"product": apy.type, "name": vault.name, "apy": apy.net_apy}
+    except ApyError as error:
+        logger.error(error)
+    except Exception as error:
+        print(vault)
+        raise error
+    
 def calculate_apy(address):
     samples = get_samples()
     vault = VaultV2.from_address(address)
-    print(json.dumps(dataclasses.asdict(vault.apy(samples)), indent=2))
+    print(json.dumps(dataclasses.asdict(await_awaitable(vault.apy(samples))), indent=2))
 
 
 def pickleJar():

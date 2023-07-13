@@ -3,7 +3,7 @@ from functools import lru_cache
 from typing import List, Optional
 
 from brownie.convert.datatypes import EthAddress
-from y.exceptions import PriceError
+from y.exceptions import PriceError, yPriceMagicError
 from y.prices import magic
 
 from yearn.multicall2 import fetch_multicall
@@ -45,7 +45,9 @@ class GenericAmm:
         for token in tokens:
             try:
                 prices.append(magic.get_price(token, block = block))
-            except PriceError:
+            except yPriceMagicError as e:
+                if not isinstance(e.exception, PriceError):
+                    raise e
                 prices.append(None)
         
         if all(price is None for price in prices):

@@ -15,7 +15,7 @@ x-envs: &envs
   - SENTRY_RELEASE
   - SENTRY_DSN
   - SENTRY_TRACES_SAMPLE_RATE
-  - LOG_LEVEL
+  - LOG_LEVEL=${LOG_LEVEL:-DEBUG}
   - DEBUG
   - SKIP_DEEP_UNISWAPS
   - SHOW_STATS
@@ -36,7 +36,7 @@ x-envs: &envs
   # eth-retry (optional)
   - ETH_RETRY_DEBUG
   - ETH_RETRY_DISABLED
-  - MAX_RETRIES=${MAX_RETRIES:-2}
+  - MAX_RETRIES=${MAX_RETRIES:-5}
   - MIN_SLEEP_TIME
   - MAX_SLEEP_TIME
   # multicall (optional)
