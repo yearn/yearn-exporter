@@ -53,11 +53,11 @@ async def wrap_vault(
     try:
         apy, tvl = await asyncio.gather(vault.apy(samples), vault.tvl())
     except ValueError as error:
-        apy_error.error_reason = ":".join(error.args)
+        apy_error.error_reason = ":".join(str(arg) for arg in error.args)
         logger.error(error)
         apy = apy_error
     except yPriceMagicError as error:
-        apy_error.error_reason = ":".join(error.args)
+        apy_error.error_reason = ":".join(str(arg) for arg in error.args)
         logger.error(error)
         apy = apy_error
 
