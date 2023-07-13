@@ -18,7 +18,7 @@ pony>=0.7.16
 sqlalchemy>=1.4.41
 sentry-sdk>=1.9.0
 pytest-bdd>=5.0.0
-dank_mids==4.20.50.dev244
+dank_mids==4.20.50.dev254
 eth_retry>=0.1.18
 eth-hash[pysha3]
 ez-a-sync==0.6.1.dev10
