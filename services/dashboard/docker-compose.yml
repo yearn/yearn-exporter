@@ -10,6 +10,7 @@ networks:
     external: true
 
 x-envs: &envs
+  - CONCURRENCY=${CONCURRENCY:-1}
   - SKIP_WALLET_STATS
   - SENTRY_ENVIRONMENT=${SENTRY_ENVIRONMENT:-development}
   - SENTRY_RELEASE
@@ -30,9 +31,12 @@ x-envs: &envs
   # dank-mids (mandatory)
   # NOTE: We do this to limit memory consumption, on a big server you can increase for faster performance.
   - DANK_MIDS_BROWNIE_CALL_SEMAPHORE=${DANK_MIDS_BROWNIE_CALL_SEMAPHORE:-250_000}
+  # NOTE: This is included as an escape-hatch-of-last-resort and should not actually occur
+  - DANKMIDS_STUCK_CALL_TIMEOUT=${DANKMIDS_STUCK_CALL_TIMEOUT:-7200}  # Default: 2h
   # dank-mids (optional)
   - MAX_JSONRPC_BATCH_SIZE
-  - DANK_MIDS_DEMO_MODE
+  - DANKMIDS_BROWNIE_ENCODER_SEMAPHORE
+  - DANKMIDS_DEMO_MODE
   # eth-retry (optional)
   - ETH_RETRY_DEBUG
   - ETH_RETRY_DISABLED
@@ -53,7 +57,7 @@ x-envs: &envs
   - YPM_DEEPEST_ROUTER_SEMAPHORE=5
   - YPRICEMAGIC_RECURSION_LOGGER_LEVEL
   - YPRICEMAGIC_RECURSION_TIMEOUT=${YPRICEMAGIC_RECURSION_TIMEOUT:-1800}  # 0.5 hours
-  - YPRICEMAGIC_CACHE_TTL=${YPRICEMAGIC_CACHE_TTL:-60} # 1 minute
+  - YPRICEMAGIC_CACHE_TTL=${YPRICEMAGIC_CACHE_TTL:-600} # 10 minutes
   # This is a temporary hack that can be removed once deps support eth_hash==0.5.0. Creds to bunny for finding this.
   - ETH_HASH_BACKEND=${ETH_HASH_BACKEND:-pysha3}
 
