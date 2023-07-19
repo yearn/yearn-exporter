@@ -31,7 +31,8 @@ x-envs: &envs
   # dank-mids (mandatory)
   # NOTE: We do this to limit memory consumption, on a big server you can increase for faster performance.
   - DANK_MIDS_BROWNIE_CALL_SEMAPHORE=${DANK_MIDS_BROWNIE_CALL_SEMAPHORE:-250_000}
-  - DANKMIDS_STUCK_CALL_TIMEOUT=${DANKMIDS_STUCK_CALL_TIMEOUT:-1800}
+  # NOTE: This is included as an escape-hatch-of-last-resort and should not actually occur
+  - DANKMIDS_STUCK_CALL_TIMEOUT=${DANKMIDS_STUCK_CALL_TIMEOUT:-7200}  # Default: 2h
   # dank-mids (optional)
   - MAX_JSONRPC_BATCH_SIZE
   - DANKMIDS_BROWNIE_ENCODER_SEMAPHORE
