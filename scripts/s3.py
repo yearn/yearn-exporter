@@ -300,7 +300,7 @@ def with_monitoring():
     public_group = os.environ.get('TG_YFIREBOT_GROUP_EXTERNAL')
     updater = Updater(os.environ.get('TG_YFIREBOT'))
     now = datetime.now()
-    message = f"`[{now}]`\n⚙️ API (vaults) for {Network.name()} is updating..."
+    message = f"`[{now}]`\n⚙️ Vaults API for {export_mode} {Network.name()} is updating..."
     ping = updater.bot.send_message(chat_id=private_group, text=message, parse_mode="Markdown")
     ping = ping.message_id
     try:
@@ -309,9 +309,9 @@ def with_monitoring():
         tb = traceback.format_exc()
         export_mode = os.getenv("EXPORT_MODE", "endorsed")
         now = datetime.now()
-        message = f"`[{now}]`\n🔥 API ({export_mode} vaults) update for {Network.name()} failed!\n```\n{tb}\n```"[:4000]
+        message = f"`[{now}]`\n🔥 {export_mode} Vaults API update for {Network.name()} failed!\n```\n{tb}\n```"[:4000]
         updater.bot.send_message(chat_id=private_group, text=message, parse_mode="Markdown", reply_to_message_id=ping)
         updater.bot.send_message(chat_id=public_group, text=message, parse_mode="Markdown")
         raise error
-    message = f"✅ API (vaults) update for {Network.name()} successful!"
+    message = f"✅ {export_mode} Vaults API update for {Network.name()} successful!"
     updater.bot.send_message(chat_id=private_group, text=message, reply_to_message_id=ping)
