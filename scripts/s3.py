@@ -300,7 +300,7 @@ def with_monitoring():
     public_group = os.environ.get('TG_YFIREBOT_GROUP_EXTERNAL')
     updater = Updater(os.environ.get('TG_YFIREBOT'))
     now = datetime.now()
-    message = f"`[{now}]`\n⚙️ Vaults API for {export_mode} {Network.name()} is updating..."
+    message = f"`[{now}]`\n⚙️ {export_mode} Vaults API for {Network.name()} is updating..."
     ping = updater.bot.send_message(chat_id=private_group, text=message, parse_mode="Markdown")
     ping = ping.message_id
     try:
