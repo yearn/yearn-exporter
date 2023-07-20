@@ -332,6 +332,8 @@ NO_START_DATE = [
     "qidao", "shapeshiftdao", "sturdy", "tempus", "wido", "yapeswap", "yieldster"
 ]
 
+mem_semaphore = asyncio.Semaphore(5)  # Some arbitrary number, we can play with this if ram use still too high
+
 @dataclass
 class Partner:
     name: str
@@ -369,58 +371,61 @@ class Partner:
         # snapshot wrapper share at each harvest
         wrappers = []
         for wrapper in tqdm(self.flat_wrappers, self.name):
-            # NOTE: We need to use a semaphore here to ensure only one active coroutine is filling the db
+            # NOTE: We need to use a semaphore here to ensure at most one active coroutine is populating the db for this wrapper
             async with wrapper.semaphore:
-                # NOTE this is all sync code
-                # TODO optimize this section
-                if use_postgres_cache: 
-                    cache = wrapper.read_cache()
-                    try:
-                        max_cached_block = int(cache['block'].max())
-                        logger.debug(f'{self.name} {wrapper.name} is cached thru block {max_cached_block}')
-                        start_block = max_cached_block + 1 if self.start_block is None else max(self.start_block, max_cached_block + 1)
-                    except KeyError:
+                # NOTE: We then use this additional semaphore for memory conservation purposes.
+                #       We use a separate semaphore because the rationalle for each is different and we don't want to accidentally refactor it away.
+                async with mem_semaphore:
+                    # NOTE this is all sync code
+                    # TODO optimize this section
+                    if use_postgres_cache: 
+                        cache = wrapper.read_cache()
+                        try:
+                            max_cached_block = int(cache['block'].max())
+                            logger.debug(f'{self.name} {wrapper.name} is cached thru block {max_cached_block}')
+                            start_block = max_cached_block + 1 if self.start_block is None else max(self.start_block, max_cached_block + 1)
+                        except KeyError:
+                            start_block = self.start_block
+                            logger.debug(f'no harvests cached for {self.name} {wrapper.name}')
+                        logger.debug(f'start block: {start_block}')
+                    else:
                         start_block = self.start_block
-                        logger.debug(f'no harvests cached for {self.name} {wrapper.name}')
-                    logger.debug(f'start block: {start_block}')
-                else:
-                    start_block = self.start_block
-                
-                protocol_fees = wrapper.protocol_fees(start_block=start_block)
-                # NOTE end sync code
-                
-                try:
-                    blocks, protocol_fees = zip(*protocol_fees.items())
-                    timestamps, balances, total_supplys, vault_prices = await asyncio.gather(
-                        get_timestamps(blocks),
-                        wrapper.balances(blocks),
-                        wrapper.total_supplies(blocks),
-                        wrapper.vault_prices(blocks),
-                    )
-                    wrap = DataFrame(
-                        {
-                            'block': blocks,
-                            'timestamp': timestamps,
-                            'protocol_fee': protocol_fees,
-                            'balance': balances,
-                            'total_supply': total_supplys,
-                            'vault_price': vault_prices,
-                        }
-                    )
-                    wrap['balance_usd'] = wrap.balance * wrap.vault_price
-                    wrap['share'] = wrap.balance / wrap.total_supply
-                    wrap['payout_base'] = wrap.share * wrap.protocol_fee * Decimal(1 - OPEX_COST)
-                    wrap['protocol_fee'] = wrap.protocol_fee
-                    wrap['wrapper'] = wrapper.wrapper
-                    wrap['vault'] = wrapper.vault
-                except ValueError as e:
-                    if str(e) != 'not enough values to unpack (expected 2, got 0)':
-                        raise
-                    wrap = DataFrame()
+                    
+                    protocol_fees = wrapper.protocol_fees(start_block=start_block)
+                    # NOTE end sync code
+                    
+                    try:
+                        blocks, protocol_fees = zip(*protocol_fees.items())
+                        timestamps, balances, total_supplys, vault_prices = await asyncio.gather(
+                            get_timestamps(blocks),
+                            wrapper.balances(blocks),
+                            wrapper.total_supplies(blocks),
+                            wrapper.vault_prices(blocks),
+                        )
+                        wrap = DataFrame(
+                            {
+                                'block': blocks,
+                                'timestamp': timestamps,
+                                'protocol_fee': protocol_fees,
+                                'balance': balances,
+                                'total_supply': total_supplys,
+                                'vault_price': vault_prices,
+                            }
+                        )
+                        wrap['balance_usd'] = wrap.balance * wrap.vault_price
+                        wrap['share'] = wrap.balance / wrap.total_supply
+                        wrap['payout_base'] = wrap.share * wrap.protocol_fee * Decimal(1 - OPEX_COST)
+                        wrap['protocol_fee'] = wrap.protocol_fee
+                        wrap['wrapper'] = wrapper.wrapper
+                        wrap['vault'] = wrapper.vault
+                    except ValueError as e:
+                        if str(e) != 'not enough values to unpack (expected 2, got 0)':
+                            raise
+                        wrap = DataFrame()
 
-                if use_postgres_cache:
-                    cache_data(wrap)
-                    wrap = pd.concat([wrap,cache])
+                    if use_postgres_cache:
+                        cache_data(wrap)
+                        wrap = pd.concat([wrap,cache])
             
             try:
                 wrap = wrap.set_index('block')
