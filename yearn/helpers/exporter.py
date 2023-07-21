@@ -108,7 +108,7 @@ class Exporter:
         # Bump forward to the next snapshot, as the historical coroutine will take care of this one.
         start = start + interval
         async for snapshot in _generate_snapshot_range_forward(start, interval):
-            await self.export_snapshot(snapshot)
+            asyncio.create_task(self.export_snapshot(snapshot))
 
     async def export_history(self) -> None:
         """ Exports all historical data. This coroutine runs for a finite duration. """
