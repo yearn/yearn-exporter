@@ -46,12 +46,12 @@ infra:
 .ONESHELL:
 single-network: infra setup-network
 	source set_network_envs.sh
-	COMMANDS="$(commands)" DEBUG=$(DEBUG) ./run.sh
+	COMMANDS="$(commands)" NAME_SUFFIX="$(name_suffix)" DEBUG=$(DEBUG) ./run.sh
 
 .ONESHELL:
 all-networks: infra
 	for network in $(supported_networks); do
-		network=$$network commands="$(commands)" DEBUG=$(DEBUG) make single-network
+		network=$$network commands="$(commands)" name_suffix="$(name_suffix)" DEBUG=$(DEBUG) make single-network
 	done
 
 .PHONY: down
@@ -80,9 +80,9 @@ up:
 # default scripts which should always be started #
 ##################################################
 	if [ "$(network)" == "" ]; then
-		make all-networks commands="$(commands)"
+		make all-networks commands="$(commands)" name_suffix="$(name_suffix)"
 	else
-		make single-network network=$(network) commands="$(commands)"
+		make single-network network=$(network) commands="$(commands)" name_suffix="$(name_suffix)"
 	fi
 
 #######################################################################
@@ -250,6 +250,9 @@ apy-monitoring:
 
 apy:
 	make up commands="s3" filter=s3
+
+apy-experimental:
+	make up commands="s3" name_suffix=experimental filter=s3
 
 curve-apy-previews:
 	make up commands=curve_apy_previews network=eth with_logs=false
