@@ -248,6 +248,9 @@ logs-transactions:
 apy-monitoring:
 	make up commands="s3 with_monitoring" filter=s3
 
+apy-experimental-monitoring:
+	make up commands="s3 with_monitoring" name_suffix=experimental filter=s3
+
 apy:
 	make up commands="s3" filter=s3
 
