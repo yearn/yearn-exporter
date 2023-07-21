@@ -11,8 +11,10 @@ export SENTRY_RELEASE=$(git rev-parse --short HEAD)
 IFS=',' read -r -a commands <<< "$COMMANDS"
 for CMD in "${commands[@]}"; do
   NAME=$(echo $CMD | sed -e 's/[_/ ]/-/g')
-  # TODO handle multiple containers with the same name more gracefully
-  export CONTAINER_NAME=${PROJECT_PREFIX}-${NAME}-1
+  if [[ ! -z "${NAME_SUFFIX}" ]]; then
+      NAME_SUFFIX="-${NAME_SUFFIX}"
+  fi
+  export CONTAINER_NAME=${PROJECT_PREFIX}-${NAME}${NAME_SUFFIX}-1
   docker rm -f $CONTAINER_NAME 2> /dev/null || true
   docker-compose \
     --file services/dashboard/docker-compose.yml \
