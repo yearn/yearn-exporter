@@ -176,12 +176,15 @@ def main():
     asyncio.get_event_loop().run_until_complete(_main())
 
 
-async def _main():
+def _get_export_mode():
     allowed_export_modes = ["endorsed", "experimental"]
     export_mode = os.getenv("EXPORT_MODE", "endorsed")
     if export_mode not in allowed_export_modes:
         raise ValueError(f"export_mode must be one of {allowed_export_modes}")
-
+    return export_mode
+  
+async def _main():
+    export_mode = _get_export_mode()
     metric_tags = {"chain": chain.id, "export_mode": export_mode}
     aliases_repo_url = "https://api.github.com/repos/yearn/yearn-assets/git/refs/heads/master"
     aliases_repo = requests.get(aliases_repo_url).json()
@@ -293,9 +296,9 @@ def with_monitoring():
     if os.getenv("DEBUG", None):
         main()
         return
-
     from telegram.ext import Updater
 
+    export_mode = _get_export_mode()
     private_group = os.environ.get('TG_YFIREBOT_GROUP_INTERNAL')
     public_group = os.environ.get('TG_YFIREBOT_GROUP_EXTERNAL')
     updater = Updater(os.environ.get('TG_YFIREBOT'))
@@ -307,7 +310,6 @@ def with_monitoring():
         main()
     except Exception as error:
         tb = traceback.format_exc()
-        export_mode = os.getenv("EXPORT_MODE", "endorsed")
         now = datetime.now()
         message = f"`[{now}]`\n🔥 {export_mode} Vaults API update for {Network.name()} failed!\n```\n{tb}\n```"[:4000]
         updater.bot.send_message(chat_id=private_group, text=message, parse_mode="Markdown", reply_to_message_id=ping)
