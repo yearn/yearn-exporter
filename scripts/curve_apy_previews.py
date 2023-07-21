@@ -56,10 +56,15 @@ def _build_data(gauges):
             # Sometimes the call returns the zero address instead of reverting. This means there is no coin with index i.
             if coin_address == ZERO_ADDRESS:
                 continue
-            
+
             try:
-                c = Contract(coin_address)
-                pool_coins.append({"name": c.name(), "address": str(c)})
+                if coin_address == "0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE":
+                    name = "ETH"
+                else:
+                    c = Contract(coin_address)
+                    name = c.name()
+
+                pool_coins.append({"name": name, "address": coin_address})
             except (ContractNotFound, ContractNotVerified, ValueError, AttributeError) as e:
                 pool_coins.append({"address": coin_address, "error": str(e)})
                 logger.error(f"error for coins({i}) for pool {str(gauge.pool)}")
