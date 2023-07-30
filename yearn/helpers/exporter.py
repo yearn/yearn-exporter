@@ -2,6 +2,7 @@ import asyncio
 import logging
 import os
 import time
+import sentry_sdk
 from datetime import datetime, timedelta, timezone
 from functools import cached_property
 from typing import (Awaitable, Callable, Literal, NoReturn, Optional, TypeVar,
@@ -120,15 +121,16 @@ class Exporter:
 
     @log_exceptions
     async def export_snapshot(self, snapshot: datetime) -> None:
-        start = time.time()
-        timestamp = int(snapshot.timestamp())
-        block = await closest_block_after_timestamp_async(timestamp, wait_for_block_if_needed=True)
-        data = await self._data_fn(block, timestamp)
-        duration = time.time() - start
-        logger.info(f"produced {self.full_name} snapshot %s block=%d took=%.3fs", snapshot, block, duration)
-        await asyncio.gather(self._export_data(data), self._export_duration(duration, snapshot.timestamp()))
-        #logger.info(f"exported {self.full_name} snapshot %s block=%d took=%.3fs", snapshot, block, time.time() - start)
-        self._record_stats()
+        with sentry_sdk.start_transaction(op="task", name="export_snapshot"):
+            start = time.time()
+            timestamp = int(snapshot.timestamp())
+            block = await closest_block_after_timestamp_async(timestamp, wait_for_block_if_needed=True)
+            data = await self._data_fn(block, timestamp)
+            duration = time.time() - start
+            logger.info(f"produced {self.full_name} snapshot %s block=%d took=%.3fs", snapshot, block, duration)
+            await asyncio.gather(self._export_data(data), self._export_duration(duration, snapshot.timestamp()))
+            #logger.info(f"exported {self.full_name} snapshot %s block=%d took=%.3fs", snapshot, block, time.time() - start)
+            self._record_stats()
 
     @log_exceptions
     async def export_historical_snapshot(self, snapshot: datetime) -> None:
@@ -139,15 +141,17 @@ class Exporter:
     # Datastore Methods
 
     async def _has_data(self, snapshot: datetime) -> bool:
-        ts = snapshot.timestamp()
-        response = await has_data(ts, self.data_query)
-        if response:
-            logger.info(f"data already present for {self.full_name} snapshot {snapshot}, ts {ts}")
-        return bool(response)
+        with sentry_sdk.start_transaction(op="task", name="_has_data"):
+            ts = snapshot.timestamp()
+            response = await has_data(ts, self.data_query)
+            if response:
+                logger.info(f"data already present for {self.full_name} snapshot {snapshot}, ts {ts}")
+            return bool(response)
 
     async def _export_data(self, data: T) -> None:
-        await self._export_fn(data)
-        self._snapshots_exported += 1
+        with sentry_sdk.start_transaction(op="task", name="_export_data"):
+            await self._export_fn(data)
+            self._snapshots_exported += 1
     
     async def _export_duration(self, duration_seconds: float, timestamp_seconds: float) -> None:
         item = _build_item(
