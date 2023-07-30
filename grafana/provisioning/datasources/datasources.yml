@@ -25,3 +25,16 @@ datasources:
     connMaxLifetime: 14400
     postgresVersion: 903
     timescaledb: false
+
+- name: 'DS_YMONITOR'
+  type: 'prometheus'
+  access: 'proxy'
+  org_id: 1
+  url: $YMONITOR_URL
+  basicAuth: true
+  basicAuthUser: $YMONITOR_USER
+  secureJsonData:
+    basicAuthPassword: $YMONITOR_PASSWORD
+  is_default: false
+  version: 1
+  editable: false
