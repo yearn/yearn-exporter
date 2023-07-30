@@ -9,7 +9,7 @@ from brownie import ZERO_ADDRESS, chain
 from y import Contract, Network, magic
 from y.time import get_block_timestamp_async
 
-from yearn.apy.common import SECONDS_PER_YEAR, Apy, ApyFees, ApySamples
+from yearn.apy.common import SECONDS_PER_YEAR, Apy, ApyFees, ApyPoints, ApySamples
 from yearn.debug import Debug
 
 if TYPE_CHECKING:
@@ -28,6 +28,9 @@ async def get_staking_pool(underlying: str) -> Optional[Contract]:
         return None if staking_pool == ZERO_ADDRESS else await Contract.coroutine(staking_pool)
         
 async def staking(vault: "Vault", staking_rewards: Contract, samples: ApySamples, block: Optional[int]=None) -> float:
+    if len(vault.strategies) == 0:
+        return Apy("v2:velo_no_strats", 0, 0, ApyFees(0, 0), ApyPoints(0, 0, 0))
+
     end = await staking_rewards.periodFinish.coroutine(block_identifier=block)
     current_time = time() if block is None else await get_block_timestamp_async(block)
     total_supply = await staking_rewards.totalSupply.coroutine(block_identifier=block) if hasattr(staking_rewards, "totalSupply") else 0
