@@ -13,15 +13,13 @@ from multicall.utils import run_in_subprocess
 from semantic_version.base import Version
 from y import ERC20, Contract, Network, magic
 from y.exceptions import NodeNotSynced, PriceError, yPriceMagicError
-from y.networks import Network
-from y.prices import magic
 from y.utils.events import get_logs_asap
 
 from yearn.common import Tvl
 from yearn.decorators import sentry_catch_all, wait_or_exit_after
 from yearn.events import decode_logs, get_logs_asap
 from yearn.multicall2 import fetch_multicall_async
-from yearn.prices.curve import curve
+from yearn.prices.balancer import balancer
 from yearn.special import Ygov
 from yearn.typing import Address
 from yearn.utils import run_in_thread, safe_views
@@ -273,6 +271,8 @@ class Vault:
             return await apy.curve.simple(self, samples)
         elif pool := await apy.velo.get_staking_pool(self.token.address):
             return await apy.velo.staking(self, pool, samples)
+        elif self._needs_balancer_simple():
+            return await apy.balancer.simple(self, samples)
         elif Version(self.api_version) >= Version("0.3.2"):
             return await apy.v2.average(self, samples)
         else:
@@ -299,6 +299,7 @@ class Vault:
 
     @cached_property
     def _needs_curve_simple(self):
+        from yearn.prices.curve import curve
         # some curve vaults which should not be calculated with curve logic
         curve_simple_excludes = {
             Network.Arbitrum: [
@@ -310,3 +311,9 @@ class Vault:
             needs_simple = self.vault.address not in curve_simple_excludes[chain.id]
 
         return needs_simple and curve and curve.get_pool(self.token.address)
+
+    def _needs_balancer_simple(self):
+        exclusions = {
+            Network.Mainnet: [],
+        }.get(chain.id, [])
+        return self.vault.address not in exclusions and balancer.selector.get_balancer_for_pool(self.token.address)

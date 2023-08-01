@@ -4,9 +4,8 @@ import logging
 import os
 from dataclasses import dataclass
 from decimal import Decimal
-from pprint import pformat
 from functools import lru_cache
-
+from pprint import pformat
 from time import time
 
 import requests
@@ -25,10 +24,10 @@ from yearn.apy.common import (SECONDS_PER_WEEK, SECONDS_PER_YEAR, Apy,
                               ApyError, ApyFees, ApySamples, SharePricePoint,
                               calculate_roi)
 from yearn.apy.curve.rewards import rewards
+from yearn.apy.gauge import Gauge
 from yearn.apy.staking_rewards import get_staking_rewards_apr
 from yearn.debug import Debug
 from yearn.prices.curve import curve, curve_contracts
-from yearn.typing import Address
 from yearn.utils import contract
 
 
@@ -39,15 +38,6 @@ class ConvexDetailedApyData:
     cvx_keep_crv: float = 0
     cvx_debt_ratio: float = 0
     convex_reward_apr: float = 0
-
-@dataclass
-class Gauge:
-    lp_token: Address
-    pool: Contract
-    gauge: Contract
-    gauge_weight: int
-    gauge_inflation_rate: int
-    gauge_working_supply: int
 
 
 logger = logging.getLogger(__name__)
@@ -155,7 +145,6 @@ async def calculate_simple(vault, gauge: Gauge, samples: ApySamples) -> Apy:
         magic.get_price(curve.crv, block=block, sync=False),
         gauge.pool.get_virtual_price.coroutine(block_identifier=block)
     )
-    gauge_weight = gauge.gauge_weight
 
     if chain.id == Network.Mainnet:
         yearn_voter = addresses[chain.id]['yearn_voter_proxy']
@@ -168,27 +157,16 @@ async def calculate_simple(vault, gauge: Gauge, samples: ApySamples) -> Apy:
         y_gauge_balance = 0
 
         if await gauge.gauge.reward_count.coroutine() == 0:
-            gauge_weight = 1
             pool_price = 1
         else:
             reward_token = await gauge.gauge.reward_tokens.coroutine(0)
             reward_data = await gauge.gauge.reward_data.coroutine(reward_token)
             if time() > reward_data['period_finish']:
-                gauge_weight = 1
                 pool_price = 1
 
-    base_apr = (
-        gauge.gauge_inflation_rate
-        * gauge_weight
-        * (SECONDS_PER_YEAR / gauge.gauge_working_supply)
-        * (PER_MAX_BOOST / pool_price)
-        * crv_price
-    ) / base_asset_price
-
-    if y_gauge_balance > 0:
-        y_boost = y_working_balance / (PER_MAX_BOOST * y_gauge_balance)
-    else:
-        y_boost = BOOST[chain.id]
+    base_apr = gauge.calculate_base_apr(MAX_BOOST, crv_price, pool_price, base_asset_price)
+    voter_proxy = addresses[chain.id]['yearn_voter_proxy'] if chain.id in addresses else None
+    y_boost = await gauge.calculate_boost(BOOST[chain.id], voter_proxy, block)
 
     # FIXME: The HBTC v1 vault is currently still earning yield, but it is no longer boosted.
     if vault and vault.vault.address == "0x46AFc2dfBd1ea0c0760CAD8262A5838e803A37e5":
@@ -332,7 +310,7 @@ async def calculate_simple(vault, gauge: Gauge, samples: ApySamples) -> Apy:
     cvx_net_apy = ((1 + cvx_net_farmed_apy) * (1 + pool_apy)) - 1
 
     crv_net_apr = (crv_apr_minus_keep_crv + reward_apr) * (1 - performance) - management
-    crv_net_farmed_apy = (1 + (crv_net_apr / COMPOUNDING)) ** COMPOUNDING - 1
+    crv_net_farmed_apy = float(Decimal(1 + (crv_net_apr / COMPOUNDING)) ** COMPOUNDING - 1)
     crv_net_apy = ((1 + crv_net_farmed_apy) * (1 + pool_apy)) - 1
 
     net_apy = crv_net_apy * crv_debt_ratio + cvx_net_apy * cvx_apy_data.cvx_debt_ratio
