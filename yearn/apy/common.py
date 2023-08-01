@@ -23,6 +23,7 @@ class ApyFees:
     management: Optional[float] = None
     keep_crv: Optional[float] = None
     cvx_keep_crv: Optional[float] = None
+    keep_velo: Optional[float] = None
 
 @dataclass
 class ApyBlocks:
