@@ -24,6 +24,13 @@ class Gauge:
     gauge_working_supply: int
 
     def calculate_base_apr(self, max_boost, reward_price, pool_price_per_share, pool_token_price) -> float:
+        logger.info(f'max boost: {max_boost}')
+        logger.info(f'reward price: {reward_price}')
+        logger.info(f'pool pps: {pool_price_per_share}')
+        logger.info(f'pool token price: {pool_token_price}')
+        logger.info(f'inflation rate: {self.gauge_inflation_rate}')
+        logger.info(f'weight: {self.gauge_weight}')
+        logger.info(f'working supply: {self.gauge_working_supply}')
         return (
             self.gauge_inflation_rate
             * self.gauge_weight
