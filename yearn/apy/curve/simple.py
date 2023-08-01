@@ -164,7 +164,10 @@ async def calculate_simple(vault, gauge: Gauge, samples: ApySamples) -> Apy:
             if time() > reward_data['period_finish']:
                 pool_price = 1
 
-    base_apr = gauge.calculate_base_apr(MAX_BOOST, crv_price, pool_price, base_asset_price)
+    base_apr = gauge.calculate_base_apr(BOOST[chain.id], crv_price, pool_price, base_asset_price)
+    if base_apr > 1000:
+        raise ApyError('crv', f'base apr too high: {base_apr}', f'MAX BOOST: {MAX_BOOST}  crv price: {crv_price}  pool price: {pool_price}  base asset price: {base_asset_price}')
+    
     voter_proxy = addresses[chain.id]['yearn_voter_proxy'] if chain.id in addresses else None
     y_boost = await gauge.calculate_boost(BOOST[chain.id], voter_proxy, block)
 
@@ -301,9 +304,14 @@ async def calculate_simple(vault, gauge: Gauge, samples: ApySamples) -> Apy:
         crv_debt_ratio = 1
 
     crv_apr = base_apr * y_boost + reward_apr
+    if crv_apr > 1000:
+        raise ApyError('crv', f'crv apr too high: {crv_apr}', f'base apr: {base_apr}  yboost: {y_boost}  reward apr: {reward_apr}')
+    
     crv_apr_minus_keep_crv = base_apr * y_boost * (1 - crv_keep_crv)
 
     gross_apr = (1 + (crv_apr * crv_debt_ratio + cvx_apy_data.cvx_apr * cvx_apy_data.cvx_debt_ratio)) * (1 + pool_apy) - 1
+    if gross_apr > 1000:
+        raise ApyError('crv', f'gross apr too high: {gross_apr}', f'crv apr: {crv_apr}  crv debt ratio: {crv_debt_ratio}  cvx apr: {cvx_apy_data.cvx_apr}  cvx debt ratio: {cvx_apy_data.cvx_debt_ratio}  pool apy: {pool_apy}')
 
     cvx_net_apr = (cvx_apy_data.cvx_apr_minus_keep_crv + cvx_apy_data.convex_reward_apr) * (1 - performance) - management
     cvx_net_farmed_apy = (1 + (cvx_net_apr / COMPOUNDING)) ** COMPOUNDING - 1

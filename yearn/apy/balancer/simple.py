@@ -127,6 +127,8 @@ async def calculate_simple(vault, gauge: Gauge, samples: ApySamples) -> Apy:
         pool_token_price,
         block=now
     )
+    if apr_data.bal_apr > 1000 or apr_data.aura_apr > 1000:
+        raise ApyError('aura', f'apr data too big {apr_data}')
 
     gross_apr = apr_data.gross_apr * apr_data.debt_ratio
 
