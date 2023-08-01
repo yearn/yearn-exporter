@@ -20,21 +20,20 @@ from collections import defaultdict
 from enum import IntEnum
 from typing import Dict, List, Optional
 
-from brownie import ZERO_ADDRESS, Contract, chain, convert, interface
+from brownie import ZERO_ADDRESS, chain, convert, interface
 from brownie.convert import to_address
 from brownie.convert.datatypes import EthAddress
 from cachetools.func import lru_cache, ttl_cache
+from y import Contract, Network, magic
 from y.constants import EEE_ADDRESS
 from y.exceptions import NodeNotSynced, PriceError
-from y.networks import Network
-from y.prices import magic
 
 from yearn.decorators import sentry_catch_all, wait_or_exit_after
 from yearn.events import decode_logs, get_logs_asap
 from yearn.exceptions import UnsupportedNetwork
 from yearn.multicall2 import fetch_multicall, fetch_multicall_async
 from yearn.typing import Address, AddressOrContract, Block
-from yearn.utils import Singleton, contract, get_event_loop
+from yearn.utils import Singleton, contract
 
 logger = logging.getLogger(__name__)
 
@@ -552,8 +551,8 @@ class CurveRegistry(metaclass=Singleton):
         }
 
     async def calculate_apy(self, gauge: Contract, lp_token: AddressOrContract, block: Optional[Block] = None) -> Dict[str,float]:
-        pool = contract(self.get_pool(lp_token))
-        results = fetch_multicall_async(
+        pool = await Contract.coroutine(self.get_pool(lp_token))
+        results = await fetch_multicall_async(
             [gauge, "working_supply"],
             [self.gauge_controller, "gauge_relative_weight", gauge],
             [gauge, "inflation_rate"],
