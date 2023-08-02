@@ -57,6 +57,9 @@ services:
       - PGDATABASE=postgres
       - PGUSER=postgres
       - PGPASSWORD=yearn-exporter
+      - YMONITOR_URL
+      - YMONITOR_USER
+      - YMONITOR_PASSWORD
     volumes:
       - grafana_data:/var/lib/grafana
       - ./grafana/provisioning/:/etc/grafana/provisioning/
