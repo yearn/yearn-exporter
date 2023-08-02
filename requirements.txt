@@ -23,7 +23,7 @@ eth_retry>=0.1.18
 eth-hash[pysha3]
 ez-a-sync==0.6.3
 python-telegram-bot==13.15
-git+https://www.github.com/BobTheBuidler/ypricemagic@0cd7fa01ac69b90507db517498f45f40e26e5e18
+git+https://www.github.com/BobTheBuidler/ypricemagic@1fe220dce831cdaa6db4809d4aeca4e82e742fe7
 git+https://www.github.com/BobTheBuidler/eth-portfolio@22bd89a64b8d9d0ae66e390cc16ebb5ff694ed8d
 git+https://www.github.com/BobTheBuidler/toolcache@e37b53cec64556d2b35df66767fca4c8f366a2fa
 memray
