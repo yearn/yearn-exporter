@@ -12,7 +12,7 @@ from y.exceptions import PriceError, yPriceMagicError
 from y.prices import magic
 from y.utils.dank_mids import dank_w3
 
-from yearn.apy.common import Apy, ApyBlocks, ApyFees, ApyPoints, ApySamples
+from yearn.apy.common import Apy, ApyBlocks, ApyFees, ApyPoints, ApySamples, ApyError
 from yearn.common import Tvl
 from yearn.prices.curve import curve
 from yearn.utils import Singleton, contract
@@ -39,7 +39,10 @@ class YveCRVJar(metaclass = Singleton):
 
     @eth_retry.auto_retry
     async def apy(self, _: ApySamples) -> Apy:
-        data = requests.get("https://api.pickle.finance/prod/protocol/pools").json()
+        try:
+            data = requests.get("https://api.pickle.finance/prod/protocol/pools").json()
+        except requests.exceptions.SSLError as e:
+            raise ApyError("yvecrv-jar", "ssl error") from e
         yvboost_eth_pool  = [pool for pool in data if pool["identifier"] == "yvboost-eth"][0]
         apy = yvboost_eth_pool["apy"]  / 100.
         points = ApyPoints(apy, apy, apy)
