@@ -190,13 +190,14 @@ async def get_current_aura_apr(
         strategy.rewardsContract.coroutine(),
     )
 
-    rewards, aura_rewards_total_supply = await asyncio.gather(
+    rewards, bal_rewards_total_supply, aura_rewards_total_supply = await asyncio.gather(
         Contract.coroutine(rewards),
-        ERC20(rewards, asynchronous=True).total_supply_readable()
+        ERC20(gauge.gauge, asynchronous=True).total_supply_readable(),
+        ERC20(rewards, asynchronous=True).total_supply_readable(),
     )
     
     # find bal rewards tvl
-    bal_rewards_tvl = pool_token_price * await ERC20(gauge.gauge).total_supply_readable()
+    bal_rewards_tvl = pool_token_price * bal_rewards_total_supply
     aura_rewards_tvl = pool_token_price * aura_rewards_total_supply
     if not aura_rewards_tvl:
         raise ApyError('bal', 'rewards tvl is 0')
