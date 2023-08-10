@@ -196,8 +196,8 @@ async def get_current_aura_apr(
         ERC20(rewards, asynchronous=True).total_supply_readable(),
     )
     
-    bal_rewards_tvl = pool_token_price * bal_rewards_total_supply
-    aura_rewards_tvl = pool_token_price * aura_rewards_total_supply
+    bal_rewards_tvl = pool_token_price * bal_rewards_total_supply * booster_boost
+    aura_rewards_tvl = pool_token_price * aura_rewards_total_supply * booster_boost
     if not bal_rewards_tvl or not aura_rewards_tvl:
         raise ApyError('bal', 'rewards tvl is 0')
 
@@ -212,6 +212,7 @@ async def get_current_aura_apr(
         calculate_24hr_swap_fees_apr(gauge.pool, block),
         get_bonus_rewards_apr(rewards, aura_rewards_tvl),
     )
+    
     portion_of_bal_tvl_in_aura = aura_rewards_tvl / bal_rewards_tvl
     bal_rewards_flowing_thru_aura_per_year = bal_rewards_per_year * portion_of_bal_tvl_in_aura
     aura_rewards_per_year = bal_rewards_flowing_thru_aura_per_year * aura_emission_rate
