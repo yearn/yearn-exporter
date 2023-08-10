@@ -213,7 +213,9 @@ async def get_current_aura_apr(
         calculate_24hr_swap_fees_apr(gauge.pool, block),
         get_bonus_rewards_apr(rewards, aura_rewards_tvl),
     )
-    aura_rewards_per_year = bal_rewards_per_year * aura_emission_rate
+    portion_of_bal_tvl_in_aura = aura_rewards_tvl / bal_rewards_tvl
+    bal_rewards_flowing_thru_aura_per_year = bal_rewards_per_year / portion_of_bal_tvl_in_aura
+    aura_rewards_per_year = bal_rewards_flowing_thru_aura_per_year * aura_emission_rate
     aura_rewards_per_year_usd = aura_rewards_per_year * aura_price
     aura_rewards_apr = aura_rewards_per_year_usd / aura_rewards_tvl
 
