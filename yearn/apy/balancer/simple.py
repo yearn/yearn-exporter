@@ -170,7 +170,8 @@ async def calculate_simple(vault, gauge: Gauge, samples: ApySamples) -> Apy:
     return Apy('aura', gross_apr, net_apy, fees, composite=composite, blocks=blocks)
 
 async def get_current_aura_apr(
-        vault, gauge,
+        vault,
+        gauge,
         pool_token_price,
         block=None
 ) -> AuraAprData:
@@ -189,27 +190,31 @@ async def get_current_aura_apr(
         strategy.rewardsContract.coroutine(),
     )
 
-    rewards = await Contract.coroutine(rewards)
-    rewards_tvl = pool_token_price * await ERC20(rewards, asynchronous=True).total_supply_readable()
-    if not rewards_tvl:
+    rewards, aura_rewards_total_supply = await asyncio.gather(
+        Contract.coroutine(rewards),
+        ERC20(rewards, asynchronous=True).total_supply_readable()
+    )
+    
+    # find bal rewards tvl
+    bal_rewards_tvl = pool_token_price * await ERC20(gauge.gauge).total_supply_readable()
+    aura_rewards_tvl = pool_token_price * aura_rewards_total_supply
+    if not aura_rewards_tvl:
         raise ApyError('bal', 'rewards tvl is 0')
 
-    reward_rate, scale = await asyncio.gather(
-        rewards.rewardRate.coroutine(),
-        ERC20(rewards, asynchronous=True).scale,
-    )
+    reward_rate, scale = await asyncio.gather(rewards.rewardRate.coroutine(), ERC20(rewards, asynchronous=True).scale)
+    logger.info(f'strategy: {strategy}  rewards: {rewards}  reward rate: {reward_rate}  scale: {scale}')
     bal_rewards_per_year = (reward_rate / scale) * SECONDS_PER_YEAR
     bal_rewards_per_year_usd =  bal_rewards_per_year * bal_price
-    bal_rewards_apr = bal_rewards_per_year_usd / rewards_tvl
+    bal_rewards_apr = bal_rewards_per_year_usd / bal_rewards_tvl
 
     aura_emission_rate, swap_fees_apr, bonus_rewards_apr = await asyncio.gather(
         get_aura_emission_rate(block),
         calculate_24hr_swap_fees_apr(gauge.pool, block),
-        get_bonus_rewards_apr(rewards, rewards_tvl),
+        get_bonus_rewards_apr(rewards, aura_rewards_tvl),
     )
     aura_rewards_per_year = bal_rewards_per_year * aura_emission_rate
     aura_rewards_per_year_usd = aura_rewards_per_year * aura_price
-    aura_rewards_apr = aura_rewards_per_year_usd / rewards_tvl
+    aura_rewards_apr = aura_rewards_per_year_usd / aura_rewards_tvl
 
     net_apr = (
         bal_rewards_apr 
