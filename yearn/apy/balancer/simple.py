@@ -196,8 +196,8 @@ async def get_current_aura_apr(
         ERC20(rewards, asynchronous=True).total_supply_readable(),
     )
     
-    bal_rewards_tvl = pool_token_price * bal_rewards_total_supply * booster_boost
-    aura_rewards_tvl = pool_token_price * aura_rewards_total_supply * booster_boost
+    bal_rewards_tvl = pool_token_price * bal_rewards_total_supply
+    aura_rewards_tvl = pool_token_price * aura_rewards_total_supply
     if not bal_rewards_tvl or not aura_rewards_tvl:
         raise ApyError('bal', 'rewards tvl is 0')
 
@@ -205,7 +205,7 @@ async def get_current_aura_apr(
     logger.info(f'strategy: {strategy}  rewards: {rewards}  reward rate: {reward_rate}  scale: {scale}')
     bal_rewards_per_year = (reward_rate / scale) * SECONDS_PER_YEAR
     bal_rewards_per_year_usd =  bal_rewards_per_year * bal_price
-    bal_rewards_apr = bal_rewards_per_year_usd / bal_rewards_tvl
+    bal_rewards_apr = bal_rewards_per_year_usd / bal_rewards_tvl * booster_boost
 
     aura_emission_rate, swap_fees_apr, bonus_rewards_apr = await asyncio.gather(
         get_aura_emission_rate(block),
@@ -217,7 +217,7 @@ async def get_current_aura_apr(
     bal_rewards_flowing_thru_aura_per_year = bal_rewards_per_year * portion_of_bal_tvl_in_aura
     aura_rewards_per_year = bal_rewards_flowing_thru_aura_per_year * aura_emission_rate
     aura_rewards_per_year_usd = aura_rewards_per_year * aura_price
-    aura_rewards_apr = aura_rewards_per_year_usd / aura_rewards_tvl
+    aura_rewards_apr = aura_rewards_per_year_usd / aura_rewards_tvl * booster_boost
 
     net_apr = (
         bal_rewards_apr 
