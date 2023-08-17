@@ -60,6 +60,9 @@ jobs:
             ~/.solcx
             ~/.vvm
         
+      - name: Prep dependencies
+        run: pip install --prefix=/install "Cython<3.0" "pyyaml==5.4.1" --no-build-isolation
+
       - name: Install dependencies
         run: pip install -r requirements.txt
       
