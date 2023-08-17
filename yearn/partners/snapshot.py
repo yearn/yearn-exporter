@@ -27,6 +27,7 @@ from y.networks import Network
 from y.time import get_block_timestamp_async, last_block_on_date
 from y.utils.events import get_logs_asap_generator
 
+from yearn.constants import ERC20_TRANSFER_EVENT_HASH
 from yearn.events import decode_logs
 from yearn.exceptions import UnsupportedNetwork
 from yearn.partners.charts import make_partner_charts
@@ -314,14 +315,13 @@ class GearboxWrapper(Wrapper):
             return await self.vault_contract.balanceOf.coroutine(credit_account, block_identifier=block) / Decimal(self.scale)
     
     async def get_vault_depositors(self, block: int) -> Set[Address]:
-        vault = await Contract.coroutine(self.vault)
         return {
-            transfer[1]
-            async for logs in get_logs_asap_generator(vault.address, [vault.topics['Transfer']], to_block=block, chronological=False)
+            transfer['receiver']
+            async for logs in get_logs_asap_generator(self.vault, [ERC20_TRANSFER_EVENT_HASH], to_block=block, chronological=False)
             for transfer in decode_logs(logs)
         }
-
-
+        
+        
 class InverseWrapper(Wrapper):
     def __hash__(self) -> int:
         return hash(self.vault + self.wrapper)
