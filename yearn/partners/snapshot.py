@@ -26,7 +26,7 @@ from y.contracts import contract_creation_block, contract_creation_block_async
 from y.exceptions import continue_if_call_reverted
 from y.networks import Network
 from y.time import get_block_timestamp_async, last_block_on_date
-from y.utils.events import get_logs_asap_generator
+from y.utils.events import BATCH_SIZE, get_logs_asap_generator
 
 from yearn.constants import ERC20_TRANSFER_EVENT_HASH
 from yearn.events import decode_logs
@@ -82,8 +82,6 @@ class Wrapper:
         logger.info(f'starting to process {partner.name} {self} {self.name} {self.vault} {self.wrapper}')
         # NOTE: We need to use a semaphore here to ensure at most one active coroutine is populating the db for this wrapper
         async with self.semaphore:
-            # NOTE: We then use this additional semaphore for memory conservation purposes.
-            #       We use a separate semaphore because the rationalle for each is different and we don't want to accidentally refactor it away.
             if use_postgres_cache: 
                 cache = await threads.run(self.read_cache)
                 try:
@@ -145,13 +143,23 @@ class Wrapper:
         try:
             wrapper_deploy_block = await contract_creation_block_async(self.wrapper)
             should_include = lambda log: log.block_number >= wrapper_deploy_block and (start_block is None or log.block_number >= start_block)
+            
+            # Do some funky stuff here so we can make use of the disk cache
+            logs_start_block = await contract_creation_block_async(self.vault)
+            while logs_start_block + BATCH_SIZE <= wrapper_deploy_block:
+                logs_start_block += BATCH_SIZE
+                
         except ValueError as e:
             if not str(e).startswith("Unable to find deploy block for "):
                 raise e
             should_include = lambda log: start_block is None or log.block_number >= start_block
         
-        # Don't pass start_block here so we can make use of the disk cache
-        async for logs in get_logs_asap_generator(self.vault, topics):
+            # Do some funky stuff here so we can make use of the disk cache
+            logs_start_block = await contract_creation_block_async(self.vault)
+            while start_block and logs_start_block + BATCH_SIZE <= start_block:
+                logs_start_block += BATCH_SIZE
+            
+        async for logs in get_logs_asap_generator(self.vault, topics, from_block=logs_start_block):
             yield {log.block_number: Decimal(log['value']) / Decimal(vault.scale) for log in decode_logs(logs) if should_include(log)}
 
     async def balances(self, blocks: Tuple[int,...]) -> List[Decimal]:
@@ -318,9 +326,10 @@ class GearboxWrapper(Wrapper):
             return await self.vault_contract.balanceOf.coroutine(credit_account, block_identifier=block) / Decimal(self.scale)
     
     async def get_vault_depositors(self, block: int) -> Set[Address]:
+        from_block = await contract_creation_block_async(self.wrapper)
         return {
             transfer['receiver']
-            async for logs in get_logs_asap_generator(self.vault, [ERC20_TRANSFER_EVENT_HASH], to_block=block, chronological=False)
+            async for logs in get_logs_asap_generator(self.vault, [ERC20_TRANSFER_EVENT_HASH], from_block=from_block, to_block=block, chronological=False)
             for transfer in decode_logs(logs)
         }
         
