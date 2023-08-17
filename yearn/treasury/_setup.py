@@ -22,7 +22,11 @@ skip_tokens = {
         "0xA612F9e9Ba5e3b57B0D64DE4bDFccD36e08f3E6a", # aUSD
         "0x5cB5e2d7Ab9Fd32021dF8F1D3E5269bD437Ec3Bf", # aUSD
         "0xE256CF1C7caEff4383DabafEe6Dd53910F97213D", # DWS
-    }
+        "0x528Ff33Bf5bf96B5392c10bc4748d9E9Fb5386B2", # PRM
+    },
+    Network.Arbitrum: {
+        "0x89b0f9dB18FD079063cFA91F174B300C1ce0003C", # AIELON
+    },
 }
 
 def customize_eth_portfolio() -> None:
@@ -40,8 +44,11 @@ skip_ypriceapi = {
         "0x3f6740b5898c5D3650ec6eAce9a649Ac791e44D7", # kLP-KP3R/WETH
         "0xD057B63f5E69CF1B929b356b579Cba08D7688048", # vCOW
         "0x9aE357521153FB07bE6F5792CE7a49752638fbb7", # SAFE
+        "0x7E46fd8a30869aa9ed55af031067Df666EfE87da", # yvecrv-f (deprecated)
+        "0xC4C319E2D4d66CcA4464C0c2B32c9Bd23ebe784e", # aleth+eth-f (exploited)
     },
     Network.Fantom: {
+        "0x6362496Bef53458b20548a35A2101214Ee2BE3e0", # anyFTM
         "0xd652776dE7Ad802be5EC7beBfafdA37600222B48", # anyDAI
     },
 }
