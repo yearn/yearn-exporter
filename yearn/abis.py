@@ -80,13 +80,7 @@ def __validate_unitroller_abis() -> None:
             using `brownie.Contract.from_abi` in order to use this module.''')
     
     for unitroller in bad:
-        Contract.from_abi(
-            unitroller._build['contractName'],
-            unitroller.address,
-            good[0].abi)
-
-    raise IncorrectABI(f"""
-        Re-cached Comptroller {address} that was misdefined in brownie's db.
-        Restarting to ensure the in-memory `contract('{address}')` cache is correct.
-        If you were running your script manually, please restart. 
-        Everything will run fine upon restart.""")
+        # Force update the in-memory cache with the correct object
+        Contract.from_abi(unitroller._build['contractName'], unitroller.address, good[0].abi)
+        Contract._ChecksumAddressSingletonMeta__instances.pop(unitroller.address)
+        Contract(unitroller.address)
