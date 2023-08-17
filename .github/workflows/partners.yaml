@@ -50,6 +50,8 @@ jobs:
           # Explorer tokens for all chains:
           ETHERSCAN_TOKEN: ${{ secrets.ETHERSCAN_TOKEN }}
           FTMSCAN_TOKEN: ${{ secrets.FTMSCAN_TOKEN }}
+          YPRICEAPI_SIGNER: ${{ secrets.YPRICEAPI_SIGNER }}
+          YPRICEAPI_SIGNATURE: ${{ secrets.YPRICEAPI_SIGNATURE }}
         run: brownie run partners_summary --network ${{ matrix.network }}
       
       - uses: actions/upload-artifact@v3
