@@ -64,14 +64,16 @@ async def get_protocol_fees(address: str, start_block: Optional[int] = None) -> 
     """
     vault = Vault.from_address(address)
     rewards = await vault.vault.rewards.coroutine()
+    should_include = lambda log: start_block is None or log.block_number >= start_block
     
     topics = construct_event_topic_set(
         filter_by_name('Transfer', vault.vault.abi)[0],
         web3.codec,
         {'sender': address, 'receiver': rewards},
     )
-    async for logs in get_logs_asap_generator(address, topics, from_block=start_block):
-        yield {log.block_number: Decimal(log['value']) / Decimal(vault.scale) for log in decode_logs(logs)}
+    # Don't pass start_block here so we can make use of the disk cache
+    async for logs in get_logs_asap_generator(address, topics):
+        yield {log.block_number: Decimal(log['value']) / Decimal(vault.scale) for log in decode_logs(logs) if should_include(log)}
 
 
 @dataclass
