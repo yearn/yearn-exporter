@@ -70,7 +70,7 @@ jobs:
             ~/.vvm
         
       - name: Prep dependencies
-        run: pip install wheel && pip install --prefix=/install "Cython<3.0" "pyyaml==5.4.1" --no-build-isolation
+        run: pip install wheel && pip install "Cython<3.0" "pyyaml==5.4.1" --no-build-isolation
 
       - name: Install dependencies
         run: pip install -r requirements.txt
