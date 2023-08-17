@@ -103,10 +103,9 @@ class VaultV1:
             # guard historical queries where there are no vote_proxy and gauge
             # for block <= 10635293 (2020-08-11)
             if vote_proxy and gauge:
+                from yearn.prices.curve import curve
                 vote_proxy = patch_contract(interface.CurveYCRVVoter(vote_proxy), dank_w3)
                 gauge = contract(gauge)
-                #boost = await curve.calculate_boost(gauge, vote_proxy, block=block),
-                #_apy = await curve.calculate_apy(gauge, self.token, block=block),
                 boost, _apy = await asyncio.gather(
                     curve.calculate_boost(gauge, vote_proxy, block=block),
                     curve.calculate_apy(gauge, self.token, block=block),
