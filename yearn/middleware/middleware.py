@@ -51,8 +51,6 @@ def should_cache(method, params):
         return True
     if method == "eth_getCode" and params[1] == "latest":
         return True
-    if method == "eth_getLogs":
-        return int(params[0]["toBlock"], 16) - int(params[0]["fromBlock"], 16) == BATCH_SIZE - 1
     return False
 
 
@@ -67,12 +65,7 @@ def cache_middleware(make_request, w3):
 
 
 def catch_and_retry_middleware(make_request, w3):
-
-    @eth_retry.auto_retry
-    def middleware(method, params):
-        return make_request(method, params)
-
-    return middleware
+    return eth_retry.auto_retry(make_request)
 
 
 def setup_middleware():
