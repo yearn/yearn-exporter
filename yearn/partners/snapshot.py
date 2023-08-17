@@ -4,9 +4,10 @@ from collections import defaultdict
 from dataclasses import dataclass, field
 from datetime import date, timedelta
 from decimal import Decimal
-from functools import cached_property
+from functools import cached_property, lru_cache
 from pathlib import Path
-from typing import AsyncGenerator, Dict, List, Optional, Set, Tuple, Union
+from typing import (AsyncGenerator, Callable, Dict, List, Optional, Set, Tuple,
+                    Union)
 
 import pandas as pd
 from a_sync import AsyncThreadPoolExecutor
@@ -158,7 +159,8 @@ class Wrapper:
         return [Decimal(balance) / Decimal(self.scale) for balance in balances]
 
     async def total_supplies(self, blocks: Tuple[int,...]) -> List[Decimal]:
-        supplies = await asyncio.gather(*[self.vault_contract.totalSupply.coroutine(block_identifier = block) for block in blocks])
+        cached_total_supply = _get_cached_total_supply_fn(self.vault_contract)
+        supplies = await asyncio.gather(*[cached_total_supply(block_identifier = block) for block in blocks])
         return [Decimal(supply) / Decimal(self.scale) for supply in supplies]
 
     async def vault_prices(self, blocks: Tuple[int,...]) -> List[Decimal]:
@@ -185,6 +187,7 @@ class BentoboxWrapper(Wrapper):
             return await bento.balanceOf.coroutine(self.vault, self.wrapper, block_identifier=block)
         except Exception as e:
             continue_if_call_reverted(e)
+
 
 class DegenboxWrapper(Wrapper):
     """
@@ -609,3 +612,7 @@ async def process_harvests(wrapper, protocol_fees) -> Optional[DataFrame]:
         if str(e) != 'not enough values to unpack (expected 2, got 0)':
             raise
         return None
+
+@lru_cache(maxsize=None)
+def _get_cached_total_supply_fn(vault: Contract) -> Callable[[], int]:
+    return alru_cache(maxsize=None)(vault.totalSupply.coroutine)
