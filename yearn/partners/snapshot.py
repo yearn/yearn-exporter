@@ -314,7 +314,7 @@ class GearboxWrapper(Wrapper):
             return await self.vault_contract.balanceOf.coroutine(credit_account, block_identifier=block) / Decimal(self.scale)
     
     async def get_vault_depositors(self, block: int) -> Set[Address]:
-        vault = Contract.coroutine(self.vault)
+        vault = await Contract.coroutine(self.vault)
         return {
             transfer[1]
             async for logs in get_logs_asap_generator(vault.address, [vault.topics['Transfer']], to_block=block, chronological=False)
