@@ -47,7 +47,7 @@ jobs:
           # Explorer tokens for all chains:
           ETHERSCAN_TOKEN: ${{ secrets.ETHERSCAN_TOKEN }}
           FTMSCAN_TOKEN: ${{ secrets.FTMSCAN_TOKEN }}
-        run: DANKMIDS_STUCK_CALL_TIMEOUT=7200 brownie run partners_summary --network ${{ matrix.network }}
+        run: brownie run partners_summary --network ${{ matrix.network }}
       
       - uses: actions/upload-artifact@v3
         with:
