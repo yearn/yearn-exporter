@@ -291,7 +291,7 @@ class GearboxWrapper(Wrapper):
         return await factory.creditAccounts.coroutine(ix)
 
     async def balances(self, blocks) -> List[Decimal]:
-        return await asyncio.gather(*[self.get_tvl(block) for block in zip(blocks)])
+        return await asyncio.gather(*[self.get_tvl(block) for block in blocks])
     
     async def get_tvl(self, block: int) -> Decimal:
         if ct := await self.count_credit_accounts(block):
