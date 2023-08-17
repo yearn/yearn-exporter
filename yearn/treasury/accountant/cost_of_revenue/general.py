@@ -49,7 +49,7 @@ def is_partner_fees(tx: TreasuryTx) -> bool:
                 (hasattr(partner, 'retired_treasuries') and tx.to_address.address in partner.retired_treasuries)
             ):
                 continue
-            if any(tx.token.address.address == convert.to_address(wrapper.vault) for wrapper in _get_flat_wrappers()): # gotta somehow async this without asyncing this
+            if any(tx.token.address.address == convert.to_address(wrapper.vault) for wrapper in _get_flat_wrappers(partner)): # gotta somehow async this without asyncing this
                 return True
             else:
                 logger.warn(f'look at {tx}, seems odd')
