@@ -21,7 +21,6 @@ from yearn.common import Tvl
 from yearn.decorators import sentry_catch_all, wait_or_exit_after
 from yearn.events import decode_logs, get_logs_asap
 from yearn.multicall2 import fetch_multicall_async
-from yearn.prices.curve import curve
 from yearn.special import Ygov
 from yearn.typing import Address
 from yearn.utils import run_in_thread, safe_views
@@ -299,6 +298,7 @@ class Vault:
 
     @cached_property
     def _needs_curve_simple(self):
+        from yearn.prices.curve import curve
         # some curve vaults which should not be calculated with curve logic
         curve_simple_excludes = {
             Network.Arbitrum: [

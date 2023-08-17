@@ -1,12 +1,13 @@
 
+import asyncio
 import logging
 
 from brownie import chain, convert
-from y.networks import Network
+from y import Network
 
 from yearn import constants
 from yearn.entities import TreasuryTx
-from yearn.partners.partners import partners
+from yearn.partners.partners import Partner, partners
 from yearn.treasury.accountant.classes import Filter, HashMatcher, IterFilter
 
 logger = logging.getLogger(__name__)
@@ -36,6 +37,10 @@ hashes = {
     }
 }.get(chain.id, {})
 
+def _get_flat_wrappers(partner: Partner):
+    # A helper function so we can run this sync without either breaking the event loop in our main thread or making this module async
+    return asyncio.get_event_loop().run_until_complete(partner.flat_wrappers)
+
 def is_partner_fees(tx: TreasuryTx) -> bool:
     if tx.from_address.address == constants.YCHAD_MULTISIG and tx.to_address:
         for partner in partners:
@@ -44,7 +49,7 @@ def is_partner_fees(tx: TreasuryTx) -> bool:
                 (hasattr(partner, 'retired_treasuries') and tx.to_address.address in partner.retired_treasuries)
             ):
                 continue
-            if any(tx.token.address.address == convert.to_address(wrapper.vault) for wrapper in partner.flat_wrappers):
+            if any(tx.token.address.address == convert.to_address(wrapper.vault) for wrapper in _get_flat_wrappers()): # gotta somehow async this without asyncing this
                 return True
             else:
                 logger.warn(f'look at {tx}, seems odd')

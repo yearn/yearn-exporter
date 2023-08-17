@@ -14,7 +14,6 @@ from y.utils.dank_mids import dank_w3
 from yearn import constants
 from yearn.common import Tvl
 from yearn.multicall2 import fetch_multicall_async
-from yearn.prices.curve import curve
 from yearn.utils import contract
 from yearn.v1 import constants
 
@@ -69,6 +68,7 @@ class VaultV1:
 
     @cached_property
     def is_curve_vault(self):
+        from yearn.prices.curve import curve
         return curve.get_pool(str(self.token)) is not None
 
     async def describe(self, block=None):
