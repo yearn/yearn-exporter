@@ -159,8 +159,8 @@ class Wrapper:
         return [Decimal(balance) / Decimal(self.scale) for balance in balances]
 
     async def total_supplies(self, blocks: Tuple[int,...]) -> List[Decimal]:
-        cached_total_supply = _get_cached_total_supply_fn(self.vault_contract)
-        supplies = await asyncio.gather(*[cached_total_supply(block_identifier = block) for block in blocks])
+        total_supply_cached = _get_cached_total_supply_fn(self.vault_contract)
+        supplies = await asyncio.gather(*[total_supply_cached(block_identifier = block) for block in blocks])
         return [Decimal(supply) / Decimal(self.scale) for supply in supplies]
 
     async def vault_prices(self, blocks: Tuple[int,...]) -> List[Decimal]:
