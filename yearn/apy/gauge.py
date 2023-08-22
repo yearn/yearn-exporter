@@ -23,19 +23,19 @@ class Gauge:
     gauge_inflation_rate: int
     gauge_working_supply: int
 
-    def calculate_base_apr(self, max_boost, reward_price, pool_price_per_share, pool_token_price) -> float:
+    def calculate_base_apr(self, max_boost, reward_price, pool_token_price) -> float:
         logger.info(f'max boost: {max_boost}')
         logger.info(f'reward price: {reward_price}')
-        logger.info(f'pool pps: {pool_price_per_share}')
         logger.info(f'pool token price: {pool_token_price}')
         logger.info(f'inflation rate: {self.gauge_inflation_rate}')
         logger.info(f'weight: {self.gauge_weight}')
         logger.info(f'working supply: {self.gauge_working_supply}')
+        
         return (
             self.gauge_inflation_rate
             * self.gauge_weight
             * (SECONDS_PER_YEAR / self.gauge_working_supply)
-            * ((1.0 / max_boost) / pool_price_per_share)
+            * (1.0 / max_boost)
             * reward_price
         ) / pool_token_price
 
@@ -52,11 +52,11 @@ class Gauge:
         else:
             return max_boost
 
-    def calculate_rewards_apr(self, pool_price_per_share, pool_token_price, kp3r=None, rkp3r=None, block=None) -> float:
+    def calculate_rewards_apr(self, pool_token_price, kp3r=None, rkp3r=None, block=None) -> float:
         if hasattr(self.gauge, "reward_contract"):
             reward_address = self.gauge.reward_contract()
             if reward_address != ZERO_ADDRESS:
-                return rewards(reward_address, pool_price_per_share, pool_token_price, block=block)
+                return rewards(reward_address, pool_token_price, block=block)
 
         elif hasattr(self.gauge, "reward_data"): # this is how new gauges, starting with MIM, show rewards
             # get our token
@@ -76,7 +76,7 @@ class Gauge:
                 else:
                     return (
                         (SECONDS_PER_YEAR * (rate / 1e18) * token_price) 
-                        / ((pool_price_per_share / 1e18) * (total_supply / 1e18) * pool_token_price)
+                        / ((total_supply / 1e18) * pool_token_price)
                     )
 
         return 0

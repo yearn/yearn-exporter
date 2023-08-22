@@ -141,9 +141,8 @@ async def calculate_simple(vault, gauge: Gauge, samples: ApySamples) -> Apy:
     if not base_asset_price:
         raise ValueError(f"Error! Could not find price for {gauge.lp_token} at block {block}")
 
-    crv_price, pool_price = await asyncio.gather(
-        magic.get_price(curve.crv, block=block, sync=False),
-        gauge.pool.get_virtual_price.coroutine(block_identifier=block)
+    crv_price = await asyncio.gather(
+        magic.get_price(curve.crv, block=block, sync=False)
     )
 
     if chain.id == Network.Mainnet:
@@ -155,18 +154,12 @@ async def calculate_simple(vault, gauge: Gauge, samples: ApySamples) -> Apy:
     else:
         y_working_balance = 0
         y_gauge_balance = 0
+        reward_token = await gauge.gauge.reward_tokens.coroutine(0)
+        reward_data = await gauge.gauge.reward_data.coroutine(reward_token)
 
-        if await gauge.gauge.reward_count.coroutine() == 0:
-            pool_price = 1
-        else:
-            reward_token = await gauge.gauge.reward_tokens.coroutine(0)
-            reward_data = await gauge.gauge.reward_data.coroutine(reward_token)
-            if time() > reward_data['period_finish']:
-                pool_price = 1
-
-    base_apr = gauge.calculate_base_apr(BOOST[chain.id], crv_price, pool_price, base_asset_price)
+    base_apr = gauge.calculate_base_apr(BOOST[chain.id], crv_price, base_asset_price)
     if base_apr > 1000:
-        raise ApyError('crv', f'base apr too high: {base_apr}', f'MAX BOOST: {MAX_BOOST}  crv price: {crv_price}  pool price: {pool_price}  base asset price: {base_asset_price}')
+        raise ApyError('crv', f'base apr too high: {base_apr}', f'MAX BOOST: {MAX_BOOST}  crv price: {crv_price}  base asset price: {base_asset_price}')
     
     voter_proxy = addresses[chain.id]['yearn_voter_proxy'] if chain.id in addresses else None
     y_boost = await gauge.calculate_boost(BOOST[chain.id], voter_proxy, block)

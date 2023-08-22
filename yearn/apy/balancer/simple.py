@@ -33,8 +33,7 @@ class AuraAprData:
     aura_apr: float = 0
     swap_fees_apr: float = 0
     bonus_rewards_apr: float = 0
-    gross_apr: float = 0
-    net_apr: float = 0
+    total_apr: float = 0
     debt_ratio: float = 0
 
 addresses = {
@@ -106,7 +105,8 @@ async def simple(vault, samples: ApySamples) -> Apy:
 
     if os.getenv('DEBUG', None):
         logger.info(pformat(Debug().collect_variables(locals())))
-
+        
+    # would probably be best to calculate both current and future expected APR. one comes from Aura gauge, the other comes from balancer gauge
     return await calculate_simple(
         vault,
         Gauge(pool.address, pool, gauge, gauge_weight, gauge_inflation_rate, gauge_working_supply),
@@ -117,44 +117,62 @@ async def calculate_simple(vault, gauge: Gauge, samples: ApySamples) -> Apy:
     if not vault: raise ApyError('bal', 'apy preview not supported')
 
     now = samples.now
-    pool_token_price, (performance_fee, management_fee, keep_bal) = await asyncio.gather(
+    pool_token_price, (performance_fee, management_fee, keep_bal, keep_aura), bal_price = await asyncio.gather(
         magic.get_price(gauge.lp_token, block=now, sync=False),
         get_vault_fees(vault, block=now),
+        magic.get_price(addresses[chain.id]['bal'], block=block, sync=False),
     )
-
-    apr_data = await get_current_aura_apr(
+    
+    # this is pulled directly from aura's pool deposit contract (ERC-4626)
+    current_aura_apr = await get_current_aura_apr(
         vault, gauge,
         pool_token_price,
         block=now
     )
-    if apr_data.bal_apr > 1000 or apr_data.aura_apr > 1000:
+    
+    # this is pulled from the balancer gauge
+    future_aura_apr = await get_future_aura_apr(
+        vault, gauge,
+        pool_token_price,
+        block=now
+    )
+    
+    # once we have balancer strategies, add a line here to pull base_apr from gauge
+    
+    # make sure none of our APRs are super high
+    if future_aura_apr.bal_apr > 1000 or future_aura_apr.aura_apr > 1000 or current_aura_apr.bal_apr > 1000 or current_aura_apr.aura_apr > 1000:
         raise ApyError('aura', f'apr data too big {apr_data}')
+        
+    # we want to calculate current/future APR, as well as current APY
+    current_gross_apr = current_aura_apr.gross_apr * current_aura_apr.debt_ratio
+    future_gross_apr = future_aura_apr.gross_apr * future_aura_apr.debt_ratio
+    gross_apr = current_gross_apr
 
-    gross_apr = apr_data.gross_apr * apr_data.debt_ratio
-
-    net_booster_apr = apr_data.net_apr * (1 - performance_fee) - management_fee
-    net_booster_apy = float(Decimal(1 + (net_booster_apr / COMPOUNDING)) ** COMPOUNDING - 1)
-    net_apy = net_booster_apy
-
+    current_net_apr = current_gross_apr * (1 - performance_fee) - management_fee
+    future_net_apr = future_gross_apr * (1 - performance_fee) - management_fee
+    current_net_apy = float(Decimal(1 + (current_net_apr / COMPOUNDING)) ** COMPOUNDING - 1)
+    net_apy = current_net_apy
+    
     fees = ApyFees(
         performance=performance_fee, 
         management=management_fee, 
         keep_crv=keep_bal, 
-        cvx_keep_crv=keep_bal
+        cvx_keep_crv=keep_aura
     )
 
     if os.getenv('DEBUG', None):
         logger.info(pformat(Debug().collect_variables(locals())))
 
     composite = {
-        "boost": apr_data.boost,
-        "bal_rewards_apr": apr_data.bal_apr,
-        "aura_rewards_apr": apr_data.aura_apr,
-        "swap_fees_apr": apr_data.swap_fees_apr,
-        "bonus_rewards_apr": apr_data.bonus_rewards_apr,
-        "aura_gross_apr": apr_data.gross_apr,
-        "aura_net_apr": apr_data.net_apr,
-        "booster_net_apr": net_booster_apr,
+        "boost": current_aura_apr.boost,
+        "current_bal_rewards_apr": current_aura_apr.bal_apr,
+        "current_aura_rewards_apr": current_aura_apr.aura_apr,
+        "swap_fees_and_yield_apr": current_aura_apr.swap_fees_apr,
+        "bonus_rewards_apr": current_aura_apr.bonus_rewards_apr,
+        "future_bal_rewards_apr": future_aura_apr.bal_apr,
+        "future_aura_rewards_apr": future_aura_apr.aura_apr,
+        "current_gross_apr": current_gross_apr,
+        "future_gross_apr": future_gross_apr,
     }
 
     try:  # maybe this last arg should just be optional?
@@ -175,59 +193,50 @@ async def get_current_aura_apr(
         pool_token_price,
         block=None
 ) -> AuraAprData:
-    """Calculate the current APR as opposed to projected APR like we do with CRV-CVX"""
+    """Calculate the current APR using our Aura staking pool"""
     strategy = vault.strategies[0].strategy
-    debt_ratio, booster, booster_boost = await asyncio.gather(
+    debt_ratio, aura_boost = await asyncio.gather(
         get_debt_ratio(vault, strategy),
-        Contract.coroutine(addresses[chain.id]['booster']),
         gauge.calculate_boost(MAX_BOOST, addresses[chain.id]['booster_voter'], block),
     )
-    booster_fee = get_booster_fee(booster, block)
 
     bal_price, aura_price, rewards = await asyncio.gather(
         magic.get_price(addresses[chain.id]['bal'], block=block, sync=False),
         magic.get_price(addresses[chain.id]['aura'], block=block, sync=False),
         strategy.rewardsContract.coroutine(),
     )
-
-    rewards, bal_rewards_total_supply, aura_rewards_total_supply = await asyncio.gather(
+    
+    # this gives us the total supply of LP tokens deposited via aura
+    rewards, aura_rewards_total_supply = await asyncio.gather(
         Contract.coroutine(rewards),
-        ERC20(gauge.gauge, asynchronous=True).total_supply_readable(),
         ERC20(rewards, asynchronous=True).total_supply_readable(),
     )
     
-    bal_rewards_tvl = pool_token_price * bal_rewards_total_supply
+    # total TVL deposited via aura
     aura_rewards_tvl = pool_token_price * aura_rewards_total_supply
-    if not bal_rewards_tvl or not aura_rewards_tvl:
+    if not aura_rewards_tvl:
         raise ApyError('bal', 'rewards tvl is 0')
-
+        
+    # pull our rewardRate, which is bal emissions per second (from aura, post-fee)
     reward_rate, scale = await asyncio.gather(rewards.rewardRate.coroutine(), ERC20(rewards, asynchronous=True).scale)
     logger.info(f'strategy: {strategy}  rewards: {rewards}  reward rate: {reward_rate}  scale: {scale}')
     bal_rewards_per_year = (reward_rate / scale) * SECONDS_PER_YEAR
     bal_rewards_per_year_usd =  bal_rewards_per_year * bal_price
-    bal_rewards_apr = bal_rewards_per_year_usd / bal_rewards_tvl * booster_boost
-
+    bal_rewards_apr = bal_rewards_per_year_usd / aura_rewards_tvl
+    
+    # based on our BAL emissions, calculate how much AURA we will receive. also pull bonus rewards and swap fees.
     aura_emission_rate, swap_fees_apr, bonus_rewards_apr = await asyncio.gather(
         get_aura_emission_rate(block),
         calculate_24hr_swap_fees_apr(gauge.pool, block),
         get_bonus_rewards_apr(rewards, aura_rewards_tvl),
     )
     
-    portion_of_bal_tvl_in_aura = aura_rewards_tvl / bal_rewards_tvl
-    bal_rewards_flowing_thru_aura_per_year = bal_rewards_per_year * portion_of_bal_tvl_in_aura
-    aura_rewards_per_year = bal_rewards_flowing_thru_aura_per_year * aura_emission_rate
+    aura_rewards_per_year = bal_rewards_per_year * aura_emission_rate
     aura_rewards_per_year_usd = aura_rewards_per_year * aura_price
-    aura_rewards_apr = aura_rewards_per_year_usd / aura_rewards_tvl * booster_boost
+    aura_rewards_apr = aura_rewards_per_year_usd / aura_rewards_tvl
 
-    net_apr = (
+    total_apr = (
         bal_rewards_apr 
-        + aura_rewards_apr 
-        + swap_fees_apr 
-        + bonus_rewards_apr
-    )
-
-    gross_apr = (
-        (bal_rewards_apr / (1 - booster_fee)) 
         + aura_rewards_apr 
         + swap_fees_apr 
         + bonus_rewards_apr
@@ -237,13 +246,74 @@ async def get_current_aura_apr(
         logger.info(pformat(Debug().collect_variables(locals())))
 
     return AuraAprData(
-        booster_boost,
+        aura_boost,
         bal_rewards_apr,
         aura_rewards_apr,
         swap_fees_apr,
         bonus_rewards_apr,
-        gross_apr,
-        net_apr,
+        total_apr,
+        debt_ratio
+    )
+
+async def get_future_aura_apr(
+        vault,
+        gauge,
+        pool_token_price,
+        block=None
+) -> AuraAprData:
+    """Calculate our future Aura APR (end of epoch target) using the Balancer gauge"""
+    strategy = vault.strategies[0].strategy
+    debt_ratio, booster, aura_boost = await asyncio.gather(
+        get_debt_ratio(vault, strategy),
+        Contract.coroutine(addresses[chain.id]['booster']),
+        gauge.calculate_boost(MAX_BOOST, addresses[chain.id]['booster_voter'], block),
+    )
+    booster_fee = get_booster_fee(booster, block) # these are the fees aura charges on BAL emissions collected
+
+    bal_price, aura_price, rewards = await asyncio.gather(
+        magic.get_price(addresses[chain.id]['bal'], block=block, sync=False),
+        magic.get_price(addresses[chain.id]['aura'], block=block, sync=False),
+        strategy.rewardsContract.coroutine(),
+    )
+    rewards, aura_rewards_total_supply = await asyncio.gather(
+        Contract.coroutine(rewards),
+        ERC20(rewards, asynchronous=True).total_supply_readable(),
+    )
+    
+    # technically we could pull the bonus rewards from the gauge here, but not really worth the trouble
+    aura_rewards_tvl = pool_token_price * aura_rewards_total_supply
+    aura_emission_rate, swap_fees_apr, bonus_rewards_apr = await asyncio.gather(
+        get_aura_emission_rate(block),
+        calculate_24hr_swap_fees_apr(gauge.pool, block),
+        get_bonus_rewards_apr(rewards, aura_rewards_tvl),
+    )
+    
+    # calculate our base balancer gauge APR. once we have a balancer-only strategy, use this same code there for base APR+boost.
+    base_apr = gauge.calculate_base_apr(MAX_BOOST, bal_price, pool_token_price)
+    aura_bal_apr = base_apr * aura_boost
+    bal_rewards_apr = aura_bal_apr / (1 - booster_fee)
+    aura_rewards_apr = bal_rewards_apr * (aura_price / bal_price) * aura_emission_rate
+    
+    if not aura_rewards_total_supply:
+        raise ApyError('bal', 'rewards tvl is 0')
+
+    total_apr = (
+        bal_rewards_apr
+        + aura_rewards_apr 
+        + swap_fees_apr 
+        + bonus_rewards_apr
+    )
+
+    if os.getenv('DEBUG', None):
+        logger.info(pformat(Debug().collect_variables(locals())))
+
+    return AuraAprData(
+        aura_boost,
+        bal_rewards_apr,
+        aura_rewards_apr,
+        swap_fees_apr,
+        bonus_rewards_apr,
+        total_apr,
         debt_ratio
     )
 
@@ -268,10 +338,14 @@ async def get_bonus_rewards_apr(rewards, rewards_tvl, block=None):
 async def get_vault_fees(vault, block=None):
     if vault:
         vault_contract = vault.vault
-        if len(vault.strategies) > 0 and hasattr(vault.strategies[0].strategy, 'keepBAL'):
-            keep_bal = await vault.strategies[0].strategy.keepBAL.coroutine(block_identifier=block) / 1e4
+        if len(vault.strategies) > 0 and hasattr(vault.strategies[0].strategy, 'localKeepCRV'):
+            keep_bal = await vault.strategies[0].strategy.localKeepCRV.coroutine(block_identifier=block) / 1e4
         else:
             keep_bal = 0
+        if len(vault.strategies) > 0 and hasattr(vault.strategies[0].strategy, 'localKeepCVX'):
+            keep_aura = await vault.strategies[0].strategy.localKeepCVX.coroutine(block_identifier=block) / 1e4
+        else:
+            keep_aura = 0
         performance = await vault_contract.performanceFee.coroutine(block_identifier=block) / 1e4 if hasattr(vault_contract, "performanceFee") else 0
         management = await vault_contract.managementFee.coroutine(block_identifier=block) / 1e4 if hasattr(vault_contract, "managementFee") else 0
 
@@ -280,8 +354,9 @@ async def get_vault_fees(vault, block=None):
         performance = 0.1
         management = 0
         keep_bal = 0
+        keep_aura = 0
     
-    return performance, management, keep_bal
+    return performance, management, keep_bal, keep_aura
 
 async def get_aura_emission_rate(block=None) -> float:
     aura = await Contract.coroutine(addresses[chain.id]['aura'])

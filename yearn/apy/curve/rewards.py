@@ -10,15 +10,15 @@ from y.time import get_block_timestamp_async
 from yearn.apy.common import SECONDS_PER_YEAR
 
 
-async def rewards(address: str, pool_price: int, base_asset_price: int, block: Optional[int]=None) -> float:
+async def rewards(address: str, base_asset_price: int, block: Optional[int]=None) -> float:
     staking_rewards = await Contract.coroutine(address)
     if hasattr(staking_rewards, "periodFinish"):
-        return await staking(staking_rewards, pool_price, base_asset_price, block=block)
+        return await staking(staking_rewards, base_asset_price, block=block)
     else:
-        return await multi(address, pool_price, base_asset_price, block=block)
+        return await multi(address, base_asset_price, block=block)
 
 
-async def staking(staking_rewards: Contract, pool_price: int, base_asset_price: int, block: Optional[int]=None) -> float:
+async def staking(staking_rewards: Contract, base_asset_price: int, block: Optional[int]=None) -> float:
     end = await staking_rewards.periodFinish.coroutine(block_identifier=block)
 
     current_time = time() if block is None else await get_block_timestamp_async(block)
@@ -42,9 +42,7 @@ async def staking(staking_rewards: Contract, pool_price: int, base_asset_price: 
     if token and rate:
         # Single reward token
         token_price = await magic.get_price(token, block=block, sync=False)
-        return (SECONDS_PER_YEAR * (rate / 1e18) * token_price) / (
-            (pool_price / 1e18) * (total_supply / 1e18) * base_asset_price
-        )
+        return (SECONDS_PER_YEAR * (rate / 1e18) * token_price) / ((total_supply / 1e18) * base_asset_price)
     else:
         # Multiple reward tokens
         queue = 0
@@ -63,7 +61,7 @@ async def staking(staking_rewards: Contract, pool_price: int, base_asset_price: 
                 token = None
             rate = data.rewardRate / 1e18 if data else 0
             token_price = await magic.get_price(token, block=block, sync=False) or 0
-            apr += SECONDS_PER_YEAR * rate * token_price / ((pool_price / 1e18) * (total_supply / 1e18) * token_price)
+            apr += SECONDS_PER_YEAR * rate * token_price / ((total_supply / 1e18) * token_price)
             queue += 1
             try:
                 token = await staking_rewards.rewardTokens.coroutine(queue, block_identifier=block)
@@ -72,7 +70,7 @@ async def staking(staking_rewards: Contract, pool_price: int, base_asset_price: 
         return apr
 
 
-async def multi(address: str, pool_price: int, base_asset_price: int, block: Optional[int]=None) -> float:
+async def multi(address: str, base_asset_price: int, block: Optional[int]=None) -> float:
     multi_rewards = await Contract.coroutine(address)
 
     total_supply = await multi_rewards.totalSupply.coroutine(block_identifier=block) if hasattr(multi_rewards, "totalSupply") else 0
@@ -91,7 +89,7 @@ async def multi(address: str, pool_price: int, base_asset_price: int, block: Opt
         if data.periodFinish >= time():
             rate = data.rewardRate / 1e18 if data else 0
             token_price = await magic.get_price(token, block=block, sync=False) or 0
-            apr += SECONDS_PER_YEAR * rate * token_price / ((pool_price / 1e18) * (total_supply / 1e18) * token_price)
+            apr += SECONDS_PER_YEAR * rate * token_price / ((total_supply / 1e18) * token_price)
         queue += 1
         try:
             token = await multi_rewards.rewardTokens.coroutine(queue, block_identifier=block)
