@@ -157,7 +157,7 @@ async def calculate_simple(vault, gauge: Gauge, samples: ApySamples) -> Apy:
         reward_token = await gauge.gauge.reward_tokens.coroutine(0)
         reward_data = await gauge.gauge.reward_data.coroutine(reward_token)
 
-    base_apr = gauge.calculate_base_apr(BOOST[chain.id], crv_price, base_asset_price)
+    base_apr = gauge.calculate_base_apr(BOOST[chain.id], float(crv_price), base_asset_price)
     if base_apr > 1000:
         raise ApyError('crv', f'base apr too high: {base_apr}', f'MAX BOOST: {MAX_BOOST}  crv price: {crv_price}  base asset price: {base_asset_price}')
     
