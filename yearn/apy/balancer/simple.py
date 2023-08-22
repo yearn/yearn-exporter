@@ -120,7 +120,7 @@ async def calculate_simple(vault, gauge: Gauge, samples: ApySamples) -> Apy:
     pool_token_price, (performance_fee, management_fee, keep_bal, keep_aura), bal_price = await asyncio.gather(
         magic.get_price(gauge.lp_token, block=now, sync=False),
         get_vault_fees(vault, block=now),
-        magic.get_price(addresses[chain.id]['bal'], block=block, sync=False),
+        magic.get_price(addresses[chain.id]['bal'], block=now, sync=False),
     )
     
     # this is pulled directly from aura's pool deposit contract (ERC-4626)
