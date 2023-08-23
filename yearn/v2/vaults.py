@@ -21,7 +21,6 @@ from yearn.common import Tvl
 from yearn.decorators import sentry_catch_all, wait_or_exit_after
 from yearn.events import decode_logs, get_logs_asap
 from yearn.multicall2 import fetch_multicall_async
-from yearn.prices.curve import curve
 from yearn.special import Ygov
 from yearn.typing import Address
 from yearn.utils import run_in_thread, safe_views
@@ -62,6 +61,13 @@ async def get_price_return_exceptions(token, block=None):
     except Exception as e:
         return e
 
+BORKED = {
+    Network.Mainnet: [
+        # borked in the vyper exploit of july 2023
+        "0x718AbE90777F5B778B52D553a5aBaa148DD0dc5D",
+    ]
+}.get(chain.id, [])
+
 def _unpack_results(vault: Address, is_experiment: bool, _views: List[str], results: List[Any], scale: int, price_or_exception: Union[float, BaseException], strategies: List[str], strategy_descs: List[Dict]) -> Dict[str,Any]:
     try:
         info = dict(zip(_views, results))
@@ -76,7 +82,7 @@ def _unpack_results(vault: Address, is_experiment: bool, _views: List[str], resu
         # Sometimes we fail to fetch price during blocks prior to the first deposit to a vault.
         # In this case (totalSupply == 0), missing price data is totally fine and we can set price = 0.
         # In all other cases, missing price data indicates an issue. We must raise and debug the Exception.
-        if info["totalSupply"] > 0:
+        if info["totalSupply"] > 0 and vault not in BORKED:
             logger.error(f"The exception below is for vault: {vault}")
             raise price_or_exception
         price_or_exception = 0
@@ -299,6 +305,7 @@ class Vault:
 
     @cached_property
     def _needs_curve_simple(self):
+        from yearn.prices.curve import curve
         # some curve vaults which should not be calculated with curve logic
         curve_simple_excludes = {
             Network.Arbitrum: [

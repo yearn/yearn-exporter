@@ -1,7 +1,8 @@
 from collections import defaultdict
-from functools import lru_cache
 from math import ceil
 
+from a_sync import AsyncThreadPoolExecutor
+from async_lru import alru_cache
 from brownie import chain
 from joblib import Parallel, delayed
 from toolz import last
@@ -72,8 +73,7 @@ def proportional_withdrawal_totals(delegated_deposits):
                 partner_withdrawals[transfer.block_number] += ceil(amount * balance / total)
     return proportional_withdrawals
 
-@lru_cache
-def delegated_deposit_balances():
+def _delegated_deposit_balances():
     """
     Returns a dict used to lookup the delegated balance of each `partner` for each `depositor` to each `vault` at `block`.
         {vault: {depositor: {partner: AsOfDict({block: amount})}}}
@@ -98,6 +98,11 @@ def delegated_deposit_balances():
                     partner_balances[block] = balance
     return balances
 
+thread = AsyncThreadPoolExecutor(1)
+
+@alru_cache
+async def delegated_deposit_balances():
+    return await thread.run(_delegated_deposit_balances)
 
 def _unwrap(root_dict, vault, depositor, partner):
     vault_based = root_dict[vault]

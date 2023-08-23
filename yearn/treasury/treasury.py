@@ -95,7 +95,7 @@ class YearnTreasury(ExportablePortfolio):
         super().__init__(TREASURY_WALLETS, label='treasury', start_block=start_block, asynchronous=asynchronous, load_prices=load_prices)
 
     # TODO link this in
-    def partners_debt(self, block: int = None) -> dict:
+    async def partners_debt(self, block: int = None) -> dict:
         for i, partner in enumerate(partners):
             if i == 1:
                 flat_wrappers = []
@@ -103,7 +103,7 @@ class YearnTreasury(ExportablePortfolio):
                     if isinstance(wrapper, Wrapper):
                         flat_wrappers.append(wrapper)
                     elif isinstance(wrapper, WildcardWrapper):
-                        flat_wrappers.extend(wrapper.unwrap())
+                        flat_wrappers.extend(await wrapper.unwrap())
                 for wrapper in flat_wrappers:
                     print(wrapper.protocol_fees(block=block))
 

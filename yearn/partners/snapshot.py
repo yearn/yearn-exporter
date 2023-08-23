@@ -1,18 +1,19 @@
 import asyncio
 import logging
 from collections import defaultdict
-from concurrent.futures import ThreadPoolExecutor
 from dataclasses import dataclass, field
 from datetime import date, timedelta
 from decimal import Decimal
-from functools import cached_property
+from functools import cached_property, lru_cache
 from pathlib import Path
-from typing import Dict, List, Optional, Tuple, Union
+from typing import (AsyncGenerator, Callable, Dict, List, Optional, Set, Tuple,
+                    Union)
 
 import pandas as pd
+from a_sync import AsyncThreadPoolExecutor
 from async_lru import alru_cache
 from async_property import async_cached_property
-from brownie import chain, convert, multicall, web3
+from brownie import chain, convert, web3
 from pandas import DataFrame
 from pandas.core.tools.datetimes import DatetimeScalar
 from pony.orm import OperationalError, commit, db_session
@@ -20,19 +21,20 @@ from rich import print
 from tqdm import tqdm
 from web3._utils.abi import filter_by_name
 from web3._utils.events import construct_event_topic_set
-from y import Contract, get_price
-from y.contracts import contract_creation_block
+from y import ERC20, Contract, get_price
+from y.contracts import contract_creation_block, contract_creation_block_async
 from y.exceptions import continue_if_call_reverted
 from y.networks import Network
 from y.time import get_block_timestamp_async, last_block_on_date
+from y.utils.events import BATCH_SIZE, get_logs_asap_generator
 
-from yearn.events import decode_logs, get_logs_asap
+from yearn.constants import ERC20_TRANSFER_EVENT_HASH
+from yearn.events import decode_logs
 from yearn.exceptions import UnsupportedNetwork
 from yearn.partners.charts import make_partner_charts
 from yearn.partners.constants import OPEX_COST, get_tier
 from yearn.partners.delegated import delegated_deposit_balances
 from yearn.typing import Address, Block
-from yearn.utils import contract
 from yearn.v2.registry import Registry
 from yearn.v2.vaults import Vault
 
@@ -49,29 +51,11 @@ except OperationalError as e:
 
 logger = logging.getLogger(__name__)
 
+threads = AsyncThreadPoolExecutor(8)
 
 async def get_timestamps(blocks: Tuple[int,...]) -> DatetimeScalar:
-    loop = asyncio.get_event_loop()
     data = await asyncio.gather(*[get_block_timestamp_async(block) for block in blocks])
     return pd.to_datetime([x * 1e9 for x in data])
-
-
-def get_protocol_fees(address: str, start_block: Optional[int] = None) -> Dict[int,Decimal]:
-    """
-    Get all protocol fee payouts for a given vault.
-
-    Fees can be found as vault share transfers to the rewards address.
-    """
-    vault = Vault.from_address(address)
-    rewards = vault.vault.rewards()
-    
-    topics = construct_event_topic_set(
-        filter_by_name('Transfer', vault.vault.abi)[0],
-        web3.codec,
-        {'sender': address, 'receiver': rewards},
-    )
-    logs = decode_logs(get_logs_asap(address, topics, from_block=start_block))
-    return {log.block_number: Decimal(log['value']) / Decimal(vault.scale) for log in logs}
 
 
 @dataclass
@@ -94,6 +78,35 @@ class Wrapper:
     def scale(self) -> int:
         return self._vault.scale
     
+    async def get_data(self, partner: "Partner", use_postgres_cache: bool) -> DataFrame:
+        logger.info(f'starting to process {partner.name} {self} {self.name} {self.vault} {self.wrapper}')
+        # NOTE: We need to use a semaphore here to ensure at most one active coroutine is populating the db for this wrapper
+        async with self.semaphore:
+            if use_postgres_cache: 
+                cache = await threads.run(self.read_cache)
+                try:
+                    max_cached_block = int(cache['block'].max())
+                    logger.debug('%s %s is cached thru block %s', partner.name, self.name, max_cached_block)
+                    start_block = max_cached_block + 1 if partner.start_block is None else max(partner.start_block, max_cached_block + 1)
+                except KeyError:
+                    start_block = partner.start_block
+                    logger.debug('no harvests cached for %s %s', partner.name, self.name)
+                logger.debug(f'start block: {start_block}')
+            else:
+                start_block = partner.start_block
+            
+            futs = []
+            async for protocol_fees in self.protocol_fees(start_block=start_block):
+                futs.append(asyncio.create_task(process_harvests(self, protocol_fees)))
+            data = [data for data in await asyncio.gather(*futs) if data is not None]
+            data = pd.concat(data) if data else DataFrame()
+            
+            if use_postgres_cache:
+                await threads.run(cache_data, data)
+                data = pd.concat([cache, data])
+            
+            return data
+    
     @db_session
     def read_cache(self) -> DataFrame:
         entities = PartnerHarvestEvent.select(lambda e: e.vault.address.address == self.vault and e.wrapper.address == self.wrapper and e.chain.chainid == chain.id)[:]
@@ -114,26 +127,52 @@ class Wrapper:
         ]
         return DataFrame(cache)
 
-    def protocol_fees(self, start_block: int = None) -> Dict[int,Decimal]:
-        return get_protocol_fees(self.vault, start_block=start_block)
+    async def protocol_fees(self, start_block: int = None) -> AsyncGenerator[Dict[int,Decimal], None]:
+        """
+        Get all protocol fee payouts for a given vault.
+
+        Fees can be found as vault share transfers to the rewards address.
+        """
+        vault = Vault.from_address(self.vault)
+        rewards = await vault.vault.rewards.coroutine()
+        topics = construct_event_topic_set(
+            filter_by_name('Transfer', vault.vault.abi)[0],
+            web3.codec,
+            {'sender': self.vault, 'receiver': rewards},
+        )
+        try:
+            wrapper_deploy_block = await contract_creation_block_async(self.wrapper)
+            should_include = lambda log: log.block_number >= wrapper_deploy_block and (start_block is None or log.block_number >= start_block)
+            
+            # Do some funky stuff here so we can make use of the disk cache
+            logs_start_block = await contract_creation_block_async(self.vault)
+            while logs_start_block + BATCH_SIZE <= wrapper_deploy_block:
+                logs_start_block += BATCH_SIZE
+                
+        except ValueError as e:
+            if not str(e).startswith("Unable to find deploy block for "):
+                raise e
+            should_include = lambda log: start_block is None or log.block_number >= start_block
+        
+            # Do some funky stuff here so we can make use of the disk cache
+            logs_start_block = await contract_creation_block_async(self.vault)
+            while start_block and logs_start_block + BATCH_SIZE <= start_block:
+                logs_start_block += BATCH_SIZE
+            
+        async for logs in get_logs_asap_generator(self.vault, topics, from_block=logs_start_block):
+            yield {log.block_number: Decimal(log['value']) / Decimal(vault.scale) for log in decode_logs(logs) if should_include(log)}
 
     async def balances(self, blocks: Tuple[int,...]) -> List[Decimal]:
-        wrapper = self.wrapper
-        coro_fn = self.vault_contract.balanceOf.coroutine
-        balances = await asyncio.gather(*[coro_fn(wrapper, block_identifier=block) for block in blocks])
-        scale = self.scale
-        return [Decimal(balance) / Decimal(scale) for balance in balances]
+        balances = await asyncio.gather(*[self.vault_contract.balanceOf.coroutine(self.wrapper, block_identifier=block) for block in blocks])
+        return [Decimal(balance) / Decimal(self.scale) for balance in balances]
 
     async def total_supplies(self, blocks: Tuple[int,...]) -> List[Decimal]:
-        coro_fn = self.vault_contract.totalSupply.coroutine
-        supplies = await asyncio.gather(*[coro_fn(block_identifier = block) for block in blocks])
-        scale = self.scale
-        return [Decimal(supply) / Decimal(scale) for supply in supplies]
+        total_supply_cached = _get_cached_total_supply_fn(self.vault_contract)
+        supplies = await asyncio.gather(*[total_supply_cached(block_identifier = block) for block in blocks])
+        return [Decimal(supply) / Decimal(self.scale) for supply in supplies]
 
     async def vault_prices(self, blocks: Tuple[int,...]) -> List[Decimal]:
-        vault = self.vault
-        prices = await asyncio.gather(*[get_price(vault, block=block, sync=False) for block in blocks])
-        return [Decimal(price) for price in prices]
+        return [Decimal(price) for price in await asyncio.gather(*[get_price(self.vault, block=block, sync=False) for block in blocks])]
 
 
 class BentoboxWrapper(Wrapper):
@@ -156,6 +195,7 @@ class BentoboxWrapper(Wrapper):
             return await bento.balanceOf.coroutine(self.vault, self.wrapper, block_identifier=block)
         except Exception as e:
             continue_if_call_reverted(e)
+
 
 class DegenboxWrapper(Wrapper):
     """
@@ -188,7 +228,7 @@ class WildcardWrapper:
     name: str
     wrapper: Union[str, List[str]]  # can unpack multiple wrappers
 
-    def unwrap(self) -> List[Wrapper]:
+    async def unwrap(self) -> List[Wrapper]:
         registry = Registry()
         wrappers = [self.wrapper] if isinstance(self.wrapper, str) else self.wrapper
         topics = construct_event_topic_set(
@@ -197,12 +237,13 @@ class WildcardWrapper:
             {'receiver': wrappers},
         )
         addresses = [str(vault.vault) for vault in registry.vaults]
-        from_block = min(ThreadPoolExecutor(8).map(contract_creation_block, addresses))
+        from_block = min(await asyncio.gather(*[threads.run(contract_creation_block, address) for address in addresses]))
 
         # wrapper -> {vaults}
         deposits = defaultdict(set)
-        for log in decode_logs(get_logs_asap(addresses, topics, from_block)):
-            deposits[log['receiver']].add(log.address)
+        async for logs in get_logs_asap_generator(addresses, topics, from_block):
+            for log in decode_logs(logs):
+                deposits[log['receiver']].add(log.address)
 
         return [
             Wrapper(name=vault.name, vault=str(vault.vault), wrapper=wrapper)
@@ -220,14 +261,11 @@ class ElementWrapper(WildcardWrapper):
     name: str
     wrapper: str
 
-    def unwrap(self) -> List[Wrapper]:
-        registry = contract(self.wrapper)
-        wrappers = registry.viewRegistry()
-
-        return [
-            Wrapper(name=contract(wrapper).name(), vault=contract(wrapper).vault(), wrapper=wrapper)
-            for wrapper in wrappers
-        ]
+    async def unwrap(self) -> List[Wrapper]:
+        registry = await Contract.coroutine(self.wrapper)
+        wrappers = await asyncio.gather(*[Contract.coroutine(wrapper) for wrapper in await registry.viewRegistry.coroutine()])
+        info = await asyncio.gather(*[asyncio.gather(ERC20(wrapper, asynchronous=True).name, wrapper.vault.coroutine()) for wrapper in wrappers])
+        return [Wrapper(name=name, vault=vault, wrapper=wrapper) for wrapper, (name, vault) in zip(wrappers, info)]
 
 
 @dataclass
@@ -235,16 +273,14 @@ class YApeSwapFactoryWrapper(WildcardWrapper):
     name: str
     wrapper: str
 
-    def unwrap(self) -> List[Wrapper]:
-        factory = contract(self.wrapper)
-        with multicall:
-            pairs = [factory.allPairs(i) for i in range(factory.allPairsLength())]
-            ratios = [contract(pair).farmingRatio() for pair in pairs]
-
+    async def unwrap(self) -> List[Wrapper]:
+        factory = await Contract.coroutine(self.wrapper)
+        pairs = await asyncio.gather(*[factory.allPairs.coroutine(i) for i in range(await factory.allPairsLength.coroutine())])
+        pairs = await asyncio.gather(*[Contract.coroutine(pair) for pair in pairs])
+        ratios = await asyncio.gather(*[pair.farmingRatio.coroutine() for pair in pairs])
         # pools with ratio.min > 0 deploy to yearn vaults
         farming = [str(pair) for pair, ratio in zip(pairs, ratios) if ratio['min'] > 0]
-
-        return WildcardWrapper(self.name, farming).unwrap()
+        return await WildcardWrapper(self.name, farming).unwrap()
 
 
 class GearboxWrapper(Wrapper):
@@ -267,22 +303,60 @@ class GearboxWrapper(Wrapper):
         return await factory.creditAccounts.coroutine(ix)
 
     async def balances(self, blocks) -> List[Decimal]:
-        count_credit_accounts = await asyncio.gather(*[self.count_credit_accounts(block) for block in blocks])
-        dead_blocks = [0 for ct_accounts in count_credit_accounts if ct_accounts is None]
-        credit_accounts_by_block = await asyncio.gather(*[asyncio.gather(*[self.get_credit_account(i) for i in range(ct)]) for ct in count_credit_accounts if ct])
-        return dead_blocks + await asyncio.gather(*[self.get_balances_for_block(block, credit_accounts) for block, credit_accounts in zip(blocks, credit_accounts_by_block)])
+        return await asyncio.gather(*[self.get_tvl(block) for block in blocks])
     
-    async def count_credit_accounts(self, block) -> Optional[int]:
+    async def get_tvl(self, block: int) -> Decimal:
+        if ct := await self.count_credit_accounts(block):
+            credit_accounts, depositors = await asyncio.gather(
+                asyncio.gather(*[self.get_credit_account(i) for i in range(ct)]),
+                self.get_vault_depositors(block),
+            )
+            return sum(await asyncio.gather(*[self.get_balance(ca, block) for ca in credit_accounts if ca in depositors]))
+        return Decimal(0)
+    
+    async def count_credit_accounts(self, block: int) -> int:
         factory = await self.account_factory
         try:
             return await factory.countCreditAccounts.coroutine(block_identifier=block)
         except Exception as e:
             continue_if_call_reverted(e)
     
-    async def get_balances_for_block(self, block: int, credit_accounts: List[Address]) -> Decimal:
-        coro_fn = self.vault_contract.balanceOf.coroutine
-        return sum(await asyncio.gather(*[coro_fn(ca, block_identifier=block) for ca in credit_accounts])) / Decimal(self.scale)
-
+    async def get_balance(self, credit_account: Address, block: int) -> Decimal:
+        async with granular_balance_semaphore:
+            return await self.vault_contract.balanceOf.coroutine(credit_account, block_identifier=block) / Decimal(self.scale)
+    
+    async def get_vault_depositors(self, block: int) -> Set[Address]:
+        from_block = await contract_creation_block_async(self.wrapper)
+        return {
+            transfer['receiver']
+            async for logs in get_logs_asap_generator(self.vault, [ERC20_TRANSFER_EVENT_HASH], from_block=from_block, to_block=block, chronological=False)
+            for transfer in decode_logs(logs)
+        }
+        
+        
+class InverseWrapper(Wrapper):
+    def __hash__(self) -> int:
+        return hash(self.vault + self.wrapper)
+    
+    async def balances(self, blocks) -> List[Decimal]:
+        return await asyncio.gather(*[self.get_tvl(block) for block in blocks])
+    
+    async def get_tvl(self, block: int) -> Decimal:
+        # We use futs instead of gather here so we can process logs as they come in vs waiting for all of them before proceeding
+        futs = [asyncio.create_task(self.get_balance(escrow, block)) async for escrow in self.get_escrows(block)]
+        return sum(await asyncio.gather(*futs))
+    
+    async def get_balance(self, escrow: Address, block: int) -> Decimal:
+        escrow = await Contract.coroutine(escrow)
+        async with granular_balance_semaphore:
+            return await escrow.balance.coroutine(block_identifier=block) / Decimal(self.scale)
+    
+    async def get_escrows(self, block) -> AsyncGenerator[Address, None]:
+        wrapper_contract = await Contract.coroutine(self.wrapper)
+        async for logs in get_logs_asap_generator(self.wrapper, [wrapper_contract.topics['CreateEscrow']], to_block=block, chronological=False):
+            for event in decode_logs(logs):
+                yield event['escrow']
+    
 
 class DelegatedDepositWrapper(Wrapper):
     """
@@ -295,7 +369,8 @@ class DelegatedDepositWrapper(Wrapper):
         return [balance / scale for balance in balances]
             
     async def get_balance_at_block(self, block: Block) -> Decimal:
-        vault_balances = delegated_deposit_balances()[self.vault]
+        balances = await delegated_deposit_balances()
+        vault_balances = balances[self.vault]
         wrapper = self.wrapper
         total = sum(
             asofdict[block]
@@ -315,9 +390,9 @@ class DelegatedDepositWildcardWrapper:
     name: str
     partnerId: str
 
-    def unwrap(self) -> List[Wrapper]:
+    async def unwrap(self) -> List[Wrapper]:
         wrappers = []
-        for vault in delegated_deposit_balances():
+        for vault in await delegated_deposit_balances():
             vault = Vault.from_address(vault)
             wrappers.append(DelegatedDepositWrapper(name=vault.name, vault=vault.vault.address, wrapper=self.partnerId))
         return wrappers
@@ -332,7 +407,7 @@ NO_START_DATE = [
     "qidao", "shapeshiftdao", "sturdy", "tempus", "wido", "yapeswap", "yieldster"
 ]
 
-mem_semaphore = asyncio.Semaphore(5)  # Some arbitrary number, we can play with this if ram use still too high
+granular_balance_semaphore = asyncio.Semaphore(50_000)
 
 @dataclass
 class Partner:
@@ -355,86 +430,31 @@ class Partner:
             raise TypeError("`start_date` must be a `datetime.date` object.")
             
 
-    @cached_property
-    def flat_wrappers(self) -> List[Wrapper]:
+    @async_cached_property
+    async def flat_wrappers(self) -> List[Wrapper]:
         # unwrap wildcard wrappers to a flat list
         flat_wrappers = []
         for wrapper in self.wrappers:
             if isinstance(wrapper, Wrapper):
                 flat_wrappers.append(wrapper)
             elif isinstance(wrapper, WildcardWrapper) or isinstance(wrapper, DelegatedDepositWildcardWrapper):
-                flat_wrappers.extend(wrapper.unwrap())
+                flat_wrappers.extend(await wrapper.unwrap())
         return flat_wrappers
 
     async def process(self, use_postgres_cache: bool = USE_POSTGRES_CACHE) -> Tuple[DataFrame,DataFrame]:
         # TODO Optimize this a bit better.
         # snapshot wrapper share at each harvest
         wrappers = []
-        for wrapper in tqdm(self.flat_wrappers, self.name):
-            # NOTE: We need to use a semaphore here to ensure at most one active coroutine is populating the db for this wrapper
-            async with wrapper.semaphore:
-                # NOTE: We then use this additional semaphore for memory conservation purposes.
-                #       We use a separate semaphore because the rationalle for each is different and we don't want to accidentally refactor it away.
-                async with mem_semaphore:
-                    # NOTE this is all sync code
-                    # TODO optimize this section
-                    if use_postgres_cache: 
-                        cache = wrapper.read_cache()
-                        try:
-                            max_cached_block = int(cache['block'].max())
-                            logger.debug(f'{self.name} {wrapper.name} is cached thru block {max_cached_block}')
-                            start_block = max_cached_block + 1 if self.start_block is None else max(self.start_block, max_cached_block + 1)
-                        except KeyError:
-                            start_block = self.start_block
-                            logger.debug(f'no harvests cached for {self.name} {wrapper.name}')
-                        logger.debug(f'start block: {start_block}')
-                    else:
-                        start_block = self.start_block
-                    
-                    protocol_fees = wrapper.protocol_fees(start_block=start_block)
-                    # NOTE end sync code
-                    
-                    try:
-                        blocks, protocol_fees = zip(*protocol_fees.items())
-                        timestamps, balances, total_supplys, vault_prices = await asyncio.gather(
-                            get_timestamps(blocks),
-                            wrapper.balances(blocks),
-                            wrapper.total_supplies(blocks),
-                            wrapper.vault_prices(blocks),
-                        )
-                        wrap = DataFrame(
-                            {
-                                'block': blocks,
-                                'timestamp': timestamps,
-                                'protocol_fee': protocol_fees,
-                                'balance': balances,
-                                'total_supply': total_supplys,
-                                'vault_price': vault_prices,
-                            }
-                        )
-                        wrap['balance_usd'] = wrap.balance * wrap.vault_price
-                        wrap['share'] = wrap.balance / wrap.total_supply
-                        wrap['payout_base'] = wrap.share * wrap.protocol_fee * Decimal(1 - OPEX_COST)
-                        wrap['protocol_fee'] = wrap.protocol_fee
-                        wrap['wrapper'] = wrapper.wrapper
-                        wrap['vault'] = wrapper.vault
-                    except ValueError as e:
-                        if str(e) != 'not enough values to unpack (expected 2, got 0)':
-                            raise
-                        wrap = DataFrame()
-
-                    if use_postgres_cache:
-                        cache_data(wrap)
-                        wrap = pd.concat([wrap,cache])
-            
+        data = await asyncio.gather(*[wrapper.get_data(self, use_postgres_cache) for wrapper in await self.flat_wrappers])
+        for wrapper, data in zip(await self.flat_wrappers, data):
             try:
-                wrap = wrap.set_index('block')
+                data = data.set_index('block')
             except KeyError:
                 logger.info('no fees for %s', wrapper.name)
                 continue
 
             # TODO: save a csv for reporting
-            wrappers.append(wrap)
+            wrappers.append(data)
 
         # if nothing to report, move to next partner
         if len(wrappers) == 0:
@@ -457,6 +477,7 @@ class Partner:
 
         self.export_csv(partner)
         payouts = self.export_payouts(partner)
+        # NOTE: This must be done in order to ensure data integrity
 
         if partner.payout.sum():
             make_partner_charts(self, partner)
@@ -569,3 +590,38 @@ def cache_data(wrap: DataFrame) -> None:
             vault=cache_token(row.vault),
         )
         commit()
+
+async def process_harvests(wrapper, protocol_fees) -> Optional[DataFrame]:
+    try:
+        blocks, protocol_fees = zip(*protocol_fees.items())
+        timestamps, balances, total_supplys, vault_prices = await asyncio.gather(
+            get_timestamps(blocks),
+            wrapper.balances(blocks),
+            wrapper.total_supplies(blocks),
+            wrapper.vault_prices(blocks),
+        )
+        wrap = DataFrame(
+            {
+                'block': blocks,
+                'timestamp': timestamps,
+                'protocol_fee': protocol_fees,
+                'balance': balances,
+                'total_supply': total_supplys,
+                'vault_price': vault_prices,
+            }
+        )
+        wrap['balance_usd'] = wrap.balance * wrap.vault_price
+        wrap['share'] = wrap.balance / wrap.total_supply
+        wrap['payout_base'] = wrap.share * wrap.protocol_fee * Decimal(1 - OPEX_COST)
+        wrap['protocol_fee'] = wrap.protocol_fee
+        wrap['wrapper'] = wrapper.wrapper
+        wrap['vault'] = wrapper.vault
+        return wrap
+    except ValueError as e:
+        if str(e) != 'not enough values to unpack (expected 2, got 0)':
+            raise
+        return None
+
+@lru_cache(maxsize=None)
+def _get_cached_total_supply_fn(vault: Contract) -> Callable[[], int]:
+    return alru_cache(maxsize=None)(vault.totalSupply.coroutine)
