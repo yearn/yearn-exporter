@@ -146,6 +146,7 @@ class VaultV1:
 
     async def apy(self, samples: "ApySamples"):
         from yearn import apy
+        from yearn.prices.curve import curve
         if curve.get_pool(self.token.address):
             return await apy.curve.simple(self, samples)
         else:
