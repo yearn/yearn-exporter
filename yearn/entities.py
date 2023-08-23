@@ -157,13 +157,9 @@ class TxGroup(db.Entity):
             retval = f"{t.name}:{retval}"
             
 
-
+@lru_cache(10)
 def get_transaction(txhash: str) -> TransactionReceipt:
     return chain.get_transaction(txhash)
-
-@lru_cache(50)
-def get_events(txhash: str):
-    return get_transaction(txhash).events
 
 class TreasuryTx(db.Entity):
     _table_ = "treasury_txs"
@@ -187,11 +183,11 @@ class TreasuryTx(db.Entity):
     composite_index(chain,txgroup)
 
     # Helpers
-    @cached_property
+    @property
     def _events(self):
         return self._transaction.events
     
-    @cached_property
+    @property
     def _transaction(self):
         return get_transaction(self.hash)
     
