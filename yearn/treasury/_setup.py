@@ -31,6 +31,8 @@ skip_tokens = {
 
 def customize_eth_portfolio() -> None:
     for token in skip_tokens.get(chain.id, []):
+        if chain.id not in SHITCOINS:
+            SHITCOINS[chain.id] = set()
         SHITCOINS[chain.id].add(token)
 
 
