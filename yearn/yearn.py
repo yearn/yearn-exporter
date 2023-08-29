@@ -57,6 +57,11 @@ class Yearn:
                 "v2": yearn.v2.registry.Registry(watch_events_forever=watch_events_forever),
                 "ib": yearn.ironbank.Registry(exclude_ib_tvl=exclude_ib_tvl),
             }
+        elif chain.id == Network.Base:
+            self.registries = {
+                "v2": yearn.v2.registry.Registry(watch_events_forever=watch_events_forever),
+                "ib": yearn.ironbank.Registry(exclude_ib_tvl=exclude_ib_tvl),
+            }
         else:
             raise UnsupportedNetwork('yearn is not supported on this network')
 
