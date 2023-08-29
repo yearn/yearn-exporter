@@ -92,6 +92,7 @@ x-envs: &envs
   - FTMSCAN_TOKEN
   - ARBISCAN_TOKEN
   - OPTISCAN_TOKEN
+  - BASESCAN_TOKEN
 
   # POSTGRES ENVS
   - PGHOST=postgres
