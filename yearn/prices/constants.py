@@ -26,6 +26,10 @@ tokens_by_network = {
         'weth': '0x4200000000000000000000000000000000000006',
         'usdc': '0x7F5c764cBc14f9669B88837ca1490cCa17c31607',
         'dai': '0xDA10009cBd5D07dd0CeCc66161FC93D7c9000da1',
+    },
+    Network.Base: {
+        'weth': '0x4200000000000000000000000000000000000006',
+        'dai': '0x50c5725949A6F0c72E6C4a641F24049A917DB0Cb',
     }
 }
 
@@ -87,15 +91,21 @@ stablecoins_by_network = {
         '0xDA10009cBd5D07dd0CeCc66161FC93D7c9000da1': 'dai',
         '0x2E3D870790dC77A83DD1d18184Acc7439A53f475': 'frax',
         '0x8c6f28f2F1A3C87F0f938b96d27520d9751ec8d9': 'susd',
+    },
+    Network.Base: {
+        '0xd9aAEc86B65D86f6A7B5B1b0c42FFA531710b6CA': 'usdbc',
+        '0x50c5725949A6F0c72E6C4a641F24049A917DB0Cb': 'dai',
+        '0x4A3A6Dd60A34bB2Aba60D73B4C88315E9CeB6A3D': 'mim',
     }
 }
 
 ib_snapshot_block_by_network = {
     Network.Mainnet: 14051986,
     Network.Fantom: 28680044,
-    Network.Gnosis: 1, # TODO revisit as IB is not deployed in gnosis
-    Network.Arbitrum: 1,
+    Network.Gnosis: 1, # TODO revisit as IB is not deployed on gnosis
+    Network.Arbitrum: 1, # TODO revisit as IB is not deployed on arbitrum
     Network.Optimism: 12658427,
+    Network.Base: 1, # TODO revisit as IB is not deployed on base
 }
 
 # We convert to checksum address here to prevent minor annoyances. It's worth it.
