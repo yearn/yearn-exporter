@@ -49,7 +49,6 @@ addresses = {
     Network.Base: {
         'factory': '0x33128a8fC17869897dcE68Ed026d694621f6FDfD',
         'fee_tiers': [3000, 500, 10_000, 100],
-
     }
 }
 
