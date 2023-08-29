@@ -66,6 +66,8 @@ class Registry(metaclass=Singleton):
                 contract('0x81291ceb9bB265185A9D07b91B5b50Df94f005BF'),
                 contract('0x8ED9F6343f057870F1DeF47AaE7CD88dfAA049A8'), # StakingRewardsRegistry
             ]
+        elif chain.id == Network.Base:
+            return [contract('0x697BC6bd64677bE63240262869dD5F2A3eEACCd3')]
         else:
             raise UnsupportedNetwork('yearn v2 is not available on this network')
         
