@@ -44,7 +44,7 @@ elif [[ "$network" =~ ^op$|^OPTI$|^opti$|^optimism$ ]]; then
   export EXPLORER=$OPTI_EXPLORER
   export DEFAULT_EXPLORER=https://api-optimistic.etherscan.io/api
 
-elif [[ "$network" =~ ^base$|^BASE$]]; then
+elif [[ "$network" =~ ^base$|^BASE$ ]]; then
   export NETWORK=base
   export BROWNIE_NETWORK=base-main
   export WEB3_PROVIDER=$BASE_WEB3_PROVIDER
