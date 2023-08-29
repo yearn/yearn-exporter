@@ -9,7 +9,7 @@ endif
 #######################################
 # specify all supported networks here #
 #######################################
-supported_networks := ethereum fantom arbitrum optimism
+supported_networks := ethereum fantom arbitrum optimism base
 
 ###############################################
 # specify all supported exporter scripts here #
@@ -98,6 +98,7 @@ up:
 	make down filter=yearn-exporter-worker-fantom-exporters-treasury-transactions
 	make down filter=yearn-exporter-worker-arbitrum-exporters-treasury-transactions
 	make down filter=yearn-exporter-worker-optimism-exporters-treasury-transactions
+	make down filter=yearn-exporter-worker-base-exporters-treasury-transactions
 
 # LOGGING
 	$(eval with_logs = $(if $(with_logs),$(with_logs),true))
@@ -196,6 +197,10 @@ optimism:
 # Gnosis Chain
 gnosis:
 	make up logs network=gnosis
+
+# Base Chain
+base:
+	make up logs network=base
 
 ############################
 # Exporter-specifc recipes #
