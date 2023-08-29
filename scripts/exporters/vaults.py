@@ -38,6 +38,9 @@ elif Network(chain.id) == Network.Mainnet:
     # end: 2020-02-12 first iearn deployment
     start = datetime(2020, 2, 12, 0, 1, tzinfo=timezone.utc)
     data_query = 'iearn{network="' + Network.label() + '"}'
+elif Network(chain.id) == Network.Base:
+    # end: release registry Aug-29-2023 01:37:43 PM +UTC block 3263458
+    start = datetime(2023, 8, 29, tzinfo=timezone.utc)
 else:
     raise NotImplementedError()
 
