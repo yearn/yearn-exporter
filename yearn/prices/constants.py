@@ -30,6 +30,9 @@ tokens_by_network = {
     Network.Base: {
         'weth': '0x4200000000000000000000000000000000000006',
         'dai': '0x50c5725949A6F0c72E6C4a641F24049A917DB0Cb',
+        'usdc': '0xd9aAEc86B65D86f6A7B5B1b0c42FFA531710b6CA', #temp
+        'usdt': '0x4A3A6Dd60A34bB2Aba60D73B4C88315E9CeB6A3D', #temp
+        'wbtc': '0x77852193BD608A518dd7b7C2f891A1d02ceeB4d4', #temp
     }
 }
 
