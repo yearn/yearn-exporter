@@ -41,6 +41,7 @@ elif Network(chain.id) == Network.Mainnet:
 elif Network(chain.id) == Network.Base:
     # end: release registry Aug-29-2023 01:37:43 PM +UTC block 3263458
     start = datetime(2023, 8, 29, tzinfo=timezone.utc)
+    data_query = 'yearn_vault{network="' + Network.label() + '"}'
 else:
     raise NotImplementedError()
 
