@@ -31,7 +31,7 @@ def closest(haystack, needle):
 
 
 async def simple(vault, samples: ApySamples) -> Apy:
-    harvests = sorted([harvest for strategy in vault.strategies for harvest in await run_in_thread(getattr, strategy, "harvests")])
+    harvests = sorted([harvest for strategy in await vault.strategies for harvest in await run_in_thread(getattr, strategy, "harvests")])
 
     # we don't want to display APYs when vaults are ramping up
     if len(harvests) < 2:
@@ -91,7 +91,7 @@ async def simple(vault, samples: ApySamples) -> Apy:
 
     # for performance fee, half comes from strategy (strategist share) and half from the vault (treasury share)
     strategy_fees = []
-    for strategy in vault.strategies: # look at all of our strategies
+    for strategy in await vault.strategies: # look at all of our strategies
         strategy_info = await contract.strategies.coroutine(strategy.strategy)
         debt_ratio = strategy_info['debtRatio'] / 10000
         performance_fee = strategy_info['performanceFee']
@@ -189,7 +189,7 @@ async def average(vault, samples: ApySamples) -> Apy:
 
     # for performance fee, half comes from strategy (strategist share) and half from the vault (treasury share)
     strategy_fees = []
-    for strategy in vault.strategies: # look at all of our strategies
+    for strategy in await vault.strategies: # look at all of our strategies
         strategy_info = await contract.strategies.coroutine(strategy.strategy)
         debt_ratio = strategy_info['debtRatio'] / 10000
         performance_fee = strategy_info['performanceFee']

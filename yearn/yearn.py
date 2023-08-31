@@ -28,7 +28,7 @@ class Yearn:
     Can describe all products.
     """
 
-    def __init__(self, load_strategies=True, load_harvests=False, load_transfers=False, watch_events_forever=True, exclude_ib_tvl=True) -> None:
+    def __init__(self, load_harvests=False, watch_events_forever=True, exclude_ib_tvl=True) -> None:
         start = time()
         if chain.id == Network.Mainnet:
             self.registries = {
@@ -62,8 +62,6 @@ class Yearn:
 
         self.exclude_ib_tvl = exclude_ib_tvl
 
-        if load_strategies:
-            self.registries["v2"].load_strategies()
         if load_harvests:
             self.registries["v2"].load_harvests()
         logger.info('loaded yearn in %.3fs', time() - start)

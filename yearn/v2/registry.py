@@ -144,7 +144,7 @@ class Registry(metaclass=Singleton):
                 self.governance = event["governance"]
 
             if event.name == "NewRelease":
-                self.releases[event["api_version"]] = contract(event["template"])
+                self.releases[event["api_version"]] = Contract(event["template"])
 
             if event.name == "NewVault":
                 # experiment was endorsed
@@ -185,11 +185,6 @@ class Registry(metaclass=Singleton):
             registry=self,
             watch_events_forever=self._watch_events_forever,
         )
-
-    def load_strategies(self):
-        # stagger loading strategies to not run out of connections in the pool
-        vaults = self.vaults + self.experiments
-        Parallel(1, "threading")(delayed(vault.load_strategies)() for vault in vaults)
 
     def load_harvests(self):
         vaults = self.vaults + self.experiments

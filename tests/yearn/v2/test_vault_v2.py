@@ -35,10 +35,11 @@ def test_describe_vault_v2(vault: Vault):
             assert "tvl" in description, f"Unable to fetch tvl for {vault.name}."
                 
         assert "strategies" in description, f"No strategies fetched for {vault.name}."
-        for strategy in vault.strategies:
-            assert strategy._views, f"Unable to fetch views for strategy {strategy.unique_name}."
+        for strategy in await_awaitable(vault.strategies):
+            unique_name = await_awaitable(strategy.unique_name)
+            assert strategy._views, f"Unable to fetch views for strategy {unique_name}."
             for view in strategy._views:
-                assert view in description["strategies"][strategy.unique_name], f"Unable to fetch {view} for strategy {strategy.name}."
+                assert view in description["strategies"][unique_name], f"Unable to fetch {view} for strategy {strategy.name}."
 
 
 def test_active_vaults_at_v2_current():

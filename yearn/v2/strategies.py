@@ -4,6 +4,7 @@ import time
 from functools import cached_property
 from typing import Any, List
 
+from async_property import async_property
 from brownie import chain
 from eth_utils import encode_hex, event_abi_to_log_topic
 from multicall.utils import run_in_subprocess
@@ -68,9 +69,9 @@ class Strategy:
         self._has_exception = False
         self._thread = threading.Thread(target=self.watch_events, daemon=True)
 
-    @property
-    def unique_name(self):
-        if [strategy.name for strategy in self.vault.strategies].count(self.name) > 1:
+    @async_property
+    async def unique_name(self):
+        if [strategy.name for strategy in await self.vault.strategies].count(self.name) > 1:
             return f'{self.name} {str(self.strategy)[:8]}'
         else:
             return self.name
@@ -109,7 +110,6 @@ class Strategy:
             height = chain.height
             if height < from_block:
                 raise NodeNotSynced(f"No new blocks in the past {sleep_time/60} minutes.")
-
 
     def process_events(self, events):
         for event in events:

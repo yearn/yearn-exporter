@@ -31,7 +31,7 @@ sentry_sdk.set_tag('script','transactions_exporter')
 
 warnings.simplefilter("ignore", BrownieEnvironmentWarning)
 
-yearn = Yearn(load_strategies=False)
+yearn = Yearn()
 
 logger = logging.getLogger('yearn.transactions_exporter')
 

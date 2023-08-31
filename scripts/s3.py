@@ -69,7 +69,7 @@ async def wrap_vault(
             }
         ]
     else:
-        strategies = [{"address": str(strategy.strategy), "name": strategy.name} for strategy in vault.strategies]
+        strategies = [{"address": str(strategy.strategy), "name": strategy.name} for strategy in await vault.strategies]
 
     inception = await inception_fut
     token_alias = aliases[str(vault.token)]["symbol"] if str(vault.token) in aliases else await ERC20(vault.token, asynchronous=True).symbol
