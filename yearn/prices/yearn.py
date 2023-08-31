@@ -31,6 +31,9 @@ addresses = {
     Network.Optimism: {
         'v2': '0xBcfCA75fF12E2C1bB404c2C216DBF901BE047690',
     },
+    Network.Base: {
+        'v2': '0xACd0CEa837A6E6f5824F4Cac6467a67dfF4B0868',
+    }
 }
 
 
