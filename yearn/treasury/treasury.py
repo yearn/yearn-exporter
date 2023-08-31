@@ -11,7 +11,7 @@ from y.classes.common import ERC20
 from y.exceptions import NonStandardERC20
 from y.networks import Network
 
-from yearn.constants import STRATEGIST_MULTISIG, TREASURY_WALLETS
+from yearn import constants
 from yearn.outputs.victoria.victoria import _build_item
 
 logger = logging.getLogger(__name__)
@@ -24,6 +24,12 @@ async def _get_symbol(token):
         return await ERC20(token, asynchronous=True).symbol
     except NonStandardERC20:
         return None
+    
+async def _get_bucket(token) -> str:
+    if token == constants.YFI:
+        return "Other long term assets"
+    else:
+        return await get_token_bucket(token)
 
 class ExportablePortfolio(Portfolio):
     """ Adds methods to export full portoflio data. """ 
@@ -56,10 +62,7 @@ class ExportablePortfolio(Portfolio):
         if protocol is not None:
             wallet = f'{protocol} | {wallet}'
 
-        symbol, bucket = await asyncio.gather(
-            _get_symbol(token),
-            get_token_bucket(token),
-        )
+        symbol, bucket = await asyncio.gather(_get_symbol(token), _get_bucket(token))
         
         items = []           
 
@@ -92,7 +95,7 @@ class YearnTreasury(ExportablePortfolio):
             Network.Optimism: datetime(2022, 8, 6, 20, 1, 18, tzinfo=timezone.utc), # create contract blocks 18100336
         }[chain.id]
         '''
-        super().__init__(TREASURY_WALLETS, label='treasury', start_block=start_block, asynchronous=asynchronous, load_prices=load_prices)
+        super().__init__(constants.TREASURY_WALLETS, label='treasury', start_block=start_block, asynchronous=asynchronous, load_prices=load_prices)
 
     # TODO link this in
     async def partners_debt(self, block: int = None) -> dict:
@@ -120,7 +123,7 @@ class StrategistMultisig(ExportablePortfolio):
             Network.Arbitrum: 2_434_174,
             Network.Optimism: 18_084_577,
         }[chain.id]
-        super().__init__(STRATEGIST_MULTISIG, label='sms', start_block=start_block, asynchronous=asynchronous, load_prices=load_prices)
+        super().__init__(constants.STRATEGIST_MULTISIG, label='sms', start_block=start_block, asynchronous=asynchronous, load_prices=load_prices)
 
         """ TODO check these
         start = {

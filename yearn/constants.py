@@ -7,6 +7,9 @@ CONCURRENCY = int(os.environ.get("CONCURRENCY", 1))
 
 YFI = {
     Network.Mainnet: "0x0bc529c00C6401aEF6D220BE8C6Ea1667F6Ad93e",
+    Network.Fantom: "0x29b0Da86e484E1C0029B56e817912d778aC0EC69",
+    Network.Arbitrum: "0x82e3A8F066a6989666b031d916c43672085b1582",
+    Network.Polygon: "0xDA537104D6A5edd53c6fBba9A898708E465260b6",
 }.get(chain.id, None)
 
 WRAPPED_GAS_COIN = {
@@ -15,6 +18,7 @@ WRAPPED_GAS_COIN = {
     Network.Arbitrum:           "0x82aF49447D8a07e3bd95BD0d56f35241523fBab1",
     Network.Gnosis:             "0xe91D153E0b41518A2Ce8Dd3D7944Fa863463a97d",
     Network.Optimism:           "0x4200000000000000000000000000000000000006",
+    Network.Polygon:            "0x0d500B1d8E8eF31E21C99d1Db9A6444d3ADf1270",
 }.get(chain.id, None)
 
 YEARN_ADDRESSES_PROVIDER = "0x9be19Ee7Bc4099D62737a7255f5c227fBcd6dB93"

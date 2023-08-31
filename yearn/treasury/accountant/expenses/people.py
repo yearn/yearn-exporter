@@ -103,7 +103,8 @@ def is_other_grant(tx: TreasuryTx) -> bool:
         ["0xca372ad75b957bfce7e7fbca879399f46f923f9ca17299e310150da8666703b9", Filter('log_index', 515)],
         ["0x9681276a8668f5870551908fc17be3553c82cf6a9fedbd2fdb43f1c05385dca1", Filter('log_index', 181)],
         "0xa96246a18846cd6966fc87571313a2021d8e1e38466132e2b7fe79acbbd2c589",
-        ["0x47bcb48367b5c724780b40a19eed7ba4f623de619e98c30807f52be934d28faf", Filter('_symbol', "DAI")]
+        ["0x47bcb48367b5c724780b40a19eed7ba4f623de619e98c30807f52be934d28faf", Filter('_symbol', "DAI")],
+        ["0xa0aa1d29e11589350db4df09adc496102a1d9db8a778fc7108d2fb99fb40b6d0", IterFilter("log_index", [391, 394])],
     ]
     disperse_hashes = [
         "0x1e411c81fc83abfe260f58072c74bfa91e38e27e0066da07ea06f75d9c8f4a00",
@@ -160,12 +161,16 @@ def is_yearn_exporter(tx: TreasuryTx) -> bool:
             return True
         elif tx._symbol == "DAI" and tx.amount == 23_025:
             return True
+    if tx.hash == "0x1dc86ccdeb96d8d3d314eb2c1fdad0f4dd11c9ea54dfddedcc9340e71f98aa9e":
+        tx.amount *= -1
+        return True        
     return False
 
 # TODO figure out why these didn't sort
 _xopowo_hashes = [
     "0xea1ce33495faf84892826ce4d25b9010ef1b035215f38e537164237cff07c459",
     "0x1969a5ebdedc96057feaa7a156adbdfd2e452868d0bb8258df767f12db26895d",
+    "0xa8eb68338106aa60aba95406ed201b098821884c8c1893c93b400ee994a7facc",
 ]
 
 def is_xopowo(tx: TreasuryTx) -> bool:
@@ -200,6 +205,7 @@ def is_s2_team(tx: TreasuryTx) -> bool:
 _ycreative_hashes = [
     "0x1969a5ebdedc96057feaa7a156adbdfd2e452868d0bb8258df767f12db26895d",
     "0xea1ce33495faf84892826ce4d25b9010ef1b035215f38e537164237cff07c459",
+    "0x53cbb8189b9ce895f0fc9b5fb0660f47c406c5d1879e053fe0bec3ff3321676c",
 ]
 
 def is_ycreative(tx: TreasuryTx) -> bool:
@@ -259,3 +265,6 @@ def is_ysupport(tx: TreasuryTx) -> bool:
 
 def is_rantom(tx: TreasuryTx) -> bool:
     return tx.to_address.address == "0x254b42CaCf7290e72e2C84c0337E36E645784Ce1"
+
+def is_tx_creator(tx: TreasuryTx) -> bool:
+    return tx.to_address.address == "0x4007c53A48DefaB0b9D2F05F34df7bd3088B3299"
