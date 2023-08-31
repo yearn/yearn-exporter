@@ -10,7 +10,7 @@ from yearn.v2.registry import Registry
 from yearn.v2.vaults import Vault
 
 registry = Registry(watch_events_forever=False)
-start_block = start_block = min(contract_creation_block(vault.vault.address)for vault in registry.vaults)
+start_block = start_block = min(contract_creation_block(vault.vault.address)for vault in await_awaitable(registry.vaults))
 blocks = [randint(start_block,chain.height) for i in range(50)]
 
 
@@ -19,7 +19,7 @@ def test_describe_v2(block):
     assert registry.describe(block=block)
 
 
-@pytest.mark.parametrize('vault',registry.vaults)
+@pytest.mark.parametrize('vault', await_awaitable(registry.vaults))
 def test_describe_vault_v2(vault: Vault):
     blocks = [randint(contract_creation_block(vault.vault.address), chain.height) for i in range(25)]
     for block in blocks:

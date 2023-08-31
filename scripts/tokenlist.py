@@ -4,6 +4,7 @@ from pathlib import Path
 
 import requests
 import sentry_sdk
+from multicall.utils import await_awaitable
 from semantic_version import Version
 from tokenlists import TokenInfo, TokenList
 from toolz import unique
@@ -30,7 +31,10 @@ def main():
 
     # Token derived by products
     for product in yearn.registries:
-        vaults = [item.vault for item in yearn.registries[product].vaults if str(item.vault) not in excluded]
+        vaults = yearn.registries[product].vaults
+        if not isinstance(vaults, list):
+            vaults = await_awaitable(vaults)
+        vaults = [item.vault for item in vaults if str(item.vault) not in excluded]
         metadata = multicall_matrix(vaults, ["name", "symbol", "decimals"])
         for vault in vaults:
             tokens.append(

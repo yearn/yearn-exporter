@@ -36,11 +36,12 @@ async def _main():
     v1_registry = RegistryV1()
     v2_registry = RegistryV2()
 
-    v1_data, v2_data = await asyncio.gather(
+    v1_data, v2_vaults = await asyncio.gather(
         asyncio.gather(*[vault.apy(samples) for vault in v1_registry.vaults]),
-        asyncio.gather(*[_get_v2_data(vault, samples) for vault in v2_registry.vaults]),
+        v2_registry.vaults,
     )
-    
+    v2_data = asyncio.gather(*[_get_v2_data(vault, samples) for vault in v2_vaults])
+        
     data.extend([
         {"product": apy.type, "name": vault.name, "apy": apy.net_apy}
         for vault, apy in zip(v1_registry.vaults, v1_data)

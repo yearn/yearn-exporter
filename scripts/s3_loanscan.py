@@ -11,6 +11,7 @@ import sentry_sdk
 from brownie import web3
 from brownie.exceptions import BrownieEnvironmentWarning
 from dotenv import find_dotenv, load_dotenv
+from multicall.utils import await_awaitable
 from y import Contract
 
 from yearn import logs
@@ -67,7 +68,8 @@ def write_json(json_dict: dict, path: str):
 def main():
     samples = get_samples()
     registry_v2 = RegistryV2()
-    assets_metadata = get_assets_metadata(registry_v2.vaults)
+    vaults = await_awaitable(registry_v2.vaults)
+    assets_metadata = get_assets_metadata(vaults)
 
     loanscan_vault_symbols = []
     loanscan_vault_json = []
@@ -86,9 +88,9 @@ def main():
         logger.info(f'failed to reduce yveCrv lendRate, {str(yveCrvVault.vault)} {yveCrvVault}')
         logger.error(yveCrvException)
 
-    for vault in registry_v2.vaults:
+    for vault in vaults:
         try:
-            vault_not_endorsed = not (hasattr(vault, "is_endorsed") and vault.is_endorsed)
+            vault_not_endorsed = not (hasattr(vault, "is_endorsed") and await_awaitable(vault.is_endorsed))
             if vault_not_endorsed:
                 continue
 

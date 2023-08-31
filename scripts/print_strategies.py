@@ -14,7 +14,7 @@ def main():
     registry = Registry()
     print(registry)
     tree = []
-    for vault in registry.vaults:
+    for vault in await_awaitable(registry.vaults):
         transforms = {
             'performanceFee': lambda bps: f'{bps / 10000:.2%}',
             'activation': lambda ts: datetime.utcfromtimestamp(ts),
