@@ -99,3 +99,9 @@ def is_4626_alliance(tx: TreasuryTx) -> bool:
     return tx in HashMatcher([
         ["0xca61496c32806ba34f0deb331c32969eda11c947fdd6235173e6fa13d9a1c288", Filter('log_index', 150)],
     ])
+
+def is_yeth_bootstrap(tx: TreasuryTx) -> bool:
+    return tx.token == "ETH" and tx.hash == '0x0c59e87027bcdcaa718e322a28bc436106d73ae8623071930437bdb0706c4d65'
+
+def is_warroom_games(tx: TreasuryTx) -> bool:
+    return tx.hash == "0x8f17ead9cea87166cf99ed2cdbc46dfdf98c04c261de5b5167caddce5f704cb2" and tx.log_index in [429,430,431]

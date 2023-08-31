@@ -6,7 +6,8 @@ from yearn.treasury.accountant.constants import treasury
 
 def is_servers(tx: TreasuryTx) -> bool:
     return tx in HashMatcher([
-        ["0x08ef1aacdf7d0f16be5e6fd0a64ebd0ba3b0c3dd0a7884a9a470aa89a7fe1a06", Filter('log_index', 222)]
+        ["0x08ef1aacdf7d0f16be5e6fd0a64ebd0ba3b0c3dd0a7884a9a470aa89a7fe1a06", Filter('log_index', 222)],
+        ["0x0c59e87027bcdcaa718e322a28bc436106d73ae8623071930437bdb0706c4d65", Filter('token', "DAI")],
     ])
 
 def is_tenderly(tx: TreasuryTx) -> bool:
@@ -34,5 +35,6 @@ def is_generic(tx: TreasuryTx) -> bool:
         ["0x5deca5d6c934372c174bbef8be9a1e103e06d8b93fd3bf8d77865dfeb34fe3be", Filter('log_index', 98)],
         "0x3160b025085b17ee4bc3810c753c2d1fe9c556d2fb4cdf2ec7669cc878a94c68",
         "0x17a72a66512aa302a4f89b7d894519abf335156deac2a4801c884283181daa83",
+        "0xb9b5eef15987d97448d6cae146231c47910ba937db7dc30cfb253d64cbc5515d",
     ]
     return tx in HashMatcher(hashes)
