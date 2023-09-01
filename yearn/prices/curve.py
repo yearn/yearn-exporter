@@ -130,6 +130,9 @@ class CurveRegistry(metaclass=Singleton):
 
     @sentry_catch_all
     def watch_events(self) -> None:
+        if chain.id == Network.Base:
+            # No curve pool
+            return
         sleep_time = 600
         registries = []
         registry_logs = []
