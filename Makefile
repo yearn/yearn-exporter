@@ -64,7 +64,7 @@ down:
 
 .PHONY: build
 build:
-	docker build -t ghcr.io/yearn/yearn-exporter . --no-cache
+	docker build -t ghcr.io/yearn/yearn-exporter .
 logs:
 	$(eval filter = $(if $(filter),yearn-exporter-$(filter),$(if $(network),$(network),yearn-exporter-worker)))
 	$(eval since = $(if $(since),$(since),300s))
