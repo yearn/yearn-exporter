@@ -24,7 +24,7 @@ eth-hash[pysha3]
 ez-a-sync==0.6.6
 python-telegram-bot==13.15
 git+https://www.github.com/banteg/multicall.py@5cdb0f08ddadf1c381dc0966b8bd71e3ac7c6272
-git+https://www.github.com/BobTheBuidler/ypricemagic@b4003452e402288860b40e76ab65a8fa492d1916
+git+https://www.github.com/BobTheBuidler/ypricemagic@0b56582324b0b3f8c4f239b250950165fb1372c3
 git+https://www.github.com/BobTheBuidler/eth-portfolio@5b9c344ffdb29a0354088f311c1f5c39b1e12657
 git+https://www.github.com/BobTheBuidler/toolcache@e37b53cec64556d2b35df66767fca4c8f366a2fa
 memray
