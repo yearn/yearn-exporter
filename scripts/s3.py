@@ -47,19 +47,11 @@ logger = logging.getLogger("yearn.apy")
 async def wrap_vault(
     vault: Union[VaultV1, VaultV2], samples: ApySamples, aliases: dict, icon_url: str, assets_metadata: dict
 ) -> dict:
-    apy_error = Apy("error", 0, 0, ApyFees(0, 0), ApyPoints(0, 0, 0), ApyBlocks(samples.now, 0, 0, 0))
-    tvl = Tvl(tvl=0)
-    inception_fut = asyncio.ensure_future(contract_creation_block_async(str(vault.vault)))
-    try:
-        apy, tvl = await asyncio.gather(vault.apy(samples), vault.tvl())
-    except ValueError as error:
-        apy_error.error_reason = ":".join(str(arg) for arg in error.args)
-        logger.error(error)
-        apy = apy_error
-    except yPriceMagicError as error:
-        apy_error.error_reason = ":".join(str(arg) for arg in error.args)
-        logger.error(error)
-        apy = apy_error
+    
+    # We don't need results for these right away but they take a while so lets start them now
+    inception_fut = asyncio.create_task(contract_creation_block_async(str(vault.vault)))
+    apy_fut = asyncio.create_task(get_apy(vault, samples))
+    tvl_fut = asyncio.create_task(vault.tvl())
 
     if isinstance(vault, VaultV1):
         strategies = [
@@ -73,18 +65,16 @@ async def wrap_vault(
     else:
         strategies = [{"address": str(strategy.strategy), "name": strategy.name} for strategy in vault.strategies]
 
-    inception = await inception_fut
     token_alias = aliases[str(vault.token)]["symbol"] if str(vault.token) in aliases else await ERC20(vault.token, asynchronous=True).symbol
     vault_alias = token_alias
-
 
     migration = None
 
     if str(vault.vault) in assets_metadata:
         migration = {"available": assets_metadata[str(vault.vault)][1], "address": assets_metadata[str(vault.vault)][2]}
-
+    
     object = {
-        "inception": inception,
+        "inception": await inception_fut,
         "address": str(vault.vault),
         "symbol": vault.symbol if hasattr(vault, "symbol") else await ERC20(vault.vault, asynchronous=True).symbol,
         "name": vault.name,
@@ -98,8 +88,8 @@ async def wrap_vault(
             "display_name": token_alias,
             "icon": icon_url % str(vault.token),
         },
-        "tvl": dataclasses.asdict(tvl),
-        "apy": dataclasses.asdict(apy),
+        "tvl": dataclasses.asdict(await tvl_fut),
+        "apy": dataclasses.asdict(await apy_fut),
         "strategies": strategies,
         "endorsed": await vault.is_endorsed if hasattr(vault, "is_endorsed") else True,
         "version": vault.api_version if hasattr(vault, "api_version") else "0.1",
@@ -116,6 +106,22 @@ async def wrap_vault(
     return object
 
 
+async def get_apy(vault, samples) -> Apy:
+    try:
+        return await vault.apy(samples)
+    except (ValueError, yPriceMagicError) as error:
+        logger.error(error)
+        return Apy(
+            type="error", 
+            gross_apr=0,
+            net_apy=0,
+            fees=ApyFees(0, 0),
+            points=ApyPoints(0, 0, 0),
+            blocks=ApyBlocks(samples.now, 0, 0, 0),
+            error_reason=":".join(str(arg) for arg in error.args),
+        )
+    
+        
 async def get_assets_metadata(vault_v2: list) -> dict:
     vault_addresses = [str(vault.vault) for vault in vault_v2]
     assets_dynamic_data = []
