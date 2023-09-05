@@ -10,7 +10,7 @@ from yearn.v2.registry import Registry
 from yearn.v2.vaults import Vault
 
 registry = Registry(watch_events_forever=False)
-start_block = start_block = min(contract_creation_block(vault.vault.address)for vault in registry.vaults)
+start_block = start_block = min(contract_creation_block(vault.vault.address)for vault in await_awaitable(registry.vaults))
 blocks = [randint(start_block,chain.height) for i in range(50)]
 
 
@@ -19,7 +19,7 @@ def test_describe_v2(block):
     assert registry.describe(block=block)
 
 
-@pytest.mark.parametrize('vault',registry.vaults)
+@pytest.mark.parametrize('vault', await_awaitable(registry.vaults))
 def test_describe_vault_v2(vault: Vault):
     blocks = [randint(contract_creation_block(vault.vault.address), chain.height) for i in range(25)]
     for block in blocks:
@@ -35,10 +35,11 @@ def test_describe_vault_v2(vault: Vault):
             assert "tvl" in description, f"Unable to fetch tvl for {vault.name}."
                 
         assert "strategies" in description, f"No strategies fetched for {vault.name}."
-        for strategy in vault.strategies:
-            assert strategy._views, f"Unable to fetch views for strategy {strategy.unique_name}."
+        for strategy in await_awaitable(vault.strategies):
+            unique_name = await_awaitable(strategy.unique_name)
+            assert strategy._views, f"Unable to fetch views for strategy {unique_name}."
             for view in strategy._views:
-                assert view in description["strategies"][strategy.unique_name], f"Unable to fetch {view} for strategy {strategy.name}."
+                assert view in description["strategies"][unique_name], f"Unable to fetch {view} for strategy {strategy.name}."
 
 
 def test_active_vaults_at_v2_current():

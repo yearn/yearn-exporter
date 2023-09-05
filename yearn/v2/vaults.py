@@ -1,33 +1,35 @@
 import asyncio
 import logging
 import re
-import threading
 import time
-from functools import cached_property
-from typing import TYPE_CHECKING, Any, Dict, List, Union
+from contextlib import suppress
+from typing import TYPE_CHECKING, Any, Dict, List, Optional, Union
 
+import a_sync
+from async_property import async_cached_property, async_property
 from brownie import chain
 from eth_utils import encode_hex, event_abi_to_log_topic
 from joblib import Parallel, delayed
 from multicall.utils import run_in_subprocess
 from semantic_version.base import Version
 from y import ERC20, Contract, Network, magic
-from y.exceptions import NodeNotSynced, PriceError, yPriceMagicError
+from y.exceptions import PriceError, yPriceMagicError
 from y.networks import Network
 from y.prices import magic
-from y.utils.events import get_logs_asap
+from y.prices.stable_swap.curve import curve
+from y.utils.events import get_logs_asap_generator
 
 from yearn.common import Tvl
-from yearn.decorators import sentry_catch_all, wait_or_exit_after
-from yearn.events import decode_logs, get_logs_asap
+from yearn.events import decode_logs
 from yearn.multicall2 import fetch_multicall_async
 from yearn.special import Ygov
 from yearn.typing import Address
-from yearn.utils import run_in_thread, safe_views
+from yearn.utils import safe_views
 from yearn.v2.strategies import Strategy
 
 if TYPE_CHECKING:
     from yearn.apy.common import ApySamples
+    from yearn.v2.registry import Registry
 
 VAULT_VIEWS_SCALED = [
     "totalAssets",
@@ -103,7 +105,14 @@ def _unpack_results(vault: Address, is_experiment: bool, _views: List[str], resu
 
 
 class Vault:
-    def __init__(self, vault: Contract, api_version=None, token=None, registry=None, watch_events_forever=True):
+    def __init__(
+        self, 
+        vault: Contract, 
+        api_version: Optional[str] = None, 
+        token: Optional[Address] = None, 
+        registry: Optional["Registry"] = None, 
+        watch_events_forever: bool = True,
+    ):
         self._strategies: Dict[Address, Strategy] = {}
         self._revoked: Dict[Address, Strategy] = {}
         self._reports = []
@@ -126,14 +135,14 @@ class Vault:
             ]
         ]
         self._watch_events_forever = watch_events_forever
-        self._done = threading.Event()
-        self._has_exception = False
-        self._thread = threading.Thread(target=self.watch_events, daemon=True)
+        
+        self._task = None
+        self._done = a_sync.Event()
 
     def __repr__(self):
         strategies = "..."  # don't block if we don't have the strategies loaded
         if self._done.is_set():
-            strategies = ", ".join(f"{strategy}" for strategy in self.strategies)
+            strategies = ", ".join(f"{strategy}" for strategy in self._strategies.values())
         return f'<Vault {self.vault} name="{self.name}" token={self.token} strategies=[{strategies}]>'
 
     def __eq__(self, other):
@@ -156,68 +165,71 @@ class Vault:
         instance.name = vault.name()
         return instance
 
-    @property
-    def strategies(self) -> List[Strategy]:
-        self.load_strategies()
+    @async_property
+    async def strategies(self) -> List[Strategy]:
+        await self.load_strategies()
         return list(self._strategies.values())
 
-    @property
-    def revoked_strategies(self) -> List[Strategy]:
-        self.load_strategies()
+    @async_property
+    async def revoked_strategies(self) -> List[Strategy]:
+        await self.load_strategies()
         return list(self._revoked.values())
 
-    @property
-    def reports(self):
+    @async_property
+    async def reports(self):
         # strategy reports are loaded at the same time as other vault strategy events
-        self.load_strategies()
+        await self.load_strategies()
         return self._reports
 
-    @property
-    def is_endorsed(self):
+    @async_property
+    async def is_endorsed(self):
         if not self.registry:
             return None
-        return str(self.vault) in self.registry.vaults
+        return str(self.vault) in await self.registry.vaults
 
-    @property
-    def is_experiment(self):
+    @async_property
+    async def is_experiment(self):
         if not self.registry:
             return None
         # experimental vaults are either listed in the registry or have the 0x address suffix in the name
-        return str(self.vault) in self.registry.experiments or re.search(r"0x.*$", self.name) is not None
+        return str(self.vault) in await self.registry.experiments or re.search(r"0x.*$", self.name) is not None
 
-    @wait_or_exit_after
-    def load_strategies(self):
-        if not self._thread._started.is_set():
-            self._thread.start()
+    async def load_strategies(self):
+        if self._done.is_set():
+            return
+        if not self._task:
+            self._task = asyncio.create_task(self.watch_events())
+        while not self._task.done():
+            with suppress(asyncio.TimeoutError):
+                await asyncio.wait_for(self._done.wait(), 5)
+                return
+        if e := self._task.exception():
+            raise e
 
     def load_harvests(self):
         Parallel(1, "threading")(delayed(strategy.load_harvests)() for strategy in self.strategies)
 
-    @sentry_catch_all
-    def watch_events(self):
+    async def watch_events(self):
         start = time.time()
-        sleep_time = 300
         from_block = None
-        height = chain.height
-        while True:
-            logs = get_logs_asap(str(self.vault), topics=self._topics, from_block=from_block, to_block=height)
+        from y.utils.dank_mids import dank_w3
+        height = await dank_w3.eth.block_number
+        async for logs in get_logs_asap_generator(str(self.vault), topics=self._topics, from_block=from_block, to_block=height, chronological=True):
             events = decode_logs(logs)
             self.process_events(events)
-            if not self._done.is_set():
-                self._done.set()
-                logger.info("loaded %d strategies %s in %.3fs", len(self._strategies), self.name, time.time() - start)
-            if not self._watch_events_forever:
-                return
-            time.sleep(sleep_time)
 
-            # set vars for next loop
-            from_block = height + 1
-            height = chain.height
-            if height < from_block:
-                raise NodeNotSynced(f"No new blocks in the past {sleep_time/60} minutes.")
-
+        self._done.set()
+        logger.info("loaded %d strategies %s in %.3fs", len(self._strategies), self.name, time.time() - start)
+            
+        if not self._watch_events_forever:
+            return
+        
+        async for logs in get_logs_asap_generator(str(self.vault), topics=self._topics, from_block=height + 1, chronological=True, run_forever=True):
+            events = decode_logs(logs)
+            self.process_events(events)
 
     def process_events(self, events):
+        # NOTE: must be chronological
         for event in events:
             # some issues during the migration of this strat prevented it from being verified so we skip it here...
             if chain.id == Network.Optimism:
@@ -254,21 +266,20 @@ class Vault:
         return await run_in_subprocess(
             _unpack_results,
             self.vault.address,
-            self.is_experiment,
+            await self.is_experiment,
             self._views,
             results,
             self.scale,
             price,
             # must be picklable.
-            [strategy.unique_name for strategy in self.strategies],
+            await asyncio.gather(*[strategy.unique_name for strategy in await self.strategies]),
             strategy_descs,
         )
 
     async def describe(self, block=None):
-        await run_in_thread(self.load_strategies)
         results = await asyncio.gather(
             fetch_multicall_async(*[[self.vault, view] for view in self._views], block=block),
-            asyncio.gather(*[strategy.describe(block=block) for strategy in self.strategies]),
+            asyncio.gather(*[strategy.describe(block=block) for strategy in await self.strategies]),
             get_price_return_exceptions(self.token, block=block)
         )
         return await self._unpack_results(results)
@@ -303,9 +314,8 @@ class Vault:
         
         return Tvl(total_assets, price, tvl)
 
-    @cached_property
-    def _needs_curve_simple(self):
-        from yearn.prices.curve import curve
+    @async_cached_property
+    async def _needs_curve_simple(self):
         # some curve vaults which should not be calculated with curve logic
         curve_simple_excludes = {
             Network.Arbitrum: [
@@ -316,4 +326,4 @@ class Vault:
         if chain.id in curve_simple_excludes:
             needs_simple = self.vault.address not in curve_simple_excludes[chain.id]
 
-        return needs_simple and curve and curve.get_pool(self.token.address)
+        return needs_simple and curve and await curve.get_pool(self.token.address)
