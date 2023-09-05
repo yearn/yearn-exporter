@@ -39,7 +39,7 @@ BATCH_SIZE = {
     Network.Gnosis: 2_000_000,
     Network.Arbitrum: 1_500_000,
     Network.Optimism: 4_000_000,
-    Network.Base: 10_000,
+    Network.Base: 100_000,
 }[chain.id]
 
 FIRST_END_BLOCK = {
