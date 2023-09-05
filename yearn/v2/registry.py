@@ -167,8 +167,9 @@ class Registry(metaclass=Singleton):
 
     async def process_events(self, events: EventDict):
         event: _EventItem
-        logger.warning('event %s', event)
         for event in events:
+            logger.info('event %s', event)
+            
             # hack to make camels to snakes
             event._ordered = [OrderedDict({inflection.underscore(k): v for k, v in od.items()}) for od in event._ordered]
             
