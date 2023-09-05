@@ -147,9 +147,6 @@ class Registry(metaclass=Singleton):
             
         if chain.id == Network.Arbitrum:
             assert len(self._vaults) == 3, (events, self._vaults)
-        
-        while height == await dank_w3.eth.block_number:
-            await asyncio.sleep(5)
             
         async for logs in get_logs_asap_generator([str(addr) for addr in self.registries], from_block=height + 1, chronological=True, run_forever=True):
             await self.process_events(decode_logs(logs))
