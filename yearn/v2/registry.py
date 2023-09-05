@@ -142,6 +142,9 @@ class Registry(metaclass=Singleton):
         if not self._watch_events_forever:
             return
         
+        while height == await dank_w3.eth.block_number:
+            await asyncio.sleep(5)
+            
         async for logs in get_logs_asap_generator([str(addr) for addr in self.registries], from_block=height + 1, chronological=True, run_forever=True):
             await self.process_events(decode_logs(logs))
             self._filter_vaults()
