@@ -162,7 +162,7 @@ async def get_registry_adapter():
     elif chain.id == Network.Optimism:
         registry_adapter_address = "0xBcfCA75fF12E2C1bB404c2C216DBF901BE047690"
     elif chain.id == Network.Base:
-        registry_adapter_address = "0xACd0CEa837A6E6f5824F4Cac6467a67dfF4B0868"
+        registry_adapter_address = "0xF3885eDe00171997BFadAa98E01E167B53a78Ec5"
     return await Contract.coroutine(registry_adapter_address)
 
 
