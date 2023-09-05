@@ -24,10 +24,10 @@ class RegistryWalletDescriber:
     async def describe_wallets(self, registry: tuple, block=None):
         active_vaults = await self.active_vaults_at(registry, block=block)
         data = await asyncio.gather(*[self.vault_describer.describe_wallets(vault.vault.address, block=block) for vault in active_vaults])
-        data = {vault.name: desc for vault,desc in zip(active_vaults,data)}
+        data = {vault.name: desc for vault, desc in zip(active_vaults, data) if desc}
 
         wallet_balances = Counter()
-        for vault, desc in data.items():
+        for desc in data.values():
             for wallet, bals in desc['wallet balances'].items():
                 wallet_balances[wallet] += bals["usd balance"]
         agg_stats = {
