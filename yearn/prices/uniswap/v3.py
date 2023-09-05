@@ -65,7 +65,7 @@ class UniswapV3(metaclass=Singleton):
         self.factory: Contract = contract(conf['factory'])
         self.quoter: Contract = Contract.from_abi(
             name='Quoter',
-            address=addresses[chainid]['quoter'],
+            address=addresses[chain.id]['quoter'],
             abi=json.load(open('interfaces/uniswap/UniswapV3Quoter.json'))
         ) # use direct abi from etherscan because the quoter is not verified on all chains (opti)
         self.fee_tiers = [FeeTier(fee) for fee in conf['fee_tiers']]
