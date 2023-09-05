@@ -110,7 +110,10 @@ def get_gauge_relative_weight_for_sidechain(gauge_address):
 
 async def simple(vault, samples: ApySamples) -> Apy:
     lp_token = vault.token.address
-    pool_address = (await y_curve.get_pool(lp_token)).address
+    pool = await y_curve.get_pool(lp_token)
+    if pool is None:
+        raise ApyError("crv", "no pool")
+    pool_address = ().address
     gauge_address = curve.get_gauge(pool_address, lp_token)
     if gauge_address is None:
         raise ApyError("crv", "no gauge")
