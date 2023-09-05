@@ -22,8 +22,8 @@ async def get_staking_rewards_apr(vault, samples: ApySamples):
     if await staking_pool.periodFinish.coroutine() < now:
         return 0
 
-    vaults = await vault.registry.vaults
-    rewards_vault = vaults[await staking_pool.rewardsToken.coroutine()]
+    await vault.registry.load_vaults()
+    rewards_vault = vault.registry._vaults[await staking_pool.rewardsToken.coroutine()]
     (
         reward_rate, 
         rewards_vault_scale, 
