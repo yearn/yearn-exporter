@@ -4,7 +4,7 @@ import time
 from y import ERC20, Contract
 from y.prices import magic
 
-from yearn.apy.common import SECONDS_PER_YEAR, ApySamples
+from yearn.apy.common import SECONDS_PER_YEAR, ApySamples, ApyError
 from yearn.v1.vaults import VaultV1
 
 
@@ -22,8 +22,12 @@ async def get_staking_rewards_apr(vault, samples: ApySamples):
     if await staking_pool.periodFinish.coroutine() < now:
         return 0
 
-    await vault.registry.load_vaults()
-    rewards_vault = vault.registry._vaults[await staking_pool.rewardsToken.coroutine()]
+    rewards_token = await staking_pool.rewardsToken.coroutine()
+    if rewards_token not in vault.registry._vaults:
+        raise ApyError('v2:rewards', f'No vault found for token {rewards_token}')
+    
+    rewards_vault = vault.registry._vaults[rewards_token]
+    
     (
         reward_rate, 
         rewards_vault_scale, 
