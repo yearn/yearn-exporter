@@ -39,6 +39,7 @@ BATCH_SIZE = {
     Network.Gnosis: 2_000_000,
     Network.Arbitrum: 1_500_000,
     Network.Optimism: 4_000_000,
+    Network.Base: 1_000_000,
 }[chain.id]
 
 FIRST_END_BLOCK = {
@@ -47,6 +48,7 @@ FIRST_END_BLOCK = {
     Network.Gnosis: 21_440_000, # # NOTE block some arbitrary time after first vault deployment
     Network.Arbitrum: 4_837_859,
     Network.Optimism: 18_111_485,
+    Network.Base: 3_263_458,
 }[chain.id]
 
 def main():
