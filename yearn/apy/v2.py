@@ -34,7 +34,7 @@ def closest(haystack, needle):
         return before
 
 
-async def simple(vault, samples: ApySamples) -> Apy:
+async def simple(vault: "Vault", samples: ApySamples) -> Apy:
     harvests = sorted([harvest for strategy in await vault.strategies for harvest in await run_in_thread(getattr, strategy, "harvests")])
 
     # we don't want to display APYs when vaults are ramping up
@@ -55,7 +55,7 @@ async def simple(vault, samples: ApySamples) -> Apy:
 
     # get our inception data
     # the first report is when the vault first allocates funds to farm with
-    reports = await run_in_thread(getattr, vault, 'reports')
+    reports = await vault.reports
     inception_block = reports[0].block_number
     inception_price = await price_per_share(block_identifier=inception_block)
 
