@@ -145,6 +145,9 @@ class Registry(metaclass=Singleton):
         while height == await dank_w3.eth.block_number:
             await asyncio.sleep(5)
             
+        if chain.id == Network.Arbitrum:
+            assert len(self._vaults) == 3, (events, self._vaults)
+        
         async for logs in get_logs_asap_generator([str(addr) for addr in self.registries], from_block=height + 1, chronological=True, run_forever=True):
             await self.process_events(decode_logs(logs))
             self._filter_vaults()
@@ -161,6 +164,7 @@ class Registry(metaclass=Singleton):
 
     async def process_events(self, events: EventDict):
         event: _EventItem
+        logger.warning('event %s', event)
         for event in events:
             # hack to make camels to snakes
             event._ordered = [OrderedDict({inflection.underscore(k): v for k, v in od.items()}) for od in event._ordered]
