@@ -21,11 +21,9 @@ from yearn.events import decode_logs
 from yearn.exceptions import BatchSizeError
 from yearn.outputs.postgres.utils import (cache_address, cache_chain,
                                           cache_token, last_recorded_block)
-from yearn.prices.incidents import INCIDENTS
 from yearn.prices.magic import _get_price
 from yearn.typing import Block
 from yearn.yearn import Yearn
-
 
 sentry_sdk.set_tag('script','transactions_exporter')
 
@@ -39,7 +37,7 @@ BATCH_SIZE = {
     Network.Mainnet: 5_000,
     Network.Fantom: 100_000,
     Network.Gnosis: 2_000_000,
-    Network.Arbitrum: 1_000_000,
+    Network.Arbitrum: 1_500_000,
     Network.Optimism: 4_000_000,
 }[chain.id]
 
@@ -99,7 +97,7 @@ def process_and_cache_user_txs(last_saved_block=None):
                 value_usd = usd,
                 gas_used = row.gas_used,
                 gas_price = row.gas_price
-                )
+            )
         if start_block == end_block:
             logger.info(f'{len(df)} user txs exported to postrges [block {start_block}]')
         else:
@@ -175,4 +173,4 @@ def _check_for_infinite_loop(cached_thru: Optional[Block], cached_thru_from_last
         return
     if cached_thru and cached_thru > chain.height - BATCH_SIZE:
         return
-    raise BatchSizeError(f'Stuck in infinite loop, increase transactions exporter batch size for {Network(chain.id).name}.')
+    raise BatchSizeError(f'Stuck in infinite loop, increase transactions exporter batch size for {Network.name()}.')
