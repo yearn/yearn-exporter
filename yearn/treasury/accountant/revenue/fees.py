@@ -4,7 +4,6 @@ from y.networks import Network
 
 from yearn.entities import TreasuryTx
 from yearn.multicall2 import fetch_multicall
-from multicall.utils import await_awaitable
 from yearn.treasury.accountant.constants import treasury, v1, v2
 from yearn.utils import contract
 
@@ -48,7 +47,7 @@ def is_fees_v2(tx: TreasuryTx) -> bool:
         and tx.token.address.address == vault.vault.address
         and tx.to_address.address in treasury.addresses
         and tx.to_address.address == vault.vault.rewards(block_identifier=tx.block)
-        for vault in await_awaitable(v2.vaults) + await_awaitable(v2.experiments)
+        for vault in v2.vaults + v2.experiments
     )
 
 factory_strats = [
