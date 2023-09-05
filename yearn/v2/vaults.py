@@ -286,7 +286,7 @@ class Vault:
 
     async def apy(self, samples: "ApySamples"):
         from yearn import apy
-        if self._needs_curve_simple:
+        if await self._needs_curve_simple:
             return await apy.curve.simple(self, samples)
         elif pool := await apy.velo.get_staking_pool(self.token.address):
             return await apy.velo.staking(self, pool, samples)
