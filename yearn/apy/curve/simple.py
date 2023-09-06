@@ -3,11 +3,11 @@ import json
 import logging
 import os
 from dataclasses import dataclass
-from decimal import Decimal
 from pprint import pformat
 from functools import lru_cache
 
 from time import time
+from http import HTTPStatus
 
 import requests
 from brownie import ZERO_ADDRESS, chain, interface
@@ -104,7 +104,13 @@ def get_gauge_relative_weight_for_sidechain(gauge_address):
     }
     headers = {'Content-type': 'application/json'}
     res = requests.post(url, data=json.dumps(payload), headers=headers)
-    result = res.json()
+    try:
+        result = res.json()
+    except json.JSONDecodeError:
+        try:
+            raise ApyError("crv:simple", f"mainnet rpc returned bad response {HTTPStatus(res.status_code)} {res.text}")
+        except ValueError:
+            raise ApyError("crv:simple", f"mainnet rpc returned bad response code {res.status_code} {res.text}")
     return int(result["result"], 16)
 
 
