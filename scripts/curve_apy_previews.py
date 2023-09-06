@@ -5,6 +5,8 @@ import os
 import re
 import shutil
 from time import sleep, time
+from datetime import datetime
+import traceback
 
 import boto3
 import requests
@@ -185,3 +187,28 @@ def _get_export_paths(suffix):
     file_name = os.path.join(file_base_path, suffix)
     s3_path = os.path.join(api_path, suffix)
     return file_name, s3_path
+
+def with_monitoring():
+    if os.getenv("DEBUG", None):
+        main()
+        return
+    from telegram.ext import Updater
+
+    private_group = os.environ.get('TG_YFIREBOT_GROUP_INTERNAL')
+    public_group = os.environ.get('TG_YFIREBOT_GROUP_EXTERNAL')
+    updater = Updater(os.environ.get('TG_YFIREBOT'))
+    now = datetime.now()
+    message = f"`[{now}]`\n⚙️ Curve Previews API for {Network.name()} is updating..."
+    ping = updater.bot.send_message(chat_id=private_group, text=message, parse_mode="Markdown")
+    ping = ping.message_id
+    try:
+        main()
+    except Exception as error:
+        tb = traceback.format_exc()
+        now = datetime.now()
+        message = f"`[{now}]`\n🔥 Curve Previews API update for {Network.name()} failed!\n```\n{tb}\n```"[:4000]
+        updater.bot.send_message(chat_id=private_group, text=message, parse_mode="Markdown", reply_to_message_id=ping)
+        updater.bot.send_message(chat_id=public_group, text=message, parse_mode="Markdown")
+        raise error
+    message = f"✅ Curve Previews API update for {Network.name()} successful!"
+    updater.bot.send_message(chat_id=private_group, text=message, reply_to_message_id=ping)
