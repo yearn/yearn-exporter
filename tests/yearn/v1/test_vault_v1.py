@@ -3,7 +3,6 @@ from random import randint
 import pytest
 from brownie import ZERO_ADDRESS, chain
 from brownie.exceptions import VirtualMachineError
-from multicall.utils import await_awaitable
 from y import Contract
 from y.contracts import contract_creation_block
 
@@ -78,7 +77,7 @@ def test_describe_vault_v1(vault: VaultV1):
             assert "max" not in description
             assert "strategy buffer" in description
 
-        if await_awaitable(vault.is_curve_vault) and hasattr(strategy, "proxy"):
+        if vault.is_curve_vault and hasattr(strategy, "proxy"):
             vote_proxy, gauge = fetch_multicall(
                 [strategy, "voter"],  # voter is static, can pin
                 [strategy, "gauge"],  # gauge is static per strategy, can cache
@@ -141,4 +140,4 @@ def test_is_curve_vault():
     for vault in registry.vaults:
         if vault.name in non_curve:
             continue
-        assert await_awaitable(vault.is_curve_vault)
+        assert vault.is_curve_vault

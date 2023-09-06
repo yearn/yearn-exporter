@@ -13,17 +13,15 @@ async def get_staking_rewards_apr(vault, samples: ApySamples):
     if not vault or isinstance(vault, VaultV1):
         return 0
 
-    staking_pools = await vault.registry.staking_pools
     vault_address = str(vault.vault)
-    if vault_address not in staking_pools:
+    if vault_address not in vault.registry.staking_pools:
         return 0
 
-    staking_pool = await Contract.coroutine(staking_pools[vault_address])
+    staking_pool = await Contract.coroutine(vault.registry.staking_pools[vault_address])
     if await staking_pool.periodFinish.coroutine() < now:
         return 0
 
-    vaults = await vault.registry.vaults
-    rewards_vault = vaults[await staking_pool.rewardsToken.coroutine()]
+    rewards_vault = vault.registry._vaults[await staking_pool.rewardsToken.coroutine()]
     (
         reward_rate, 
         rewards_vault_scale, 

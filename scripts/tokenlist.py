@@ -4,7 +4,6 @@ from pathlib import Path
 
 import requests
 import sentry_sdk
-from multicall.utils import await_awaitable
 from semantic_version import Version
 from tokenlists import TokenInfo, TokenList
 from toolz import unique
@@ -19,7 +18,7 @@ sentry_sdk.set_tag('script','tokenlist')
 
 
 def main():
-    yearn = Yearn()
+    yearn = Yearn(load_strategies=False)
     excluded = {
         "0xBa37B002AbaFDd8E89a1995dA52740bbC013D992",
         "0xe2F6b9773BF3A015E2aA70741Bde1498bdB9425b",
@@ -31,10 +30,7 @@ def main():
 
     # Token derived by products
     for product in yearn.registries:
-        vaults = yearn.registries[product].vaults
-        if not isinstance(vaults, list):
-            vaults = await_awaitable(vaults)
-        vaults = [item.vault for item in vaults if str(item.vault) not in excluded]
+        vaults = [item.vault for item in yearn.registries[product].vaults if str(item.vault) not in excluded]
         metadata = multicall_matrix(vaults, ["name", "symbol", "decimals"])
         for vault in vaults:
             tokens.append(

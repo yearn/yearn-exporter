@@ -60,8 +60,6 @@ async def wrap_vault(
                 "name": await vault.strategy.getName.coroutine() if hasattr(vault.strategy, "getName") else vault.strategy._name,
             }
         ]
-    elif isinstance(vault, VaultV2):
-        strategies = [{"address": str(strategy.strategy), "name": strategy.name} for strategy in await vault.strategies]
     else:
         strategies = [{"address": str(strategy.strategy), "name": strategy.name} for strategy in vault.strategies]
 
@@ -91,7 +89,7 @@ async def wrap_vault(
         "tvl": dataclasses.asdict(await tvl_fut),
         "apy": dataclasses.asdict(await apy_fut),
         "strategies": strategies,
-        "endorsed": await vault.is_endorsed if hasattr(vault, "is_endorsed") else True,
+        "endorsed": vault.is_endorsed if hasattr(vault, "is_endorsed") else True,
         "version": vault.api_version if hasattr(vault, "api_version") else "0.1",
         "decimals": vault.decimals if hasattr(vault, "decimals") else await ERC20(vault.vault, asynchronous=True).decimals,
         "type": "v2" if isinstance(vault, VaultV2) else "v1",
@@ -215,14 +213,14 @@ async def _main():
     if chain.id == Network.Mainnet:
         special = [YveCRVJar(), Backscratcher()]
         registry_v1 = RegistryV1()
-        vaults = list(itertools.chain(special, registry_v1.vaults, *await asyncio.gather(registry_v2.vaults, registry_v2.experiments)))
+        vaults = list(itertools.chain(special, registry_v1.vaults, registry_v2.vaults, registry_v2.experiments))
     else:
-        vaults = await registry_v2.vaults
+        vaults = registry_v2.vaults
 
     if len(vaults) == 0:
         raise ValueError(f"No vaults found for chain_id: {chain.id}")
 
-    assets_metadata = await get_assets_metadata(await registry_v2.vaults)
+    assets_metadata = await get_assets_metadata(registry_v2.vaults)
 
     data = await tqdm_asyncio.gather(*[wrap_vault(vault, samples, aliases, icon_url, assets_metadata) for vault in vaults])
 

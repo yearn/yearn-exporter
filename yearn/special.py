@@ -13,7 +13,6 @@ from y.exceptions import PriceError, yPriceMagicError
 from yearn.apy.common import (Apy, ApyBlocks, ApyError, ApyFees, ApyPoints,
                               ApySamples)
 from yearn.common import Tvl
-from yearn.prices.curve import curve_contracts
 from yearn.utils import Singleton
 
 if TYPE_CHECKING:
@@ -65,13 +64,12 @@ class Backscratcher(metaclass = Singleton):
         self.vault = Contract("0xc5bDdf9843308380375a611c18B50Fb9341f502A")
         self.token = Contract("0xD533a949740bb3306d119CC777fa900bA034cd52")
         self.proxy = Contract("0xF147b8125d2ef93FB6965Db97D6746952a133934")
-        self._crv = Contract(curve_contracts[chain.id]["crv"])
-        self._voting_escrow = Contract(curve_contracts[chain.id]["voting_escrow"])
     
     async def _locked(self, block=None) -> Tuple[float,float]:
+        from yearn.prices.curve import curve
         crv_locked, crv_price = await asyncio.gather(
-            self._voting_escrow.balanceOf["address"].coroutine(self.proxy, block_identifier=block),
-            magic.get_price(self._crv, block=block, sync=False),
+            curve.voting_escrow.balanceOf["address"].coroutine(self.proxy, block_identifier=block),
+            magic.get_price(curve.crv, block=block, sync=False),
         )
         crv_locked /= 1e18
         return crv_locked, crv_price

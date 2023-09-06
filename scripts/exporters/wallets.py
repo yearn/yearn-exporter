@@ -20,7 +20,7 @@ sentry_sdk.set_tag('script','wallet_exporter')
 
 logger = logging.getLogger('yearn.wallet_exporter')
 
-yearn = Yearn(watch_events_forever=False)
+yearn = Yearn(load_strategies=False, watch_events_forever=False)
 
 # start: 2020-02-12 first iearn deployment
 # start opti: 2022-01-01 an arbitrary start timestamp because the default start is < block 1 on opti and messes things up

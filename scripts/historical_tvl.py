@@ -29,7 +29,7 @@ def generate_snapshot_range(start, interval):
 
 
 def main():
-    yearn = Yearn()
+    yearn = Yearn(load_strategies=False)
     start = START_DATE[chain.id]
     interval = timedelta(hours=24)
 
