@@ -3,7 +3,6 @@ import os
 from bisect import bisect_left
 from datetime import datetime, timedelta
 from pprint import pformat
-from typing import TYPE_CHECKING
 
 from brownie import chain
 from semantic_version.base import Version
@@ -14,9 +13,6 @@ from yearn.apy.common import (Apy, ApyBlocks, ApyError, ApyFees, ApyPoints,
 from yearn.apy.staking_rewards import get_staking_rewards_apr
 from yearn.debug import Debug
 from yearn.utils import run_in_thread
-
-if TYPE_CHECKING:
-    from yearn.v2.vaults import Vault
 
 logger = logging.getLogger(__name__)
 
@@ -129,8 +125,8 @@ async def simple(vault, samples: ApySamples) -> Apy:
     return Apy("v2:simple", gross_apr, net_apy, fees, points=points, blocks=blocks)
 
 
-async def average(vault: "Vault", samples: ApySamples) -> Apy:
-    reports = await vault.reports
+async def average(vault, samples: ApySamples) -> Apy:
+    reports = await run_in_thread(getattr, vault, "reports")
 
     # we don't want to display APYs when vaults are ramping up
     if len(reports) < 2:
