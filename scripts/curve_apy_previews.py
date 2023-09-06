@@ -79,6 +79,8 @@ def _build_data(gauges):
         except json.JSONDecodeError:
             raise
         except Exception as error:
+            if "Expecting value:" in str(error):
+                raise error
             apy_error.error_reason = ":".join(str(arg) for arg in error.args)
             logger.error(error)
             logger.error(gauge)
