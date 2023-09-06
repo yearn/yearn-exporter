@@ -76,6 +76,8 @@ def _build_data(gauges):
                 apy = await_awaitable(calculate_simple(None, gauge, samples))
             else:
                 apy = Apy("zero_weight", 0, 0, ApyFees(0, 0), ApyPoints(0, 0, 0))
+        except json.JSONDecodeError:
+            raise
         except Exception as error:
             apy_error.error_reason = ":".join(str(arg) for arg in error.args)
             logger.error(error)

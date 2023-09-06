@@ -108,6 +108,8 @@ async def get_apy(vault, samples) -> Apy:
     try:
         return await vault.apy(samples)
     except (ValueError, yPriceMagicError) as error:
+        if isinstance(error, yPriceMagicError) and isinstance(error.exception, json.JSONDecodeError):
+            raise error
         logger.error(error)
         return Apy(
             type="error", 
