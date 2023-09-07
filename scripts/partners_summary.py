@@ -12,5 +12,5 @@ logger = logging.getLogger(__name__)
 
 def main():
     start = datetime.now()
-    process_partners(partners)
+    process_partners(partners, verbose=True)
     logger.info(f"Partners summary completed in {datetime.now() - start}")
