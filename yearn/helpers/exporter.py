@@ -71,6 +71,8 @@ class Exporter:
         self._export_fn = eth_retry.auto_retry(export_fn)
         self._snapshots_fetched = 0
         self._snapshots_exported = 0
+        if chain.id in [Network.Optimism, Network.Arbitrum, Network.Base]:
+            concurrency *= 5
         self._semaphore = asyncio.Semaphore(concurrency)
     
     @overload
