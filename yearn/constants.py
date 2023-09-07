@@ -78,6 +78,7 @@ TREASURY_WALLETS = {
         "0x5f0845101857d2A91627478e302357860b1598a1", # Yearn KP3R Wallet
         "0x7d2aB9CA511EBD6F03971Fb417d3492aA82513f0", # ySwap Multisig
         "0x2C01B4AD51a67E2d8F02208F54dF9aC4c0B778B6", # yMechs Multisig
+        "0xE376e8e8E3B0793CD61C6F1283bA18548b726C2e", # Fee Reimbursement Stash
     },
     Network.Fantom: {
         TREASURY_MULTISIG,
