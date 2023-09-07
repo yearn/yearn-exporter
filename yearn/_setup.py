@@ -1,5 +1,6 @@
 
 import json
+import logging
 
 from brownie import Contract, chain, interface
 from y import Contract_erc20
@@ -71,3 +72,9 @@ def customize_ypricemagic() -> None:
 
     for k, v in additional_stablecoins.items():
         STABLECOINS[k] = v
+
+def configure_loggers():
+    if config_settings := os.environ.get("LOGGER_LEVELS"):
+        for logger_config in config_settings.split(','):
+            logger_name, level = logger_config.split(':')
+            logging.getLogger(logger_name).setLevel(getattr(logging, level.upper()))
