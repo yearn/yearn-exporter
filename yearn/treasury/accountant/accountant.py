@@ -68,6 +68,8 @@ def sort_tx(treasury_tx_id: int) -> Optional[TxGroup]:
     if txgroup != tx.txgroup:
         tx.txgroup = txgroup
         commit()
+    # Hack to reduce memory consumption
+    tx.__dict__.pop('_events', None)
     return txgroup
 
 
