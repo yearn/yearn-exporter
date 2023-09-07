@@ -18,13 +18,13 @@ pony>=0.7.16
 sqlalchemy>=1.4.41
 sentry-sdk==1.27.1
 pytest-bdd>=5.0.0
-dank_mids>=4.20.59
+dank_mids==4.20.60
 eth_retry>=0.1.18
 eth-hash[pysha3]
 ez-a-sync==0.6.6
 python-telegram-bot==13.15
-git+https://www.github.com/BobTheBuidler/ypricemagic@6e796f346fa1c5348a37c401f1cf6eaf50336fd6
-git+https://www.github.com/BobTheBuidler/eth-portfolio@5b9c344ffdb29a0354088f311c1f5c39b1e12657
+git+https://www.github.com/BobTheBuidler/ypricemagic@363075f21015a4bf38e70419350ce670497a53d8
+git+https://www.github.com/BobTheBuidler/eth-portfolio@6c71e6200663063c92b7d7f27bbafba7a0b02997
 git+https://www.github.com/BobTheBuidler/toolcache@e37b53cec64556d2b35df66767fca4c8f366a2fa
 memray
 git+https://www.github.com/BobTheBuidler/async-lru@1364553fbe0b2f0120a2659dca292189dc1e37ef
