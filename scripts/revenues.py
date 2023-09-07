@@ -5,7 +5,9 @@ import boto3
 import sentry_sdk
 import logging
 import yearn
+import traceback
 from datetime import datetime, timedelta
+from y import Network
 
 sentry_sdk.set_tag('script','revenues')
 logger = logging.getLogger(__name__)
@@ -80,3 +82,28 @@ def _get_s3():
         kwargs["aws_secret_access_key"] = aws_secret
 
     return boto3.client("s3", **kwargs)
+
+def with_monitoring():
+    if os.getenv("DEBUG", None):
+        main()
+        return
+    from telegram.ext import Updater
+
+    private_group = os.environ.get('TG_YFIREBOT_GROUP_INTERNAL')
+    public_group = os.environ.get('TG_YFIREBOT_GROUP_EXTERNAL')
+    updater = Updater(os.environ.get('TG_YFIREBOT'))
+    now = datetime.now()
+    message = f"`[{now}]`\n⚙️ Revenues script for ZooTroop is collecting to send..."
+    ping = updater.bot.send_message(chat_id=private_group, text=message, parse_mode="Markdown")
+    ping = ping.message_id
+    try:
+        main()
+    except Exception as error:
+        tb = traceback.format_exc()
+        now = datetime.now()
+        message = f"`[{now}]`\n🔥 Revenues script for ZooTroop has failed!\n```\n{tb}\n```"[:4000]
+        updater.bot.send_message(chat_id=private_group, text=message, parse_mode="Markdown", reply_to_message_id=ping)
+        updater.bot.send_message(chat_id=public_group, text=message, parse_mode="Markdown")
+        raise error
+    message = f"✅ Revenues script for ZooTroop has sent!"
+    updater.bot.send_message(chat_id=private_group, text=message, reply_to_message_id=ping)
