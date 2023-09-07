@@ -297,10 +297,7 @@ class Vault:
                 raise e
             price = 0
             
-        # NOTE: which one of these do we use? idk, must check
-        tvl = total_assets * price / 10 ** self.vault.decimals(block_identifier=block)
         tvl = total_assets * price / await ERC20(self.vault, asynchronous=True).scale if price else None
-        
         return Tvl(total_assets, price, tvl)
 
     @cached_property

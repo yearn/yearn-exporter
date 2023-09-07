@@ -159,5 +159,6 @@ class VaultV1:
         except yPriceMagicError as e:
             if not isinstance(e.exception, PriceError):
                 raise e
+            price = None
         tvl = total_assets * price / 10 ** await self.vault.decimals.coroutine(block_identifier=block) if price else None
         return Tvl(total_assets, price, tvl) 
