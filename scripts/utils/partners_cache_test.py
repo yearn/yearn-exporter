@@ -8,13 +8,13 @@ logger.setLevel(logging.DEBUG)
 
 def main():
     start = time()
-    clean_df = process_partners(partners,False)
+    clean_df = process_partners(partners, use_postgres_cache=False, verbose=True)
     logger.info('clean df:')
     logger.info(clean_df)
     logger.info(f'took {time() - start}s')
 
     start = time()
-    cached_df = process_partners(partners,True)
+    cached_df = process_partners(partners, use_postgres_cache=False, verbose=True)
     logger.info('cached df:')
     logger.info(cached_df)
     logger.info(f'took {time() - start}s')
