@@ -16,6 +16,7 @@ import requests
 import sentry_sdk
 from brownie import chain
 from brownie.exceptions import BrownieEnvironmentWarning
+from telegram.error import BadRequest
 from tqdm.asyncio import tqdm_asyncio
 from y import ERC20, Contract, Network
 from y.contracts import contract_creation_block_async
@@ -317,9 +318,15 @@ def with_monitoring():
     except Exception as error:
         tb = traceback.format_exc()
         now = datetime.now()
-        message = f"`[{now}]`\n🔥 {export_mode} Vaults API update for {Network.name()} failed!\n```\n{tb}\n```"[:4000]
-        updater.bot.send_message(chat_id=private_group, text=message, parse_mode="Markdown", reply_to_message_id=ping)
-        updater.bot.send_message(chat_id=public_group, text=message, parse_mode="Markdown")
+        message = f"`[{now}]`\n🔥 {export_mode} Vaults API update for {Network.name()} failed!\n"
+        try:
+            detail_message = (message + f"```\n{tb}\n```")[:4000]
+            updater.bot.send_message(chat_id=private_group, text=detail_message, parse_mode="Markdown", reply_to_message_id=ping)
+            updater.bot.send_message(chat_id=public_group, text=detail_message, parse_mode="Markdown")
+        except BadRequest:
+            detail_message = message + f"{error.__class__.__name__}({error})"
+            updater.bot.send_message(chat_id=private_group, text=detail_message, parse_mode="Markdown", reply_to_message_id=ping)
+            updater.bot.send_message(chat_id=public_group, text=detail_message, parse_mode="Markdown")
         raise error
     message = f"✅ {export_mode} Vaults API update for {Network.name()} successful!"
     updater.bot.send_message(chat_id=private_group, text=message, reply_to_message_id=ping)
