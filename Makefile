@@ -260,9 +260,15 @@ apy-experimental:
 curve-apy-previews:
 	make up commands=curve_apy_previews network=eth with_logs=false
 
+curve-apy-previews-monitoring:
+	make up commands="curve_apy_previews with_monitoring" network=eth
+
 # revenue scripts
 revenues:
 	make up network=eth commands=revenues with_logs=false
+
+revenue-monitoring:
+	make up network=eth commands="revenues with_monitoring" with_logs=false
 
 # partners scripts
 partners-eth:
