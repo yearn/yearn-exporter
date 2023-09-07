@@ -267,7 +267,7 @@ curve-apy-previews-monitoring:
 revenues:
 	make up network=eth commands=revenues with_logs=false
 
-revenue-monitoring:
+revenues-monitoring:
 	make up network=eth commands="revenues with_monitoring" with_logs=false
 
 # partners scripts
