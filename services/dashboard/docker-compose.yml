@@ -16,7 +16,11 @@ x-envs: &envs
   - SENTRY_RELEASE
   - SENTRY_DSN
   - SENTRY_TRACES_SAMPLE_RATE
+  # Basic log level configuration
   - LOG_LEVEL=${LOG_LEVEL:-INFO}
+  # Granular log level configuration
+  # pass a comma separated list of `logger.name:LEVEL` (ie: yearn.v1.vaults:DEBUG,yearn.v2.vaults:DEBUG)
+  - LOGGER_LEVELS
   - DEBUG
   - SKIP_DEEP_UNISWAPS
   - SHOW_STATS
