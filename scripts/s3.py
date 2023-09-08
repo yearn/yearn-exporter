@@ -324,9 +324,10 @@ def with_monitoring():
             updater.bot.send_message(chat_id=private_group, text=detail_message, parse_mode="Markdown", reply_to_message_id=ping)
             updater.bot.send_message(chat_id=public_group, text=detail_message, parse_mode="Markdown")
         except BadRequest:
-            detail_message = message + f"{error.__class__.__name__}({error})"
-            updater.bot.send_message(chat_id=private_group, text=detail_message, parse_mode="Markdown", reply_to_message_id=ping)
-            updater.bot.send_message(chat_id=public_group, text=detail_message, parse_mode="Markdown")
+            pass
+            #detail_message = message + f"{error.__class__.__name__}({error})"
+            #updater.bot.send_message(chat_id=private_group, text=detail_message, parse_mode="Markdown", reply_to_message_id=ping)
+            #updater.bot.send_message(chat_id=public_group, text=detail_message, parse_mode="Markdown")
         raise error
     message = f"✅ {export_mode} Vaults API update for {Network.name()} successful!"
     updater.bot.send_message(chat_id=private_group, text=message, reply_to_message_id=ping)
