@@ -4,6 +4,7 @@ volumes:
   brownie: {}
   cache: {}
   memray: {}
+  ypricemagic: {}
 
 networks:
   yearn-exporter-infra_stack:
@@ -111,6 +112,7 @@ x-volumes: &volumes
   - brownie:/root/.brownie
   - cache:/app/yearn-exporter/cache
   - memray:/app/yearn-exporter/memray
+  - ypricemagic:/root/.ypricemagic
 
 services:
   exporter:
