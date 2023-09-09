@@ -54,7 +54,10 @@ class YveCRVJar(metaclass = Singleton):
 
     @eth_retry.auto_retry
     async def tvl(self, block=None) -> Tvl:
-        data = requests.get("https://api.pickle.finance/prod/protocol/value").json()
+        try:
+            data = requests.get("https://api.pickle.finance/prod/protocol/value").json()
+        except requests.exceptions.SSLError as e:
+            return Tvl(tvl=None)
         tvl = data[self.id]
         return Tvl(tvl=tvl)
 
