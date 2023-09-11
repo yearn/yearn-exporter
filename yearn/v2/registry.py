@@ -71,7 +71,7 @@ class Registry(metaclass=Singleton):
         
         for r in registries[:]:
             if hasattr(r, 'releaseRegistry') and "ReleaseRegistryUpdated" in r.topics:
-                logs = get_logs_asap(str(r), r.topics["ReleaseRegistryUpdated"])
+                logs = get_logs_asap(str(r), [r.topics["ReleaseRegistryUpdated"]])
                 # Add all past and present Release Registries
                 registries.extend({contract(event['address']) for event in decode_logs(logs)})
         return registries
