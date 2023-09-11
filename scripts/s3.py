@@ -34,6 +34,7 @@ from yearn.v1.registry import Registry as RegistryV1
 from yearn.v1.vaults import VaultV1
 from yearn.v2.registry import Registry as RegistryV2
 from yearn.v2.vaults import Vault as VaultV2
+from yearn.helpers import monitoring
 
 sentry_sdk.set_tag('script','s3')
 
@@ -302,37 +303,5 @@ def _get_export_paths(suffix):
     return file_name, s3_path
 
 
-
-
 def with_monitoring():
-    if os.getenv("DEBUG", None):
-        main()
-        return
-    from telegram.ext import Updater
-
-    export_mode = _get_export_mode()
-    private_group = os.environ.get('TG_YFIREBOT_GROUP_INTERNAL')
-    public_group = os.environ.get('TG_YFIREBOT_GROUP_EXTERNAL')
-    updater = Updater(os.environ.get('TG_YFIREBOT'))
-    now = datetime.now()
-    message = f"`[{now}]`\n⚙️ {export_mode} Vaults API for {Network.name()} is updating..."
-    ping = updater.bot.send_message(chat_id=private_group, text=message, parse_mode="Markdown")
-    ping = ping.message_id
-    try:
-        main()
-    except Exception as error:
-        tb = traceback.format_exc()
-        now = datetime.now()
-        message = f"`[{now}]`\n🔥 {export_mode} Vaults API update for {Network.name()} failed!\n"
-        try:
-            detail_message = (message + f"```\n{tb}\n```")[:4000]
-            updater.bot.send_message(chat_id=private_group, text=detail_message, parse_mode="Markdown", reply_to_message_id=ping)
-            updater.bot.send_message(chat_id=public_group, text=detail_message, parse_mode="Markdown")
-        except BadRequest:
-            pass
-            #detail_message = message + f"{error.__class__.__name__}({error})"
-            #updater.bot.send_message(chat_id=private_group, text=detail_message, parse_mode="Markdown", reply_to_message_id=ping)
-            #updater.bot.send_message(chat_id=public_group, text=detail_message, parse_mode="Markdown")
-        raise error
-    message = f"✅ {export_mode} Vaults API update for {Network.name()} successful!"
-    updater.bot.send_message(chat_id=private_group, text=message, reply_to_message_id=ping)
+    monitoring("s3", _get_export_mode())
