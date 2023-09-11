@@ -53,21 +53,28 @@ class Registry(metaclass=Singleton):
 
     def load_registry(self):
         if chain.id == Network.Mainnet:
-            return self.load_from_ens()
+            registries = self.load_from_ens()
         elif chain.id == Network.Gnosis:
-            return [contract('0xe2F12ebBa58CAf63fcFc0e8ab5A61b145bBA3462')]
+            registries = [contract('0xe2F12ebBa58CAf63fcFc0e8ab5A61b145bBA3462')]
         elif chain.id == Network.Fantom:
-            return [contract('0x727fe1759430df13655ddb0731dE0D0FDE929b04')]
+            registries = [contract('0x727fe1759430df13655ddb0731dE0D0FDE929b04')]
         elif chain.id == Network.Arbitrum:
-            return [contract('0x3199437193625DCcD6F9C9e98BDf93582200Eb1f')]
+            registries = [contract('0x3199437193625DCcD6F9C9e98BDf93582200Eb1f')]
         elif chain.id == Network.Optimism:
-            return [
+            registries = [
                 contract('0x79286Dd38C9017E5423073bAc11F53357Fc5C128'),
                 contract('0x81291ceb9bB265185A9D07b91B5b50Df94f005BF'),
                 contract('0x8ED9F6343f057870F1DeF47AaE7CD88dfAA049A8'), # StakingRewardsRegistry
             ]
         else:
             raise UnsupportedNetwork('yearn v2 is not available on this network')
+        
+        for r in registries[:]:
+            if hasattr(r, 'releaseRegistry') and "ReleaseRegistryUpdated" in r.topics:
+                logs = get_logs_asap(str(r), r.topics["ReleaseRegistryUpdated"])
+                # Add all past and present Release Registries
+                registries.extend({contract(event['address']) for event in decode_logs(logs)})
+        return registries
 
     def load_from_ens(self):
         # track older registries to pull experiments
@@ -78,14 +85,7 @@ class Registry(metaclass=Singleton):
             {'node': web3.ens.namehash('v2.registry.ychad.eth')},
         )
         events = decode_logs(get_logs_asap(str(resolver), topics))
-        registries = []
-        for event in events:
-            r = contract(event['newAddress'].hex())
-            registries.append(r)
-            if hasattr(r, 'releaseRegistry'):
-                logs = get_logs_asap(str(r), r.topics["ReleaseRegistryUpdated"])
-                # Add all past and present Release Registries
-                registries.extend({contract(event['address']) for event in decode_logs(logs)})
+        registries = [contract(event['newAddress'].hex()) for event in events]
         logger.info('loaded %d registry versions', len(registries))
         return registries
 
