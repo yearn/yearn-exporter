@@ -139,7 +139,7 @@ class Registry(metaclass=Singleton):
         for event in events:
             # hack to make camels to snakes
             event._ordered = [OrderedDict({inflection.underscore(k): v for k, v in od.items()}) for od in event._ordered]
-            logger.debug("%s %s %s", event.address, event.name, dict(event))
+            logger.debug("starting to process %s for %s: %s", event.name, event.address, dict(event))
             if event.name == "NewGovernance":
                 self.governance = event["governance"]
 
@@ -175,6 +175,7 @@ class Registry(metaclass=Singleton):
 
             if event.name == "StakingPoolAdded":
                 self._staking_pools[event["token"]] = event["staking_pool"]
+            logger.debug("done processing %s for %s: %s", event.name, event.address, dict(event))
 
 
     def vault_from_event(self, event):
