@@ -15,6 +15,7 @@ YEARN_PARTNER_TRACKER = Contract({
     Network.Fantom: "0x086865B2983320b36C42E48086DaDc786c9Ac73B",
     Network.Arbitrum: "0x0e5b46E4b2a05fd53F5a4cD974eb98a9a613bcb7",
     Network.Optimism: "0x7E08735690028cdF3D81e7165493F1C34065AbA2",
+    Network.Base: "0xD0F08E42A40569fF83D28AA783a5b6537462667c",
 }[chain.id])
 
 class AsOfDict(dict):

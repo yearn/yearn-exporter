@@ -66,6 +66,8 @@ class Registry(metaclass=Singleton):
                 contract('0x81291ceb9bB265185A9D07b91B5b50Df94f005BF'),
                 contract('0x8ED9F6343f057870F1DeF47AaE7CD88dfAA049A8'), # StakingRewardsRegistry
             ]
+        elif chain.id == Network.Base:
+            registries = [contract('0xF3885eDe00171997BFadAa98E01E167B53a78Ec5')]
         else:
             raise UnsupportedNetwork('yearn v2 is not available on this network')
         
@@ -73,7 +75,9 @@ class Registry(metaclass=Singleton):
             if hasattr(r, 'releaseRegistry') and "ReleaseRegistryUpdated" in r.topics:
                 logs = get_logs_asap(str(r), [r.topics["ReleaseRegistryUpdated"]])
                 # Add all past and present Release Registries
-                registries.extend({contract(list(event.values())[0]) for event in decode_logs(logs)})
+                for rr in {list(event.values())[0] for event in decode_logs(logs)}:
+                    registries.append(contract(rr))
+                    logger.debug("release registry %s found for registry %s", rr, r)
         return registries
 
     def load_from_ens(self):

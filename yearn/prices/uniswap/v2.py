@@ -75,6 +75,13 @@ addresses: List[Dict[str,str]] = {
             'router': '0xE6Df0BB08e5A97b40B21950a0A51b94c4DbA0Ff6',
 
         }
+    ],
+    Network.Base: [
+        {
+            'name': 'sushiswap',
+            'factory': '0x71524B4f93c58fcbF659783284E38825f0622859',
+            'router': '0x6BDED42c6DA8FBf0d2bA55B2fa120C5e0c8D7891',
+        }
     ]
 }
 

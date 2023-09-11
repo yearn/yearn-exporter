@@ -38,21 +38,11 @@ class Yearn:
                 "ib": yearn.ironbank.Registry(exclude_ib_tvl=exclude_ib_tvl),
                 "special": yearn.special.Registry(),
             }
-        elif chain.id ==  Network.Gnosis:
+        elif chain.id in [Network.Gnosis, Network.Base]:
             self.registries = {
                 "v2": yearn.v2.registry.Registry(watch_events_forever=watch_events_forever),
             }
-        elif chain.id ==  Network.Fantom:
-            self.registries = {
-                "v2": yearn.v2.registry.Registry(watch_events_forever=watch_events_forever),
-                "ib": yearn.ironbank.Registry(exclude_ib_tvl=exclude_ib_tvl),
-            }
-        elif chain.id == Network.Arbitrum:
-            self.registries = {
-                "v2": yearn.v2.registry.Registry(watch_events_forever=watch_events_forever),
-                "ib": yearn.ironbank.Registry(exclude_ib_tvl=exclude_ib_tvl),
-            }
-        elif chain.id == Network.Optimism:
+        elif chain.id in [Network.Fantom, Network.Arbitrum, Network.Optimism]:
             self.registries = {
                 "v2": yearn.v2.registry.Registry(watch_events_forever=watch_events_forever),
                 "ib": yearn.ironbank.Registry(exclude_ib_tvl=exclude_ib_tvl),

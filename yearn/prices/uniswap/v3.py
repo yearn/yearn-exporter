@@ -29,25 +29,32 @@ Path = List[Union[Address,FeeTier]]
 
 # https://github.com/Uniswap/uniswap-v3-periphery/blob/main/deploys.md
 UNISWAP_V3_FACTORY = '0x1F98431c8aD98523631AE4a59f267346ea31F984'
+UNISWAP_V3_QUOTER = '0xb27308f9F90D607463bb33eA1BeBb41C27CE5AB6'
 FEE_DENOMINATOR = 1_000_000
 USDC_SCALE = 1e6
 
-# same addresses on all networks
 addresses = {
     Network.Mainnet: {
         'factory': UNISWAP_V3_FACTORY,
+        'quoter': UNISWAP_V3_QUOTER,
         'fee_tiers': [3000, 500, 10_000, 100],
     },
     Network.Arbitrum: {
         'factory': UNISWAP_V3_FACTORY,
+        'quoter': UNISWAP_V3_QUOTER,
         'fee_tiers': [3000, 500, 10_000],
     },
     Network.Optimism: {
         'factory': UNISWAP_V3_FACTORY,
+        'quoter': UNISWAP_V3_QUOTER,
         'fee_tiers': [3000, 500, 10_000, 100],
     },
+    Network.Base: {
+        'factory': '0x33128a8fC17869897dcE68Ed026d694621f6FDfD',
+        'quoter': '0x3d4e44Eb1374240CE5F1B871ab261CD16335B76a', # quoter v2
+        'fee_tiers': [3000, 500, 10_000, 100],
+    }
 }
-
 
 class UniswapV3(metaclass=Singleton):
     def __init__(self) -> None:
@@ -58,7 +65,7 @@ class UniswapV3(metaclass=Singleton):
         self.factory: Contract = contract(conf['factory'])
         self.quoter: Contract = Contract.from_abi(
             name='Quoter',
-            address='0xb27308f9F90D607463bb33eA1BeBb41C27CE5AB6',
+            address=addresses[chain.id]['quoter'],
             abi=json.load(open('interfaces/uniswap/UniswapV3Quoter.json'))
         ) # use direct abi from etherscan because the quoter is not verified on all chains (opti)
         self.fee_tiers = [FeeTier(fee) for fee in conf['fee_tiers']]

@@ -84,6 +84,7 @@ class YearnTreasury(ExportablePortfolio):
             Network.Gnosis: 20_000_000,
             Network.Arbitrum: 4_837_859,
             Network.Optimism: 18_100_336,
+            Network.Base: 3_264_243,
         }[chain.id]
         
         ''' TODO: confirm these starts match start_block
@@ -122,6 +123,7 @@ class StrategistMultisig(ExportablePortfolio):
             Network.Gnosis: 20_455_212,
             Network.Arbitrum: 2_434_174,
             Network.Optimism: 18_084_577,
+            Network.Base: 3_263_643,
         }[chain.id]
         super().__init__(constants.STRATEGIST_MULTISIG, label='sms', start_block=start_block, asynchronous=asynchronous, load_prices=load_prices)
 
