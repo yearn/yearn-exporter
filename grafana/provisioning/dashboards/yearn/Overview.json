@@ -24,7 +24,7 @@
   "editable": true,
   "fiscalYearStartMonth": 0,
   "graphTooltip": 0,
-  "id": 206,
+  "id": 284,
   "links": [],
   "liveNow": false,
   "panels": [
@@ -940,6 +940,7 @@
         "type": "prometheus",
         "uid": "DS_PROMETHEUS"
       },
+      "description": "Yearn's locked CRV balance",
       "fieldConfig": {
         "defaults": {
           "color": {
@@ -1083,7 +1084,160 @@
           "refId": "B"
         }
       ],
-      "title": "vecrv balance",
+      "title": "veCRV",
+      "type": "timeseries"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "DS_PROMETHEUS"
+      },
+      "description": "Total locked YFI",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisCenteredZero": false,
+            "axisColorMode": "text",
+            "axisLabel": "",
+            "axisPlacement": "auto",
+            "barAlignment": 0,
+            "drawStyle": "line",
+            "fillOpacity": 50,
+            "gradientMode": "opacity",
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            },
+            "lineInterpolation": "linear",
+            "lineWidth": 1,
+            "pointSize": 1,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "showPoints": "auto",
+            "spanNulls": true,
+            "stacking": {
+              "group": "A",
+              "mode": "none"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green"
+              }
+            ]
+          },
+          "unit": "short"
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Locked YFI"
+            },
+            "properties": [
+              {
+                "id": "custom.fillBelowTo",
+                "value": "Locked veYFI"
+              },
+              {
+                "id": "color",
+                "value": {
+                  "fixedColor": "purple",
+                  "mode": "fixed"
+                }
+              },
+              {
+                "id": "custom.fillOpacity",
+                "value": 50
+              },
+              {
+                "id": "custom.fillBelowTo"
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Locked veYFI"
+            },
+            "properties": [
+              {
+                "id": "color",
+                "value": {
+                  "fixedColor": "dark-blue",
+                  "mode": "fixed"
+                }
+              },
+              {
+                "id": "custom.axisPlacement",
+                "value": "right"
+              }
+            ]
+          }
+        ]
+      },
+      "gridPos": {
+        "h": 7,
+        "w": 12,
+        "x": 12,
+        "y": 10
+      },
+      "id": 53,
+      "options": {
+        "legend": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "mode": "single",
+          "sort": "none"
+        }
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "DS_PROMETHEUS"
+          },
+          "editorMode": "code",
+          "exemplar": true,
+          "expr": "veyfi{network=\"ETH\", param=\"totalSupply\"} / 1000000000000000000",
+          "interval": "",
+          "legendFormat": "Locked veYFI",
+          "range": true,
+          "refId": "A"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "DS_PROMETHEUS"
+          },
+          "editorMode": "code",
+          "exemplar": true,
+          "expr": "veyfi{network=\"ETH\", param=\"supply\"} / 1000000000000000000",
+          "hide": false,
+          "interval": "",
+          "legendFormat": "Locked YFI",
+          "range": true,
+          "refId": "B"
+        }
+      ],
+      "title": "veYFI",
       "type": "timeseries"
     },
     {
@@ -1145,10 +1299,10 @@
         "overrides": []
       },
       "gridPos": {
-        "h": 7,
+        "h": 6,
         "w": 12,
-        "x": 12,
-        "y": 10
+        "x": 0,
+        "y": 17
       },
       "id": 32,
       "options": {
@@ -1176,7 +1330,7 @@
           },
           "editorMode": "code",
           "exemplar": false,
-          "expr": "yearn_vault{param=\"tvl\", experimental=\"false\", vault!~\"yvUSDC 0.2.2|yvDAI 0.2.2|yvWBTC 0.3.1|yvHEGIC 0.3.0|yvAVAX 0.4.3\"}",
+          "expr": "yearn_vault{param=\"tvl\", experimental=\"false\", vault=~\"$vaults\"}",
           "interval": "",
           "legendFormat": "{{vault}} - {{network}}",
           "queryType": "randomWalk",
@@ -1185,109 +1339,6 @@
         }
       ],
       "title": "vault aum",
-      "type": "timeseries"
-    },
-    {
-      "datasource": {
-        "type": "prometheus",
-        "uid": "PBFE396EC0B189D67"
-      },
-      "fieldConfig": {
-        "defaults": {
-          "color": {
-            "mode": "palette-classic"
-          },
-          "custom": {
-            "axisCenteredZero": false,
-            "axisColorMode": "text",
-            "axisLabel": "",
-            "axisPlacement": "auto",
-            "axisSoftMax": 0.1,
-            "barAlignment": 0,
-            "drawStyle": "line",
-            "fillOpacity": 0,
-            "gradientMode": "none",
-            "hideFrom": {
-              "legend": false,
-              "tooltip": false,
-              "viz": false
-            },
-            "lineInterpolation": "linear",
-            "lineWidth": 1,
-            "pointSize": 5,
-            "scaleDistribution": {
-              "linearThreshold": 1,
-              "log": 2,
-              "type": "symlog"
-            },
-            "showPoints": "never",
-            "spanNulls": true,
-            "stacking": {
-              "group": "A",
-              "mode": "none"
-            },
-            "thresholdsStyle": {
-              "mode": "off"
-            }
-          },
-          "mappings": [],
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              {
-                "color": "green",
-                "value": null
-              }
-            ]
-          },
-          "unit": "dtdurations"
-        },
-        "overrides": []
-      },
-      "gridPos": {
-        "h": 7,
-        "w": 12,
-        "x": 0,
-        "y": 17
-      },
-      "id": 27,
-      "options": {
-        "legend": {
-          "calcs": [
-            "lastNotNull"
-          ],
-          "displayMode": "table",
-          "placement": "right",
-          "showLegend": true,
-          "sortBy": "Last *",
-          "sortDesc": false
-        },
-        "timezone": [
-          "browser"
-        ],
-        "tooltip": {
-          "mode": "single",
-          "sort": "asc"
-        }
-      },
-      "pluginVersion": "9.2.0",
-      "targets": [
-        {
-          "datasource": {
-            "type": "prometheus",
-            "uid": "DS_PROMETHEUS"
-          },
-          "editorMode": "code",
-          "exemplar": false,
-          "expr": "time() - yearn_vault{param=\"lastReport\", experimental=\"false\", vault!~\"yvUSDC 0.2.2|yvDAI 0.2.2|yvWBTC 0.3.1|yvHEGIC 0.3.0|yvAVAX 0.4.3\"}",
-          "interval": "",
-          "legendFormat": "{{vault}} - {{network}}",
-          "queryType": "randomWalk",
-          "range": true,
-          "refId": "A"
-        }
-      ],
-      "title": "time since last report",
       "type": "timeseries"
     },
     {
@@ -1350,7 +1401,7 @@
         "overrides": []
       },
       "gridPos": {
-        "h": 7,
+        "h": 6,
         "w": 12,
         "x": 12,
         "y": 17
@@ -1379,7 +1430,7 @@
           },
           "editorMode": "code",
           "exemplar": false,
-          "expr": "yearn_vault{param=\"pricePerShare\",experimental=\"false\"}",
+          "expr": "yearn_vault{param=\"pricePerShare\",experimental=\"false\", vault=~\"$vaults\"}",
           "hide": false,
           "interval": "",
           "legendFormat": "{{vault}} - {{network}}",
@@ -1395,7 +1446,110 @@
         "type": "prometheus",
         "uid": "PBFE396EC0B189D67"
       },
-      "description": "Annualized Share Price change > 0",
+      "description": "Time since last report on vault.\nNot all harvests will yield a profit",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisCenteredZero": false,
+            "axisColorMode": "text",
+            "axisLabel": "",
+            "axisPlacement": "auto",
+            "axisSoftMax": 0.1,
+            "barAlignment": 0,
+            "drawStyle": "line",
+            "fillOpacity": 0,
+            "gradientMode": "none",
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            },
+            "lineInterpolation": "linear",
+            "lineWidth": 1,
+            "pointSize": 5,
+            "scaleDistribution": {
+              "linearThreshold": 1,
+              "type": "linear"
+            },
+            "showPoints": "never",
+            "spanNulls": true,
+            "stacking": {
+              "group": "A",
+              "mode": "none"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              }
+            ]
+          },
+          "unit": "dtdurations"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 7,
+        "w": 12,
+        "x": 0,
+        "y": 23
+      },
+      "id": 27,
+      "options": {
+        "legend": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "displayMode": "table",
+          "placement": "right",
+          "showLegend": true,
+          "sortBy": "Last *",
+          "sortDesc": false
+        },
+        "timezone": [
+          "browser"
+        ],
+        "tooltip": {
+          "mode": "single",
+          "sort": "asc"
+        }
+      },
+      "pluginVersion": "9.2.0",
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "DS_PROMETHEUS"
+          },
+          "editorMode": "code",
+          "exemplar": false,
+          "expr": "time() - yearn_vault{param=\"lastReport\", experimental=\"false\", vault=~\"$vaults\"}",
+          "interval": "",
+          "legendFormat": "{{vault}} - {{network}}",
+          "queryType": "randomWalk",
+          "range": true,
+          "refId": "A"
+        }
+      ],
+      "title": "harvest",
+      "type": "timeseries"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "PBFE396EC0B189D67"
+      },
+      "description": "Annualized Share Price change",
       "fieldConfig": {
         "defaults": {
           "color": {
@@ -1495,108 +1649,7 @@
               "options": {
                 "mode": "exclude",
                 "names": [
-                  "yvVelo-agEUR-USDC-f 0.4.6 - OPTI",
-                  "yvCurve-XAI-FRAXBP-f 0.4.5 - ETH",
-                  "yvCurve-pUSDFRAXBP3CRV-f-f 0.4.6 - ETH",
-                  "yvAVAX 0.4.3 - FTM",
-                  "yvCurve-stETH-frxETH-f 0.4.6 - ETH",
-                  "yvCurve-tBTC-f 0.4.6 - ETH",
-                  "yvCurve-UST 0.4.3 - ETH",
-                  "yvVelo-wTBT-USDC-f 0.4.6 - OPTI",
-                  "yvCurve-ibAUD-USDC 0.4.3 - ETH",
-                  "yvAero-DEUS-WETH-f 0.4.6 - BASE",
-                  "yvAero-MAI-USDbC-f 0.4.6 - BASE",
-                  "yvCurve-alETH-frxETH-f 0.4.6 - ETH",
-                  "yvVelo-USDC-sUSD 0.4.5 - OPTI",
-                  "yvCurve-FRAXBP-f 0.4.5 - ETH",
-                  "yvCurve-PAL-ETH-f 0.4.6 - ETH",
-                  "yvBal-USDC-DAI-USDT-f 0.4.6 - ETH",
-                  "yvBal-auraBAL-f 0.4.6 - ETH",
-                  "yvVelo-USDC-DOLA 0.4.5 - OPTI",
-                  "yvCurve-USDT 0.3.5 - ETH",
-                  "yvCurve-HBTC-f 0.4.6 - ETH",
-                  "yvCurve-BUSD-f 0.4.6 - ETH",
-                  "yvCurve-ibCHF-USDC 0.4.3 - ETH",
-                  "yvCurve-BTRFLY-ETH-f 0.4.6 - ETH",
-                  "yvVelo-DAI-USDC-f 0.4.6 - OPTI",
-                  "yvAero-SONNE-USDbC-f 0.4.6 - BASE",
-                  "yvVelo-TAROT-OP-f 0.4.6 - OPTI",
-                  "yvCurve-USDK 0.3.5 - ETH",
-                  "yvCurve-agEUR-VEUR-f-f 0.4.6 - ETH",
-                  "yvCurve-crvUSDETHCRV-f 0.4.6 - ETH",
-                  "yvVelo-USDT-USDC-f 0.4.6 - OPTI",
-                  "yvAero-TAROT-WETH-f 0.4.6 - BASE",
-                  "yvCurve-sdCRV-f 0.4.5 - ETH",
-                  "yvCurve-crvUSDTUSD-f-f 0.4.6 - ETH",
-                  "yvVelo-USD+-DOLA-f 0.4.6 - OPTI",
-                  "yvBal-GHO-bb-a-USD-f 0.4.6 - ETH",
-                  "yvVelo-USX-USDC-f 0.4.6 - OPTI",
-                  "yvCurve-alUSD-FRAXBP-f 0.4.6 - ETH",
-                  "yvCurve-ibKRW-f 0.4.6 - ETH",
-                  "yvAero-WETH-USDbC-f 0.4.6 - BASE",
-                  "yvCurve-ibBTC 0.4.3 - ETH",
-                  "yvCurve-GUSD-f 0.4.6 - ETH",
-                  "yvCurve-DUSD-f 0.4.6 - ETH",
-                  "yvVelo-USDC-MAI 0.4.5 - OPTI",
-                  "yvAero-AERO-USDbC-f 0.4.6 - BASE",
-                  "yvCurve-crvUSDCWETHINV-f 0.4.6 - ETH",
-                  "yvCurve-ibGBP-USDC 0.4.3 - ETH",
-                  "yvVelo-wstETH-WETH-f 0.4.6 - OPTI",
-                  "yvVelo-sETH-WETH-f 0.4.6 - OPTI",
-                  "yvVelo-LUSD-USDC-f 0.4.6 - OPTI",
-                  "yvCurve-cbETH-frxETH-f 0.4.6 - ETH",
-                  "yvCurve-LDO-ETH-f 0.4.6 - ETH",
-                  "yvCurve-ankrETH-f 0.4.6 - ETH",
-                  "yvCurve-oETH-f 0.4.6 - ETH",
-                  "yvCurve-Pax 0.3.5 - ETH",
-                  "yvAero-DAI+-USD+-f 0.4.6 - BASE",
-                  "yvVelo-MAI-FRAX-f 0.4.6 - OPTI",
-                  "yvBal-bb-a-USD-f 0.4.6 - ETH",
-                  "yvCurve-RSR-FRAXBP-f 0.4.6 - ETH",
-                  "yvCurve-USDN-f 0.4.5 - ETH",
-                  "yvAero-stERN-USD+-f 0.4.6 - BASE",
-                  "yvCurve-USDP-f 0.4.6 - ETH",
-                  "yvCurve-sdYFIpool-f-f 0.4.6 - ETH",
-                  "yvCurve-mUSD-f 0.4.6 - ETH",
-                  "yvBal-wstETH-rETH-sfrxETH-f 0.4.6 - ETH",
-                  "yvCurve-STG-FRAXBP-f 0.4.6 - ETH",
-                  "yvCurve-sdANGLE-f 0.4.5 - ETH",
-                  "yvVelo-ERN-USDC-f 0.4.6 - OPTI",
-                  "yvAero-tBTC-USDbC-f 0.4.6 - BASE",
-                  "yvBal-stafiETH-f 0.4.6 - ETH",
-                  "yvCurve-Compound-f 0.4.6 - ETH",
-                  "yvCurve-crvUSDSUSD-f-f 0.4.6 - ETH",
-                  "yvVelo-TAROT-USDC-f 0.4.6 - OPTI",
-                  "yvBal-stETH-f 0.4.6 - ETH",
-                  "yvCurve-EURT-USD-f 0.4.6 - ETH",
-                  "yvVelo-FRAX-USDC-f 0.4.6 - OPTI",
-                  "yvCurve-EURS-f 0.4.6 - ETH",
-                  "lp-yBAL 0.4.6 - ETH",
-                  "yvCurve-OHM-ETH-f 0.4.6 - ETH",
-                  "yvCurve-ibEUR-USDC 0.4.3 - ETH",
-                  "yvCurve-FXS-ETH-f 0.4.6 - ETH",
-                  "yvCurve-cbETH-f 0.4.5 - ETH",
-                  "yvAero-wUSDR-USDbC-f 0.4.6 - BASE",
-                  "yvCurve-sdCRVlp-f-f 0.4.6 - ETH",
-                  "yvCurve-cvxCRVv2-f 0.4.6 - ETH",
-                  "yvKP3RETH-f 0.4.3 - ETH",
-                  "yvCurve-sETH 0.4.5 - OPTI",
-                  "yvVelo-USD+-FRAX-f 0.4.6 - OPTI",
-                  "yvCurve-ETHxWETH-f-f 0.4.6 - ETH",
-                  "st-yBAL 0.4.6 - ETH",
-                  "yvVelo-sfrxETH-frxETH-f 0.4.6 - OPTI",
-                  "yvBal-cbETH-wstETH-f 0.4.6 - ETH",
-                  "yvCurve-ankrETH-frxETH-f 0.4.6 - ETH",
-                  "yvCurve-clevCVX-f 0.4.6 - ETH",
-                  "yvBal-rETH-f 0.4.6 - ETH",
-                  "yvCurve-DYDX-ETH-f 0.4.6 - ETH",
-                  "yvBal-DOLA-USDC-f 0.4.6 - ETH",
-                  "yvCurve-T-ETH-f 0.4.6 - ETH",
-                  "yvCurve-frxETH-f 0.4.6 - ETH",
-                  "yvCurve-cvxFXS-f 0.4.6 - ETH",
-                  "yvCurve-STBT-f 0.4.6 - ETH",
-                  "yvCurve-crvUSDDOLA-f-f 0.4.6 - ETH",
-                  "yvBal-GHO-LUSD-f 0.4.6 - ETH"
+                  "yvWETH 0.4.2 - ETH"
                 ],
                 "prefix": "All except:",
                 "readOnly": true
@@ -1617,9 +1670,9 @@
       },
       "gridPos": {
         "h": 7,
-        "w": 24,
-        "x": 0,
-        "y": 24
+        "w": 12,
+        "x": 12,
+        "y": 23
       },
       "id": 25,
       "options": {
@@ -1645,7 +1698,7 @@
           },
           "editorMode": "code",
           "exemplar": true,
-          "expr": "delta(yearn_vault{param=\"pricePerShare\", experimental=\"false\"}[1d]) * 365 != 365",
+          "expr": "delta(yearn_vault{param=\"pricePerShare\", experimental=\"false\", vault=~\"$vaults\"}[1d]) * 365 != 365",
           "interval": "",
           "legendFormat": "{{vault}} - {{network}}",
           "queryType": "randomWalk",
@@ -1653,7 +1706,7 @@
           "refId": "A"
         }
       ],
-      "title": "price per share change 1d annualized",
+      "title": "share price change 1d annualized",
       "type": "timeseries"
     }
   ],
@@ -1662,16 +1715,125 @@
   "style": "dark",
   "tags": [],
   "templating": {
-    "list": []
+    "list": [
+      {
+        "current": {
+          "selected": false,
+          "text": "ETH",
+          "value": "ETH"
+        },
+        "datasource": {
+          "type": "prometheus",
+          "uid": "PBFE396EC0B189D67"
+        },
+        "definition": "yearn_strategy{param=\"totalLoss\"}",
+        "hide": 0,
+        "includeAll": false,
+        "label": "network",
+        "multi": false,
+        "name": "networks",
+        "options": [],
+        "query": {
+          "query": "yearn_strategy{param=\"totalLoss\"}",
+          "refId": "PrometheusVariableQueryEditor-VariableQuery"
+        },
+        "refresh": 1,
+        "regex": "/.*network=\"([^/\"]*).*/",
+        "skipUrlSync": false,
+        "sort": 1,
+        "type": "query"
+      },
+      {
+        "current": {
+          "selected": true,
+          "text": "yvWETH 0.4.2",
+          "value": "yvWETH 0.4.2"
+        },
+        "datasource": {
+          "type": "prometheus",
+          "uid": "PBFE396EC0B189D67"
+        },
+        "definition": "yearn_strategy{network=\"$networks\", experimental=\"false\"}",
+        "hide": 0,
+        "includeAll": true,
+        "label": "vaults",
+        "multi": false,
+        "name": "vaults",
+        "options": [],
+        "query": {
+          "query": "yearn_strategy{network=\"$networks\", experimental=\"false\"}",
+          "refId": "PrometheusVariableQueryEditor-VariableQuery"
+        },
+        "refresh": 1,
+        "regex": "/.*vault=\"([^\"]*).*/",
+        "skipUrlSync": false,
+        "sort": 1,
+        "type": "query"
+      },
+      {
+        "current": {
+          "selected": false,
+          "text": "0xa258C4606Ca8206D8aA700cE2143D7db854D168c",
+          "value": "0xa258C4606Ca8206D8aA700cE2143D7db854D168c"
+        },
+        "datasource": {
+          "type": "prometheus",
+          "uid": "PBFE396EC0B189D67"
+        },
+        "definition": "yearn_vault{network=\"$networks\", param=\"totalAssets\", vault=~\"$vaults\", experimental=\"false\"}",
+        "hide": 0,
+        "includeAll": false,
+        "label": "address",
+        "multi": false,
+        "name": "address",
+        "options": [],
+        "query": {
+          "query": "yearn_vault{network=\"$networks\", param=\"totalAssets\", vault=~\"$vaults\", experimental=\"false\"}",
+          "refId": "PrometheusVariableQueryEditor-VariableQuery"
+        },
+        "refresh": 1,
+        "regex": "/.*address=\"([^\"]*).*/",
+        "skipUrlSync": false,
+        "sort": 0,
+        "type": "query"
+      },
+      {
+        "current": {
+          "selected": false,
+          "text": "v2",
+          "value": "v2"
+        },
+        "datasource": {
+          "type": "prometheus",
+          "uid": "PBFE396EC0B189D67"
+        },
+        "definition": "yearn_vault{network=\"$networks\", param=\"totalAssets\", vault=~\"$vaults\", experimental=\"false\", address=\"$address\"}",
+        "hide": 0,
+        "includeAll": false,
+        "label": "version",
+        "multi": false,
+        "name": "version",
+        "options": [],
+        "query": {
+          "query": "yearn_vault{network=\"$networks\", param=\"totalAssets\", vault=~\"$vaults\", experimental=\"false\", address=\"$address\"}",
+          "refId": "PrometheusVariableQueryEditor-VariableQuery"
+        },
+        "refresh": 1,
+        "regex": "/.*version=\"([^/\"]*).*/",
+        "skipUrlSync": false,
+        "sort": 0,
+        "type": "query"
+      }
+    ]
   },
   "time": {
-    "from": "now-30d",
+    "from": "now-90d",
     "to": "now"
   },
   "timepicker": {},
   "timezone": "browser",
   "title": "Overview",
-  "uid": "caf3d5a8-972f-4279-a88c-85548c7c8e99",
-  "version": 13,
+  "uid": "eb1a32c5-5954-430f-a7a4-50dc580964f0",
+  "version": 14,
   "weekStart": ""
 }
