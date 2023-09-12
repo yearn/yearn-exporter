@@ -19,7 +19,7 @@ logger = logging.getLogger(__name__)
 
 COMPOUNDING = 365
 
-voter = Contract("0x41c914ee0c7e1a5edcd0295623e6dc557b5abf3c") if Network(chain.id) == Network.Base else None
+voter = Contract("0x16613524e02ad97eDfeF371bC883F2F5d6C480A5") if Network(chain.id) == Network.Base else None
 
 @alru_cache
 async def get_staking_pool(underlying: str) -> Optional[Contract]:
