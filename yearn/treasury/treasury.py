@@ -31,6 +31,8 @@ async def _get_bucket(token) -> str:
     else:
         return await get_token_bucket(token)
 
+_label_names = ['param','wallet','token_address','token','bucket']
+
 class ExportablePortfolio(Portfolio):
     """ Adds methods to export full portoflio data. """ 
 
@@ -56,7 +58,7 @@ class ExportablePortfolio(Portfolio):
 
         return metrics_to_export
     
-    async def _process_token(self, ts, section: str, wallet: str, token: str, bals: Balance, protocol: Optional[str] = None):
+    async def _process_token(self, ts, section: str, wallet: str, token: str, bal: Balance, protocol: Optional[str] = None):
         # TODO wallet nicknames in grafana
         #wallet = KNOWN_ADDRESSES[wallet] if wallet in KNOWN_ADDRESSES else wallet
         if protocol is not None:
@@ -64,16 +66,10 @@ class ExportablePortfolio(Portfolio):
 
         symbol, bucket = await asyncio.gather(_get_symbol(token), _get_bucket(token))
         
-        items = []           
-
-        # build items
-        for key, value in bals.items():
-            label_names = ['param','wallet','token_address','token','bucket']
-            if key == "usd_value":
-                key = "usd value"
-            label_values = [key, wallet, token, symbol, bucket]
-            items.append(_build_item(f"{self.label}_{section}", label_names, label_values, value, ts))
-        return items
+        return [
+            _build_item(f"{self.label}_{section}", _label_names, ["balance", wallet, token, symbol, bucket], bal.balance, ts),
+            _build_item(f"{self.label}_{section}", _label_names, ["usd value", wallet, token, symbol, bucket], bal.usd, ts),
+        ]
 
 
 class YearnTreasury(ExportablePortfolio):
