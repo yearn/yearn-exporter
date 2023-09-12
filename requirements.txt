@@ -21,11 +21,10 @@ pytest-bdd>=5.0.0
 dank_mids==4.20.60
 eth_retry>=0.1.18
 eth-hash[pysha3]
-ez-a-sync==0.6.6
+ez-a-sync==0.7.2
 python-telegram-bot==13.15
-git+https://www.github.com/banteg/multicall.py@5cdb0f08ddadf1c381dc0966b8bd71e3ac7c6272
-git+https://www.github.com/BobTheBuidler/ypricemagic@2f1895d0efde0802c1ada8a5361701f759273ddd
-git+https://www.github.com/BobTheBuidler/eth-portfolio@6c71e6200663063c92b7d7f27bbafba7a0b02997
+ypricemagic==2.13.4
+git+https://www.github.com/BobTheBuidler/eth-portfolio@63d42011be65adc6f19167d784837e7ed2f4389a
 git+https://www.github.com/BobTheBuidler/toolcache@e37b53cec64556d2b35df66767fca4c8f366a2fa
 memray
 git+https://www.github.com/BobTheBuidler/async-lru@1364553fbe0b2f0120a2659dca292189dc1e37ef

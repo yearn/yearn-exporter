@@ -1,15 +1,20 @@
+import asyncio
 import logging
 import time
 import warnings
 from typing import NoReturn
 
-import pandas
 import sentry_sdk
+from a_sync import AsyncThreadPoolExecutor, a_sync
 from brownie import chain
 from brownie.exceptions import BrownieEnvironmentWarning
+from eth_portfolio.structs import (InternalTransfer, LedgerEntry,
+                                   TokenTransfer, Transaction)
 from pony.orm import TransactionIntegrityError, commit, db_session
-from tqdm import tqdm
+from tqdm.asyncio import tqdm_asyncio
 from y.constants import EEE_ADDRESS
+from y.datatypes import Block
+from y.time import get_block_timestamp_async
 
 from yearn.entities import TreasuryTx
 from yearn.outputs.postgres.utils import (cache_address, cache_chain,
@@ -23,7 +28,8 @@ warnings.simplefilter("ignore", BrownieEnvironmentWarning)
 
 logger = logging.getLogger('yearn.treasury_transactions_exporter')
 
-treasury = YearnTreasury(load_prices=True)
+treasury = YearnTreasury(load_prices=True, asynchronous=True)
+
 
 def main() -> NoReturn:
     cached_thru = treasury._start_block - 1
@@ -35,50 +41,85 @@ def main() -> NoReturn:
             time.sleep(10)
             continue
             
-        df = treasury.ledger.df(start_block, end_block, full=True)
-        if len(df) > 0:
-            for index, row in tqdm(list(df.iterrows()), desc="Insert Txs to Postgres"):
-                insert_treasury_tx(row)
+        to_sort = load_new_txs(start_block, end_block)
+        if to_sort > 0:
             sort()
         else:
             time.sleep(10)
         cached_thru = end_block
 
+
+@a_sync(default='sync')
+async def load_new_txs(start_block: Block, end_block: Block) -> int:
+    futs = []
+    async for entry in treasury.ledger._get_and_yield(start_block, end_block):
+        futs.append(asyncio.create_task(insert_treasury_tx(entry)))
+    return sum(await tqdm_asyncio.gather(*futs, desc="Insert Txs to Postgres"))
+
+
+# NOTE: Things get sketchy when we bump these higher
+insert_thread = AsyncThreadPoolExecutor(1)
+sort_thread = AsyncThreadPoolExecutor(1)
+
+# NOTE: These we need to sort later for reasons I no longer remember
+sort_later = lambda entry: isinstance(entry, TokenTransfer)
+
+async def insert_treasury_tx(entry: LedgerEntry) -> int:
+    ts = await get_block_timestamp_async(entry.block_number)
+    if txid := await insert_thread.run(insert_to_db, entry, ts):
+        if sort_later(entry):
+            return 1
+        await sort_thread.run(accountant.sort_tx, txid)
+    return 0
+
+    
 @db_session
-def insert_treasury_tx(row: pandas.Series) -> bool:
-    block = row.blockNumber
-    timestamp = chain[block].timestamp
-    log_index = None if not hasattr(row, 'log_index') or str(row.log_index) in ["None", "nan"] else int(row.log_index)
+def insert_to_db(entry: LedgerEntry, ts: int) -> bool:
+    if isinstance(entry, TokenTransfer):
+        log_index = entry.log_index
+        token = cache_token(entry.token_address)
+        gas = None
+    else:
+        log_index = None
+        token = cache_token(EEE_ADDRESS)
+        gas = entry.gas
     try:
-        TreasuryTx(
+        entity = TreasuryTx(
             chain=cache_chain(),
-            block = block,
-            timestamp = timestamp,
-            hash = row.hash,
+            block = entry.block_number,
+            timestamp = ts,
+            hash = entry.hash,
             log_index = log_index,
-            from_address = cache_address(row['from']),
-            to_address = cache_address(row.to) if row.to and str(row.to) != "nan" else None,
-            token = cache_token(row.token_address if hasattr(row, 'token_address') and row.token_address and str(row.token_address) != "nan" else EEE_ADDRESS),
-            amount = row.value,
-            price = row.price,
-            value_usd = row.value_usd,
-            gas_used = row.gasUsed if hasattr(row, 'gasUsed') and str(row.gasUsed) != "nan" else None,
-            gas_price = row.gasPrice if hasattr(row, 'gasPrice') and str(row.gasPrice) != "nan" else None,
+            from_address = cache_address(entry.from_address),
+            to_address = cache_address(entry.to_address) if entry.to_address else None,
+            token = token,
+            amount = entry.value,
+            price = entry.price,
+            value_usd = entry.value_usd,
+            # TODO: nuke db and add this column
+            # gas = gas,
+            gas_used = entry.gas_used if isinstance(entry, InternalTransfer) else None,
+            gas_price = entry.gas_price if isinstance(entry, Transaction) else None,
             txgroup = accountant.pending_txgroup(),
         )
         commit()
+        return entity.treasury_tx_id
     except TransactionIntegrityError:
-        _validate_integrity_error(row, log_index)
+        _validate_integrity_error(entry, log_index)
+
 
 @db_session
-def _validate_integrity_error(row, log_index: int) -> None:
+def _validate_integrity_error(entry: LedgerEntry, log_index: int) -> None:
     ''' Raises AssertionError if existing object that causes a TransactionIntegrityError is not an EXACT MATCH to the attempted insert. '''
-    existing_object = TreasuryTx.get(hash=row.hash, log_index=log_index, chain=cache_chain())
-    assert row['to'] == existing_object.to_address.address, (row['to'],existing_object.to_address.address)
-    assert row['from'] == existing_object.from_address.address, (row['from'], existing_object.from_address.address)
-    assert row['token_address'] == existing_object.token.address.address, (row['token_address'], existing_object.token.address.address)
-    assert row['value'] == existing_object.amount or row['value'] == -1 * existing_object.amount, (row['value'], existing_object.amount)
-    assert row['blockNumber'] == existing_object.block, (row['blockNumber'], existing_object.block)
+    existing_object = TreasuryTx.get(hash=entry.hash, log_index=log_index, chain=cache_chain())
+    assert entry.to_address == existing_object.to_address.address, (entry.to_address,existing_object.to_address.address)
+    assert entry.from_address == existing_object.from_address.address, (entry.from_address, existing_object.from_address.address)
+    assert entry.value == existing_object.amount or entry.value == -1 * existing_object.amount, (entry.value, existing_object.amount)
+    assert entry.block_number == existing_object.block, (entry.block_number, existing_object.block)
+    if isinstance(entry, TokenTransfer):
+        assert entry.token_address == existing_object.token.address.address, (entry.token_address, existing_object.token.address.address)
+    else:
+        assert existing_object.token.address.address == EEE_ADDRESS
     # NOTE All good!
 
 @db_session
