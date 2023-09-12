@@ -279,6 +279,8 @@ class Vault:
             return await apy.curve.simple(self, samples)
         elif pool := await apy.velo.get_staking_pool(self.token.address):
             return await apy.velo.staking(self, pool, samples)
+        elif pool := await apy.aero.get_staking_pool(self.token.address):
+            return await apy.aero.staking(self, pool, samples)
         elif Version(self.api_version) >= Version("0.3.2"):
             return await apy.v2.average(self, samples)
         else:
