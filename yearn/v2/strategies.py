@@ -8,10 +8,9 @@ from brownie import chain
 from eth_utils import encode_hex, event_abi_to_log_topic
 from multicall.utils import run_in_subprocess
 from y.exceptions import NodeNotSynced
-from y.utils.events import get_logs_asap
 
 from yearn.decorators import sentry_catch_all, wait_or_exit_after
-from yearn.events import decode_logs
+from yearn.events import decode_logs, get_logs_asap
 from yearn.multicall2 import fetch_multicall_async
 from yearn.utils import contract, safe_views
 
