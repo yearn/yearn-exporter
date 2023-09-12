@@ -19,12 +19,12 @@ logger = logging.getLogger(__name__)
 
 COMPOUNDING = 365
 
-registry = Contract("0x41c914ee0c7e1a5edcd0295623e6dc557b5abf3c") if Network(chain.id) == Network.Optimism else None
+voter = Contract("0x41c914ee0c7e1a5edcd0295623e6dc557b5abf3c") if Network(chain.id) == Network.Optimism else None
 
 @alru_cache
 async def get_staking_pool(underlying: str) -> Optional[Contract]:
     if Network(chain.id) == Network.Optimism:
-        staking_pool = await registry.gauges.coroutine(underlying)
+        staking_pool = await voter.gauges.coroutine(underlying)
         return None if staking_pool == ZERO_ADDRESS else await Contract.coroutine(staking_pool)
         
 async def staking(vault: "Vault", staking_rewards: Contract, samples: ApySamples, block: Optional[int]=None) -> float:
