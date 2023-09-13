@@ -20,6 +20,7 @@ from y.exceptions import ContractNotVerified
 from yearn.apy import Apy, ApyFees, ApyPoints, ApySamples, get_samples
 from yearn.apy.curve.simple import Gauge, calculate_simple
 from yearn.exceptions import EmptyS3Export
+from yearn.helpers import telegram_monitoring
 
 logger = logging.getLogger(__name__)
 sentry_sdk.set_tag('script','curve_apy_previews')
@@ -189,26 +190,4 @@ def _get_export_paths(suffix):
     return file_name, s3_path
 
 def with_monitoring():
-    if os.getenv("DEBUG", None):
-        main()
-        return
-    from telegram.ext import Updater
-
-    private_group = os.environ.get('TG_YFIREBOT_GROUP_INTERNAL')
-    public_group = os.environ.get('TG_YFIREBOT_GROUP_EXTERNAL')
-    updater = Updater(os.environ.get('TG_YFIREBOT'))
-    now = datetime.now()
-    message = f"`[{now}]`\n⚙️ Curve Previews API for {Network.name()} is updating..."
-    ping = updater.bot.send_message(chat_id=private_group, text=message, parse_mode="Markdown")
-    ping = ping.message_id
-    try:
-        main()
-    except Exception as error:
-        tb = traceback.format_exc()
-        now = datetime.now()
-        message = f"`[{now}]`\n🔥 Curve Previews API update for {Network.name()} failed!\n```\n{tb}\n```"[:4000]
-        updater.bot.send_message(chat_id=private_group, text=message, parse_mode="Markdown", reply_to_message_id=ping)
-        updater.bot.send_message(chat_id=public_group, text=message, parse_mode="Markdown")
-        raise error
-    message = f"✅ Curve Previews API update for {Network.name()} successful!"
-    updater.bot.send_message(chat_id=private_group, text=message, reply_to_message_id=ping)
+    telegram_monitoring.monitoring("revenues", _get_export_mode())
