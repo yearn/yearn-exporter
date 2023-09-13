@@ -34,7 +34,7 @@ from yearn.v1.registry import Registry as RegistryV1
 from yearn.v1.vaults import VaultV1
 from yearn.v2.registry import Registry as RegistryV2
 from yearn.v2.vaults import Vault as VaultV2
-from yearn.helpers import monitoring
+from yearn.helpers import telegram_monitoring
 
 sentry_sdk.set_tag('script','s3')
 
@@ -304,4 +304,4 @@ def _get_export_paths(suffix):
 
 
 def with_monitoring():
-    monitoring("s3", _get_export_mode())
+    telegram_monitoring.monitoring("s3", _get_export_mode())

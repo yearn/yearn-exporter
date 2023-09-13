@@ -4,25 +4,26 @@ from datetime import datetime
 from brownie import chain
 from telegram.error import BadRequest
 from y import Network
+from scripts import s3, curve_apy_previews, revenues
+
 
 def monitoring(script, export_mode_import):
-    if os.getenv("DEBUG", None):
-        main()
-        return
-    from telegram.ext import Updater
-
-    export_mode =  export_mode_import
+    export_mode = export_mode_import
     private_group = os.environ.get('TG_YFIREBOT_GROUP_INTERNAL')
     public_group = os.environ.get('TG_YFIREBOT_GROUP_EXTERNAL')
     updater = Updater(os.environ.get('TG_YFIREBOT'))
     now = datetime.now()
 
     if script == "s3":
+      if os.getenv("DEBUG", None):
+          s3.main()
+          return
+      from telegram.ext import Updater
       message = f"`[{now}]`\n⚙️ #{export_mode} Vaults API for #{Network.name()} is updating..."
       ping = updater.bot.send_message(chat_id=private_group, text=message, parse_mode="Markdown")
       ping = ping.message_id
       try:
-          main()
+          s3.main()
       except Exception as error:
           tb = traceback.format_exc()
           now = datetime.now()
@@ -42,11 +43,14 @@ def monitoring(script, export_mode_import):
       message = f"✅ #{export_mode} Vaults API update for #{Network.name()} successful!"
       updater.bot.send_message(chat_id=private_group, text=message, reply_to_message_id=ping)
     elif script == "revenues":
+      if os.getenv("DEBUG", None):
+          revenues.main()
+          return
       message = f"`[{now}]`\n⚙️ Revenues script for ZooTroop is collecting to send..."
       ping = updater.bot.send_message(chat_id=private_group, text=message, parse_mode="Markdown")
       ping = ping.message_id
       try:
-          main()
+          revenues.main()
       except Exception as error:
           tb = traceback.format_exc()
           now = datetime.now()
@@ -57,11 +61,14 @@ def monitoring(script, export_mode_import):
       message = f"✅ Revenues script for ZooTroop has sent!"
       updater.bot.send_message(chat_id=private_group, text=message, reply_to_message_id=ping)
     elif script == "curve_apy_previews":
+      if os.getenv("DEBUG", None):
+          curve_apy_previews.main()
+          return
       message = f"`[{now}]`\n⚙️ Curve Previews API for {Network.name()} is updating..."
       ping = updater.bot.send_message(chat_id=private_group, text=message, parse_mode="Markdown")
       ping = ping.message_id
       try:
-          main()
+          curve_apy_previews.main()
       except Exception as error:
           tb = traceback.format_exc()
           now = datetime.now()
