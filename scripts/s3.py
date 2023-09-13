@@ -271,10 +271,13 @@ def _export(data, file_name, s3_path):
 
 
 def _get_s3():
+    aws_endpoint_url = os.environ.get("AWS_ENDPOINT_URL")
     aws_key = os.environ.get("AWS_ACCESS_KEY")
     aws_secret = os.environ.get("AWS_ACCESS_SECRET")
 
     kwargs = {}
+    if aws_endpoint_url is not None:
+        kwargs["endpoint_url"] = aws_endpoint_url
     if aws_key is not None:
         kwargs["aws_access_key_id"] = aws_key
     if aws_secret is not None:
