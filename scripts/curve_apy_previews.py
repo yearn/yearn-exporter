@@ -158,31 +158,45 @@ def _upload(data):
     if os.getenv("DEBUG", None):
         return
 
-    aws_bucket = os.environ.get("AWS_BUCKET")
+    for item in _get_s3s():
+        s3 = item["s3"]
+        aws_bucket = item["aws_bucket"]
+        s3.upload_file(
+            file_name,
+            aws_bucket,
+            s3_path,
+            ExtraArgs={'ContentType': "application/json", 'CacheControl': "max-age=1800"},
+        )
 
-    s3 = _get_s3()
-    s3.upload_file(
-        file_name,
-        aws_bucket,
-        s3_path,
-        ExtraArgs={'ContentType': "application/json", 'CacheControl': "max-age=1800"},
-    )
 
+def _get_s3s():
+    s3s = []
+    aws_buckets = os.environ.get("AWS_BUCKET").split(";")
+    aws_endpoint_urls = os.environ.get("AWS_ENDPOINT_URL").split(";")
+    aws_keys = os.environ.get("AWS_ACCESS_KEY").split(";")
+    aws_secrets = os.environ.get("AWS_ACCESS_SECRET").split(";")
 
-def _get_s3():
-    aws_endpoint_url = os.environ.get("AWS_ENDPOINT_URL")
-    aws_key = os.environ.get("AWS_ACCESS_KEY")
-    aws_secret = os.environ.get("AWS_ACCESS_SECRET")
+    for i in range(len(aws_buckets)):
+        aws_bucket = aws_buckets[i]
+        aws_endpoint_url = aws_endpoint_urls[i]
+        aws_key = aws_keys[i]
+        aws_secret = aws_secrets[i]
+        kwargs = {}
+        if aws_endpoint_url is not None:
+            kwargs["endpoint_url"] = aws_endpoint_url
+        if aws_key is not None:
+            kwargs["aws_access_key_id"] = aws_key
+        if aws_secret is not None:
+            kwargs["aws_secret_access_key"] = aws_secret
 
-    kwargs = {}
-    if aws_endpoint_url is not None:
-        kwargs["endpoint_url"] = aws_endpoint_url
-    if aws_key is not None:
-        kwargs["aws_access_key_id"] = aws_key
-    if aws_secret is not None:
-        kwargs["aws_secret_access_key"] = aws_secret
+        s3s.append(
+          {
+            "s3": boto3.client("s3", **kwargs),
+            "aws_bucket": aws_bucket
+          }
+        )
 
-    return boto3.client("s3", **kwargs)
+    return s3s
 
 
 def _get_export_paths(suffix):
