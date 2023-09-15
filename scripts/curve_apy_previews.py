@@ -41,7 +41,16 @@ def _build_data(gauges):
     for name, values in gauges.items():
         m = re.match('^([^\(\)]+) \(.*\)', name)
         gauge_name = m[1]
-        gauge = _extract_gauge(values)
+        try:
+            gauge = _extract_gauge(values)
+        except ContractNotVerified as e:
+            data.append({
+                "gauge_name": gauge_name,
+                "apy": dataclasses.asdict(Apy("error", 0, 0, ApyFees(0, 0), ApyPoints(0, 0, 0), error_reason=str(e))),
+                "updated": int(time()),
+                "block": samples.now,
+            })
+            continue
         if not gauge:
             continue
 
@@ -161,10 +170,13 @@ def _upload(data):
 
 
 def _get_s3():
+    aws_endpoint_url = os.environ.get("AWS_ENDPOINT_URL")
     aws_key = os.environ.get("AWS_ACCESS_KEY")
     aws_secret = os.environ.get("AWS_ACCESS_SECRET")
 
     kwargs = {}
+    if aws_endpoint_url is not None:
+        kwargs["endpoint_url"] = aws_endpoint_url
     if aws_key is not None:
         kwargs["aws_access_key_id"] = aws_key
     if aws_secret is not None:
