@@ -107,10 +107,13 @@ def get_gauge_relative_weight_for_sidechain(gauge_address):
     try:
         result = res.json()
     except json.JSONDecodeError:
+        error_message = res.text
+        if "cf-footer" in error_message:
+            error_message = "node temporarily unavailable"
         try:
-            raise ApyError("crv:simple", f"mainnet rpc returned bad response {HTTPStatus(res.status_code)} {res.text}")
+            raise ApyError("crv:simple", f"mainnet rpc returned bad response {HTTPStatus(res.status_code)} {error_message}")
         except ValueError:
-            raise ApyError("crv:simple", f"mainnet rpc returned bad response code {res.status_code} {res.text}")
+            raise ApyError("crv:simple", f"mainnet rpc returned bad response code {res.status_code} {error_message}")
     return int(result["result"], 16)
 
 
