@@ -2,6 +2,7 @@
 """
 This script produces a list of velodrome/aerodrome gauges for which vaults can be created
 """
+
 import asyncio
 import dataclasses
 import json
@@ -28,13 +29,12 @@ from yearn.apy.common import SECONDS_PER_YEAR
 from yearn.apy.curve.simple import Gauge
 from yearn.apy.velo import COMPOUNDING
 from yearn.debug import Debug
-from yearn.exceptions import EmptyS3Export
 
 logger = logging.getLogger(__name__)
 sentry_sdk.set_tag('script','curve_apy_previews')
 
 sugars = {
-    Network.Optimism: '',
+    Network.Optimism: '0x4D996E294B00cE8287C16A2b9A4e637ecA5c939f',
     Network.Base: '0x2073D8035bB2b0F2e85aAF5a8732C6f397F9ff9b',
 }
 
@@ -51,10 +51,10 @@ def main():
 async def _build_data():
     start = int(time())
     samples = get_samples()
-    data = await tqdm_asyncio.gather(*[_build_data_for_lp(lp, samples) for lp in await _get_lps()])
-    print(data)
+    data = [d for d in await tqdm_asyncio.gather(*[_build_data_for_lp(lp, samples) for lp in await _get_lps()]) if d]
     for d in data:
         d['updated'] = start
+    print(data)
     return data
 
 async def _get_lps() -> List[dict]:
@@ -63,12 +63,17 @@ async def _get_lps() -> List[dict]:
     sugar_oracle = await Contract.coroutine(sugars[chain.id])
     return [lp for lp in await sugar_oracle.all.coroutine(999999999999999999999, 0, ZERO_ADDRESS)]
 
-async def _build_data_for_lp(lp: dict, samples: ApySamples) -> dict:
+class NoGaugeFound(Exception):
+    pass
+
+async def _build_data_for_lp(lp: dict, samples: ApySamples) -> Optional[dict]:
     lp_token = lp[0]
     gauge_name = lp[1]
     
     try:
         gauge = await _load_gauge(lp)
+    except NoGaugeFound:
+        return None
     except ContractNotVerified as e:
         return {
             "gauge_name": gauge_name,
@@ -106,8 +111,7 @@ async def _load_gauge(lp: dict) -> Gauge:
     lp_address = lp[0]
     gauge_address = lp[11]
     if gauge_address == ZERO_ADDRESS:
-        logger.warning("lp %s has no gauge", lp_address)
-        raise ContractNotVerified(ZERO_ADDRESS)
+        raise NoGaugeFound(f"lp {lp_address} has no gauge")
     voter = await Contract.coroutine(voters[chain.id])
     pool, gauge, weight = await asyncio.gather(
         Contract.coroutine(lp_address), 
