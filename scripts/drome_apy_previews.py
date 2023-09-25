@@ -230,17 +230,35 @@ def with_monitoring():
     public_group = os.environ.get('TG_YFIREBOT_GROUP_EXTERNAL')
     updater = Updater(os.environ.get('TG_YFIREBOT'))
     now = datetime.now()
-    message = f"`[{now}]`\n⚙️ Curve Previews API for {Network.name()} is updating..."
-    ping = updater.bot.send_message(chat_id=private_group, text=message, parse_mode="Markdown")
-    ping = ping.message_id
-    try:
-        main()
-    except Exception as error:
-        tb = traceback.format_exc()
-        now = datetime.now()
-        message = f"`[{now}]`\n🔥 Curve Previews API update for {Network.name()} failed!\n```\n{tb}\n```"[:4000]
-        updater.bot.send_message(chat_id=private_group, text=message, parse_mode="Markdown", reply_to_message_id=ping)
-        updater.bot.send_message(chat_id=public_group, text=message, parse_mode="Markdown")
-        raise error
-    message = f"✅ Curve Previews API update for {Network.name()} successful!"
-    updater.bot.send_message(chat_id=private_group, text=message, reply_to_message_id=ping)
+    if Network.name() == "Optimism":
+        message = f"`[{now}]`\n⚙️ Velodrome Previews API for {Network.name()} is updating..."
+        ping = updater.bot.send_message(chat_id=private_group, text=message, parse_mode="Markdown")
+        ping = ping.message_id
+        try:
+            main()
+        except Exception as error:
+            tb = traceback.format_exc()
+            now = datetime.now()
+            message = f"`[{now}]`\n🔥 Velodrome Previews API update for {Network.name()} failed!\n```\n{tb}\n```"[:4000]
+            updater.bot.send_message(chat_id=private_group, text=message, parse_mode="Markdown", reply_to_message_id=ping)
+            updater.bot.send_message(chat_id=public_group, text=message, parse_mode="Markdown")
+            raise error
+        message = f"✅ Velodrome Previews API update for {Network.name()} successful!"
+        updater.bot.send_message(chat_id=private_group, text=message, reply_to_message_id=ping)
+    elif Network.name() == "Base":
+        message = f"`[{now}]`\n⚙️ Aerodrome Previews API for {Network.name()} is updating..."
+        ping = updater.bot.send_message(chat_id=private_group, text=message, parse_mode="Markdown")
+        ping = ping.message_id
+        try:
+            main()
+        except Exception as error:
+            tb = traceback.format_exc()
+            now = datetime.now()
+            message = f"`[{now}]`\n🔥 Aerodrome Previews API update for {Network.name()} failed!\n```\n{tb}\n```"[:4000]
+            updater.bot.send_message(chat_id=private_group, text=message, parse_mode="Markdown", reply_to_message_id=ping)
+            updater.bot.send_message(chat_id=public_group, text=message, parse_mode="Markdown")
+            raise error
+        message = f"✅ Aerodrome Previews API update for {Network.name()} successful!"
+        updater.bot.send_message(chat_id=private_group, text=message, reply_to_message_id=ping)
+    else: 
+        message = f"{Network.name()} network not a valid network for previews script."
