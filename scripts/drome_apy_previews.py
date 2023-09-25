@@ -45,6 +45,11 @@ voters = {
     Network.Base: '0x16613524e02ad97eDfeF371bC883F2F5d6C480A5',
 }
 
+labels = {
+    Network.Optimism: 'velo',
+    Network.Base: 'aero',
+}
+
 def main():
     _upload(await_awaitable(_build_data()))
 
@@ -146,7 +151,7 @@ async def _staking_apy(lp: dict, staking_rewards: Contract, samples: ApySamples,
     fees = ApyFees(performance=performance, management=management, keep_velo=keep)
         
     if end < current_time or total_supply == 0 or rate == 0:
-        return Apy("v2:aero_unpopular", gross_apr=0, net_apy=0, fees=fees)
+        return Apy(f"v2:{labels[chain.id]}_unpopular", gross_apr=0, net_apy=0, fees=fees)
     
     pool_price, token_price = await asyncio.gather(
         magic.get_price(lp[0], block=block, sync=False),
@@ -161,8 +166,10 @@ async def _staking_apy(lp: dict, staking_rewards: Contract, samples: ApySamples,
     #staking_rewards_apr = await _get_staking_rewards_apr(reward_token, pool_price, token_price, rate, total_supply, samples)
     if os.getenv("DEBUG", None):
         logger.info(pformat(Debug().collect_variables(locals())))
-    return Apy("v2:aero", gross_apr=gross_apr, net_apy=net_apy, fees=fees) #, staking_rewards_apr=staking_rewards_apr)
+    return Apy(f"v2:{labels[chain.id]}", gross_apr=gross_apr, net_apy=net_apy, fees=fees) #, staking_rewards_apr=staking_rewards_apr)
 
+# NOTE: do we need this? 
+"""
 async def _get_staking_rewards_apr(reward_token: str, lp_price: float, reward_price: float, reward_rate: int, total_supply_staked: int, samples: ApySamples):
     vault_scale = 10 ** 18
     reward_token_scale = await ERC20(reward_token, asynchronous=True).scale
@@ -170,6 +177,7 @@ async def _get_staking_rewards_apr(reward_token: str, lp_price: float, reward_pr
     rewards_vault_apy = (await rewards_vault.apy(samples)).net_apy
     emissions_apr = SECONDS_PER_YEAR * per_staking_token_rate * reward_price / lp_price
     return emissions_apr * (1 + rewards_vault_apy)
+"""
 
 def _upload(data):
     print(json.dumps(data, sort_keys=True, indent=4))
