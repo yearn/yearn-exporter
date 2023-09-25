@@ -18,9 +18,10 @@ from typing import List, Optional
 import boto3
 import sentry_sdk
 from brownie import ZERO_ADDRESS, chain
+from msgspec import Struct
 from multicall.utils import await_awaitable
 from tqdm.asyncio import tqdm_asyncio
-from y import Contract, Network, magic, ERC20
+from y import ERC20, Contract, Network, magic
 from y.exceptions import ContractNotVerified
 from y.time import get_block_timestamp_async
 
@@ -33,22 +34,33 @@ from yearn.debug import Debug
 logger = logging.getLogger(__name__)
 sentry_sdk.set_tag('script','curve_apy_previews')
 
-sugars = {
-    Network.Optimism: '0x4D996E294B00cE8287C16A2b9A4e637ecA5c939f',
-    Network.Base: '0x2073D8035bB2b0F2e85aAF5a8732C6f397F9ff9b',
-}
+class Drome(Struct):
+    label: str
+    sugar: str
+    voter: str
+    # A random vault to check fees
+    fee_checker: str
 
-voters = {
-    # Velodrome
-    Network.Optimism: '0x41c914ee0c7e1a5edcd0295623e6dc557b5abf3c',
-    # Aerodrome
-    Network.Base: '0x16613524e02ad97eDfeF371bC883F2F5d6C480A5',
-}
+class NoGaugeFound(Exception):
+    pass
 
-labels = {
-    Network.Optimism: 'velo',
-    Network.Base: 'aero',
-}
+try:
+    drome = {
+        Network.Optimism: Drome(
+            label='velo',
+            sugar='0x4D996E294B00cE8287C16A2b9A4e637ecA5c939f',
+            voter='0x41c914ee0c7e1a5edcd0295623e6dc557b5abf3c',
+            fee_checker='0xbC61B71562b01a3a4808D3B9291A3Bf743AB3361',
+        ),
+        Network.Base: Drome(
+            label='aero',
+            sugar='0x2073D8035bB2b0F2e85aAF5a8732C6f397F9ff9b',
+            voter='0x16613524e02ad97eDfeF371bC883F2F5d6C480A5',
+            fee_checker='0xEcFc1e5BDa4d4191c9Cab053ec704347Db87Be5d',
+        ),
+    }[chain.id]
+except KeyError:
+    raise ValueError(f"there is no drome on unsupported network: {chain.id}")
 
 def main():
     _upload(await_awaitable(_build_data()))
@@ -63,13 +75,8 @@ async def _build_data():
     return data
 
 async def _get_lps() -> List[dict]:
-    if chain.id not in sugars:
-        raise ValueError(f"can't get balancer gauges for unsupported network: {chain.id}")
-    sugar_oracle = await Contract.coroutine(sugars[chain.id])
+    sugar_oracle = await Contract.coroutine(drome.sugar)
     return [lp for lp in await sugar_oracle.all.coroutine(999999999999999999999, 0, ZERO_ADDRESS)]
-
-class NoGaugeFound(Exception):
-    pass
 
 async def _build_data_for_lp(lp: dict, samples: ApySamples) -> Optional[dict]:
     lp_token = lp[0]
@@ -117,7 +124,7 @@ async def _load_gauge(lp: dict) -> Gauge:
     gauge_address = lp[11]
     if gauge_address == ZERO_ADDRESS:
         raise NoGaugeFound(f"lp {lp_address} has no gauge")
-    voter = await Contract.coroutine(voters[chain.id])
+    voter = await Contract.coroutine(drome.voter)
     pool, gauge, weight = await asyncio.gather(
         Contract.coroutine(lp_address), 
         Contract.coroutine(gauge_address),
@@ -151,7 +158,7 @@ async def _staking_apy(lp: dict, staking_rewards: Contract, samples: ApySamples,
     fees = ApyFees(performance=performance, management=management, keep_velo=keep)
         
     if end < current_time or total_supply == 0 or rate == 0:
-        return Apy(f"v2:{labels[chain.id]}_unpopular", gross_apr=0, net_apy=0, fees=fees)
+        return Apy(f"v2:{drome.label}_unpopular", gross_apr=0, net_apy=0, fees=fees)
     
     pool_price, token_price = await asyncio.gather(
         magic.get_price(lp[0], block=block, sync=False),
@@ -166,7 +173,7 @@ async def _staking_apy(lp: dict, staking_rewards: Contract, samples: ApySamples,
     #staking_rewards_apr = await _get_staking_rewards_apr(reward_token, pool_price, token_price, rate, total_supply, samples)
     if os.getenv("DEBUG", None):
         logger.info(pformat(Debug().collect_variables(locals())))
-    return Apy(f"v2:{labels[chain.id]}", gross_apr=gross_apr, net_apy=net_apy, fees=fees) #, staking_rewards_apr=staking_rewards_apr)
+    return Apy(f"v2:{drome.label}", gross_apr=gross_apr, net_apy=net_apy, fees=fees) #, staking_rewards_apr=staking_rewards_apr)
 
 # NOTE: do we need this? 
 """
