@@ -69,6 +69,8 @@ fee_checker_strat = Contract(fee_checker.withdrawalQueue(0))
 keep = fee_checker_strat.localKeepVELO() / 1e4
 unkeep = 1 - keep
 
+fees = ApyFees(performance=performance_fee, management=management_fee, keep_velo=keep)
+
 def main():
     _upload(await_awaitable(_build_data()))
 
@@ -96,13 +98,13 @@ async def _build_data_for_lp(lp: dict, block: Optional[int] = None) -> Optional[
     except ContractNotVerified as e:
         return {
             "gauge_name": gauge_name,
-            "apy": dataclasses.asdict(Apy("error:unverified", 0, 0, ApyFees(0, 0), ApyPoints(0, 0, 0), error_reason=str(e))),
+            "apy": dataclasses.asdict(Apy("error:unverified", 0, 0, fees, ApyPoints(0, 0, 0), error_reason=str(e))),
             "block": block,
         }
 
-    apy_error = Apy("error", 0, 0, ApyFees(0, 0), ApyPoints(0, 0, 0))
+    apy_error = Apy("error", 0, 0, fees, ApyPoints(0, 0, 0))
     try:
-        apy = await _staking_apy(lp, gauge.gauge, block=block) if gauge.gauge_weight > 0 else Apy("zero_weight", 0, 0, ApyFees(0, 0), ApyPoints(0, 0, 0))
+        apy = await _staking_apy(lp, gauge.gauge, block=block) if gauge.gauge_weight > 0 else Apy("zero_weight", 0, 0, fees, ApyPoints(0, 0, 0))
     except Exception as error:
         apy_error.error_reason = ":".join(str(arg) for arg in error.args)
         logger.error(error)
@@ -149,7 +151,6 @@ async def _staking_apy(lp: dict, staking_rewards: Contract, block: Optional[int]
     )
     
     rate *= unkeep
-    fees = ApyFees(performance=performance_fee, management=management_fee, keep_velo=keep)
         
     if end < current_time or total_supply == 0 or rate == 0:
         return Apy(f"v2:{drome.label}_unpopular", gross_apr=0, net_apy=0, fees=fees)
