@@ -25,7 +25,7 @@ from y import ERC20, Contract, Network, magic
 from y.exceptions import ContractNotVerified
 from y.time import get_block_timestamp_async
 
-from yearn.apy import Apy, ApyFees, ApyPoints, get_samples
+from yearn.apy import Apy, ApyFees, get_samples
 from yearn.apy.common import SECONDS_PER_YEAR
 from yearn.apy.curve.simple import Gauge
 from yearn.apy.velo import COMPOUNDING
@@ -98,18 +98,16 @@ async def _build_data_for_lp(lp: dict, block: Optional[int] = None) -> Optional[
     except ContractNotVerified as e:
         return {
             "gauge_name": gauge_name,
-            "apy": dataclasses.asdict(Apy("error:unverified", 0, 0, fees, ApyPoints(0, 0, 0), error_reason=str(e))),
+            "apy": dataclasses.asdict(Apy("error:unverified", 0, 0, fees, error_reason=str(e))),
             "block": block,
         }
 
-    apy_error = Apy("error", 0, 0, fees, ApyPoints(0, 0, 0))
     try:
-        apy = await _staking_apy(lp, gauge.gauge, block=block) if gauge.gauge_weight > 0 else Apy("zero_weight", 0, 0, fees, ApyPoints(0, 0, 0))
+        apy = await _staking_apy(lp, gauge.gauge, block=block) if gauge.gauge_weight > 0 else Apy("zero_weight", 0, 0, fees)
     except Exception as error:
-        apy_error.error_reason = ":".join(str(arg) for arg in error.args)
         logger.error(error)
         logger.error(gauge)
-        apy = apy_error
+        apy = Apy("error", 0, 0, fees, error_reason=":".join(str(arg) for arg in error.args))
 
     return {
         "gauge_name": gauge_name,
