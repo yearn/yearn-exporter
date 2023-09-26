@@ -29,6 +29,7 @@ from yearn.apy import Apy, ApyFees, ApyPoints, get_samples
 from yearn.apy.common import SECONDS_PER_YEAR
 from yearn.apy.curve.simple import Gauge
 from yearn.apy.velo import COMPOUNDING
+from yearn.v2.registry import Registry
 from yearn.debug import Debug
 
 logger = logging.getLogger(__name__)
@@ -41,9 +42,6 @@ class Drome(Struct):
     voter: str
     # A random vault to check fees
     fee_checker: str
-
-class NoGaugeFound(Exception):
-    pass
 
 try:
     drome = {
@@ -77,15 +75,17 @@ def main():
 async def _build_data():
     start = int(time())
     block = get_samples().now
-    data = [d for d in await tqdm_asyncio.gather(*[_build_data_for_lp(lp, block) for lp in await _get_lps(block)]) if d]
+    data = [d for d in await tqdm_asyncio.gather(*[_build_data_for_lp(lp, block) for lp in await _get_lps_with_vault_potential()]) if d]
     for d in data:
         d['updated'] = start
     print(data)
     return data
 
-async def _get_lps(block: Optional[int] = None) -> List[dict]:
+async def _get_lps_with_vault_potential() -> List[dict]:
     sugar_oracle = await Contract.coroutine(drome.sugar)
-    return [lp for lp in await sugar_oracle.all.coroutine(999999999999999999999, 0, ZERO_ADDRESS, block_identifier=block)]
+    current_vaults = Registry(watch_events_forever=False, include_experimental=False).vaults
+    current_underlyings = [str(vault.token) for vault in current_vaults]
+    return [lp for lp in await sugar_oracle.all.coroutine(999999999999999999999, 0, ZERO_ADDRESS) if lp[0] not in current_underlyings and lp[11] != ZERO_ADDRESS]
 
 async def _build_data_for_lp(lp: dict, block: Optional[int] = None) -> Optional[dict]:
     lp_token = lp[0]
@@ -93,8 +93,6 @@ async def _build_data_for_lp(lp: dict, block: Optional[int] = None) -> Optional[
     
     try:
         gauge = await _load_gauge(lp, block=block)
-    except NoGaugeFound:
-        return None
     except ContractNotVerified as e:
         return {
             "gauge_name": gauge_name,
@@ -127,15 +125,16 @@ async def _build_data_for_lp(lp: dict, block: Optional[int] = None) -> Optional[
 async def _load_gauge(lp: dict, block: Optional[int] = None) -> Gauge:
     lp_address = lp[0]
     gauge_address = lp[11]
-    if gauge_address == ZERO_ADDRESS:
-        raise NoGaugeFound(f"lp {lp_address} has no gauge")
     voter = await Contract.coroutine(drome.voter)
     pool, gauge, weight = await asyncio.gather(
         Contract.coroutine(lp_address), 
         Contract.coroutine(gauge_address),
         voter.weights.coroutine(lp_address, block_identifier=block),
     )
-    inflation_rate, working_supply = await asyncio.gather(gauge.rewardRate.coroutine(block_identifier=block), gauge.totalSupply.coroutine(block_identifier=block))
+    inflation_rate, working_supply = await asyncio.gather(
+        gauge.rewardRate.coroutine(block_identifier=block),
+        gauge.totalSupply.coroutine(block_identifier=block),
+    )
     return Gauge(lp_address, pool, gauge, weight, inflation_rate, working_supply)
     
 async def _staking_apy(lp: dict, staking_rewards: Contract, block: Optional[int]=None) -> float:
