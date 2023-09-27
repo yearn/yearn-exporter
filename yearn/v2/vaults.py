@@ -251,6 +251,7 @@ class Vault:
 
     async def _unpack_results(self, results):
         results, strategy_descs, price = results
+        strategies = await run_in_thread(getattr, self, 'strategies')
         return await run_in_subprocess(
             _unpack_results,
             self.vault.address,
@@ -260,15 +261,15 @@ class Vault:
             self.scale,
             price,
             # must be picklable.
-            [strategy.unique_name for strategy in self.strategies],
+            [strategy.unique_name for strategy in strategies],
             strategy_descs,
         )
 
     async def describe(self, block=None):
-        await run_in_thread(self.load_strategies)
+        strategies = await run_in_thread(getattr, self, 'strategies')
         results = await asyncio.gather(
             fetch_multicall_async(*[[self.vault, view] for view in self._views], block=block),
-            asyncio.gather(*[strategy.describe(block=block) for strategy in self.strategies]),
+            asyncio.gather(*[strategy.describe(block=block) for strategy in strategies]),
             get_price_return_exceptions(self.token, block=block)
         )
         return await self._unpack_results(results)
