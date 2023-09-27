@@ -1,9 +1,9 @@
 import asyncio
 import logging
 from dataclasses import dataclass
-from functools import cached_property
 from typing import TYPE_CHECKING, Optional
 
+from async_property import async_cached_property
 from brownie import ZERO_ADDRESS, interface
 from brownie.network.contract import InterfaceContainer
 from dank_mids.brownie_patch import patch_contract
@@ -14,6 +14,7 @@ from y.utils.dank_mids import dank_w3
 from yearn import constants
 from yearn.common import Tvl
 from yearn.multicall2 import fetch_multicall_async
+from yearn.prices.curve import curve
 from yearn.utils import contract
 from yearn.v1 import constants
 
@@ -66,10 +67,9 @@ class VaultV1:
             return self.controller
         return contract(self.vault.controller(block_identifier=block))
 
-    @cached_property
-    def is_curve_vault(self):
-        from yearn.prices.curve import curve
-        return curve.get_pool(str(self.token)) is not None
+    @async_cached_property
+    async def is_curve_vault(self):
+        return await magic.curve.get_pool(str(self.token)) is not None
 
     async def describe(self, block=None):
         info = {}
@@ -94,7 +94,7 @@ class VaultV1:
             attrs["max"] = [self.vault, "max"]
 
         # new curve voter proxy vaults
-        if self.is_curve_vault and hasattr(strategy, "proxy"):
+        if await self.is_curve_vault and hasattr(strategy, "proxy"):
             vote_proxy, gauge = await fetch_multicall_async(
                 [strategy, "voter"],  # voter is static, can pin
                 [strategy, "gauge"],  # gauge is static per strategy, can cache
@@ -103,7 +103,6 @@ class VaultV1:
             # guard historical queries where there are no vote_proxy and gauge
             # for block <= 10635293 (2020-08-11)
             if vote_proxy and gauge:
-                from yearn.prices.curve import curve
                 vote_proxy = patch_contract(interface.CurveYCRVVoter(vote_proxy), dank_w3)
                 gauge = contract(gauge)
                 boost, _apy = await asyncio.gather(

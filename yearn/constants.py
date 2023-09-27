@@ -112,3 +112,11 @@ TREASURY_WALLETS = {
 TREASURY_WALLETS = {convert.to_address(address) for address in TREASURY_WALLETS}
 
 RANDOMIZE_EXPORTS = bool(os.environ.get("RANDOMIZE_EXPORTS"))
+
+CRV = {
+    Network.Mainnet: "0xD533a949740bb3306d119CC777fa900bA034cd52",
+    Network.Gnosis: "0x712b3d230f3c1c19db860d80619288b1f0bdd0bd",
+    Network.Fantom: "0x1E4F97b9f9F913c46F1632781732927B9019C68b",
+    Network.Arbitrum: "0x11cDb42B0EB46D95f990BeDD4695A6e3fA034978",
+    Network.Optimism: "0x0994206dfE8De6Ec6920FF4D779B0d950605Fb53",
+}.get(chain.id, None)
