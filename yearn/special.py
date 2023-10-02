@@ -2,7 +2,7 @@ import asyncio
 import math
 import os
 from time import time
-from datetime import datetime, timedelta, timezone
+from datetime import datetime, timezone
 from typing import TYPE_CHECKING, Tuple
 
 import eth_retry
@@ -47,19 +47,12 @@ class StYETH(metaclass = Singleton):
         now = datetime.utcnow()
         now = now.replace(tzinfo=timezone.utc)
 
-        # start of week
-        sow = now - timedelta(days=now.weekday())
-        end = sow + timedelta(days=6)
-        # end of week
-        eow = datetime(end.year, end.month, end.day, 23, 59, 59)
-        eow = eow.replace(tzinfo=timezone.utc)
-
-        seconds_til_eow = (eow - now).total_seconds()
+        seconds_til_eow = SECONDS_PER_WEEK - int(now.timestamp()) % SECONDS_PER_WEEK
 
         data = self.vault.get_amounts()
         streaming = data[1]
         unlocked = data[2]
-        apr = streaming * SECONDS_PER_YEAR / int(seconds_til_eow) / unlocked
+        apr = streaming * SECONDS_PER_YEAR / seconds_til_eow / unlocked
 
         if os.getenv("DEBUG", None):
             logger.info(pformat(Debug().collect_variables(locals())))
