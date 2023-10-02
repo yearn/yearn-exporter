@@ -1,22 +1,87 @@
 import asyncio
 import math
+import os
 from time import time
+from datetime import datetime, timedelta, timezone
 from typing import TYPE_CHECKING, Tuple
 
 import eth_retry
 import requests
 from brownie import chain
+from pprint import pformat
+
 from y import Contract, magic
 from y.contracts import contract_creation_block_async
 from y.exceptions import PriceError, yPriceMagicError
 
 from yearn.apy.common import (Apy, ApyBlocks, ApyError, ApyFees, ApyPoints,
-                              ApySamples)
+                              ApySamples, SECONDS_PER_YEAR, SECONDS_PER_WEEK)
 from yearn.common import Tvl
 from yearn.utils import Singleton
+from yearn.debug import Debug
 
 if TYPE_CHECKING:
     from yearn.apy.common import Apy, ApySamples
+
+class StYETH(metaclass = Singleton):
+    def __init__(self):
+        self.id = "st-yETH"
+        self.name = "st-yETH"
+        self.vault = Contract("0x583019fF0f430721aDa9cfb4fac8F06cA104d0B4")
+        self.token = Contract("0x1BED97CBC3c24A4fb5C069C6E311a967386131f7")
+
+    @property
+    def strategies(self):
+        return []
+
+    @property
+    def decimals(self):
+        return 18
+
+    @property
+    def symbol(self):
+        return 'st-yETH'
+
+    @eth_retry.auto_retry
+    async def apy(self, _: ApySamples) -> Apy:
+        now = datetime.utcnow()
+        now = now.replace(tzinfo=timezone.utc)
+
+        # start of week
+        sow = now - timedelta(days=now.weekday())
+        end = sow + timedelta(days=6)
+        # end of week
+        eow = datetime(end.year, end.month, end.day, 23, 59, 59)
+        eow = eow.replace(tzinfo=timezone.utc)
+
+        seconds_til_eow = (eow - now).total_seconds()
+
+        data = self.vault.get_amounts()
+        streaming = data[1]
+        unlocked = data[2]
+        apr = streaming * SECONDS_PER_YEAR / int(seconds_til_eow) / unlocked
+
+        if os.getenv("DEBUG", None):
+            logger.info(pformat(Debug().collect_variables(locals())))
+
+        return Apy("v2:st-yeth", gross_apr=apr, net_apy=apr, fees=ApyFees())
+
+
+    @eth_retry.auto_retry
+    async def tvl(self, block=None) -> Tvl:
+        YETH_POOL = Contract("0x2cced4ffA804ADbe1269cDFc22D7904471aBdE63")
+        data = YETH_POOL.vb_prod_sum(block_identifier=block)
+        total_assets = data[1]
+        try:
+            price = await magic.get_price(self.token, block=block, sync=False)
+        except yPriceMagicError as e:
+            if not isinstance(e.exception, PriceError):
+                raise e
+            price = None
+
+        tvl = total_assets / 10**self.decimals * price if price else None
+
+        return Tvl(total_assets, price, tvl)
 
 
 class YveCRVJar(metaclass = Singleton):

@@ -28,7 +28,7 @@ from yearn.apy import (Apy, ApyBlocks, ApyFees, ApyPoints, ApySamples,
 from yearn.common import Tvl
 from yearn.exceptions import EmptyS3Export
 from yearn.graphite import send_metric
-from yearn.special import Backscratcher, YveCRVJar
+from yearn.special import Backscratcher, YveCRVJar, StYETH
 from yearn.utils import chunks, contract
 from yearn.v1.registry import Registry as RegistryV1
 from yearn.v1.vaults import VaultV1
@@ -214,7 +214,7 @@ async def _main():
     registry_v2 = RegistryV2(include_experimental=(export_mode == "experimental"))
 
     if chain.id == Network.Mainnet:
-        special = [YveCRVJar(), Backscratcher()]
+        special = [YveCRVJar(), Backscratcher(), StYETH()]
         registry_v1 = RegistryV1()
         vaults = list(itertools.chain(special, registry_v1.vaults, registry_v2.vaults, registry_v2.experiments))
     else:
