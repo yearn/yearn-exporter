@@ -254,7 +254,7 @@
     {
       "datasource": {
         "type": "prometheus",
-        "uid": "PBFE396EC0B189D67"
+        "uid": "DS_PROMETHEUS"
       },
       "fieldConfig": {
         "defaults": {
@@ -355,7 +355,7 @@
     {
       "datasource": {
         "type": "prometheus",
-        "uid": "PBFE396EC0B189D67"
+        "uid": "DS_PROMETHEUS"
       },
       "description": "total native tvl in layer 1s",
       "fieldConfig": {
@@ -444,7 +444,7 @@
     {
       "datasource": {
         "type": "prometheus",
-        "uid": "PBFE396EC0B189D67"
+        "uid": "DS_PROMETHEUS"
       },
       "description": "total native tvl in layer 2 vaults",
       "fieldConfig": {
@@ -600,7 +600,7 @@
     {
       "datasource": {
         "type": "prometheus",
-        "uid": "PBFE396EC0B189D67"
+        "uid": "DS_PROMETHEUS"
       },
       "description": "This is just tvl summed and does not subtract out delegated deposits",
       "fieldConfig": {
@@ -786,7 +786,7 @@
     {
       "datasource": {
         "type": "prometheus",
-        "uid": "PBFE396EC0B189D67"
+        "uid": "DS_PROMETHEUS"
       },
       "fieldConfig": {
         "defaults": {
@@ -1243,7 +1243,7 @@
     {
       "datasource": {
         "type": "prometheus",
-        "uid": "PBFE396EC0B189D67"
+        "uid": "DS_PROMETHEUS"
       },
       "fieldConfig": {
         "defaults": {
@@ -1344,7 +1344,7 @@
     {
       "datasource": {
         "type": "prometheus",
-        "uid": "PBFE396EC0B189D67"
+        "uid": "DS_PROMETHEUS"
       },
       "fieldConfig": {
         "defaults": {
@@ -1444,7 +1444,7 @@
     {
       "datasource": {
         "type": "prometheus",
-        "uid": "PBFE396EC0B189D67"
+        "uid": "DS_PROMETHEUS"
       },
       "description": "Time since last report on vault.\nNot all harvests will yield a profit",
       "fieldConfig": {
@@ -1547,7 +1547,7 @@
     {
       "datasource": {
         "type": "prometheus",
-        "uid": "PBFE396EC0B189D67"
+        "uid": "DS_PROMETHEUS"
       },
       "description": "Annualized Share Price change",
       "fieldConfig": {
@@ -1724,7 +1724,7 @@
         },
         "datasource": {
           "type": "prometheus",
-          "uid": "PBFE396EC0B189D67"
+          "uid": "DS_PROMETHEUS"
         },
         "definition": "yearn_strategy{param=\"totalLoss\"}",
         "hide": 0,
@@ -1751,7 +1751,7 @@
         },
         "datasource": {
           "type": "prometheus",
-          "uid": "PBFE396EC0B189D67"
+          "uid": "DS_PROMETHEUS"
         },
         "definition": "yearn_strategy{network=\"$networks\", experimental=\"false\"}",
         "hide": 0,
@@ -1778,7 +1778,7 @@
         },
         "datasource": {
           "type": "prometheus",
-          "uid": "PBFE396EC0B189D67"
+          "uid": "DS_PROMETHEUS"
         },
         "definition": "yearn_vault{network=\"$networks\", param=\"totalAssets\", vault=~\"$vaults\", experimental=\"false\"}",
         "hide": 0,
@@ -1805,7 +1805,7 @@
         },
         "datasource": {
           "type": "prometheus",
-          "uid": "PBFE396EC0B189D67"
+          "uid": "DS_PROMETHEUS"
         },
         "definition": "yearn_vault{network=\"$networks\", param=\"totalAssets\", vault=~\"$vaults\", experimental=\"false\", address=\"$address\"}",
         "hide": 0,
@@ -1833,7 +1833,7 @@
   "timepicker": {},
   "timezone": "browser",
   "title": "Overview",
-  "uid": "eb1a32c5-5954-430f-a7a4-50dc580964f0",
+  "uid": "OWHktH4Vk",
   "version": 14,
   "weekStart": ""
 }
