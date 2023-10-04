@@ -65,7 +65,7 @@
     {
       "datasource": {
         "type": "prometheus",
-        "uid": "PBFE396EC0B189D67"
+        "uid": "DS_PROMETHEUS"
       },
       "description": "summ of v2 vaults tvl",
       "fieldConfig": {
