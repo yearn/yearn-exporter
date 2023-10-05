@@ -15,9 +15,10 @@ from y.contracts import contract_creation_block_async
 from y.exceptions import PriceError, yPriceMagicError
 
 from yearn.apy.common import (Apy, ApyBlocks, ApyError, ApyFees, ApyPoints,
-                              ApySamples, SECONDS_PER_YEAR, SECONDS_PER_WEEK)
+                              ApySamples, SECONDS_PER_YEAR, SECONDS_PER_WEEK, SharePricePoint, calculate_roi)
 from yearn.common import Tvl
 from yearn.utils import Singleton
+from yearn.prices.constants import weth
 from yearn.debug import Debug
 
 if TYPE_CHECKING:
@@ -62,8 +63,8 @@ class StYETH(metaclass = Singleton):
 
     @eth_retry.auto_retry
     async def tvl(self, block=None) -> Tvl:
-        YETH_POOL = Contract("0x2cced4ffA804ADbe1269cDFc22D7904471aBdE63")
-        data = YETH_POOL.vb_prod_sum(block_identifier=block)
+        yeth_pool = Contract("0x2cced4ffA804ADbe1269cDFc22D7904471aBdE63")
+        data = yeth_pool.vb_prod_sum(block_identifier=block)
         total_assets = data[1]
         try:
             price = await magic.get_price(self.token, block=block, sync=False)
@@ -75,6 +76,82 @@ class StYETH(metaclass = Singleton):
         tvl = total_assets / 10**self.decimals * price if price else None
 
         return Tvl(total_assets, price, tvl)
+
+
+    async def describe(self, block=None):
+        supply, price = await asyncio.gather(
+            self.token.balanceOf.coroutine(self.vault, block_identifier=block),
+            magic.get_price(str(self.token), block=block, sync=False)
+        )
+        supply /= 1e18
+        return {
+            'totalSupply': supply,
+            'token price': price,
+            'tvl': supply * price,
+        }
+
+
+    async def total_value_at(self, block=None):
+        supply, price = await asyncio.gather(
+            self.token.balanceOf.coroutine(self.vault, block_identifier=block),
+            magic.get_price(str(self.token), block=block, sync=False)
+        )
+        supply /= 1e18
+
+        return supply * price
+
+
+class YETHLST():
+    def __init__(self, address, idx):
+        self.id = idx
+        self.vault = Contract(address)
+        self.name = self.vault.name()
+        self.token = self.vault
+
+    @property
+    def strategies(self):
+        return []
+
+    @property
+    def symbol(self):
+        return self.vault.symbol()
+
+    async def _get_supply_price(self, block=None):
+        yeth_pool = Contract("0x2cced4ffA804ADbe1269cDFc22D7904471aBdE63")
+        rate_provider = Contract("0x4e322aeAf355dFf8fb9Fd5D18F3D87667E8f8316")
+        supply = yeth_pool.virtual_balance(self.id)
+        weth_price = await magic.get_price(weth, block=block, sync=False)
+        price = weth_price * rate_provider.rate(str(self.token), block_identifier=block) / 1e18
+
+        return supply / 10**self.token.decimals(), price
+
+    @eth_retry.auto_retry
+    async def apy(self, samples: ApySamples) -> Apy:
+        rate_provider = Contract("0x4e322aeAf355dFf8fb9Fd5D18F3D87667E8f8316")
+        now_rate = rate_provider.rate(str(self.vault), block_identifier=samples.now) / 1e18
+        week_ago_rate = rate_provider.rate(str(self.vault), block_identifier=samples.week_ago) / 1e18
+        now_point = SharePricePoint(samples.now, now_rate)
+        week_ago_point = SharePricePoint(samples.week_ago, week_ago_rate)
+        apy = calculate_roi(now_point, week_ago_point)
+        return Apy(self.name, gross_apr=apy, net_apy=apy, fees=ApyFees())
+
+    @eth_retry.auto_retry
+    async def tvl(self, block=None) -> Tvl:
+        supply, price = await self._get_supply_price(block)
+        tvl = supply * price
+        return Tvl(supply, price, tvl)
+
+    async def describe(self, block=None):
+        supply, price = await self._get_supply_price(block)
+        return {
+            'totalSupply': supply,
+            'token price': price,
+            'tvl': supply * price,
+        }
+
+    async def total_value_at(self, block=None):
+        supply, price = await self._get_supply_price(block)
+        return supply * price
 
 
 class YveCRVJar(metaclass = Singleton):
@@ -228,7 +305,11 @@ class Ygov(metaclass = Singleton):
 
 class Registry(metaclass = Singleton):
     def __init__(self) -> None:
-        self.vaults = [Backscratcher(), Ygov()]
+        self.vaults = [Backscratcher(), Ygov(), StYETH()]
+        yeth_pool = Contract("0x2cced4ffA804ADbe1269cDFc22D7904471aBdE63")
+        for i in range(yeth_pool.num_assets()):
+            address = yeth_pool.assets(i)
+            self.vaults.append(YETHLST(address, i))
 
     async def describe(self, block=None):
         # not supported yet
