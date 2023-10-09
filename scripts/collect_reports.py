@@ -324,6 +324,8 @@ def handle_event(event, multi_harvest):
         r.want_price_at_block = 1
     if r.want_token in [
         '0xC4C319E2D4d66CcA4464C0c2B32c9Bd23ebe784e', # rekt alETH
+        '0x9848482da3Ee3076165ce6497eDA906E66bB85C5', # rekt jPegd pETH
+        '0xEd4064f376cB8d68F770FB1Ff088a3d0F3FF5c4d', # rekt crvETH
     ]:
         r.want_price_at_block = 0
     else:
