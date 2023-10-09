@@ -99,12 +99,7 @@ class StYETH(metaclass = Singleton):
 
 
     async def total_value_at(self, block=None):
-        supply, price = await asyncio.gather(
-            self.token.balanceOf.coroutine(self.vault, block_identifier=block),
-            magic.get_price(str(self.token), block=block, sync=False)
-        )
-        supply /= 1e18
-
+        supply, price = await self._get_supply_price(block=block)
         return supply * price
 
 
@@ -114,6 +109,7 @@ class YETHLST():
         self.vault = Contract(address)
         self.name = self.vault.name()
         self.token = self.vault
+        self.rate_provider = Contract("0x4e322aeAf355dFf8fb9Fd5D18F3D87667E8f8316")
 
     @property
     def strategies(self):
@@ -124,18 +120,16 @@ class YETHLST():
         return self.vault.symbol()
 
     async def _get_supply_price(self, block=None):
-        rate_provider = Contract("0x4e322aeAf355dFf8fb9Fd5D18F3D87667E8f8316")
         supply = YETH_POOL.virtual_balance(self.id, block_identifier=block)
         weth_price = await magic.get_price(weth, block=block, sync=False)
-        price = weth_price * rate_provider.rate(str(self.vault), block_identifier=block) / 10**self.vault.decimals()
+        price = weth_price * self.rate_provider.rate(str(self.vault), block_identifier=block) / 10**self.vault.decimals()
 
         return supply / 10**self.vault.decimals(), price
 
     @eth_retry.auto_retry
     async def apy(self, samples: ApySamples) -> Apy:
-        rate_provider = Contract("0x4e322aeAf355dFf8fb9Fd5D18F3D87667E8f8316")
-        now_rate = rate_provider.rate(str(self.vault), block_identifier=samples.now) / 10**self.vault.decimals()
-        week_ago_rate = rate_provider.rate(str(self.vault), block_identifier=samples.week_ago) / 10**self.vault.decimals()
+        now_rate = self.rate_provider.rate(str(self.vault), block_identifier=samples.now) / 10**self.vault.decimals()
+        week_ago_rate = self.rate_provider.rate(str(self.vault), block_identifier=samples.week_ago) / 10**self.vault.decimals()
         now_point = SharePricePoint(samples.now, now_rate)
         week_ago_point = SharePricePoint(samples.week_ago, week_ago_rate)
         apy = calculate_roi(now_point, week_ago_point)
