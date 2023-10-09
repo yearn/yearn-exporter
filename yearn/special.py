@@ -28,8 +28,8 @@ class StYETH(metaclass = Singleton):
     def __init__(self):
         self.id = "st-yETH"
         self.name = "st-yETH"
-        self.vault = Contract("0x583019fF0f430721aDa9cfb4fac8F06cA104d0B4")
-        self.token = Contract("0x1BED97CBC3c24A4fb5C069C6E311a967386131f7")
+        self.vault = Contract("0x583019fF0f430721aDa9cfb4fac8F06cA104d0B4") # st-yETH
+        self.token = Contract("0x1BED97CBC3c24A4fb5C069C6E311a967386131f7") # yETH
 
     @property
     def strategies(self):
@@ -42,6 +42,21 @@ class StYETH(metaclass = Singleton):
     @property
     def symbol(self):
         return 'st-yETH'
+
+
+    async def _get_supply_price(self, block=None):
+        yeth_pool = Contract("0x2cced4ffA804ADbe1269cDFc22D7904471aBdE63")
+        data = yeth_pool.vb_prod_sum(block_identifier=block)
+        supply = data[1]
+        try:
+            price = await magic.get_price(self.token, block=block, sync=False)
+        except yPriceMagicError as e:
+            if not isinstance(e.exception, PriceError):
+                raise e
+            price = None
+
+        return supply / 10**self.token.decimals(), price
+
 
     @eth_retry.auto_retry
     async def apy(self, _: ApySamples) -> Apy:
@@ -58,32 +73,21 @@ class StYETH(metaclass = Singleton):
         if os.getenv("DEBUG", None):
             logger.info(pformat(Debug().collect_variables(locals())))
 
-        return Apy("v2:st-yeth", gross_apr=apr, net_apy=apr, fees=ApyFees())
+        # TODO fix fees
+        return Apy("st-yeth", gross_apr=apr, net_apy=apr, fees=ApyFees())
 
 
     @eth_retry.auto_retry
     async def tvl(self, block=None) -> Tvl:
-        yeth_pool = Contract("0x2cced4ffA804ADbe1269cDFc22D7904471aBdE63")
-        data = yeth_pool.vb_prod_sum(block_identifier=block)
-        total_assets = data[1]
-        try:
-            price = await magic.get_price(self.token, block=block, sync=False)
-        except yPriceMagicError as e:
-            if not isinstance(e.exception, PriceError):
-                raise e
-            price = None
+        supply, price = await self._get_supply_price(block=block)
+        tvl = supply * price if price else None
 
-        tvl = total_assets / 10**self.decimals * price if price else None
-
-        return Tvl(total_assets, price, tvl)
+        return Tvl(supply, price, tvl)
 
 
     async def describe(self, block=None):
-        supply, price = await asyncio.gather(
-            self.token.balanceOf.coroutine(self.vault, block_identifier=block),
-            magic.get_price(str(self.token), block=block, sync=False)
-        )
-        supply /= 1e18
+        supply, price = await self._get_supply_price(block=block)
+
         apy = await self.apy(None)
         return {
             'type': 'yETH',
@@ -125,18 +129,20 @@ class YETHLST():
         rate_provider = Contract("0x4e322aeAf355dFf8fb9Fd5D18F3D87667E8f8316")
         supply = yeth_pool.virtual_balance(self.id)
         weth_price = await magic.get_price(weth, block=block, sync=False)
-        price = weth_price * rate_provider.rate(str(self.token), block_identifier=block) / 1e18
+        price = weth_price * rate_provider.rate(str(self.vault), block_identifier=block) / 10**self.vault.decimals()
 
-        return supply / 10**self.token.decimals(), price
+        return supply / 10**self.vault.decimals(), price
 
     @eth_retry.auto_retry
     async def apy(self, samples: ApySamples) -> Apy:
         rate_provider = Contract("0x4e322aeAf355dFf8fb9Fd5D18F3D87667E8f8316")
-        now_rate = rate_provider.rate(str(self.vault), block_identifier=samples.now) / 1e18
-        week_ago_rate = rate_provider.rate(str(self.vault), block_identifier=samples.week_ago) / 1e18
+        now_rate = rate_provider.rate(str(self.vault), block_identifier=samples.now) / 10**self.vault.decimals()
+        week_ago_rate = rate_provider.rate(str(self.vault), block_identifier=samples.week_ago) / 10**self.vault.decimals()
         now_point = SharePricePoint(samples.now, now_rate)
         week_ago_point = SharePricePoint(samples.week_ago, week_ago_rate)
         apy = calculate_roi(now_point, week_ago_point)
+
+        # TODO fix fees
         return Apy(self.name, gross_apr=apy, net_apy=apy, fees=ApyFees())
 
     @eth_retry.auto_retry
