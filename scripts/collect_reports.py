@@ -322,6 +322,10 @@ def handle_event(event, multi_harvest):
     print(f'Want token = {r.want_token}')
     if r.vault_address == '0x9E0E0AF468FbD041Cab7883c5eEf16D1A99a47C3':
         r.want_price_at_block = 1
+    if r.want_token in [
+        '0xC4C319E2D4d66CcA4464C0c2B32c9Bd23ebe784e', # rekt alETH
+    ]:
+        r.want_price_at_block = 0
     else:
         r.want_price_at_block = get_price(r.want_token, r.block)
     
