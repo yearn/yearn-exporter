@@ -15,6 +15,8 @@ from yearn.utils import Singleton
 from yearn.prices.constants import weth
 from yearn.debug import Debug
 
+YETH_POOL = Contract("0x2cced4ffA804ADbe1269cDFc22D7904471aBdE63")
+
 class StYETH(metaclass = Singleton):
     def __init__(self):
         self.id = "st-yETH"
@@ -36,8 +38,7 @@ class StYETH(metaclass = Singleton):
 
 
     async def _get_supply_price(self, block=None):
-        yeth_pool = Contract("0x2cced4ffA804ADbe1269cDFc22D7904471aBdE63")
-        data = yeth_pool.vb_prod_sum(block_identifier=block)
+        data = YETH_POOL.vb_prod_sum(block_identifier=block)
         supply = data[1]
         try:
             price = await magic.get_price(self.token, block=block, sync=False)
@@ -78,6 +79,9 @@ class StYETH(metaclass = Singleton):
 
     async def describe(self, block=None):
         supply, price = await self._get_supply_price(block=block)
+        pool_supply = YETH_POOL.supply(block_identifier=block)
+        total_assets = self.vault.totalAssets(block_identifier=block)
+        boost = pool_supply / total_assets
 
         apy = await self.apy(None)
         return {
@@ -86,7 +90,8 @@ class StYETH(metaclass = Singleton):
             'token price': price,
             'tvl': supply * price,
             'net_apy': apy.net_apy,
-            'gross_apr': apy.gross_apr
+            'gross_apr': apy.gross_apr,
+            'boost': boost
         }
 
 
@@ -116,9 +121,8 @@ class YETHLST():
         return self.vault.symbol()
 
     async def _get_supply_price(self, block=None):
-        yeth_pool = Contract("0x2cced4ffA804ADbe1269cDFc22D7904471aBdE63")
         rate_provider = Contract("0x4e322aeAf355dFf8fb9Fd5D18F3D87667E8f8316")
-        supply = yeth_pool.virtual_balance(self.id)
+        supply = YETH_POOL.virtual_balance(self.id, block_identifier=block)
         weth_price = await magic.get_price(weth, block=block, sync=False)
         price = weth_price * rate_provider.rate(str(self.vault), block_identifier=block) / 10**self.vault.decimals()
 
@@ -133,7 +137,6 @@ class YETHLST():
         week_ago_point = SharePricePoint(samples.week_ago, week_ago_rate)
         apy = calculate_roi(now_point, week_ago_point)
 
-        # TODO fix fees
         return Apy(self.name, gross_apr=apy, net_apy=apy, fees=ApyFees())
 
     @eth_retry.auto_retry
@@ -164,9 +167,8 @@ class YETHLST():
 class Registry(metaclass = Singleton):
     def __init__(self) -> None:
         self.vaults = [StYETH()]
-        yeth_pool = Contract("0x2cced4ffA804ADbe1269cDFc22D7904471aBdE63")
-        for i in range(yeth_pool.num_assets()):
-            address = yeth_pool.assets(i)
+        for i in range(YETH_POOL.num_assets()):
+            address = YETH_POOL.assets(i)
             self.vaults.append(YETHLST(address, i))
 
     async def describe(self, block=None):
