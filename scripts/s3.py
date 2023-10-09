@@ -29,7 +29,7 @@ from yearn.common import Tvl
 from yearn.exceptions import EmptyS3Export
 from yearn.graphite import send_metric
 from yearn.special import Backscratcher, YveCRVJar
-from yearn.yeth import Registry as RegistryYETH
+from yearn.yeth import StYETH, YETHLST, Registry as RegistryYETH
 from yearn.utils import chunks, contract
 from yearn.v1.registry import Registry as RegistryV1
 from yearn.v1.vaults import VaultV1
@@ -103,7 +103,7 @@ async def wrap_vault(
     if chain.id == 1:
         if ([isinstance(vault, t) for t in [Backscratcher, YveCRVJar]]):
             object["special"] = True
-        else if ([isinstance(vault, t) for t in [StYETH, YETHLST]]):
+        elif ([isinstance(vault, t) for t in [StYETH, YETHLST]]):
             object["type"] = "yETH"
 
     return object

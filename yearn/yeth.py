@@ -1,5 +1,6 @@
 import asyncio
 import os
+import logging
 from datetime import datetime, timezone
 
 import eth_retry
@@ -14,6 +15,8 @@ from yearn.common import Tvl
 from yearn.utils import Singleton
 from yearn.prices.constants import weth
 from yearn.debug import Debug
+
+logger = logging.getLogger("yearn.yeth")
 
 YETH_POOL = Contract("0x2cced4ffA804ADbe1269cDFc22D7904471aBdE63")
 
