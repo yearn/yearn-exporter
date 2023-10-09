@@ -7,6 +7,7 @@ import eth_retry
 from pprint import pformat
 
 from y import Contract, magic
+from y.time import get_block_timestamp
 from y.exceptions import PriceError, yPriceMagicError
 
 from yearn.apy.common import (Apy, ApyBlocks, ApyError, ApyFees, ApyPoints,
@@ -54,17 +55,16 @@ class StYETH(metaclass = Singleton):
 
 
     @eth_retry.auto_retry
-    async def apy(self, _: ApySamples) -> Apy:
-        now = datetime.utcnow()
-        now = now.replace(tzinfo=timezone.utc)
+    async def apy(self, samples: ApySamples) -> Apy:
+        block = samples.now
+        now = get_block_timestamp(block)
+        seconds_til_eow = SECONDS_PER_WEEK - now % SECONDS_PER_WEEK
 
-        seconds_til_eow = SECONDS_PER_WEEK - int(now.timestamp()) % SECONDS_PER_WEEK
-
-        data = self.vault.get_amounts()
+        data = self.vault.get_amounts(block_identifier=block)
         streaming = data[1]
         unlocked = data[2]
         apr = streaming * SECONDS_PER_YEAR / seconds_til_eow / unlocked
-        performance_fee = self.vault.performance_fee_rate() / 1e4
+        performance_fee = self.vault.performance_fee_rate(block_identifier=block) / 1e4
 
         if os.getenv("DEBUG", None):
             logger.info(pformat(Debug().collect_variables(locals())))
@@ -86,7 +86,13 @@ class StYETH(metaclass = Singleton):
         total_assets = self.vault.totalAssets(block_identifier=block)
         boost = pool_supply / total_assets
 
-        apy = await self.apy(None)
+        if block:
+            block_timestamp = get_block_timestamp(block)
+            samples = get_samples(block_timestamp)
+        else:
+            samples = get_samples()
+
+        apy = await self.apy(samples)
         return {
             'type': 'yETH',
             'totalSupply': supply,
@@ -144,7 +150,12 @@ class YETHLST():
 
     async def describe(self, block=None):
         supply, price = await self._get_supply_price(block)
-        samples = get_samples()
+        if block:
+            block_timestamp = get_block_timestamp(block)
+            samples = get_samples(block_timestamp)
+        else:
+            samples = get_samples()
+
         apy = await self.apy(samples)
 
         return {
