@@ -69,7 +69,7 @@ class StYETH(metaclass = Singleton):
         if os.getenv("DEBUG", None):
             logger.info(pformat(Debug().collect_variables(locals())))
 
-        return Apy("st-yeth", gross_apr=apr, net_apy=apr, fees=ApyFees(performance=performance_fee))
+        return Apy("yETH", gross_apr=apr, net_apy=apr, fees=ApyFees(performance=performance_fee))
 
 
     @eth_retry.auto_retry
@@ -140,7 +140,7 @@ class YETHLST():
         week_ago_point = SharePricePoint(samples.week_ago, week_ago_rate)
         apy = calculate_roi(now_point, week_ago_point)
 
-        return Apy(self.name, gross_apr=apy, net_apy=apy, fees=ApyFees())
+        return Apy("yETH", gross_apr=apy, net_apy=apy, fees=ApyFees())
 
     @eth_retry.auto_retry
     async def tvl(self, block=None) -> Tvl:
