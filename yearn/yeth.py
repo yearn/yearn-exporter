@@ -8,6 +8,7 @@ from pprint import pformat
 
 from y import Contract, magic
 from y.time import get_block_timestamp
+from y.contracts import contract_creation_block_async
 from y.exceptions import PriceError, yPriceMagicError
 
 from yearn.apy.common import (Apy, ApyBlocks, ApyError, ApyFees, ApyPoints,
@@ -84,17 +85,17 @@ class StYETH(metaclass = Singleton):
         supply, price = await self._get_supply_price(block=block)
         pool_supply = YETH_POOL.supply(block_identifier=block)
         total_assets = self.vault.totalAssets(block_identifier=block)
-        boost = pool_supply / total_assets
+        boost = 1 - pool_supply / total_assets
 
         if block:
             block_timestamp = get_block_timestamp(block)
-            samples = get_samples(block_timestamp)
+            samples = get_samples(datetime.fromtimestamp(block_timestamp))
         else:
             samples = get_samples()
 
         apy = await self.apy(samples)
         return {
-            'type': 'yETH',
+            'address': str(self.vault),
             'totalSupply': supply,
             'token price': price,
             'tvl': supply * price,
@@ -152,14 +153,14 @@ class YETHLST():
         supply, price = await self._get_supply_price(block)
         if block:
             block_timestamp = get_block_timestamp(block)
-            samples = get_samples(block_timestamp)
+            samples = get_samples(datetime.fromtimestamp(block_timestamp))
         else:
             samples = get_samples()
 
         apy = await self.apy(samples)
 
         return {
-            'type': 'yETH',
+            'address': str(self.vault),
             'totalSupply': supply,
             'token price': price,
             'tvl': supply * price,

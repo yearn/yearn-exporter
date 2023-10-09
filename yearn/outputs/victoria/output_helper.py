@@ -28,6 +28,11 @@ mapping = {
         "metric": "yearn_vault",
         "labels": ["vault", "param", "address", "version", "experimental"],
         "agg_stats": ["total wallets","active wallets","wallets > $5k","wallets > $50k"]
+    },
+    "yeth": {
+        "metric": "yearn_vault",
+        "labels": ["vault", "param", "address", "version", "yeth"],
+        "agg_stats": ["total wallets","active wallets","wallets > $5k","wallets > $50k"]
     }
 }
 
@@ -44,13 +49,16 @@ def _flatten_dict(d):
     return dict(items())
 
 
-def _get_label_values(params, inital_labels, experimental = False):
+def _get_label_values(params, inital_labels, experimental = False, yeth = False):
     address = _get_string_label(params, "address")
     version = _get_string_label(params, "version")
     label_values = inital_labels + [address, version]
     if experimental:
         experimental_label = _get_bool_label(params, "experimental")
         label_values.append(experimental_label)
+    if yeth:
+        yeth_label = _get_bool_label(params, "yeth")
+        label_values.append(yeth_label)
 
     return label_values
 
