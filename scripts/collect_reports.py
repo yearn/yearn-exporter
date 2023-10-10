@@ -291,7 +291,7 @@ def handle_event(event, multi_harvest):
         t.txn_gas_price = gas_price / 1e9 # Use gwei
         t.eth_price_at_block = get_price(constants.weth, t.block)
         t.call_cost_eth = gas_price * tx.gasUsed / 1e18
-        t.call_cost_usd = t.eth_price_at_block * t.call_cost_eth
+        t.call_cost_usd = float(t.eth_price_at_block) * float(t.call_cost_eth)
         if chain.id == 1:
             t.kp3r_price_at_block = get_price(CHAIN_VALUES[chain.id]["KEEPER_TOKEN"], t.block)
             t.kp3r_paid = get_keeper_payment(tx) / 1e18
