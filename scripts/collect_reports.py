@@ -295,7 +295,7 @@ def handle_event(event, multi_harvest):
         if chain.id == 1:
             t.kp3r_price_at_block = get_price(CHAIN_VALUES[chain.id]["KEEPER_TOKEN"], t.block)
             t.kp3r_paid = get_keeper_payment(tx) / 1e18
-            t.kp3r_paid_usd = t.kp3r_paid * t.kp3r_price_at_block
+            t.kp3r_paid_usd = float(t.kp3r_paid) * float(t.kp3r_price_at_block)
             t.keeper_called = t.kp3r_paid > 0
         else:
             if t.txn_to == CHAIN_VALUES[chain.id]["KEEPER_CALL_CONTRACT"]:
