@@ -85,7 +85,7 @@ class StYETH(metaclass = Singleton):
         supply, price = await self._get_supply_price(block=block)
         pool_supply = YETH_POOL.supply(block_identifier=block)
         total_assets = self.vault.totalAssets(block_identifier=block)
-        boost = 1 - pool_supply / total_assets
+        boost = total_assets / pool_supply
 
         if block:
             block_timestamp = get_block_timestamp(block)
