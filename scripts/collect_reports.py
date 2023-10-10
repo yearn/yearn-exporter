@@ -331,7 +331,7 @@ def handle_event(event, multi_harvest):
     else:
         r.want_price_at_block = get_price(r.want_token, r.block)
     
-    r.want_gain_usd = r.gain * r.want_price_at_block
+    r.want_gain_usd = r.gain * float(r.want_price_at_block)
     r.vault_name = vault.name()
     r.strategy_name = strategy.name()
     r.strategy_api = strategy.apiVersion()
@@ -357,7 +357,7 @@ def handle_event(event, multi_harvest):
             if tfr.address == crv and _from == r.strategy_address and (_to == voter or _to == treasury):
                 r.keep_crv = _val / 1e18
                 r.crv_price_usd = get_price(crv, r.block)
-                r.keep_crv_value_usd = r.keep_crv * r.crv_price_usd
+                r.keep_crv_value_usd = r.keep_crv * float(r.crv_price_usd)
         
         if r.keep_crv > 0:
             yvecrv_token = web3.eth.contract(yvecrv, abi=token_abi)
@@ -613,7 +613,7 @@ def format_public_telegram(r, t):
     message += f' [{r.vault_name}]({explorer}address/{r.vault_address})  --  [{r.strategy_name}]({explorer}address/{r.strategy_address})\n\n'
     message += f'📅 {r.date_string} UTC \n\n'
     net_profit_want = "{:,.2f}".format(r.gain - r.loss)
-    net_profit_usd = "{:,.2f}".format((r.gain - r.loss) * r.want_price_at_block)
+    net_profit_usd = "{:,.2f}".format((r.gain - r.loss) * float(r.want_price_at_block))
     sym = r.token_symbol.replace('_','-')
     message += f'💰 Net profit: {net_profit_want} {sym} (${net_profit_usd})\n\n'
     txn_cost_str = "${:,.2f}".format(t.call_cost_usd)
