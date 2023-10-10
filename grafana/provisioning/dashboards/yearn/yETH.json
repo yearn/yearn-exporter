@@ -164,7 +164,7 @@
           "refId": "A"
         }
       ],
-      "title": "st-yETH boost",
+      "title": "% staked yETH",
       "type": "stat"
     },
     {
@@ -263,7 +263,7 @@
             "uid": "PBFE396EC0B189D67"
           },
           "editorMode": "code",
-          "expr": "yearn_vault{yeth=\"true\", param=\"tvl\"}",
+          "expr": "yearn_vault{yeth=\"true\", vault!=\"st-yETH\", param=\"tvl\"}",
           "instant": false,
           "legendFormat": "{{vault}} {{address}}",
           "range": true,
@@ -330,7 +330,7 @@
             "uid": "PBFE396EC0B189D67"
           },
           "editorMode": "code",
-          "expr": "yearn_vault{yeth=\"true\", param=\"tvl\"}",
+          "expr": "yearn_vault{yeth=\"true\", vault!=\"st-yETH\", param=\"tvl\"}",
           "instant": false,
           "legendFormat": "{{vault}} {{address}}",
           "range": true,
