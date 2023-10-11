@@ -138,13 +138,12 @@ class Yearn:
             for vault, params in data[product].items():
 
                 for key, value in params.items():
-                    if key in ["address", "version", "experimental", "yeth"] or value is None:
+                    if key in ["address", "version", "experimental"] or value is None:
                         continue
 
                     has_experiments = product == "special"
-                    is_yeth = product == "yeth"
 
-                    label_values = _get_label_values(params, [vault, key], experimental=has_experiments, yeth=is_yeth)
+                    label_values = _get_label_values(params, [vault, key], experimental=has_experiments)
                     label_names = mapping[product]["labels"]
 
                     if product == "ib" and key == 'tvl' and block >= constants.ib_snapshot_block:
