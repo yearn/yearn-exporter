@@ -28,11 +28,6 @@ mapping = {
         "metric": "yearn_vault",
         "labels": ["vault", "param", "address", "version", "experimental"],
         "agg_stats": ["total wallets","active wallets","wallets > $5k","wallets > $50k"]
-    },
-    "yeth": {
-        "metric": "yeth",
-        "labels": ["product", "param", "address", "version"],
-        "agg_stats": ["total wallets","active wallets","wallets > $5k","wallets > $50k"]
     }
 }
 

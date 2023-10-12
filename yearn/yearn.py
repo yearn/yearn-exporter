@@ -127,7 +127,7 @@ class Yearn:
         metrics_to_export = []
 
         if chain.id == Network.Mainnet:
-            simple_products = ["v1", "earn", "ib", "special", "yeth"]
+            simple_products = ["v1", "earn", "ib", "special"]
         elif chain.id in ironbank_registries:
             simple_products = ["ib"]
         else:
@@ -226,7 +226,7 @@ class Yearn:
                     if k == 'wallet balances':
                         for wallet, bals in v.items():
                             for denom, bal in bals.items():
-                                label_values = [wallet] + _get_label_values(params, [vault, denom], product in ['v2','special', 'yeth'])
+                                label_values = [wallet] + _get_label_values(params, [vault, denom], product in ['v2','special'])
                                 label_names = ["wallet"] + mapping[product]["labels"]
                                 item = _build_item(metric, label_names, label_values, bal, timestamp)
                                 metrics_to_export.append(item)
