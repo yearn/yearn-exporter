@@ -108,8 +108,8 @@ class Exporter:
     async def export_future(self) -> NoReturn:
         """ Exports all future data. This coroutine will run forever. """
         intervals = _get_intervals(self._start_time, self._resolution)
-        start = intervals[RESOLUTION]['start'] 
-        interval = intervals[RESOLUTION]['interval']
+        start = intervals[self._resolution]['start']
+        interval = intervals[self._resolution]['interval']
         # Bump forward to the next snapshot, as the historical coroutine will take care of this one.
         start = start + interval
         async for snapshot in _generate_snapshot_range_forward(start, interval):
