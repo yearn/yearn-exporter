@@ -32,6 +32,7 @@ def main():
         export_fn = _post,
         start_block = closest_block_after_timestamp(start[chain.id]),
         concurrency=constants.CONCURRENCY,
+        resolution='1d',
     ).run()
 
 class YETH:

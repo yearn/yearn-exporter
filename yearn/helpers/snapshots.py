@@ -56,7 +56,7 @@ def _get_last_interval_snapshots(end: datetime, resolution: Resolution, interval
             last_interval_snapshots.add(snapshot)
     return last_interval_snapshots
 
-def _get_intervals(start):
+def _get_intervals(start, resolution):
     # default resolution is hourly
     resolutions = {
         '1d': {
@@ -92,10 +92,10 @@ def _get_intervals(start):
             'interval': timedelta(seconds=15),
         },
     }
-    assert RESOLUTION in resolutions, f"resolution {RESOLUTION} not supported. Must be one of {resolutions}"
+    assert resolution in resolutions, f"resolution {resolution} not supported. Must be one of {resolutions}"
     intervals = {}
     for res, params in resolutions.items():
         intervals[res] = params
-        if res == RESOLUTION:
+        if res == resolution:
             break
     return intervals
