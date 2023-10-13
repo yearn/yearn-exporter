@@ -4,9 +4,11 @@ import logging
 from datetime import datetime, timezone
 
 import eth_retry
+
+from brownie import chain
 from pprint import pformat
 
-from y import Contract, magic
+from y import Contract, magic, Network
 from y.time import get_block_timestamp
 from y.contracts import contract_creation_block_async
 from y.exceptions import PriceError, yPriceMagicError
@@ -149,7 +151,7 @@ class YETHLST():
         week_ago_point = SharePricePoint(samples.week_ago, week_ago_rate)
         apy = calculate_roi(now_point, week_ago_point)
 
-        return Apy("yETH", gross_apr=apy, net_apy=apy)
+        return Apy("yETH", gross_apr=apy, net_apy=apy, fees=ApyFees())
 
     @eth_retry.auto_retry
     async def tvl(self, block=None) -> Tvl:
