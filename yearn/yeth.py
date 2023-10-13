@@ -21,10 +21,11 @@ from yearn.debug import Debug
 
 logger = logging.getLogger("yearn.yeth")
 
-YETH_POOL = Contract("0x2cced4ffA804ADbe1269cDFc22D7904471aBdE63")
-RATE_PROVIDER = Contract("0x4e322aeAf355dFf8fb9Fd5D18F3D87667E8f8316")
-STAKING_CONTRACT = Contract("0x583019fF0f430721aDa9cfb4fac8F06cA104d0B4") # st-yETH
-YETH_TOKEN = Contract("0x1BED97CBC3c24A4fb5C069C6E311a967386131f7") # yETH
+if chain.id == Network.Mainnet:
+    YETH_POOL = Contract("0x2cced4ffA804ADbe1269cDFc22D7904471aBdE63")
+    RATE_PROVIDER = Contract("0x4e322aeAf355dFf8fb9Fd5D18F3D87667E8f8316")
+    STAKING_CONTRACT = Contract("0x583019fF0f430721aDa9cfb4fac8F06cA104d0B4") # st-yETH
+    YETH_TOKEN = Contract("0x1BED97CBC3c24A4fb5C069C6E311a967386131f7") # yETH
 
 class StYETH(metaclass = Singleton):
     def __init__(self):
