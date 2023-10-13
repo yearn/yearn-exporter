@@ -270,6 +270,12 @@ curve-apy-previews:
 curve-apy-previews-monitoring:
 	make up commands="curve_apy_previews with_monitoring" network=eth
 
+apy-yeth-monitoring:
+	make up commands="yeth with_monitoring" network=eth
+
+apy-yeth:
+	make up commands="yeth" network=eth filter=yeth
+
 # revenue scripts
 revenues:
 	make up network=eth commands=revenues with_logs=false
