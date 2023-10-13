@@ -29,7 +29,6 @@ from yearn.common import Tvl
 from yearn.exceptions import EmptyS3Export
 from yearn.graphite import send_metric
 from yearn.special import Backscratcher, YveCRVJar
-from yearn.yeth import StYETH
 from yearn.utils import chunks, contract
 from yearn.v1.registry import Registry as RegistryV1
 from yearn.v1.vaults import VaultV1
@@ -45,42 +44,6 @@ METRIC_NAME = "yearn.exporter.apy"
 logs.basicConfig(level=logging.DEBUG)
 logger = logging.getLogger("yearn.apy")
 
-async def _create_apy_object(product, aliases, icon_url) -> dict:
-    inception_fut = asyncio.create_task(contract_creation_block_async(product.address))
-    apy_fut = asyncio.create_task(get_apy(product, samples))
-    tvl_fut = asyncio.create_task(product.tvl())
-
-    alias = aliases[product.address]["symbol"] if product.address in aliases else product.symbol()
-
-    object = {
-        "inception": await inception_fut,
-        "address": product.address,
-        "symbol": product.symbol(),
-        "name": product.name,
-        "display_name": alias,
-        "icon": icon_url % product.address,
-        "tvl": dataclasses.asdict(await tvl_fut),
-        "apy": dataclasses.asdict(await apy_fut),
-        "decimals": product.decimals,
-        "type": "yETH",
-        "updated": int(time())
-    }
-    return object
-
-
-async def wrap_stYETH(
-  stYETH: StYETH, samples: ApySamples, aliases: dict, icon_url: str
-) -> dict:
-
-    stYETHobject = _create_apy_object(stYETH, samples, aliases, icon_url)
-    lstObjects = []
-    for lst in stYETH.lsts:
-        lstObject = _create_apy_object(lst, samples, aliases, icon_url)
-        lstObject["asset_id"] = lst.asset_id
-        lstObjects.append(lstObject)
-
-    stYETHobject["lsts"] = lstObjects
-    return stYETHobject
 
 async def wrap_vault(
     vault: Union[VaultV1, VaultV2], samples: ApySamples, aliases: dict, icon_url: str, assets_metadata: dict
@@ -136,7 +99,7 @@ async def wrap_vault(
         "migration": migration,
     }
 
-    if chain.id == 1 and [isinstance(vault, t) for t in [Backscratcher, YveCRVJar]]:
+    if chain.id == 1 and any([isinstance(vault, t) for t in [Backscratcher, YveCRVJar]]):
         object["special"] = True
 
     return object
@@ -262,12 +225,7 @@ async def _main():
 
     assets_metadata = await get_assets_metadata(registry_v2.vaults)
 
-    vault_data = await tqdm_asyncio.gather(*[wrap_vault(vault, samples, aliases, icon_url, assets_metadata) for vault in vaults])
-    if chain.id == Network.Mainnet:
-        stYETH_data = [await wrap_stYETH(StYETH(), samples, aliases, icon_url)]
-        data = vault_data + stYETH_data
-    else:
-        data = vault_data
+    data = await tqdm_asyncio.gather(*[wrap_vault(vault, samples, aliases, icon_url, assets_metadata) for vault in vaults])
 
     if len(data) == 0:
         raise ValueError(f"Data is empty for chain_id: {chain.id}")
