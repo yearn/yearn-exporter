@@ -148,7 +148,7 @@ class YETHLST():
         week_ago_point = SharePricePoint(samples.week_ago, week_ago_rate)
         apy = calculate_roi(now_point, week_ago_point)
 
-        return Apy("yETH", gross_apr=apy, net_apy=apy, fees=ApyFees())
+        return Apy("yETH", gross_apr=apy, net_apy=apy)
 
     @eth_retry.auto_retry
     async def tvl(self, block=None) -> Tvl:
