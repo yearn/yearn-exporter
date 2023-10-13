@@ -166,6 +166,7 @@ def _get_s3s():
 
 
 def _get_export_paths():
+    suffix = "all"
     out = "generated"
     if os.path.isdir(out):
         shutil.rmtree(out)
@@ -175,7 +176,9 @@ def _get_export_paths():
     file_base_path = os.path.join(out, yeth_api_path)
     os.makedirs(file_base_path, exist_ok=True)
 
-    return file_base_path, yeth_api_path
+    file_name = os.path.join(file_base_path, suffix)
+    s3_path = os.path.join(yeth_api_path, suffix)
+    return file_name, s3_path
 
 
 def with_monitoring():
