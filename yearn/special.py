@@ -1,25 +1,19 @@
 import asyncio
 import math
-import os
 from time import time
-from datetime import datetime, timezone
 from typing import TYPE_CHECKING, Tuple
 
 import eth_retry
 import requests
 from brownie import chain
-from pprint import pformat
-
 from y import Contract, magic
 from y.contracts import contract_creation_block_async
 from y.exceptions import PriceError, yPriceMagicError
 
 from yearn.apy.common import (Apy, ApyBlocks, ApyError, ApyFees, ApyPoints,
-                              ApySamples, SECONDS_PER_YEAR, SECONDS_PER_WEEK, SharePricePoint, calculate_roi, get_samples)
+                              ApySamples)
 from yearn.common import Tvl
 from yearn.utils import Singleton
-from yearn.prices.constants import weth
-from yearn.debug import Debug
 
 if TYPE_CHECKING:
     from yearn.apy.common import Apy, ApySamples

@@ -143,7 +143,7 @@ class Yearn:
 
                     has_experiments = product == "special"
 
-                    label_values = _get_label_values(params, [vault, key], experimental=has_experiments)
+                    label_values = _get_label_values(params, [vault, key], has_experiments)
                     label_names = mapping[product]["labels"]
 
                     if product == "ib" and key == 'tvl' and block >= constants.ib_snapshot_block:
