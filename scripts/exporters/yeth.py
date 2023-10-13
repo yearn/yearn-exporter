@@ -44,7 +44,7 @@ class YETH:
     async def describe(self, block=None):
         return await self.registry.describe(block)
 
-    
+
     async def metrics_for_export(self, block: Block, timestamp: int) -> List:
         metrics_to_export = []
         data = await self.describe(block)
