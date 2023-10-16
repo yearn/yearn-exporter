@@ -40,6 +40,7 @@ class Exporter:
         export_fn: Callable[[T], Awaitable[None]],
         start_block: int,
         concurrency: Optional[int] = 1,
+        resolution: Literal = RESOLUTION
     ) -> None:
         """
         Required Args:
@@ -66,6 +67,9 @@ class Exporter:
         self.data_query = data_query
         self.start_block = start_block
         self.start_timestamp = datetime.fromtimestamp(chain[start_block].timestamp, tz=timezone.utc)
+        if resolution != RESOLUTION:
+            logger.warn(f"{self.full_name}: Overriding resolution with custom value '{resolution}', env has '{RESOLUTION}' !")
+        self._resolution = resolution
 
         self._data_fn = data_fn
         self._export_fn = eth_retry.auto_retry(export_fn)
@@ -103,9 +107,9 @@ class Exporter:
 
     async def export_future(self) -> NoReturn:
         """ Exports all future data. This coroutine will run forever. """
-        intervals = _get_intervals(self._start_time)
-        start = intervals[RESOLUTION]['start'] 
-        interval = intervals[RESOLUTION]['interval']
+        intervals = _get_intervals(self._start_time, self._resolution)
+        start = intervals[self._resolution]['start']
+        interval = intervals[self._resolution]['interval']
         # Bump forward to the next snapshot, as the historical coroutine will take care of this one.
         start = start + interval
         async for snapshot in _generate_snapshot_range_forward(start, interval):
@@ -113,7 +117,7 @@ class Exporter:
 
     async def export_history(self) -> None:
         """ Exports all historical data. This coroutine runs for a finite duration. """
-        intervals = _get_intervals(self._start_time)
+        intervals = _get_intervals(self._start_time, self._resolution)
         for resolution in intervals:
             snapshot_generator = _generate_snapshot_range_historical(self.start_timestamp, resolution, intervals)
             await asyncio.gather(*[self.export_historical_snapshot(snapshot) async for snapshot in snapshot_generator])

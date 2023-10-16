@@ -91,6 +91,9 @@ up:
 		if [ "$(commands)" == "exporters/veyfi" ] || [ "$(commands)" == $(exporter_scripts) ] || [ "$(commands)" == "" ]; then
 			make single-network network=ethereum commands="exporters/veyfi"
 		fi
+		if [ "$(commands)" == "exporters/yeth" ] || [ "$(commands)" == $(exporter_scripts) ] || [ "$(commands)" == "" ]; then
+			make single-network network=ethereum commands="exporters/yeth"
+		fi
 	fi
 
 # cleanup containers which are temporarily unused or too buggy, ugly workaround until there is a better way to control this:
@@ -267,6 +270,12 @@ curve-apy-previews:
 curve-apy-previews-monitoring:
 	make up commands="curve_apy_previews with_monitoring" network=eth
 
+apy-yeth-monitoring:
+	make up commands="yeth with_monitoring" network=eth
+
+apy-yeth:
+	make up commands="yeth" network=eth filter=yeth
+
 # revenue scripts
 revenues:
 	make up network=eth commands=revenues with_logs=false
@@ -290,6 +299,10 @@ partners-summary-ftm:
 # veyfi scripts
 veyfi:
 	make up network=ethereum commands="exporters/veyfi" logs
+
+# yeth
+yeth:
+	make up network=ethereum commands="exporters/yeth" logs
 
 # utils
 fetch-memray:

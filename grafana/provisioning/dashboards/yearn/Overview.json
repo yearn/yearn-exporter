@@ -56,7 +56,7 @@
           "type": "datasource",
           "uid": "grafana"
         },
-        "enable": true,
+        "enable": false,
         "hide": true,
         "iconColor": "rgba(0, 211, 255, 1)",
         "name": "Annotations & Alerts",

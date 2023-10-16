@@ -13,6 +13,7 @@ import yearn.ironbank
 import yearn.special
 import yearn.v1.registry
 import yearn.v2.registry
+import yearn.yeth
 from yearn.exceptions import UnsupportedNetwork
 from yearn.ironbank import addresses as ironbank_registries
 from yearn.outputs.victoria.output_helper import (_flatten_dict,
@@ -37,6 +38,7 @@ class Yearn:
                 "v2": yearn.v2.registry.Registry(watch_events_forever=watch_events_forever),
                 "ib": yearn.ironbank.Registry(exclude_ib_tvl=exclude_ib_tvl),
                 "special": yearn.special.Registry(),
+                "yeth": yearn.yeth.Registry(),
             }
         elif chain.id in [Network.Gnosis, Network.Base]:
             self.registries = {

@@ -57,6 +57,7 @@ class ApySamples:
     now: int
     week_ago: int
     month_ago: int
+    day_ago: int
 
 
 class ApyError(ValueError):
@@ -84,6 +85,7 @@ def get_samples(now_time: Optional[datetime] = None) -> ApySamples:
         now = web3.eth.block_number
     else:
         now = closest_block_after_timestamp(int(now_time.timestamp()), True)
+    day_ago = closest_block_after_timestamp(int((now_time - timedelta(days=1)).timestamp()), True)
     week_ago = closest_block_after_timestamp(int((now_time - timedelta(days=7)).timestamp()), True)
     month_ago = closest_block_after_timestamp(int((now_time - timedelta(days=31)).timestamp()), True)
-    return ApySamples(now, week_ago, month_ago)
+    return ApySamples(now, week_ago, month_ago, day_ago)
