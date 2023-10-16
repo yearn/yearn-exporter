@@ -453,28 +453,15 @@
           },
           "unit": "none"
         },
-        "overrides": [
-          {
-            "matcher": {
-              "id": "byFrameRefID",
-              "options": "A"
-            },
-            "properties": [
-              {
-                "id": "custom.axisPlacement",
-                "value": "right"
-              }
-            ]
-          }
-        ]
+        "overrides": []
       },
       "gridPos": {
         "h": 11,
-        "w": 12,
+        "w": 24,
         "x": 0,
         "y": 20
       },
-      "id": 14,
+      "id": 15,
       "options": {
         "legend": {
           "calcs": [
@@ -497,7 +484,7 @@
             "uid": "PBFE396EC0B189D67"
           },
           "editorMode": "code",
-          "expr": "yeth{product!=\"st-yETH\",param=\"virtual_balance\"}",
+          "expr": "yeth{product=\"st-yETH\",param=\"totalSupply\"}",
           "hide": false,
           "instant": false,
           "legendFormat": "{{product}}",
@@ -505,8 +492,21 @@
           "refId": "B"
         }
       ],
-      "title": "Virtual balance of st-yETH in the AMM pool",
+      "title": "Total Supply of st-yETH in the AMM pool",
       "type": "timeseries"
+    },
+    {
+      "collapsed": false,
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 31
+      },
+      "id": 6,
+      "panels": [],
+      "title": "LSTs",
+      "type": "row"
     },
     {
       "datasource": {
@@ -565,22 +565,39 @@
           },
           "unit": "none"
         },
-        "overrides": []
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byFrameRefID",
+              "options": "B"
+            },
+            "properties": [
+              {
+                "id": "custom.axisPlacement",
+                "value": "right"
+              },
+              {
+                "id": "decimals",
+                "value": 2
+              }
+            ]
+          }
+        ]
       },
       "gridPos": {
         "h": 11,
-        "w": 12,
-        "x": 12,
-        "y": 20
+        "w": 24,
+        "x": 0,
+        "y": 32
       },
-      "id": 15,
+      "id": 14,
       "options": {
         "legend": {
           "calcs": [
             "lastNotNull"
           ],
-          "displayMode": "list",
-          "placement": "bottom",
+          "displayMode": "table",
+          "placement": "right",
           "showLegend": true
         },
         "tooltip": {
@@ -596,29 +613,29 @@
             "uid": "PBFE396EC0B189D67"
           },
           "editorMode": "code",
-          "expr": "yeth{product=\"st-yETH\",param=\"totalSupply\"}",
+          "expr": "yeth{product=~\"$lst\",param=\"rate\"}",
           "hide": false,
           "instant": false,
-          "legendFormat": "{{product}}",
+          "legendFormat": "rate: {{product}}",
           "range": true,
           "refId": "B"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "PBFE396EC0B189D67"
+          },
+          "editorMode": "code",
+          "expr": "yeth{product=~\"$lst\",param=\"virtual_balance\"}",
+          "hide": false,
+          "instant": false,
+          "legendFormat": "virtual_balance: {{product}}",
+          "range": true,
+          "refId": "A"
         }
       ],
-      "title": "Total Supply of st-yETH in the AMM pool",
+      "title": "Virtual balance vs rate in the st-yETH AMM pool",
       "type": "timeseries"
-    },
-    {
-      "collapsed": false,
-      "gridPos": {
-        "h": 1,
-        "w": 24,
-        "x": 0,
-        "y": 31
-      },
-      "id": 6,
-      "panels": [],
-      "title": "LSTs",
-      "type": "row"
     },
     {
       "datasource": {
@@ -647,7 +664,7 @@
         "h": 12,
         "w": 6,
         "x": 0,
-        "y": 32
+        "y": 43
       },
       "id": 7,
       "options": {
@@ -746,7 +763,7 @@
         "h": 12,
         "w": 18,
         "x": 6,
-        "y": 32
+        "y": 43
       },
       "id": 16,
       "options": {
@@ -757,7 +774,7 @@
         "legend": {
           "calcs": [],
           "displayMode": "list",
-          "placement": "bottom",
+          "placement": "right",
           "showLegend": true
         },
         "orientation": "vertical",
@@ -777,7 +794,7 @@
             "uid": "PBFE396EC0B189D67"
           },
           "editorMode": "code",
-          "expr": "yeth{product!=\"st-yETH\", param=\"virtual_balance\"} * on(product) yeth{product!=\"st-yETH\", param=\"rate\"} ",
+          "expr": "yeth{product=~\"$lst\", param=\"virtual_balance\"} * on(product) yeth{product=~\"$lst\", param=\"rate\"} ",
           "instant": false,
           "legendFormat": "{{product}}",
           "range": true,
@@ -835,7 +852,7 @@
         "h": 11,
         "w": 12,
         "x": 0,
-        "y": 44
+        "y": 55
       },
       "id": 8,
       "options": {
@@ -846,7 +863,7 @@
         "legend": {
           "calcs": [],
           "displayMode": "list",
-          "placement": "bottom",
+          "placement": "right",
           "showLegend": true
         },
         "orientation": "auto",
@@ -867,7 +884,7 @@
             "uid": "PBFE396EC0B189D67"
           },
           "editorMode": "code",
-          "expr": "yeth{param=\"volume_in_eth\"}",
+          "expr": "yeth{param=\"volume_in_eth\",product=~\"$lst\"}",
           "instant": false,
           "legendFormat": "{{product}}",
           "range": true,
@@ -925,7 +942,7 @@
         "h": 11,
         "w": 12,
         "x": 12,
-        "y": 44
+        "y": 55
       },
       "id": 9,
       "options": {
@@ -936,7 +953,7 @@
         "legend": {
           "calcs": [],
           "displayMode": "list",
-          "placement": "bottom",
+          "placement": "right",
           "showLegend": true
         },
         "orientation": "auto",
@@ -957,7 +974,7 @@
             "uid": "PBFE396EC0B189D67"
           },
           "editorMode": "code",
-          "expr": "yeth{param=\"volume_out_eth\"}",
+          "expr": "yeth{param=\"volume_out_eth\",product=~\"$lst\"}",
           "instant": false,
           "legendFormat": "{{product}}",
           "range": true,
@@ -1015,7 +1032,7 @@
         "h": 11,
         "w": 12,
         "x": 0,
-        "y": 55
+        "y": 66
       },
       "id": 10,
       "options": {
@@ -1026,7 +1043,7 @@
         "legend": {
           "calcs": [],
           "displayMode": "list",
-          "placement": "bottom",
+          "placement": "right",
           "showLegend": true
         },
         "orientation": "auto",
@@ -1047,7 +1064,7 @@
             "uid": "PBFE396EC0B189D67"
           },
           "editorMode": "code",
-          "expr": "yeth{param=\"volume_in_usd\"}",
+          "expr": "yeth{param=\"volume_in_usd\",product=~\"$lst\"}",
           "instant": false,
           "legendFormat": "{{product}}",
           "range": true,
@@ -1105,7 +1122,7 @@
         "h": 11,
         "w": 12,
         "x": 12,
-        "y": 55
+        "y": 66
       },
       "id": 11,
       "options": {
@@ -1116,7 +1133,7 @@
         "legend": {
           "calcs": [],
           "displayMode": "list",
-          "placement": "bottom",
+          "placement": "right",
           "showLegend": true
         },
         "orientation": "auto",
@@ -1137,7 +1154,7 @@
             "uid": "PBFE396EC0B189D67"
           },
           "editorMode": "code",
-          "expr": "yeth{param=\"volume_out_usd\"}",
+          "expr": "yeth{param=\"volume_out_usd\",product=~\"$lst\"}",
           "instant": false,
           "legendFormat": "{{product}}",
           "range": true,
@@ -1212,14 +1229,14 @@
         "h": 13,
         "w": 24,
         "x": 0,
-        "y": 66
+        "y": 77
       },
       "id": 1,
       "options": {
         "legend": {
           "calcs": [],
           "displayMode": "list",
-          "placement": "bottom",
+          "placement": "right",
           "showLegend": true
         },
         "tooltip": {
@@ -1235,7 +1252,7 @@
             "uid": "PBFE396EC0B189D67"
           },
           "editorMode": "code",
-          "expr": "yeth{product!=\"st-yETH\",param=\"net_apy\"}",
+          "expr": "yeth{product!=\"st-yETH\", product=~\"$lst\",param=\"net_apy\"}",
           "instant": false,
           "legendFormat": "{{product}}",
           "range": true,
@@ -1296,7 +1313,7 @@
         "h": 8,
         "w": 12,
         "x": 0,
-        "y": 79
+        "y": 90
       },
       "id": 17,
       "options": {
@@ -1306,8 +1323,8 @@
         "groupWidth": 0.7,
         "legend": {
           "calcs": [],
-          "displayMode": "list",
-          "placement": "bottom",
+          "displayMode": "table",
+          "placement": "right",
           "showLegend": true
         },
         "orientation": "auto",
@@ -1318,7 +1335,7 @@
           "sort": "none"
         },
         "xTickLabelRotation": 0,
-        "xTickLabelSpacing": 0
+        "xTickLabelSpacing": 100
       },
       "targets": [
         {
@@ -1327,8 +1344,9 @@
             "uid": "PBFE396EC0B189D67"
           },
           "editorMode": "code",
-          "expr": "yeth{product!=\"st-yETH\", param=\"target\"} - on(product) yeth{product!=\"st-yETH\", param=\"weight\"}",
+          "expr": "yeth{product=~\"$lst\", param=\"target\"} - on(product) yeth{product=~\"$lst\", param=\"weight\"}",
           "instant": false,
+          "legendFormat": "{{product}}",
           "range": true,
           "refId": "A"
         }
@@ -1410,14 +1428,14 @@
         "h": 8,
         "w": 12,
         "x": 12,
-        "y": 79
+        "y": 90
       },
       "id": 18,
       "options": {
         "legend": {
           "calcs": [],
           "displayMode": "list",
-          "placement": "bottom",
+          "placement": "right",
           "showLegend": true
         },
         "tooltip": {
@@ -1432,7 +1450,7 @@
             "uid": "PBFE396EC0B189D67"
           },
           "editorMode": "code",
-          "expr": "yeth{product!=\"st-yETH\", param=\"target\"}",
+          "expr": "yeth{product=~\"$lst\", param=\"target\"}",
           "hide": false,
           "instant": false,
           "legendFormat": "{{param}}: {{product}}",
@@ -1445,7 +1463,7 @@
             "uid": "PBFE396EC0B189D67"
           },
           "editorMode": "code",
-          "expr": "yeth{product!=\"st-yETH\", param=\"weight\"}",
+          "expr": "yeth{product=~\"$lst\", param=\"weight\"}",
           "hide": false,
           "instant": false,
           "legendFormat": "{{param}}: {{product}}",
@@ -1462,10 +1480,43 @@
   "style": "dark",
   "tags": [],
   "templating": {
-    "list": []
+    "list": [
+      {
+        "allValue": ".*",
+        "current": {
+          "selected": true,
+          "text": [
+            "All"
+          ],
+          "value": [
+            "$__all"
+          ]
+        },
+        "datasource": {
+          "type": "prometheus",
+          "uid": "PBFE396EC0B189D67"
+        },
+        "definition": "yeth{product!=\"st-yETH\"}",
+        "hide": 0,
+        "includeAll": true,
+        "label": "LST",
+        "multi": true,
+        "name": "lst",
+        "options": [],
+        "query": {
+          "query": "yeth{product!=\"st-yETH\"}",
+          "refId": "PrometheusVariableQueryEditor-VariableQuery"
+        },
+        "refresh": 1,
+        "regex": "/product=\"(?<text>[^\"]+)|product=\"(?<value>[^\"]+)/g",
+        "skipUrlSync": false,
+        "sort": 1,
+        "type": "query"
+      }
+    ]
   },
   "time": {
-    "from": "now-30d",
+    "from": "now-90d",
     "to": "now"
   },
   "timepicker": {},
