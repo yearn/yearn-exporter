@@ -51,7 +51,7 @@ class StYETH(metaclass = Singleton):
 
     async def _get_supply_price(self, block=None):
         data = YETH_POOL.vb_prod_sum(block_identifier=block)
-        supply = data[1]
+        supply = data[1] / 1e18
         try:
             price = await magic.get_price(YETH_TOKEN, block=block, sync=False)
         except yPriceMagicError as e:
@@ -59,7 +59,7 @@ class StYETH(metaclass = Singleton):
                 raise e
             price = None
 
-        return supply / 1e18, price
+        return supply, price
 
 
     @eth_retry.auto_retry
@@ -136,12 +136,19 @@ class YETHLST():
     def decimals(self):
         return 18
 
-    async def _get_supply_price(self, block=None):
-        supply = YETH_POOL.virtual_balance(self.asset_id, block_identifier=block)
-        weth_price = await magic.get_price(weth, block=block, sync=False)
-        price = weth_price * RATE_PROVIDER.rate(str(self.lst), block_identifier=block) / 1e18
+    def _get_lst_data(self, block=None):
+        virtual_balance = YETH_POOL.virtual_balance(self.asset_id, block_identifier=block) / 1e18
+        weights = YETH_POOL.weight(self.asset_id, block_identifier=block)
+        weight = weights[0] / 1e18
+        target = weights[1] / 1e18
+        rate = RATE_PROVIDER.rate(str(self.lst), block_identifier=block) / 1e18
 
-        return supply / 1e18, price
+        return {
+          "virtual_balance": virtual_balance,
+          "weight": weight,
+          "target": target,
+          "rate": rate
+        }
 
     @eth_retry.auto_retry
     async def apy(self, samples: ApySamples) -> Apy:
@@ -155,12 +162,14 @@ class YETHLST():
 
     @eth_retry.auto_retry
     async def tvl(self, block=None) -> Tvl:
-        supply, price = await self._get_supply_price(block)
-        tvl = supply * price
-        return Tvl(supply, price, tvl)
+        data = self._get_lst_data(block=block)
+        tvl = data["virtual_balance"] * data["rate"]
+        return Tvl(data["virtual_balance"], data["rate"], tvl)
 
     async def describe(self, block=None):
-        supply, price = await self._get_supply_price(block)
+        weth_price = await magic.get_price(weth, block=block, sync=False)
+        data = self._get_lst_data(block=block)
+
         if block:
             block_timestamp = get_block_timestamp(block)
             samples = get_samples(datetime.fromtimestamp(block_timestamp))
@@ -174,9 +183,11 @@ class YETHLST():
 
         return {
             'address': self.address,
-            'totalSupply': supply,
-            'token price': price,
-            'tvl': supply * price,
+            'weth_price': weth_price,
+            'virtual_balance': data["virtual_balance"],
+            'rate': data["rate"],
+            'weight': data["weight"],
+            'target': data["target"],
             'net_apy': apy.net_apy,
             'gross_apr': apy.gross_apr,
             'volume_in_eth': swap_volumes['volume_in_eth'][self.asset_id],
@@ -186,8 +197,9 @@ class YETHLST():
         }
 
     async def total_value_at(self, block=None):
-        supply, price = await self._get_supply_price(block)
-        return supply * price
+        data = self._get_lst_data(block=block)
+        tvl = data["virtual_balance"] * data["rate"]
+        return tvl
 
 
 class Registry(metaclass = Singleton):

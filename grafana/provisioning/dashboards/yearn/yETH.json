@@ -1,8 +1,23 @@
 {
+  "annotations": {
+    "list": [
+      {
+        "builtIn": 1,
+        "datasource": {
+          "type": "grafana",
+          "uid": "-- Grafana --"
+        },
+        "enable": true,
+        "hide": true,
+        "iconColor": "rgba(0, 211, 255, 1)",
+        "name": "Annotations & Alerts",
+        "type": "dashboard"
+      }
+    ]
+  },
   "editable": true,
   "fiscalYearStartMonth": 0,
   "graphTooltip": 0,
-  "id": 10,
   "links": [],
   "liveNow": false,
   "panels": [
@@ -24,6 +39,7 @@
         "type": "prometheus",
         "uid": "PBFE396EC0B189D67"
       },
+      "description": "Weekly APY updated once per day, takes the now time and updates it against the lp prices a week ago.",
       "fieldConfig": {
         "defaults": {
           "color": {
@@ -49,14 +65,14 @@
       },
       "gridPos": {
         "h": 8,
-        "w": 12,
+        "w": 7,
         "x": 0,
         "y": 1
       },
       "id": 2,
       "options": {
         "colorMode": "value",
-        "graphMode": "area",
+        "graphMode": "none",
         "justifyMode": "auto",
         "orientation": "auto",
         "reduceOptions": {
@@ -90,6 +106,69 @@
         "type": "prometheus",
         "uid": "PBFE396EC0B189D67"
       },
+      "description": "",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              }
+            ]
+          },
+          "unit": "none"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 7,
+        "x": 7,
+        "y": 1
+      },
+      "id": 13,
+      "options": {
+        "colorMode": "value",
+        "graphMode": "none",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "textMode": "value"
+      },
+      "pluginVersion": "10.0.1",
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "PBFE396EC0B189D67"
+          },
+          "editorMode": "code",
+          "expr": "yeth{product=\"st-yETH\", param=\"totalSupply\"}",
+          "instant": false,
+          "range": true,
+          "refId": "A"
+        }
+      ],
+      "title": "Amount of st-yETH",
+      "type": "stat"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "PBFE396EC0B189D67"
+      },
       "fieldConfig": {
         "defaults": {
           "color": {
@@ -115,14 +194,14 @@
       },
       "gridPos": {
         "h": 8,
-        "w": 12,
-        "x": 12,
+        "w": 7,
+        "x": 14,
         "y": 1
       },
       "id": 3,
       "options": {
         "colorMode": "value",
-        "graphMode": "area",
+        "graphMode": "none",
         "justifyMode": "auto",
         "orientation": "auto",
         "reduceOptions": {
@@ -132,7 +211,7 @@
           "fields": "",
           "values": false
         },
-        "textMode": "auto"
+        "textMode": "value"
       },
       "pluginVersion": "10.0.1",
       "targets": [
@@ -152,93 +231,11 @@
       "type": "stat"
     },
     {
-      "collapsed": false,
-      "gridPos": {
-        "h": 1,
-        "w": 24,
-        "x": 0,
-        "y": 9
-      },
-      "id": 6,
-      "panels": [],
-      "title": "LSTs",
-      "type": "row"
-    },
-    {
       "datasource": {
         "type": "prometheus",
         "uid": "PBFE396EC0B189D67"
       },
-      "fieldConfig": {
-        "defaults": {
-          "color": {
-            "mode": "palette-classic"
-          },
-          "custom": {
-            "hideFrom": {
-              "legend": false,
-              "tooltip": false,
-              "viz": false
-            }
-          },
-          "decimals": 2,
-          "mappings": [],
-          "unit": "none"
-        },
-        "overrides": []
-      },
-      "gridPos": {
-        "h": 13,
-        "w": 12,
-        "x": 0,
-        "y": 10
-      },
-      "id": 7,
-      "options": {
-        "displayLabels": [
-          "percent"
-        ],
-        "legend": {
-          "displayMode": "list",
-          "placement": "bottom",
-          "showLegend": true,
-          "values": []
-        },
-        "pieType": "donut",
-        "reduceOptions": {
-          "calcs": [
-            "lastNotNull"
-          ],
-          "fields": "",
-          "values": false
-        },
-        "tooltip": {
-          "mode": "single",
-          "sort": "none"
-        }
-      },
-      "targets": [
-        {
-          "datasource": {
-            "type": "prometheus",
-            "uid": "PBFE396EC0B189D67"
-          },
-          "editorMode": "code",
-          "expr": "yeth{product!=\"st-yETH\", param=\"tvl\"}",
-          "instant": false,
-          "legendFormat": "{{product}} {{address}}",
-          "range": true,
-          "refId": "A"
-        }
-      ],
-      "title": "LST TVL composition",
-      "type": "piechart"
-    },
-    {
-      "datasource": {
-        "type": "prometheus",
-        "uid": "PBFE396EC0B189D67"
-      },
+      "description": "Boost is how much yETH is staked into st-yETH custom amm. If more yETH goes to lp in the curve yETH-eth pool then less % is staked in st-yETH causing the boost to increase. \nIf pool_supply < total_assets boost > 100%",
       "fieldConfig": {
         "defaults": {
           "color": {
@@ -251,7 +248,7 @@
             "axisPlacement": "auto",
             "barAlignment": 0,
             "drawStyle": "line",
-            "fillOpacity": 13,
+            "fillOpacity": 0,
             "gradientMode": "none",
             "hideFrom": {
               "legend": false,
@@ -288,23 +285,391 @@
               }
             ]
           },
-          "unit": "currencyUSD"
+          "unit": "percentunit"
         },
-        "overrides": []
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byFrameRefID",
+              "options": "B"
+            },
+            "properties": [
+              {
+                "id": "custom.axisPlacement",
+                "value": "right"
+              },
+              {
+                "id": "custom.spanNulls",
+                "value": true
+              },
+              {
+                "id": "custom.axisLabel",
+                "value": "% ETH staked"
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byFrameRefID",
+              "options": "A"
+            },
+            "properties": [
+              {
+                "id": "custom.axisLabel",
+                "value": "st-yETH APY"
+              }
+            ]
+          },
+          {
+            "__systemRef": "hideSeriesFrom",
+            "matcher": {
+              "id": "byNames",
+              "options": {
+                "mode": "exclude",
+                "names": [
+                  "net_apy"
+                ],
+                "prefix": "All except:",
+                "readOnly": true
+              }
+            },
+            "properties": [
+              {
+                "id": "custom.hideFrom",
+                "value": {
+                  "legend": false,
+                  "tooltip": false,
+                  "viz": true
+                }
+              }
+            ]
+          }
+        ]
       },
       "gridPos": {
-        "h": 13,
-        "w": 12,
-        "x": 12,
-        "y": 10
+        "h": 11,
+        "w": 24,
+        "x": 0,
+        "y": 9
       },
-      "id": 4,
+      "id": 12,
       "options": {
         "legend": {
           "calcs": [],
           "displayMode": "list",
           "placement": "bottom",
           "showLegend": true
+        },
+        "tooltip": {
+          "mode": "single",
+          "sort": "none"
+        }
+      },
+      "pluginVersion": "10.0.1",
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "PBFE396EC0B189D67"
+          },
+          "editorMode": "code",
+          "expr": "yeth{product=\"st-yETH\",param=\"net_apy\"}",
+          "instant": false,
+          "legendFormat": "{{param}}",
+          "range": true,
+          "refId": "A"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "PBFE396EC0B189D67"
+          },
+          "editorMode": "code",
+          "expr": "yeth{product=\"st-yETH\", param=\"boost\"}",
+          "hide": false,
+          "instant": false,
+          "legendFormat": "% yETH staked in st-yETH",
+          "range": true,
+          "refId": "B"
+        }
+      ],
+      "title": "st-yETH APY vs Boost",
+      "type": "timeseries"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "PBFE396EC0B189D67"
+      },
+      "description": "",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisCenteredZero": false,
+            "axisColorMode": "text",
+            "axisLabel": "",
+            "axisPlacement": "auto",
+            "barAlignment": 0,
+            "drawStyle": "line",
+            "fillOpacity": 0,
+            "gradientMode": "none",
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            },
+            "lineInterpolation": "linear",
+            "lineWidth": 1,
+            "pointSize": 5,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "showPoints": "auto",
+            "spanNulls": true,
+            "stacking": {
+              "group": "A",
+              "mode": "normal"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 80
+              }
+            ]
+          },
+          "unit": "none"
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byFrameRefID",
+              "options": "A"
+            },
+            "properties": [
+              {
+                "id": "custom.axisPlacement",
+                "value": "right"
+              }
+            ]
+          }
+        ]
+      },
+      "gridPos": {
+        "h": 11,
+        "w": 12,
+        "x": 0,
+        "y": 20
+      },
+      "id": 14,
+      "options": {
+        "legend": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "mode": "single",
+          "sort": "none"
+        }
+      },
+      "pluginVersion": "10.0.1",
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "PBFE396EC0B189D67"
+          },
+          "editorMode": "code",
+          "expr": "yeth{product!=\"st-yETH\",param=\"virtual_balance\"}",
+          "hide": false,
+          "instant": false,
+          "legendFormat": "{{product}}",
+          "range": true,
+          "refId": "B"
+        }
+      ],
+      "title": "Virtual balance of st-yETH in the AMM pool",
+      "type": "timeseries"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "PBFE396EC0B189D67"
+      },
+      "description": "",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisCenteredZero": false,
+            "axisColorMode": "text",
+            "axisLabel": "",
+            "axisPlacement": "auto",
+            "barAlignment": 0,
+            "drawStyle": "line",
+            "fillOpacity": 0,
+            "gradientMode": "none",
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            },
+            "lineInterpolation": "linear",
+            "lineWidth": 1,
+            "pointSize": 5,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "showPoints": "auto",
+            "spanNulls": true,
+            "stacking": {
+              "group": "A",
+              "mode": "normal"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 80
+              }
+            ]
+          },
+          "unit": "none"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 11,
+        "w": 12,
+        "x": 12,
+        "y": 20
+      },
+      "id": 15,
+      "options": {
+        "legend": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "mode": "single",
+          "sort": "none"
+        }
+      },
+      "pluginVersion": "10.0.1",
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "PBFE396EC0B189D67"
+          },
+          "editorMode": "code",
+          "expr": "yeth{product=\"st-yETH\",param=\"totalSupply\"}",
+          "hide": false,
+          "instant": false,
+          "legendFormat": "{{product}}",
+          "range": true,
+          "refId": "B"
+        }
+      ],
+      "title": "Total Supply of st-yETH in the AMM pool",
+      "type": "timeseries"
+    },
+    {
+      "collapsed": false,
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 31
+      },
+      "id": 6,
+      "panels": [],
+      "title": "LSTs",
+      "type": "row"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "PBFE396EC0B189D67"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            }
+          },
+          "decimals": 2,
+          "mappings": [],
+          "unit": "short"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 12,
+        "w": 6,
+        "x": 0,
+        "y": 32
+      },
+      "id": 7,
+      "options": {
+        "displayLabels": [
+          "percent"
+        ],
+        "legend": {
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": false,
+          "values": [
+            "percent",
+            "value"
+          ]
+        },
+        "pieType": "donut",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
         },
         "tooltip": {
           "mode": "single",
@@ -318,15 +683,109 @@
             "uid": "PBFE396EC0B189D67"
           },
           "editorMode": "code",
-          "expr": "yeth{product!=\"st-yETH\", param=\"tvl\"}",
+          "expr": "yeth{product!=\"st-yETH\", param=\"virtual_balance\"}",
           "instant": false,
-          "legendFormat": "{{product}} {{address}}",
+          "legendFormat": "{{product}}",
           "range": true,
           "refId": "A"
         }
       ],
-      "title": "LST TVL",
-      "type": "timeseries"
+      "title": "LST composition percentage",
+      "type": "piechart"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "PBFE396EC0B189D67"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisCenteredZero": false,
+            "axisColorMode": "text",
+            "axisLabel": "",
+            "axisPlacement": "auto",
+            "fillOpacity": 80,
+            "gradientMode": "none",
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            },
+            "lineWidth": 1,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
+          },
+          "decimals": 2,
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 80
+              }
+            ]
+          },
+          "unit": "short"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 12,
+        "w": 18,
+        "x": 6,
+        "y": 32
+      },
+      "id": 16,
+      "options": {
+        "barRadius": 0,
+        "barWidth": 0.97,
+        "fullHighlight": false,
+        "groupWidth": 0.7,
+        "legend": {
+          "calcs": [],
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "orientation": "vertical",
+        "showValue": "auto",
+        "stacking": "normal",
+        "tooltip": {
+          "mode": "single",
+          "sort": "none"
+        },
+        "xTickLabelRotation": 0,
+        "xTickLabelSpacing": 100
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "PBFE396EC0B189D67"
+          },
+          "editorMode": "code",
+          "expr": "yeth{product!=\"st-yETH\", param=\"virtual_balance\"} * on(product) yeth{product!=\"st-yETH\", param=\"rate\"} ",
+          "instant": false,
+          "legendFormat": "{{product}}",
+          "range": true,
+          "refId": "A"
+        }
+      ],
+      "title": "LST composition in ETH",
+      "type": "barchart"
     },
     {
       "datasource": {
@@ -376,7 +835,7 @@
         "h": 11,
         "w": 12,
         "x": 0,
-        "y": 23
+        "y": 44
       },
       "id": 8,
       "options": {
@@ -410,7 +869,7 @@
           "editorMode": "code",
           "expr": "yeth{param=\"volume_in_eth\"}",
           "instant": false,
-          "legendFormat": "{{product}} {{address}}",
+          "legendFormat": "{{product}}",
           "range": true,
           "refId": "A"
         }
@@ -466,7 +925,7 @@
         "h": 11,
         "w": 12,
         "x": 12,
-        "y": 23
+        "y": 44
       },
       "id": 9,
       "options": {
@@ -500,7 +959,7 @@
           "editorMode": "code",
           "expr": "yeth{param=\"volume_out_eth\"}",
           "instant": false,
-          "legendFormat": "{{product}} {{address}}",
+          "legendFormat": "{{product}}",
           "range": true,
           "refId": "A"
         }
@@ -556,7 +1015,7 @@
         "h": 11,
         "w": 12,
         "x": 0,
-        "y": 34
+        "y": 55
       },
       "id": 10,
       "options": {
@@ -590,7 +1049,7 @@
           "editorMode": "code",
           "expr": "yeth{param=\"volume_in_usd\"}",
           "instant": false,
-          "legendFormat": "{{product}} {{address}}",
+          "legendFormat": "{{product}}",
           "range": true,
           "refId": "A"
         }
@@ -646,7 +1105,7 @@
         "h": 11,
         "w": 12,
         "x": 12,
-        "y": 34
+        "y": 55
       },
       "id": 11,
       "options": {
@@ -680,7 +1139,7 @@
           "editorMode": "code",
           "expr": "yeth{param=\"volume_out_usd\"}",
           "instant": false,
-          "legendFormat": "{{product}} {{address}}",
+          "legendFormat": "{{product}}",
           "range": true,
           "refId": "A"
         }
@@ -753,7 +1212,7 @@
         "h": 13,
         "w": 24,
         "x": 0,
-        "y": 45
+        "y": 66
       },
       "id": 1,
       "options": {
@@ -778,16 +1237,227 @@
           "editorMode": "code",
           "expr": "yeth{product!=\"st-yETH\",param=\"net_apy\"}",
           "instant": false,
-          "legendFormat": "{{product}} {{address}}",
+          "legendFormat": "{{product}}",
           "range": true,
           "refId": "A"
         }
       ],
       "title": "LST APY composition",
       "type": "timeseries"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "PBFE396EC0B189D67"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisCenteredZero": false,
+            "axisColorMode": "text",
+            "axisLabel": "",
+            "axisPlacement": "auto",
+            "fillOpacity": 80,
+            "gradientMode": "none",
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            },
+            "lineWidth": 1,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 80
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 79
+      },
+      "id": 17,
+      "options": {
+        "barRadius": 0,
+        "barWidth": 0.97,
+        "fullHighlight": false,
+        "groupWidth": 0.7,
+        "legend": {
+          "calcs": [],
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "orientation": "auto",
+        "showValue": "auto",
+        "stacking": "none",
+        "tooltip": {
+          "mode": "single",
+          "sort": "none"
+        },
+        "xTickLabelRotation": 0,
+        "xTickLabelSpacing": 0
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "PBFE396EC0B189D67"
+          },
+          "editorMode": "code",
+          "expr": "yeth{product!=\"st-yETH\", param=\"target\"} - on(product) yeth{product!=\"st-yETH\", param=\"weight\"}",
+          "instant": false,
+          "range": true,
+          "refId": "A"
+        }
+      ],
+      "title": "Diff target-weight",
+      "type": "barchart"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "PBFE396EC0B189D67"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisCenteredZero": false,
+            "axisColorMode": "text",
+            "axisLabel": "",
+            "axisPlacement": "left",
+            "barAlignment": 0,
+            "drawStyle": "line",
+            "fillOpacity": 0,
+            "gradientMode": "none",
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            },
+            "lineInterpolation": "linear",
+            "lineWidth": 1,
+            "pointSize": 5,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "showPoints": "auto",
+            "spanNulls": false,
+            "stacking": {
+              "group": "A",
+              "mode": "none"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 80
+              }
+            ]
+          }
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byFrameRefID",
+              "options": "B"
+            },
+            "properties": [
+              {
+                "id": "custom.axisPlacement",
+                "value": "right"
+              }
+            ]
+          }
+        ]
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 12,
+        "y": 79
+      },
+      "id": 18,
+      "options": {
+        "legend": {
+          "calcs": [],
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "mode": "single",
+          "sort": "none"
+        }
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "PBFE396EC0B189D67"
+          },
+          "editorMode": "code",
+          "expr": "yeth{product!=\"st-yETH\", param=\"target\"}",
+          "hide": false,
+          "instant": false,
+          "legendFormat": "{{param}}: {{product}}",
+          "range": true,
+          "refId": "A"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "PBFE396EC0B189D67"
+          },
+          "editorMode": "code",
+          "expr": "yeth{product!=\"st-yETH\", param=\"weight\"}",
+          "hide": false,
+          "instant": false,
+          "legendFormat": "{{param}}: {{product}}",
+          "range": true,
+          "refId": "B"
+        }
+      ],
+      "title": "Target vs weight",
+      "type": "timeseries"
     }
   ],
-  "refresh": "",
+  "refresh": false,
   "schemaVersion": 38,
   "style": "dark",
   "tags": [],
@@ -802,6 +1472,6 @@
   "timezone": "",
   "title": "yETH",
   "uid": "eef3a622-567d-4587-8d2e-358039eb97e1",
-  "version": 1,
+  "version": 5,
   "weekStart": ""
 }
