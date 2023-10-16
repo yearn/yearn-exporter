@@ -67,7 +67,7 @@
         "type": "prometheus",
         "uid": "DS_PROMETHEUS"
       },
-      "description": "summ of v2 vaults tvl",
+      "description": "sum of v2 vaults tvl",
       "fieldConfig": {
         "defaults": {
           "color": {
