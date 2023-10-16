@@ -5511,7 +5511,7 @@
           {
             "selected": false,
             "text": "arbi",
-            "value": "ARBI"
+            "value": "ARB"
           },
           {
             "selected": false,
@@ -5524,7 +5524,7 @@
             "value": "BASE"
           }
         ],
-        "query": "eth : ETH, ftm : FTM, arbi : ARBI, opti : OPTI, base : BASE",
+        "query": "eth : ETH, ftm : FTM, arbi : ARB, opti : OPTI, base : BASE",
         "queryValue": "",
         "skipUrlSync": false,
         "type": "custom"
