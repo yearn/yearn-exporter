@@ -1,4 +1,41 @@
 {
+  "__inputs": [
+    {
+      "name": "prometheus",
+      "label": "DS_PROMETHEUS",
+      "description": "",
+      "type": "datasource",
+      "pluginId": "prometheus",
+      "pluginName": "Prometheus"
+    }
+  ],
+  "__elements": {},
+  "__requires": [
+    {
+      "type": "grafana",
+      "id": "grafana",
+      "name": "Grafana",
+      "version": "10.0.1"
+    },
+    {
+      "type": "datasource",
+      "id": "prometheus",
+      "name": "Prometheus",
+      "version": "1.0.0"
+    },
+    {
+      "type": "panel",
+      "id": "stat",
+      "name": "Stat",
+      "version": ""
+    },
+    {
+      "type": "panel",
+      "id": "timeseries",
+      "name": "Time series",
+      "version": ""
+    }
+  ],
   "annotations": {
     "list": [
       {
@@ -18,13 +55,14 @@
   "editable": true,
   "fiscalYearStartMonth": 0,
   "graphTooltip": 0,
+  "id": null,
   "links": [],
   "liveNow": false,
   "panels": [
     {
       "datasource": {
         "type": "prometheus",
-        "uid": "PBFE396EC0B189D67"
+        "uid": "DS_PROMETHEUS"
       },
       "description": "Weekly APY updated once per day, takes the now time and updates it against the lp prices a week ago.",
       "fieldConfig": {
@@ -51,9 +89,9 @@
         "overrides": []
       },
       "gridPos": {
-        "h": 8,
-        "w": 7,
-        "x": 0,
+        "h": 4,
+        "w": 5,
+        "x": 9,
         "y": 0
       },
       "id": 2,
@@ -76,7 +114,7 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "PBFE396EC0B189D67"
+            "uid": "DS_PROMETHEUS"
           },
           "editorMode": "code",
           "expr": "yeth{product=\"st-yETH\",param=\"net_apy\"}",
@@ -86,12 +124,13 @@
         }
       ],
       "title": "st-yETH APY",
+      "transparent": true,
       "type": "stat"
     },
     {
       "datasource": {
         "type": "prometheus",
-        "uid": "PBFE396EC0B189D67"
+        "uid": "DS_PROMETHEUS"
       },
       "description": "",
       "fieldConfig": {
@@ -114,9 +153,9 @@
         "overrides": []
       },
       "gridPos": {
-        "h": 8,
-        "w": 7,
-        "x": 7,
+        "h": 4,
+        "w": 5,
+        "x": 14,
         "y": 0
       },
       "id": 13,
@@ -139,7 +178,7 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "PBFE396EC0B189D67"
+            "uid": "DS_PROMETHEUS"
           },
           "editorMode": "code",
           "expr": "yeth{product=\"st-yETH\", param=\"totalSupply\"}",
@@ -149,12 +188,13 @@
         }
       ],
       "title": "Amount of st-yETH",
+      "transparent": true,
       "type": "stat"
     },
     {
       "datasource": {
         "type": "prometheus",
-        "uid": "PBFE396EC0B189D67"
+        "uid": "DS_PROMETHEUS"
       },
       "fieldConfig": {
         "defaults": {
@@ -180,9 +220,9 @@
         "overrides": []
       },
       "gridPos": {
-        "h": 8,
-        "w": 7,
-        "x": 14,
+        "h": 4,
+        "w": 5,
+        "x": 19,
         "y": 0
       },
       "id": 3,
@@ -205,7 +245,7 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "PBFE396EC0B189D67"
+            "uid": "DS_PROMETHEUS"
           },
           "editorMode": "code",
           "expr": "yeth{product=\"st-yETH\", param=\"boost\"}",
@@ -215,12 +255,13 @@
         }
       ],
       "title": "% staked yETH",
+      "transparent": true,
       "type": "stat"
     },
     {
       "datasource": {
         "type": "prometheus",
-        "uid": "PBFE396EC0B189D67"
+        "uid": "DS_PROMETHEUS"
       },
       "description": "Boost is how much yETH is staked into st-yETH custom amm. If more yETH goes to lp in the curve yETH-eth pool then less % is staked in st-yETH causing the boost to increase. \nIf pool_supply < total_assets boost > 100%",
       "fieldConfig": {
@@ -306,30 +347,6 @@
                 "value": "st-yETH APY"
               }
             ]
-          },
-          {
-            "__systemRef": "hideSeriesFrom",
-            "matcher": {
-              "id": "byNames",
-              "options": {
-                "mode": "exclude",
-                "names": [
-                  "net_apy"
-                ],
-                "prefix": "All except:",
-                "readOnly": true
-              }
-            },
-            "properties": [
-              {
-                "id": "custom.hideFrom",
-                "value": {
-                  "legend": false,
-                  "tooltip": false,
-                  "viz": true
-                }
-              }
-            ]
           }
         ]
       },
@@ -337,7 +354,7 @@
         "h": 11,
         "w": 24,
         "x": 0,
-        "y": 8
+        "y": 4
       },
       "id": 12,
       "options": {
@@ -357,7 +374,7 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "PBFE396EC0B189D67"
+            "uid": "DS_PROMETHEUS"
           },
           "editorMode": "code",
           "expr": "yeth{product=\"st-yETH\",param=\"net_apy\"}",
@@ -369,7 +386,7 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "PBFE396EC0B189D67"
+            "uid": "DS_PROMETHEUS"
           },
           "editorMode": "code",
           "expr": "yeth{product=\"st-yETH\", param=\"boost\"}",
@@ -386,7 +403,7 @@
     {
       "datasource": {
         "type": "prometheus",
-        "uid": "PBFE396EC0B189D67"
+        "uid": "DS_PROMETHEUS"
       },
       "description": "",
       "fieldConfig": {
@@ -446,7 +463,7 @@
         "h": 11,
         "w": 24,
         "x": 0,
-        "y": 19
+        "y": 15
       },
       "id": 15,
       "options": {
@@ -468,7 +485,7 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "PBFE396EC0B189D67"
+            "uid": "DS_PROMETHEUS"
           },
           "editorMode": "code",
           "expr": "yeth{product=\"st-yETH\",param=\"totalSupply\"}",
@@ -498,6 +515,6 @@
   "timezone": "",
   "title": "yETH",
   "uid": "eef3a622-567d-4587-8d2e-358039eb97e1",
-  "version": 13,
+  "version": 14,
   "weekStart": ""
 }
