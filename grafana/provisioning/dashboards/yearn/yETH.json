@@ -380,7 +380,7 @@
           "refId": "B"
         }
       ],
-      "title": "st-yETH APY vs Boost",
+      "title": "st-yETH APY vs % Staked in st-yETH",
       "type": "timeseries"
     },
     {
