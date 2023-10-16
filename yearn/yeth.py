@@ -1,5 +1,6 @@
 import asyncio
 import os
+import re
 import logging
 from datetime import datetime, timezone
 
@@ -126,7 +127,7 @@ class YETHLST():
         self.asset_id = asset_id
         self.address = address
         self.lst = Contract(address)
-        self.name = self.lst.name()
+        self.name = self._sanitize(self.lst.name())
 
     @property
     def symbol(self):
@@ -135,6 +136,9 @@ class YETHLST():
     @property
     def decimals(self):
         return 18
+
+    def _sanitize(self, name):
+        return re.sub(r"([\d]+)\.[\d]*", r"\1", name)
 
     def _get_lst_data(self, block=None):
         virtual_balance = YETH_POOL.virtual_balance(self.asset_id, block_identifier=block) / 1e18
