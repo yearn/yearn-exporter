@@ -1726,22 +1726,45 @@
           "type": "prometheus",
           "uid": "DS_PROMETHEUS"
         },
-        "definition": "yearn_strategy{param=\"totalLoss\"}",
         "hide": 0,
         "includeAll": false,
         "label": "network",
         "multi": false,
         "name": "networks",
-        "options": [],
+        "options": [
+          {
+            "selected": false,
+            "text": "eth",
+            "value": "ETH"
+          },
+          {
+            "selected": false,
+            "text": "ftm",
+            "value": "FTM"
+          },
+          {
+            "selected": false,
+            "text": "arbi",
+            "value": "ARB"
+          },
+          {
+            "selected": false,
+            "text": "opti",
+            "value": "OPTI"
+          },
+          {
+            "selected": true,
+            "text": "base",
+            "value": "BASE"
+          }
+        ],
         "query": {
-          "query": "yearn_strategy{param=\"totalLoss\"}",
-          "refId": "PrometheusVariableQueryEditor-VariableQuery"
+          "query": "eth : ETH, ftm : FTM, arbi : ARB, opti : OPTI, base : BASE",
+          "queryValue": ""
         },
-        "refresh": 1,
-        "regex": "/.*network=\"([^/\"]*).*/",
         "skipUrlSync": false,
         "sort": 1,
-        "type": "query"
+        "type": "custom"
       },
       {
         "current": {
