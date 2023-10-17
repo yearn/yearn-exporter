@@ -5,7 +5,7 @@ from datetime import datetime, timezone
 import sentry_sdk
 from brownie import chain
 from cachetools.func import ttl_cache
-from y.networks import Network
+from y import Network
 from y.time import closest_block_after_timestamp
 
 from yearn import constants
@@ -49,7 +49,7 @@ class WalletExporter(Exporter):
 
 exporter = WalletExporter(
     name = "wallets",
-    data_query = 'aggregate{param="total wallets"}',
+    data_query = 'aggregate{param="total wallets", network="' + Network.label() + '"}',
     data_fn = yearn.wallet_data_for_export,
     export_fn = _post,
     start_block = closest_block_after_timestamp(int(start.timestamp())) - 1,
