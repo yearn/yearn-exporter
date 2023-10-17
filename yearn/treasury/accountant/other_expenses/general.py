@@ -51,6 +51,7 @@ def is_veyfi_gas(tx: TreasuryTx) -> bool:
         "0x8ed7ee716e04096a7274188b5b371bc7c92aff305fa7b47f32ad622374fb23fc",
         "0x9b8f9dfaaedceaeb2b286db92f2aba2d2e519954b47a2d603cd4ce5fd03336fe",
         "0xe4b770cdbc0fce9d9acec45beb02113b50cb6903c2868b89c46f5d9382a6071f",
+        "0x706f5891441d58820be67c99d31e4fe24b20f9e5fd751a0567520bfd2a7008ca",
     ])
 
 def is_vesting_packages(tx: TreasuryTx) -> bool:
@@ -58,6 +59,7 @@ def is_vesting_packages(tx: TreasuryTx) -> bool:
         "0x6532f364035f392cf353e1b3f77b4be6e7f2b56c1ad541d1bb8c45cb61462c3f",
         "0x9b8f9dfaaedceaeb2b286db92f2aba2d2e519954b47a2d603cd4ce5fd03336fe",
         "0xe4b770cdbc0fce9d9acec45beb02113b50cb6903c2868b89c46f5d9382a6071f",
+        "0x706f5891441d58820be67c99d31e4fe24b20f9e5fd751a0567520bfd2a7008ca",
     ])
 
 def is_strategist_buyout(tx: TreasuryTx) -> bool:
@@ -105,3 +107,6 @@ def is_yeth_bootstrap(tx: TreasuryTx) -> bool:
 
 def is_warroom_games(tx: TreasuryTx) -> bool:
     return tx.hash == "0x8f17ead9cea87166cf99ed2cdbc46dfdf98c04c261de5b5167caddce5f704cb2" and tx.log_index in [429,430,431]
+
+def is_yfi_dot_eth(tx: TreasuryTx) -> bool:
+    return tx.hash == "0x7c9e50cab268ae67d563ec3e563ebbf6a38a66dfdb02c65d22320d7239480a99"

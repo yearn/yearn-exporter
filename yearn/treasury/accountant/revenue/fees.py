@@ -42,13 +42,19 @@ def is_fees_v1(tx: TreasuryTx) -> bool:
     return False
 
 def is_fees_v2(tx: TreasuryTx) -> bool:
-    return any(
+    if any(
         tx.from_address.address == vault.vault.address 
         and tx.token.address.address == vault.vault.address
         and tx.to_address.address in treasury.addresses
         and tx.to_address.address == vault.vault.rewards(block_identifier=tx.block)
         for vault in v2.vaults + v2.experiments
-    )
+    ):
+        return True
+    elif is_inverse_fees_from_stash_contract(tx):
+        if tx.value_usd > 0:
+            tx.value_usd *= -1
+        return True
+    return False
 
 factory_strats = [
     ["Contract: StrategyCurveBoostedFactoryClonable", ["CRV", "LDO"]],
@@ -88,3 +94,6 @@ def is_temple(tx: TreasuryTx) -> bool:
             return True
         elif tx._from_nickname == "Contract: Splitter" and tx._symbol in ["yveCRV-DAO","CRV"]:
             return True
+
+def is_inverse_fees_from_stash_contract(tx: TreasuryTx) -> bool:
+    return tx.from_address.address == "0xE376e8e8E3B0793CD61C6F1283bA18548b726C2e" and tx.to_address.nickname == "Token: Curve stETH Pool yVault"
