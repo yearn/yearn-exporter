@@ -53,6 +53,7 @@ services:
       - GF_RENDERING_SERVER_URL=http://renderer:8091/render
       - GF_RENDERING_CALLBACK_URL=http://grafana:3000/
       - GF_LOG_FILTERS=rendering:debug
+      - GF_INSTALL_PLUGINS=volkovlabs-variable-panel
       - PGHOST=postgres
       - PGDATABASE=postgres
       - PGUSER=postgres
