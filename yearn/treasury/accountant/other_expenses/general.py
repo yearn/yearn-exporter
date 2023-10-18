@@ -110,3 +110,7 @@ def is_warroom_games(tx: TreasuryTx) -> bool:
 
 def is_yfi_dot_eth(tx: TreasuryTx) -> bool:
     return tx.hash == "0x7c9e50cab268ae67d563ec3e563ebbf6a38a66dfdb02c65d22320d7239480a99"
+
+def is_yyper_contest(tx: TreasuryTx) -> bool:
+    """Grant for a vyper compiler audit context, vyper-context.eth"""
+    return tx in HashMatcher([["0xb8bb3728fdfb49d7c86c08dba8e3586e3761f13d2c88fa6fab80227b6a3f4519", Filter('log_index', 202)]])

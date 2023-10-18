@@ -84,7 +84,7 @@ def cache_token(address: str) -> Token:
                 address=address_entity,
                 symbol=symbol,
                 name=name,
-                decimals= 0 if address == UNI_V3_POS else decimals,
+                decimals= 0 if address == UNI_V3_POS or decimals is None else decimals,
                 chain=cache_chain()
             )
         except ValueError as e:

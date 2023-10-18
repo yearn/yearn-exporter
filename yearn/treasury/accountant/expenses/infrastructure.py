@@ -36,5 +36,7 @@ def is_generic(tx: TreasuryTx) -> bool:
         "0x3160b025085b17ee4bc3810c753c2d1fe9c556d2fb4cdf2ec7669cc878a94c68",
         "0x17a72a66512aa302a4f89b7d894519abf335156deac2a4801c884283181daa83",
         "0xb9b5eef15987d97448d6cae146231c47910ba937db7dc30cfb253d64cbc5515d",
+        ["0xfc07ee04d44f8e481f58339b7b8c998d454e4ec427b8021c4e453c8eeee6a9b9", Filter('log_index', 207)],
+        "0xf9ddee2db73fdf322caa10da88a178aca8308d79c2ad83324716c22878600e1c",
     ]
     return tx in HashMatcher(hashes)
