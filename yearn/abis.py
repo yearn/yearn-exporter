@@ -3,7 +3,7 @@
 
 from typing import Dict, List
 
-from brownie import chain
+from brownie import chain, interface
 from y import Contract, ContractNotVerified, Network
 from y.prices.lending import compound
 
@@ -21,6 +21,7 @@ non_verified_contracts: Dict[str,str] = {
 def _fix_problematic_abis() -> None:
     __force_non_verified_contracts()
     __validate_unitroller_abis()
+    __set_abis_with_interfaces()
 
 def __force_non_verified_contracts():
     for non_verified_contract, verified_contract in non_verified_contracts.items():
@@ -84,3 +85,16 @@ def __validate_unitroller_abis() -> None:
         Contract.from_abi(unitroller._build['contractName'], unitroller.address, good[0].abi)
         Contract._ChecksumAddressSingletonMeta__instances.pop(unitroller.address)
         Contract(unitroller.address)
+
+abis_to_fix = {
+    Network.Mainnet: {
+        # These are now using some weird non-verified proxy
+        "0x098256c06ab24F5655C5506A6488781BD711c14b": interface.ATokenVault,  # waDAI
+        "0xa7E0e66F38b8ad8343CFF67118C1f33e827D1455": interface.ATokenVault,  # waUSDT
+        "0x57d20c946A7A3812a7225B881CdcD8431D23431C": interface.ATokenVault,  # waUSDC
+    },
+}
+
+def __set_abis_with_interfaces():
+    for address, interface in abis_to_fix.get(chain.id, {}).items():
+        Contract.from_abi(interface._name, address, interface.abi)
