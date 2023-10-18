@@ -21,9 +21,9 @@ pytest-bdd>=5.0.0
 dank_mids==4.20.64
 eth_retry>=0.1.18
 eth-hash[pysha3]
-ez-a-sync==0.7.4
+ez-a-sync==0.12.1
 python-telegram-bot==13.15
-git+https://www.github.com/BobTheBuidler/ypricemagic@ad9b1c3a5aaced52bfca04ef484564772280f572
-git+https://www.github.com/BobTheBuidler/eth-portfolio@594b4eddf979739e23efa427e3dc508bf90594dc
+git+https://www.github.com/BobTheBuidler/ypricemagic@f10e8d594480242139ce17271484dd79a39cea43
+git+https://www.github.com/BobTheBuidler/eth-portfolio@0fb0db03365404824e109893bc8e042d2f140d85
 git+https://www.github.com/BobTheBuidler/toolcache@e37b53cec64556d2b35df66767fca4c8f366a2fa
 memray
