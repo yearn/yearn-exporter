@@ -34,6 +34,13 @@ DEPRECATED_VAULTS = {
     ]
 }
 
+# populate rekt vaults here
+TEMP_REKT_VAULTS = {
+    Network.Optimism: [
+        "0x9E724b3f65b509326A4F5Ec90D4689BeE6b6C78e", # ERN-USDC, issue with pricing
+    ]
+}
+
 class Registry(metaclass=Singleton):
     def __init__(self, watch_events_forever=True, include_experimental=True):
         self.releases = {}  # api_version => template
@@ -141,7 +148,15 @@ class Registry(metaclass=Singleton):
                 raise NodeNotSynced(f"No new blocks in the past {sleep_time/60} minutes.")
 
     def process_events(self, events):
+        temp_rekt_vaults = []
+        if chain.id in TEMP_REKT_VAULTS:
+            temp_rekt_vaults = TEMP_REKT_VAULTS[chain.id]
+
         for event in events:
+            if "vault" in event and event["vault"] in temp_rekt_vaults:
+                logger.warn(f"skipping temp rekt vault {event['vault']}")
+                continue
+
             # hack to make camels to snakes
             event._ordered = [OrderedDict({inflection.underscore(k): v for k, v in od.items()}) for od in event._ordered]
             logger.debug("starting to process %s for %s: %s", event.name, event.address, dict(event))

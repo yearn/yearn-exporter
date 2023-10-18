@@ -228,21 +228,8 @@ async def _main():
     data = []
     total = len(vaults)
 
-    # populate rekt vaults here
-    temp_rekt = {
-        Network.Optimism: [
-            "0xa7B550B3A80361d8e47E07616dC42f04c655881b", # stERN-ERN
-            "0x9E724b3f65b509326A4F5Ec90D4689BeE6b6C78e", # ERN-USDC
-            "0x50032bE2b2c7e8A6a6bc241e3aEbef21497A3cF0", # ERN-DOLA
-            "0x7bDEA31F968089f93A548ddec8BB74036E8ac6e0"  # ERN-LUSD
-          ]
-    }
     for i, vault in enumerate(vaults):
         pos = i + 1
-        # TEMP disable all ERN vaults on optimism because there's some pricing issue with them
-        if chain.id in temp_rekt and str(vault.vault) in temp_rekt[chain.id]:
-            logger.warn(f"skipping rekt vault [{pos}/{total}]: {vault.name} {str(vault.vault)}")
-            continue
         logger.info(f"wrapping vault [{pos}/{total}]: {vault.name} {str(vault.vault)}")
         data.append(await wrap_vault(vault, samples, aliases, icon_url, assets_metadata))
         logger.info(f"done wrapping vault [{pos}/{total}]: {vault.name} {str(vault.vault)}")
