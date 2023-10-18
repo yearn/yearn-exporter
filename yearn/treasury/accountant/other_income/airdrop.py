@@ -17,6 +17,7 @@ def is_airdrop(tx: TreasuryTx) -> bool:
             "0x44f7d3b2030799ea45932baf6049528a059aabd6387f3128993d646d01c8e877", # TKX
             "0xf2dbe58dffd3bc1476755e9f74e2ae07531579d0a3ea9e2aaac2ef902e080c2a", # TKX
             "0x8079e9cae847da196dc5507561bc9d1434f765f05045bc1a82df735ec83bc6ec", # MTV
+            "0x037a9cc5baa7d63a11d0f0720ee552bbf4ad85118ee5425220a263695fedbe9f", # Gnosis SAFE airdrop
         ],
     }.get(chain.id, [])
     return tx in HashMatcher(hashes)

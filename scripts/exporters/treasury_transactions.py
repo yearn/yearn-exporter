@@ -6,6 +6,7 @@ from typing import NoReturn
 
 import sentry_sdk
 from a_sync import AsyncThreadPoolExecutor, a_sync
+from a_sync.utils.iterators import _Done
 from brownie import chain
 from brownie.exceptions import BrownieEnvironmentWarning
 from eth_portfolio.structs import (InternalTransfer, LedgerEntry,
@@ -16,7 +17,7 @@ from y.constants import EEE_ADDRESS
 from y.datatypes import Block
 from y.time import get_block_timestamp_async
 
-from yearn.entities import TreasuryTx
+from yearn.entities import TreasuryTx, db
 from yearn.outputs.postgres.utils import (cache_address, cache_chain,
                                           cache_token)
 from yearn.treasury import accountant
@@ -42,6 +43,7 @@ def main() -> NoReturn:
             continue
             
         to_sort = load_new_txs(start_block, end_block)
+        deduplicate_internal_transfers()
         if to_sort > 0:
             sort()
         else:
@@ -125,3 +127,17 @@ def _validate_integrity_error(entry: LedgerEntry, log_index: int) -> None:
 @db_session
 def sort() -> None:
     accountant.sort_txs(accountant.unsorted_txs())
+
+@db_session
+def deduplicate_internal_transfers():
+    db.execute(
+        """
+        WITH counted AS (
+            SELECT treasury_tx_id, ROW_NUMBER() over(partition BY CHAIN, TIMESTAMP, block, hash, log_index, token_id, "from", "to", amount, gas_used, gas_price ORDER BY treasury_tx_id ASC) number
+            FROM treasury_txs
+        )
+        DELETE FROM treasury_txs WHERE treasury_tx_id IN (
+            SELECT treasury_tx_id FROM counted WHERE NUMBER > 1
+        )
+        """
+    )

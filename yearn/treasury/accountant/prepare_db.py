@@ -27,6 +27,7 @@ def prepare_db() -> None:
     cache_bridge_assistooor()
     cache_cowswap_msig()
     cache_address_nicknames_for_tokens()
+    cache_token_dumper()
 
 def cache_ychad() -> None:
     """ Label yChad in pg. """
@@ -104,3 +105,7 @@ def cache_address_nicknames_for_tokens() -> None:
     for address in select(a for a in Address if a.token and not a.nickname):
         address.nickname = f"Token: {address.token.name}"
         db.commit()
+
+def cache_token_dumper() -> None:
+    cache_address('0xC001d00d425Fa92C4F840baA8f1e0c27c4297a0B').nickname = "Token Dumper Multisig"
+    

@@ -8,7 +8,7 @@ from pony.orm import commit, select
 from y.networks import Network
 from y.prices import magic
 
-from yearn.constants import ERC20_TRANSFER_EVENT_HASH
+from yearn.constants import ERC20_TRANSFER_EVENT_HASH, TREASURY_WALLETS
 from yearn.entities import TreasuryTx
 from yearn.events import decode_logs, get_logs_asap
 from yearn.outputs.postgres.utils import (cache_address, cache_chain,
@@ -23,6 +23,9 @@ logger = logging.getLogger(__name__)
 
 
 def is_internal_transfer(tx: TreasuryTx) -> bool:
+    if chain.id == Network.Mainnet and tx.block > 17162286 and "yMechs Multisig" in [tx._from_nickname, tx._to_nickname]:
+        # as of may 1 2023, ymechs wallet split from treasury
+        return False
     return tx.to_address and tx.to_address.address in treasury.addresses and tx.from_address.address in treasury.addresses
 
 def has_amount_zero(tx: TreasuryTx) -> bool:
@@ -179,3 +182,12 @@ def is_ycrv_for_testing(tx: TreasuryTx) -> bool:
 def is_vest_factory(tx: TreasuryTx) -> bool:
     VESTING_FACTORY = "0x98d3872b4025ABE58C4667216047Fe549378d90f"
     return tx.to_address.address == VESTING_FACTORY
+
+def is_ignore_ymechs(tx: TreasuryTx) -> bool:
+    """After may 1 2023 ymechs wallet separated from yearn treasury"""
+    if tx.block > 17162286:
+        if tx._from_nickname == "yMechs Multisig" and tx.to_address.address not in TREASURY_WALLETS:
+            return True
+        if tx._to_nickname == "yMechs Multisig" and tx.from_address.address not in TREASURY_WALLETS:
+            return True
+    return False

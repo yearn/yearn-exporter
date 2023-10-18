@@ -28,6 +28,8 @@ if chain.id == Network.Mainnet:
     other_expense_txgroup.create_child("4626 Alliance Grant", general.is_4626_alliance)
     other_expense_txgroup.create_child("yETH Bootstrap", general.is_yeth_bootstrap)
     other_expense_txgroup.create_child("Warroom Games 2023 Prizes", general.is_warroom_games)
+    other_expense_txgroup.create_child("yfi.eth", general.is_yfi_dot_eth)
+    other_expense_txgroup.create_child("Fund Vyper Compiler Audit Context", general.is_yyper_contest)
 
 # Bugs
 if chain.id == Network.Mainnet:
