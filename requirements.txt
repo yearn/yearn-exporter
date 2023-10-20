@@ -22,7 +22,7 @@ dank_mids==4.20.64
 eth_retry>=0.1.18
 eth-hash[pysha3]
 ez-a-sync==0.12.1
-ypricemagic==2.15.2
+ypricemagic==2.15.4
 python-telegram-bot==13.15
 git+https://www.github.com/BobTheBuidler/eth-portfolio@0fb0db03365404824e109893bc8e042d2f140d85
 git+https://www.github.com/BobTheBuidler/toolcache@e37b53cec64556d2b35df66767fca4c8f366a2fa
