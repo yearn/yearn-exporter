@@ -89,7 +89,7 @@ def _unpack_results(vault: Address, is_experiment: bool, _views: List[str], resu
     
     price = price_or_exception
     
-    info["token price"] = price
+    info["token price"] = float(price)
     if "totalAssets" in info:
         info["tvl"] = info["token price"] * info["totalAssets"]
 
