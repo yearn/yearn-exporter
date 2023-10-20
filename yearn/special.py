@@ -160,12 +160,12 @@ class Ygov(metaclass = Singleton):
         return {
             'totalAssets': yfi_locked,
             'token price': yfi_price,
-            'tvl': yfi_locked * yfi_price,
+            'tvl': yfi_locked * float(yfi_price),
         }
 
     async def total_value_at(self, block=None):
         yfi_locked, yfi_price = await self._locked(block=block)
-        return yfi_locked * yfi_price
+        return yfi_locked * float(yfi_price)
 
 
 class Registry(metaclass = Singleton):
