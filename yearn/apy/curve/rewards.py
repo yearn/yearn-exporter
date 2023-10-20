@@ -26,15 +26,13 @@ async def staking(staking_rewards: Contract, pool_price: int, base_asset_price: 
         return 0
 
     snx_address = await staking_rewards.snx.coroutine(block_identifier=block) if hasattr(staking_rewards, "snx") else None
+    reward_token = None
     if hasattr(staking_rewards, "rewardToken"):
-        reward_token, rewards_token = await asyncio.gather(
-            staking_rewards.rewardToken.coroutine(block_identifier=block),
-            staking_rewards.rewardsToken.coroutine(block_identifier=block),
-        )
-    else:
-        reward_token, rewards_token = None, None
+        reward_token = await staking_rewards.rewardToken.coroutine(block_identifier=block)
+    elif hasattr(staking_rewards, "rewardsToken"):
+        reward_token = await staking_rewards.rewardsToken.coroutine(block_identifier=block)
 
-    token = reward_token or rewards_token or snx_address
+    token = reward_token or snx_address
 
     total_supply = await staking_rewards.totalSupply.coroutine(block_identifier=block) if hasattr(staking_rewards, "totalSupply") else 0
     rate = await staking_rewards.rewardRate.coroutine(block_identifier=block) if hasattr(staking_rewards, "rewardRate") else 0
