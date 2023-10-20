@@ -36,6 +36,9 @@ DEPRECATED_VAULTS = {
 
 # populate rekt vaults here
 TEMP_REKT_VAULTS = {
+    Network.Mainnet: [
+        "0xcd68c3fC3e94C5AcC10366556b836855D96bfa93" # yvCurve-dETH-f 0.4.6 has dETH as unverified token contract
+    ],
     Network.Optimism: [
         "0x9E724b3f65b509326A4F5Ec90D4689BeE6b6C78e", # ERN-USDC, issue with pricing
     ]
