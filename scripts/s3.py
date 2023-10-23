@@ -279,10 +279,10 @@ def _export(data, file_name, s3_path):
 
 def _get_s3s():
     s3s = []
-    aws_buckets = os.environ.get("AWS_BUCKET").split(";")
-    aws_endpoint_urls = os.environ.get("AWS_ENDPOINT_URL").split(";")
-    aws_keys = os.environ.get("AWS_ACCESS_KEY").split(";")
-    aws_secrets = os.environ.get("AWS_ACCESS_SECRET").split(";")
+    aws_buckets = os.environ.get("AWS_BUCKET", "").split(";")
+    aws_endpoint_urls = os.environ.get("AWS_ENDPOINT_URL", "").split(";")
+    aws_keys = os.environ.get("AWS_ACCESS_KEY", "").split(";")
+    aws_secrets = os.environ.get("AWS_ACCESS_SECRET", "").split(";")
 
     for i in range(len(aws_buckets)):
         aws_bucket = aws_buckets[i]
