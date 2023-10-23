@@ -258,12 +258,12 @@ class Registry(metaclass = Singleton):
             samples = get_samples()
 
         self.swap_volumes = await self._get_daily_swap_volumes(samples.day_ago, samples.now)
-        products = await self.active_products_at(block)
+        products = await self.active_vaults_at(block)
         data = await asyncio.gather(*[product.describe(block=block) for product in products])
         return {product.name: desc for product, desc in zip(products, data)}
 
     async def total_value_at(self, block=None):
-        products = await self.active_products_at(block)
+        products = await self.active_vaults_at(block)
         tvls = await asyncio.gather(*[product.total_value_at(block=block) for product in products])
         return {product.name: tvl for product, tvl in zip(products, tvls)}
 
