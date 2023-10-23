@@ -25,7 +25,7 @@ from y import ERC20, Contract, Network, magic
 from y.exceptions import ContractNotVerified
 from y.time import get_block_timestamp_async
 
-from yearn.apy import Apy, ApyFees, ApyPoints, ApySamples, get_samples
+from yearn.apy import Apy, ApyFees, ApyPoints, get_samples
 from yearn.apy.common import SECONDS_PER_YEAR
 from yearn.apy.curve.simple import Gauge
 from yearn.apy.velo import COMPOUNDING
@@ -35,6 +35,7 @@ logger = logging.getLogger(__name__)
 sentry_sdk.set_tag('script','curve_apy_previews')
 
 class Drome(Struct):
+    """Holds various params for a drome deployment"""
     label: str
     sugar: str
     voter: str
@@ -62,44 +63,48 @@ try:
 except KeyError:
     raise ValueError(f"there is no drome on unsupported network: {chain.id}")
 
+fee_checker = Contract(drome.fee_checker)
+performance_fee = fee_checker.performanceFee() / 1e4
+management_fee = fee_checker.managementFee() / 1e4
+fee_checker_strat = Contract(fee_checker.withdrawalQueue(0))
+
+keep = fee_checker_strat.localKeepVELO() / 1e4
+unkeep = 1 - keep
+
 def main():
     _upload(await_awaitable(_build_data()))
 
 async def _build_data():
     start = int(time())
-    samples = get_samples()
-    data = [d for d in await tqdm_asyncio.gather(*[_build_data_for_lp(lp, samples) for lp in await _get_lps()]) if d]
+    block = get_samples().now
+    data = [d for d in await tqdm_asyncio.gather(*[_build_data_for_lp(lp, block) for lp in await _get_lps(block)]) if d]
     for d in data:
         d['updated'] = start
     print(data)
     return data
 
-async def _get_lps() -> List[dict]:
+async def _get_lps(block: Optional[int] = None) -> List[dict]:
     sugar_oracle = await Contract.coroutine(drome.sugar)
-    return [lp for lp in await sugar_oracle.all.coroutine(999999999999999999999, 0, ZERO_ADDRESS)]
+    return [lp for lp in await sugar_oracle.all.coroutine(999999999999999999999, 0, ZERO_ADDRESS, block_identifier=block)]
 
-async def _build_data_for_lp(lp: dict, samples: ApySamples) -> Optional[dict]:
+async def _build_data_for_lp(lp: dict, block: Optional[int] = None) -> Optional[dict]:
     lp_token = lp[0]
     gauge_name = lp[1]
     
     try:
-        gauge = await _load_gauge(lp)
+        gauge = await _load_gauge(lp, block=block)
     except NoGaugeFound:
         return None
     except ContractNotVerified as e:
         return {
             "gauge_name": gauge_name,
             "apy": dataclasses.asdict(Apy("error:unverified", 0, 0, ApyFees(0, 0), ApyPoints(0, 0, 0), error_reason=str(e))),
-            "block": samples.now,
+            "block": block,
         }
 
     apy_error = Apy("error", 0, 0, ApyFees(0, 0), ApyPoints(0, 0, 0))
     try:
-            
-        if gauge.gauge_weight > 0:
-            apy = await _staking_apy(lp, gauge.gauge, samples)
-        else:
-            apy = Apy("zero_weight", 0, 0, ApyFees(0, 0), ApyPoints(0, 0, 0))
+        apy = await _staking_apy(lp, gauge.gauge, block=block) if gauge.gauge_weight > 0 else Apy("zero_weight", 0, 0, ApyFees(0, 0), ApyPoints(0, 0, 0))
     except Exception as error:
         apy_error.error_reason = ":".join(str(arg) for arg in error.args)
         logger.error(error)
@@ -116,10 +121,10 @@ async def _build_data_for_lp(lp: dict, samples: ApySamples) -> Optional[dict]:
         "inflation_rate": str(gauge.gauge_inflation_rate),
         "working_supply": str(gauge.gauge_working_supply),
         "apy": dataclasses.asdict(apy),
-        "block": samples.now,
+        "block": block,
     }
 
-async def _load_gauge(lp: dict) -> Gauge:
+async def _load_gauge(lp: dict, block: Optional[int] = None) -> Gauge:
     lp_address = lp[0]
     gauge_address = lp[11]
     if gauge_address == ZERO_ADDRESS:
@@ -128,12 +133,12 @@ async def _load_gauge(lp: dict) -> Gauge:
     pool, gauge, weight = await asyncio.gather(
         Contract.coroutine(lp_address), 
         Contract.coroutine(gauge_address),
-        voter.weights.coroutine(lp_address),
+        voter.weights.coroutine(lp_address, block_identifier=block),
     )
-    inflation_rate, working_supply = await asyncio.gather(gauge.rewardRate.coroutine(), gauge.totalSupply.coroutine())
+    inflation_rate, working_supply = await asyncio.gather(gauge.rewardRate.coroutine(block_identifier=block), gauge.totalSupply.coroutine(block_identifier=block))
     return Gauge(lp_address, pool, gauge, weight, inflation_rate, working_supply)
     
-async def _staking_apy(lp: dict, staking_rewards: Contract, samples: ApySamples, block: Optional[int]=None) -> float:
+async def _staking_apy(lp: dict, staking_rewards: Contract, block: Optional[int]=None) -> float:
     
     current_time = time() if block is None else await get_block_timestamp_async(block)
     
@@ -144,18 +149,8 @@ async def _staking_apy(lp: dict, staking_rewards: Contract, samples: ApySamples,
         staking_rewards.periodFinish.coroutine(block_identifier=block),
     )
     
-    # NOTE: should perf be 0? 
-    #performance = await vault.vault.performanceFee.coroutine(block_identifier=block) / 1e4 if hasattr(vault.vault, "performanceFee") else 0
-    performance = 0
-    # NOTE: should mgmt be 0?
-    #management = await vault.vault.managementFee.coroutine(block_identifier=block) / 1e4 if hasattr(vault.vault, "managementFee") else 0
-    management = 0
-    # since its a fork we still call it keepVELO
-    #keep = await vault.strategies[0].strategy.localKeepVELO.coroutine(block_identifier=block) / 1e4 if hasattr(vault.strategies[0].strategy, "localKeepVELO") else 0
-    # NOTE: should keep be 0?
-    keep = 0
-    rate = rate * (1 - keep)
-    fees = ApyFees(performance=performance, management=management, keep_velo=keep)
+    rate *= unkeep
+    fees = ApyFees(performance=performance_fee, management=management_fee, keep_velo=keep)
         
     if end < current_time or total_supply == 0 or rate == 0:
         return Apy(f"v2:{drome.label}_unpopular", gross_apr=0, net_apy=0, fees=fees)
@@ -167,13 +162,11 @@ async def _staking_apy(lp: dict, staking_rewards: Contract, samples: ApySamples,
     
     gross_apr = (SECONDS_PER_YEAR * (rate / 1e18) * token_price) / (pool_price * (total_supply / 1e18))
     
-    net_apr = gross_apr * (1 - performance) - management 
+    net_apr = gross_apr * (1 - performance_fee) - management_fee
     net_apy = (1 + (net_apr / COMPOUNDING)) ** COMPOUNDING - 1
-    # NOTE: do we need this?
-    #staking_rewards_apr = await _get_staking_rewards_apr(reward_token, pool_price, token_price, rate, total_supply, samples)
     if os.getenv("DEBUG", None):
         logger.info(pformat(Debug().collect_variables(locals())))
-    return Apy(f"v2:{drome.label}", gross_apr=gross_apr, net_apy=net_apy, fees=fees) #, staking_rewards_apr=staking_rewards_apr)
+    return Apy(f"v2:{drome.label}", gross_apr=gross_apr, net_apy=net_apy, fees=fees)
 
 # NOTE: do we need this? 
 """
