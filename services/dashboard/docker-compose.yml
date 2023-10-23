@@ -4,7 +4,6 @@ volumes:
   brownie: {}
   cache: {}
   memray: {}
-  ypostgres: {}
   ypricemagic: {}
 
 networks:
