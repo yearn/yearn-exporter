@@ -1,26 +1,27 @@
 import asyncio
+import logging
 import os
 import re
-import logging
 from datetime import datetime, timezone
+from pprint import pformat
+from typing import Optional
 
 import eth_retry
-
 from brownie import chain
-from pprint import pformat
-
-from y import Contract, magic, Network
-from y.time import get_block_timestamp
+from y import Contract, Network, magic
 from y.contracts import contract_creation_block_async
+from y.datatypes import Block
 from y.exceptions import PriceError, yPriceMagicError
+from y.time import get_block_timestamp
 
-from yearn.apy.common import (Apy, ApyFees,
-                              ApySamples, SECONDS_PER_YEAR, SECONDS_PER_WEEK, SharePricePoint, calculate_roi, get_samples)
+from yearn.apy.common import (SECONDS_PER_WEEK, SECONDS_PER_YEAR, Apy, ApyFees,
+                              ApySamples, SharePricePoint, calculate_roi,
+                              get_samples)
 from yearn.common import Tvl
-from yearn.events import decode_logs, get_logs_asap
-from yearn.utils import Singleton
-from yearn.prices.constants import weth
 from yearn.debug import Debug
+from yearn.events import decode_logs, get_logs_asap
+from yearn.prices.constants import weth
+from yearn.utils import Singleton
 
 logger = logging.getLogger("yearn.yeth")
 
