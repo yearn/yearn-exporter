@@ -368,6 +368,7 @@ def _dedecimal(dct: dict):
             _dedecimal(v)
         elif isinstance(v, Decimal):
             dct[k] = float(v)
+    return dct
 
 @lru_cache
 def _get_debug_lock() -> asyncio.Lock:
