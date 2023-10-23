@@ -29,6 +29,7 @@ from y.exceptions import NodeNotSynced, PriceError
 from y.networks import Network
 from y.prices import magic
 
+from yearn import constants
 from yearn.decorators import sentry_catch_all, wait_or_exit_after
 from yearn.events import decode_logs, get_logs_asap
 from yearn.exceptions import UnsupportedNetwork
@@ -64,7 +65,6 @@ XCHAIN_GAUGE_FACTORY = "0xabC000d88f23Bb45525E447528DBF656A9D55bf5"
 curve_contracts = {
     Network.Mainnet: {
         'address_provider': ADDRESS_PROVIDER,
-        'crv': '0xD533a949740bb3306d119CC777fa900bA034cd52',
         'voting_escrow': '0x5f3b5DfEb7B28CDbD7FAba78963EE202a494e2A2',
         'gauge_controller': '0x2F50D538606Fa9EDD2B11E2446BEb18C9D5846bB',
     },
@@ -72,19 +72,15 @@ curve_contracts = {
         # Curve has not properly initialized the provider. contract(self.address_provider.get_address(5)) returns 0x0.
         # CurveRegistry class has extra handling to fetch registry in this case.
         'address_provider': ADDRESS_PROVIDER,
-        'crv': '0x712b3d230f3c1c19db860d80619288b1f0bdd0bd',
     },
     Network.Fantom: {
         'address_provider': ADDRESS_PROVIDER,
-        'crv': '0x1E4F97b9f9F913c46F1632781732927B9019C68b',
     },
     Network.Arbitrum: {
         'address_provider': ADDRESS_PROVIDER,
-        'crv': '0x11cDb42B0EB46D95f990BeDD4695A6e3fA034978',
     },
     Network.Optimism: {
         'address_provider': ADDRESS_PROVIDER,
-        'crv': '0x0994206dfE8De6Ec6920FF4D779B0d950605Fb53',
     }
 }
 
@@ -104,8 +100,6 @@ class Ids(IntEnum):
     Curve_Tricrypto_Factory = 11
 
 class CurveRegistry(metaclass=Singleton):
-
-    @wait_or_exit_after
     def __init__(self) -> None:
         if chain.id not in curve_contracts:
             raise UnsupportedNetwork("curve is not supported on this network")
@@ -115,7 +109,6 @@ class CurveRegistry(metaclass=Singleton):
             self.voting_escrow = contract(addrs['voting_escrow'])
             self.gauge_controller = contract(addrs['gauge_controller'])
 
-        self.crv = contract(addrs['crv'])
         self.identifiers = defaultdict(list)  # id -> versions
         self.registries = defaultdict(set)  # registry -> pools
         self.factories = defaultdict(set)  # factory -> pools
@@ -126,7 +119,11 @@ class CurveRegistry(metaclass=Singleton):
         self._done = threading.Event()
         self._thread = threading.Thread(target=self.watch_events, daemon=True)
         self._has_exception = False
-        self._thread.start()
+    
+    @wait_or_exit_after
+    def ensure_loaded(self):
+        if not self._thread._started.is_set():
+            self._thread.start()
 
     @sentry_catch_all
     def watch_events(self) -> None:
@@ -270,6 +267,7 @@ class CurveRegistry(metaclass=Singleton):
         """
         Get Curve pool (swap) address by LP token address. Supports factory pools.
         """
+        self.ensure_loaded()
         token = to_address(token)
         if token in self.token_to_pool:
             return self.token_to_pool[token]
@@ -564,7 +562,7 @@ class CurveRegistry(metaclass=Singleton):
             block=block,
         )
         crv_price, token_price, results = await asyncio.gather(
-            magic.get_price(self.crv, block=block, sync=False),
+            magic.get_price(constants.CRV, block=block, sync=False),
             magic.get_price(lp_token, block=block, sync=False),
             results
         )
