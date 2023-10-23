@@ -37,7 +37,7 @@ async def staking(vault: "Vault", staking_rewards: Contract, samples: ApySamples
     rate = await staking_rewards.rewardRate.coroutine(block_identifier=block) if hasattr(staking_rewards, "rewardRate") else 0
     performance = await vault.vault.performanceFee.coroutine(block_identifier=block) / 1e4 if hasattr(vault.vault, "performanceFee") else 0
     management = await vault.vault.managementFee.coroutine(block_identifier=block) / 1e4 if hasattr(vault.vault, "managementFee") else 0
-    strats = vault.strategies
+    strats = await vault.strategies
     keep = await strats[0].strategy.localKeepVELO.coroutine(block_identifier=block) / 1e4 if hasattr(strats[0].strategy, "localKeepVELO") else 0
     rate = rate * (1 - keep)
     fees = ApyFees(performance=performance, management=management, keep_velo=keep)
