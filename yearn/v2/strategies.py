@@ -93,7 +93,7 @@ class Harvests(ProcessedEvents[int]):
     def _process_event(self, event: _EventItem) -> int:
         block = event.block_number
         logger.debug("%s harvested on %d", self.strategy.name, block)
-        return event
+        return block
     
 
 def _unpack_results(views: List[str], results: List[Any], scale: int):
