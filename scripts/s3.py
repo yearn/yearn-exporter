@@ -9,6 +9,7 @@ import traceback
 import warnings
 from contextlib import suppress
 from datetime import datetime
+from decimal import Decimal
 from time import time
 from typing import Union
 
@@ -18,7 +19,6 @@ import sentry_sdk
 from brownie import chain
 from brownie.exceptions import BrownieEnvironmentWarning
 from telegram.error import BadRequest
-from tqdm.asyncio import tqdm_asyncio
 from y import ERC20, Contract, Network
 from y.contracts import contract_creation_block_async
 from y.exceptions import yPriceMagicError
@@ -352,3 +352,11 @@ def with_monitoring():
         raise error
     message = f"✅ {export_mode} Vaults API update for {Network.name()} successful!"
     updater.bot.send_message(chat_id=private_group, text=message, reply_to_message_id=ping)
+
+def _dedecimal(dct: dict):
+    """Decimal type cant be json encoded, we make them into floats"""
+    for k, v in dct.items():
+        if isinstance(v, dict):
+            _dedecimal(v)
+        elif isinstance(v, Decimal):
+            dct[k] = float(v)
