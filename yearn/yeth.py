@@ -236,7 +236,7 @@ class Registry(metaclass = Singleton):
                 volume_in_eth[asset_in] += amount_in * rates[asset_in]
                 volume_out_eth[asset_out] += amount_out * rates[asset_out]
 
-        weth_price = await magic.get_price(weth, block=from_block, sync=False)
+        weth_price = float(await magic.get_price(weth, block=from_block, sync=False))
         for i, value in enumerate(volume_in_eth):
             volume_in_usd[i] = value * weth_price
 
@@ -267,7 +267,7 @@ class Registry(metaclass = Singleton):
         tvls = await asyncio.gather(*[product.total_value_at(block=block) for product in products])
         return {product.name: tvl for product, tvl in zip(products, tvls)}
 
-    async def active_products_at(self, block=None):
+    async def active_vaults_at(self, block=None):
         products = [self.st_yeth] + self.st_yeth.lsts
         if block:
             blocks = await asyncio.gather(*[contract_creation_block_async(str(product.address)) for product in products])
