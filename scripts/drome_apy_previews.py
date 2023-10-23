@@ -85,7 +85,7 @@ async def _build_data():
 
 async def _get_lps_with_vault_potential() -> List[dict]:
     sugar_oracle = await Contract.coroutine(drome.sugar)
-    current_vaults = Registry(include_experimental=False).vaults
+    current_vaults = await Registry(include_experimental=False).vaults
     current_underlyings = [str(vault.token) for vault in current_vaults]
     return [lp for lp in await sugar_oracle.all.coroutine(999999999999999999999, 0, ZERO_ADDRESS) if lp[0] not in current_underlyings and lp[11] != ZERO_ADDRESS]
 
