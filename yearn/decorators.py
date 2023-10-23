@@ -26,13 +26,13 @@ def wait_or_exit_before(func):
     @functools.wraps(func)
     async def wrap(self):
         task: asyncio.Task = self._task
-        logger.info("waiting for %s", self)
+        logger.debug("waiting for %s", self)
         while not self._done.is_set() and not task.done():
             await asyncio.sleep(10)
-            logger.info("%s not done", self)
-        logger.info("loading %s complete", self)
+            logger.debug("%s not done", self)
+        logger.debug("loading %s complete", self)
         if task.done() and (e := task.exception()):
-            logger.info('task %s has exception %s, awaiting', task, e)
+            logger.debug('task %s has exception %s, awaiting', task, e)
             raise e
         return await func(self)
     return wrap
