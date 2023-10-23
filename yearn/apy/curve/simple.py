@@ -237,7 +237,7 @@ async def calculate_simple(vault, gauge: Gauge, samples: ApySamples) -> Apy:
             if period_finish < current_time:
                 reward_apr = 0
             else:
-                reward_apr = (SECONDS_PER_YEAR * (rate / 1e18) * token_price) / ((pool_price / 1e18) * (total_supply / 1e18) * base_asset_price)
+                reward_apr = (SECONDS_PER_YEAR * (rate / 1e18) * float(token_price)) / ((float(pool_price) / 1e18) * (total_supply / 1e18) * float(base_asset_price))
     else:
         reward_apr = 0
 
@@ -522,7 +522,7 @@ class _ConvexVault:
                     virtual_rewards_pool.totalSupply.coroutine(),
                 )
 
-                reward_apr = (reward_rate * SECONDS_PER_YEAR * reward_token_price) / (base_asset_price * (pool_price / 1e18) * total_supply)
+                reward_apr = (reward_rate * SECONDS_PER_YEAR * float(reward_token_price)) / (float(base_asset_price) * (float(pool_price) / 1e18) * total_supply)
                 convex_reward_apr += reward_apr
 
         return convex_reward_apr
