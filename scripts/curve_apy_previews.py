@@ -1,25 +1,19 @@
 import dataclasses
-import json
 import logging
-import os
 import re
-import shutil
 from time import sleep, time
-from datetime import datetime
-import traceback
 
-import boto3
 import requests
 import sentry_sdk
 from brownie import ZERO_ADDRESS, chain
 from brownie.exceptions import ContractNotFound
 from multicall.utils import await_awaitable
-from y import Contract, Network, PriceError
+from y import Contract, Network
 from y.exceptions import ContractNotVerified
 
-from yearn.apy import Apy, ApyFees, ApyPoints, ApySamples, get_samples
+from yearn.apy import Apy, ApyFees, ApyPoints, get_samples
 from yearn.apy.curve.simple import Gauge, calculate_simple
-from yearn.exceptions import EmptyS3Export
+from yearn.helpers import s3, telegram
 
 logger = logging.getLogger(__name__)
 sentry_sdk.set_tag('script','curve_apy_previews')
@@ -33,7 +27,7 @@ CURVE_API_URL = "https://api.curve.fi/api/getAllGauges"
 def main():
     gauges = _get_gauges()
     data = _build_data(gauges)
-    _upload(data)
+    s3.upload('apy-previews', 'curve-factory', data)
 
 def _build_data(gauges):
     samples = get_samples()
@@ -142,99 +136,8 @@ def _get_gauges():
                 raise ValueError(f"Error fetching gauges from {url}")
             attempts += 1
             sleep(.1)
-
-        
     else:
         raise ValueError(f"can't get curve gauges for unsupported network: {chain.id}")
-
-
-def _upload(data):
-    print(json.dumps(data, sort_keys=True, indent=4))
-
-    file_name, s3_path = _get_export_paths("curve-factory")
-    with open(file_name, "w+") as f:
-        json.dump(data, f)
-
-    if os.getenv("DEBUG", None):
-        return
-
-    for item in _get_s3s():
-        s3 = item["s3"]
-        aws_bucket = item["aws_bucket"]
-        s3.upload_file(
-            file_name,
-            aws_bucket,
-            s3_path,
-            ExtraArgs={'ContentType': "application/json", 'CacheControl': "max-age=1800"},
-        )
-
-
-def _get_s3s():
-    s3s = []
-    aws_buckets = os.environ.get("AWS_BUCKET").split(";")
-    aws_endpoint_urls = os.environ.get("AWS_ENDPOINT_URL").split(";")
-    aws_keys = os.environ.get("AWS_ACCESS_KEY").split(";")
-    aws_secrets = os.environ.get("AWS_ACCESS_SECRET").split(";")
-
-    for i in range(len(aws_buckets)):
-        aws_bucket = aws_buckets[i]
-        aws_endpoint_url = aws_endpoint_urls[i]
-        aws_key = aws_keys[i]
-        aws_secret = aws_secrets[i]
-        kwargs = {}
-        if aws_endpoint_url is not None:
-            kwargs["endpoint_url"] = aws_endpoint_url
-        if aws_key is not None:
-            kwargs["aws_access_key_id"] = aws_key
-        if aws_secret is not None:
-            kwargs["aws_secret_access_key"] = aws_secret
-
-        s3s.append(
-          {
-            "s3": boto3.client("s3", **kwargs),
-            "aws_bucket": aws_bucket
-          }
-        )
-
-    return s3s
-
-
-def _get_export_paths(suffix):
-    out = "generated"
-    if os.path.isdir(out):
-        shutil.rmtree(out)
-    os.makedirs(out, exist_ok=True)
-
-    api_path = os.path.join("v1", "chains", f"{chain.id}", "apy-previews")
-
-    file_base_path = os.path.join(out, api_path)
-    os.makedirs(file_base_path, exist_ok=True)
-
-    file_name = os.path.join(file_base_path, suffix)
-    s3_path = os.path.join(api_path, suffix)
-    return file_name, s3_path
-
+    
 def with_monitoring():
-    if os.getenv("DEBUG", None):
-        main()
-        return
-    from telegram.ext import Updater
-
-    private_group = os.environ.get('TG_YFIREBOT_GROUP_INTERNAL')
-    public_group = os.environ.get('TG_YFIREBOT_GROUP_EXTERNAL')
-    updater = Updater(os.environ.get('TG_YFIREBOT'))
-    now = datetime.now()
-    message = f"`[{now}]`\n⚙️ Curve Previews API for {Network.name()} is updating..."
-    ping = updater.bot.send_message(chat_id=private_group, text=message, parse_mode="Markdown")
-    ping = ping.message_id
-    try:
-        main()
-    except Exception as error:
-        tb = traceback.format_exc()
-        now = datetime.now()
-        message = f"`[{now}]`\n🔥 Curve Previews API update for {Network.name()} failed!\n```\n{tb}\n```"[:4000]
-        updater.bot.send_message(chat_id=private_group, text=message, parse_mode="Markdown", reply_to_message_id=ping)
-        updater.bot.send_message(chat_id=public_group, text=message, parse_mode="Markdown")
-        raise error
-    message = f"✅ Curve Previews API update for {Network.name()} successful!"
-    updater.bot.send_message(chat_id=private_group, text=message, reply_to_message_id=ping)
+    telegram.run_job_with_monitoring('Curve Previews API', main)
