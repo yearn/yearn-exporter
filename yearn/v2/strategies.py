@@ -76,7 +76,7 @@ class Strategy:
 
 
 class Harvests(ProcessedEvents[int]):
-    def __init__(self, strategy: Contract):
+    def __init__(self, strategy: Strategy):
         topics = [
             [
                 encode_hex(event_abi_to_log_topic(event))
@@ -84,14 +84,15 @@ class Harvests(ProcessedEvents[int]):
                 if event["type"] == "event" and event["name"] in STRATEGY_EVENTS
             ]
         ]
-        super().__init__(addresses=[str(strategy)], topics=topics)
+        super().__init__(addresses=[str(strategy.strategy)], topics=topics)
+        self.strategy = strategy
     def _include_event(self, event: _EventItem) -> bool:
         return event.name == "Harvested"
     # TODO: work this in somehow:
     #   logger.info("loaded %d harvests %s in %.3fs", len(self._harvests), self.name, time.time() - start)
     def _process_event(self, event: _EventItem) -> int:
         block = event.block_number
-        logger.debug("%s harvested on %d", self.name, block)
+        logger.debug("%s harvested on %d", self.strategy.name, block)
         return 
     
 
