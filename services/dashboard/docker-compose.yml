@@ -110,6 +110,13 @@ x-envs: &envs
 
   # DOCKER CONTAINER ENVS
   - CONTAINER_NAME
+  
+  - YPRICEMAGIC_DB_PROVIDER=postgres
+  - YPRICEMAGIC_DB_HOST=ypostgres
+  - YPRICEMAGIC_DB_PORT=5432
+  - YPRICEMAGIC_DB_USER=${PGUSER:-postgres}
+  - YPRICEMAGIC_DB_PASSWORD=${PGPASSWORD:-yearn-exporter}
+  - YPRICEMAGIC_DB_DATABASE=${YPRICEMAGIC_DB_DATABASE:-postgres}
 
 x-volumes: &volumes
   - brownie:/root/.brownie
