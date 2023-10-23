@@ -280,11 +280,9 @@ class Registry(metaclass=Singleton):
         return asyncio.create_task(self.watch_events())
     
     def _filter_vaults(self):
-        #logger.debug('filtering vaults')
         if chain.id in DEPRECATED_VAULTS:
             for vault in DEPRECATED_VAULTS[chain.id]:
                 self._remove_vault(vault)
-        #logger.debug('vaults filtered')
 
     def _remove_vault(self, address):
         self._vaults.pop(address, None)
