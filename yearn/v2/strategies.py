@@ -88,6 +88,8 @@ class Harvests(ProcessedEvents[int]):
         self.strategy = strategy
     def _include_event(self, event: _EventItem) -> bool:
         return event.name == "Harvested"
+    def _get_block_for_obj(self, block: int) -> int:
+        return block
     # TODO: work this in somehow:
     #   logger.info("loaded %d harvests %s in %.3fs", len(self._harvests), self.name, time.time() - start)
     def _process_event(self, event: _EventItem) -> int:
