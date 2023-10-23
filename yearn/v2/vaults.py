@@ -1,29 +1,33 @@
 import asyncio
 import logging
 import re
-import threading
 import time
-from typing import TYPE_CHECKING, Any, Dict, List, Union
+from functools import cached_property
+from typing import (TYPE_CHECKING, Any, AsyncIterator, Dict, List, NoReturn,
+                    Optional, Union)
 
-from async_property import async_cached_property
+import a_sync
+from async_property import async_cached_property, async_property
 from brownie import chain
+from brownie.network.event import _EventItem
 from eth_utils import encode_hex, event_abi_to_log_topic
-from joblib import Parallel, delayed
 from multicall.utils import run_in_subprocess
 from semantic_version.base import Version
 from y import ERC20, Contract, Network, magic
-from y.exceptions import NodeNotSynced, PriceError, yPriceMagicError
+from y.contracts import contract_creation_block_async
+from y.decorators import stuck_coro_debugger
+from y.exceptions import PriceError, yPriceMagicError
 from y.networks import Network
 from y.prices import magic
-from y.utils.events import get_logs_asap
+from y.utils.dank_mids import dank_w3
+from y.utils.events import ProcessedEvents
 
 from yearn.common import Tvl
-from yearn.decorators import sentry_catch_all, wait_or_exit_after
-from yearn.events import decode_logs, get_logs_asap
+from yearn.decorators import set_exc
 from yearn.multicall2 import fetch_multicall_async
 from yearn.special import Ygov
 from yearn.typing import Address
-from yearn.utils import run_in_thread, safe_views
+from yearn.utils import safe_views
 from yearn.v2.strategies import Strategy
 
 if TYPE_CHECKING:
@@ -91,7 +95,7 @@ def _unpack_results(vault: Address, is_experiment: bool, _views: List[str], resu
     
     info["token price"] = float(price)
     if "totalAssets" in info:
-        info["tvl"] = info["token price"] * info["totalAssets"]
+        info["tvl"] = float(info["token price"]) * info["totalAssets"]
 
     for strategy_name, desc in zip(strategies, strategy_descs):
         info["strategies"][strategy_name] = desc
@@ -101,9 +105,9 @@ def _unpack_results(vault: Address, is_experiment: bool, _views: List[str], resu
     info["version"] = "v2"
     return info
 
-
+    
 class Vault:
-    def __init__(self, vault: Contract, api_version=None, token=None, registry=None, watch_events_forever=True):
+    def __init__(self, vault: Contract, api_version=None, token=None, registry=None):
         self._strategies: Dict[Address, Strategy] = {}
         self._revoked: Dict[Address, Strategy] = {}
         self._reports = []
@@ -116,24 +120,17 @@ class Vault:
         self.scale = 10 ** self.vault.decimals()
         # multicall-safe views with 0 inputs and numeric output.
         self._views = safe_views(self.vault.abi)
+        self._calls = [[self.vault, view] for view in self._views]
 
         # load strategies from events and watch for freshly attached strategies
-        self._topics = [
-            [
-                encode_hex(event_abi_to_log_topic(event))
-                for event in self.vault.abi
-                if event["type"] == "event" and event["name"] in STRATEGY_EVENTS
-            ]
-        ]
-        self._watch_events_forever = watch_events_forever
-        self._done = threading.Event()
-        self._has_exception = False
-        self._thread = threading.Thread(target=self.watch_events, daemon=True)
+        self._events = VaultEvents(self)
+        self._done = a_sync.Event(name=f"{self.__module__}.{self.__class__.__name__}._done")
+        self._task = None
 
     def __repr__(self):
         strategies = "..."  # don't block if we don't have the strategies loaded
         if self._done.is_set():
-            strategies = ", ".join(f"{strategy}" for strategy in self.strategies)
+            strategies = ", ".join(f"{strategy}" for strategy in self._strategies)
         return f'<Vault {self.vault} name="{self.name}" token={self.token} strategies=[{strategies}]>'
 
     def __eq__(self, other):
@@ -156,124 +153,92 @@ class Vault:
         instance.name = vault.name()
         return instance
 
-    @property
-    def strategies(self) -> List[Strategy]:
-        self.load_strategies()
+    @async_property
+    @stuck_coro_debugger
+    async def strategies(self) -> List[Strategy]:
+        await self.load_strategies()
         return list(self._strategies.values())
+    
+    async def strategies_at_block(self, block: int) -> AsyncIterator[Strategy]:
+        self._task
+        working = {}
+        async for _ in self._events.events(to_block=block):
+            for address in self._strategies:
+                if address in working:
+                    continue
+                working[address] = asyncio.create_task(contract_creation_block_async(address, when_no_history_return_0=True))
+            for address in list(working.keys()):
+                if working[address].done():
+                    if await working.pop(address) > block:
+                        return
+                    yield self._strategies[address]
+                    
+        await self._events._lock.wait_for(block)
 
-    @property
-    def revoked_strategies(self) -> List[Strategy]:
-        self.load_strategies()
+    @async_property
+    @stuck_coro_debugger
+    async def revoked_strategies(self) -> List[Strategy]:
+        await self.load_strategies()
         return list(self._revoked.values())
 
-    @property
-    def reports(self):
+    @async_property
+    @stuck_coro_debugger
+    async def reports(self):
         # strategy reports are loaded at the same time as other vault strategy events
-        self.load_strategies()
+        await self.load_strategies()
         return self._reports
 
-    @property
-    def is_endorsed(self):
+    @async_property
+    @stuck_coro_debugger
+    async def is_endorsed(self):
         if not self.registry:
             return None
-        return str(self.vault) in self.registry.vaults
+        return str(self.vault) in await self.registry.vaults
 
-    @property
-    def is_experiment(self):
+    @async_property
+    @stuck_coro_debugger
+    async def is_experiment(self):
         if not self.registry:
             return None
         # experimental vaults are either listed in the registry or have the 0x address suffix in the name
-        return str(self.vault) in self.registry.experiments or re.search(r"0x.*$", self.name) is not None
+        return str(self.vault) in await self.registry.experiments or re.search(r"0x.*$", self.name) is not None
 
-    @wait_or_exit_after
-    def load_strategies(self):
-        if not self._thread._started.is_set():
-            self._thread.start()
+    @stuck_coro_debugger
+    async def is_active(self, block: Optional[int]) -> bool:
+        if block and await contract_creation_block_async(str(self.vault)) < block:
+            return False
+        # fixes edge case: a vault is not necessarily initialized on creation
+        return self.vault.activation.coroutine(block_identifier=block)
 
-    def load_harvests(self):
-        Parallel(1, "threading")(delayed(strategy.load_harvests)() for strategy in self.strategies)
+    @stuck_coro_debugger
+    async def load_strategies(self):
+        self._task
+        await self._done.wait()
+        if self._task.done() and (e := self._task.exception()):
+            raise e
 
-    @sentry_catch_all
-    def watch_events(self):
+    @set_exc
+    async def watch_events(self) -> NoReturn:
         start = time.time()
-        sleep_time = 300
-        from_block = None
-        height = chain.height
-        while True:
-            logs = get_logs_asap(str(self.vault), topics=self._topics, from_block=from_block, to_block=height)
-            events = decode_logs(logs)
-            self.process_events(events)
-            if not self._done.is_set():
-                self._done.set()
-                logger.info("loaded %d strategies %s in %.3fs", len(self._strategies), self.name, time.time() - start)
-            if not self._watch_events_forever:
-                return
-            time.sleep(sleep_time)
+        height = await dank_w3.eth.block_number
+        done_task = asyncio.create_task(self._events._lock.wait_for(height))
+        def done_callback(task: asyncio.Task) -> None:
+            logger.info("loaded %d strategies %s in %.3fs", len(self._strategies), self.name, time.time() - start)
+            self._done.set()
+        done_task.add_done_callback(done_callback)
+        self._events._ensure_task()
 
-            # set vars for next loop
-            from_block = height + 1
-            height = chain.height
-            if height < from_block:
-                raise NodeNotSynced(f"No new blocks in the past {sleep_time/60} minutes.")
-
-
-    def process_events(self, events):
-        for event in events:
-            # some issues during the migration of this strat prevented it from being verified so we skip it here...
-            if chain.id == Network.Optimism:
-                failed_migration = False
-                for key in ["newVersion", "oldVersion", "strategy"]:
-                    failed_migration |= (key in event and event[key] == "0x4286a40EB3092b0149ec729dc32AD01942E13C63")
-                if failed_migration:
-                    continue
-
-            if event.name == "StrategyAdded":
-                strategy_address = event["strategy"]
-                logger.debug("%s strategy added %s", self.name, strategy_address)
-                try: 
-                    self._strategies[strategy_address] = Strategy(strategy_address, self, self._watch_events_forever)
-                except ValueError:
-                    logger.error(f"Error loading strategy {strategy_address}")
-                    pass
-            elif event.name == "StrategyRevoked":
-                logger.debug("%s strategy revoked %s", self.name, event["strategy"])
-                self._revoked[event["strategy"]] = self._strategies.pop(
-                    event["strategy"], Strategy(event["strategy"], self, self._watch_events_forever)
-                )
-            elif event.name == "StrategyMigrated":
-                logger.debug("%s strategy migrated %s -> %s", self.name, event["oldVersion"], event["newVersion"])
-                self._revoked[event["oldVersion"]] = self._strategies.pop(
-                    event["oldVersion"], Strategy(event["oldVersion"], self, self._watch_events_forever)
-                )
-                self._strategies[event["newVersion"]] = Strategy(event["newVersion"], self, self._watch_events_forever)
-            elif event.name == "StrategyReported":
-                self._reports.append(event)
-
-    async def _unpack_results(self, results):
-        results, strategy_descs, price = results
-        strategies = await run_in_thread(getattr, self, 'strategies')
-        return await run_in_subprocess(
-            _unpack_results,
-            self.vault.address,
-            self.is_experiment,
-            self._views,
-            results,
-            self.scale,
-            price,
-            # must be picklable.
-            [strategy.unique_name for strategy in strategies],
-            strategy_descs,
-        )
-
+    @stuck_coro_debugger
     async def describe(self, block=None):
-        strategies = await run_in_thread(getattr, self, 'strategies')
+        block = block or await dank_w3.eth.block_number
         results = await asyncio.gather(
-            fetch_multicall_async(*[[self.vault, view] for view in self._views], block=block),
-            asyncio.gather(*[strategy.describe(block=block) for strategy in strategies]),
-            get_price_return_exceptions(self.token, block=block)
+            fetch_multicall_async(*self._calls, block=block),
+            self._describe_strategies(block),
+            get_price_return_exceptions(self.token, block=block),
         )
         return await self._unpack_results(results)
-
+        
+    @stuck_coro_debugger
     async def apy(self, samples: "ApySamples"):
         from yearn import apy
         if self._needs_curve_simple:
@@ -287,6 +252,7 @@ class Vault:
         else:
             return await apy.v2.simple(self, samples)
         
+    @stuck_coro_debugger
     async def tvl(self, block=None):
         total_assets = await self.vault.totalAssets.coroutine(block_identifier=block)
         try:
@@ -303,7 +269,12 @@ class Vault:
         tvl = total_assets * price / await ERC20(self.vault, asynchronous=True).scale if price else None
         return Tvl(total_assets, price, tvl)
 
+    @cached_property
+    def _task(self) -> asyncio.Task:
+        return asyncio.create_task(self.watch_events())
+        
     @async_cached_property
+    @stuck_coro_debugger
     async def _needs_curve_simple(self):
         # some curve vaults which should not be calculated with curve logic
         curve_simple_excludes = {
@@ -316,3 +287,62 @@ class Vault:
             needs_simple = self.vault.address not in curve_simple_excludes[chain.id]
 
         return needs_simple and magic.curve and await magic.curve.get_pool(self.token.address)
+    
+    @stuck_coro_debugger
+    async def _describe_strategies(self, block: int) -> List[dict]:
+        return asyncio.gather(*[asyncio.create_task(strategy.describe(block=block)) async for strategy in self.strategies_at_block(block)])
+    
+    @stuck_coro_debugger
+    async def _unpack_results(self, results):
+        results, strategy_descs, price = results
+        return await run_in_subprocess(
+            _unpack_results,
+            self.vault.address,
+            await self.is_experiment,
+            self._views,
+            results,
+            self.scale,
+            price,
+            # must be picklable.
+            [strategy.unique_name for strategy in await self.strategies],
+            strategy_descs,
+        )
+    
+    
+class VaultEvents(ProcessedEvents[int]):
+    __slots__ = "vault",
+    def __init__(self, vault: Vault, **kwargs: Any):
+        topics = [[encode_hex(event_abi_to_log_topic(event)) for event in vault.vault.abi if event["type"] == "event" and event["name"] in STRATEGY_EVENTS]]
+        super().__init__(addresses=[str(vault.vault)], topics=topics, **kwargs)
+        self.vault = vault
+    def _process_event(self, event: _EventItem) -> _EventItem:
+        # some issues during the migration of this strat prevented it from being verified so we skip it here...
+        if chain.id == Network.Optimism:
+            failed_migration = False
+            for key in ["newVersion", "oldVersion", "strategy"]:
+                failed_migration |= (key in event and event[key] == "0x4286a40EB3092b0149ec729dc32AD01942E13C63")
+            if failed_migration:
+                return event
+
+        if event.name == "StrategyAdded":
+            strategy_address = event["strategy"]
+            logger.debug("%s strategy added %s", self.vault.name, strategy_address)
+            try: 
+                self.vault._strategies[strategy_address] = Strategy(strategy_address, self.vault)
+            except ValueError:
+                logger.error(f"Error loading strategy {strategy_address}")
+                pass
+        elif event.name == "StrategyRevoked":
+            logger.debug("%s strategy revoked %s", self.vault.name, event["strategy"])
+            self.vault._revoked[event["strategy"]] = self.vault._strategies.pop(
+                event["strategy"], Strategy(event["strategy"], self.vault)
+            )
+        elif event.name == "StrategyMigrated":
+            logger.debug("%s strategy migrated %s -> %s", self.vault.name, event["oldVersion"], event["newVersion"])
+            self.vault._revoked[event["oldVersion"]] = self.vault._strategies.pop(
+                event["oldVersion"], Strategy(event["oldVersion"], self.vault)
+            )
+            self.vault._strategies[event["newVersion"]] = Strategy(event["newVersion"], self.vault)
+        elif event.name == "StrategyReported":
+            self.vault._reports.append(event)
+        return event

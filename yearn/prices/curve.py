@@ -23,9 +23,8 @@ from typing import Dict, List, Optional
 from brownie import ZERO_ADDRESS, Contract, chain, convert, interface
 from brownie.convert import to_address
 from brownie.convert.datatypes import EthAddress
-from cachetools.func import lru_cache, ttl_cache
-from y.constants import EEE_ADDRESS
-from y.exceptions import NodeNotSynced, PriceError
+from cachetools.func import lru_cache
+from y.exceptions import NodeNotSynced
 from y.networks import Network
 from y.prices import magic
 
@@ -35,7 +34,7 @@ from yearn.events import decode_logs, get_logs_asap
 from yearn.exceptions import UnsupportedNetwork
 from yearn.multicall2 import fetch_multicall, fetch_multicall_async
 from yearn.typing import Address, AddressOrContract, Block
-from yearn.utils import Singleton, contract, get_event_loop
+from yearn.utils import Singleton, contract
 
 logger = logging.getLogger(__name__)
 
@@ -101,6 +100,7 @@ class Ids(IntEnum):
 
 class CurveRegistry(metaclass=Singleton):
     # NOTE: before deprecating, figure out why this loads more pools than ypm
+    @wait_or_exit_after
     def __init__(self) -> None:
         if chain.id not in curve_contracts:
             raise UnsupportedNetwork("curve is not supported on this network")
@@ -119,11 +119,12 @@ class CurveRegistry(metaclass=Singleton):
 
         self._done = threading.Event()
         self._thread = threading.Thread(target=self.watch_events, daemon=True)
+        self._thread.start()
         self._has_exception = False
     
-    @wait_or_exit_after
     def ensure_loaded(self):
         if not self._thread._started.is_set():
+            logger.debug("starting thread")
             self._thread.start()
 
     @sentry_catch_all
@@ -399,7 +400,7 @@ class CurveRegistry(metaclass=Singleton):
         try:
             rate = (
                 inflation_rate * relative_weight * 86400 * 365 / working_supply * 0.4
-            ) / token_price
+            ) / float(token_price)
         except ZeroDivisionError:
             rate = 0
 
@@ -409,7 +410,7 @@ class CurveRegistry(metaclass=Singleton):
             "inflation rate": inflation_rate,
             "virtual price": virtual_price,
             "crv reward rate": rate,
-            "crv apy": rate * crv_price,
+            "crv apy": rate * float(crv_price),
             "token price": token_price,
         }
 
