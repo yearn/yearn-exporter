@@ -167,17 +167,6 @@ async def _staking_apy(lp: dict, staking_rewards: Contract, block: Optional[int]
         logger.info(pformat(Debug().collect_variables(locals())))
     return Apy(f"v2:{drome.label}", gross_apr=gross_apr, net_apy=net_apy, fees=fees)
 
-# NOTE: do we need this? 
-"""
-async def _get_staking_rewards_apr(reward_token: str, lp_price: float, reward_price: float, reward_rate: int, total_supply_staked: int, samples: ApySamples):
-    vault_scale = 10 ** 18
-    reward_token_scale = await ERC20(reward_token, asynchronous=True).scale
-    per_staking_token_rate = (reward_rate / reward_token_scale) / (total_supply_staked / vault_scale)
-    rewards_vault_apy = (await rewards_vault.apy(samples)).net_apy
-    emissions_apr = SECONDS_PER_YEAR * per_staking_token_rate * reward_price / lp_price
-    return emissions_apr * (1 + rewards_vault_apy)
-"""
-
 def _upload(data):
     print(json.dumps(data, sort_keys=True, indent=4))
 
