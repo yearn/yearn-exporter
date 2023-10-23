@@ -49,19 +49,15 @@ class StYETH(metaclass = Singleton):
     def symbol(self):
         return 'st-yETH'
 
+    async def get_supply(self, block: Optional[Block] = None) -> float:
+        return (await YETH_POOL.vb_prod_sum.coroutine(block_identifier=block))[1] / 10 ** 18
 
-    async def _get_supply_price(self, block=None):
-        data = YETH_POOL.vb_prod_sum(block_identifier=block)
-        supply = data[1] / 1e18
+    async def get_price(self, block: Optional[Block] = None) -> Optional[float]:
         try:
-            price = await magic.get_price(YETH_TOKEN, block=block, sync=False)
+            return await magic.get_price(YETH_TOKEN, block=block, sync=False)
         except yPriceMagicError as e:
             if not isinstance(e.exception, PriceError):
                 raise e
-            price = None
-
-        return supply, price
-
 
     @eth_retry.auto_retry
     async def apy(self, samples: ApySamples) -> Apy:
@@ -83,14 +79,13 @@ class StYETH(metaclass = Singleton):
 
     @eth_retry.auto_retry
     async def tvl(self, block=None) -> Tvl:
-        supply, price = await self._get_supply_price(block=block)
+        supply, price = await asyncio.gather(self.get_supply(block), self.get_price(block))
         tvl = supply * price if price else None
-
         return Tvl(supply, price, tvl)
 
 
     async def describe(self, block=None):
-        supply, price = await self._get_supply_price(block=block)
+        supply, price = await asyncio.gather(self.get_supply(block), self.get_price(block))
         try:
             pool_supply = YETH_POOL.supply(block_identifier=block)
             total_assets = STAKING_CONTRACT.totalAssets(block_identifier=block)
@@ -118,7 +113,7 @@ class StYETH(metaclass = Singleton):
 
 
     async def total_value_at(self, block=None):
-        supply, price = await self._get_supply_price(block=block)
+        supply, price = await asyncio.gather(self.get_supply(block), self.get_price(block))
         return supply * price
 
 
