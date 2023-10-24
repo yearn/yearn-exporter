@@ -23,13 +23,7 @@ eth_retry>=0.1.18
 eth-hash[pysha3]
 ez-a-sync==0.12.2
 python-telegram-bot==13.15
-<<<<<<< HEAD
 git+https://www.github.com/BobTheBuidler/ypricemagic@382cb3a6e35fee96f6565dbdf7b709c6d699f0d1
 git+https://www.github.com/BobTheBuidler/eth-portfolio@594b4eddf979739e23efa427e3dc508bf90594dc
-=======
-ypricemagic==2.13.5
-git+https://www.github.com/BobTheBuidler/ypricemagic@f680e5bbf15eac7e565fabfbeef13d41523de8ca
-git+https://www.github.com/BobTheBuidler/eth-portfolio@63d42011be65adc6f19167d784837e7ed2f4389a
->>>>>>> 4002c12 (fix: ypm uni v3 quoter v2 bug)
 git+https://www.github.com/BobTheBuidler/toolcache@e37b53cec64556d2b35df66767fca4c8f366a2fa
 memray
