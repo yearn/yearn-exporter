@@ -4,6 +4,7 @@ volumes:
   grafana_data: {}
   victoria_metrics_data: {}
   postgres_data: {}
+  ypostgres_data: {}
 
 networks:
   stack:
@@ -103,4 +104,18 @@ services:
       - stack
     volumes:
       - postgres_data:/var/lib/postgresql/data
+    restart: always
+  ypostgres:
+    image: postgres:14
+    command: -c 'max_connections=${PGCONNECTIONS:-5000}'
+    ports:
+      - 5420:5432
+    environment:
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=yearn-exporter
+      - POSTGRES_DB=postgres
+    networks:
+      - stack
+    volumes:
+      - ypostgres_data:/var/lib/postgresql/data
     restart: always

@@ -39,7 +39,7 @@ async def staking(staking_rewards: Contract, pool_price: int, base_asset_price: 
 
     if token and rate:
         # Single reward token
-        token_price = await magic.get_price(token, block=block, sync=False)
+        token_price = float(await magic.get_price(token, block=block, sync=False))
         return (SECONDS_PER_YEAR * (rate / 1e18) * token_price) / (
             (pool_price / 1e18) * (total_supply / 1e18) * base_asset_price
         )
@@ -60,7 +60,7 @@ async def staking(staking_rewards: Contract, pool_price: int, base_asset_price: 
             except ValueError:
                 token = None
             rate = data.rewardRate / 1e18 if data else 0
-            token_price = await magic.get_price(token, block=block, sync=False) or 0
+            token_price = float(await magic.get_price(token, block=block, sync=False) or 0)
             apr += SECONDS_PER_YEAR * rate * token_price / ((pool_price / 1e18) * (total_supply / 1e18) * token_price)
             queue += 1
             try:
@@ -88,7 +88,7 @@ async def multi(address: str, pool_price: int, base_asset_price: int, block: Opt
             token = None
         if data.periodFinish >= time():
             rate = data.rewardRate / 1e18 if data else 0
-            token_price = await magic.get_price(token, block=block, sync=False) or 0
+            token_price = float(await magic.get_price(token, block=block, sync=False) or 0)
             apr += SECONDS_PER_YEAR * rate * token_price / ((pool_price / 1e18) * (total_supply / 1e18) * token_price)
         queue += 1
         try:

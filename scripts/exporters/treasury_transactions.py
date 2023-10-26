@@ -53,10 +53,13 @@ def main() -> NoReturn:
 
 @a_sync(default='sync')
 async def load_new_txs(start_block: Block, end_block: Block) -> int:
-    futs = []
-    async for entry in treasury.ledger._get_and_yield(start_block, end_block):
-        futs.append(asyncio.create_task(insert_treasury_tx(entry)))
-    return sum(await tqdm_asyncio.gather(*futs, desc="Insert Txs to Postgres"))
+    futs = [
+        asyncio.create_task(insert_treasury_tx(entry))
+        async for entry in treasury.ledger._get_and_yield(start_block, end_block)
+        if not isinstance(entry, _Done) and entry.value
+    ]
+    to_sort = sum(await tqdm_asyncio.gather(*futs, desc="Insert Txs to Postgres"))
+    return to_sort
 
 
 # NOTE: Things get sketchy when we bump these higher

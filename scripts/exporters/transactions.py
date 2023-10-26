@@ -29,7 +29,7 @@ sentry_sdk.set_tag('script','transactions_exporter')
 
 warnings.simplefilter("ignore", BrownieEnvironmentWarning)
 
-yearn = Yearn(load_strategies=False)
+yearn = Yearn()
 
 logger = logging.getLogger('yearn.transactions_exporter')
 
@@ -39,7 +39,7 @@ BATCH_SIZE = {
     Network.Gnosis: 2_000_000,
     Network.Arbitrum: 1_500_000,
     Network.Optimism: 4_000_000,
-    Network.Base: 100_000,
+    Network.Base: 500_000,
 }[chain.id]
 
 FIRST_END_BLOCK = {
@@ -95,8 +95,8 @@ def process_and_cache_user_txs(last_saved_block=None):
                 from_address=cache_address(row['from']),
                 to_address=cache_address(row['to']),
                 amount = row.amount,
-                price = price,
-                value_usd = usd,
+                price = Decimal(price),
+                value_usd = Decimal(usd),
                 gas_used = row.gas_used,
                 gas_price = row.gas_price
             )

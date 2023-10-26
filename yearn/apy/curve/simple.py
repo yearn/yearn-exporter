@@ -4,14 +4,12 @@ import logging
 import os
 from dataclasses import dataclass
 from pprint import pformat
-from functools import lru_cache
 
 from time import time
 from http import HTTPStatus
 
 import requests
-from brownie import ZERO_ADDRESS, chain, interface
-from dank_mids.brownie_patch import patch_contract
+from brownie import ZERO_ADDRESS, chain
 from eth_abi import encode_single
 from eth_utils import function_signature_to_4byte_selector as fourbyte
 from semantic_version import Version
@@ -19,8 +17,8 @@ from y import Contract, Network
 from y.prices import magic
 from y.prices.stable_swap.curve import curve as y_curve
 from y.time import get_block_timestamp_async
-from y.utils.dank_mids import dank_w3
 
+from yearn import constants
 from yearn.apy.common import (SECONDS_PER_WEEK, SECONDS_PER_YEAR, Apy,
                               ApyError, ApyFees, ApySamples, SharePricePoint,
                               calculate_roi)
@@ -58,8 +56,6 @@ addresses = {
         'yearn_voter_proxy': '0xF147b8125d2ef93FB6965Db97D6746952a133934',
         'convex_voter_proxy': '0x989AEb4d175e16225E39E87d0D97A3360524AD80',
         'convex_booster': '0xF403C135812408BFbE8713b5A23a04b3D48AAE31',
-        'rkp3r_rewards': '0xEdB67Ee1B171c4eC66E6c10EC43EDBbA20FaE8e9',
-        'kp3r': '0x1cEB5cB57C4D4E2b2433641b95Dd330A33185A44',
     }
 }
 
@@ -164,7 +160,7 @@ async def calculate_simple(vault, gauge: Gauge, samples: ApySamples) -> Apy:
         raise ValueError(f"Error! Could not find price for {gauge.lp_token} at block {block}")
 
     crv_price, pool_price = await asyncio.gather(
-        magic.get_price(curve.crv, block=block, sync=False),
+        magic.get_price(constants.CRV, block=block, sync=False),
         gauge.pool.get_virtual_price.coroutine(block_identifier=block)
     )
     gauge_weight = gauge.gauge_weight
@@ -194,7 +190,7 @@ async def calculate_simple(vault, gauge: Gauge, samples: ApySamples) -> Apy:
         * gauge_weight
         * (SECONDS_PER_YEAR / gauge.gauge_working_supply)
         * (PER_MAX_BOOST / pool_price)
-        * crv_price
+        * float(crv_price)
     ) / base_asset_price
 
     if y_gauge_balance > 0:
@@ -227,7 +223,7 @@ async def calculate_simple(vault, gauge: Gauge, samples: ApySamples) -> Apy:
         else:
             reward_data, token_price, total_supply = await asyncio.gather(
                 gauge.gauge.reward_data.coroutine(gauge_reward_token),
-                _get_reward_token_price(gauge_reward_token),
+                magic.get_price(gauge_reward_token, block=samples.now, sync=False),
                 gauge.gauge.totalSupply.coroutine(),
             )
             rate = reward_data['rate']
@@ -236,7 +232,7 @@ async def calculate_simple(vault, gauge: Gauge, samples: ApySamples) -> Apy:
             if period_finish < current_time:
                 reward_apr = 0
             else:
-                reward_apr = (SECONDS_PER_YEAR * (rate / 1e18) * token_price) / ((pool_price / 1e18) * (total_supply / 1e18) * base_asset_price)
+                reward_apr = (SECONDS_PER_YEAR * (rate / 1e18) * float(token_price)) / ((float(pool_price) / 1e18) * (total_supply / 1e18) * float(base_asset_price))
     else:
         reward_apr = 0
 
@@ -271,10 +267,11 @@ async def calculate_simple(vault, gauge: Gauge, samples: ApySamples) -> Apy:
     if vault:
         if isinstance(vault, VaultV2):
             vault_contract = vault.vault
-            if len(vault.strategies) > 0 and hasattr(vault.strategies[0].strategy, "keepCRV"):
-                crv_keep_crv = await vault.strategies[0].strategy.keepCRV.coroutine(block_identifier=block) / 1e4
-            elif len(vault.strategies) > 0 and hasattr(vault.strategies[0].strategy, "keepCrvPercent"):
-                crv_keep_crv = await vault.strategies[0].strategy.keepCrvPercent.coroutine(block_identifier=block) / 1e4
+            strats = await vault.strategies
+            if len(strats) > 0 and hasattr(strats[0].strategy, "keepCRV"):
+                crv_keep_crv = await strats[0].strategy.keepCRV.coroutine(block_identifier=block) / 1e4
+            elif len(strats) > 0 and hasattr(strats[0].strategy, "keepCrvPercent"):
+                crv_keep_crv = await strats[0].strategy.keepCrvPercent.coroutine(block_identifier=block) / 1e4
             else:
                 crv_keep_crv = 0
             performance = await vault_contract.performanceFee.coroutine(block_identifier=block) / 1e4 if hasattr(vault_contract, "performanceFee") else 0
@@ -297,24 +294,25 @@ async def calculate_simple(vault, gauge: Gauge, samples: ApySamples) -> Apy:
     cvx_vault = None
     # if the vault consists of only a convex strategy then return 
     # specialized apy calculations for convex
-    if _ConvexVault.is_convex_vault(vault):
-        cvx_strategy = vault.strategies[0].strategy
+    if await _ConvexVault.is_convex_vault(vault):
+        strats = await vault.strategies
+        cvx_strategy = strats[0].strategy
         cvx_vault = _ConvexVault(cvx_strategy, vault, gauge.gauge)
         return await cvx_vault.apy(base_asset_price, pool_price, base_apr, pool_apy, management, performance)
 
     # if the vault has two strategies then the first is curve and the second is convex
-    if isinstance(vault, VaultV2) and len(vault.strategies) == 2: # this vault has curve and convex
+    if isinstance(vault, VaultV2) and len(strats := await vault.strategies) == 2: # this vault has curve and convex
 
         # The first strategy should be curve, the second should be convex.
         # However the order on the vault object here does not correspond
         # to the order on the withdrawal queue on chain, therefore we need to 
         # re-order so convex is always second if necessary 
-        first_strategy = vault.strategies[0].strategy
-        second_strategy = vault.strategies[1].strategy
+        first_strategy = strats[0].strategy
+        second_strategy = strats[1].strategy
 
         crv_strategy = first_strategy
         cvx_strategy = second_strategy
-        if not _ConvexVault.is_convex_strategy(vault.strategies[1]):
+        if not _ConvexVault.is_convex_strategy(strats[1]):
             cvx_strategy = first_strategy
             crv_strategy = second_strategy
 
@@ -382,7 +380,7 @@ class _ConvexVault:
         self.gauge = gauge
 
     @staticmethod
-    def is_convex_vault(vault) -> bool:
+    async def is_convex_vault(vault) -> bool:
         """Determines whether the passed in vault is a Convex vault
         i.e. it only has one strategy that's based on farming Convex.
         """
@@ -391,7 +389,7 @@ class _ConvexVault:
         if not isinstance(vault, VaultV2):
             return False 
 
-        return len(vault.strategies) == 1 and _ConvexVault.is_convex_strategy(vault.strategies[0])
+        return len(strats := await vault.strategies) == 1 and _ConvexVault.is_convex_strategy(strats[0])
 
     @staticmethod
     def is_convex_strategy(strategy) -> bool:
@@ -461,7 +459,7 @@ class _ConvexVault:
     async def _get_cvx_emissions_converted_to_crv(self) -> float:
         """The amount of CVX emissions at the current block for a given pool, converted to CRV (from a pricing standpoint) to ease calculation of total APY."""
         crv_price, cvx = await asyncio.gather(
-            magic.get_price(curve.crv, block=self.block, sync=False),
+            magic.get_price(constants.CRV, block=self.block, sync=False),
             Contract.coroutine(addresses[chain.id]['cvx']),
         )
         total_cliff = 1e3 # the total number of cliffs to happen
@@ -514,12 +512,12 @@ class _ConvexVault:
             if await virtual_rewards_pool.periodFinish.coroutine() > current_time:
                 reward_token = await virtual_rewards_pool.rewardToken.coroutine()
                 reward_token_price, reward_rate, total_supply = await asyncio.gather(
-                    _get_reward_token_price(reward_token, block),
+                    magic.get_price(reward_token, block=block, sync=False),
                     virtual_rewards_pool.rewardRate.coroutine(),
                     virtual_rewards_pool.totalSupply.coroutine(),
                 )
 
-                reward_apr = (reward_rate * SECONDS_PER_YEAR * reward_token_price) / (base_asset_price * (pool_price / 1e18) * total_supply)
+                reward_apr = (reward_rate * SECONDS_PER_YEAR * float(reward_token_price)) / (float(base_asset_price) * (float(pool_price) / 1e18) * total_supply)
                 convex_reward_apr += reward_apr
 
         return convex_reward_apr
@@ -538,24 +536,3 @@ class _ConvexVault:
     def _debt_ratio(self) -> float:
         """The debt ratio of the Convex strategy."""
         return self.vault.vault.strategies(self._cvx_strategy)[2] / 1e4
-
-
-@lru_cache
-def _get_rkp3r() -> Contract:
-    return patch_contract(interface.rKP3R(addresses[chain.id]['rkp3r_rewards']), dank_w3)
-
-async def _get_reward_token_price(reward_token, block=None):
-    if chain.id not in addresses:
-        return await magic.get_price(reward_token, block=block, sync=False)
-
-    # if the reward token is rKP3R we need to calculate it's price in 
-    # terms of KP3R after the discount
-    contract_addresses = addresses[chain.id]
-    if reward_token == contract_addresses['rkp3r_rewards']:
-        price, discount = await asyncio.gather(
-            magic.get_price(contract_addresses['kp3r'], block=block, sync=False),
-            _get_rkp3r().discount.coroutine(block_identifier=block),
-        )
-        return price * (100 - discount) / 100
-    else:
-        return await magic.get_price(reward_token, block=block, sync=False)

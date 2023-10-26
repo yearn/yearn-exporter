@@ -28,7 +28,7 @@ async def get_staking_pool(underlying: str) -> Optional[Contract]:
         return None if staking_pool == ZERO_ADDRESS else await Contract.coroutine(staking_pool)
         
 async def staking(vault: "Vault", staking_rewards: Contract, samples: ApySamples, block: Optional[int]=None) -> float:
-    if len(vault.strategies) == 0:
+    if len(await vault.strategies) == 0:
         return Apy("v2:velo_no_strats", 0, 0, ApyFees(0, 0), ApyPoints(0, 0, 0))
 
     end = await staking_rewards.periodFinish.coroutine(block_identifier=block)
@@ -37,17 +37,18 @@ async def staking(vault: "Vault", staking_rewards: Contract, samples: ApySamples
     rate = await staking_rewards.rewardRate.coroutine(block_identifier=block) if hasattr(staking_rewards, "rewardRate") else 0
     performance = await vault.vault.performanceFee.coroutine(block_identifier=block) / 1e4 if hasattr(vault.vault, "performanceFee") else 0
     management = await vault.vault.managementFee.coroutine(block_identifier=block) / 1e4 if hasattr(vault.vault, "managementFee") else 0
-    keep = await vault.strategies[0].strategy.localKeepVELO.coroutine(block_identifier=block) / 1e4 if hasattr(vault.strategies[0].strategy, "localKeepVELO") else 0
+    strats = await vault.strategies
+    keep = await strats[0].strategy.localKeepVELO.coroutine(block_identifier=block) / 1e4 if hasattr(strats[0].strategy, "localKeepVELO") else 0
     rate = rate * (1 - keep)
     fees = ApyFees(performance=performance, management=management, keep_velo=keep)
     
     if end < current_time or total_supply == 0 or rate == 0:
         return Apy("v2:velo_unpopular", gross_apr=0, net_apy=0, fees=fees)
-    else:
-        pool_price = await magic.get_price(vault.token.address, block=block, sync=False)
-    reward_token = await staking_rewards.rewardToken.coroutine(block_identifier=block) if hasattr(staking_rewards, "rewardToken") else None
+
+    pool_price = float(await magic.get_price(vault.token.address, block=block, sync=False))
+    reward_token = await staking_rewards.rewardToken.coroutine(block_identifier=block)
     token = reward_token
-    token_price = await magic.get_price(token, block=block, sync=False)
+    token_price = float(await magic.get_price(token, block=block, sync=False))
     
     gross_apr = (SECONDS_PER_YEAR * (rate / 1e18) * token_price) / (pool_price * (total_supply / 1e18))
     

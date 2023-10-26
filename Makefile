@@ -275,6 +275,18 @@ apy-yeth-monitoring:
 
 apy-yeth:
 	make up commands="yeth" network=eth filter=yeth
+	
+aerodrome-apy-previews:
+	make up commands="drome_apy_previews" network=base
+
+aerodrome-apy-previews-monitoring:
+	make up commands="drome_apy_previews with_monitoring" network=base
+
+velodrome-apy-previews:
+	make up commands="drome_apy_previews" network=optimism
+
+velodrome-apy-previews-monitoring:
+	make up commands="drome_apy_previews with_monitoring" network=optimism
 
 # revenue scripts
 revenues:

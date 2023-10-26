@@ -268,3 +268,6 @@ def is_rantom(tx: TreasuryTx) -> bool:
 
 def is_tx_creator(tx: TreasuryTx) -> bool:
     return tx.to_address.address == "0x4007c53A48DefaB0b9D2F05F34df7bd3088B3299"
+
+def is_dinobots(tx: TreasuryTx) -> bool:
+    return tx.token.symbol == "DAI" and tx._from_nickname == "Yearn yChad Multisig" and tx._to_nickname == "yMechs Multisig" and int(tx.amount) == 47_500

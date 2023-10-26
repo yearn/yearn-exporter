@@ -1,26 +1,27 @@
 import asyncio
+import logging
 import os
 import re
-import logging
-from datetime import datetime, timezone
+from datetime import datetime
+from pprint import pformat
+from typing import Optional
 
 import eth_retry
-
 from brownie import chain
-from pprint import pformat
-
-from y import Contract, magic, Network
-from y.time import get_block_timestamp
+from y import Contract, Network, magic
 from y.contracts import contract_creation_block_async
+from y.datatypes import Block
 from y.exceptions import PriceError, yPriceMagicError
+from y.time import get_block_timestamp
 
-from yearn.apy.common import (Apy, ApyFees,
-                              ApySamples, SECONDS_PER_YEAR, SECONDS_PER_WEEK, SharePricePoint, calculate_roi, get_samples)
+from yearn.apy.common import (SECONDS_PER_WEEK, SECONDS_PER_YEAR, Apy, ApyFees,
+                              ApySamples, SharePricePoint, calculate_roi,
+                              get_samples)
 from yearn.common import Tvl
-from yearn.events import decode_logs, get_logs_asap
-from yearn.utils import Singleton
-from yearn.prices.constants import weth
 from yearn.debug import Debug
+from yearn.events import decode_logs, get_logs_asap
+from yearn.prices.constants import weth
+from yearn.utils import Singleton
 
 logger = logging.getLogger("yearn.yeth")
 
@@ -49,19 +50,15 @@ class StYETH(metaclass = Singleton):
     def symbol(self):
         return 'st-yETH'
 
+    async def get_supply(self, block: Optional[Block] = None) -> float:
+        return (await YETH_POOL.vb_prod_sum.coroutine(block_identifier=block))[1] / 10 ** 18
 
-    async def _get_supply_price(self, block=None):
-        data = YETH_POOL.vb_prod_sum(block_identifier=block)
-        supply = data[1] / 1e18
+    async def get_price(self, block: Optional[Block] = None) -> Optional[float]:
         try:
-            price = await magic.get_price(YETH_TOKEN, block=block, sync=False)
+            return float(await magic.get_price(YETH_TOKEN, block=block, sync=False))
         except yPriceMagicError as e:
             if not isinstance(e.exception, PriceError):
                 raise e
-            price = None
-
-        return supply, price
-
 
     @eth_retry.auto_retry
     async def apy(self, samples: ApySamples) -> Apy:
@@ -83,14 +80,13 @@ class StYETH(metaclass = Singleton):
 
     @eth_retry.auto_retry
     async def tvl(self, block=None) -> Tvl:
-        supply, price = await self._get_supply_price(block=block)
+        supply, price = await asyncio.gather(self.get_supply(block), self.get_price(block))
         tvl = supply * price if price else None
-
         return Tvl(supply, price, tvl)
 
 
     async def describe(self, block=None):
-        supply, price = await self._get_supply_price(block=block)
+        supply, price = await asyncio.gather(self.get_supply(block), self.get_price(block))
         try:
             pool_supply = YETH_POOL.supply(block_identifier=block)
             total_assets = STAKING_CONTRACT.totalAssets(block_identifier=block)
@@ -118,7 +114,7 @@ class StYETH(metaclass = Singleton):
 
 
     async def total_value_at(self, block=None):
-        supply, price = await self._get_supply_price(block=block)
+        supply, price = await asyncio.gather(self.get_supply(block), self.get_price(block))
         return supply * price
 
 
@@ -236,7 +232,7 @@ class Registry(metaclass = Singleton):
                 volume_in_eth[asset_in] += amount_in * rates[asset_in]
                 volume_out_eth[asset_out] += amount_out * rates[asset_out]
 
-        weth_price = await magic.get_price(weth, block=from_block, sync=False)
+        weth_price = float(await magic.get_price(weth, block=from_block, sync=False))
         for i, value in enumerate(volume_in_eth):
             volume_in_usd[i] = value * weth_price
 
@@ -258,16 +254,16 @@ class Registry(metaclass = Singleton):
             samples = get_samples()
 
         self.swap_volumes = await self._get_daily_swap_volumes(samples.day_ago, samples.now)
-        products = await self.active_products_at(block)
+        products = await self.active_vaults_at(block)
         data = await asyncio.gather(*[product.describe(block=block) for product in products])
         return {product.name: desc for product, desc in zip(products, data)}
 
     async def total_value_at(self, block=None):
-        products = await self.active_products_at(block)
+        products = await self.active_vaults_at(block)
         tvls = await asyncio.gather(*[product.total_value_at(block=block) for product in products])
         return {product.name: tvl for product, tvl in zip(products, tvls)}
 
-    async def active_products_at(self, block=None):
+    async def active_vaults_at(self, block=None):
         products = [self.st_yeth] + self.st_yeth.lsts
         if block:
             blocks = await asyncio.gather(*[contract_creation_block_async(str(product.address)) for product in products])
