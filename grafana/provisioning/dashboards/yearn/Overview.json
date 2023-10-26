@@ -24,7 +24,7 @@
   "editable": true,
   "fiscalYearStartMonth": 0,
   "graphTooltip": 0,
-  "id": 31,
+  "id": 33,
   "links": [],
   "liveNow": false,
   "panels": [
@@ -327,7 +327,7 @@
     {
       "datasource": {
         "type": "prometheus",
-        "uid": "DS_PROMETHEUS"
+        "uid": "PBFE396EC0B189D67"
       },
       "description": "total native tvl in layer 1s",
       "fieldConfig": {
@@ -381,7 +381,7 @@
           },
           "editorMode": "code",
           "exemplar": true,
-          "expr": "sum(sum by (vault, version, address) (yearn_vault{param=\"tvl\", experimental=\"false\", network=\"ETH\"}))\n + \nsum(sum by (vault, version, address) (yearn_vault{param=\"tvl\", experimental=\"false\", network=\"FTM\"}))\n+\nyeth{product=\"st-yETH\",param=\"tvl\"}",
+          "expr": "(sum(sum by (vault, version, address) (yearn_vault{param=\"tvl\", experimental=\"false\", network=\"ETH\"})) or vector(0)) +\n(sum(sum by (vault, version, address) (yearn_vault{param=\"tvl\", experimental=\"false\", network=\"FTM\"})) or vector(0)) +\nyeth{product=\"st-yETH\",param=\"tvl\"}",
           "instant": false,
           "interval": "",
           "legendFormat": "l1 tvl",
@@ -2104,187 +2104,187 @@
       "type": "row"
     },
     {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "DS_PROMETHEUS"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 1,
+        "w": 2,
+        "x": 4,
+        "y": 25
+      },
+      "id": 63,
+      "options": {
+        "autoScroll": false,
+        "displayMode": "minimize",
+        "emptyValue": false,
+        "favorites": false,
+        "filter": true,
+        "groupSelection": false,
+        "header": true,
+        "padding": 0,
+        "showName": false,
+        "statusSort": false,
+        "sticky": false,
+        "variable": "networks"
+      },
+      "transparent": true,
+      "type": "volkovlabs-variable-panel"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "DS_PROMETHEUS"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 1,
+        "w": 6,
+        "x": 6,
+        "y": 25
+      },
+      "id": 64,
+      "options": {
+        "autoScroll": false,
+        "displayMode": "minimize",
+        "emptyValue": false,
+        "favorites": false,
+        "filter": true,
+        "groupSelection": false,
+        "header": true,
+        "padding": 0,
+        "showName": false,
+        "statusSort": false,
+        "sticky": false,
+        "variable": "vaults"
+      },
+      "transparent": true,
+      "type": "volkovlabs-variable-panel"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "DS_PROMETHEUS"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 1,
+        "w": 6,
+        "x": 12,
+        "y": 25
+      },
+      "id": 65,
+      "options": {
+        "autoScroll": false,
+        "displayMode": "minimize",
+        "emptyValue": false,
+        "favorites": false,
+        "filter": true,
+        "groupSelection": false,
+        "header": true,
+        "padding": 0,
+        "showName": false,
+        "statusSort": false,
+        "sticky": false,
+        "variable": "address"
+      },
+      "transparent": true,
+      "type": "volkovlabs-variable-panel"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "DS_PROMETHEUS"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 1,
+        "w": 2,
+        "x": 18,
+        "y": 25
+      },
+      "id": 66,
+      "options": {
+        "autoScroll": false,
+        "displayMode": "minimize",
+        "emptyValue": false,
+        "favorites": false,
+        "filter": true,
+        "groupSelection": false,
+        "header": true,
+        "padding": 0,
+        "showName": false,
+        "statusSort": false,
+        "sticky": false,
+        "variable": "version"
+      },
+      "transparent": true,
+      "type": "volkovlabs-variable-panel"
+    },
+    {
       "collapsed": true,
       "gridPos": {
         "h": 1,
         "w": 24,
         "x": 0,
-        "y": 25
+        "y": 26
       },
       "id": 54,
       "panels": [
-        {
-          "datasource": {
-            "type": "prometheus",
-            "uid": "DS_PROMETHEUS"
-          },
-          "fieldConfig": {
-            "defaults": {
-              "thresholds": {
-                "mode": "absolute",
-                "steps": [
-                  {
-                    "color": "green",
-                    "value": null
-                  }
-                ]
-              }
-            },
-            "overrides": []
-          },
-          "gridPos": {
-            "h": 2,
-            "w": 2,
-            "x": 4,
-            "y": 26
-          },
-          "id": 63,
-          "options": {
-            "autoScroll": false,
-            "displayMode": "minimize",
-            "emptyValue": false,
-            "favorites": false,
-            "filter": true,
-            "groupSelection": false,
-            "header": true,
-            "padding": 0,
-            "showName": false,
-            "statusSort": false,
-            "sticky": false,
-            "variable": "networks"
-          },
-          "transparent": true,
-          "type": "volkovlabs-variable-panel"
-        },
-        {
-          "datasource": {
-            "type": "prometheus",
-            "uid": "DS_PROMETHEUS"
-          },
-          "fieldConfig": {
-            "defaults": {
-              "thresholds": {
-                "mode": "absolute",
-                "steps": [
-                  {
-                    "color": "green",
-                    "value": null
-                  }
-                ]
-              }
-            },
-            "overrides": []
-          },
-          "gridPos": {
-            "h": 2,
-            "w": 6,
-            "x": 6,
-            "y": 26
-          },
-          "id": 64,
-          "options": {
-            "autoScroll": false,
-            "displayMode": "minimize",
-            "emptyValue": false,
-            "favorites": false,
-            "filter": true,
-            "groupSelection": false,
-            "header": true,
-            "padding": 0,
-            "showName": false,
-            "statusSort": false,
-            "sticky": false,
-            "variable": "vaults"
-          },
-          "transparent": true,
-          "type": "volkovlabs-variable-panel"
-        },
-        {
-          "datasource": {
-            "type": "prometheus",
-            "uid": "DS_PROMETHEUS"
-          },
-          "fieldConfig": {
-            "defaults": {
-              "thresholds": {
-                "mode": "absolute",
-                "steps": [
-                  {
-                    "color": "green",
-                    "value": null
-                  }
-                ]
-              }
-            },
-            "overrides": []
-          },
-          "gridPos": {
-            "h": 1,
-            "w": 6,
-            "x": 12,
-            "y": 26
-          },
-          "id": 65,
-          "options": {
-            "autoScroll": false,
-            "displayMode": "minimize",
-            "emptyValue": false,
-            "favorites": false,
-            "filter": true,
-            "groupSelection": false,
-            "header": true,
-            "padding": 0,
-            "showName": false,
-            "statusSort": false,
-            "sticky": false,
-            "variable": "address"
-          },
-          "transparent": true,
-          "type": "volkovlabs-variable-panel"
-        },
-        {
-          "datasource": {
-            "type": "prometheus",
-            "uid": "DS_PROMETHEUS"
-          },
-          "fieldConfig": {
-            "defaults": {
-              "thresholds": {
-                "mode": "absolute",
-                "steps": [
-                  {
-                    "color": "green",
-                    "value": null
-                  }
-                ]
-              }
-            },
-            "overrides": []
-          },
-          "gridPos": {
-            "h": 2,
-            "w": 2,
-            "x": 18,
-            "y": 26
-          },
-          "id": 66,
-          "options": {
-            "autoScroll": false,
-            "displayMode": "minimize",
-            "emptyValue": false,
-            "favorites": false,
-            "filter": true,
-            "groupSelection": false,
-            "header": true,
-            "padding": 0,
-            "showName": false,
-            "statusSort": false,
-            "sticky": false,
-            "variable": "version"
-          },
-          "transparent": true,
-          "type": "volkovlabs-variable-panel"
-        },
         {
           "datasource": {
             "type": "prometheus",
@@ -2332,8 +2332,7 @@
                 "mode": "absolute",
                 "steps": [
                   {
-                    "color": "green",
-                    "value": null
+                    "color": "green"
                   },
                   {
                     "color": "red",
@@ -2349,7 +2348,7 @@
             "h": 6,
             "w": 12,
             "x": 0,
-            "y": 28
+            "y": 27
           },
           "id": 32,
           "options": {
@@ -2436,8 +2435,7 @@
                 "mode": "absolute",
                 "steps": [
                   {
-                    "color": "green",
-                    "value": null
+                    "color": "green"
                   },
                   {
                     "color": "red",
@@ -2453,7 +2451,7 @@
             "h": 6,
             "w": 12,
             "x": 12,
-            "y": 28
+            "y": 27
           },
           "id": 24,
           "options": {
@@ -2540,8 +2538,7 @@
                 "mode": "absolute",
                 "steps": [
                   {
-                    "color": "green",
-                    "value": null
+                    "color": "green"
                   }
                 ]
               },
@@ -2553,7 +2550,7 @@
             "h": 7,
             "w": 12,
             "x": 0,
-            "y": 34
+            "y": 33
           },
           "id": 27,
           "options": {
@@ -2643,8 +2640,7 @@
                 "mode": "absolute",
                 "steps": [
                   {
-                    "color": "green",
-                    "value": null
+                    "color": "green"
                   },
                   {
                     "color": "red",
@@ -2725,7 +2721,7 @@
             "h": 7,
             "w": 12,
             "x": 12,
-            "y": 34
+            "y": 33
           },
           "id": 25,
           "options": {
@@ -2799,8 +2795,8 @@
       {
         "current": {
           "selected": false,
-          "text": "",
-          "value": ""
+          "text": "lp-yCRVv2 0.4.6",
+          "value": "lp-yCRVv2 0.4.6"
         },
         "datasource": {
           "type": "prometheus",
@@ -2826,10 +2822,9 @@
       },
       {
         "current": {
-          "isNone": true,
           "selected": false,
-          "text": "None",
-          "value": ""
+          "text": "0x6E9455D109202b426169F0d8f01A3332DAE160f3",
+          "value": "0x6E9455D109202b426169F0d8f01A3332DAE160f3"
         },
         "datasource": {
           "type": "prometheus",
@@ -2856,10 +2851,9 @@
       },
       {
         "current": {
-          "isNone": true,
           "selected": false,
-          "text": "None",
-          "value": ""
+          "text": "v2",
+          "value": "v2"
         },
         "datasource": {
           "type": "prometheus",
@@ -2894,6 +2888,6 @@
   "timezone": "browser",
   "title": "Overview",
   "uid": "OWHktH4Vk",
-  "version": 17,
+  "version": 18,
   "weekStart": ""
 }
