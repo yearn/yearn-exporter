@@ -38,7 +38,7 @@ services:
     restart: always
 
   grafana:
-    image: grafana/grafana:10.1.4
+    image: grafana/grafana:10.2.0
     depends_on:
       - victoria-metrics
       - postgres
