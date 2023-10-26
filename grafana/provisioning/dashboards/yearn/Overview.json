@@ -24,7 +24,7 @@
   "editable": true,
   "fiscalYearStartMonth": 0,
   "graphTooltip": 0,
-  "id": 32,
+  "id": 31,
   "links": [],
   "liveNow": false,
   "panels": [
@@ -91,7 +91,7 @@
       "gridPos": {
         "h": 3,
         "w": 4,
-        "x": 5,
+        "x": 4,
         "y": 0
       },
       "id": 17,
@@ -214,7 +214,7 @@
       "gridPos": {
         "h": 3,
         "w": 2,
-        "x": 9,
+        "x": 8,
         "y": 0
       },
       "id": 51,
@@ -381,7 +381,7 @@
           },
           "editorMode": "code",
           "exemplar": true,
-          "expr": "sum(sum by (vault, version, address) (yearn_vault{param=\"tvl\", experimental=\"false\", network=\"ETH\"}))\n + \nsum(sum by (vault, version, address) (yearn_vault{param=\"tvl\", experimental=\"false\", network=\"FTM\"}))",
+          "expr": "sum(sum by (vault, version, address) (yearn_vault{param=\"tvl\", experimental=\"false\", network=\"ETH\"}))\n + \nsum(sum by (vault, version, address) (yearn_vault{param=\"tvl\", experimental=\"false\", network=\"FTM\"}))\n+\nyeth{product=\"st-yETH\",param=\"tvl\"}",
           "instant": false,
           "interval": "",
           "legendFormat": "l1 tvl",
@@ -2124,7 +2124,8 @@
                 "mode": "absolute",
                 "steps": [
                   {
-                    "color": "green"
+                    "color": "green",
+                    "value": null
                   }
                 ]
               }
@@ -2133,8 +2134,8 @@
           },
           "gridPos": {
             "h": 2,
-            "w": 3,
-            "x": 0,
+            "w": 2,
+            "x": 4,
             "y": 26
           },
           "id": 63,
@@ -2166,7 +2167,8 @@
                 "mode": "absolute",
                 "steps": [
                   {
-                    "color": "green"
+                    "color": "green",
+                    "value": null
                   }
                 ]
               }
@@ -2175,50 +2177,8 @@
           },
           "gridPos": {
             "h": 2,
-            "w": 9,
-            "x": 3,
-            "y": 26
-          },
-          "id": 65,
-          "options": {
-            "autoScroll": false,
-            "displayMode": "minimize",
-            "emptyValue": false,
-            "favorites": false,
-            "filter": true,
-            "groupSelection": false,
-            "header": true,
-            "padding": 0,
-            "showName": false,
-            "statusSort": false,
-            "sticky": false,
-            "variable": "address"
-          },
-          "transparent": true,
-          "type": "volkovlabs-variable-panel"
-        },
-        {
-          "datasource": {
-            "type": "prometheus",
-            "uid": "DS_PROMETHEUS"
-          },
-          "fieldConfig": {
-            "defaults": {
-              "thresholds": {
-                "mode": "absolute",
-                "steps": [
-                  {
-                    "color": "green"
-                  }
-                ]
-              }
-            },
-            "overrides": []
-          },
-          "gridPos": {
-            "h": 2,
-            "w": 8,
-            "x": 12,
+            "w": 6,
+            "x": 6,
             "y": 26
           },
           "id": 64,
@@ -2250,7 +2210,51 @@
                 "mode": "absolute",
                 "steps": [
                   {
-                    "color": "green"
+                    "color": "green",
+                    "value": null
+                  }
+                ]
+              }
+            },
+            "overrides": []
+          },
+          "gridPos": {
+            "h": 1,
+            "w": 6,
+            "x": 12,
+            "y": 26
+          },
+          "id": 65,
+          "options": {
+            "autoScroll": false,
+            "displayMode": "minimize",
+            "emptyValue": false,
+            "favorites": false,
+            "filter": true,
+            "groupSelection": false,
+            "header": true,
+            "padding": 0,
+            "showName": false,
+            "statusSort": false,
+            "sticky": false,
+            "variable": "address"
+          },
+          "transparent": true,
+          "type": "volkovlabs-variable-panel"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "DS_PROMETHEUS"
+          },
+          "fieldConfig": {
+            "defaults": {
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {
+                    "color": "green",
+                    "value": null
                   }
                 ]
               }
@@ -2259,8 +2263,8 @@
           },
           "gridPos": {
             "h": 2,
-            "w": 4,
-            "x": 20,
+            "w": 2,
+            "x": 18,
             "y": 26
           },
           "id": 66,
@@ -2328,7 +2332,8 @@
                 "mode": "absolute",
                 "steps": [
                   {
-                    "color": "green"
+                    "color": "green",
+                    "value": null
                   },
                   {
                     "color": "red",
@@ -2431,7 +2436,8 @@
                 "mode": "absolute",
                 "steps": [
                   {
-                    "color": "green"
+                    "color": "green",
+                    "value": null
                   },
                   {
                     "color": "red",
@@ -2534,7 +2540,8 @@
                 "mode": "absolute",
                 "steps": [
                   {
-                    "color": "green"
+                    "color": "green",
+                    "value": null
                   }
                 ]
               },
@@ -2636,7 +2643,8 @@
                 "mode": "absolute",
                 "steps": [
                   {
-                    "color": "green"
+                    "color": "green",
+                    "value": null
                   },
                   {
                     "color": "red",
@@ -2763,7 +2771,120 @@
   "schemaVersion": 38,
   "tags": [],
   "templating": {
-    "list": []
+    "list": [
+      {
+        "current": {
+          "selected": false,
+          "text": "ETH",
+          "value": "ETH"
+        },
+        "datasource": {
+          "type": "postgres",
+          "uid": "P351E3BF3DD845A07"
+        },
+        "definition": "SELECT victoria_metrics_label FROM chains ORDER BY chainid;",
+        "hide": 2,
+        "includeAll": false,
+        "label": "networks",
+        "multi": false,
+        "name": "networks",
+        "options": [],
+        "query": "SELECT victoria_metrics_label FROM chains ORDER BY chainid;",
+        "refresh": 1,
+        "regex": "",
+        "skipUrlSync": false,
+        "sort": 0,
+        "type": "query"
+      },
+      {
+        "current": {
+          "selected": false,
+          "text": "",
+          "value": ""
+        },
+        "datasource": {
+          "type": "prometheus",
+          "uid": "DS_PROMETHEUS"
+        },
+        "definition": "yearn_vault{param=\"totalAssets\", network=\"$networks\", experimental=\"false\"}",
+        "hide": 2,
+        "includeAll": false,
+        "label": "vaults",
+        "multi": false,
+        "name": "vaults",
+        "options": [],
+        "query": {
+          "qryType": 4,
+          "query": "yearn_vault{param=\"totalAssets\", network=\"$networks\", experimental=\"false\"}",
+          "refId": "PrometheusVariableQueryEditor-VariableQuery"
+        },
+        "refresh": 1,
+        "regex": "/.*vault=\"([^\"]*).*/",
+        "skipUrlSync": false,
+        "sort": 1,
+        "type": "query"
+      },
+      {
+        "current": {
+          "isNone": true,
+          "selected": false,
+          "text": "None",
+          "value": ""
+        },
+        "datasource": {
+          "type": "prometheus",
+          "uid": "DS_PROMETHEUS"
+        },
+        "definition": "yearn_vault{network=\"$networks\", param=\"totalAssets\", vault=~\"$vaults\", experimental=\"false\"}",
+        "description": "",
+        "hide": 2,
+        "includeAll": false,
+        "label": "address",
+        "multi": false,
+        "name": "address",
+        "options": [],
+        "query": {
+          "qryType": 4,
+          "query": "yearn_vault{network=\"$networks\", param=\"totalAssets\", vault=~\"$vaults\", experimental=\"false\"}",
+          "refId": "PrometheusVariableQueryEditor-VariableQuery"
+        },
+        "refresh": 1,
+        "regex": "/.*address=\"([^\"]*).*/",
+        "skipUrlSync": false,
+        "sort": 0,
+        "type": "query"
+      },
+      {
+        "current": {
+          "isNone": true,
+          "selected": false,
+          "text": "None",
+          "value": ""
+        },
+        "datasource": {
+          "type": "prometheus",
+          "uid": "DS_PROMETHEUS"
+        },
+        "definition": "yearn_vault{network=\"$networks\", param=\"totalAssets\", vault=~\"$vaults\", experimental=\"false\", address=\"$address\"}",
+        "description": "The vault version",
+        "hide": 2,
+        "includeAll": false,
+        "label": "version",
+        "multi": false,
+        "name": "version",
+        "options": [],
+        "query": {
+          "qryType": 4,
+          "query": "yearn_vault{network=\"$networks\", param=\"totalAssets\", vault=~\"$vaults\", experimental=\"false\", address=\"$address\"}",
+          "refId": "PrometheusVariableQueryEditor-VariableQuery"
+        },
+        "refresh": 1,
+        "regex": "/.*version=\"([^/\"]*).*/",
+        "skipUrlSync": false,
+        "sort": 0,
+        "type": "query"
+      }
+    ]
   },
   "time": {
     "from": "now-90d",
@@ -2773,6 +2894,6 @@
   "timezone": "browser",
   "title": "Overview",
   "uid": "OWHktH4Vk",
-  "version": 16,
+  "version": 17,
   "weekStart": ""
 }
