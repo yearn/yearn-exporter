@@ -124,7 +124,7 @@ console: build setup-network
 	docker build -f Dockerfile.dev -t ghcr.io/yearn/yearn-exporter .
 	$(compose_command) -p $$PROJECT_PREFIX run --rm --entrypoint "brownie console --network $$BROWNIE_NETWORK" exporter
 
-shell: setup-network
+shell: infra setup-network
 	source set_network_envs.sh
 	$(compose_command) -p $$PROJECT_PREFIX run --rm --entrypoint bash exporter
 
