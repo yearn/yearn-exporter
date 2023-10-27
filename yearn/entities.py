@@ -98,11 +98,28 @@ class Token(db.Entity):
     address = Required(Address, column="address_id")
     streams = Set('Stream', reverse="token")
     vesting_escrows = Set("VestingEscrow", reverse="token")
+    vault = Optional("Vault", column="vault_id")
 
     @property
     def scale(self) -> int:
         return 10 ** self.decimals
 
+class Vault(db.Entity):
+    _table_ = "vaults"
+    vault_id = PrimaryKey(int, auto=True)
+    address = Required(str, index=True)
+    name = Required(str)
+    token = Required("Token", column="token_id", index=True)
+    strategy = Optional("Strategy", column="strategy_id")
+    version = Required(str)
+
+class Strategy(db.Entity):
+    _table_ = "strategies"
+    strategy_id = PrimaryKey(int, auto=True)
+    address = Required(str, index=True)
+    name = Required(str)
+    vault = Required("Vault", column="vault_id", index=True)
+    version = Required(str)
 
 # Used for wallet exporter and other analysis
 class UserTx(db.Entity):
