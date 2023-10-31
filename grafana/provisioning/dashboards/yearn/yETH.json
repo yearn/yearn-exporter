@@ -1599,7 +1599,7 @@
           {
             "matcher": {
               "id": "byName",
-              "options": "sum daily swap volume outgoing"
+              "options": "Sum swap volume outgoing"
             },
             "properties": [
               {
@@ -1614,7 +1614,7 @@
           {
             "matcher": {
               "id": "byName",
-              "options": "Sum Daily swap volume incoming"
+              "options": "Sum swap volume incoming"
             },
             "properties": [
               {
@@ -1633,7 +1633,7 @@
               "options": {
                 "mode": "exclude",
                 "names": [
-                  "Sum Daily swap volume incoming"
+                  "Sum swap volume incoming"
                 ],
                 "prefix": "All except:",
                 "readOnly": true
@@ -1682,7 +1682,7 @@
           "editorMode": "code",
           "expr": "sum(yeth{param=\"volume_in_usd\",product=~\"$lst\"})",
           "instant": false,
-          "legendFormat": "Sum Daily swap volume incoming",
+          "legendFormat": "Sum swap volume incoming",
           "range": true,
           "refId": "A"
         },
@@ -1695,7 +1695,7 @@
           "expr": "sum(yeth{param=\"volume_out_usd\",product=~\"$lst\"})",
           "hide": false,
           "instant": false,
-          "legendFormat": "sum daily swap volume outgoing",
+          "legendFormat": "Sum swap volume outgoing",
           "range": true,
           "refId": "B"
         }
@@ -1789,7 +1789,7 @@
           "refId": "A"
         }
       ],
-      "title": "Daily swap volume incoming ETH",
+      "title": "Swap volume incoming ETH",
       "type": "barchart"
     },
     {
@@ -1878,7 +1878,7 @@
           "refId": "A"
         }
       ],
-      "title": "Daily swap volume outgoing ETH",
+      "title": "Swap volume outgoing ETH",
       "type": "barchart"
     },
     {
@@ -1967,7 +1967,7 @@
           "refId": "A"
         }
       ],
-      "title": "Daily swap volume incoming USD",
+      "title": "Swap volume incoming USD",
       "type": "barchart"
     },
     {
@@ -2056,7 +2056,7 @@
           "refId": "A"
         }
       ],
-      "title": "Daily swap volume outgoing USD",
+      "title": "Swap volume outgoing USD",
       "type": "barchart"
     },
     {
