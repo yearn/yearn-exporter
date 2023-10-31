@@ -2,7 +2,7 @@ import asyncio
 import os
 import re
 import logging
-from datetime import datetime, timezone
+from datetime import datetime, timezone, timedelta
 
 import eth_retry
 
@@ -10,7 +10,7 @@ from brownie import chain
 from pprint import pformat
 
 from y import Contract, magic, Network
-from y.time import get_block_timestamp
+from y.time import get_block_timestamp, closest_block_after_timestamp
 from y.contracts import contract_creation_block_async
 from y.exceptions import PriceError, yPriceMagicError
 
@@ -210,8 +210,9 @@ class Registry(metaclass = Singleton):
     def __init__(self) -> None:
         self.st_yeth = StYETH()
         self.swap_volumes = {}
+        self.resolution = os.environ.get('RESOLUTION', '1h') # Default: 1 hour
 
-    async def _get_daily_swap_volumes(self, from_block, to_block):
+    async def _get_swap_volumes(self, from_block, to_block):
         logs = get_logs_asap([str(YETH_POOL)], None, from_block=from_block, to_block=to_block)
         events = decode_logs(logs)
 
@@ -251,13 +252,16 @@ class Registry(metaclass = Singleton):
         }
 
     async def describe(self, block=None):
+        to_block = chain.height
+        now_time = datetime.today()
         if block:
+            to_block = block
             block_timestamp = get_block_timestamp(block)
-            samples = get_samples(datetime.fromtimestamp(block_timestamp))
-        else:
-            samples = get_samples()
+            now_time = datetime.fromtimestamp(block_timestamp)
 
-        self.swap_volumes = await self._get_daily_swap_volumes(samples.day_ago, samples.now)
+        from_block = self._get_from_block(now_time)
+
+        self.swap_volumes = await self._get_swap_volumes(from_block, to_block)
         products = await self.active_products_at(block)
         data = await asyncio.gather(*[product.describe(block=block) for product in products])
         return {product.name: desc for product, desc in zip(products, data)}
@@ -273,3 +277,27 @@ class Registry(metaclass = Singleton):
             blocks = await asyncio.gather(*[contract_creation_block_async(str(product.address)) for product in products])
             products = [product for product, deploy_block in zip(products, blocks) if deploy_block <= block]
         return products
+
+    def _get_from_block(self, now_time):
+        from_time = None
+        match self.resolution:
+            case "1d":
+                from_time = (now_time - timedelta(days=1)).timestamp()
+            case "1h":
+                from_time = (now_time - timedelta(hours=1)).timestamp()
+            case "30m":
+                from_time = (now_time - timedelta(minutes=30)).timestamp()
+            case "15m":
+                from_time = (now_time - timedelta(minutes=15)).timestamp()
+            case "5m":
+                from_time = (now_time - timedelta(minutes=5)).timestamp()
+            case "1m":
+                from_time = (now_time - timedelta(minutes=1)).timestamp()
+            case "30s":
+                from_time = (now_time - timedelta(seconds=30)).timestamp()
+            case "15s":
+                from_time = (now_time - timedelta(seconds=15)).timestamp()
+            case _:
+                raise Exception(f"Invalid resolution {self.resolution} specified!")
+
+        return closest_block_after_timestamp(int(from_time), True)

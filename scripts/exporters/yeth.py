@@ -31,8 +31,7 @@ def main():
         data_fn = YETH().metrics_for_export,
         export_fn = _post,
         start_block = closest_block_after_timestamp(start[chain.id]),
-        concurrency=constants.CONCURRENCY,
-        resolution='1d',
+        concurrency=constants.CONCURRENCY
     ).run()
 
 class YETH:
