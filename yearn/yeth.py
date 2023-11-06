@@ -26,18 +26,17 @@ logger = logging.getLogger("yearn.yeth")
 
 if chain.id == Network.Mainnet:
     YETH_POOL = Contract("0x2cced4ffA804ADbe1269cDFc22D7904471aBdE63")
-    RATE_PROVIDER = Contract("0x4e322aeAf355dFf8fb9Fd5D18F3D87667E8f8316")
     STAKING_CONTRACT = Contract("0x583019fF0f430721aDa9cfb4fac8F06cA104d0B4") # st-yETH
     YETH_TOKEN = Contract("0x1BED97CBC3c24A4fb5C069C6E311a967386131f7") # yETH
 
-class StYETH(metaclass = Singleton):
-    def __init__(self):
+class StYETH:
+    def __init__(self, block=None):
         self.name = "st-yETH"
         self.address = str(STAKING_CONTRACT)
         self.lsts = []
         # TODO load assets via events
-        for i in range(YETH_POOL.num_assets()):
-            address = YETH_POOL.assets(i)
+        for i in range(YETH_POOL.num_assets(block_identifier=block)):
+            address = YETH_POOL.assets(i, block_identifier=block)
             lst = YETHLST(address, i)
             self.lsts.append(lst)
 
@@ -128,6 +127,7 @@ class YETHLST():
         self.address = address
         self.lst = Contract(address)
         self.name = self._sanitize(self.lst.name())
+        self.rate_provider = Contract(YETH_POOL.rate_providers(asset_id))
 
     @property
     def symbol(self):
@@ -145,22 +145,34 @@ class YETHLST():
         weights = YETH_POOL.weight(self.asset_id, block_identifier=block)
         weight = weights[0] / 1e18
         target = weights[1] / 1e18
-        rate = RATE_PROVIDER.rate(str(self.lst), block_identifier=block) / 1e18
-
+        rate, _ = self._get_rate([block])
         return {
           "virtual_balance": virtual_balance,
           "weight": weight,
           "target": target,
-          "rate": rate
+          "rate": rate / 1e18
         }
+
+    def _get_rate(self, blocks, idx=0):
+        block = blocks[idx]
+        try:
+            return self.rate_provider.rate(self.address, block_identifier=block), block
+        except ValueError as ve:
+            logger.error(ve)
+            idx += 1
+            if idx == len(blocks):
+                return 1e18, block
+            else:
+                return self._get_rate(blocks, idx)
 
     @eth_retry.auto_retry
     async def apy(self, samples: ApySamples) -> Apy:
-        now_rate = RATE_PROVIDER.rate(str(self.lst), block_identifier=samples.now) / 1e18
-        week_ago_rate = RATE_PROVIDER.rate(str(self.lst), block_identifier=samples.week_ago) / 1e18
-        now_point = SharePricePoint(samples.now, now_rate)
-        week_ago_point = SharePricePoint(samples.week_ago, week_ago_rate)
-        apy = calculate_roi(now_point, week_ago_point)
+        now_rate, now_block = self._get_rate([samples.now])
+        previous_rate, previous_block = self._get_rate([samples.week_ago, samples.day_ago])
+
+        now_point = SharePricePoint(now_block, now_rate)
+        previous_point = SharePricePoint(previous_block, previous_rate)
+        apy = calculate_roi(now_point, previous_point)
 
         return Apy("yETH", gross_apr=apy, net_apy=apy, fees=ApyFees())
 
@@ -225,8 +237,8 @@ class Registry(metaclass = Singleton):
         rates = []
         for i in range(num_assets):
             lst = self.st_yeth.lsts[i]
-            address = str(lst.lst)
-            rates.append(RATE_PROVIDER.rate(address, block_identifier=from_block) / 1e18)
+            rate, _ = lst._get_rate([from_block])
+            rates.append(rate / 1e18)
 
         for e in events:
             if e.name == "Swap":
@@ -261,6 +273,7 @@ class Registry(metaclass = Singleton):
 
         from_block = self._get_from_block(now_time)
 
+        self.st_yeth = StYETH(to_block)
         self.swap_volumes = await self._get_swap_volumes(from_block, to_block)
         products = await self.active_products_at(block)
         data = await asyncio.gather(*[product.describe(block=block) for product in products])
