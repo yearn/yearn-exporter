@@ -114,3 +114,6 @@ def is_yfi_dot_eth(tx: TreasuryTx) -> bool:
 def is_yyper_contest(tx: TreasuryTx) -> bool:
     """Grant for a vyper compiler audit context, vyper-context.eth"""
     return tx in HashMatcher([["0xb8bb3728fdfb49d7c86c08dba8e3586e3761f13d2c88fa6fab80227b6a3f4519", Filter('log_index', 202)]])
+
+def is_reimburse_yeth_applications(tx: TreasuryTx) -> bool:
+    return tx in HashMatcher([["0x846d475425a1a70469b8674b6f15568c83a14ed3251cafa006811722af676f44", Filter('_symbol', 'ETH')]])

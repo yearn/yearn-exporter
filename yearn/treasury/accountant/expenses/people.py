@@ -1,11 +1,80 @@
 
+from typing import List, Optional
 
+from brownie import convert
+from msgspec import UNSET, Struct
 from pony.orm import commit
 
 from yearn.entities import TreasuryTx
 from yearn.treasury.accountant.classes import Filter, HashMatcher, IterFilter
 
 
+class BudgetRequest(Struct):
+    number: int = 0
+    dai: Optional[float] = UNSET
+    yfi: Optional[float] = UNSET
+    # TODO: maybe refactor this somewhere else? its only here for non-comp 
+    usdc: Optional[float] = UNSET
+    
+    def __post_init__(self) -> None:
+        if self.number:
+            _budget_requests[self.number] = self
+    
+    @property
+    def url(self) -> str:
+        if not self.number:
+            raise ValueError(f"{self}.no is unassigned")
+        return f"https://github.com/yearn/budget/issues/{self.number}"
+
+
+class yTeam(Struct):
+    label: str
+    address: str
+    brs: List[BudgetRequest] = []
+    
+    def __post_init__(self) -> None:
+        self.address = convert.to_address(self.address)
+    
+    @property
+    def txgroup_name(self) -> str:
+        # TODO: BR numbers
+        return f"{self.label} [BR#xxx]"
+        
+    def is_team_comp(self, tx: TreasuryTx) -> bool:
+        token = tx._symbol.lower()
+        brs_for_token = [br for br in self.brs if hasattr(br, token)]
+        if not brs_for_token:
+            return False
+        amount = float(tx.amount)
+        return any(amount == getattr(br, token) for br in brs_for_token) and tx.to_address.address == self.address
+
+
+# TODO: add BR numbers
+yteams = [
+    yTeam(
+        "V3 Development", 
+        "0x3333333368A1ed686392C1534e747F3e15CA286C", 
+        brs=[
+            BudgetRequest(dai=35_000, yfi=1.5),
+            # 2nd request
+            BudgetRequest(dai=40_000, yfi=1.5),
+            # extra fundus # TODO: figure out a better way to handle these
+            BudgetRequest(dai=25_000),
+            BudgetRequest(usdc=65_000),
+        ]
+    ),
+    yTeam("S2 Team", "0x00520049162aa47AdA264E2f77DA6749dfaa6218", brs=[BudgetRequest(dai=39_500, yfi=2.25)]),
+    yTeam("yCreative", "0x402449F51afbFC864D44133A975980179C6cD24C", brs=[BudgetRequest(dai=15_500, yfi=1.65), BudgetRequest(dai=46_500, yfi=4.95)]),
+    yTeam("Corn", "0xF6411852b105042bb8bbc6Dd50C0e8F30Af63337", brs=[BudgetRequest(dai=10_000, yfi=1.5), BudgetRequest(dai=30_000, yfi=4.5)]),
+    yTeam("ySecurity", "0x4851C7C7163bdF04A22C9e12Ab77e184a5dB8F0E", brs=[BudgetRequest(dai=20_667, yfi=2.5)]),
+    yTeam("Zootroop", "0xBd5CA40C66226F53378AE06bc71784CAd6016087", brs=[BudgetRequest(dai=34_500, yfi=1.5), BudgetRequest(dai=36_500, yfi=2)]),
+    yTeam("yETH", "0xeEEEEeeeEe274C3CCe13f77C85d8eBd9F7fd4479", brs=[BudgetRequest(dai=20_000, yfi=4.5)]),
+    yTeam("yLockers", "0xAAAA00079535300dDba84A89eb92434250f83ea7", brs=[BudgetRequest(dai=20_600, yfi=2), BudgetRequest(dai=60_500, yfi=6)]),
+    yTeam("yDiscount", "0x54991866A907891c9B85478CC1Fb0560B17D2b1D", brs=[BudgetRequest(yfi=1)]),
+]
+
+# old
+# TODO refactor all of this
 def is_team_payment(tx: TreasuryTx) -> bool:
     hashes = [
         "0x0704961379ad0ee362c9a2dfd22fdfa7d9a2ed5a94a99dbae1f83853a2d597bc",
@@ -105,6 +174,11 @@ def is_other_grant(tx: TreasuryTx) -> bool:
         "0xa96246a18846cd6966fc87571313a2021d8e1e38466132e2b7fe79acbbd2c589",
         ["0x47bcb48367b5c724780b40a19eed7ba4f623de619e98c30807f52be934d28faf", Filter('_symbol', "DAI")],
         ["0xa0aa1d29e11589350db4df09adc496102a1d9db8a778fc7108d2fb99fb40b6d0", IterFilter("log_index", [391, 394])],
+        "0xf8fe392a865b36b908bd8a4247d7d40a3d8cfef13da9e8bc657aee46bd82f9dd",
+        ["0xfc07ee04d44f8e481f58339b7b8c998d454e4ec427b8021c4e453c8eeee6a9b9", Filter('_symbol', "ETH")],
+        ["0xfc07ee04d44f8e481f58339b7b8c998d454e4ec427b8021c4e453c8eeee6a9b9", Filter('log_index', 218)],
+        ["0x925d77f797779f087a44b2e871160fb194f9cdf949019b5c3c3617f86a0d97fb", IterFilter('log_index', [150, 151])],
+        "0x4bda2a3b21ff999a2ef1cbbaffaa21a713293f8e175adcc4d67e862f0717d6ef",
     ]
     disperse_hashes = [
         "0x1e411c81fc83abfe260f58072c74bfa91e38e27e0066da07ea06f75d9c8f4a00",
@@ -146,14 +220,6 @@ def is_docs_grant(tx: TreasuryTx) -> bool:
     return tx in HashMatcher([
         "0x99f8e351a15e7ce7f0acbae2dea52c56cd93ef97b0a5981f79a68180ff777f00",
     ])
-    
-def is_yeth(tx: TreasuryTx) -> bool:
-    if tx.to_address.address == "0xeEEEEeeeEe274C3CCe13f77C85d8eBd9F7fd4479":
-        if tx._symbol == "YFI" and tx.amount == 4.5:
-            return True
-        elif tx._symbol == "DAI" and tx.amount == 20_000:
-            return True
-    return False
 
 def is_yearn_exporter(tx: TreasuryTx) -> bool:
     if tx.to_address.address == "0xcD63C69f08bdDa7Fe96a87A2Ca3f56f3a6990a75":
@@ -166,79 +232,18 @@ def is_yearn_exporter(tx: TreasuryTx) -> bool:
         return True        
     return False
 
-# TODO figure out why these didn't sort
-_xopowo_hashes = [
-    "0xea1ce33495faf84892826ce4d25b9010ef1b035215f38e537164237cff07c459",
-    "0x1969a5ebdedc96057feaa7a156adbdfd2e452868d0bb8258df767f12db26895d",
-    "0xa8eb68338106aa60aba95406ed201b098821884c8c1893c93b400ee994a7facc",
-]
-
 def is_xopowo(tx: TreasuryTx) -> bool:
     if tx.to_address.address == "0x4F909396A75FE9d59F584156A851B3770f3F438a":
-        print(tx.amount)
-        print(5.1)
-        if tx._symbol == "YFI" and (tx.amount == 5.1 or tx.hash in _xopowo_hashes):
-            return True
+        if tx._symbol == "YFI":
+            return float(tx.amount) == 5.1 or tx in HashMatcher([
+                # usual amount chunked in two parts
+                "0x699887b634006c45a5a0ccd66cdc0f5396e82635dd17e7e4e0934014d454d81c",
+                "0xfc07ee04d44f8e481f58339b7b8c998d454e4ec427b8021c4e453c8eeee6a9b9",
+            ])
         elif tx._symbol == "DAI" and tx.amount == 71_500:
             return True
     return False
 
-def is_v3_team(tx: TreasuryTx) -> bool:
-    if tx.to_address.address == "0x3333333368A1ed686392C1534e747F3e15CA286C":
-        return True
-        # make sure this is good
-        if tx._symbol == "YFI" and tx.amount == 1.5:
-            return True
-        elif tx._symbol == "DAI" and tx.amount == 35_000:
-            return True
-    return False
-
-def is_s2_team(tx: TreasuryTx) -> bool:
-    if tx.to_address.address == "0x00520049162aa47AdA264E2f77DA6749dfaa6218":
-        if tx._symbol == "YFI" and tx.amount == 2.25:
-            return True
-        elif tx._symbol == "DAI" and tx.amount == 39_500:
-            return True
-    return False
-
-# TODO figure out why this didn't sort
-_ycreative_hashes = [
-    "0x1969a5ebdedc96057feaa7a156adbdfd2e452868d0bb8258df767f12db26895d",
-    "0xea1ce33495faf84892826ce4d25b9010ef1b035215f38e537164237cff07c459",
-    "0x53cbb8189b9ce895f0fc9b5fb0660f47c406c5d1879e053fe0bec3ff3321676c",
-]
-
-def is_ycreative(tx: TreasuryTx) -> bool:
-    if tx.to_address.address == "0x402449F51afbFC864D44133A975980179C6cD24C":
-        if tx._symbol == "YFI" and (tx.amount == 1.65 or tx.hash in _ycreative_hashes):
-            return True
-        elif tx._symbol == "DAI" and tx.amount == 15_500:
-            return True
-    return False
-
-def is_ysecurity(tx: TreasuryTx) -> bool:
-    if tx.to_address.address == "0x4851C7C7163bdF04A22C9e12Ab77e184a5dB8F0E":
-        if tx._symbol == "YFI" and tx.amount == 2.5:
-            return True
-        elif tx._symbol == "DAI" and tx.amount == 20_667:
-            return True
-    return False
-
-def is_zootroop(tx: TreasuryTx) -> bool:
-    if tx.to_address.address == "0xBd5CA40C66226F53378AE06bc71784CAd6016087":
-        if tx._symbol == "YFI" and tx.amount == 1.5:
-            return True
-        elif tx._symbol == "DAI" and tx.amount == 34_500:
-            return True
-    return False
-
-def is_corn(tx: TreasuryTx) -> bool:
-    if tx.to_address.address == "0xF6411852b105042bb8bbc6Dd50C0e8F30Af63337":
-        if tx._symbol == "YFI" and tx.amount == 1.5:
-            return True
-        elif tx._symbol == "DAI" and tx.amount == 10_000:
-            return True
-    return False
 
 # TODO: Refactor this whole thing
 
@@ -246,7 +251,11 @@ def is_tapir(tx: TreasuryTx) -> bool:
     return tx.to_address.address == "0x80c9aC867b2D36B7e8D74646E074c460a008C0cb" and tx._symbol == "DAI" and tx.amount == 4_000
 
 def is_hipsterman(tx: TreasuryTx) -> bool:
-    return tx.to_address.address == "0xE53D3f2B99FE0Ed6C05977bC0547127836f0D78d" and tx._symbol == "DAI" and tx.amount == 3_500
+    if tx.to_address.address == "0xE53D3f2B99FE0Ed6C05977bC0547127836f0D78d" and tx._symbol == "DAI" and tx.amount in [3_500, 7000]:
+        return True
+    elif tx.hash == "0xfe0ce0947c405f22c99eab63f7e529d95eab4274f2c468deaa1da50adaeb4450":
+        tx.value_usd *= -1
+        return True
 
 def is_worms(tx: TreasuryTx) -> bool:
     return tx.to_address.address == "0xB1d693B77232D88a3C9467eD5619FfE79E80BCCc"
@@ -268,3 +277,9 @@ def is_rantom(tx: TreasuryTx) -> bool:
 
 def is_tx_creator(tx: TreasuryTx) -> bool:
     return tx.to_address.address == "0x4007c53A48DefaB0b9D2F05F34df7bd3088B3299"
+
+def is_dinobots(tx: TreasuryTx) -> bool:
+    return tx.token.symbol == "DAI" and tx._from_nickname == "Yearn yChad Multisig" and tx._to_nickname == "yMechs Multisig" and int(tx.amount) == 47_500
+
+# TODO: add rejected BRs
+_budget_requests = {}

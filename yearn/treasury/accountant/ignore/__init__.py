@@ -160,6 +160,7 @@ if chain.id == Network.Mainnet:
     ignore_txgroup.create_child("Testing with contributor funds", general.is_ycrv_for_testing)
     ignore_txgroup.create_child("Deploy Vesting Package", general.is_vest_factory)
     ignore_txgroup.create_child("Ignore yMechs", general.is_ignore_ymechs)
+    ignore_txgroup.create_child("Maker DSR", maker.is_dsr)
 elif chain.id == Network.Fantom:
     ignore_txgroup.create_child("OTCTrader", general.is_otc_trader)
 

@@ -3,7 +3,7 @@ from brownie import chain
 from y.networks import Network
 
 from yearn.treasury.accountant.classes import TopLevelTxGroup
-from yearn.treasury.accountant.revenue import (bribes, farming, fees,
+from yearn.treasury.accountant.revenue import (bribes, dinobots, farming, fees,
                                                keepcoins, seasolver, yacademy)
 
 REVENUE_LABEL = "Protocol Revenue"
@@ -22,6 +22,8 @@ fees_txgroup.create_child("TempleDAO Private Vault Fees", fees.is_temple)
 seasolver_txgroup = revenue_txgroup.create_child("SeaSolver")
 seasolver_txgroup.create_child("Positive Slippage", seasolver.is_seasolver_slippage_revenue)
 seasolver_txgroup.create_child("CowSwap Incentives", seasolver.is_cowswap_incentive)
+
+dinobots_txgroup = revenue_txgroup.create_child("Dinobots", dinobots.is_dinobots_rev)
 
 bribes_txgroup = revenue_txgroup.create_child("Bribes")
 bribes_txgroup.create_child("yCRV Bribes", check=bribes.is_ycrv_bribe)
