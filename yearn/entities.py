@@ -553,7 +553,21 @@ db.bind(
     
 db.generate_mapping(create_tables=True)
 
-
+@db_session
+def deduplicate_internal_transfers():
+    db.execute(
+        """
+        WITH counted AS (
+            SELECT treasury_tx_id, ROW_NUMBER() over(partition BY CHAIN, TIMESTAMP, block, hash, log_index, token_id, "from", "to", amount, gas_used, gas_price ORDER BY treasury_tx_id ASC) number
+            FROM treasury_txs
+        )
+        DELETE FROM treasury_txs WHERE treasury_tx_id IN (
+            SELECT treasury_tx_id FROM counted WHERE NUMBER > 1
+        )
+        """
+    )
+    
+# views
 @db_session
 def create_txgroup_parentage_view() -> None:
     try:
