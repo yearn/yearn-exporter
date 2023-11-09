@@ -30,6 +30,7 @@ if chain.id == Network.Mainnet:
     other_expense_txgroup.create_child("Warroom Games 2023 Prizes", general.is_warroom_games)
     other_expense_txgroup.create_child("yfi.eth", general.is_yfi_dot_eth)
     other_expense_txgroup.create_child("Fund Vyper Compiler Audit Context", general.is_yyper_contest)
+    other_expense_txgroup.create_child("Reimburse yETH Applications", general.is_reimburse_yeth_applications)
 
 # Bugs
 if chain.id == Network.Mainnet:

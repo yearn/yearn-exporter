@@ -26,3 +26,7 @@ def is_dai(tx: TreasuryTx) -> bool:
             return True
         elif tx.to_address.address == "0xd42e1Cb8b98382df7Db43e0F09dFE57365659D16": # DSProxy
             return True
+
+def is_dsr(tx: TreasuryTx) -> bool:
+    """sending DAI to or receiving DAI back from Maker's DSR module"""
+    return "Contract: DsrManager" in [tx._to_nickname, tx._from_nickname]

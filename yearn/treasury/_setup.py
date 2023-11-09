@@ -25,6 +25,7 @@ skip_tokens = {
         "0x528Ff33Bf5bf96B5392c10bc4748d9E9Fb5386B2", # PRM
         "0x53fFFB19BAcD44b82e204d036D579E86097E5D09", # BGBG
         "0x57b9d10157f66D8C00a815B5E289a152DeDBE7ed", # 环球股
+        "0x1d41cf24dF81E3134319BC11c308c5589A486166", # Strangers NFT from @marcoworms <3
     },
     Network.Arbitrum: {
         "0x89b0f9dB18FD079063cFA91F174B300C1ce0003C", # AIELON

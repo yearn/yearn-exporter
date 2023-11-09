@@ -5,6 +5,7 @@ from time import time
 import pandas as pd
 from pony.orm import db_session
 from tqdm import tqdm
+from yearn.entities import deduplicate_internal_transfers
 from yearn.treasury import accountant
 
 pd.set_option('display.max_rows', 1000)
@@ -12,6 +13,7 @@ pd.set_option('display.max_colwidth', None)
 
 @db_session
 def main():
+    deduplicate_internal_transfers()
     txs = accountant.unsorted_txs()
     start_ct, start = len(txs), time()
     accountant.sort_txs(txs)
