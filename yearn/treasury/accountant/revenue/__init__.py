@@ -48,4 +48,4 @@ elif chain.id == Network.Fantom:
     farming_txgroup.create_child("SOLIDsex Farming", farming.is_solidsex)
 
 if chain.id == Network.Mainnet:
-    revenue_txgroup.create_child("yAcadmy Audit Rev Share", yacademy.is_yacademy_audit_revenue)
+    revenue_txgroup.create_child("yAcademy Audit Rev Share", yacademy.is_yacademy_audit_revenue)
