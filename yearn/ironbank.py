@@ -105,6 +105,7 @@ class Registry:
         )
         output = defaultdict(dict)
         for m, price in zip(markets, prices):
+            price = float(price)
             res = results[m.vault]
             exchange_rate = res["exchangeRateCurrent"] * 10 ** (m.cdecimals - m.decimals - 18)
             for attr in ["getCash", "totalBorrows", "totalReserves"]:
