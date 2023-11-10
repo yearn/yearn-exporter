@@ -26,6 +26,7 @@ skip_tokens = {
         "0x53fFFB19BAcD44b82e204d036D579E86097E5D09", # BGBG
         "0x57b9d10157f66D8C00a815B5E289a152DeDBE7ed", # 环球股
         "0x1d41cf24dF81E3134319BC11c308c5589A486166", # Strangers NFT from @marcoworms <3
+        "0x1BA4b447d0dF64DA64024e5Ec47dA94458C1e97f", # Hegic V8888 Options (Tokenized)
     },
     Network.Arbitrum: {
         "0x89b0f9dB18FD079063cFA91F174B300C1ce0003C", # AIELON
