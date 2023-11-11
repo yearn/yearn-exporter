@@ -20,21 +20,20 @@ from collections import defaultdict
 from enum import IntEnum
 from typing import Dict, List, Optional
 
-from brownie import ZERO_ADDRESS, Contract, chain, convert, interface
+from brownie import ZERO_ADDRESS, chain, convert, interface
 from brownie.convert import to_address
 from brownie.convert.datatypes import EthAddress
 from cachetools.func import lru_cache, ttl_cache
+from y import Contract, Network, magic
 from y.constants import EEE_ADDRESS
 from y.exceptions import NodeNotSynced, PriceError
-from y.networks import Network
-from y.prices import magic
 
 from yearn.decorators import sentry_catch_all, wait_or_exit_after
 from yearn.events import decode_logs, get_logs_asap
 from yearn.exceptions import UnsupportedNetwork
 from yearn.multicall2 import fetch_multicall, fetch_multicall_async
 from yearn.typing import Address, AddressOrContract, Block
-from yearn.utils import Singleton, contract, get_event_loop
+from yearn.utils import Singleton, contract
 
 logger = logging.getLogger(__name__)
 
@@ -112,8 +111,8 @@ class CurveRegistry(metaclass=Singleton):
 
         addrs = curve_contracts[chain.id]
         if chain.id == Network.Mainnet:
-            self.voting_escrow = contract(addrs['voting_escrow'])
-            self.gauge_controller = contract(addrs['gauge_controller'])
+            self.voting_escrow = Contract(addrs['voting_escrow'])
+            self.gauge_controller = Contract(addrs['gauge_controller'])
 
         self.crv = contract(addrs['crv'])
         self.identifiers = defaultdict(list)  # id -> versions
@@ -121,7 +120,7 @@ class CurveRegistry(metaclass=Singleton):
         self.factories = defaultdict(set)  # factory -> pools
         self.token_to_pool = dict()  # lp_token -> pool
         self.coin_to_pools = defaultdict(list)
-        self.address_provider = contract(addrs['address_provider'])
+        self.address_provider = Contract(addrs['address_provider'])
 
         self._done = threading.Event()
         self._thread = threading.Thread(target=self.watch_events, daemon=True)
@@ -171,7 +170,7 @@ class CurveRegistry(metaclass=Singleton):
             for event in decode_logs(registry_logs):
                 if event.name == 'PoolAdded':
                     self.registries[event.address].add(event['pool'])
-                    lp_token = contract(event.address).get_lp_token(event['pool'])
+                    lp_token = Contract(event.address).get_lp_token(event['pool'])
                     pool = event['pool']
                     self.token_to_pool[lp_token] = pool
                     for coin in self.get_coins(pool):
@@ -228,7 +227,7 @@ class CurveRegistry(metaclass=Singleton):
                 if pool in self.factories[factory]:
                     continue
                 # for curve v5 pools, pool and lp token are separate
-                lp_token = contract(factory).get_token(pool)
+                lp_token = Contract(factory).get_token(pool)
                 self.token_to_pool[lp_token] = pool
                 self.factories[factory].add(pool)
                 for coin in self.get_coins(pool):
@@ -285,17 +284,17 @@ class CurveRegistry(metaclass=Singleton):
         # for ethereum mainnet: gauges can be retrieved from the pool factory
             factory = self.get_factory(pool)
             registry = self.get_registry(pool)
-            if factory and hasattr(contract(factory), 'get_gauge'):
-                gauge = contract(factory).get_gauge(pool)
+            if factory and hasattr(Contract(factory), 'get_gauge'):
+                gauge = Contract(factory).get_gauge(pool)
                 if gauge != ZERO_ADDRESS:
                     return gauge
             if registry:
-                gauges, _ = contract(registry).get_gauges(pool)
+                gauges, _ = Contract(registry).get_gauges(pool)
                 if gauges[0] != ZERO_ADDRESS:
                     return gauges[0]
         else:
         # for chains != ethereum: get gauges from special XCHAIN_GAUGE_FACTORY contract
-            factory = contract(XCHAIN_GAUGE_FACTORY)
+            factory = Contract(XCHAIN_GAUGE_FACTORY)
             gauge = factory.get_gauge_from_lp_token(lp_token)
             if gauge != ZERO_ADDRESS:
                 return gauge
@@ -310,13 +309,13 @@ class CurveRegistry(metaclass=Singleton):
         factory = self.get_factory(pool)
         registry = self.get_registry(pool)
         if factory:
-            coins = contract(factory).get_coins(pool)
+            coins = Contract(factory).get_coins(pool)
         elif registry:
-            coins = contract(registry).get_coins(pool)
+            coins = Contract(registry).get_coins(pool)
 
         # pool not in registry
         if set(coins) == {ZERO_ADDRESS}:
-            coins = fetch_multicall(*[[contract(pool), 'coins', i] for i in range(8)])
+            coins = fetch_multicall(*[[Contract(pool), 'coins', i] for i in range(8)])
 
         return [coin for coin in coins if coin not in {None, ZERO_ADDRESS}]
 
@@ -555,7 +554,7 @@ class CurveRegistry(metaclass=Singleton):
         }
 
     async def calculate_apy(self, gauge: Contract, lp_token: AddressOrContract, block: Optional[Block] = None) -> Dict[str,float]:
-        pool = contract(self.get_pool(lp_token))
+        pool = await Contract.coroutine(self.get_pool(lp_token))
         results = fetch_multicall_async(
             [gauge, "working_supply"],
             [self.gauge_controller, "gauge_relative_weight", gauge],
