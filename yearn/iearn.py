@@ -2,13 +2,13 @@ import asyncio
 from collections import defaultdict
 
 from brownie import chain
+from y import Contract
 from y.contracts import contract_creation_block_async
 from y.networks import Network
 from y.prices import magic
 
 from yearn.exceptions import UnsupportedNetwork
 from yearn.multicall2 import fetch_multicall_async, multicall_matrix_async
-from yearn.utils import contract
 
 IEARN = {
     # v1 - deprecated
@@ -30,7 +30,7 @@ IEARN = {
 class Earn:
     def __init__(self, name, vault):
         self.name = name
-        self.vault = contract(vault)
+        self.vault = Contract(vault)
         self.token = self.vault.token()
         self.scale = 10 ** self.vault.decimals()
 
