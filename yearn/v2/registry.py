@@ -36,9 +36,6 @@ DEPRECATED_VAULTS = {
 
 # populate rekt vaults here
 TEMP_REKT_VAULTS = {
-    Network.Mainnet: [
-        "0xcd68c3fC3e94C5AcC10366556b836855D96bfa93" # yvCurve-dETH-f 0.4.6 has dETH as unverified token contract
-    ],
     Network.Optimism: [
         "0x9E724b3f65b509326A4F5Ec90D4689BeE6b6C78e", # ERN-USDC, issue with pricing
     ]
@@ -151,9 +148,7 @@ class Registry(metaclass=Singleton):
                 raise NodeNotSynced(f"No new blocks in the past {sleep_time/60} minutes.")
 
     def process_events(self, events):
-        temp_rekt_vaults = []
-        if chain.id in TEMP_REKT_VAULTS:
-            temp_rekt_vaults = TEMP_REKT_VAULTS[chain.id]
+        temp_rekt_vaults = TEMP_REKT_VAULTS.get(chain.id, [])
 
         for event in events:
             if "vault" in event and event["vault"] in temp_rekt_vaults:
