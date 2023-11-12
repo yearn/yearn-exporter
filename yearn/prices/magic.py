@@ -33,19 +33,19 @@ async def _get_price(token: AnyAddressType, block: Optional[Block]) -> Decimal:
         from yearn.special import Backscratcher
         # no liquid market for yveCRV-DAO -> return CRV token price
         if token == Backscratcher().vault.address and block < 11786563:
-            return await _get_price("0xD533a949740bb3306d119CC777fa900bA034cd52", block)
+            return Decimal(await _get_price("0xD533a949740bb3306d119CC777fa900bA034cd52", block))
         # no liquidity for curve pool (yvecrv-f) -> return 0
         elif token == "0x7E46fd8a30869aa9ed55af031067Df666EfE87da" and block < 14987514:
-            return 0
+            return Decimal(0)
         # no continuous price data before 2020-10-10
         elif token == "0xEB4C2781e4ebA804CE9a9803C67d0893436bB27D" and block < 11024342:
-            return 0
+            return Decimal(0)
     try:
-        return await magic.get_price(token, block, sync=False)
+        return Decimal(await magic.get_price(token, block, sync=False))
     except:
         for incident in INCIDENTS[token]:
             if incident['start'] <= block <= incident['end']:
-                return incident['result']
+                return Decimal(incident['result'])
         raise
 
 # Will delete once we're sure we don't need anymore
