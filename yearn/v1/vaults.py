@@ -138,7 +138,7 @@ class VaultV1:
             info["strategy buffer"] = info.pop("min") / info.pop("max")
 
         if "token price" not in info:
-            info["token price"] = await self.get_price(block=block) if info["vault total"] > 0 else 0
+            info["token price"] = float(await self.get_price(block=block)) if info["vault total"] > 0 else 0
 
         info["tvl"] = info["vault balance"] * info["token price"]
             
@@ -155,7 +155,7 @@ class VaultV1:
     async def tvl(self, block=None):
         total_assets = await self.vault.balance.coroutine(block_identifier=block)
         try:
-            price = await magic.get_price(self.token, block=block, sync=False)
+            price = float(await magic.get_price(self.token, block=block, sync=False))
         except yPriceMagicError as e:
             if not isinstance(e.exception, PriceError):
                 raise e
