@@ -26,8 +26,8 @@ class VaultWalletDescriber:
             'total wallets': len(set(wallet for wallet, bal in balances.items())),
             'wallet balances': {
                 wallet: {
-                    "token balance": float(bal),
-                    "usd balance": float(bal) * price
+                    "token balance": bal,
+                    "usd balance": bal * price
                     } for wallet, bal in balances.items()
                 }
             }

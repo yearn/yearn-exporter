@@ -1,4 +1,5 @@
 import logging
+from decimal import Decimal
 from typing import Optional
 
 from brownie import chain
@@ -24,7 +25,7 @@ from yearn.utils import contract
 
 logger = logging.getLogger(__name__)
 
-async def _get_price(token: AnyAddressType, block: Optional[Block]) -> float:
+async def _get_price(token: AnyAddressType, block: Optional[Block]) -> Decimal:
     """ Performs some checks before deferring to ypricemagic. """ 
 
     if chain.id == Network.Mainnet:

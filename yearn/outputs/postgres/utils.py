@@ -1,5 +1,6 @@
 import logging
-from typing import Optional
+from decimal import Decimal
+from typing import Dict, Optional
 
 from brownie import ZERO_ADDRESS, chain, convert
 from brownie.convert.datatypes import HexString
@@ -115,7 +116,7 @@ def last_recorded_block(Entity: db.Entity) -> int:
     return select(max(e.block) for e in Entity if e.chainid == chain.id).first()
 
 @db_session
-def fetch_balances(vault_address: str, block=None):
+def fetch_balances(vault_address: str, block=None) -> Dict[str, Decimal]:
     token_dbid = select(t.token_id for t in Token if t.chain.chainid == chain.id and t.address.address == vault_address).first()
     if block and block > last_recorded_block(UserTx):
         # NOTE: we use `postgres.` instead of `self.` so we can make use of parallelism
