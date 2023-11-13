@@ -134,6 +134,11 @@ debug-apy: build setup-network
 	docker build -f Dockerfile.dev -t ghcr.io/yearn/yearn-exporter .
 	DEBUG=true $(compose_command) -p $$PROJECT_PREFIX run --rm --entrypoint "brownie run --network $$BROWNIE_NETWORK debug_apy with_exception_handling -I" exporter
 
+debug-price: build setup-network
+	source set_network_envs.sh
+	docker build -f Dockerfile.dev -t ghcr.io/yearn/yearn-exporter .
+	$(compose_command) -p $$PROJECT_PREFIX run --rm -e BAD=$(BAD) --entrypoint "brownie run --network $$BROWNIE_NETWORK utils/debug-price -I" exporter
+
 list-networks:
 	@echo "supported networks: $(supported_networks)"
 
