@@ -110,3 +110,6 @@ This is a flexible approach to start multiple containers on multiple networks wh
 
 - start APY preview for curve pools:  
    `make curve-apy-previews`
+
+- debug ypm prices:
+   `make debug-price network=optimism`
