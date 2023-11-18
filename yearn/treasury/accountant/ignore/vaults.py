@@ -1,11 +1,10 @@
 from brownie import ZERO_ADDRESS, chain
-from y.networks import Network
+from y import Contract, Network
 
 from yearn.entities import TreasuryTx
-from yearn.treasury.accountant.revenue.fees import v2_vaults
 from yearn.treasury.accountant.classes import Filter, HashMatcher, IterFilter
 from yearn.treasury.accountant.constants import treasury, v1
-from yearn.utils import contract
+from yearn.treasury.accountant.revenue.fees import v2_vaults
 
 vaults = (v1.vaults + v2_vaults) if v1 else v2_vaults
 
@@ -90,7 +89,7 @@ def is_vault_withdrawal(tx: TreasuryTx) -> bool:
             for event in tx._events['Transfer']:
                 sender, receiver, value = event.values()
                 if event.address == tx.token.address.address and receiver == ZERO_ADDRESS == tx.to_address.address and sender in treasury.addresses and sender == tx.from_address.address:
-                    underlying = contract(tx.token.address.address).token()
+                    underlying = Contract(tx.token.address.address).token()
                     for _event in tx._events['Transfer']:
                         _sender, _receiver, _value = _event.values()
                         if _event.address == underlying and _receiver == tx.from_address.address and event.pos < _event.pos and _sender == tx.token.address.address:

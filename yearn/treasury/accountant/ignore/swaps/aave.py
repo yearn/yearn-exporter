@@ -1,10 +1,10 @@
 
 from brownie import ZERO_ADDRESS
+from y import Contract
 
 from yearn.entities import TreasuryTx
 from yearn.treasury.accountant.classes import HashMatcher
 from yearn.treasury.accountant.constants import treasury
-from yearn.utils import contract
 
 
 def is_aave_deposit(tx: TreasuryTx) -> bool:
@@ -15,11 +15,11 @@ def is_aave_deposit(tx: TreasuryTx) -> bool:
 
 def is_aave_withdrawal(tx: TreasuryTx) -> bool:
     # Atoken side
-    if tx.from_address.address in treasury.addresses and tx.to_address and tx.to_address.address == ZERO_ADDRESS and "RedeemUnderlying" in tx._events and hasattr(contract(tx.token.address.address), 'underlyingAssetAddress'):
+    if tx.from_address.address in treasury.addresses and tx.to_address and tx.to_address.address == ZERO_ADDRESS and "RedeemUnderlying" in tx._events and hasattr(Contract(tx.token.address.address), 'underlyingAssetAddress'):
         for event in tx._events['RedeemUnderlying']:
             if (
                 event['_user'] == tx.from_address.address and
-                contract(tx.token.address.address).underlyingAssetAddress() == event['_reserve'] and
+                Contract(tx.token.address.address).underlyingAssetAddress() == event['_reserve'] and
                 round(event['_amount'] / tx.token.scale, 15) == round(float(tx.amount), 15)
             ):
                 return True

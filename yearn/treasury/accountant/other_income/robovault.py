@@ -3,11 +3,10 @@
 from typing import Optional
 
 from brownie import chain
-from y.networks import Network
+from y import Contract, Network
 
 from yearn.entities import TreasuryTx, TxGroup
 from yearn.treasury.accountant.constants import treasury
-from yearn.utils import contract
 
 
 def is_robovault_share(tx: TreasuryTx) -> Optional[TxGroup]:
@@ -25,7 +24,7 @@ def is_robovault_share(tx: TreasuryTx) -> Optional[TxGroup]:
         return False
     
     try:
-        strat = contract(tx.from_address.address)
+        strat = Contract(tx.from_address.address)
     except ValueError as e:
         if not "Contract source code not verified" in str(e):
             raise
@@ -44,5 +43,5 @@ def is_robovault_share(tx: TreasuryTx) -> Optional[TxGroup]:
     return all([
         tx._from_nickname == "Contract: Strategy",
         tx._symbol == 'rv3USDCc',
-        contract(strat.vault(block_identifier = tx.block)).symbol() == 'rv3USDCb'
+        Contract(strat.vault(block_identifier = tx.block)).symbol() == 'rv3USDCb'
     ])

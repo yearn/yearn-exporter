@@ -16,7 +16,6 @@ from yearn import constants
 from yearn.common import Tvl
 from yearn.multicall2 import fetch_multicall_async
 from yearn.prices.curve import curve
-from yearn.utils import contract
 from yearn.v1 import constants
 
 if TYPE_CHECKING:
@@ -38,10 +37,10 @@ class VaultV1:
     decimals: Optional[int] = None
 
     def __post_init__(self):
-        self.vault = contract(self.vault)
-        self.controller = contract(self.controller)
-        self.strategy = contract(self.strategy)
-        self.token = contract(self.token)
+        self.vault = Contract(self.vault)
+        self.controller = Contract(self.controller)
+        self.strategy = Contract(self.strategy)
+        self.token = Contract(self.token)
         if str(self.vault) not in constants.VAULT_ALIASES:
             logger.warning("no vault alias for %s, reading from vault.sybmol()", self.vault)
         self.name = constants.VAULT_ALIASES.get(str(self.vault), self.vault.symbol())
@@ -62,7 +61,7 @@ class VaultV1:
         controller = await self.get_controller(block)
         strategy = await controller.strategies.coroutine(self.token, block_identifier=block)
         if strategy != ZERO_ADDRESS:
-            return contract(strategy)
+            return Contract(strategy)
 
     @stuck_coro_debugger
     async def get_controller(self, block=None):
@@ -109,7 +108,7 @@ class VaultV1:
             # for block <= 10635293 (2020-08-11)
             if vote_proxy and gauge:
                 vote_proxy = patch_contract(interface.CurveYCRVVoter(vote_proxy), dank_w3)
-                gauge = contract(gauge)
+                gauge = Contract(gauge)
                 boost, _apy = await asyncio.gather(
                     curve.calculate_boost(gauge, vote_proxy, block=block),
                     curve.calculate_apy(gauge, self.token, block=block),

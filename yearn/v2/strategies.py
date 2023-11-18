@@ -11,7 +11,7 @@ from y.decorators import stuck_coro_debugger
 from y.utils.events import ProcessedEvents
 
 from yearn.multicall2 import fetch_multicall_async
-from yearn.utils import contract, safe_views
+from yearn.utils import safe_views
 
 STRATEGY_VIEWS_SCALED = [
     "maxDebtPerHarvest",
@@ -32,7 +32,7 @@ logger = logging.getLogger(__name__)
 
 class Strategy:
     def __init__(self, strategy, vault):
-        self.strategy = contract(strategy)
+        self.strategy = Contract(strategy)
         self.vault = vault
         try:
             self.name = self.strategy.name()
