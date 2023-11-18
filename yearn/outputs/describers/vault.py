@@ -1,6 +1,7 @@
 
 import asyncio
 from concurrent.futures import ProcessPoolExecutor
+from decimal import Decimal
 
 from yearn.outputs.postgres.utils import fetch_balances
 from yearn.prices.magic import _get_price
@@ -31,5 +32,6 @@ class VaultWalletDescriber:
                     } for wallet, bal in balances.items()
                 }
             }
+        }
         info['active wallets'] = sum(1 if balances['usd balance'] > ACTIVE_WALLET_USD_THRESHOLD else 0 for balances in info['wallet balances'].values())
         return info
