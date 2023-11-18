@@ -117,7 +117,7 @@ async def wrap_vault(
     logger.info(f"done wrapping vault [{pos}/{total}]: {vault.name} {str(vault.vault)}")
     if DEBUG:
         _get_debug_lock().release()
-    return data
+    return _dedecimal(data)
 
 
 async def get_apy(vault, samples) -> Apy:
