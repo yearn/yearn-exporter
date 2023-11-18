@@ -14,10 +14,11 @@ async def get_staking_rewards_apr(vault, samples: ApySamples):
         return 0
 
     vault_address = str(vault.vault)
-    if vault_address not in vault.registry.staking_pools:
+    staking_pools = await vault.registry.staking_pools
+    if vault_address not in staking_pools:
         return 0
 
-    staking_pool = await Contract.coroutine(vault.registry.staking_pools[vault_address])
+    staking_pool = await Contract.coroutine(staking_pools[vault_address])
     if await staking_pool.periodFinish.coroutine() < now:
         return 0
 
