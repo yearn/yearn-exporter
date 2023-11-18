@@ -8,6 +8,7 @@ from concurrent.futures import ThreadPoolExecutor
 from threading import current_thread
 from typing import Awaitable, Callable
 
+import eth_retry
 import sentry_sdk.client
 from brownie import chain, web3
 from sentry_sdk import Hub, capture_message, init, push_scope, set_tag, utils
@@ -26,6 +27,7 @@ def before_send(event, hint):
     # NOTE: We can't add our tag logic here because this is not called in the same thread where the Exception occurred.
     return event
 
+@eth_retry.auto_retry
 def set_custom_tags():
     set_tag("chain_id", chain.id)
     set_tag("network", Network(chain.id).name())
