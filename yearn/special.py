@@ -82,7 +82,7 @@ class Backscratcher(metaclass = Singleton):
         return {
             'totalSupply': crv_locked,
             'token price': crv_price,
-            'tvl': crv_locked * crv_price,
+            'tvl': crv_locked * float(crv_price),
         }
 
     async def total_value_at(self, block=None):
