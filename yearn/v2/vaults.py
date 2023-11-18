@@ -2,11 +2,12 @@ import asyncio
 import logging
 import re
 import time
+from contextlib import suppress
 from functools import cached_property
 from typing import (TYPE_CHECKING, Any, AsyncIterator, Dict, List, NoReturn,
                     Optional, Union)
 
-import a_sync
+from a_sync.utils.iterators import exhaust_iterator
 from async_property import async_cached_property, async_property
 from brownie import chain
 from brownie.network.event import _EventItem
@@ -23,7 +24,6 @@ from y.utils.dank_mids import dank_w3
 from y.utils.events import ProcessedEvents
 
 from yearn.common import Tvl
-from yearn.decorators import set_exc
 from yearn.multicall2 import fetch_multicall_async
 from yearn.special import Ygov
 from yearn.typing import Address
@@ -124,13 +124,12 @@ class Vault:
 
         # load strategies from events and watch for freshly attached strategies
         self._events = VaultEvents(self)
-        self._done = a_sync.Event(name=f"{self.__module__}.{self.__class__.__name__}._done")
-        self._task = None
 
     def __repr__(self):
         strategies = "..."  # don't block if we don't have the strategies loaded
-        if self._done.is_set():
-            strategies = ", ".join(f"{strategy}" for strategy in self._strategies)
+        with suppress(RuntimeError): # NOTE on RuntimeError, event loop isnt running and task doesn't exist. can't be created, is not complete. no need to check strats.
+            if self._task.done():
+                strategies = ", ".join(f"{strategy}" for strategy in self._strategies)
         return f'<Vault {self.vault} name="{self.name}" token={self.token} strategies=[{strategies}]>'
 
     def __hash__(self) -> int:
@@ -215,21 +214,16 @@ class Vault:
 
     @stuck_coro_debugger
     async def load_strategies(self):
-        self._task
-        await self._done.wait()
-        if self._task.done() and (e := self._task.exception()):
-            raise e
+        await self._task
 
-    @set_exc
     async def watch_events(self) -> NoReturn:
         start = time.time()
-        height = await dank_w3.eth.block_number
-        done_task = asyncio.create_task(self._events._lock.wait_for(height))
-        def done_callback(task: asyncio.Task) -> None:
-            logger.info("loaded %d strategies %s in %.3fs", len(self._strategies), self.name, time.time() - start)
-            self._done.set()
-        done_task.add_done_callback(done_callback)
-        self._events._ensure_task()
+        async for event in self._events.events(await dank_w3.eth.block_number):
+            # we iterate thru the list to ensure they're loaded thru now
+            pass
+        logger.info("loaded %d strategies %s in %.3fs", len(self._strategies), self.name, time.time() - start)
+        # Keep the loader running in the background
+        self._daemon = asyncio.create_task(exhaust_iterator(self._events))
 
     @stuck_coro_debugger
     async def describe(self, block=None):
@@ -313,7 +307,7 @@ class Vault:
         )
     
     
-class VaultEvents(ProcessedEvents[int]):
+class VaultEvents(ProcessedEvents[_EventItem]):
     __slots__ = "vault",
     def __init__(self, vault: Vault, **kwargs: Any):
         topics = [[encode_hex(event_abi_to_log_topic(event)) for event in vault.vault.abi if event["type"] == "event" and event["name"] in STRATEGY_EVENTS]]
@@ -321,32 +315,35 @@ class VaultEvents(ProcessedEvents[int]):
         self.vault = vault
     def _process_event(self, event: _EventItem) -> _EventItem:
         # some issues during the migration of this strat prevented it from being verified so we skip it here...
-        if chain.id == Network.Optimism:
-            failed_migration = False
-            for key in ["newVersion", "oldVersion", "strategy"]:
-                failed_migration |= (key in event and event[key] == "0x4286a40EB3092b0149ec729dc32AD01942E13C63")
-            if failed_migration:
-                return event
+        try:
+            if chain.id == Network.Optimism:
+                failed_migration = False
+                for key in ["newVersion", "oldVersion", "strategy"]:
+                    failed_migration |= (key in event and event[key] == "0x4286a40EB3092b0149ec729dc32AD01942E13C63")
+                if failed_migration:
+                    return event
 
-        if event.name == "StrategyAdded":
-            strategy_address = event["strategy"]
-            logger.debug("%s strategy added %s", self.vault.name, strategy_address)
-            try: 
-                self.vault._strategies[strategy_address] = Strategy(strategy_address, self.vault)
-            except ValueError:
-                logger.error(f"Error loading strategy {strategy_address}")
-                pass
-        elif event.name == "StrategyRevoked":
-            logger.debug("%s strategy revoked %s", self.vault.name, event["strategy"])
-            self.vault._revoked[event["strategy"]] = self.vault._strategies.pop(
-                event["strategy"], Strategy(event["strategy"], self.vault)
-            )
-        elif event.name == "StrategyMigrated":
-            logger.debug("%s strategy migrated %s -> %s", self.vault.name, event["oldVersion"], event["newVersion"])
-            self.vault._revoked[event["oldVersion"]] = self.vault._strategies.pop(
-                event["oldVersion"], Strategy(event["oldVersion"], self.vault)
-            )
-            self.vault._strategies[event["newVersion"]] = Strategy(event["newVersion"], self.vault)
-        elif event.name == "StrategyReported":
-            self.vault._reports.append(event)
-        return event
+            if event.name == "StrategyAdded":
+                strategy_address = event["strategy"]
+                logger.debug("%s strategy added %s", self.vault.name, strategy_address)
+                try: 
+                    self.vault._strategies[strategy_address] = Strategy(strategy_address, self.vault)
+                except ValueError:
+                    logger.error(f"Error loading strategy {strategy_address}")
+            elif event.name == "StrategyRevoked":
+                logger.debug("%s strategy revoked %s", self.vault.name, event["strategy"])
+                self.vault._revoked[event["strategy"]] = self.vault._strategies.pop(
+                    event["strategy"], Strategy(event["strategy"], self.vault)
+                )
+            elif event.name == "StrategyMigrated":
+                logger.debug("%s strategy migrated %s -> %s", self.vault.name, event["oldVersion"], event["newVersion"])
+                self.vault._revoked[event["oldVersion"]] = self.vault._strategies.pop(
+                    event["oldVersion"], Strategy(event["oldVersion"], self.vault)
+                )
+                self.vault._strategies[event["newVersion"]] = Strategy(event["newVersion"], self.vault)
+            elif event.name == "StrategyReported":
+                self.vault._reports.append(event)
+            return event
+        except Exception as e:
+            logger.exception(e)
+            raise e
