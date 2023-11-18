@@ -60,6 +60,8 @@ class Registry:
             if res['getPricePerFullShare'] is None:
                 continue
 
+            price = float(price)
+
             output[vault.name] = {
                 "total supply": res["totalSupply"] / vault.scale,
                 "available balance": res["balance"] / vault.scale,
