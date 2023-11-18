@@ -3,10 +3,9 @@ import json
 import logging
 import os
 from dataclasses import dataclass
-from pprint import pformat
-
-from time import time
 from http import HTTPStatus
+from pprint import pformat
+from time import time
 
 import requests
 from brownie import ZERO_ADDRESS, chain
@@ -27,7 +26,6 @@ from yearn.apy.staking_rewards import get_staking_rewards_apr
 from yearn.debug import Debug
 from yearn.prices.curve import curve, curve_contracts
 from yearn.typing import Address
-from yearn.utils import contract
 
 
 @dataclass 
@@ -426,14 +424,14 @@ class _ConvexVault:
             logger.info(pformat(Debug().collect_variables(locals())))
 
         if hasattr(self._cvx_strategy, "uselLocalCRV"):
-            use_local_crv = self._cvx_strategy.uselLocalCRV(block_identifier=self.block)
+            use_local_crv = await self._cvx_strategy.uselLocalCRV.coroutine(block_identifier=self.block)
             if use_local_crv:
-                cvx_keep_crv = self._cvx_strategy.localCRV(block_identifier=self.block)  / 1e4
+                cvx_keep_crv = await self._cvx_strategy.localCRV.coroutine(block_identifier=self.block)  / 1e4
             else:
-                curve_global = contract(self._cvx_strategy.curveGlobal(block_identifier=self.block))
-                cvx_keep_crv = curve_global.keepCRV(block_identifier=self.block) / 1e4
+                curve_global = await Contract.coroutine(self._cvx_strategy.curveGlobal(block_identifier=self.block))
+                cvx_keep_crv = await curve_global.keepCRV.coroutine(block_identifier=self.block) / 1e4
         elif hasattr(self._cvx_strategy, "keepCRV"):
-            cvx_keep_crv = self._cvx_strategy.keepCRV(block_identifier=self.block) / 1e4
+            cvx_keep_crv = await self._cvx_strategy.keepCRV.coroutine(block_identifier=self.block) / 1e4
         else:
             # the experimental vault 0xe92AE2cF5b373c1713eB5855D4D3aF81D8a8aCAE yvCurvexFraxTplLP-U
             # has a strategy 0x06aee67AC42473E9F0e7DC1A6687A1F26C8136A3 ConvexTempleDAO-U which doesn't have
@@ -454,7 +452,7 @@ class _ConvexVault:
         if os.getenv("DEBUG", None):
             logger.info(pformat(Debug().collect_variables(locals())))
 
-        return ConvexDetailedApyData(cvx_apr, cvx_apr_minus_keep_crv, cvx_keep_crv, self._debt_ratio, convex_reward_apr)
+        return ConvexDetailedApyData(cvx_apr, cvx_apr_minus_keep_crv, cvx_keep_crv, await self._debt_ratio(), convex_reward_apr)
 
     async def _get_cvx_emissions_converted_to_crv(self) -> float:
         """The amount of CVX emissions at the current block for a given pool, converted to CRV (from a pricing standpoint) to ease calculation of total APY."""
@@ -504,23 +502,24 @@ class _ConvexVault:
         if rewards_length == 0:
             return 0
 
-        convex_reward_apr = 0 # reset our rewards apr if we're calculating it via convex
+        # reset our rewards apr if we're calculating it via convex
+        return sum(await asyncio.gather(*[self._get_apr_for_reward(self, rewards_contract, base_asset_price, pool_price, current_time, block) for i in range(rewards_length)]))
+    
+    async def _get_apr_for_reward(self, rewards_contract, i, base_asset_price, pool_price, current_time, block) -> float:
+        virtual_rewards_pool = await Contract.coroutine(await rewards_contract.extraRewards.coroutine(i))
+        # do this for all assets, which will duplicate much of the curve info but we don't want to miss anything
+        if await virtual_rewards_pool.periodFinish.coroutine() > current_time:
+            reward_token = await virtual_rewards_pool.rewardToken.coroutine()
+            reward_token_price, reward_rate, total_supply = await asyncio.gather(
+                magic.get_price(reward_token, block=block, sync=False),
+                # NOTE: shouldn't these have block numbers?
+                virtual_rewards_pool.rewardRate.coroutine(),
+                virtual_rewards_pool.totalSupply.coroutine(),
+            )
 
-        for x in range(rewards_length):
-            virtual_rewards_pool = await Contract.coroutine(await rewards_contract.extraRewards.coroutine(x))
-                # do this for all assets, which will duplicate much of the curve info but we don't want to miss anything
-            if await virtual_rewards_pool.periodFinish.coroutine() > current_time:
-                reward_token = await virtual_rewards_pool.rewardToken.coroutine()
-                reward_token_price, reward_rate, total_supply = await asyncio.gather(
-                    magic.get_price(reward_token, block=block, sync=False),
-                    virtual_rewards_pool.rewardRate.coroutine(),
-                    virtual_rewards_pool.totalSupply.coroutine(),
-                )
-
-                reward_apr = (reward_rate * SECONDS_PER_YEAR * float(reward_token_price)) / (float(base_asset_price) * (float(pool_price) / 1e18) * total_supply)
-                convex_reward_apr += reward_apr
-
-        return convex_reward_apr
+            reward_apr = (reward_rate * SECONDS_PER_YEAR * float(reward_token_price)) / (float(base_asset_price) * (float(pool_price) / 1e18) * total_supply)
+            return reward_apr
+        return 0
 
     async def _get_convex_fee(self, cvx_booster, block=None) -> float:
         """The fee % that Convex charges on all CRV yield."""
@@ -532,7 +531,7 @@ class _ConvexVault:
         )
         return (cvx_lock_incentive + cvx_staker_incentive + cvx_earmark_incentive + cvx_platform_fee) / 1e4
 
-    @property
-    def _debt_ratio(self) -> float:
+    async def _debt_ratio(self, block=None) -> float:
         """The debt ratio of the Convex strategy."""
-        return self.vault.vault.strategies(self._cvx_strategy)[2] / 1e4
+        info = await self.vault.vault.strategies(self._cvx_strategy, block_identifier=block)
+        return info[2] / 1e4
