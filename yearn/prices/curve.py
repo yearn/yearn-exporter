@@ -572,7 +572,7 @@ class CurveRegistry(metaclass=Singleton):
         try:
             rate = (
                 inflation_rate * relative_weight * 86400 * 365 / working_supply * 0.4
-            ) / token_price
+            ) / float(token_price)
         except ZeroDivisionError:
             rate = 0
 
