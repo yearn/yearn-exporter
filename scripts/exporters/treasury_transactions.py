@@ -17,7 +17,7 @@ from y.constants import EEE_ADDRESS
 from y.datatypes import Block
 from y.time import get_block_timestamp_async
 
-from yearn.entities import TreasuryTx, db
+from yearn.entities import TreasuryTx, deduplicate_internal_transfers
 from yearn.outputs.postgres.utils import (cache_address, cache_chain,
                                           cache_token)
 from yearn.treasury import accountant
@@ -53,13 +53,17 @@ def main() -> NoReturn:
 
 @a_sync(default='sync')
 async def load_new_txs(start_block: Block, end_block: Block) -> int:
+    """returns: number of new txs"""
     futs = [
         asyncio.create_task(insert_treasury_tx(entry))
         async for entry in treasury.ledger._get_and_yield(start_block, end_block)
         if not isinstance(entry, _Done) and entry.value
     ]
+    if not futs:
+        return 0
     to_sort = sum(await tqdm_asyncio.gather(*futs, desc="Insert Txs to Postgres"))
     return to_sort
+
 
 
 # NOTE: Things get sketchy when we bump these higher
@@ -130,17 +134,3 @@ def _validate_integrity_error(entry: LedgerEntry, log_index: int) -> None:
 @db_session
 def sort() -> None:
     accountant.sort_txs(accountant.unsorted_txs())
-
-@db_session
-def deduplicate_internal_transfers():
-    db.execute(
-        """
-        WITH counted AS (
-            SELECT treasury_tx_id, ROW_NUMBER() over(partition BY CHAIN, TIMESTAMP, block, hash, log_index, token_id, "from", "to", amount, gas_used, gas_price ORDER BY treasury_tx_id ASC) number
-            FROM treasury_txs
-        )
-        DELETE FROM treasury_txs WHERE treasury_tx_id IN (
-            SELECT treasury_tx_id FROM counted WHERE NUMBER > 1
-        )
-        """
-    )
