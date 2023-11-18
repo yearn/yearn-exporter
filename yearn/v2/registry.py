@@ -246,14 +246,23 @@ class Registry(metaclass=Singleton):
         return [vault for vault, active in zip(vaults, await asyncio.gather(*[vault.is_active(block) for vault in vaults])) if active]
     
     async def _active_vaults_at_iter(self, block=None) -> AsyncIterator[Vault]:
+        # ensure loader task is running
         self._task
         events = await self._events
+        # make sure the events are loaded thru now before proceeding
         await events._lock.wait_for(events._init_block)
-        vaults = list(itertools.chain(self._vaults.values(), self._experiments.values()))
-        async def is_active(vault: Vault) -> bool:
-            return vault, await vault.is_active(block)
-        for fut in asyncio.as_completed([is_active(vault) for vault in vaults]):
-            vault, active = await fut
+        
+        vaults: List[Vault] = list(itertools.chain(self._vaults.values(), self._experiments.values()))
+        
+        i = 0  # TODO figure out why we need this here
+        while len(vaults) == 0:
+            await asyncio.sleep(6)
+            vaults = list(itertools.chain(self._vaults.values(), self._experiments.values()))
+            i += 1  
+            if i >= 20:
+                logger.error("we're stuck")
+        
+        async for vault, active in a_sync.as_completed({vault: vault.is_active(block) for vault in vaults}, aiter=True):
             if active:
                 yield vault
 
@@ -266,11 +275,11 @@ class Registry(metaclass=Singleton):
         return asyncio.create_task(self.watch_events())
     
     def _filter_vaults(self):
-        logger.debug('filtering vaults')
+        #logger.debug('filtering vaults')
         if chain.id in DEPRECATED_VAULTS:
             for vault in DEPRECATED_VAULTS[chain.id]:
                 self._remove_vault(vault)
-        logger.debug('vaults filtered')
+        #logger.debug('vaults filtered')
 
     def _remove_vault(self, address):
         self._vaults.pop(address, None)

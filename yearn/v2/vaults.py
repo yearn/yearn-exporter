@@ -133,6 +133,9 @@ class Vault:
             strategies = ", ".join(f"{strategy}" for strategy in self._strategies)
         return f'<Vault {self.vault} name="{self.name}" token={self.token} strategies=[{strategies}]>'
 
+    def __hash__(self) -> int:
+        return hash(self.vault.address)
+
     def __eq__(self, other):
         if isinstance(other, Vault):
             return self.vault == other.vault
@@ -205,10 +208,10 @@ class Vault:
 
     @stuck_coro_debugger
     async def is_active(self, block: Optional[int]) -> bool:
-        if block and await contract_creation_block_async(str(self.vault)) < block:
+        if block and await contract_creation_block_async(str(self.vault)) > block:
             return False
         # fixes edge case: a vault is not necessarily initialized on creation
-        return self.vault.activation.coroutine(block_identifier=block)
+        return await self.vault.activation.coroutine(block_identifier=block)
 
     @stuck_coro_debugger
     async def load_strategies(self):
@@ -294,6 +297,7 @@ class Vault:
     
     @stuck_coro_debugger
     async def _unpack_results(self, results):
+        # TODO: get rid of this
         results, strategy_descs, price = results
         return await run_in_subprocess(
             _unpack_results,

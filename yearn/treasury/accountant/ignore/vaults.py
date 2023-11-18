@@ -1,13 +1,13 @@
-
 from brownie import ZERO_ADDRESS, chain
 from y.networks import Network
 
 from yearn.entities import TreasuryTx
+from yearn.treasury.accountant.revenue.fees import v2_vaults
 from yearn.treasury.accountant.classes import Filter, HashMatcher, IterFilter
-from yearn.treasury.accountant.constants import treasury, v1, v2
+from yearn.treasury.accountant.constants import treasury, v1
 from yearn.utils import contract
 
-vaults = (v1.vaults + v2.vaults) if v1 else v2.vaults
+vaults = (v1.vaults + v2_vaults) if v1 else v2_vaults
 
 def is_vault_deposit(tx: TreasuryTx) -> bool:
     """ This code doesn't validate amounts but so far that's not been a problem. """
