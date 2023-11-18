@@ -133,6 +133,7 @@ services:
       - yearn-exporter-infra_stack
     external_links:
       - yearn-exporter-infra-postgres-1:postgres
+      - yearn-exporter-infra_ypostgres_1:ypostgres
       - yearn-exporter-infra-victoria-metrics-1:victoria-metrics
     logging:
       driver: "json-file"
