@@ -83,7 +83,7 @@ def _unpack_results(vault: Address, is_experiment: bool, _views: List[str], resu
         # In this case (totalSupply == 0), missing price data is totally fine and we can set price = 0.
         # In all other cases, missing price data indicates an issue. We must raise and debug the Exception.
         if info["totalSupply"] > 0 and vault not in BORKED:
-            logger.error(f"The exception below is for vault: {vault}")
+            logger.warning(f"The exception below is for vault: {vault}")
             raise price_or_exception
         price_or_exception = 0
     
