@@ -39,7 +39,7 @@ class Strategy:
         except ValueError:
             self.name = strategy[:10]
         self._views = safe_views(self.strategy.abi)
-        self._events = Harvests(self.strategy)
+        self._events = Harvests(self)
 
     @async_property
     async def unique_name(self):
@@ -80,7 +80,7 @@ class Harvests(ProcessedEvents[int]):
         topics = [
             [
                 encode_hex(event_abi_to_log_topic(event))
-                for event in strategy.abi
+                for event in strategy.strategy.abi
                 if event["type"] == "event" and event["name"] in STRATEGY_EVENTS
             ]
         ]
