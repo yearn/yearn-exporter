@@ -95,8 +95,8 @@ def process_and_cache_user_txs(last_saved_block=None):
                 from_address=cache_address(row['from']),
                 to_address=cache_address(row['to']),
                 amount = row.amount,
-                price = price,
-                value_usd = usd,
+                price = Decimal(price),
+                value_usd = Decimal(usd),
                 gas_used = row.gas_used,
                 gas_price = row.gas_price
             )
