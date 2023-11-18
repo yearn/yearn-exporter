@@ -269,6 +269,7 @@ class Vault:
 
     @cached_property
     def _task(self) -> asyncio.Task:
+        """The daemon task that loads events for this vault. Starts when first accessed."""
         return asyncio.create_task(self.watch_events())
         
     @async_cached_property
