@@ -232,12 +232,13 @@ class WildcardWrapper:
     async def unwrap(self) -> List[Wrapper]:
         registry = Registry()
         wrappers = [self.wrapper] if isinstance(self.wrapper, str) else self.wrapper
+        vaults = await registry.vaults
         topics = construct_event_topic_set(
-            filter_by_name('Transfer', registry.vaults[0].vault.abi)[0],
+            filter_by_name('Transfer', vaults[0].vault.abi)[0],
             web3.codec,
             {'receiver': wrappers},
         )
-        addresses = [str(vault.vault) for vault in registry.vaults]
+        addresses = [str(vault.vault) for vault in vaults]
         from_block = min(await asyncio.gather(*[threads.run(contract_creation_block, address) for address in addresses]))
 
         # wrapper -> {vaults}
@@ -249,7 +250,7 @@ class WildcardWrapper:
         return [
             Wrapper(name=vault.name, vault=str(vault.vault), wrapper=wrapper)
             for wrapper in wrappers
-            for vault in registry.vaults
+            for vault in vaults
             if str(vault.vault) in deposits[wrapper]
         ]
 

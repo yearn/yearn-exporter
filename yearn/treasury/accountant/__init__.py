@@ -1,4 +1,6 @@
 
+import logging
+
 from brownie import Contract
 from brownie.exceptions import ContractNotFound
 from tqdm import tqdm
@@ -8,6 +10,8 @@ from yearn.entities import Address
 from yearn.treasury.accountant.accountant import *
 from yearn.treasury.accountant.prepare_db import prepare_db
 from yearn.utils import contract
+
+logger = logging.getLogger(__name__)
 
 __all__ = [
     "all_txs",

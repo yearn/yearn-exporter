@@ -1,4 +1,6 @@
 
+import asyncio
+import logging
 from brownie import chain
 from y.networks import Network
 
@@ -41,13 +43,19 @@ def is_fees_v1(tx: TreasuryTx) -> bool:
 
     return False
 
+_vaults = asyncio.get_event_loop().run_until_complete(v2.vaults)
+_experiments = asyncio.get_event_loop().run_until_complete(v2.experiments)
+v2_vaults = _vaults + _experiments
+logger = logging.getLogger(__name__)
+logger.info('%s v2 vaults loaded', len(v2_vaults))
+
 def is_fees_v2(tx: TreasuryTx) -> bool:
     if any(
         tx.from_address.address == vault.vault.address 
         and tx.token.address.address == vault.vault.address
         and tx.to_address.address in treasury.addresses
         and tx.to_address.address == vault.vault.rewards(block_identifier=tx.block)
-        for vault in v2.vaults + v2.experiments
+        for vault in v2_vaults
     ):
         return True
     elif is_inverse_fees_from_stash_contract(tx):
