@@ -145,4 +145,4 @@ def fetch_balances(vault_address: str, block=None) -> Dict[str, Decimal]:
                 from user_txs where token_id = $token_dbid
                 group by "from") b on a.wallet = b.wallet
                 """)
-    return {wallet: balance for wallet, balance in balances if wallet != ZERO_ADDRESS}
+    return {wallet: balance for wallet, balance in balances if wallet != ZERO_ADDRESS and balance}
