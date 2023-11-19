@@ -576,6 +576,7 @@ class CurveRegistry(metaclass=Singleton):
         except ZeroDivisionError:
             rate = 0
 
+        crv_price = float(crv_price)
         return {
             "crv price": crv_price,
             "relative weight": relative_weight,
@@ -583,7 +584,7 @@ class CurveRegistry(metaclass=Singleton):
             "virtual price": virtual_price,
             "crv reward rate": rate,
             "crv apy": rate * crv_price,
-            "token price": token_price,
+            "token price": float(token_price),
         }
 
 
