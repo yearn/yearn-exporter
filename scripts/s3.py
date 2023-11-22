@@ -148,8 +148,7 @@ async def get_assets_metadata(vault_v2: list) -> dict:
 
 
 async def get_assets_dynamic(registry_adapter: Contract, addresses: list) -> list:
-    data = await asyncio.gather(*[registry_adapter.assetsDynamic.coroutine([address]) for address in addresses])
-    return [asset for address_data in data for asset in address_data]
+    return await asyncio.gather(*[registry_adapter.assetDynamic.coroutine(address) for address in addresses])
 
 
 async def get_registry_adapter():
