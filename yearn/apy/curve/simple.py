@@ -193,9 +193,9 @@ async def calculate_simple(vault, gauge: Gauge, samples: ApySamples) -> Apy:
         gauge.gauge_inflation_rate
         * gauge_weight
         * (SECONDS_PER_YEAR / gauge.gauge_working_supply)
-        * (PER_MAX_BOOST / float(pool_price))
+        * (PER_MAX_BOOST / pool_price)
         * float(crv_price)
-    ) / base_asset_price
+    ) / float(base_asset_price)
 
     if y_gauge_balance > 0:
         y_boost = y_working_balance / (PER_MAX_BOOST * y_gauge_balance)
