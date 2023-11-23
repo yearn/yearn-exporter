@@ -99,6 +99,7 @@ class Ids(IntEnum):
     Curve_Tricrypto_Factory = 11
 
 class CurveRegistry(metaclass=Singleton):
+    # NOTE: before deprecating, figure out why this loads more pools than ypm
     def __init__(self) -> None:
         if chain.id not in curve_contracts:
             raise UnsupportedNetwork("curve is not supported on this network")
