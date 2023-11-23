@@ -24,7 +24,6 @@ from yearn.apy import Apy, ApyFees, get_samples
 from yearn.apy.common import SECONDS_PER_YEAR
 from yearn.apy.curve.simple import Gauge
 from yearn.apy.velo import COMPOUNDING
-from yearn.v2.registry import Registry
 from yearn.debug import Debug
 from yearn.helpers import s3, telegram
 from yearn.v2.registry import Registry
