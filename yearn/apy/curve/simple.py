@@ -272,10 +272,11 @@ async def calculate_simple(vault, gauge: Gauge, samples: ApySamples) -> Apy:
     if vault:
         if isinstance(vault, VaultV2):
             vault_contract = vault.vault
-            if len(vault.strategies) > 0 and hasattr(vault.strategies[0].strategy, "keepCRV"):
-                crv_keep_crv = await vault.strategies[0].strategy.keepCRV.coroutine(block_identifier=block) / 1e4
-            elif len(vault.strategies) > 0 and hasattr(vault.strategies[0].strategy, "keepCrvPercent"):
-                crv_keep_crv = await vault.strategies[0].strategy.keepCrvPercent.coroutine(block_identifier=block) / 1e4
+            strats = await vault.strategies
+            if len(strats) > 0 and hasattr(strats[0].strategy, "keepCRV"):
+                crv_keep_crv = await strats[0].strategy.keepCRV.coroutine(block_identifier=block) / 1e4
+            elif len(strats) > 0 and hasattr(strats[0].strategy, "keepCrvPercent"):
+                crv_keep_crv = await strats[0].strategy.keepCrvPercent.coroutine(block_identifier=block) / 1e4
             else:
                 crv_keep_crv = 0
             performance = await vault_contract.performanceFee.coroutine(block_identifier=block) / 1e4 if hasattr(vault_contract, "performanceFee") else 0
@@ -298,24 +299,25 @@ async def calculate_simple(vault, gauge: Gauge, samples: ApySamples) -> Apy:
     cvx_vault = None
     # if the vault consists of only a convex strategy then return 
     # specialized apy calculations for convex
-    if _ConvexVault.is_convex_vault(vault):
-        cvx_strategy = vault.strategies[0].strategy
+    if await _ConvexVault.is_convex_vault(vault):
+        strats = await vault.strategies
+        cvx_strategy = strats[0].strategy
         cvx_vault = _ConvexVault(cvx_strategy, vault, gauge.gauge)
         return await cvx_vault.apy(base_asset_price, pool_price, base_apr, pool_apy, management, performance)
 
     # if the vault has two strategies then the first is curve and the second is convex
-    if isinstance(vault, VaultV2) and len(vault.strategies) == 2: # this vault has curve and convex
+    if isinstance(vault, VaultV2) and len(strats := await vault.strategies) == 2: # this vault has curve and convex
 
         # The first strategy should be curve, the second should be convex.
         # However the order on the vault object here does not correspond
         # to the order on the withdrawal queue on chain, therefore we need to 
         # re-order so convex is always second if necessary 
-        first_strategy = vault.strategies[0].strategy
-        second_strategy = vault.strategies[1].strategy
+        first_strategy = strats[0].strategy
+        second_strategy = strats[1].strategy
 
         crv_strategy = first_strategy
         cvx_strategy = second_strategy
-        if not _ConvexVault.is_convex_strategy(vault.strategies[1]):
+        if not _ConvexVault.is_convex_strategy(strats[1]):
             cvx_strategy = first_strategy
             crv_strategy = second_strategy
 
@@ -383,7 +385,7 @@ class _ConvexVault:
         self.gauge = gauge
 
     @staticmethod
-    def is_convex_vault(vault) -> bool:
+    async def is_convex_vault(vault) -> bool:
         """Determines whether the passed in vault is a Convex vault
         i.e. it only has one strategy that's based on farming Convex.
         """
@@ -392,7 +394,7 @@ class _ConvexVault:
         if not isinstance(vault, VaultV2):
             return False 
 
-        return len(vault.strategies) == 1 and _ConvexVault.is_convex_strategy(vault.strategies[0])
+        return len(strats := await vault.strategies) == 1 and _ConvexVault.is_convex_strategy(strats[0])
 
     @staticmethod
     def is_convex_strategy(strategy) -> bool:

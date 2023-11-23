@@ -2,6 +2,7 @@ from datetime import datetime
 
 import click
 import sentry_sdk
+from multicall.utils import await_awaitable
 from brownie.utils.output import build_tree
 
 sentry_sdk.set_tag('script','print_strategies')
@@ -11,7 +12,6 @@ def main():
     from yearn.v2.registry import Registry
     registry = Registry()
     print(registry)
-    registry.load_strategies()
     tree = []
     for vault in registry.vaults:
         transforms = {
@@ -28,7 +28,7 @@ def main():
             'totalLoss': lambda tokens: f'{tokens / vault.scale}',
         }
         strategies = []
-        for strategy in vault.strategies + vault.revoked_strategies:
+        for strategy in await_awaitable(vault.strategies) + await_awaitable(vault.revoked_strategies):
             config = vault.vault.strategies(strategy.strategy).dict()
             color = 'green' if strategy in vault.strategies else 'red'
             strategies.append([

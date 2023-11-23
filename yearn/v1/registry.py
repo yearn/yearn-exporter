@@ -3,9 +3,10 @@ import logging
 from functools import cached_property
 from typing import Dict, List, Optional
 
-from brownie import chain, interface, web3
+from brownie import chain, interface
 from dank_mids.brownie_patch import patch_contract
 from y.contracts import contract_creation_block_async
+from y.decorators import stuck_coro_debugger
 from y.networks import Network
 from y.utils.dank_mids import dank_w3
 
@@ -37,6 +38,7 @@ class Registry:
     def __repr__(self) -> str:
         return f"<Registry V1 vaults={len(self.vaults)}>"
 
+    @stuck_coro_debugger
     async def describe(self, block: Optional[Block] = None) -> Dict[str, Dict]:
         vaults = await self.active_vaults_at(block)
         share_prices = await fetch_multicall_async(*[[vault.vault, "getPricePerFullShare"] for vault in vaults], block=block)
@@ -44,6 +46,7 @@ class Registry:
         data = await asyncio.gather(*[vault.describe(block=block) for vault in vaults])
         return {vault.name: desc for vault, desc in zip(vaults, data)}
 
+    @stuck_coro_debugger
     async def total_value_at(self, block: Optional[Block] = None) -> Dict[str, float]:
         vaults = await self.active_vaults_at(block)
         balances = await fetch_multicall_async(*[[vault.vault, "balance"] for vault in vaults], block=block)
@@ -52,6 +55,7 @@ class Registry:
         prices = await asyncio.gather(*[vault.get_price(block) for (vault, balance) in vaults])
         return {vault.name: balance * price / 10 ** vault.decimals for (vault, balance), price in zip(vaults, prices)}
 
+    @stuck_coro_debugger
     async def active_vaults_at(self, block: Optional[Block] = None) -> List[VaultV1]:
         if block:
             blocks = await asyncio.gather(*[contract_creation_block_async(str(vault.vault)) for vault in self.vaults])

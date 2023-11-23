@@ -6,7 +6,7 @@ from typing import TYPE_CHECKING, Tuple
 import eth_retry
 import requests
 from brownie import chain
-from y import Contract, magic
+from y import ERC20, Contract, magic
 from y.contracts import contract_creation_block_async
 from y.exceptions import PriceError, yPriceMagicError
 
@@ -136,11 +136,8 @@ class Backscratcher(metaclass = Singleton):
             if not isinstance(e.exception, PriceError):
                 raise e
             price = None
-        tvl = total_assets * price / 10 ** await self.vault.decimals.coroutine(block_identifier=block) if price else None
+        tvl = total_assets * price / await ERC20(self.vault, asynchronous=True).scale if price else None
         return Tvl(total_assets, price, tvl)
-
-
-
 
 class Ygov(metaclass = Singleton):
     def __init__(self):
