@@ -99,7 +99,7 @@ def insert_to_db(entry: LedgerEntry, ts: int) -> bool:
             timestamp = ts,
             hash = entry.hash,
             log_index = log_index,
-            from_address = cache_address(entry.from_address),
+            from_address = cache_address(entry.from_address) if entry.from_address else None,
             to_address = cache_address(entry.to_address) if entry.to_address else None,
             token = token,
             amount = entry.value,
