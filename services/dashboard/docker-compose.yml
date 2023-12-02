@@ -39,6 +39,7 @@ x-envs: &envs
   # NOTE: This is included as an escape-hatch-of-last-resort and should not actually occur
   - DANKMIDS_STUCK_CALL_TIMEOUT
   # dank-mids (optional)
+  - DANKMIDS_MAX_MULTICALL_SIZE=${DANKMIDS_MAX_MULTICALL_SIZE:-5_000}
   - DANKMIDS_MAX_JSONRPC_BATCH_SIZE
   - DANKMIDS_BROWNIE_ENCODER_SEMAPHORE
   - DANKMIDS_DEMO_MODE
