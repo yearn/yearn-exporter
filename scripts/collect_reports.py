@@ -7,16 +7,15 @@ from dotenv import load_dotenv
 from yearn.cache import memory
 import pandas as pd
 from datetime import datetime, timezone
-from brownie import chain, web3, Contract, ZERO_ADDRESS, interface
+from brownie import chain, web3, ZERO_ADDRESS, interface
 from web3._utils.events import construct_event_topic_set
 from yearn.utils import contract, contract_creation_block
 from yearn.prices import constants
-from y import get_price
+from y import Contract, Network, get_price
 from y.utils.dank_mids import dank_w3
+from y.utils.events import ProcessedEvents
 from yearn.db.models import Reports, Event, Transactions, Session, engine, select
 from sqlalchemy import desc, asc
-from yearn.networks import Network
-from yearn.events import decode_logs
 import warnings
 warnings.filterwarnings("ignore", ".*Class SelectOfScalar will not make use of SQL compilation caching.*")
 warnings.filterwarnings("ignore", ".*Locally compiled and on-chain*")
@@ -24,7 +23,6 @@ warnings.filterwarnings("ignore", ".*It has been discarded*")
 warnings.filterwarnings("ignore", ".*MismatchedABI*")
 logging.basicConfig(level=logging.DEBUG) 
 
-logging.basicConfig(level=logging.DEBUG)
 # mainnet_public_channel = os.environ.get('TELEGRAM_CHANNEL_1_PUBLIC')
 # ftm_public_channel = os.environ.get('TELEGRAM_CHANNEL_250_PUBLIC')
 # discord_mainnet = os.environ.get('DISCORD_CHANNEL_1')
