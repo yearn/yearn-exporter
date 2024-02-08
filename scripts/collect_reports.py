@@ -270,8 +270,11 @@ async def handle_event(event, multi_harvest):
         t.call_cost_eth = gas_price * tx_receipt.gasUsed / 1e18
         t.call_cost_usd = float(t.eth_price_at_block) * float(t.call_cost_eth)
         if chain.id == 1:
-            t.kp3r_price_at_block = await get_price(CHAIN_VALUES[chain.id]["KEEPER_TOKEN"], t.block, sync=False)
-            t.kp3r_paid = get_keeper_payment(tx_receipt) / 1e18
+            t.kp3r_price_at_block, t.kp3r_paid = await asyncio.gather(
+		    get_price(CHAIN_VALUES[chain.id]["KEEPER_TOKEN"], t.block, sync=False),
+		    get_keeper_payment(tx_receipt)
+	    )
+            t.kp3r_paid /= 10 ** 18
             t.kp3r_paid_usd = float(t.kp3r_paid) * float(t.kp3r_price_at_block)
             t.keeper_called = t.kp3r_paid > 0
         else:
@@ -368,7 +371,7 @@ async def handle_event(event, multi_harvest):
         if previous_report != None:
             previous_report_id = previous_report.id
             r.previous_report_id = previous_report_id
-            r.rough_apr_pre_fee, r.rough_apr_post_fee = compute_apr(r, previous_report)
+            r.rough_apr_pre_fee, r.rough_apr_post_fee = await compute_apr(r, previous_report)
         # Insert to database
         insert_success = False
         try:
@@ -414,11 +417,13 @@ def last_harvest_block():
             
     return result1, result2
 
-def get_keeper_payment(tx):
+async def get_keeper_payment(tx):
     kp3r_token = CHAIN_VALUES[chain.id]["KEEPER_TOKEN"]
-    token = contract(kp3r_token)
-    denominator = 10 ** token.decimals()
-    token = web3.eth.contract(str(kp3r_token), abi=token.abi)
+    kp3r_contract, denominator = await asyncio.gather(
+	    Contract.coroutine(kp3r_token),
+    	    await ERC20(kp3r_token, asynchronous=True).scale,
+    )
+    token = web3.eth.contract(str(kp3r_token), abi=kp3r_contract.abi)
     decoded_events = token.events.Transfer().processReceipt(tx)
     amount = 0
     for e in decoded_events:
@@ -429,19 +434,23 @@ def get_keeper_payment(tx):
                 amount = token_amount
     return amount
 
-def compute_apr(report, previous_report):
+async def compute_apr(report, previous_report):
     SECONDS_IN_A_YEAR = 31557600
     seconds_between_reports = report.timestamp - previous_report.timestamp
     pre_fee_apr = 0
     post_fee_apr = 0
 
     if report.vault_address == '0x27B5739e22ad9033bcBf192059122d163b60349D':
-        vault = Contract(report.vault_address)
-        if vault.totalAssets() == 0 or seconds_between_reports == 0:
+        vault, vault_scale = await asyncio.gather(
+		Contract.coroutine(report.vault_address),
+		ERC20(report.vault_address, asynchronous=True).scale,
+	)
+	total_assets = await vault.totalAssets.coroutine()
+        if total_assets == 0 or seconds_between_reports == 0:
             return 0, 0
-        pre_fee_apr = report.gain / int(vault.totalAssets()/10**vault.decimals()) * (SECONDS_IN_A_YEAR / seconds_between_reports)
+        pre_fee_apr = report.gain / int(total_assets/vault_scale) * (SECONDS_IN_A_YEAR / seconds_between_reports)
         if report.gain_post_fees != 0:
-            post_fee_apr = report.gain_post_fees / int(vault.totalAssets()/10**vault.decimals()) * (SECONDS_IN_A_YEAR / seconds_between_reports)
+            post_fee_apr = report.gain_post_fees / int(total_assets/vault_scale) * (SECONDS_IN_A_YEAR / seconds_between_reports)
     else:
         if int(previous_report.total_debt) == 0 or seconds_between_reports == 0:
             return 0, 0
