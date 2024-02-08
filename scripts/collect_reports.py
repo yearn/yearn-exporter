@@ -12,6 +12,7 @@ from web3._utils.events import construct_event_topic_set
 from yearn.utils import contract, contract_creation_block
 from yearn.prices import constants
 from y import get_price
+from y.utils.dank_mids import dank_w3
 from yearn.db.models import Reports, Event, Transactions, Session, engine, select
 from sqlalchemy import desc, asc
 from yearn.networks import Network
@@ -185,12 +186,12 @@ if chain.id == 1:
         vault_v030.events.StrategyReported().abi, web3.codec, {}
     )
 
-def main(dynamically_find_multi_harvest=False):
-    if chain.id == 1:
-        ycrv = interface.YCRV('0xFCc5c47bE19d06BF83eB04298b026F81069ff65b')
-        y = Contract.from_abi('','0xFCc5c47bE19d06BF83eB04298b026F81069ff65b',interface.YCRV.abi)
+
+def main():
+    asyncio.get_event_loop().run_until_complete(_main())
+	
+async def _main(dynamically_find_multi_harvest=False):
     print(f"dynamic multi_harvest detection is enabled: {dynamically_find_multi_harvest}")
-    interval_seconds = 25
 
     last_reported_block, last_reported_block030 = last_harvest_block()
     # last_reported_block = 16482431
@@ -200,55 +201,25 @@ def main(dynamically_find_multi_harvest=False):
     if chain.id == 1:
         print("latest block (v0.3.0 API)",last_reported_block030)
         print("blocks behind (v0.3.0 API)", chain.height - last_reported_block030)
-    event_filter = web3.eth.filter({'topics': topics, "fromBlock": last_reported_block + 1})
+
+    filters = [StrategyReportedEvents(dynamically_find_multi_harvest, from_block=last_reported_block+1)]
     if chain.id == 1:
-        event_filter_v030 = web3.eth.filter({'topics': topics_v030, "fromBlock": last_reported_block030 + 1})
+        # No old vaults deployed anywhere other than mainnet
+        filters.append(StrategyReportedEventsV030(dynamically_find_multi_harvest, from_block=last_reported_block030+1))
     
     # while True: # Keep this as a long-running script # <--- disabled this since ypm issues
-    events_to_process = []
-    transaction_hashes = []
-    if dynamically_find_multi_harvest:
-        # The code below is used to populate the "multi_harvest" property #
-        for strategy_report_event in decode_logs(event_filter.get_new_entries()):
-            e = Event(False, strategy_report_event, strategy_report_event.transaction_hash.hex())
-            if e.txn_hash in transaction_hashes:
-                e.multi_harvest = True
-                for i in range(0, len(events_to_process)):
-                        if e.txn_hash == events_to_process[i].txn_hash:
-                            events_to_process[i].multi_harvest = True
-            else:
-                transaction_hashes.append(strategy_report_event.transaction_hash.hex())
-            events_to_process.append(e)
-            
-        if chain.id == 1: # No old vaults deployed anywhere other than mainnet
-            for strategy_report_event in decode_logs(event_filter_v030.get_new_entries()):
-                e = Event(True, strategy_report_event, strategy_report_event.transaction_hash.hex())
-                if e.txn_hash in transaction_hashes:
-                    e.multi_harvest = True
-                    for i in range(0, len(events_to_process)):
-                        if e.txn_hash == events_to_process[i].txn_hash:
-                            events_to_process[i].multi_harvest = True
-                else:
-                    transaction_hashes.append(strategy_report_event.transaction_hash.hex())
-                events_to_process.append(e)
+    tasks = []
+    async for strategy_report_event in a_sync.as_yielded(*filters):
+        asyncio.create_task(handle_event(strategy_report_event.event, strategy_report_event.multi_harvest))
 
-        for e in events_to_process:
-            handle_event(e.event, e.multi_harvest)
-        # time.sleep(interval_seconds)
-    else:
-        for strategy_report_event in decode_logs(event_filter.get_new_entries()):
-            e = Event(False, strategy_report_event, strategy_report_event.transaction_hash.hex())
-            handle_event(e.event, e.multi_harvest)
-            
-        if chain.id == 1: # Old vault API exists only on Ethereum mainnet
-            for strategy_report_event in decode_logs(event_filter_v030.get_new_entries()):
-                e = Event(True, strategy_report_event, strategy_report_event.transaction_hash.hex())
-                handle_event(e.event, e.multi_harvest)
+@alru_cache(maxsize=1)
+async def get_vaults() -> List[str]:
+    registry_helper = await Contract.coroutine(CHAIN_VALUES[chain.id]["REGISTRY_HELPER_ADDRESS"])
+    return list(await registry_helper.getVaults.coroutine())
 
-        # time.sleep(interval_seconds)
-
-def handle_event(event, multi_harvest):
-    endorsed_vaults = list(contract(CHAIN_VALUES[chain.id]["REGISTRY_HELPER_ADDRESS"]).getVaults())
+@a_sync.a_sync(default='sync')
+async def handle_event(event, multi_harvest):
+    endorsed_vaults = await get_vaults()
     txn_hash = event.transaction_hash.hex()
     if event.address in VAULT_EXCEPTIONS:
         return
@@ -263,19 +234,25 @@ def handle_event(event, multi_harvest):
             return
 
     print(txn_hash)
-    tx = web3.eth.getTransactionReceipt(txn_hash)
-    gas_price = web3.eth.getTransaction(txn_hash).gasPrice
-    ts = chain[event.block_number].timestamp
+    block, tx, tx_receipt = await asyncio.gather(
+        dank_w3.eth.getBlock(event.block_number),
+        dank_w3.eth.getTransaction(txn_hash),
+        dank_w3.eth.getTransactionReceipt(txn_hash),
+    )
+    gas_price = tx.gasPrice
+    ts = block.timestamp
     dt = datetime.utcfromtimestamp(ts).strftime("%m/%d/%Y, %H:%M:%S")
     r = Reports()
     r.multi_harvest = multi_harvest
     r.chain_id = chain.id
     r.vault_address = event.address
     try:
-        vault = contract(r.vault_address)
+        vault = await Contract.coroutine(r.vault_address)
     except ValueError:
         return
-    r.vault_decimals = vault.decimals()
+    # now we cache this so we don't need to call it for every event with `vault.decimals()`
+    v = ERC20(vault.address, asynchronous=True)
+    r.vault_decimals = await v.decimals 
     r.strategy_address, r.gain, r.loss, r.debt_paid, r.total_gain, r.total_loss, r.total_debt, r.debt_added, r.debt_ratio = normalize_event_values(event.values(), r.vault_decimals)
     
     txn_record_exists = False
@@ -285,16 +262,16 @@ def handle_event(event, multi_harvest):
         t.chain_id = chain.id
         t.txn_hash = txn_hash
         t.block = event.block_number
-        t.txn_to = tx.to
-        t.txn_from = tx["from"]
-        t.txn_gas_used = tx.gasUsed
+        t.txn_to = tx_receipt.to
+        t.txn_from = tx_receipt["from"]
+        t.txn_gas_used = tx_receipt.gasUsed
         t.txn_gas_price = gas_price / 1e9 # Use gwei
-        t.eth_price_at_block = get_price(constants.weth, t.block)
-        t.call_cost_eth = gas_price * tx.gasUsed / 1e18
+        t.eth_price_at_block = await get_price(constants.weth, t.block, sync=False)
+        t.call_cost_eth = gas_price * tx_receipt.gasUsed / 1e18
         t.call_cost_usd = float(t.eth_price_at_block) * float(t.call_cost_eth)
         if chain.id == 1:
-            t.kp3r_price_at_block = get_price(CHAIN_VALUES[chain.id]["KEEPER_TOKEN"], t.block)
-            t.kp3r_paid = get_keeper_payment(tx) / 1e18
+            t.kp3r_price_at_block = await get_price(CHAIN_VALUES[chain.id]["KEEPER_TOKEN"], t.block, sync=False)
+            t.kp3r_paid = get_keeper_payment(tx_receipt) / 1e18
             t.kp3r_paid_usd = float(t.kp3r_paid) * float(t.kp3r_price_at_block)
             t.keeper_called = t.kp3r_paid > 0
         else:
@@ -311,13 +288,15 @@ def handle_event(event, multi_harvest):
     r.block = event.block_number
     r.txn_hash = txn_hash
     print("ETHERSCAN_TOKEN: ", os.environ.get('ETHERSCAN_TOKEN'))
-    strategy = contract(r.strategy_address)
+    strategy = await Contract.coroutine(r.strategy_address)
     
-    r.vault_api = vault.apiVersion()
-    r.gov_fee_in_want, r.strategist_fee_in_want = parse_fees(tx, r.vault_address, r.strategy_address, r.vault_decimals, r.gain, r.vault_api)
+    r.vault_api, r.want_token = await asyncio.gather(
+	    vault.apiVersion.coroutine(),
+	    strategy.want.coroutine(),
+    )
+    r.gov_fee_in_want, r.strategist_fee_in_want = parse_fees(tx_receipt, r.vault_address, r.strategy_address, r.vault_decimals, r.gain, r.vault_api)
     r.gain_post_fees = r.gain - r.loss - r.strategist_fee_in_want - r.gov_fee_in_want
-    r.token_symbol = contract(strategy.want()).symbol()
-    r.want_token = strategy.want()
+    r.token_symbol = await ERC20(r.want_token, asynchronous=True).symbol
     r.want_price_at_block = 0
     print(f'Want token = {r.want_token}')
     if r.vault_address == '0x9E0E0AF468FbD041Cab7883c5eEf16D1A99a47C3':
@@ -329,14 +308,23 @@ def handle_event(event, multi_harvest):
     ]:
         r.want_price_at_block = 0
     else:
-        r.want_price_at_block = get_price(r.want_token, r.block)
+        r.want_price_at_block = await get_price(r.want_token, r.block, sync=False)
     
     r.want_gain_usd = r.gain * float(r.want_price_at_block)
-    r.vault_name = vault.name()
-    r.strategy_name = strategy.name()
-    r.strategy_api = strategy.apiVersion()
-    r.strategist = strategy.strategist()
-    r.vault_symbol = vault.symbol()
+
+    (
+        r.vault_name, 
+        r.strategy_name, 
+        r.strategy_api,
+        r.strategist,
+        r.vault_symbol,
+    ) = await asyncio.gather(
+        v.name,
+        ERC20(strategy, asynchronous=True).name,
+        strategy.apiVersion.coroutine(),
+        strategy.strategist.coroutine(),
+        v.symbol,
+    )
     r.date = datetime.utcfromtimestamp(ts)
     r.date_string = dt
     r.timestamp = ts
@@ -348,22 +336,23 @@ def handle_event(event, multi_harvest):
         yvecrv = '0xc5bDdf9843308380375a611c18B50Fb9341f502A'
         voter = '0xF147b8125d2ef93FB6965Db97D6746952a133934'
         treasury = '0x93A62dA5a14C80f265DAbC077fCEE437B1a0Efde'
-        token_abi = Contract(crv).abi
+        crv_contract = await Contract.coroutine(crv)
+        token_abi = crv_contract.abi
         crv_token = web3.eth.contract(crv, abi=token_abi)
-        decoded_events = crv_token.events.Transfer().processReceipt(tx)
+        decoded_events = crv_token.events.Transfer().processReceipt(tx_receipt)
         r.keep_crv = 0
         for tfr in decoded_events:
             _from, _to, _val = tfr.args.values()
             if tfr.address == crv and _from == r.strategy_address and (_to == voter or _to == treasury):
                 r.keep_crv = _val / 1e18
-                r.crv_price_usd = get_price(crv, r.block)
+                r.crv_price_usd = await get_price(crv, r.block, sync=False)
                 r.keep_crv_value_usd = r.keep_crv * float(r.crv_price_usd)
         
         if r.keep_crv > 0:
             yvecrv_token = web3.eth.contract(yvecrv, abi=token_abi)
-            decoded_events = yvecrv_token.events.Transfer().processReceipt(tx)
+            decoded_events = yvecrv_token.events.Transfer().processReceipt(tx_receipt)
             try:
-                r.keep_crv_percent = strategy.keepCRV()
+                r.keep_crv_percent = await strategy.keepCRV.coroutine()
             except:
                 pass
             for tfr in decoded_events:
@@ -701,3 +690,33 @@ def get_contract(address):
         response = requests.get(f"https://api.etherscan.io/api?module=contract&action=getabi&address={address}&apikey={ETHERSCANKEY}").json()
         return Contract.from_abi('',address, json.loads(response['result']))
 
+
+class _StrategyReportedEvents(ProcessedEvents):
+    is_v030: bool
+    def __init__(self, topics: List, from_block: int, dynamically_find_multi_harvest: bool) -> None:
+        super().__init__(topics=topics, from_block=from_block)
+        self.dynamically_find_multi_harvest = dynamically_find_multi_harvest
+    
+    async def _process_event(self, strategy_report_event: _EventItem) -> Event:
+        e = Event(self.is_v030, strategy_report_event, strategy_report_event.transaction_hash.hex())
+        if self.dynamically_find_multi_harvest:
+            # The code below is used to populate the "multi_harvest" property #
+            if e.txn_hash in transaction_hashes:
+                e.multi_harvest = True
+                for i in range(len(events_to_process)):
+                    if e.txn_hash == events_to_process[i].txn_hash:
+                        events_to_process[i].multi_harvest = True
+            else:
+                transaction_hashes.append(strategy_report_event.transaction_hash.hex())
+        events_to_process.append(e)
+        return e
+
+class StrategyReportedEvents(_StrategyReportedEvents):
+    is_v030 = False
+    def __init__(self, from_block: int, dynamically_find_multi_harvest: bool) -> None:
+        super().__init__(topics, from_block, dynamically_find_multi_harvest)
+        
+class StrategyReportedEventsV030(_StrategyReportedEvents):
+    is_v030 = True
+    def __init__(self, from_block: int, dynamically_find_multi_harvest: bool) -> None:
+        super().__init__(topics_v030, from_block, dynamically_find_multi_harvest)
