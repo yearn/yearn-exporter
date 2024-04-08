@@ -4,6 +4,7 @@ volumes:
   grafana_data: {}
   victoria_metrics_data: {}
   postgres_data: {}
+  ypostgres_data: {}
 
 networks:
   stack:
