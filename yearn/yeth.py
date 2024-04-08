@@ -1,26 +1,29 @@
 import asyncio
+import logging
 import os
 import re
 import logging
 from datetime import datetime, timezone, timedelta
+from pprint import pformat
+from typing import Optional
 
 import eth_retry
-
 from brownie import chain
-from pprint import pformat
 
-from y import Contract, magic, Network
-from y.time import get_block_timestamp_async, closest_block_after_timestamp
+from y import Contract, Network, magic
 from y.contracts import contract_creation_block_async
+from y.datatypes import Block
 from y.exceptions import PriceError, yPriceMagicError
+from y.time import get_block_timestamp_async, closest_block_after_timestamp
 
-from yearn.apy.common import (Apy, ApyFees,
-                              ApySamples, SECONDS_PER_YEAR, SECONDS_PER_WEEK, SharePricePoint, calculate_roi, get_samples)
+from yearn.apy.common import (SECONDS_PER_WEEK, SECONDS_PER_YEAR, Apy, ApyFees,
+                              ApySamples, SharePricePoint, calculate_roi,
+                              get_samples)
 from yearn.common import Tvl
-from yearn.events import decode_logs, get_logs_asap
-from yearn.utils import Singleton
-from yearn.prices.constants import weth
 from yearn.debug import Debug
+from yearn.events import decode_logs, get_logs_asap
+from yearn.prices.constants import weth
+from yearn.utils import Singleton
 
 logger = logging.getLogger("yearn.yeth")
 
@@ -96,7 +99,7 @@ class StYETH(metaclass = Singleton):
 
         if block:
             block_timestamp = get_block_timestamp(block)
-            samples = get_samples(datetime.fromtimestamp(block_timestamp))
+            samples = get_samples(datetime.fromtimestamp(block_timestamp, tz=timezone.utc))
         else:
             samples = get_samples()
 
@@ -170,7 +173,7 @@ class YETHLST():
         data = self._get_lst_data(block=block)
 
         if block:
-            block_timestamp = get_block_timestamp(block)
+            block_timestamp = await get_block_timestamp_async(block)
             samples = get_samples(datetime.fromtimestamp(block_timestamp))
         else:
             samples = get_samples()
@@ -250,7 +253,7 @@ class Registry(metaclass = Singleton):
         if block:
             to_block = block
             block_timestamp = get_block_timestamp(block)
-            now_time = datetime.fromtimestamp(block_timestamp)
+            now_time = datetime.fromtimestamp(block_timestamp, tz=timezone.utc)
         else:
             to_block = chain.height
             now_time = datetime.today()
