@@ -5,16 +5,18 @@ import re
 import logging
 from datetime import datetime, timezone, timedelta
 from pprint import pformat
-from typing import Optional
+from typing import Optional, AsyncIterator
 
 import eth_retry
 from brownie import chain
+from brownie.network.event import _EventItem
 
 from y import Contract, Network, magic
 from y.contracts import contract_creation_block_async
 from y.datatypes import Block
 from y.exceptions import PriceError, yPriceMagicError
 from y.time import get_block_timestamp_async, closest_block_after_timestamp
+from y.utils.events import Events
 from y.utils.dank_mids import dank_w3
 
 from yearn.apy.common import (SECONDS_PER_WEEK, SECONDS_PER_YEAR, Apy, ApyFees,
@@ -139,12 +141,16 @@ class YETHLST():
     def _sanitize(self, name):
         return re.sub(r"([\d]+)\.[\d]*", r"\1", name)
 
-    def _get_lst_data(self, block=None):
-        virtual_balance = YETH_POOL.virtual_balance(self.asset_id, block_identifier=block) / 1e18
-        weights = YETH_POOL.weight(self.asset_id, block_identifier=block)
+    async def _get_lst_data(self, block=None):
+        virtual_balance, weights, rate = await asyncio.gather(
+            YETH_POOL.virtual_balance.coroutine(self.asset_id, block_identifier=block),
+            YETH_POOL.weight.coroutine(self.asset_id, block_identifier=block),
+            RATE_PROVIDER.rate.coroutine(str(self.lst), block_identifier=block)
+        )
+        virtual_balance /= 1e18
         weight = weights[0] / 1e18
         target = weights[1] / 1e18
-        rate = RATE_PROVIDER.rate(str(self.lst), block_identifier=block) / 1e18
+        rate /= 1e18
 
         return {
           "virtual_balance": virtual_balance,
@@ -155,8 +161,12 @@ class YETHLST():
 
     @eth_retry.auto_retry
     async def apy(self, samples: ApySamples) -> Apy:
-        now_rate = RATE_PROVIDER.rate(str(self.lst), block_identifier=samples.now) / 1e18
-        week_ago_rate = RATE_PROVIDER.rate(str(self.lst), block_identifier=samples.week_ago) / 1e18
+        now_rate, week_ago_rate = await asyncio.gather(
+            RATE_PROVIDER.rate.coroutine(str(self.lst), block_identifier=samples.now),
+            RATE_PROVIDER.rate(str(self.lst), block_identifier=samples.week_ago),
+        )
+        now_rate /= 1e18
+        week_ago_rate /= 1e18
         now_point = SharePricePoint(samples.now, now_rate)
         week_ago_point = SharePricePoint(samples.week_ago, week_ago_rate)
         apy = calculate_roi(now_point, week_ago_point)
@@ -165,13 +175,15 @@ class YETHLST():
 
     @eth_retry.auto_retry
     async def tvl(self, block=None) -> Tvl:
-        data = self._get_lst_data(block=block)
+        data = await self._get_lst_data(block=block)
         tvl = data["virtual_balance"] * data["rate"]
         return Tvl(data["virtual_balance"], data["rate"], tvl)
 
     async def describe(self, block=None):
-        weth_price = await magic.get_price(weth, block=block, sync=False)
-        data = self._get_lst_data(block=block)
+        weth_price, data = await asyncio.gather(
+            magic.get_price(weth, block=block, sync=False),
+            self._get_lst_data(block=block),
+        )
 
         if block:
             block_timestamp = await get_block_timestamp_async(block)
@@ -200,7 +212,7 @@ class YETHLST():
         }
 
     async def total_value_at(self, block=None):
-        data = self._get_lst_data(block=block)
+        data = await self._get_lst_data(block=block)
         tvl = data["virtual_balance"] * data["rate"]
         return tvl
 
@@ -210,31 +222,32 @@ class Registry(metaclass = Singleton):
         self.st_yeth = StYETH()
         self.swap_volumes = {}
         self.resolution = os.environ.get('RESOLUTION', '1h') # Default: 1 hour
+        self.swap_events = Events(addresses=[str(YETH_POOL)])
 
+    async def _get_swaps(self, from_block, to_block) -> AsyncIterator[_EventItem]:
+        async for event in YETH_POOL.events.Swap.events(to_block):
+            if event.block_number < from_block:
+                continue
+            elif event.block_number > to_block:
+                return
+            yield event
+                
     async def _get_swap_volumes(self, from_block, to_block):
-        logs = get_logs_asap([str(YETH_POOL)], None, from_block=from_block, to_block=to_block)
-        events = decode_logs(logs)
-
-        num_assets = YETH_POOL.num_assets(block_identifier=from_block)
+        num_assets = await YETH_POOL.num_assets.coroutine(block_identifier=from_block)
         volume_in_eth = [0] * num_assets
         volume_out_eth = [0] * num_assets
         volume_in_usd = [0] * num_assets
         volume_out_usd = [0] * num_assets
 
-        rates = []
-        for i in range(num_assets):
-            lst = self.st_yeth.lsts[i]
-            address = str(lst.lst)
-            rates.append(RATE_PROVIDER.rate(address, block_identifier=from_block) / 1e18)
+        rates = [r / 1e18 for r in await asyncio.gather(*[RATE_PROVIDER.rate.coroutine(str(self.st_yeth.lsts[i].lst), block_identifier=from_block) for i in range(num_assets)])]
 
-        for e in events:
-            if e.name == "Swap":
-                asset_in = e["asset_in"]
-                asset_out = e["asset_out"]
-                amount_in = e["amount_in"] / 1e18
-                amount_out = e["amount_out"] / 1e18
-                volume_in_eth[asset_in] += amount_in * rates[asset_in]
-                volume_out_eth[asset_out] += amount_out * rates[asset_out]
+        async for swap in self._get_swaps(from_block, to_block):
+            asset_in = swap["asset_in"]
+            asset_out = swap["asset_out"]
+            amount_in = swap["amount_in"] / 1e18
+            amount_out = swap["amount_out"] / 1e18
+            volume_in_eth[asset_in] += amount_in * rates[asset_in]
+            volume_out_eth[asset_out] += amount_out * rates[asset_out]
 
         weth_price = float(await magic.get_price(weth, block=from_block, sync=False))
         for i, value in enumerate(volume_in_eth):
