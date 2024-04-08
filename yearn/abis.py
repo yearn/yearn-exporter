@@ -43,7 +43,8 @@ def __validate_unitroller_abis() -> None:
     '''
     good: List[Contract] = []
     bad: List[Contract] = []
-    for address in compound.TROLLERS.values():
+    for troller in compound.trollers.values():
+        address = troller.address
         # We use `Contract` instead of `contract` here so
         #  we don't cache any incorrect ABIs into memory.
         try:
