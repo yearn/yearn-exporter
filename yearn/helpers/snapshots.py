@@ -19,7 +19,7 @@ async def _generate_snapshot_range_forward(start: datetime, interval: timedelta)
         snapshot = start + i * interval
         while snapshot > datetime.now(tz=timezone.utc) + REORG_BUFFER:
             diff = snapshot - datetime.now(tz=timezone.utc) + REORG_BUFFER
-            logger.debug(f"SLEEPING {diff}")
+            logger.debug("SLEEPING %s", diff)
             await asyncio.sleep(diff.total_seconds())
         yield snapshot
 

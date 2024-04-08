@@ -205,7 +205,7 @@ class UniswapV2:
         if len(pairs) < all_pairs_len:
             logger.debug("Oh no! looks like your node can't look back that far. Checking for the missing pools...")
             poolids_your_node_couldnt_get = [i for i in range(all_pairs_len) if i not in pairs]
-            logger.debug(f'missing poolids: {poolids_your_node_couldnt_get}')
+            logger.debug('missing poolids: %s', poolids_your_node_couldnt_get)
             pools_your_node_couldnt_get = fetch_multicall(*[[self.factory,'allPairs',i] for i in poolids_your_node_couldnt_get])
             token0s = fetch_multicall(*[[contract(pool), 'token0'] for pool in pools_your_node_couldnt_get if pool not in self.excluded_pools()])
             token1s = fetch_multicall(*[[contract(pool), 'token1'] for pool in pools_your_node_couldnt_get if pool not in self.excluded_pools()])
