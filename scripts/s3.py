@@ -344,15 +344,10 @@ def with_monitoring():
         tb = traceback.format_exc()
         now = datetime.now()
         message = f"`[{now}]`\n🔥 {export_mode} Vaults API update for {Network.name()} failed!\n"
-        try:
+        with suppress(BadRequest):
             detail_message = (message + f"```\n{tb}\n```")[:4000]
             updater.bot.send_message(chat_id=private_group, text=detail_message, parse_mode="Markdown", reply_to_message_id=ping)
             updater.bot.send_message(chat_id=public_group, text=detail_message, parse_mode="Markdown")
-        except BadRequest:
-            pass
-            #detail_message = message + f"{error.__class__.__name__}({error})"
-            #updater.bot.send_message(chat_id=private_group, text=detail_message, parse_mode="Markdown", reply_to_message_id=ping)
-            #updater.bot.send_message(chat_id=public_group, text=detail_message, parse_mode="Markdown")
         raise error
     message = f"✅ {export_mode} Vaults API update for {Network.name()} successful!"
     updater.bot.send_message(chat_id=private_group, text=message, reply_to_message_id=ping)
