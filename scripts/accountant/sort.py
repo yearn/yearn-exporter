@@ -25,10 +25,10 @@ def main():
             'log index': tx.log_index,
             'from': tx._from_nickname if tx._from_nickname else tx.from_address.address,
             'to': tx._to_nickname if tx._to_nickname else tx.to_address.address if tx.to_address else None,
-            'amount': round(tx.amount,6),
+            'amount': round(tx.amount, 6),
             'hash':tx.hash,
             'token': tx.token.symbol,
-            'value_usd': round(tx.value_usd,2) if tx.value_usd else None,
+            'value_usd': round(tx.value_usd, 2) if tx.value_usd else None,
         } for tx in tqdm(txs)
     ])
 
