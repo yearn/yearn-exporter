@@ -15,6 +15,7 @@ from y.contracts import contract_creation_block_async
 from y.datatypes import Block
 from y.exceptions import PriceError, yPriceMagicError
 from y.time import get_block_timestamp_async, closest_block_after_timestamp
+from y.utils.dank_mids import dank_w3
 
 from yearn.apy.common import (SECONDS_PER_WEEK, SECONDS_PER_YEAR, Apy, ApyFees,
                               ApySamples, SharePricePoint, calculate_roi,
@@ -98,7 +99,7 @@ class StYETH(metaclass = Singleton):
             boost = 0
 
         if block:
-            block_timestamp = get_block_timestamp(block)
+            block_timestamp = await get_block_timestamp_async(block)
             samples = get_samples(datetime.fromtimestamp(block_timestamp, tz=timezone.utc))
         else:
             samples = get_samples()
@@ -252,16 +253,16 @@ class Registry(metaclass = Singleton):
     async def describe(self, block=None):
         if block:
             to_block = block
-            block_timestamp = get_block_timestamp(block)
+            block_timestamp = await get_block_timestamp_async(block)
             now_time = datetime.fromtimestamp(block_timestamp, tz=timezone.utc)
         else:
-            to_block = chain.height
+            to_block = await dank_w3.eth.block_number
             now_time = datetime.today()
 
         from_block = self._get_from_block(now_time)
 
         self.swap_volumes = await self._get_swap_volumes(from_block, to_block)
-        products = await self.active_products_at(block)
+        products = await self.active_vaults_at(block)
         data = await asyncio.gather(*[product.describe(block=block) for product in products])
         return {product.name: desc for product, desc in zip(products, data)}
 
