@@ -10,7 +10,7 @@ from brownie import chain
 from pprint import pformat
 
 from y import Contract, magic, Network
-from y.time import get_block_timestamp, closest_block_after_timestamp
+from y.time import get_block_timestamp_async, closest_block_after_timestamp
 from y.contracts import contract_creation_block_async
 from y.exceptions import PriceError, yPriceMagicError
 
@@ -66,7 +66,7 @@ class StYETH(metaclass = Singleton):
     @eth_retry.auto_retry
     async def apy(self, samples: ApySamples) -> Apy:
         block = samples.now
-        now = get_block_timestamp(block)
+        now = await get_block_timestamp_async(block)
         seconds_til_eow = SECONDS_PER_WEEK - now % SECONDS_PER_WEEK
 
         data = STAKING_CONTRACT.get_amounts(block_identifier=block)
@@ -252,12 +252,13 @@ class Registry(metaclass = Singleton):
         }
 
     async def describe(self, block=None):
-        to_block = chain.height
-        now_time = datetime.today()
         if block:
             to_block = block
             block_timestamp = get_block_timestamp(block)
             now_time = datetime.fromtimestamp(block_timestamp)
+        else:
+            to_block = chain.height
+            now_time = datetime.today()
 
         from_block = self._get_from_block(now_time)
 
@@ -267,7 +268,7 @@ class Registry(metaclass = Singleton):
         return {product.name: desc for product, desc in zip(products, data)}
 
     async def total_value_at(self, block=None):
-        products = await self.active_products_at(block)
+        products = await self.active_vaults_at(block)
         tvls = await asyncio.gather(*[product.total_value_at(block=block) for product in products])
         return {product.name: tvl for product, tvl in zip(products, tvls)}
 
