@@ -38,7 +38,7 @@ def get_last_recorded_block():
 def postgres_ready(snapshot: datetime) -> bool:
     if (postgres_cached_thru_block := get_last_recorded_block()):
         return chain[postgres_cached_thru_block].timestamp >= snapshot.timestamp()
-    logger.debug(f"postgress not yet popuated for {snapshot}")
+    logger.debug("postgress not yet popuated for %s", snapshot)
     return False
 
 class WalletExporter(Exporter):

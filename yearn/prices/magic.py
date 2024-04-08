@@ -166,7 +166,7 @@ def find_price(
     if price is None and return_price_during_vault_downtime:
         for incident in INCIDENTS[token]:
             if incident['start'] <= block <= incident['end']:
-                logger.debug(f"incidents -> {price}")
+                logger.debug("incidents -> %s", price)
                 return incident['result']
 
     if price is None:

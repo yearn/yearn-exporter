@@ -74,7 +74,7 @@ def __ensure_signatures_are_known(addresses: List[Address]) -> None:
                     no_sigs.append(address)
         except ContractNotFound:
             # This is MOST LIKELY unimportant and not Yearn related.
-            logger.debug(f"{address.address} self destructed")
+            logger.debug("%s self destructed", address.address)
         except ValueError as e:
             if str(e).startswith("Source for") and str(e).endswith("has not been verified"):
                 continue

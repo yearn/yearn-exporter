@@ -92,7 +92,7 @@ class Wrapper:
                 except KeyError:
                     start_block = partner.start_block
                     logger.debug('no harvests cached for %s %s', partner.name, self.name)
-                logger.debug(f'start block: {start_block}')
+                logger.debug('start block: %s', start_block)
             else:
                 start_block = partner.start_block
             

@@ -3,6 +3,8 @@ import logging
 from typing import Any, Callable, Iterable, List, Optional, Tuple, Union
 
 import sentry_sdk
+from y import ContractNotVerified
+
 from yearn.entities import TreasuryTx, TxGroup
 from yearn.outputs.postgres.utils import cache_txgroup
 
@@ -57,8 +59,10 @@ class ChildTxGroup(_TxGroup):
         try:
             if hasattr(self, 'check') and self.check(tx):
                 return self.txgroup
+        except ContractNotVerified:
+            logger.info("ContractNotVerified when sorting %s with %s", tx, self.label)
         except Exception as e:
-            logger.warning(f"{e.__repr__()} when sorting {tx} with {self.label}.")
+            logger.warning("%s when sorting %s with %s.", e.__repr__(), tx, self.label)
             sentry_sdk.capture_exception(e)
             return None
         return super().sort(tx)
