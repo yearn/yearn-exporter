@@ -57,7 +57,7 @@ class StYETH(metaclass = Singleton):
 
     async def get_price(self, block: Optional[Block] = None) -> Optional[float]:
         try:
-            return await magic.get_price(YETH_TOKEN, block=block, sync=False)
+            return float(await magic.get_price(YETH_TOKEN, block=block, sync=False))
         except yPriceMagicError as e:
             if not isinstance(e.exception, PriceError):
                 raise e
