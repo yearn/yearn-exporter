@@ -21,7 +21,7 @@ pytest-bdd>=5.0.0
 dank_mids==4.20.71
 eth_retry>=0.1.19
 eth-hash[pysha3]
-ez-a-sync==0.12.3
+ez-a-sync==0.19.2
 python-telegram-bot==13.15
 ypricemagic==2.16.12
 git+https://www.github.com/BobTheBuidler/eth-portfolio@0fb0db03365404824e109893bc8e042d2f140d85
