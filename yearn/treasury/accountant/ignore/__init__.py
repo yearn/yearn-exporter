@@ -2,7 +2,7 @@
 from decimal import Decimal
 
 from brownie import chain
-from y.networks import Network
+from y import Network
 
 from yearn.entities import TreasuryTx
 from yearn.treasury.accountant.classes import HashMatcher, TopLevelTxGroup
