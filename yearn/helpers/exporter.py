@@ -23,6 +23,7 @@ from yearn.outputs.victoria.victoria import _build_item, _post, has_data
 from yearn.sentry import log_exceptions
 
 logger = logging.getLogger(__name__)
+has_data_logger = logging.getLogger(f"{__name__}.has_data")
 
 SHOW_STATS = bool(os.environ.get("SHOW_STATS"))
 
@@ -149,7 +150,7 @@ class Exporter:
             ts = snapshot.timestamp()
             response = await has_data(ts, self.data_query)
             if response:
-                logger.info(f"data already present for {self.full_name} snapshot {snapshot}, ts {ts}")
+                has_data_logger.info(f"data already present for {self.full_name} snapshot {snapshot}, ts {ts}")
             return bool(response)
 
     async def _export_data(self, data: T) -> None:
