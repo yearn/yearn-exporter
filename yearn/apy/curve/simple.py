@@ -21,6 +21,7 @@ from y.prices.stable_swap.curve import curve as y_curve
 from y.time import get_block_timestamp_async
 from y.utils.dank_mids import dank_w3
 
+from yearn import constants
 from yearn.apy.common import (SECONDS_PER_WEEK, SECONDS_PER_YEAR, Apy,
                               ApyError, ApyFees, ApySamples, SharePricePoint,
                               calculate_roi)
@@ -164,7 +165,7 @@ async def calculate_simple(vault, gauge: Gauge, samples: ApySamples) -> Apy:
         raise ValueError(f"Error! Could not find price for {gauge.lp_token} at block {block}")
 
     crv_price, pool_price = await asyncio.gather(
-        magic.get_price(curve.crv, block=block, sync=False),
+        magic.get_price(constants.CRV, block=block, sync=False),
         gauge.pool.get_virtual_price.coroutine(block_identifier=block)
     )
     gauge_weight = gauge.gauge_weight
@@ -461,7 +462,7 @@ class _ConvexVault:
     async def _get_cvx_emissions_converted_to_crv(self) -> float:
         """The amount of CVX emissions at the current block for a given pool, converted to CRV (from a pricing standpoint) to ease calculation of total APY."""
         crv_price, cvx = await asyncio.gather(
-            magic.get_price(curve.crv, block=self.block, sync=False),
+            magic.get_price(constants.CRV, block=self.block, sync=False),
             Contract.coroutine(addresses[chain.id]['cvx']),
         )
         total_cliff = 1e3 # the total number of cliffs to happen
