@@ -40,8 +40,8 @@ from yearn.v2.vaults import Vault
 
 try:
     from yearn.entities import PartnerHarvestEvent
-    from yearn.outputs.postgres.utils import (cache_address, cache_chain,
-                                              cache_token)
+    from yearn.outputs.postgres.utils import (address_dbid, chain_dbid,
+                                              token_dbid)
     USE_POSTGRES_CACHE = True
 except OperationalError as e:
     if "Is the server running on that host and accepting TCP/IP connections?" in str(e):
@@ -578,7 +578,7 @@ def cache_data(wrap: DataFrame) -> None:
     '''
     for i, row in wrap.iterrows():
         PartnerHarvestEvent(
-            chain=cache_chain(),
+            chain=chain_dbid(),
             block=row.block,
             timestamp=int(row.timestamp.timestamp()),
             balance=row.balance,
@@ -589,8 +589,8 @@ def cache_data(wrap: DataFrame) -> None:
             payout_base=row.payout_base,
             protocol_fee=row.protocol_fee,
             # Use cache_address instead of cache_token because some wrappers aren't verified
-            wrapper=cache_address(row.wrapper),
-            vault=cache_token(row.vault),
+            wrapper=address_dbid(row.wrapper),
+            vault=token_dbid(row.vault),
         )
         commit()
 
