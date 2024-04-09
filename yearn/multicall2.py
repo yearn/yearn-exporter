@@ -7,15 +7,13 @@ from typing import Any, List, Optional
 
 import eth_retry
 import requests
-from brownie import Contract, chain, web3
-from brownie.network.contract import _ContractMethod
+from brownie import chain, web3
+from dank_mids.brownie_patch.types import DankContractMethod
 from eth_abi.exceptions import InsufficientDataBytes
-from y.contracts import contract_creation_block
-from y.networks import Network
+from y import Contract, Network, contract_creation_block
 
 from yearn.exceptions import MulticallError
 from yearn.typing import Block
-from yearn.utils import contract
 
 JSONRPC_BATCH_MAX_SIZE = int(os.environ.get("JSONRPC_BATCH_MAX_SIZE", 10_000)) # Currently set arbitrarily, necessaary for certain node-as-a-service providers.
 MULTICALL_MAX_SIZE = int(os.environ.get("MULTICALL_MAX_SIZE", 500)) # Currently set arbitrarily
@@ -27,7 +25,7 @@ MULTICALL2 = {
     Network.Optimism: '0xcA11bde05977b3631167028862bE2a173976CA11', # Multicall 3
     Network.Base: '0xcA11bde05977b3631167028862bE2a173976CA11' # MC3
 }
-multicall2 = contract(MULTICALL2[chain.id])
+multicall2 = Contract(MULTICALL2[chain.id])
 
 
 def fetch_multicall(*calls, block: Optional[Block] = None, require_success: bool = False) -> List[Any]:
@@ -123,7 +121,7 @@ async def fetch_multicall_async(*calls, block: Optional[Block] = None, require_s
 
     return results
 
-def _get_fn(contract: Contract, fn_name: str, fn_inputs: Any) -> _ContractMethod:
+def _get_fn(contract: Contract, fn_name: str, fn_inputs: Any) -> DankContractMethod:
     fn = getattr(contract, fn_name)
     # check that there aren't multiple functions with the same name
     if hasattr(fn, "_get_fn_from_args"):
