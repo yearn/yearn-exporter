@@ -6,6 +6,7 @@ from typing import List
 
 from brownie import chain
 from y.contracts import contract_creation_block_async
+from y.decorators import stuck_coro_debugger
 from y.networks import Network
 
 import yearn.iearn
@@ -28,37 +29,32 @@ class Yearn:
     Can describe all products.
     """
 
-    def __init__(self, load_strategies=True, load_harvests=False, load_transfers=False, watch_events_forever=True, exclude_ib_tvl=True) -> None:
+    def __init__(self, exclude_ib_tvl=True) -> None:
         start = time()
         if chain.id == Network.Mainnet:
             self.registries = {
                 "earn": yearn.iearn.Registry(),
                 "v1": yearn.v1.registry.Registry(),
-                "v2": yearn.v2.registry.Registry(watch_events_forever=watch_events_forever),
+                "v2": yearn.v2.registry.Registry(),
                 "ib": yearn.ironbank.Registry(exclude_ib_tvl=exclude_ib_tvl),
                 "special": yearn.special.Registry(),
             }
         elif chain.id in [Network.Gnosis, Network.Base]:
             self.registries = {
-                "v2": yearn.v2.registry.Registry(watch_events_forever=watch_events_forever),
+                "v2": yearn.v2.registry.Registry(),
             }
         elif chain.id in [Network.Fantom, Network.Arbitrum, Network.Optimism]:
             self.registries = {
-                "v2": yearn.v2.registry.Registry(watch_events_forever=watch_events_forever),
+                "v2": yearn.v2.registry.Registry(),
                 "ib": yearn.ironbank.Registry(exclude_ib_tvl=exclude_ib_tvl),
             }
         else:
             raise UnsupportedNetwork('yearn is not supported on this network')
 
         self.exclude_ib_tvl = exclude_ib_tvl
-
-        if load_strategies:
-            self.registries["v2"].load_strategies()
-        if load_harvests:
-            self.registries["v2"].load_harvests()
         logger.info('loaded yearn in %.3fs', time() - start)
 
-
+    @stuck_coro_debugger
     async def active_vaults_at(self, block=None):
         active_vaults_by_registry = await asyncio.gather(*[registry.active_vaults_at(block) for registry in self.registries.values()])
         active = [vault for registry in active_vaults_by_registry for vault in registry]
@@ -71,14 +67,14 @@ class Yearn:
 
         return active
     
-    
+    @stuck_coro_debugger
     async def describe(self, block=None):
         if block is None:
             block = chain.height
         desc = await asyncio.gather(*[self.registries[key].describe(block=block) for key in self.registries])
         return dict(zip(self.registries, desc))
 
-
+    @stuck_coro_debugger
     async def describe_wallets(self, block=None):
         from yearn.outputs.describers.registry import RegistryWalletDescriber
         describer = RegistryWalletDescriber()
@@ -102,12 +98,12 @@ class Yearn:
         data.update(agg_stats)
         return data
 
-
+    @stuck_coro_debugger
     async def total_value_at(self, block=None):
         desc = await asyncio.gather(*[self.registries[key].total_value_at(block=block) for key in self.registries])
         return dict(zip(self.registries, desc))
         
-
+    @stuck_coro_debugger
     async def data_for_export(self, block, timestamp) -> List:
         start = time()
         data = await self.describe(block)
@@ -183,7 +179,7 @@ class Yearn:
 
         return metrics_to_export
 
-    
+    @stuck_coro_debugger
     async def wallet_data_for_export(self, block: int, timestamp: int):
         data = await self.describe_wallets(block)
         metrics_to_export = []

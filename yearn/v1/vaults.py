@@ -7,8 +7,9 @@ from async_property import async_cached_property
 from brownie import ZERO_ADDRESS, interface
 from brownie.network.contract import InterfaceContainer
 from dank_mids.brownie_patch import patch_contract
+from y import Contract, magic
+from y.decorators import stuck_coro_debugger
 from y.exceptions import PriceError, yPriceMagicError
-from y.prices import magic
 from y.utils.dank_mids import dank_w3
 
 from yearn import constants
@@ -53,6 +54,7 @@ class VaultV1:
             return await magic.get_price(underlying, block=block, sync=False)
         return await magic.get_price(self.token, block=block, sync=False)
 
+    @stuck_coro_debugger
     async def get_strategy(self, block=None):
         if self.name in ["aLINK", "LINK"] or block is None:
             return self.strategy
@@ -62,15 +64,18 @@ class VaultV1:
         if strategy != ZERO_ADDRESS:
             return contract(strategy)
 
+    @stuck_coro_debugger
     async def get_controller(self, block=None):
         if block is None:
             return self.controller
-        return contract(self.vault.controller(block_identifier=block))
+        return await Contract.coroutine(await self.vault.controller.coroutine(block_identifier=block))
 
     @async_cached_property
+    @stuck_coro_debugger
     async def is_curve_vault(self):
         return await magic.curve.get_pool(str(self.token)) is not None
 
+    @stuck_coro_debugger
     async def describe(self, block=None):
         info = {}
         strategy = self.strategy
@@ -139,18 +144,20 @@ class VaultV1:
         if "token price" not in info:
             info["token price"] = float(await self.get_price(block=block)) if info["vault total"] > 0 else 0
 
-        info["tvl"] = info["vault balance"] * info["token price"]
+        info["tvl"] = info["vault balance"] * float(info["token price"])
             
         return info
 
+    @stuck_coro_debugger
     async def apy(self, samples: "ApySamples"):
         from yearn import apy
         from yearn.prices.curve import curve
-        if curve.get_pool(self.token.address):
+        if await magic.curve.get_pool(self.token.address):
             return await apy.curve.simple(self, samples)
         else:
             return await apy.v1.simple(self, samples)
 
+    @stuck_coro_debugger
     async def tvl(self, block=None):
         total_assets = await self.vault.balance.coroutine(block_identifier=block)
         try:

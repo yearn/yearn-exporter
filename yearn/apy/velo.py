@@ -28,7 +28,7 @@ async def get_staking_pool(underlying: str) -> Optional[Contract]:
         return None if staking_pool == ZERO_ADDRESS else await Contract.coroutine(staking_pool)
         
 async def staking(vault: "Vault", staking_rewards: Contract, samples: ApySamples, block: Optional[int]=None) -> float:
-    if len(vault.strategies) == 0:
+    if len(await vault.strategies) == 0:
         return Apy("v2:velo_no_strats", 0, 0, ApyFees(0, 0), ApyPoints(0, 0, 0))
 
     end = await staking_rewards.periodFinish.coroutine(block_identifier=block)

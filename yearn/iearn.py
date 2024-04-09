@@ -68,7 +68,7 @@ class Registry:
                 "pooled balance": res["pool"] / vault.scale,
                 "price per share": res['getPricePerFullShare'] / 1e18,
                 "token price": price,
-                "tvl": res["pool"] / vault.scale * price,
+                "tvl": res["pool"] / vault.scale * float(price),
                 "address": vault.vault,
                 "version": "iearn",
             }

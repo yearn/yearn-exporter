@@ -14,7 +14,7 @@ warnings.simplefilter("ignore", BrownieEnvironmentWarning)
 
 def main():
     data = []
-    yearn = Yearn(load_strategies=False)
+    yearn = Yearn()
 
     for product, registry in yearn.registries.items():
         for name, tvl in registry.total_value_at().items():
