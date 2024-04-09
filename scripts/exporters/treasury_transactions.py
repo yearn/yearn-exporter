@@ -74,7 +74,7 @@ sort_thread = AsyncThreadPoolExecutor(1)
 sort_later = lambda entry: isinstance(entry, TokenTransfer)
 
 async def insert_treasury_tx(entry: LedgerEntry) -> int:
-    ts = await get_block_timestamp_async(entry.block_number)
+    ts = int(await get_block_timestamp_async(entry.block_number))
     if txid := await insert_thread.run(insert_to_db, entry, ts):
         if sort_later(entry):
             return 1
