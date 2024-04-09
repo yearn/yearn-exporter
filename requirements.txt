@@ -24,6 +24,6 @@ eth-hash[pysha3]
 ez-a-sync==0.19.2
 python-telegram-bot==13.15
 ypricemagic>=3.4.6
-git+https://www.github.com/BobTheBuidler/eth-portfolio@fix-block-rewards
+git+https://www.github.com/BobTheBuidler/eth-portfolio@98613afaef2beb020e2412574d9a68e2d1a6186c
 git+https://www.github.com/BobTheBuidler/toolcache@e37b53cec64556d2b35df66767fca4c8f366a2fa
 memray
