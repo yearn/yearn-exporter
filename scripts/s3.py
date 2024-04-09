@@ -8,6 +8,8 @@ import shutil
 import traceback
 import warnings
 from datetime import datetime
+from decimal import Decimal
+from functools import lru_cache
 from time import time
 from typing import Union
 
@@ -40,15 +42,25 @@ sentry_sdk.set_tag('script','s3')
 warnings.simplefilter("ignore", BrownieEnvironmentWarning)
 
 METRIC_NAME = "yearn.exporter.apy"
+DEBUG = os.getenv("DEBUG", None)
 
 logs.basicConfig(level=logging.DEBUG)
 logger = logging.getLogger("yearn.apy")
 
 
 async def wrap_vault(
-    vault: Union[VaultV1, VaultV2], samples: ApySamples, aliases: dict, icon_url: str, assets_metadata: dict
+    vault: Union[VaultV1, VaultV2], 
+    samples: ApySamples, 
+    aliases: dict, 
+    icon_url: str, 
+    assets_metadata: dict, 
+    pos: int, 
+    total: int,
 ) -> dict:
-    
+    if DEBUG:
+        await _get_debug_lock().acquire()
+    logger.info(f"wrapping vault [{pos}/{total}]: {vault.name} {str(vault.vault)}")
+
     # We don't need results for these right away but they take a while so lets start them now
     inception_fut = asyncio.create_task(contract_creation_block_async(str(vault.vault)))
     apy_fut = asyncio.create_task(get_apy(vault, samples))
@@ -72,7 +84,7 @@ async def wrap_vault(
     if str(vault.vault) in assets_metadata:
         migration = {"available": assets_metadata[str(vault.vault)][1], "address": assets_metadata[str(vault.vault)][2]}
     
-    object = {
+    data = {
         "inception": await inception_fut,
         "address": str(vault.vault),
         "symbol": vault.symbol if hasattr(vault, "symbol") else await ERC20(vault.vault, asynchronous=True).symbol,
@@ -100,9 +112,12 @@ async def wrap_vault(
     }
 
     if chain.id == 1 and any([isinstance(vault, t) for t in [Backscratcher, YveCRVJar]]):
-        object["special"] = True
+        data["special"] = True
 
-    return object
+    logger.info(f"done wrapping vault [{pos}/{total}]: {vault.name} {str(vault.vault)}")
+    if DEBUG:
+        _get_debug_lock().release()
+    return _dedecimal(data)
 
 
 async def get_apy(vault, samples) -> Apy:
@@ -224,14 +239,7 @@ async def _main():
 
     assets_metadata = await get_assets_metadata(registry_v2.vaults)
 
-    data = []
-    total = len(vaults)
-
-    for i, vault in enumerate(vaults):
-        pos = i + 1
-        logger.info(f"wrapping vault [{pos}/{total}]: {vault.name} {str(vault.vault)}")
-        data.append(await wrap_vault(vault, samples, aliases, icon_url, assets_metadata))
-        logger.info(f"done wrapping vault [{pos}/{total}]: {vault.name} {str(vault.vault)}")
+    data = await tqdm_asyncio.gather(*[wrap_vault(vault, samples, aliases, icon_url, assets_metadata, i + 1, len(vaults)) for i, vault in enumerate(vaults)])
 
     if len(data) == 0:
         raise ValueError(f"Data is empty for chain_id: {chain.id}")
@@ -262,7 +270,7 @@ def _export(data, file_name, s3_path):
     with open(file_name, "w+") as f:
         json.dump(data, f)
 
-    if os.getenv("DEBUG", None):
+    if DEBUG:
         return
 
     for item in _get_s3s():
@@ -278,10 +286,10 @@ def _export(data, file_name, s3_path):
 
 def _get_s3s():
     s3s = []
-    aws_buckets = os.environ.get("AWS_BUCKET").split(";")
-    aws_endpoint_urls = os.environ.get("AWS_ENDPOINT_URL").split(";")
-    aws_keys = os.environ.get("AWS_ACCESS_KEY").split(";")
-    aws_secrets = os.environ.get("AWS_ACCESS_SECRET").split(";")
+    aws_buckets = os.environ.get("AWS_BUCKET", "").split(";")
+    aws_endpoint_urls = os.environ.get("AWS_ENDPOINT_URL", "").split(";")
+    aws_keys = os.environ.get("AWS_ACCESS_KEY", "").split(";")
+    aws_secrets = os.environ.get("AWS_ACCESS_SECRET", "").split(";")
 
     for i in range(len(aws_buckets)):
         aws_bucket = aws_buckets[i]
@@ -325,7 +333,7 @@ def _get_export_paths(suffix):
 
 
 def with_monitoring():
-    if os.getenv("DEBUG", None):
+    if DEBUG:
         main()
         return
     from telegram.ext import Updater
@@ -351,3 +359,17 @@ def with_monitoring():
         raise error
     message = f"✅ {export_mode} Vaults API update for {Network.name()} successful!"
     updater.bot.send_message(chat_id=private_group, text=message, reply_to_message_id=ping)
+
+def _dedecimal(dct: dict):
+    """Decimal type cant be json encoded, we make them into floats"""
+    for k, v in dct.items():
+        if isinstance(v, dict):
+            _dedecimal(v)
+        elif isinstance(v, Decimal):
+            dct[k] = float(v)
+    return dct
+
+@lru_cache
+def _get_debug_lock() -> asyncio.Lock:
+    # we use this helper function to ensure the lock is always on the right loop
+    return asyncio.Lock()
