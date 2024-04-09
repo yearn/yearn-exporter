@@ -141,12 +141,12 @@ class Registry(metaclass=Singleton):
     
     @set_exc
     async def watch_events(self) -> NoReturn:
-        start = await dank_w3.eth.block_number
+        start = time.time()
         events = await self._events
         def done_callback(task: asyncio.Task) -> None:
             logger.info("loaded v2 registry in %.3fs", time.time() - start)
             self._done.set()
-        done_task = asyncio.create_task(events._lock.wait_for(start))
+        done_task = asyncio.create_task(events._lock.wait_for(await dank_w3.eth.block_number))
         done_task.add_done_callback(done_callback)
         async for _ in events:
             self._filter_vaults()
