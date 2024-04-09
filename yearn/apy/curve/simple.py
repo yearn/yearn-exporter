@@ -4,14 +4,12 @@ import logging
 import os
 from dataclasses import dataclass
 from pprint import pformat
-from functools import lru_cache
 
 from time import time
 from http import HTTPStatus
 
 import requests
-from brownie import ZERO_ADDRESS, chain, interface
-from dank_mids.brownie_patch import patch_contract
+from brownie import ZERO_ADDRESS, chain
 from eth_abi import encode_single
 from eth_utils import function_signature_to_4byte_selector as fourbyte
 from semantic_version import Version
@@ -19,7 +17,6 @@ from y import Contract, Network
 from y.prices import magic
 from y.prices.stable_swap.curve import curve as y_curve
 from y.time import get_block_timestamp_async
-from y.utils.dank_mids import dank_w3
 
 from yearn import constants
 from yearn.apy.common import (SECONDS_PER_WEEK, SECONDS_PER_YEAR, Apy,
@@ -59,8 +56,6 @@ addresses = {
         'yearn_voter_proxy': '0xF147b8125d2ef93FB6965Db97D6746952a133934',
         'convex_voter_proxy': '0x989AEb4d175e16225E39E87d0D97A3360524AD80',
         'convex_booster': '0xF403C135812408BFbE8713b5A23a04b3D48AAE31',
-        'rkp3r_rewards': '0xEdB67Ee1B171c4eC66E6c10EC43EDBbA20FaE8e9',
-        'kp3r': '0x1cEB5cB57C4D4E2b2433641b95Dd330A33185A44',
     }
 }
 
@@ -228,7 +223,7 @@ async def calculate_simple(vault, gauge: Gauge, samples: ApySamples) -> Apy:
         else:
             reward_data, token_price, total_supply = await asyncio.gather(
                 gauge.gauge.reward_data.coroutine(gauge_reward_token),
-                _get_reward_token_price(gauge_reward_token),
+                magic.get_price(gauge_reward_token, block=samples.now, sync=False),
                 gauge.gauge.totalSupply.coroutine(),
             )
             rate = reward_data['rate']
@@ -517,7 +512,7 @@ class _ConvexVault:
             if await virtual_rewards_pool.periodFinish.coroutine() > current_time:
                 reward_token = await virtual_rewards_pool.rewardToken.coroutine()
                 reward_token_price, reward_rate, total_supply = await asyncio.gather(
-                    _get_reward_token_price(reward_token, block),
+                    magic.get_price(reward_token, block=block, sync=False),
                     virtual_rewards_pool.rewardRate.coroutine(),
                     virtual_rewards_pool.totalSupply.coroutine(),
                 )
@@ -541,24 +536,3 @@ class _ConvexVault:
     def _debt_ratio(self) -> float:
         """The debt ratio of the Convex strategy."""
         return self.vault.vault.strategies(self._cvx_strategy)[2] / 1e4
-
-
-@lru_cache
-def _get_rkp3r() -> Contract:
-    return patch_contract(interface.rKP3R(addresses[chain.id]['rkp3r_rewards']), dank_w3)
-
-async def _get_reward_token_price(reward_token, block=None):
-    if chain.id not in addresses:
-        return await magic.get_price(reward_token, block=block, sync=False)
-
-    # if the reward token is rKP3R we need to calculate it's price in 
-    # terms of KP3R after the discount
-    contract_addresses = addresses[chain.id]
-    if reward_token == contract_addresses['rkp3r_rewards']:
-        price, discount = await asyncio.gather(
-            magic.get_price(contract_addresses['kp3r'], block=block, sync=False),
-            _get_rkp3r().discount.coroutine(block_identifier=block),
-        )
-        return price * (100 - discount) / 100
-    else:
-        return await magic.get_price(reward_token, block=block, sync=False)
