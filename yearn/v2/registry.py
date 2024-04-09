@@ -4,23 +4,18 @@ import logging
 import time
 from collections import OrderedDict
 from functools import cached_property
-from logging import getLogger
 from typing import AsyncIterator, Awaitable, Dict, List, NoReturn, overload
 
 import a_sync
+import dank_mids
 import inflection
 from async_property import async_cached_property, async_property
 from brownie import chain, web3
 from brownie.network.event import _EventItem
-from dank_mids.brownie_patch import patch_contract
 from web3._utils.abi import filter_by_name
 from web3._utils.events import construct_event_topic_set
-from y import Contract
+from y import Contract, Network, magic
 from y.decorators import stuck_coro_debugger
-from y.exceptions import NodeNotSynced
-from y.networks import Network
-from y.prices import magic
-from y.utils.dank_mids import dank_w3
 from y.utils.events import Events, ProcessedEvents
 
 from yearn.decorators import set_exc, wait_or_exit_before
@@ -87,7 +82,7 @@ class Registry(metaclass=Singleton):
                 events = Events(addresses=r, topics=[r.topics['ReleaseRegistryUpdated']])
                 for rr in set(await asyncio.gather(*[
                     asyncio.create_task(Contract.coroutine(list(event.values())[0]))
-                    async for event in events.events(to_block=await dank_w3.eth.block_number)
+                    async for event in events.events(to_block=await dank_mids.eth.block_number)
                 ])):
                     registries.append(rr)
                     logger.debug("release registry %s found for registry %s", rr, r)
@@ -110,7 +105,7 @@ class Registry(metaclass=Singleton):
                 coro=Contract.coroutine(event['newAddress'].hex()),
                 name=f"load registry {event['newAddress']}",
             )
-            async for event in events.events(to_block = await dank_w3.eth.block_number)
+            async for event in events.events(to_block = await dank_mids.eth.block_number)
         ]            
         if registries:
             registries = await asyncio.gather(*registries)
@@ -146,7 +141,7 @@ class Registry(metaclass=Singleton):
         def done_callback(task: asyncio.Task) -> None:
             logger.info("loaded v2 registry in %.3fs", time.time() - start)
             self._done.set()
-        done_task = asyncio.create_task(events._lock.wait_for(await dank_w3.eth.block_number))
+        done_task = asyncio.create_task(events._lock.wait_for(await dank_mids.eth.block_number))
         done_task.add_done_callback(done_callback)
         async for _ in events:
             self._filter_vaults()
@@ -205,14 +200,14 @@ class Registry(metaclass=Singleton):
 
     def vault_from_event(self, event):
         return Vault(
-            vault=patch_contract(Contract.from_abi("Vault", event["vault"], self.releases[event["api_version"]].abi), dank_w3),
+            vault=dank_mids.patch_contract(Contract.from_abi("Vault", event["vault"], self.releases[event["api_version"]].abi)),
             token=event["token"],
             api_version=event["api_version"],
             registry=self,
         )
 
     @stuck_coro_debugger
-    async def describe(self, block=None) -> [VaultName, Dict]:
+    async def describe(self, block=None) -> Dict[VaultName, Dict]:
         return await a_sync.gather({
             vault.name: asyncio.create_task(vault.describe(block=block)) 
             async for vault in self.active_vaults_at(block, iter=True)
@@ -289,6 +284,7 @@ class Registry(metaclass=Singleton):
 class RegistryEvents(ProcessedEvents[_EventItem]):
     __slots__ = "_init_block", "_registry"
     def __init__(self, registry: Registry, registries: List[Contract]):
+        assert registries, registries
         self._init_block = chain.height
         self._registry = registry
         super().__init__(addresses=registries)

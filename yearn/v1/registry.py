@@ -4,11 +4,10 @@ from functools import cached_property
 from typing import Dict, List, Optional
 
 from brownie import chain, interface
-from dank_mids.brownie_patch import patch_contract
+import dank_mids
 from y.contracts import contract_creation_block_async
 from y.decorators import stuck_coro_debugger
 from y.networks import Network
-from y.utils.dank_mids import dank_w3
 
 from yearn.exceptions import UnsupportedNetwork
 from yearn.multicall2 import fetch_multicall_async
@@ -25,7 +24,7 @@ class Registry:
             raise UnsupportedNetwork("Vaults V1 registry is only available on Mainnet.")
 
         # TODO Fix ENS resolution for registry.ychad.eth
-        self.registry = patch_contract(interface.YRegistry("0x3eE41C098f9666ed2eA246f4D2558010e59d63A0"), dank_w3)
+        self.registry = dank_mids.patch_contract(interface.YRegistry("0x3eE41C098f9666ed2eA246f4D2558010e59d63A0"))
     
     @cached_property
     def vaults(self) -> List[VaultV1]:
