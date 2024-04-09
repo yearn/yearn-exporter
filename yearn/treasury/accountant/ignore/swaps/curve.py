@@ -1,18 +1,17 @@
 
 from brownie import ZERO_ADDRESS, chain
-from y.networks import Network
+from y import Contract, Network
 
 from yearn.entities import TreasuryTx
 from yearn.multicall2 import fetch_multicall
 from yearn.treasury.accountant.classes import Filter, HashMatcher, IterFilter
 from yearn.treasury.accountant.constants import treasury
-from yearn.utils import contract
 
 
 def is_curve_deposit(tx: TreasuryTx) -> bool:
     if 'AddLiquidity' in tx._events:
         for event in tx._events['AddLiquidity']:
-            pool = contract(event.address)
+            pool = Contract(event.address)
             # LP Token Side
             if tx.from_address.address == ZERO_ADDRESS and ('crv' in tx._symbol.lower() or 'curve' in tx.token.name.lower()) and tx.to_address and tx.to_address.address in treasury.addresses and ((hasattr(pool, 'lp_token') and pool.lp_token() == tx.token.address.address) or (hasattr(pool, 'totalSupply') and pool.address == tx.token.address.address)):
                 return True
@@ -49,7 +48,7 @@ def is_curve_withdrawal(tx: TreasuryTx) -> bool:
     
     if 'RemoveLiquidity' in tx._events:
         for event in tx._events['RemoveLiquidity']:
-            pool = contract(event.address)
+            pool = Contract(event.address)
             # LP Token side
             if tx.to_address and tx.to_address.address == ZERO_ADDRESS and ('crv' in tx._symbol.lower() or 'curve' in tx.token.name.lower()) and ((hasattr(pool, 'lp_token') and pool.lp_token() == tx.token.address.address) or (hasattr(pool, 'totalSupply') and pool.address == tx.token.address.address)):
                 return True
@@ -84,7 +83,7 @@ def is_curve_swap(tx: TreasuryTx) -> bool:
     if "TokenExchange" in tx._events:
         for event in tx._events["TokenExchange"]:
             if all(arg in event for arg in {"buyer","sold_id","tokens_sold","bought_id","tokens_bought"}):
-                pool = contract(event.address)
+                pool = Contract(event.address)
                 buy_token, sell_token = fetch_multicall([pool, 'coins', event['bought_id']], [pool, 'coins', event['sold_id']])
                 # Sell side
                 if tx.from_address.address == event['buyer'] and tx.to_address and tx.to_address.address == event.address and tx.token.address.address == sell_token and round(float(tx.amount), 15) == round(event['tokens_sold']/tx.token.scale, 15):

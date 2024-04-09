@@ -1,13 +1,13 @@
 
 import asyncio
 import logging
+
 from brownie import chain
-from y.networks import Network
+from y import Contract, Network
 
 from yearn.entities import TreasuryTx
 from yearn.multicall2 import fetch_multicall
 from yearn.treasury.accountant.constants import treasury, v1, v2
-from yearn.utils import contract
 
 
 def is_fees_v1(tx: TreasuryTx) -> bool:
@@ -27,7 +27,7 @@ def is_fees_v1(tx: TreasuryTx) -> bool:
             continue
         
         try:
-            controller = contract(vault.vault.controller(block_identifier=tx.block))
+            controller = Contract(vault.vault.controller(block_identifier=tx.block))
         except Exception as e:
             known_exceptions = [
                 "No data was returned - the call likely reverted",

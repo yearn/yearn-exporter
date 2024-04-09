@@ -1,8 +1,9 @@
 
 from brownie import ZERO_ADDRESS
+from y import Contract
+
 from yearn.entities import TreasuryTx
 from yearn.treasury.accountant.constants import treasury
-from yearn.utils import contract
 
 
 def is_sex(tx: TreasuryTx) -> bool:
@@ -41,7 +42,7 @@ def is_generic_comp_rewards(tx: TreasuryTx) -> bool:
     if tx.to_address and tx.to_address.address in treasury.addresses and "DistributedSupplierComp" in tx._events:
         for event in tx._events["DistributedSupplierComp"]:
             if tx.from_address.address == event.address and 'supplier' in event and event['supplier'] == tx.to_address.address:
-                troller = contract(event.address)
+                troller = Contract(event.address)
                 if hasattr(troller, 'getCompAddress') and troller.getCompAddress() == tx.token.address.address:
                     return True
 
