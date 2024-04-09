@@ -43,11 +43,11 @@ async def staking(vault: "Vault", staking_rewards: Contract, samples: ApySamples
     
     if end < current_time or total_supply == 0 or rate == 0:
         return Apy("v2:velo_unpopular", gross_apr=0, net_apy=0, fees=fees)
-    else:
-        pool_price = await magic.get_price(vault.token.address, block=block, sync=False)
-    reward_token = await staking_rewards.rewardToken.coroutine(block_identifier=block) if hasattr(staking_rewards, "rewardToken") else None
+
+    pool_price = float(await magic.get_price(vault.token.address, block=block, sync=False))
+    reward_token = await staking_rewards.rewardToken.coroutine(block_identifier=block)
     token = reward_token
-    token_price = await magic.get_price(token, block=block, sync=False)
+    token_price = float(await magic.get_price(token, block=block, sync=False))
     
     gross_apr = (SECONDS_PER_YEAR * (rate / 1e18) * token_price) / (pool_price * (total_supply / 1e18))
     
