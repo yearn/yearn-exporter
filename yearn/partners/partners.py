@@ -684,5 +684,32 @@ partners = {
                 ),
             ],
         )
+              Partner(
+            name='drops',
+            start_date=None,
+            treasury='0x93068cCFb7F4E49326DDE5E038415F569074fDD7',
+            wrappers=[
+                Wrapper(
+                    name='yvdai market',
+                    vault='0xdA816459F1AB5631232FE5e97a05BBBb94970c95',
+                    wrapper='0x367144a75577f7FBE80E69854046F6169eF080aC',
+                ),
+                Wrapper(
+                    name='yvusdc market',
+                    vault='0xa354F35829Ae975e850e23e9615b11Da1B3dC4DE',
+                    wrapper='0xA3a1A7598060Ac3ca11d7604019F3fFc32bCE7Ec',
+                ),
+                Wrapper(
+                    name='yvusdt market',
+                    vault='0x3B27F92C0e212C671EA351827EDF93DB27cc0c65',
+                    wrapper='0xF63f89F6463550Ce4ce5B6Ca6b1323B39C90E9cB',
+                ),
+              Wrapper(
+                    name='yvweth market',
+                    vault='0xa258C4606Ca8206D8aA700cE2143D7db854D168c',
+                    wrapper='0x72ab6843D4c988D74Dd8D5cdF16eF49301d87952',
+                ),
+            ],
+        )
     ],
 }.get(chain.id, [])
