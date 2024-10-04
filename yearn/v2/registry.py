@@ -23,6 +23,7 @@ from yearn.events import decode_logs, get_logs_asap
 from yearn.exceptions import UnsupportedNetwork
 from yearn.multicall2 import fetch_multicall_async
 from yearn.utils import Singleton, contract
+from yearn.outputs.postgres.utils import cache_strategy
 from yearn.v2.vaults import Vault
 
 logger = logging.getLogger(__name__)
@@ -103,7 +104,17 @@ class Registry(metaclass=Singleton):
     @property
     @wait_or_exit_before
     def vaults(self) -> List[Vault]:
-        return list(self._vaults.values())
+        vaults = list(self._vaults.values())
+        for v in vaults:
+            for s in v.strategies:
+                strategy_name = s.strategy._name
+                if hasattr(s.strategy, "name"):
+                    strategy_name = s.strategy.name()
+                vault_name = v.vault._name
+                if hasattr(v.vault, "name"):
+                    vault_name = v.vault.name()
+                cache_strategy(str(v.vault), vault_name, v.vault.apiVersion(), str(s.strategy), strategy_name, s.strategy.apiVersion())
+        return vaults
 
     @property
     @wait_or_exit_before

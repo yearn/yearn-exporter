@@ -14,6 +14,7 @@ from yearn.multicall2 import fetch_multicall_async
 from yearn.typing import Block
 from yearn.utils import contract
 from yearn.v1.vaults import VaultV1
+from yearn.outputs.postgres.utils import cache_strategy
 
 logger = logging.getLogger(__name__)
 
@@ -32,7 +33,17 @@ class Registry:
         addresses_generator_v1_vaults = contract(addresses_provider.addressById("ADDRESSES_GENERATOR_V1_VAULTS"))
 
         # NOTE: we assume no more v1 vaults are deployed
-        return [VaultV1(vault_address, *self.registry.getVaultInfo(vault_address)) for vault_address in addresses_generator_v1_vaults.assetsAddresses()]
+        vaults = [VaultV1(vault_address, *self.registry.getVaultInfo(vault_address)) for vault_address in addresses_generator_v1_vaults.assetsAddresses()]
+        for v in vaults:
+            strategy_name = v.strategy._name
+            if hasattr(v.strategy, "name"):
+                strategy_name = v.strategy.name()
+            vault_name = v.vault._name
+            if hasattr(v.vault, "name"):
+                vault_name = v.vault.name()
+            cache_strategy(str(v.vault), vault_name, "v1", str(v.strategy), strategy_name, "v1")
+
+        return vaults
             
     def __repr__(self) -> str:
         return f"<Registry V1 vaults={len(self.vaults)}>"

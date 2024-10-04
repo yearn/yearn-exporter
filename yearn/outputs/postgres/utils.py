@@ -7,7 +7,7 @@ from brownie.convert.datatypes import HexString
 from pony.orm import db_session, select
 from y import Contract, ContractNotVerified, Network
 
-from yearn.entities import (Address, Chain, Token, TreasuryTx, TxGroup, UserTx,
+from yearn.entities import (Address, Chain, Token, TreasuryTx, TxGroup, UserTx, Vault, Strategy,
                             db)
 from yearn.multicall2 import fetch_multicall
 from yearn.utils import hex_to_string, is_contract
@@ -93,6 +93,22 @@ def cache_token(address: str) -> Token:
             raise ValueError(str(e), token.address, symbol, name, decimals)
         logger.info(f'token {symbol} added to postgres')
     return token
+
+@db_session
+def cache_vault(address: str, name: str, version: str) -> Vault:
+    token = cache_token(address)
+    vault = Vault.get(token=token)
+    if not vault:
+        vault = Vault(token=token, address=address, name=name, version=version)
+    return vault
+
+@db_session
+def cache_strategy(vault_address: str, vault_name: str, vault_version: str, strategy_address: str, strategy_name: str, strategy_version: str) -> Strategy:
+    vault = cache_vault(vault_address, vault_name, vault_version)
+    strategy = Strategy.get(vault=vault, address=strategy_address)
+    if not strategy:
+        strategy = Strategy(vault=vault, address=strategy_address, name=strategy_name, version=strategy_version)
+    return strategy
 
 @db_session    
 def cache_txgroup(name: str, parent: Optional[TxGroup] = None) -> TxGroup:
