@@ -3,17 +3,18 @@ from typing import List, Optional
 
 from brownie import chain
 from pony.orm import db_session, select
+from y import Contract
+
 from yearn.constants import YCHAD_MULTISIG, YFI
 from yearn.entities import Stream, Token, TxGroup
 from yearn.events import decode_logs, get_logs_asap
-from yearn.outputs.postgres.utils import cache_token
+from yearn.outputs.postgres.utils import token_dbid
 from yearn.treasury.constants import BUYER
-from yearn.utils import contract
 
 dai = "0x6B175474E89094C44Da98b954EedeAC495271d0F"
 
-streams_dai = contract('0x60c7B0c5B3a4Dc8C690b074727a17fF7aA287Ff2')
-streams_yfi = contract('0xf3764eC89B1ad20A31ed633b1466363FAc1741c4')
+streams_dai = Contract('0x60c7B0c5B3a4Dc8C690b074727a17fF7aA287Ff2')
+streams_yfi = Contract('0xf3764eC89B1ad20A31ed633b1466363FAc1741c4')
 
 class YearnStreams:
     def __init__(self):
@@ -33,10 +34,8 @@ class YearnStreams:
             return list(select(s for s in Stream if s.to_address.address == recipient))
         return list(select(s for s in Stream if s.to_address.address == recipient and (s.end_block is None or at_block <= s.end_block)))
     
-    def streams_for_token(self, token: Token, include_inactive: bool = False) -> List[Stream]:
-        if not isinstance(token, Token):
-            token = cache_token(token)
-        streams = list(select(s for s in Stream if s.token == token))
+    def streams_for_token(self, token: str, include_inactive: bool = False) -> List[Stream]:
+        streams = list(select(s for s in Stream if s.token.token_id == token_dbid(token)))
         if include_inactive is False:
             streams = [s for s in streams if s.is_alive]
         return streams

@@ -21,7 +21,7 @@ from y.utils.events import Events, ProcessedEvents
 from yearn.decorators import set_exc, wait_or_exit_before
 from yearn.exceptions import UnsupportedNetwork
 from yearn.multicall2 import fetch_multicall_async
-from yearn.utils import Singleton, contract
+from yearn.utils import Singleton
 from yearn.v2.vaults import Vault
 
 logger = logging.getLogger(__name__)
@@ -164,7 +164,7 @@ class Registry(metaclass=Singleton):
                 self.governance = event["governance"]
 
             if event.name == "NewRelease":
-                self.releases[event["api_version"]] = contract(event["template"])
+                self.releases[event["api_version"]] = Contract(event["template"])
 
             if event.name == "NewVault":
                 # experiment was endorsed
@@ -296,7 +296,7 @@ class RegistryEvents(ProcessedEvents[_EventItem]):
             self._registry.governance = event["governance"]
 
         if event.name == "NewRelease":
-            self._registry.releases[event["api_version"]] = contract(event["template"])
+            self._registry.releases[event["api_version"]] = Contract(event["template"])
 
         if event.name == "NewVault":
             # experiment was endorsed
