@@ -18,7 +18,7 @@ sentry_sdk.set_tag('script','tokenlist')
 
 
 def main():
-    yearn = Yearn(load_strategies=False)
+    yearn = Yearn()
     excluded = {
         "0xBa37B002AbaFDd8E89a1995dA52740bbC013D992",
         "0xe2F6b9773BF3A015E2aA70741Bde1498bdB9425b",

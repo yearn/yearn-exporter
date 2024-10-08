@@ -6,13 +6,12 @@ from pprint import pformat
 
 from brownie import chain
 from semantic_version.base import Version
-from y.networks import Network
+from y import Network
 
 from yearn.apy.common import (Apy, ApyBlocks, ApyError, ApyFees, ApyPoints,
                               ApySamples, SharePricePoint, calculate_roi)
 from yearn.apy.staking_rewards import get_staking_rewards_apr
 from yearn.debug import Debug
-from yearn.utils import run_in_thread
 
 logger = logging.getLogger(__name__)
 
@@ -29,9 +28,8 @@ def closest(haystack, needle):
     else:
         return before
 
-
 async def simple(vault, samples: ApySamples) -> Apy:
-    harvests = sorted([harvest for strategy in vault.strategies for harvest in await run_in_thread(getattr, strategy, "harvests")])
+    harvests = sorted([harvest for strategy in await vault.strategies async for harvest in strategy.harvests(samples.now)])
 
     # we don't want to display APYs when vaults are ramping up
     if len(harvests) < 2:
@@ -51,7 +49,7 @@ async def simple(vault, samples: ApySamples) -> Apy:
 
     # get our inception data
     # the first report is when the vault first allocates funds to farm with
-    reports = await run_in_thread(getattr, vault, 'reports')
+    reports = await vault.reports
     inception_block = reports[0].block_number
     inception_price = await price_per_share(block_identifier=inception_block)
 
@@ -91,7 +89,7 @@ async def simple(vault, samples: ApySamples) -> Apy:
 
     # for performance fee, half comes from strategy (strategist share) and half from the vault (treasury share)
     strategy_fees = []
-    for strategy in vault.strategies: # look at all of our strategies
+    for strategy in await vault.strategies: # look at all of our strategies
         strategy_info = await contract.strategies.coroutine(strategy.strategy)
         debt_ratio = strategy_info['debtRatio'] / 10000
         performance_fee = strategy_info['performanceFee']
@@ -126,7 +124,7 @@ async def simple(vault, samples: ApySamples) -> Apy:
 
 
 async def average(vault, samples: ApySamples) -> Apy:
-    reports = await run_in_thread(getattr, vault, "reports")
+    reports = await vault.reports
 
     # we don't want to display APYs when vaults are ramping up
     if len(reports) < 2:
@@ -189,7 +187,7 @@ async def average(vault, samples: ApySamples) -> Apy:
 
     # for performance fee, half comes from strategy (strategist share) and half from the vault (treasury share)
     strategy_fees = []
-    for strategy in vault.strategies: # look at all of our strategies
+    for strategy in await vault.strategies: # look at all of our strategies
         strategy_info = await contract.strategies.coroutine(strategy.strategy)
         debt_ratio = strategy_info['debtRatio'] / 10000
         performance_fee = strategy_info['performanceFee']
