@@ -8,6 +8,7 @@ from functools import cached_property
 from typing import (Awaitable, Callable, Literal, NoReturn, Optional, TypeVar,
                     overload)
 
+import a_sync
 import eth_retry
 from brownie import chain
 from dank_mids.controller import instances
@@ -76,7 +77,8 @@ class Exporter:
         self._export_fn = eth_retry.auto_retry(export_fn)
         self._snapshots_fetched = 0
         self._snapshots_exported = 0
-        self._semaphore = asyncio.Semaphore(concurrency)
+        self._historical_queue = a_sync.ProcessingQueue(self.export_historical_snapshot, concurrency)
+        #self._semaphore = asyncio.Semaphore(concurrency)
     
     @overload
     def run(self, direction: Literal["historical"] = "historical") -> None:
@@ -121,7 +123,7 @@ class Exporter:
         intervals = _get_intervals(self._start_time, self._resolution)
         for resolution in intervals:
             snapshot_generator = _generate_snapshot_range_historical(self.start_timestamp, resolution, intervals)
-            await asyncio.gather(*[self.export_historical_snapshot(snapshot) async for snapshot in snapshot_generator])
+            await asyncio.gather(*[self._historical_queue.put_nowait(snapshot) async for snapshot in snapshot_generator])
         logger.info(f"historical {self.full_name} export complete in {self._get_runtime(datetime.now(tz=timezone.utc))}")
 
     @log_exceptions
@@ -139,9 +141,12 @@ class Exporter:
 
     @log_exceptions
     async def export_historical_snapshot(self, snapshot: datetime) -> None:
-        async with self._semaphore:
-            if not await self._has_data(snapshot):
-                await self.export_snapshot(snapshot)
+        if not await self._has_data(snapshot):
+            await self.export_snapshot(snapshot)
+            ##fut = await self._queue.put(snapshot)
+        #async with self._semaphore:
+        #    if not await self._has_data(snapshot):
+        #        await self.export_snapshot(snapshot)
 
     # Datastore Methods
 
