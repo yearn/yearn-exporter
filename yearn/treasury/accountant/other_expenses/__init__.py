@@ -3,7 +3,7 @@ from brownie import chain
 from y.networks import Network
 
 from yearn.treasury.accountant.classes import TopLevelTxGroup
-from yearn.treasury.accountant.other_expenses import bugs, general
+from yearn.treasury.accountant.other_expenses import bugs, general, revshare
 
 OTHER_EXPENSE_LABEL = "Other Operating Expense"
 
@@ -31,6 +31,9 @@ if chain.id == Network.Mainnet:
     other_expense_txgroup.create_child("yfi.eth", general.is_yfi_dot_eth)
     other_expense_txgroup.create_child("Fund Vyper Compiler Audit Context", general.is_yyper_contest)
     other_expense_txgroup.create_child("Reimburse yETH Applications", general.is_reimburse_yeth_applications)
+    other_expense_txgroup.create_child("dYFI Launch", general.is_dyfi_launch)
+    other_expense_txgroup.create_child("veYFI Launch", general.is_veyfi_launch)
+    other_expense_txgroup.create_child("Unknown", general.is_unknown)
 
 # Bugs
 if chain.id == Network.Mainnet:
@@ -43,3 +46,9 @@ if chain.id == Network.Mainnet:
     bug_reimbursements_txgroup.create_child("Reimburse st-yCRV User", bugs.is_stycrv)
     bug_reimbursements_txgroup.create_child("Slippage Bug", bugs.is_slippage_bug_reimbursement)
     bug_reimbursements_txgroup.create_child("Reimburse Opti Zap Bug", bugs.is_opti_zap_bug)
+    bug_reimbursements_txgroup.create_child("Reimburse Discord Link Bug", bugs.is_reimburse_discord_link_bug)
+
+if chain.id == Network.Mainnet:
+    revshare_txgroup = other_expense_txgroup.create_child("Revshare")
+
+    revshare_txgroup.create_child("yAudit Revshare", revshare.is_yaudit_revshare)

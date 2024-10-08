@@ -62,10 +62,12 @@ def is_vault_deposit(tx: TreasuryTx) -> bool:
         return True
     
     # TODO Figure out hueristics for ETH deposit to yvWETH
+    # TODO build hueristics for v3 vaults
     return tx in HashMatcher({
         Network.Mainnet: [
             "0x6efac7fb65f187d9aa48d3ae42f3d3a2acdeed3e0b1ded2bb6967cf08c6548a4",
             "0xf37fe9e92366f215f97eb223571c0070f8a5195274658496fbc214083be43dbf",
+            "0x0532f4fbc9b8b105b240f7a37084af6749d30ae03c540191bfb69019c036290c",
         ],
     }.get(chain.id, []))
 

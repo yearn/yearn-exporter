@@ -47,3 +47,7 @@ def is_slippage_bug_reimbursement(tx: TreasuryTx) -> bool:
 
 def is_opti_zap_bug(tx: TreasuryTx) -> bool:
     return tx in HashMatcher(["0xf1bc9683863fd7133377e618e80a7035bc9389e7abf3f650aed4df8b068a2b79"])
+
+def is_reimburse_discord_link_bug(tx: TreasuryTx) -> bool:
+    "https://github.com/yearn/chief-multisig-officer/pull/1201"
+    return tx in HashMatcher(["0x2201d33e1050a0c2639a6dc88c2faebc99fe60c2210713cd95ab1424d7e7df1c"])
