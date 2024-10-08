@@ -7,24 +7,19 @@ from datetime import datetime, timezone, timedelta
 from pprint import pformat
 from typing import Optional, AsyncIterator
 
+import dank_mids
 import eth_retry
 from brownie import chain
 from brownie.network.event import _EventItem
-
-from y import Contract, Network, magic
-from y.contracts import contract_creation_block_async
-from y.datatypes import Block
+from y import Block, Contract, Network, magic, contract_creation_block_async, get_block_timestamp_async, get_block_at_timestamp
 from y.exceptions import PriceError, yPriceMagicError
-from y.time import get_block_timestamp_async, closest_block_after_timestamp
 from y.utils.events import Events
-from y.utils.dank_mids import dank_w3
 
 from yearn.apy.common import (SECONDS_PER_WEEK, SECONDS_PER_YEAR, Apy, ApyFees,
                               ApySamples, SharePricePoint, calculate_roi,
                               get_samples)
 from yearn.common import Tvl
 from yearn.debug import Debug
-from yearn.events import decode_logs, get_logs_asap
 from yearn.prices.constants import weth
 from yearn.utils import Singleton
 
@@ -163,7 +158,7 @@ class YETHLST():
     async def apy(self, samples: ApySamples) -> Apy:
         now_rate, week_ago_rate = await asyncio.gather(
             RATE_PROVIDER.rate.coroutine(str(self.lst), block_identifier=samples.now),
-            RATE_PROVIDER.rate(str(self.lst), block_identifier=samples.week_ago),
+            RATE_PROVIDER.rate.coroutine(str(self.lst), block_identifier=samples.week_ago),
         )
         now_rate /= 1e18
         week_ago_rate /= 1e18
@@ -264,18 +259,18 @@ class Registry(metaclass = Singleton):
         }
 
     async def describe(self, block=None):
+        # we'll start this processing early because it can take a while
         if block:
             to_block = block
             block_timestamp = await get_block_timestamp_async(block)
             now_time = datetime.fromtimestamp(block_timestamp, tz=timezone.utc)
         else:
-            to_block = await dank_w3.eth.block_number
+            to_block = await dank_mids.eth.block_number
             now_time = datetime.today()
-
-        from_block = self._get_from_block(now_time)
-
-        self.swap_volumes = await self._get_swap_volumes(from_block, to_block)
-        products = await self.active_vaults_at(block)
+        products, self.swap_volumes = await asyncio.gather(
+            self.active_vaults_at(block),
+            self._get_swap_volumes(await self._get_from_block(now_time), to_block),
+        )
         data = await asyncio.gather(*[product.describe(block=block) for product in products])
         return {product.name: desc for product, desc in zip(products, data)}
 
@@ -291,26 +286,25 @@ class Registry(metaclass = Singleton):
             products = [product for product, deploy_block in zip(products, blocks) if deploy_block <= block]
         return products
 
-    def _get_from_block(self, now_time):
+    async def _get_from_block(self, now_time):
         from_time = None
         match self.resolution:
             case "1d":
-                from_time = (now_time - timedelta(days=1)).timestamp()
+                delta = timedelta(days=1)
             case "1h":
-                from_time = (now_time - timedelta(hours=1)).timestamp()
+                delta = timedelta(hours=1)
             case "30m":
-                from_time = (now_time - timedelta(minutes=30)).timestamp()
+                delta = timedelta(minutes=30)
             case "15m":
-                from_time = (now_time - timedelta(minutes=15)).timestamp()
+                delta = timedelta(minutes=15)
             case "5m":
-                from_time = (now_time - timedelta(minutes=5)).timestamp()
+                delta = timedelta(minutes=5)
             case "1m":
-                from_time = (now_time - timedelta(minutes=1)).timestamp()
+                delta = timedelta(minutes=1)
             case "30s":
-                from_time = (now_time - timedelta(seconds=30)).timestamp()
+                delta = timedelta(seconds=30)
             case "15s":
-                from_time = (now_time - timedelta(seconds=15)).timestamp()
+                delta = timedelta(seconds=15)
             case _:
                 raise Exception(f"Invalid resolution {self.resolution} specified!")
-
-        return closest_block_after_timestamp(int(from_time), True)
+        return await get_block_at_timestamp(now_time - delta, sync=False)
