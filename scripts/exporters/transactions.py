@@ -58,11 +58,14 @@ FIRST_END_BLOCK = {
 def main():
     _cached_thru_from_last_run = 0
     while True:
+        start = time.time()
         cached_thru = last_recorded_block(UserTx)
         _check_for_infinite_loop(_cached_thru_from_last_run, cached_thru)
         await_awaitable(process_and_cache_user_txs(cached_thru))
         _cached_thru_from_last_run = cached_thru
-        time.sleep(1)
+        # minimum 5m loop interval reduces node usage massively
+        if sleep_time := max(0, (start + 5 * 60) - time.time()):
+            time.sleep(sleep_time)
 
 async def process_and_cache_user_txs(last_saved_block=None):
     # NOTE: We look 50 blocks back to avoid uncles and reorgs

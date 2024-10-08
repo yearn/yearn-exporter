@@ -67,6 +67,9 @@ BORKED = {
     Network.Mainnet: [
         # borked in the vyper exploit of july 2023
         "0x718AbE90777F5B778B52D553a5aBaa148DD0dc5D",
+        # price borked
+        "0xc5F3D11580c41cD07104e9AF154Fc6428bb93c73",
+        "0x4213458C69c19E6792510E1153cb0c5834665fdC",
     ]
 }.get(chain.id, [])
 
@@ -216,12 +219,8 @@ class Vault:
 
     async def watch_events(self) -> NoReturn:
         start = time.time()
-        async for event in self._events.events(await dank_w3.eth.block_number):
-            # we iterate thru the list to ensure they're loaded thru now
-            pass
+        await self._events.events(await dank_w3.eth.block_number)
         logger.info("loaded %d strategies %s in %.3fs", len(self._strategies), self.name, time.time() - start)
-        # Keep the loader running in the background
-        self._daemon = asyncio.create_task(exhaust_iterator(self._events))
 
     @stuck_coro_debugger
     async def describe(self, block=None):
