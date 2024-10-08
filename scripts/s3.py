@@ -7,6 +7,7 @@ import os
 import shutil
 import traceback
 import warnings
+from contextlib import suppress
 from datetime import datetime
 from decimal import Decimal
 from functools import lru_cache
@@ -27,11 +28,9 @@ from y.exceptions import yPriceMagicError
 from yearn import logs
 from yearn.apy import (Apy, ApyBlocks, ApyFees, ApyPoints, ApySamples,
                        get_samples)
-from yearn.common import Tvl
 from yearn.exceptions import EmptyS3Export
 from yearn.graphite import send_metric
 from yearn.special import Backscratcher, YveCRVJar
-from yearn.utils import chunks, contract
 from yearn.v1.registry import Registry as RegistryV1
 from yearn.v1.vaults import VaultV1
 from yearn.v2.registry import Registry as RegistryV2
@@ -74,7 +73,8 @@ async def wrap_vault(
             }
         ]
     else:
-        strategies = [{"address": str(strategy.strategy), "name": strategy.name} for strategy in vault.strategies]
+        strategies = await vault.strategies if isinstance(vault, VaultV2) else vault.strategies
+        strategies = [{"address": str(strategy.strategy), "name": strategy.name} for strategy in strategies]
 
     token_alias = aliases[str(vault.token)]["symbol"] if str(vault.token) in aliases else await ERC20(vault.token, asynchronous=True).symbol
     vault_alias = token_alias
@@ -102,7 +102,7 @@ async def wrap_vault(
         "tvl": dataclasses.asdict(await tvl_fut),
         "apy": dataclasses.asdict(await apy_fut),
         "strategies": strategies,
-        "endorsed": vault.is_endorsed if hasattr(vault, "is_endorsed") else True,
+        "endorsed": await vault.is_endorsed if hasattr(vault, "is_endorsed") else True,
         "version": vault.api_version if hasattr(vault, "api_version") else "0.1",
         "decimals": vault.decimals if hasattr(vault, "decimals") else await ERC20(vault.vault, asynchronous=True).decimals,
         "type": "v2" if isinstance(vault, VaultV2) else "v1",
@@ -230,14 +230,14 @@ async def _main():
     if chain.id == Network.Mainnet:
         special = [YveCRVJar(), Backscratcher()]
         registry_v1 = RegistryV1()
-        vaults = list(itertools.chain(special, registry_v1.vaults, registry_v2.vaults, registry_v2.experiments))
+        vaults = list(itertools.chain(special, registry_v1.vaults, await registry_v2.vaults, await registry_v2.experiments))
     else:
-        vaults = registry_v2.vaults
+        vaults = await registry_v2.vaults
 
     if len(vaults) == 0:
         raise ValueError(f"No vaults found for chain_id: {chain.id}")
 
-    assets_metadata = await get_assets_metadata(registry_v2.vaults)
+    assets_metadata = await get_assets_metadata(await registry_v2.vaults)
 
     data = await tqdm_asyncio.gather(*[wrap_vault(vault, samples, aliases, icon_url, assets_metadata, i + 1, len(vaults)) for i, vault in enumerate(vaults)])
 

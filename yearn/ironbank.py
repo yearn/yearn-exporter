@@ -111,7 +111,7 @@ class Registry:
             for attr in ["getCash", "totalBorrows", "totalReserves"]:
                 res[attr] /= 10 ** m.decimals
 
-            tvl = (res["getCash"] + res["totalBorrows"] - res["totalReserves"]) * price
+            tvl = (res["getCash"] + res["totalBorrows"] - res["totalReserves"]) * float(price)
             supplied = res["getCash"] + res["totalBorrows"] - res["totalReserves"]
             ratio = res["totalBorrows"] / supplied if supplied != 0 else None
 
@@ -122,7 +122,7 @@ class Registry:
                 "total borrows": res["totalBorrows"],
                 "total reserves": res["totalReserves"],
                 "exchange rate": exchange_rate,
-                "token price": price * exchange_rate,
+                "token price": float(price) * exchange_rate,
                 "underlying price": price,
                 "supply apy": res["supplyRatePerBlock"] / 1e18 * blocks_per_year,
                 "borrow apy": res["borrowRatePerBlock"] / 1e18 * blocks_per_year,
