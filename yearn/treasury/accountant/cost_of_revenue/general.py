@@ -52,7 +52,7 @@ def is_partner_fees(tx: TreasuryTx) -> bool:
             if any(tx.token.address.address == convert.to_address(wrapper.vault) for wrapper in _get_flat_wrappers(partner)): # gotta somehow async this without asyncing this
                 return True
             else:
-                logger.warn(f'look at {tx}, seems odd')
+                logger.warning(f'look at {tx}, seems odd')
     
     # DEV figure out why these weren't captured by the above
     hashes = {

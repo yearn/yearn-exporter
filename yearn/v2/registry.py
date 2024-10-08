@@ -152,7 +152,7 @@ class Registry(metaclass=Singleton):
 
         for event in events:
             if "vault" in event and event["vault"] in temp_rekt_vaults:
-                logger.warn(f"skipping temp rekt vault {event['vault']}")
+                logger.warning(f"skipping temp rekt vault {event['vault']}")
                 continue
 
             # hack to make camels to snakes

@@ -542,9 +542,9 @@ def process_partners(partners: List[Partner], use_postgres_cache: bool = USE_POS
     total = 0
     payouts = []
     if not use_postgres_cache:
-        logger.warn('This script can run much faster for subsequent runs if you cache the data to postgres.')
-        logger.warn("Caching will be enabled by default if you run the yearn-exporter locally.")
-        logger.warn('To enable caching without running the exporter, run `make postgres` from project root.')
+        logger.warning('This script can run much faster for subsequent runs if you cache the data to postgres.')
+        logger.warning("Caching will be enabled by default if you run the yearn-exporter locally.")
+        logger.warning('To enable caching without running the exporter, run `make postgres` from project root.')
 
     partners_data: List[Tuple[DataFrame, DataFrame]] = asyncio.get_event_loop().run_until_complete(
         tqdm_asyncio.gather(*[partner.process(use_postgres_cache=use_postgres_cache, verbose=verbose) for partner in partners])

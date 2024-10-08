@@ -154,8 +154,8 @@ async def get_price(token_address, block):
     try:
         return await _get_price(token_address, block)
     except Exception as e:
-        logger.warn(f'{e.__class__.__name__}: {str(e)}')
-        logger.warn(f'vault: {token_address} block: {block}')
+        logger.warning(f'{e.__class__.__name__}: {str(e)}')
+        logger.warning(f'vault: {token_address} block: {block}')
         raise e
 
 
