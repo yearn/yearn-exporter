@@ -117,3 +117,24 @@ def is_yyper_contest(tx: TreasuryTx) -> bool:
 
 def is_reimburse_yeth_applications(tx: TreasuryTx) -> bool:
     return tx in HashMatcher([["0x846d475425a1a70469b8674b6f15568c83a14ed3251cafa006811722af676f44", Filter('_symbol', 'ETH')]])
+
+def is_dyfi_launch(tx: TreasuryTx) -> bool:
+    if tx in HashMatcher(["0x2ec726e5ee52cdc063e61795d1b96a75d16fd91824136c990b7c3ddd52b28e31"]):
+        # unused returned
+        if tx.amount > 0:
+            tx.amount *= -1
+        if tx.value_usd > 0:
+            tx.value_usd *= -1
+        return True
+    return tx in HashMatcher([
+        "0x066c32f02fc0908d55b6651afcfb20473ec3d99363de222f2e8f4a7e0c66462e",
+    ])
+
+def is_veyfi_launch(tx: TreasuryTx) -> bool:
+    return tx in HashMatcher([["0x51202f9e8a9afa84a9a0c37831ca9a18508810175cb95ab7c52691bbe69a56d5", Filter('_symbol', 'YFI')]])
+
+def is_unknown(tx: TreasuryTx) -> bool:
+    return tx in HashMatcher([
+        ["0xdf3e6cf2e50052e4eeb57fb2562b5e1b02701014ce65b60e6c8a850c409b341a", IterFilter('log_index', [121, 122])],
+        "0x81fd665147690345100c385d273135dba3b4163b17ccc7d7c7b48fb636297205",
+    ])
