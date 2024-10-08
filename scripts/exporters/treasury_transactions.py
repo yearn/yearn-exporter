@@ -121,6 +121,9 @@ def insert_to_db(entry: LedgerEntry, ts: int) -> bool:
 def _validate_integrity_error(entry: LedgerEntry, log_index: int) -> None:
     ''' Raises AssertionError if existing object that causes a TransactionIntegrityError is not an EXACT MATCH to the attempted insert. '''
     existing_object = TreasuryTx.get(hash=entry.hash, log_index=log_index, chain=cache_chain())
+    if existing_object is None:
+        existing_objects = list(TreasuryTx.select(lambda tx: tx.hash==entry.hash and tx.log_index==log_index and tx.chain==cache_chain()))
+        raise ValueError(f'unable to `.get` due to multiple entries: {existing_objects}')
     assert entry.to_address == existing_object.to_address.address, (entry.to_address,existing_object.to_address.address)
     assert entry.from_address == existing_object.from_address.address, (entry.from_address, existing_object.from_address.address)
     assert entry.value == existing_object.amount or entry.value == -1 * existing_object.amount, (entry.value, existing_object.amount)
