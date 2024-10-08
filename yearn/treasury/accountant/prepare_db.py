@@ -9,7 +9,6 @@ from yearn.entities import Address, db
 from yearn.outputs.postgres.utils import cache_address
 from yearn.partners.partners import partners
 from yearn.treasury.accountant.constants import BRIDGE_ASSISTOOOR, DISPERSE_APP
-from yearn.utils import contract
 
 
 @db_session

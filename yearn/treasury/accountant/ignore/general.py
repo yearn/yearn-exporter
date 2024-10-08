@@ -5,8 +5,8 @@ from decimal import Decimal
 from brownie import ZERO_ADDRESS, chain
 from brownie.exceptions import RPCRequestError
 from pony.orm import commit, select
+from y import Contract, ContractNotVerified, Network, get_price
 from y.networks import Network
-from y.prices import magic
 
 from yearn.constants import ERC20_TRANSFER_EVENT_HASH, TREASURY_WALLETS
 from yearn.entities import TreasuryTx
@@ -17,7 +17,6 @@ from yearn.prices import constants
 from yearn.treasury.accountant.classes import Filter, HashMatcher
 from yearn.treasury.accountant.constants import (DISPERSE_APP, PENDING_LABEL,
                                                  treasury)
-from yearn.utils import contract
 
 logger = logging.getLogger(__name__)
 
@@ -48,7 +47,7 @@ def is_disperse_dot_app(tx: TreasuryTx) -> bool:
                 sender, receiver, amount = decode_logs([transfer])["Transfer"][0].values()
                 if sender == DISPERSE_APP and transfer.address == tx.token.address.address:
                     amount /= Decimal(tx.token.scale)
-                    price = Decimal(magic.get_price(transfer.address, block=tx.block))
+                    price = Decimal(get_price(transfer.address, block=tx.block))
                     TreasuryTx(
                         chain = cache_chain(),
                         timestamp = chain[tx.block].timestamp,
@@ -75,7 +74,7 @@ def is_disperse_dot_app(tx: TreasuryTx) -> bool:
             for int_tx in chain.get_transaction(tx.hash).internal_transfers:
                 if int_tx['from'] == tx.to_address.address:
                     amount = int_tx['value'] / Decimal(tx.token.scale)
-                    price = Decimal(magic.get_price(eee_address, tx.block))
+                    price = Decimal(get_price(eee_address, tx.block))
                     TreasuryTx(
                         chain = cache_chain(),
                         timestamp = chain[tx.block].timestamp,
@@ -103,11 +102,9 @@ def is_gnosis_execution(tx: TreasuryTx) -> bool:
         and tx.to_address.address in treasury.addresses
         ):
         try:
-            con = contract(tx.to_address.address)
-        except ValueError as e:
-            if "contract source code not verified" in str(e).lower() or str(e).endswith('has not been verified'):
-                return False
-            raise
+            con = Contract(tx.to_address.address)
+        except ContractNotVerified:
+            return False
 
         if con._build['contractName'] != "GnosisSafeProxy":
             return False

@@ -5,14 +5,12 @@ from typing import Dict, List, Optional
 
 from brownie import chain, interface
 import dank_mids
-from y.contracts import contract_creation_block_async
+from y import Contract, Network, contract_creation_block_async
 from y.decorators import stuck_coro_debugger
-from y.networks import Network
 
 from yearn.exceptions import UnsupportedNetwork
 from yearn.multicall2 import fetch_multicall_async
 from yearn.typing import Block
-from yearn.utils import contract
 from yearn.v1.vaults import VaultV1
 
 logger = logging.getLogger(__name__)
@@ -28,8 +26,8 @@ class Registry:
     
     @cached_property
     def vaults(self) -> List[VaultV1]:
-        addresses_provider = contract("0x9be19Ee7Bc4099D62737a7255f5c227fBcd6dB93")
-        addresses_generator_v1_vaults = contract(addresses_provider.addressById("ADDRESSES_GENERATOR_V1_VAULTS"))
+        addresses_provider = Contract("0x9be19Ee7Bc4099D62737a7255f5c227fBcd6dB93")
+        addresses_generator_v1_vaults = Contract(addresses_provider.addressById("ADDRESSES_GENERATOR_V1_VAULTS"))
 
         # NOTE: we assume no more v1 vaults are deployed
         return [VaultV1(vault_address, *self.registry.getVaultInfo(vault_address)) for vault_address in addresses_generator_v1_vaults.assetsAddresses()]

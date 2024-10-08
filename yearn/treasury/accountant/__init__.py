@@ -4,12 +4,11 @@ import logging
 from brownie import Contract
 from brownie.exceptions import ContractNotFound
 from tqdm import tqdm
-from y.networks import Network
+from y import Contract, ContractNotVerified, Network
 
 from yearn.entities import Address
 from yearn.treasury.accountant.accountant import *
 from yearn.treasury.accountant.prepare_db import prepare_db
-from yearn.utils import contract
 
 logger = logging.getLogger(__name__)
 
@@ -30,7 +29,7 @@ GNOSIS_IMPLEMENTATION = {
     Network.Fantom: "0xd9db270c1b5e3bd161e8c8503c55ceabee709552",
 }.get(chain.id,None)
 
-GNOSIS_ABI = contract(GNOSIS_IMPLEMENTATION).abi if GNOSIS_IMPLEMENTATION else None
+GNOSIS_ABI = Contract(GNOSIS_IMPLEMENTATION).abi if GNOSIS_IMPLEMENTATION else None
 
 
 @db_session
@@ -43,18 +42,14 @@ def __ensure_topics_are_known(addresses: List[Address]) -> None:
     no_topics = [] 
     for address in tqdm(addresses):
         try:
-            if not contract(address.address).topics:
+            if not Contract(address.address).topics:
                 if not force_gnosis_safe_abi(address):
                     no_topics.append(address)
         except ContractNotFound:
             # This is MOST LIKELY unimportant and not Yearn related.
-            logger.debug(f"{address.address} self destructed")
-        except ValueError as e:
-            if str(e).startswith("Source for") and str(e).endswith("has not been verified"):
-                continue
-            if "Contract source code not verified" in str(e):
-                continue
-            raise
+            logger.debug("%s self destructed", address.address)
+        except ContractNotVerified:
+            logger.debug("%s is not verified", address.address)
 
     no_topics_with_nick = {address.nickname for address in no_topics if address.nickname}
     no_topics_no_nick = [address for address in no_topics if not address.nickname]
@@ -73,7 +68,7 @@ def __ensure_signatures_are_known(addresses: List[Address]) -> None:
     no_sigs = []
     for address in tqdm(addresses):
         try:
-            if not contract(address.address).signatures:
+            if not Contract(address.address).signatures:
                 if not force_gnosis_safe_abi(address):
                     no_sigs.append(address)
         except ContractNotFound:

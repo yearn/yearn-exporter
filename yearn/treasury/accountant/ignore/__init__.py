@@ -2,7 +2,7 @@
 from decimal import Decimal
 
 from brownie import chain
-from y import Network
+from y import Contract, Network
 
 from yearn.entities import TreasuryTx
 from yearn.treasury.accountant.classes import HashMatcher, TopLevelTxGroup
@@ -15,7 +15,6 @@ from yearn.treasury.accountant.ignore.swaps import (aave, balancer, buying_yfi,
                                                     robovault, synthetix,
                                                     uniswap, unwrapper, woofy,
                                                     ycrv, yla)
-from yearn.utils import contract
 
 IGNORE_LABEL = "Ignore"
 
@@ -45,11 +44,11 @@ def is_kp3r(tx: TreasuryTx) -> bool:
             )
             or (
                 tx.to_address and tx.to_address.is_contract
-                and contract(tx.to_address.address)._build['contractName'] in contract_names
+                and Contract(tx.to_address.address)._build['contractName'] in contract_names
             )
             or (
                 tx.from_address.is_contract
-                and contract(tx.from_address.address)._build['contractName'] in contract_names
+                and Contract(tx.from_address.address)._build['contractName'] in contract_names
             )
             or HashMatcher(hashes).contains(tx)
         )
@@ -71,7 +70,7 @@ def is_bridged(tx: TreasuryTx) -> bool:
     elif tx.to_address and tx.to_address.token and tx.to_address.token.symbol and tx.to_address.token.symbol.startswith("any") and "LogAnySwapOut" in tx._events:
         for event in tx._events["LogAnySwapOut"]:
             token, sender, receiver, amount, from_chainid, to_chainid = event.values()
-            if from_chainid == chain.id and sender == tx.from_address.address and tx.token.address.address == contract(token).underlying() and Decimal(amount) / tx.token.scale == tx.amount:
+            if from_chainid == chain.id and sender == tx.from_address.address and tx.token.address.address == Contract(token).underlying() and Decimal(amount) / tx.token.scale == tx.amount:
                 return True
     
     # Anyswap in - anyToken part
@@ -85,7 +84,7 @@ def is_bridged(tx: TreasuryTx) -> bool:
     elif tx.from_address and tx.from_address.token and tx.from_address.token.symbol and tx.from_address.token.symbol.startswith("any") and "LogAnySwapIn" in tx._events:
         for event in tx._events["LogAnySwapIn"]:
             txhash, token, receiver, amount, from_chainid, to_chainid = event.values()
-            if to_chainid == chain.id and receiver == tx.to_address.address and tx.token.address.address == contract(token).underlying() and Decimal(amount) / tx.token.scale == tx.amount:
+            if to_chainid == chain.id and receiver == tx.to_address.address and tx.token.address.address == Contract(token).underlying() and Decimal(amount) / tx.token.scale == tx.amount:
                 return True
 
     return tx in HashMatcher({
