@@ -29,8 +29,7 @@ class VaultWalletDescriber:
                 wallet: {
                     "token balance": bal,
                     "usd balance": bal * price
-                    } for wallet, bal in balances.items()
-                }
+                } for wallet, bal in balances.items()
             }
         }
         info['active wallets'] = sum(1 if balances['usd balance'] > ACTIVE_WALLET_USD_THRESHOLD else 0 for balances in info['wallet balances'].values())
