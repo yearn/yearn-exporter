@@ -9,9 +9,6 @@ setup_logging()
 setup_sentry()
 
 if network.is_connected():
-    # If ypm db is not yet initialized, force eth-util extended version
-    import eth_portfolio._db.entities
-    
     from y import Network
     from yearn._setup import (customize_ypricemagic,
                               force_init_problematic_contracts)
