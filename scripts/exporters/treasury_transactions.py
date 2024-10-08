@@ -19,7 +19,7 @@ from y.time import get_block_timestamp_async
 
 from yearn.entities import TreasuryTx, deduplicate_internal_transfers
 from yearn.outputs.postgres.utils import address_dbid, chain_dbid, token_dbid
-from yearn.treasury import accountant
+from yearn.treasury import accountant, streams
 from yearn.treasury.treasury import YearnTreasury
 
 sentry_sdk.set_tag('script','treasury_transactions_exporter')
@@ -55,6 +55,10 @@ def main() -> NoReturn:
 @a_sync(default='sync')
 async def load_new_txs(start_block: Block, end_block: Block) -> int:
     """returns: number of new txs"""
+    # NOTE: ensure stream loader task has been started
+    global _streams_task
+    if _streams_task is None:
+        _streams_task = asyncio.create_task(streams._get_coro())
     futs = []
     async for entry in treasury.ledger[start_block: end_block]:
         if isinstance(entry, InternalTransfer) and entry.to_address == GNOSIS_SINGLETON:
@@ -145,3 +149,5 @@ def _validate_integrity_error(entry: LedgerEntry, log_index: int) -> None:
 @db_session
 def sort() -> None:
     accountant.sort_txs(accountant.unsorted_txs())
+
+_streams_task = None
