@@ -17,7 +17,7 @@ from multicall.utils import run_in_subprocess
 from semantic_version.base import Version
 from y import ERC20, Contract, Network, magic, dank_w3
 from y.contracts import contract_creation_block_async
-from y.decorators import stuck_coro_debugger
+from y._decorators import stuck_coro_debugger
 from y.exceptions import PriceError, yPriceMagicError
 from y.utils.events import ProcessedEvents
 

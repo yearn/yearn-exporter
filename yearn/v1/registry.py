@@ -6,7 +6,7 @@ from typing import Dict, List, Optional
 from brownie import chain, interface
 import dank_mids
 from y import Contract, Network, contract_creation_block_async
-from y.decorators import stuck_coro_debugger
+from y._decorators import stuck_coro_debugger
 
 from yearn.exceptions import UnsupportedNetwork
 from yearn.multicall2 import fetch_multicall_async
