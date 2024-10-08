@@ -273,8 +273,8 @@ class Stream(db.Entity):
         try:
             return Stream[stream_id]
         except ObjectNotFound:
-            from yearn.outputs.postgres.utils import (cache_address,
-                                                      cache_token,
+            from yearn.outputs.postgres.utils import (address_dbid,
+                                                      token_dbid,
                                                       cache_txgroup)
 
             txgroup = {
@@ -283,10 +283,10 @@ class Stream(db.Entity):
             }.get(to_address, "Other Grants")
 
             txgroup = cache_txgroup(txgroup)
-            stream_contract = cache_address(log.address)
-            token = cache_token(Contract(log.address).token())
-            from_address = cache_address(from_address)
-            to_address = cache_address(to_address)
+            stream_contract = address_dbid(log.address)
+            token = token_dbid(Contract(log.address).token())
+            from_address = address_dbid(from_address)
+            to_address = address_dbid(to_address)
 
             entity = Stream(
                 stream_id = stream_id,
@@ -430,18 +430,18 @@ class VestingEscrow(db.Entity):
 
     @staticmethod
     def get_or_create_entity(event: _EventItem) -> "VestingEscrow":
-        from yearn.outputs.postgres.utils import cache_address, cache_token
+        from yearn.outputs.postgres.utils import address_dbid, cache_token
 
         print(event)
         funder, token, recipient, escrow, amount, start, duration, cliff_length = event.values()
-        escrow_address_entity = cache_address(escrow)
-        escrow = VestingEscrow.get(address=escrow_address_entity)
+        escrow_address_dbid = address_dbid(escrow)
+        escrow = VestingEscrow.get(address=escrow_address_dbid)
         if escrow is None:
             token_entity = cache_token(token)
             escrow = VestingEscrow(
-                address = escrow_address_entity,
-                funder = cache_address(funder),
-                recipient = cache_address(recipient),
+                address = escrow_address_dbid,
+                funder = address_dbid(funder),
+                recipient = address_dbid(recipient),
                 token = token_entity,
                 amount = amount / token_entity.scale,
                 start_timestamp = datetime.fromtimestamp(start),
