@@ -1,5 +1,6 @@
 
 import asyncio
+import functools
 import logging
 
 from brownie import chain, convert
@@ -37,9 +38,13 @@ hashes = {
     }
 }.get(chain.id, {})
 
+
 def _get_flat_wrappers(partner: Partner):
+    loop = asyncio.get_event_loop()
     # A helper function so we can run this sync without either breaking the event loop in our main thread or making this module async
-    return asyncio.get_event_loop().run_until_complete(partner.flat_wrappers)
+    wrappers = [] #if loop.is_running() else loop.run_until_complete(partner.flat_wrappers)
+    logger.info("loaded %s wrappers for %s", len(wrappers), partner)
+    return wrappers
 
 def is_partner_fees(tx: TreasuryTx) -> bool:
     if tx.from_address.address == constants.YCHAD_MULTISIG and tx.to_address:
