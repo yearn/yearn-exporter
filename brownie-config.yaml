@@ -2,6 +2,7 @@ networks:
     default: mainnet
 
 autofetch_sources: false
+eager_caching: false
 
 compiler:
     evm_version: london
