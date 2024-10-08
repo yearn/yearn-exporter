@@ -2,27 +2,24 @@ import asyncio
 import json
 import logging
 import threading
-from concurrent.futures import ThreadPoolExecutor
 from datetime import datetime, timedelta
 from functools import lru_cache
 from typing import AsyncGenerator, List
 
+import a_sync
+import dank_mids
 import eth_retry
 import pandas as pd
 from brownie import Contract, chain, interface, web3
 from brownie.convert.datatypes import HexString
 from brownie.network.contract import _fetch_from_explorer, _resolve_address
-from dank_mids.brownie_patch import patch_contract
-from typing_extensions import ParamSpec
 from y.networks import Network
-from y.utils.dank_mids import dank_w3
 
 from yearn.typing import AddressOrContract
 
 logger = logging.getLogger(__name__)
 
-threads = ThreadPoolExecutor(8)
-run_in_thread = lambda fn, *args: asyncio.get_event_loop().run_in_executor(threads, fn, *args)
+threads = a_sync.PruningThreadPoolExecutor(8)
 
 BINARY_SEARCH_BARRIER = {
     Network.Mainnet: 0,
@@ -78,7 +75,7 @@ def contract(address: AddressOrContract) -> Contract:
             if address in PREFER_INTERFACE[chain.id]:
                 _interface = PREFER_INTERFACE[chain.id][address]
                 i = _interface(address)
-                return _squeeze(patch_contract(i, dank_w3))
+                return _squeeze(dank_mids.patch_contract(i))
 
         # autofetch-sources: false
         # Try to fetch the contract from the local sqlite db.
@@ -89,7 +86,7 @@ def contract(address: AddressOrContract) -> Contract:
             c = _resolve_proxy(address)
 
         # Lastly, get rid of unnecessary memory-hog properties
-        return _squeeze(patch_contract(c, dank_w3))
+        return _squeeze(dank_mids.patch_contract(c))
 
 
 # These tokens have trouble when resolving the implementation via the chain.
