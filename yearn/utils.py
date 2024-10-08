@@ -151,9 +151,9 @@ def _resolve_proxy(address):
         df.drop_duplicates(subset=["name", "type"], keep="last", inplace=True)
         deduplicated = df.to_dict("records")
         if len(abi) != len(deduplicated):
-            logger.warn(f"Warning: combined abi for contract {address} contains duplicates!")
-            logger.warn(f"original:\n{abi}")
-            logger.warn(f"deduplicated:\n{deduplicated}")
+            logger.warning(f"Warning: combined abi for contract {address} contains duplicates!")
+            logger.warning(f"original:\n{abi}")
+            logger.warning(f"deduplicated:\n{deduplicated}")
 
         abi = deduplicated
 

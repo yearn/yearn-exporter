@@ -223,7 +223,7 @@ async def calculate_simple(vault, gauge: Gauge, samples: ApySamples) -> Apy:
         # TODO: consider adding for loop with [gauge.reward_tokens(i) for i in range(gauge.reward_count())] for multiple rewards tokens
         gauge_reward_token = await gauge.gauge.reward_tokens.coroutine(0)
         if gauge_reward_token in [ZERO_ADDRESS]:
-            logger.warn(f"no reward token for gauge {str(gauge.gauge)}")
+            logger.warning(f"no reward token for gauge {str(gauge.gauge)}")
         else:
             reward_data, token_price, total_supply = await asyncio.gather(
                 gauge.gauge.reward_data.coroutine(gauge_reward_token),
@@ -327,7 +327,7 @@ async def calculate_simple(vault, gauge: Gauge, samples: ApySamples) -> Apy:
             crv_debt_ratio = strategies_data[2] / 1e4
         else:
             # TODO handle this case
-            logger.warn(f"no APY calculations for strategy {str(cvx_strategy)}")
+            logger.warning(f"no APY calculations for strategy {str(cvx_strategy)}")
             cvx_apy_data = ConvexDetailedApyData()
             crv_debt_ratio = 1
     else:

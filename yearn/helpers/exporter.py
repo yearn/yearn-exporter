@@ -69,7 +69,7 @@ class Exporter:
         self.start_block = start_block
         self.start_timestamp = datetime.fromtimestamp(chain[start_block].timestamp, tz=timezone.utc)
         if resolution != RESOLUTION:
-            logger.warn(f"{self.full_name}: Overriding resolution with custom value '{resolution}', env has '{RESOLUTION}' !")
+            logger.warning(f"{self.full_name}: Overriding resolution with custom value '{resolution}', env has '{RESOLUTION}' !")
         self._resolution = resolution
 
         self._data_fn = data_fn

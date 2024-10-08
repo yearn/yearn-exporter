@@ -174,7 +174,7 @@ def find_price(
         raise PriceError(f'could not fetch price for {_describe_err(token, block)}')
 
     if price == 0:
-        logger.warn("Price is 0 for token %s at block %d", token, block)
+        logger.warning("Price is 0 for token %s at block %d", token, block)
 
     return price
 
