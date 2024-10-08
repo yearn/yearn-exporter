@@ -236,6 +236,7 @@ class CurveRegistry(metaclass=Singleton):
         """
         Get metapool factory that has spawned a pool.
         """
+        self.ensure_loaded()
         try:
             return next(
                 factory
@@ -249,6 +250,7 @@ class CurveRegistry(metaclass=Singleton):
         """
         Get registry containing a pool.
         """
+        self.ensure_loaded()
         try:
             return next(
                 registry
@@ -276,6 +278,7 @@ class CurveRegistry(metaclass=Singleton):
         """
         Get liquidity gauge address by pool or lp_token.
         """
+        self.ensure_loaded()
         pool = to_address(pool)
         lp_token = to_address(lp_token)
         if chain.id == Network.Mainnet:
@@ -297,7 +300,6 @@ class CurveRegistry(metaclass=Singleton):
             if gauge != ZERO_ADDRESS:
                 return gauge
 
-
     @lru_cache(maxsize=None)
     def get_coins(self, pool: AddressOrContract) -> List[EthAddress]:
         """
@@ -317,182 +319,7 @@ class CurveRegistry(metaclass=Singleton):
 
         return [coin for coin in coins if coin not in {None, ZERO_ADDRESS}]
 
-    @lru_cache(maxsize=None)
-    def get_underlying_coins(self, pool: AddressOrContract) -> List[EthAddress]:
-        pool = to_address(pool)
-        factory = self.get_factory(pool)
-        registry = self.get_registry(pool)
-
-        if factory:
-            factory = contract(factory)
-            # new factory reverts for non-meta pools
-            if not hasattr(factory, 'is_meta') or factory.is_meta(pool):
-                if hasattr(factory, 'get_underlying_coins'):
-                    coins = factory.get_underlying_coins(pool)
-                elif hasattr(factory, 'get_coins'):
-                    coins = factory.get_coins(pool)
-                else:
-                    coins = {ZERO_ADDRESS}
-            else:
-                coins = factory.get_coins(pool)
-        elif registry:
-            registry = contract(registry)
-            if hasattr(registry, 'get_underlying_coins'):
-                coins = registry.get_underlying_coins(pool)
-            elif hasattr(registry, 'get_coins'):
-                coins = registry.get_coins(pool)
-
-        # pool not in registry, not checking for underlying_coins here
-        if set(coins) == {ZERO_ADDRESS}:
-            return self.get_coins(pool)
-
-        return [coin for coin in coins if coin != ZERO_ADDRESS]
-
-    @lru_cache(maxsize=None)
-    def get_decimals(self, pool: AddressOrContract) -> List[int]:
-        pool = to_address(pool)
-        factory = self.get_factory(pool)
-        registry = self.get_registry(pool)
-        source = contract(factory or registry)
-        decimals = source.get_decimals(pool)
-
-        # pool not in registry
-        if not any(decimals):
-            coins = self.get_coins(pool)
-            decimals = fetch_multicall(
-                *[[contract(token), 'decimals'] for token in coins]
-            )
-
-        return [dec for dec in decimals if dec != 0]
-
-    def get_balances(self, pool: AddressOrContract, block: Optional[Block] = None, should_raise_err: bool = True) -> Optional[Dict[EthAddress,float]]:
-        """
-        Get {token: balance} of liquidity in the pool.
-        """
-        pool = to_address(pool)
-        factory = self.get_factory(pool)
-        registry = self.get_registry(pool)
-        coins = self.get_coins(pool)
-        decimals = self.get_decimals(pool)
-
-        try:
-            source = contract(factory or registry)
-            balances = source.get_balances(pool, block_identifier=block)
-        # fallback for historical queries
-        except ValueError as e:
-            if str(e) not in [
-                'execution reverted',
-                'No data was returned - the call likely reverted'
-                ]: raise
-
-            balances = fetch_multicall(
-                *[[contract(pool), 'balances', i] for i, _ in enumerate(coins)],
-                block=block
-            )
-
-        if not any(balances):
-            if should_raise_err:
-                raise ValueError(f'could not fetch balances {pool} at {block}')
-            return None
-
-        return {
-            coin: balance / 10 ** dec
-            for coin, balance, dec in zip(coins, balances, decimals)
-        }
     
-    def get_virtual_price(self, pool: Address, block: Optional[Block] = None) -> Optional[float]:
-        pool = contract(pool)
-        try:
-            return pool.get_virtual_price(block_identifier=block) / 1e18
-        except ValueError as e:
-            if str(e) == "execution reverted":
-                return None
-            raise
-
-    def get_tvl(self, pool: AddressOrContract, block: Optional[Block] = None) -> float:
-        """
-        Get total value in Curve pool.
-        """
-        pool = to_address(pool)
-        balances = self.get_balances(pool, block=block)
-
-        return sum(
-            amount * magic.get_price(coin, block=block)
-            for coin, amount in balances.items()
-        )
-
-    @ttl_cache(maxsize=None, ttl=600)
-    def get_price(self, token: AddressOrContract, block: Optional[Block] = None) -> Optional[float]:
-        token = to_address(token)
-        pool = self.get_pool(token)
-        # crypto pools can have different tokens, use slow method
-        try:
-            tvl = self.get_tvl(pool, block=block)
-        except ValueError:
-            tvl = 0
-        supply = contract(token).totalSupply(block_identifier=block) / 1e18
-        if supply == 0:
-            if tvl > 0:
-                raise ValueError('curve pool has balance but no supply')
-            return 0
-        return tvl / supply
-
-    def get_coin_price(self, token: AddressOrContract, block: Optional[Block] = None) -> Optional[float]:
-
-        # Select the most appropriate pool
-        pools = self.coin_to_pools[token]
-        if not pools:
-            return
-        elif len(pools) == 1:
-            pool = pools[0]
-        else:
-            # We need to find the pool with the deepest liquidity
-            balances = [self.get_balances(pool, block, should_raise_err=False) for pool in pools]
-            deepest_pool, deepest_bal = None, 0
-            for pool, pool_bals in zip(pools, balances):
-                if pool_bals is None:
-                    continue
-                if isinstance(pool_bals, Exception):
-                    if str(pool_bals).startswith("could not fetch balances"):
-                        continue
-                    raise pool_bals
-                for _token, bal in pool_bals.items():
-                    if _token == token and bal > deepest_bal:
-                        deepest_pool = pool
-                        deepest_bal = bal
-            pool = deepest_pool
-        
-        # Get the index for `token`
-        coins = self.get_coins(pool)
-        token_in_ix = [i for i, coin in enumerate(coins) if coin == token][0]
-        amount_in = 10 ** contract(str(token)).decimals()
-        if len(coins) == 2:
-            # this works for most typical metapools
-            token_out_ix = 0 if token_in_ix == 1 else 1 if token_in_ix == 0 else None
-        elif len(coins) == 3:
-            # We will just default to using token 0 until we have a reason to make this more flexible
-            token_out_ix = 0 if token_in_ix in [1, 2] else 1 if token_in_ix == 0 else None
-        else:
-            # TODO: handle this sitch if necessary
-            return None
-        
-        # Get the price for `token` using the selected pool.
-        try:
-            dy = contract(pool).get_dy(token_in_ix, token_out_ix, amount_in, block_identifier = block)
-        except:
-            return None
-        
-        if coins[token_out_ix] == EEE_ADDRESS:
-            token_out = EEE_ADDRESS
-            amount_out = dy / 10 ** 18
-        else:
-            token_out = contract(coins[token_out_ix])
-            amount_out = dy / 10 ** token_out.decimals()
-        try:
-            return amount_out * magic.get_price(token_out, block = block)
-        except PriceError:
-            return None
-
     async def calculate_boost(self, gauge: Contract, addr: Address, block: Optional[Block] = None) -> Dict[str,float]:
         results = await fetch_multicall_async(
             [gauge, "balanceOf", addr],

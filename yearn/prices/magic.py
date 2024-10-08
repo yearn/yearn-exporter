@@ -10,7 +10,7 @@ from y.exceptions import PriceError
 from y.networks import Network
 
 from yearn.constants import CRV
-from yearn.prices import constants, curve
+from yearn.prices import constants
 from yearn.prices.aave import aave
 from yearn.prices.balancer import balancer as bal
 from yearn.prices.band import band
@@ -124,7 +124,7 @@ def find_price(
     elif chain.id == Network.Mainnet:
         # no liquid market for yveCRV-DAO -> return CRV token price
         if token == Backscratcher().vault.address and block < 11786563:
-            if curve.curve and CRV:
+            if CRV:
                 return get_price(CRV, block=block)
         # no liquidity for curve pool (yvecrv-f) -> return 0
         elif token == "0x7E46fd8a30869aa9ed55af031067Df666EfE87da" and block < 14987514:
@@ -134,7 +134,6 @@ def find_price(
             return 0
 
     markets = [
-        curve.curve,
         compound,
         fixed_forex,
         generic_amm,
@@ -160,10 +159,6 @@ def find_price(
         price, underlying = price
         logger.debug("peel %s %s", price, underlying)
         return price * get_price(underlying, block=block)
-    
-    if price is None and token in curve.curve.coin_to_pools:
-        logger.debug(f'Curve.get_coin_price -> {price}')
-        price = curve.curve.get_coin_price(token, block = block)
 
     if price is None and return_price_during_vault_downtime:
         for incident in INCIDENTS[token]:
