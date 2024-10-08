@@ -8,14 +8,14 @@ from typing import (TYPE_CHECKING, Any, AsyncIterator, Dict, List, NoReturn,
                     Optional, Union)
 
 import a_sync
-from a_sync.utils.iterators import exhaust_iterator
+import dank_mids
 from async_property import async_cached_property, async_property
 from brownie import chain
 from brownie.network.event import _EventItem
 from eth_utils import encode_hex, event_abi_to_log_topic
 from multicall.utils import run_in_subprocess
 from semantic_version.base import Version
-from y import ERC20, Contract, Network, magic, dank_w3
+from y import ERC20, Contract, Network, magic
 from y.contracts import contract_creation_block_async
 from y._decorators import stuck_coro_debugger
 from y.exceptions import PriceError, yPriceMagicError
@@ -219,12 +219,12 @@ class Vault:
 
     async def watch_events(self) -> NoReturn:
         start = time.time()
-        await self._events.events(await dank_w3.eth.block_number)
+        await self._events.events(await dank_mids.eth.block_number)
         logger.info("loaded %d strategies %s in %.3fs", len(self._strategies), self.name, time.time() - start)
 
     @stuck_coro_debugger
     async def describe(self, block=None):
-        block = block or await dank_w3.eth.block_number
+        block = block or await dank_mids.eth.block_number
         results = await asyncio.gather(
             fetch_multicall_async(*self._calls, block=block),
             self._describe_strategies(block),

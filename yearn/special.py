@@ -3,9 +3,9 @@ import math
 from time import time
 from typing import TYPE_CHECKING, Tuple
 
+import dank_mids
 import eth_retry
 import requests
-from brownie import chain
 from y import ERC20, Contract, magic
 from y.contracts import contract_creation_block_async
 from y.exceptions import PriceError, yPriceMagicError
@@ -49,7 +49,7 @@ class YveCRVJar(metaclass = Singleton):
         yvboost_eth_pool  = [pool for pool in data if pool["identifier"] == "yvboost-eth"][0]
         apy = yvboost_eth_pool["apy"]  / 100.
         points = ApyPoints(apy, apy, apy)
-        block = await dank_w3.eth.block_number
+        block = await dank_mids.eth.block_number
         inception_block = await contract_creation_block_async(str(self.vault))
         blocks = ApyBlocks(block, block, block, inception_block)
         return Apy("yvecrv-jar", apy, apy, ApyFees(), points=points, blocks=blocks)
