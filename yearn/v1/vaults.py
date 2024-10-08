@@ -3,14 +3,13 @@ import logging
 from dataclasses import dataclass
 from typing import TYPE_CHECKING, Optional
 
+import dank_mids
 from async_property import async_cached_property
 from brownie import ZERO_ADDRESS, interface
 from brownie.network.contract import InterfaceContainer
-from dank_mids.brownie_patch import patch_contract
 from y import Contract, magic
 from y.decorators import stuck_coro_debugger
 from y.exceptions import PriceError, yPriceMagicError
-from y.utils.dank_mids import dank_w3
 
 from yearn import constants
 from yearn.common import Tvl
@@ -107,7 +106,7 @@ class VaultV1:
             # guard historical queries where there are no vote_proxy and gauge
             # for block <= 10635293 (2020-08-11)
             if vote_proxy and gauge:
-                vote_proxy = patch_contract(interface.CurveYCRVVoter(vote_proxy), dank_w3)
+                vote_proxy = dank_mids.patch_contract(interface.CurveYCRVVoter(vote_proxy))
                 gauge = Contract(gauge)
                 boost, _apy = await asyncio.gather(
                     curve.calculate_boost(gauge, vote_proxy, block=block),
@@ -121,7 +120,7 @@ class VaultV1:
             attrs["lifetime earned"] = [strategy, "earned"]  # /scale
 
         if strategy._name == "StrategyYFIGovernance":
-            ygov = patch_contract(interface.YearnGovernance(await strategy.gov.coroutine()), dank_w3)
+            ygov = dank_mids.patch_contract(interface.YearnGovernance(await strategy.gov.coroutine()))
             attrs["earned"] = [ygov, "earned", strategy]
             attrs["reward rate"] = [ygov, "rewardRate"]
             attrs["ygov balance"] = [ygov, "balanceOf", strategy]

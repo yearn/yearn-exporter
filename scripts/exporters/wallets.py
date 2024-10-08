@@ -8,12 +8,11 @@ from cachetools.func import ttl_cache
 from y import Network
 from y.time import closest_block_after_timestamp
 
-from yearn import constants
+from yearn import constants, utils
 from yearn.entities import UserTx
 from yearn.helpers.exporter import Exporter
 from yearn.outputs.postgres.utils import last_recorded_block
 from yearn.outputs.victoria.victoria import _post
-from yearn.utils import run_in_thread
 from yearn.yearn import Yearn
 
 sentry_sdk.set_tag('script','wallet_exporter')
@@ -44,7 +43,7 @@ def postgres_ready(snapshot: datetime) -> bool:
 class WalletExporter(Exporter):
     async def export_historical_snapshot(self, snapshot: datetime) -> None:
         """ Override a method on Exporter so we can add an additional check. """
-        if await run_in_thread(postgres_ready, snapshot):
+        if await utils.threads.run(postgres_ready, snapshot):
             return await super().export_historical_snapshot(snapshot)
 
 exporter = WalletExporter(
