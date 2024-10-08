@@ -18,8 +18,7 @@ from y.datatypes import Block
 from y.time import get_block_timestamp_async
 
 from yearn.entities import TreasuryTx, deduplicate_internal_transfers
-from yearn.outputs.postgres.utils import (cache_address, cache_chain,
-                                          cache_token)
+from yearn.outputs.postgres.utils import address_dbid, chain_dbid, token_dbid
 from yearn.treasury import accountant
 from yearn.treasury.treasury import YearnTreasury
 
@@ -28,6 +27,8 @@ sentry_sdk.set_tag('script','treasury_transactions_exporter')
 warnings.simplefilter("ignore", BrownieEnvironmentWarning)
 
 logger = logging.getLogger('yearn.treasury_transactions_exporter')
+
+GNOSIS_SINGLETON = "0xd9Db270c1B5E3Bd161E8c8503c55cEABeE709552"
 
 treasury = YearnTreasury(load_prices=True, asynchronous=True)
 
@@ -54,11 +55,16 @@ def main() -> NoReturn:
 @a_sync(default='sync')
 async def load_new_txs(start_block: Block, end_block: Block) -> int:
     """returns: number of new txs"""
-    futs = [
-        asyncio.create_task(insert_treasury_tx(entry))
-        async for entry in treasury.ledger._get_and_yield(start_block, end_block)
-        if not isinstance(entry, _Done) and entry.value
-    ]
+    futs = []
+    async for entry in treasury.ledger[start_block: end_block]:
+        if isinstance(entry, InternalTransfer) and entry.to_address == GNOSIS_SINGLETON:
+            # TODO: move this into eth-port
+            logger.debug("internal transfer to gnosis singleton, these are goofy and not real. ignoring %s", entry)
+            continue
+        if not entry.value:
+            logger.debug("zero value transfer, skipping %s", entry)
+            continue
+        futs.append(asyncio.create_task(insert_treasury_tx(entry)))
     if not futs:
         return 0
     to_sort = sum(await tqdm_asyncio.gather(*futs, desc="Insert Txs to Postgres"))
@@ -81,26 +87,25 @@ async def insert_treasury_tx(entry: LedgerEntry) -> int:
         await sort_thread.run(accountant.sort_tx, txid)
     return 0
 
-    
 @db_session
-def insert_to_db(entry: LedgerEntry, ts: int) -> bool:
+def insert_to_db(entry: LedgerEntry, ts: int) -> int:
     if isinstance(entry, TokenTransfer):
         log_index = entry.log_index
-        token = cache_token(entry.token_address)
+        token = token_dbid(entry.token_address)
         gas = None
     else:
         log_index = None
-        token = cache_token(EEE_ADDRESS)
+        token = token_dbid(EEE_ADDRESS)
         gas = entry.gas
     try:
         entity = TreasuryTx(
-            chain=cache_chain(),
+            chain=chain_dbid(),
             block = entry.block_number,
             timestamp = ts,
             hash = entry.hash,
             log_index = log_index,
-            from_address = cache_address(entry.from_address) if entry.from_address else None,
-            to_address = cache_address(entry.to_address) if entry.to_address else None,
+            from_address = address_dbid(entry.from_address) if entry.from_address else None,
+            to_address = address_dbid(entry.to_address) if entry.to_address else None,
             token = token,
             amount = entry.value,
             price = entry.price,
@@ -120,11 +125,14 @@ def insert_to_db(entry: LedgerEntry, ts: int) -> bool:
 @db_session
 def _validate_integrity_error(entry: LedgerEntry, log_index: int) -> None:
     ''' Raises AssertionError if existing object that causes a TransactionIntegrityError is not an EXACT MATCH to the attempted insert. '''
-    existing_object = TreasuryTx.get(hash=entry.hash, log_index=log_index, chain=cache_chain())
+    existing_object = TreasuryTx.get(hash=entry.hash, log_index=log_index, chain=chain_dbid())
     if existing_object is None:
-        existing_objects = list(TreasuryTx.select(lambda tx: tx.hash==entry.hash and tx.log_index==log_index and tx.chain==cache_chain()))
+        existing_objects = list(TreasuryTx.select(lambda tx: tx.hash==entry.hash and tx.log_index==log_index and tx.chain==chain_dbid()))
         raise ValueError(f'unable to `.get` due to multiple entries: {existing_objects}')
-    assert entry.to_address == existing_object.to_address.address, (entry.to_address,existing_object.to_address.address)
+    if entry.to_address:
+        assert entry.to_address == existing_object.to_address.address, (entry.to_address, existing_object.to_address.address)
+    else:
+        assert existing_object.to_address is None, (entry.to_address, existing_object.to_address)
     assert entry.from_address == existing_object.from_address.address, (entry.from_address, existing_object.from_address.address)
     assert entry.value == existing_object.amount or entry.value == -1 * existing_object.amount, (entry.value, existing_object.amount)
     assert entry.block_number == existing_object.block, (entry.block_number, existing_object.block)
