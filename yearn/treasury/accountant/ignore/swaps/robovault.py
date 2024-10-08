@@ -1,9 +1,10 @@
 
 from brownie import ZERO_ADDRESS
+from y import Contract
+
 from yearn.entities import TreasuryTx
 from yearn.treasury.accountant.classes import HashMatcher, IterFilter
 from yearn.treasury.accountant.constants import treasury
-from yearn.utils import contract
 
 
 def is_reaper_withdrawal(tx: TreasuryTx) -> bool:
@@ -18,7 +19,7 @@ def is_reaper_withdrawal(tx: TreasuryTx) -> bool:
         for event in events['Transfer']:
             sender, receiver, value = event.values()
             if event.address == tx.token.address.address and receiver == ZERO_ADDRESS:
-                underlying = contract(tx.token.address.address).token()
+                underlying = Contract(tx.token.address.address).token()
                 for _event in events['Transfer']:
                     _sender, _receiver, _value = _event.values()
                     if _event.address == underlying and _receiver == tx.from_address.address and event.pos < _event.pos and _sender == tx.token.address.address:
@@ -26,7 +27,7 @@ def is_reaper_withdrawal(tx: TreasuryTx) -> bool:
     # token side
     if tx.from_address.token and "Robovault" in tx.from_address.nickname:
         try:
-            vault = contract(tx.from_address.address)
+            vault = Contract(tx.from_address.address)
         except ValueError as e:
             if "not verified" in str(e).lower():
                 return False
