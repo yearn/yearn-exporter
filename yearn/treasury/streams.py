@@ -10,7 +10,7 @@ from async_lru import alru_cache
 from brownie import chain
 from pony.orm import db_session, select
 from tqdm.asyncio import tqdm_asyncio
-from y import Contract, get_price
+from y import Contract, Network, get_price
 from y.time import closest_block_after_timestamp_async
 
 from yearn.constants import YCHAD_MULTISIG, YFI
@@ -25,8 +25,9 @@ ONE_DAY = 60 * 60 * 24
 
 dai = "0x6B175474E89094C44Da98b954EedeAC495271d0F"
 
-streams_dai = Contract('0x60c7B0c5B3a4Dc8C690b074727a17fF7aA287Ff2')
-streams_yfi = Contract('0xf3764eC89B1ad20A31ed633b1466363FAc1741c4')
+if chain.id == Network.Mainnet:
+    streams_dai = Contract('0x60c7B0c5B3a4Dc8C690b074727a17fF7aA287Ff2')
+    streams_yfi = Contract('0xf3764eC89B1ad20A31ed633b1466363FAc1741c4')
 
 logger = logging.getLogger(__name__)
 
@@ -123,12 +124,12 @@ class YearnStreams:
                 if stream.txgroup is None:
                     stream.txgroup = team_payments_txgroup
 
-streams = YearnStreams()
+if chain.id == Network.Mainnet:
+    streams = YearnStreams()
 
 @db_session
 def all_other_dai_streams():
     return [s for s in streams.dai_streams() if s.to_address.address != BUYER]
-
 
 @alru_cache
 async def get_stream_contract(stream_id: str) -> Contract:
