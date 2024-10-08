@@ -135,16 +135,12 @@ class Registry(metaclass=Singleton):
         return f"<Registry chain={chain.id} releases={len(self.releases)} vaults={len(self._vaults)} experiments={len(self._experiments)}>"
     
     @set_exc
-    async def watch_events(self) -> NoReturn:
-        start = time.time()
-        events = await self._events
-        def done_callback(task: asyncio.Task) -> None:
-            logger.info("loaded v2 registry in %.3fs", time.time() - start)
-            self._done.set()
-        done_task = asyncio.create_task(events._lock.wait_for(await dank_mids.eth.block_number))
-        done_task.add_done_callback(done_callback)
-        async for _ in events:
-            self._filter_vaults()
+    async def load_events(self) -> NoReturn:
+        if not self._done.is_set():
+            start = time.time()
+            events: RegistryEvents = await self._events
+            async for _ in events.events(to_block = await dank_mids.eth.block_number):
+                self._filter_vaults()
             if not self._done.is_set():
                 self._done.set()
                 logger.info("loaded v2 registry in %.3fs", time.time() - start)
@@ -235,17 +231,19 @@ class Registry(metaclass=Singleton):
     @stuck_coro_debugger
     async def _active_vaults_at(self, block=None) -> List[Vault]:
         self._task
-        events = await self._events
-        await events._lock.wait_for(events._init_block)
+        events: RegistryEvents = await self._events
+        await events.events(to_block = block or events._init_block)
+        self._filter_vaults()
         vaults = list(itertools.chain(self._vaults.values(), self._experiments.values()))
         return [vault for vault, active in zip(vaults, await asyncio.gather(*[vault.is_active(block) for vault in vaults])) if active]
     
     async def _active_vaults_at_iter(self, block=None) -> AsyncIterator[Vault]:
         # ensure loader task is running
         self._task
-        events = await self._events
+        events: RegistryEvents = await self._events
         # make sure the events are loaded thru now before proceeding
-        await events._lock.wait_for(events._init_block)
+        await events.events(to_block=block or events._init_block)
+        self._filter_vaults()
         
         vaults: List[Vault] = list(itertools.chain(self._vaults.values(), self._experiments.values()))
         
@@ -267,7 +265,7 @@ class Registry(metaclass=Singleton):
     
     @cached_property
     def _task(self) -> asyncio.Task:
-        return asyncio.create_task(self.watch_events())
+        return asyncio.create_task(self.load_events())
     
     def _filter_vaults(self):
         if chain.id in DEPRECATED_VAULTS:
