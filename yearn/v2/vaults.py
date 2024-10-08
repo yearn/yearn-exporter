@@ -3,9 +3,9 @@ import logging
 import re
 import threading
 import time
-from functools import cached_property
 from typing import TYPE_CHECKING, Any, Dict, List, Union
 
+from async_property import async_cached_property
 from brownie import chain
 from eth_utils import encode_hex, event_abi_to_log_topic
 from joblib import Parallel, delayed
@@ -303,9 +303,8 @@ class Vault:
         tvl = total_assets * price / await ERC20(self.vault, asynchronous=True).scale if price else None
         return Tvl(total_assets, price, tvl)
 
-    @cached_property
-    def _needs_curve_simple(self):
-        from yearn.prices.curve import curve
+    @async_cached_property
+    async def _needs_curve_simple(self):
         # some curve vaults which should not be calculated with curve logic
         curve_simple_excludes = {
             Network.Arbitrum: [
@@ -316,4 +315,4 @@ class Vault:
         if chain.id in curve_simple_excludes:
             needs_simple = self.vault.address not in curve_simple_excludes[chain.id]
 
-        return needs_simple and curve and curve.get_pool(self.token.address)
+        return needs_simple and magic.curve and await magic.curve.get_pool(self.token.address)
