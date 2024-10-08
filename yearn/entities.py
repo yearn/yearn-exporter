@@ -172,7 +172,7 @@ class TreasuryTx(db.Entity):
     log_index = Optional(int)
     composite_key(hash, log_index)
     token = Required(Token, reverse="treasury_tx", column="token_id", index=True)
-    from_address = Required(Address, reverse="treasury_tx_from", column="from", index=True)
+    from_address = Optional(Address, reverse="treasury_tx_from", column="from", index=True)
     to_address = Optional(Address, reverse="treasury_tx_to", column="to", index=True)
     amount = Required(Decimal,38,18)
     price = Optional(Decimal,38,18)
