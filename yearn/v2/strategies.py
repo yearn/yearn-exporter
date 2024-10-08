@@ -7,7 +7,7 @@ from brownie.network.event import _EventItem
 from eth_utils import encode_hex, event_abi_to_log_topic
 from multicall.utils import run_in_subprocess
 from y import Contract
-from y.decorators import stuck_coro_debugger
+from y._decorators import stuck_coro_debugger
 from y.utils.events import ProcessedEvents
 
 from yearn.multicall2 import fetch_multicall_async

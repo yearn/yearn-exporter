@@ -8,7 +8,7 @@ from async_property import async_cached_property
 from brownie import ZERO_ADDRESS, interface
 from brownie.network.contract import InterfaceContainer
 from y import Contract, magic
-from y.decorators import stuck_coro_debugger
+from y._decorators import stuck_coro_debugger
 from y.exceptions import PriceError, yPriceMagicError
 
 from yearn import constants

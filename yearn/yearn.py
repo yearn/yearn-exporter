@@ -6,7 +6,7 @@ from typing import List
 
 from brownie import chain
 from y.contracts import contract_creation_block_async
-from y.decorators import stuck_coro_debugger
+from y._decorators import stuck_coro_debugger
 from y.networks import Network
 
 import yearn.iearn

@@ -15,7 +15,7 @@ from brownie.network.event import _EventItem
 from web3._utils.abi import filter_by_name
 from web3._utils.events import construct_event_topic_set
 from y import Contract, Network, magic
-from y.decorators import stuck_coro_debugger
+from y._decorators import stuck_coro_debugger
 from y.utils.events import Events, ProcessedEvents
 
 from yearn.decorators import set_exc, wait_or_exit_before
