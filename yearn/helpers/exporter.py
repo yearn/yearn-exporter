@@ -15,8 +15,7 @@ from dank_mids.controller import instances
 from y.networks import Network
 from y.time import closest_block_after_timestamp_async
 
-from yearn import constants
-from yearn.helpers.snapshots import (RESOLUTION,
+from yearn.helpers.snapshots import (RESOLUTION, Resolution,
                                      _generate_snapshot_range_forward,
                                      _generate_snapshot_range_historical,
                                      _get_intervals)
@@ -42,7 +41,7 @@ class Exporter:
         export_fn: Callable[[T], Awaitable[None]],
         start_block: int,
         concurrency: Optional[int] = 1,
-        resolution: Literal = RESOLUTION
+        resolution: Resolution = RESOLUTION
     ) -> None:
         """
         Required Args:
@@ -77,8 +76,7 @@ class Exporter:
         self._export_fn = eth_retry.auto_retry(export_fn)
         self._snapshots_fetched = 0
         self._snapshots_exported = 0
-        self._historical_queue = a_sync.ProcessingQueue(self.export_historical_snapshot, concurrency)
-        #self._semaphore = asyncio.Semaphore(concurrency)
+        self._historical_queue = a_sync.ProcessingQueue(self.export_historical_snapshot, concurrency, return_data=False)
     
     @overload
     def run(self, direction: Literal["historical"] = "historical") -> None:
@@ -116,14 +114,16 @@ class Exporter:
         # Bump forward to the next snapshot, as the historical coroutine will take care of this one.
         start = start + interval
         async for snapshot in _generate_snapshot_range_forward(start, interval):
-            asyncio.create_task(self.export_snapshot(snapshot))
+            a_sync.create_task(self.export_snapshot(snapshot), skip_gc_until_done=True)
 
     async def export_history(self) -> None:
         """ Exports all historical data. This coroutine runs for a finite duration. """
         intervals = _get_intervals(self._start_time, self._resolution)
         for resolution in intervals:
-            snapshot_generator = _generate_snapshot_range_historical(self.start_timestamp, resolution, intervals)
-            await asyncio.gather(*[self._historical_queue.put_nowait(snapshot) async for snapshot in snapshot_generator])
+            async for snapshot in _generate_snapshot_range_historical(self.start_timestamp, resolution, intervals):
+                self._historical_queue(snapshot)
+            await self._historical_queue.join()
+            logger.info(f"historical {self.full_name} {resolution} export complete in {self._get_runtime(datetime.now(tz=timezone.utc))}")
         logger.info(f"historical {self.full_name} export complete in {self._get_runtime(datetime.now(tz=timezone.utc))}")
 
     @log_exceptions
@@ -143,10 +143,6 @@ class Exporter:
     async def export_historical_snapshot(self, snapshot: datetime) -> None:
         if not await self._has_data(snapshot):
             await self.export_snapshot(snapshot)
-            ##fut = await self._queue.put(snapshot)
-        #async with self._semaphore:
-        #    if not await self._has_data(snapshot):
-        #        await self.export_snapshot(snapshot)
 
     # Datastore Methods
 
