@@ -1,11 +1,10 @@
 
 from brownie import ZERO_ADDRESS, chain
-from y.networks import Network
+from y import Contract, Network
 
 from yearn.entities import TreasuryTx
 from yearn.treasury.accountant.classes import HashMatcher
 from yearn.treasury.accountant.constants import treasury
-from yearn.utils import contract
 
 
 def is_solidex_staking(tx: TreasuryTx) -> bool:
@@ -23,14 +22,14 @@ def is_solidex_staking(tx: TreasuryTx) -> bool:
     # Step 2: Get your claim tokens
     elif tx.from_address.address == ZERO_ADDRESS and tx.to_address and tx.to_address.address in treasury.addresses and "Deposited" in tx._events:
         for event in tx._events["Deposited"]:
-            pool = contract(tx.token.address.address).pool()
+            pool = Contract(tx.token.address.address).pool()
             if event.address == lp_depositor and 'user' in event and 'pool' in event and event['user'] == tx.to_address.address and event['pool'] == pool:
                 return True
     
     # UNSTAKING
     # Step 1: Burn your claim tokens
     elif tx.from_address.address in treasury.addresses and tx.to_address and tx.to_address.address == ZERO_ADDRESS and "Withdrawn" in tx._events:
-        token = contract(tx.token.address.address)
+        token = Contract(tx.token.address.address)
         if hasattr(token, 'pool'):
             pool = token.pool()
             for event in tx._events["Withdrawn"]:
