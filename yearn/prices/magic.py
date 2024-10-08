@@ -9,6 +9,7 @@ from y.datatypes import AnyAddressType
 from y.exceptions import PriceError
 from y.networks import Network
 
+from yearn.constants import CRV
 from yearn.prices import constants, curve
 from yearn.prices.aave import aave
 from yearn.prices.balancer import balancer as bal
@@ -31,6 +32,7 @@ async def _get_price(token: AnyAddressType, block: Optional[Block]) -> Decimal:
     if chain.id == Network.Mainnet:
         # fixes circular import
         from yearn.special import Backscratcher
+
         # no liquid market for yveCRV-DAO -> return CRV token price
         if token == Backscratcher().vault.address and block < 11786563:
             return Decimal(await _get_price("0xD533a949740bb3306d119CC777fa900bA034cd52", block))
@@ -122,8 +124,8 @@ def find_price(
     elif chain.id == Network.Mainnet:
         # no liquid market for yveCRV-DAO -> return CRV token price
         if token == Backscratcher().vault.address and block < 11786563:
-            if curve.curve and curve.curve.crv:
-                return get_price(curve.curve.crv, block=block)
+            if curve.curve and CRV:
+                return get_price(CRV, block=block)
         # no liquidity for curve pool (yvecrv-f) -> return 0
         elif token == "0x7E46fd8a30869aa9ed55af031067Df666EfE87da" and block < 14987514:
             return 0
