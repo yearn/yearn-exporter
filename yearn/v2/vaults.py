@@ -7,6 +7,7 @@ from functools import cached_property
 from typing import (TYPE_CHECKING, Any, AsyncIterator, Dict, List, NoReturn,
                     Optional, Union)
 
+import a_sync
 from a_sync.utils.iterators import exhaust_iterator
 from async_property import async_cached_property, async_property
 from brownie import chain
@@ -162,20 +163,20 @@ class Vault:
         return list(self._strategies.values())
     
     async def strategies_at_block(self, block: int) -> AsyncIterator[Strategy]:
-        self._task
+        self._task  # ensure fetcher task is running
         working = {}
         async for _ in self._events.events(to_block=block):
             for address in self._strategies:
                 if address in working:
                     continue
                 working[address] = asyncio.create_task(contract_creation_block_async(address, when_no_history_return_0=True))
-            for address in list(working.keys()):
-                if working[address].done():
-                    if await working.pop(address) > block:
-                        return
-                    yield self._strategies[address]
-                    
-        await self._events._lock.wait_for(block)
+        async for address, deploy_block in a_sync.as_completed(working, aiter=True):
+            if deploy_block > block:
+                continue
+            while address not in self._strategies:
+                logger.info('%s not in %s._strategies', address, self)
+                await asyncio.sleep(5)
+            yield self._strategies[address]
 
     @async_property
     @stuck_coro_debugger
@@ -287,7 +288,7 @@ class Vault:
     
     @stuck_coro_debugger
     async def _describe_strategies(self, block: int) -> List[dict]:
-        return asyncio.gather(*[asyncio.create_task(strategy.describe(block=block)) async for strategy in self.strategies_at_block(block)])
+        return await asyncio.gather(*[asyncio.create_task(strategy.describe(block=block)) async for strategy in self.strategies_at_block(block)])
     
     @stuck_coro_debugger
     async def _unpack_results(self, results):
@@ -301,8 +302,7 @@ class Vault:
             results,
             self.scale,
             price,
-            # must be picklable.
-            [strategy.unique_name for strategy in await self.strategies],
+            await asyncio.gather(*[strategy.unique_name for strategy in await self.strategies]),
             strategy_descs,
         )
     
