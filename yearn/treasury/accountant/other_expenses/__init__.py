@@ -32,7 +32,9 @@ if chain.id == Network.Mainnet:
     other_expense_txgroup.create_child("Fund Vyper Compiler Audit Context", general.is_yyper_contest)
     other_expense_txgroup.create_child("Reimburse yETH Applications", general.is_reimburse_yeth_applications)
     other_expense_txgroup.create_child("dYFI Launch", general.is_dyfi_launch)
+    other_expense_txgroup.create_child("dYFI Redemptions", general.is_dyfi_redemptions)
     other_expense_txgroup.create_child("veYFI Launch", general.is_veyfi_launch)
+    other_expense_txgroup.create_child("Vyper Donation", general.is_vyper_donation)
     other_expense_txgroup.create_child("Unknown", general.is_unknown)
 
 # Bugs
@@ -52,3 +54,4 @@ if chain.id == Network.Mainnet:
     revshare_txgroup = other_expense_txgroup.create_child("Revshare")
 
     revshare_txgroup.create_child("yAudit Revshare", revshare.is_yaudit_revshare)
+    revshare_txgroup.create_child("yLockers Revshare", revshare.is_ylockers_revshare)

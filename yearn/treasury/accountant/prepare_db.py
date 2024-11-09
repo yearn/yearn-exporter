@@ -27,6 +27,7 @@ def prepare_db() -> None:
     cache_cowswap_msig()
     cache_address_nicknames_for_tokens()
     cache_token_dumper()
+    cache_dyfi_redemptions()
 
 def cache_ychad() -> None:
     """ Label yChad in pg. """
@@ -107,4 +108,8 @@ def cache_address_nicknames_for_tokens() -> None:
 
 def cache_token_dumper() -> None:
     cache_address('0xC001d00d425Fa92C4F840baA8f1e0c27c4297a0B').nickname = "Token Dumper Multisig"
+
+def cache_dyfi_redemptions() -> None:
+    if chain.id == Network.Mainnet:
+        cache_address('0x7dC3A74F0684fc026f9163C6D5c3C99fda2cf60a').nickname = "dYFI Redemption Contract"
     

@@ -39,6 +39,8 @@ def is_pass_thru(tx: TreasuryTx) -> bool:
             "0xae6797ad466de75731117df46ccea5c263265dd6258d596b9d6d8cf3a7b1e3c2",
             "0x2a6191ba8426d3ae77e2a6c91de10a6e76d1abdb2d0f831c6c5aad52be3d6246",
             "0x25b54e113e58a3a4bbffc011cdfcb8c07a0424f33b0dbda921803d82b88f1429",  # https://github.com/yearn/chief-multisig-officer/pull/924
+            "0xcb000dd2b623f9924fe0234831800950a3269b2d412ce9eeabb0ec65cd737059",
+            ["0xd782e3923961ea7462584d61e0e37cf10289158a8cc338adb77b3ad38c72c459", Filter("_symbol", "COW")],
         ],
         Network.Fantom: [
             "0x14faeac8ee0734875611e68ce0614eaf39db94a5ffb5bc6f9739da6daf58282a",
@@ -249,8 +251,10 @@ def is_factory_yield(tx: TreasuryTx) -> bool:
     if tx._from_nickname in factory_strats and tx._to_nickname == "yMechs Multisig":
         return True
     return tx in HashMatcher({
+        # TODO: figure out why these didn't match and update the sort rule
         Network.Mainnet: [
             "0xefea7be3abc943d0aa0eedfbc9e3db4677e1bd92511265ad0cb619bea1763d14",
             "0x2f9fefebde546c00a5c519e370e1205058aad8a3881d0bbd2b3d433ed9da6cb3",
+            "0x3d0624e984904f9a77ad83453ab01841e870804bfd96fadaced62fcad6fc1507",
         ],
     }.get(chain.id, []))

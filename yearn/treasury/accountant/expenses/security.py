@@ -7,21 +7,18 @@ from yearn.treasury.accountant.classes import Filter, HashMatcher, IterFilter
 
 
 def is_yacademy_audit(tx: TreasuryTx) -> bool:
-    hashes = [
-        "0x48e05bff53a67304593a0bff5238fd2bed01c61074937706df879fb901e9e1ba",
-        "0xf3a31b7c162018f93c8485ad4e374a15e0053308148c7f9afe2f6d16b2013c19",
-        ["0x3e75d22250d87c183824c3b77ddb9cb11935db2061ce7f34df4f024d0646fcfb", Filter('log_index', 116)],
-        "0x7a7117d68adf198f295277ccabdecbca244eebe0d6c59200060f80a76406567e",
-        ["0x610941b6f2197408aabe5a8958ead79dfba44f7de39d2e9fd8a620420e0a0554", Filter('_symbol', 'USDT')],
-    ]
-    return tx in HashMatcher(hashes)
+    """Expense for an audit performed by yAcademy"""
+    # NOTE: the hash we're excluding was a one-time revshare tx before the splitter was set up.
+    return tx.to_address.address == "0x0E0aF03c405E17D0e486354fe709d3294d07EC44" and tx.hash != "0xdf3e6cf2e50052e4eeb57fb2562b5e1b02701014ce65b60e6c8a850c409b341a"
 
 def is_chainsec_audit(tx: TreasuryTx) -> bool:
+    """Expense for an audit performed by chainsec"""
     if chain.id == Network.Mainnet and tx._symbol in ["USDC", "USDT"] and tx.to_address.address == "0x8bAf5eaF92E37CD9B1FcCD676918A9B3D4F87Dc7":
         return True
     return tx in HashMatcher(["0x83ec212072f82f4aba4b512051d52c5f016de79a620a580622a0f051e3473a78"])
 
 def is_debaub_audit(tx: TreasuryTx) -> bool:
+    """Expense for an audit performed by debaub"""
     return tx in HashMatcher([
         "0xb2595246e8387b80e35784aaade3a92bd3111bf9059c3b563516886d1aefcf3f",
     ])
@@ -32,6 +29,7 @@ def is_decurity_audit(tx: TreasuryTx) -> bool:
     ])
 
 def is_statemind_audit(tx: TreasuryTx) -> bool:
+    """Expense for an audit performed by statemind"""
     return tx in HashMatcher([
         ["0xeb51cb5a3b4ae618be75bf3e23c2d8e333d93d5e81e869eca7f9612a30079822", Filter('log_index', 193)],
         ["0xcb79cbe5b68d04a1a3feab3360734277020ee0536380843a8c9db3e8356b81d6", Filter('log_index', 398)],
@@ -39,6 +37,7 @@ def is_statemind_audit(tx: TreasuryTx) -> bool:
     ])
 
 def is_mixbytes_audit(tx: TreasuryTx) -> bool:
+    """Expense for an audit performed by mixbytes"""
     return tx in HashMatcher([
         ["0xcb79cbe5b68d04a1a3feab3360734277020ee0536380843a8c9db3e8356b81d6", Filter('log_index', 399)],
         ["0xca61496c32806ba34f0deb331c32969eda11c947fdd6235173e6fa13d9a1c288", Filter('_symbol', 'USDC')],

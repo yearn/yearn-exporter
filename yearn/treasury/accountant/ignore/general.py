@@ -133,12 +133,17 @@ def is_stream_replenishment(tx: TreasuryTx) -> bool:
     if tx._to_nickname in  ["Contract: LlamaPay", "Vesting Escrow Factory"]:
         return True
     
-    # Puling unused funds back from vesting escrow
-    return tx in HashMatcher({
+    # Puling unused funds back from vesting escrow / llamapay
+    elif tx in HashMatcher({
         Network.Mainnet: [
             ["0x1621ba5c9b57930c97cc43d5d6d401ee9c69fed435b0b458ee031544a10bfa75", Filter('log_index', 487)],
         ],
-    }.get(chain.id, []))
+    }.get(chain.id, [])) or tx._from_nickname == "Contract: LlamaPay":
+        if tx.amount > 0:
+            tx.amount *= -1
+        if tx.value_usd > 0:
+            tx.value_usd *= -1
+        return True
 
 def is_scam_airdrop(tx: TreasuryTx) -> bool:
     hashes = {
