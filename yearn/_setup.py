@@ -3,8 +3,8 @@ import json
 import logging
 import os
 
-from brownie import Contract, chain, interface
-from y import Contract_erc20
+from brownie import chain
+from y import Contract, Contract_erc20
 from y.constants import STABLECOINS
 from y.networks import Network
 

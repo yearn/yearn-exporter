@@ -1,5 +1,6 @@
 
 from brownie import network, chain, web3
+from multicall.multicall import batcher
 from web3.middleware.geth_poa import geth_poa_middleware
 
 from yearn.logs import setup_logging
@@ -14,11 +15,10 @@ if network.is_connected():
                               force_init_problematic_contracts)
     from yearn.middleware.middleware import setup_middleware
     
-    # needed for base and opti
-    
-    if chain.id == Network.Optimism:
-        web3.middleware_onion.inject(geth_poa_middleware, layer=0)
-    
+    # needed for base
+    if chain.id == Network.Base:
+        batcher.step = 2000
+
     setup_middleware()
     force_init_problematic_contracts()
     customize_ypricemagic()

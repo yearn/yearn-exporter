@@ -18,7 +18,7 @@ from semantic_version.base import Version
 from y import ERC20, Contract, Network, magic
 from y.contracts import contract_creation_block_async
 from y._decorators import stuck_coro_debugger
-from y.exceptions import PriceError, yPriceMagicError
+from y.exceptions import ContractNotVerified, PriceError, yPriceMagicError
 from y.utils.events import ProcessedEvents
 
 from yearn.common import Tvl
@@ -116,7 +116,16 @@ class Vault:
         self.api_version = api_version
         if token is None:
             token = vault.token()
-        self.token = Contract(token)
+        try:
+            self.token = Contract(token)
+        except ContractNotVerified as e:
+            if token not in [
+                "0x08BfA22bB3e024CDfEB3eca53c0cb93bF59c4147", 
+                "0x79586fa680958102154093B795Fdb8EFBc013822", 
+                "0x021cF6B7ebb8c8EFcF21396Eb4c94658976172c7",
+            ]:
+                raise Exception(e, f"vault: {vault}")
+            self.token = token
         self.registry = registry
         self.scale = 10 ** self.vault.decimals()
         # multicall-safe views with 0 inputs and numeric output.

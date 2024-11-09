@@ -52,6 +52,7 @@ class Registry(metaclass=Singleton):
         self._registries = []
         self._vaults = {}  # address -> Vault
         self._experiments = {}  # address => Vault
+        self._removed = {}
         self._staking_pools = {} # vault address -> staking_pool address
     
     @async_cached_property
@@ -124,6 +125,12 @@ class Registry(metaclass=Singleton):
     @wait_or_exit_before
     async def experiments(self) -> List[Vault]:
         return list(self._experiments.values())
+
+    @async_property
+    @stuck_coro_debugger
+    @wait_or_exit_before
+    async def removed(self) -> List[Vault]:
+        return list(self._removed.values())
 
     @async_property
     @stuck_coro_debugger
@@ -270,12 +277,19 @@ class Registry(metaclass=Singleton):
     def _filter_vaults(self):
         if chain.id in DEPRECATED_VAULTS:
             for vault in DEPRECATED_VAULTS[chain.id]:
-                self._remove_vault(vault)
+                self._remove_vault(vault, save=False)
 
-    def _remove_vault(self, address):
-        self._vaults.pop(address, None)
-        self._experiments.pop(address, None)
+    def _remove_vault(self, address, save=True):
+        v = self._vaults.pop(address, None)
+        e = self._experiments.pop(address, None)
         self.tags.pop(address, None)
+        if save:
+            if v and e:
+                raise NotImplementedError(v, e)
+            if v or e:
+                self._removed[address] = v or e
+            else:
+                raise NotImplementedError(v, e)
         logger.debug('removed %s', address)
 
 

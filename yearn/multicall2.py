@@ -8,6 +8,7 @@ from typing import Any, List, Optional
 import eth_retry
 import requests
 from brownie import chain, web3
+from brownie.exceptions import VirtualMachineError
 from dank_mids.brownie_patch.types import DankContractMethod
 from eth_abi.exceptions import InsufficientDataBytes
 from y import Contract, Network, contract_creation_block
@@ -26,6 +27,8 @@ MULTICALL2 = {
     Network.Base: '0xcA11bde05977b3631167028862bE2a173976CA11' # MC3
 }
 multicall2 = Contract(MULTICALL2[chain.id])
+# TODO: move this bug fix somewhere more appropriate
+multicall2.tryAggregate.abi['outputs'] = [dict(x) for x in multicall2.tryAggregate.abi['outputs']]
 
 
 def fetch_multicall(*calls, block: Optional[Block] = None, require_success: bool = False) -> List[Any]:
@@ -66,11 +69,21 @@ def fetch_multicall(*calls, block: Optional[Block] = None, require_success: bool
                 False, multicall_input, block_identifier=block or 'latest'
             )
     except ValueError as e:
-        if 'out of gas' in str(e) or 'execution aborted (timeout = 10s)' in str(e):
+        if 'out of gas' in str(e) or 'execution aborted (timeout = 10s)' in str(e) or ("unknown typed error" in str(e).lower() and len(calls) > 1):
             halfpoint = len(calls) // 2
             batch0 = fetch_multicall(*calls[:halfpoint],block=block,require_success=require_success)
             batch1 = fetch_multicall(*calls[halfpoint:],block=block,require_success=require_success)
             return batch0 + batch1
+        elif "unknown typed error" in str(e).lower() and len(calls) == 1:
+            contract_address, fn_name, *args = calls[0]
+            contract_call = getattr(Contract(contract_address), fn_name)
+            try:
+                return [contract_call(*args, block_identifier=block)]
+            except (VirtualMachineError, ValueError) as e:
+                if require_success:
+                    #trying  smth
+                    raise MulticallError(e) from e
+                return [None]
         raise
 
     for fn, (ok, data) in zip(fn_list, result):
@@ -79,7 +92,7 @@ def fetch_multicall(*calls, block: Optional[Block] = None, require_success: bool
             decoded.append(fn.decode_output(data))
         except (AssertionError, InsufficientDataBytes):
             if require_success:
-                raise MulticallError()
+                raise MulticallError
             decoded.append(None)
 
     # NOTE this will only run if `require_success` is True

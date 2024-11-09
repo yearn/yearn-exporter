@@ -5,9 +5,11 @@ WORKDIR /app/yearn-exporter
 RUN pip3 install poetry
 ADD pyproject.toml ./
 ADD poetry.lock  ./
+RUN poetry run pip install "cython<3.0.0" wheel
+RUN poetry run pip install pyyaml==5.4.1 --no-build-isolation
 RUN poetry install
 # 0.5.1 is faster than 0.5.0 due to parsimonius 0.10 but won't install with brownie at the moment
-RUN poetry run pip3 install "eth-abi>=5.1,<6"
+#RUN poetry run pip3 install "eth-abi>=5.1,<6"
 ADD . /app/yearn-exporter
 
 ENTRYPOINT ["./entrypoint.sh"]

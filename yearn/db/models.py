@@ -33,11 +33,99 @@ class Snapshot(SQLModel, table=True):
     block_id: int = Field(foreign_key="block.id")
     block: Block = Relationship(back_populates="snapshots")
 
+
+
+class Event:
+    isOldApi = False
+    event = None
+    txn_hash = ""
+    multi_harvest = False
+    def __init__(self, isOldApi, event, txn_hash):
+        self.isOldApi = isOldApi
+        self.event = event
+        self.txn_hash = txn_hash
+
+class Transactions(SQLModel, table=True):
+    txn_hash: str = Field(primary_key=True)
+    chain_id: int
+    # Transaction fields
+    block: int
+    txn_to: str
+    txn_from: str
+    txn_gas_used: int
+    txn_gas_price: int
+    eth_price_at_block: float
+    call_cost_usd: float
+    call_cost_eth: float
+    kp3r_price_at_block: float
+    kp3r_paid: int
+    kp3r_paid_usd: float
+    keeper_called: bool
+    # Date fields
+    date: datetime
+    date_string: str
+    timestamp: str
+    updated_timestamp: datetime
+    reports: List["Reports"] = Relationship(back_populates="txn")
+
+
+class Reports(SQLModel, table=True):
+    id: int = Field(primary_key=True)
+    chain_id: int
+    # Transaction fields
+    block: int
+    txn_hash: str
+    txn_hash: str = Field(default=None, foreign_key="transactions.txn_hash")
+    txn: Transactions = Relationship(back_populates="reports")
+    # StrategyReported fields
+    vault_address: str
+    strategy_address: str
+    gain: int
+    loss: int
+    debt_paid: int
+    total_gain: int
+    total_loss: int
+    total_debt: int
+    debt_added: int
+    debt_ratio: int
+    # Looked-up fields
+    want_token: str
+    token_symbol: str
+    want_price_at_block: int
+    want_gain_usd: int
+    gov_fee_in_want: int
+    strategist_fee_in_want: int
+    gain_post_fees: int
+    rough_apr_pre_fee: float
+    rough_apr_post_fee: float
+    vault_api: str
+    vault_name: str
+    vault_symbol: str
+    vault_decimals: int
+    strategy_name: str
+    strategy_api: str
+    strategist: str
+    previous_report_id: int
+    multi_harvest: bool
+    # Date fields
+    date: datetime
+    date_string: str
+    timestamp: str
+    updated_timestamp: datetime
+    # KeepCRV
+    keep_crv: int
+    keep_crv_percent: int
+    crv_price_usd: int
+    keep_crv_value_usd: int
+    yvecrv_minted: int
+
+
 pguser = os.environ.get('PGUSER', 'postgres')
 pgpassword = os.environ.get('PGPASSWORD', 'yearn')
 pghost = os.environ.get('PGHOST', 'localhost')
 pgdatabase = os.environ.get('PGDATABASE', 'yearn')
-dsn = f'postgresql://{pguser}:{pgpassword}@{pghost}:5432/{pgdatabase}'
+pgport = int(os.environ.get('PGPORT', 5432))
+dsn = f'postgresql://{pguser}:{pgpassword}@{pghost}:{pgport}/{pgdatabase}'
 
 engine = create_engine(dsn, echo=False)
 

@@ -7,6 +7,7 @@ import asyncio
 import dataclasses
 import logging
 import os
+from decimal import InvalidOperation
 from pprint import pformat
 from time import time
 from typing import List, Optional
@@ -30,6 +31,8 @@ from yearn.v2.registry import Registry
 
 logger = logging.getLogger(__name__)
 sentry_sdk.set_tag('script','curve_apy_previews')
+logging.getLogger('y.utils.events').setLevel(logging.DEBUG)
+logging.getLogger('y._db.common').setLevel(logging.DEBUG)
 
 class Drome(Struct):
     """Holds various params for a drome deployment"""
@@ -105,6 +108,8 @@ async def _build_data_for_lp(lp: dict, block: Optional[int] = None) -> Optional[
     try:
         apy = await _staking_apy(lp, gauge.gauge, block=block) if gauge.gauge_weight > 0 else Apy("zero_weight", 0, 0, fees)
     except Exception as error:
+        if isinstance(error, InvalidOperation):
+            raise error
         logger.error(error)
         logger.error(gauge)
         apy = Apy("error", 0, 0, fees, error_reason=":".join(str(arg) for arg in error.args))

@@ -1,13 +1,12 @@
-import os
-import psycopg2
 import csv
-import boto3
-import sentry_sdk
 import logging
-import yearn
+import os
 import traceback
 from datetime import datetime, timedelta
-from y import Network
+
+import boto3
+import psycopg2
+import sentry_sdk
 
 sentry_sdk.set_tag('script','revenues')
 logger = logging.getLogger(__name__)
@@ -21,6 +20,7 @@ def main():
     file_name = f"revenues_{from_str}_{to_str}.csv"
     file_path = f"/tmp/{file_name}"
 
+    _validate_completeness(to_str)
     _export_data(from_str, to_str, file_path)
 
     if debug:
@@ -47,7 +47,12 @@ def main():
             os.remove(file_path)
             logger.info("deleted file '%s'", file_path)
 
-
+def _validate_completeness(to_str):
+    conn = _get_db_connection()
+    cur = conn.cursor()
+    cur.execute("SELECT max(timestamp::date) from treasury_txs")
+    assert cur.fetchone() > datetime.strptime(to_str)
+    
 def _export_data(from_str, to_str, file_path):
     sql = f"COPY (\
 SELECT * FROM general_ledger \
