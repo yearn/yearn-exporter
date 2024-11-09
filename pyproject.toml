@@ -25,16 +25,14 @@ matplotlib = ">=3.6.1"
 sqlalchemy = ">=1.4.41"
 sentry-sdk = ">=2.1.1,<2.2"
 pytest-bdd = ">=5.0.0"
-dank_mids = "4.20.94"
+dank_mids = ">=4.20.95"
 eth_retry = ">=0.1.19"
 eth-hash = { version = "*", extras = ["pysha3"] }
 ez-a-sync = "0.22.3"
 #ez-a-sync = { git = "https://www.github.com/BobTheBuidler/ez-a-sync", branch = "smarter" }
 python-telegram-bot = "13.15"
-ypricemagic = { git = "https://www.github.com/BobTheBuidler/ypricemagic", branch = "master" }
-#ypricemagic = { git = "https://www.github.com/BobTheBuidler/ypricemagic", branch = "temp-fix" }
-#eth-portfolio = { git = "https://www.github.com/BobTheBuidler/eth-portfolio", branch = "ypm-3.6.1" }
-eth-portfolio = { git = "https://www.github.com/BobTheBuidler/eth-portfolio", branch = "faster-restarts" }
+ypricemagic = "4.0.2"
+eth-portfolio = { git = "https://www.github.com/BobTheBuidler/eth-portfolio", branch = "master" }
 toolcache = { git = "https://www.github.com/BobTheBuidler/toolcache", rev = "e37b53cec64556d2b35df66767fca4c8f366a2fa" }
 memray = "*"
 numpy = "<2"
