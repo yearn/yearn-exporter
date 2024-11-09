@@ -289,7 +289,7 @@ class Registry(metaclass=Singleton):
             if v or e:
                 self._removed[address] = v or e
             else:
-                raise NotImplementedError(v, e)
+                raise NotImplementedError(v, e, address)
         logger.debug('removed %s', address)
 
 
