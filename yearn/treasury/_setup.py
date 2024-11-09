@@ -1,5 +1,6 @@
+
+import eth_portfolio
 from brownie import chain
-from eth_portfolio._shitcoins import SHITCOINS
 from y.networks import Network
 from y.prices.utils import ypriceapi
 
@@ -30,6 +31,19 @@ skip_tokens = {
         "0xC36442b4a4522E871399CD717aBDD847Ab11FE88", # Uni V3 NonfungiblePositionManager
         "0x3f6740b5898c5D3650ec6eAce9a649Ac791e44D7", # Uni V3 UniV3PairManager
         "0x3EF9181c9b96BAAafb3717A553E808Ccc72be37D", # MEMEPEPE
+        "0x0329b631464C43f4e8132df7B4ac29a2D89FFdC7", # YFI2.0
+        "0x594DaaD7D77592a2b97b725A7AD59D7E188b5bFa", # APU
+        "0x05bAdF8A8e7fE5b43fae112108E26f2f663Bf1a2", # INUNOMICS
+        "0x927402ab67c0CDA3c187E9DFE34554AC581441f2", # SAITABIT
+        "0x875bf9be244970B8572DD042053508bF758371Ee", # fake SOLID
+
+        # these arent shitcoins per se but we can't price them and dont expect to in the future, lets save cpu cycles
+        "0xD057B63f5E69CF1B929b356b579Cba08D7688048", # vCOW
+        "0x4c1317326fD8EFDeBdBE5e1cd052010D97723bd6", # deprecated yCRV
+        "0x8a0889d47f9Aa0Fac1cC718ba34E26b867437880", # deprecated st-yCRV
+
+        # test token?
+        "0x372d5d02c6b4075bd58892f80300cA590e92d29E", # tOUSG
     },
     Network.Arbitrum: {
         "0x89b0f9dB18FD079063cFA91F174B300C1ce0003C", # AIELON
@@ -38,9 +52,7 @@ skip_tokens = {
 
 def customize_eth_portfolio() -> None:
     for token in skip_tokens.get(chain.id, []):
-        if chain.id not in SHITCOINS:
-            SHITCOINS[chain.id] = set()
-        SHITCOINS[chain.id].add(token)
+        eth_portfolio.SHITCOINS[chain.id].add(token)
 
 
 skip_ypriceapi = {
