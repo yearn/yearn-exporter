@@ -9,13 +9,10 @@ authors = ["Your Name <you@example.com>"]
 
 [tool.poetry.dependencies]
 python = ">=3.10,<3.11"
-eth-brownie = "==1.19.3"
-#eth-brownie = ">=1.20.3,<1.21"
-#eth-brownie = { git = "https://github.com/BobTheBuidler/brownie", branch = "patch-2" }
+eth-brownie = "1.19.3"
 click = ">=7.1.2"
 tabulate = ">=0.8.7"
 joblib = ">=1.0.1"
-cachetools = ">=4.1.1"
 fastapi = ">=0.63.0"
 uvicorn = ">=0.13.4"
 sqlmodel = ">=0.0.4"
@@ -27,16 +24,13 @@ matplotlib = ">=3.6.1"
 sqlalchemy = ">=1.4.41"
 sentry-sdk = ">=2.1.1,<2.2"
 pytest-bdd = ">=5.0.0"
-dank_mids = ">=4.20.96"
-#dank_mids = { git = "https://www.github.com/BobTheBuidler/dank_mids", branch = "master" }
+dank_mids = "4.20.98"
 eth_retry = ">=0.1.19"
 eth-hash = { version = "*", extras = ["pysha3"] }
-ez-a-sync = "0.22.9"
-#ez-a-sync = { git = "https://www.github.com/BobTheBuidler/ez-a-sync", branch = "BobTheBuidler-patch-1" }
+ez-a-sync = "^0.22.13"
 python-telegram-bot = "13.15"
-ypricemagic = "4.0.2"
+ypricemagic = "4.0.14"
 eth-portfolio = { git = "https://www.github.com/BobTheBuidler/eth-portfolio", branch = "master" }
-toolcache = { git = "https://www.github.com/BobTheBuidler/toolcache", rev = "e37b53cec64556d2b35df66767fca4c8f366a2fa" }
 memray = "*"
 numpy = "<2"
 
