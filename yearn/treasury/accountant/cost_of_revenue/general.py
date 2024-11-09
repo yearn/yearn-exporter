@@ -1,6 +1,7 @@
 
 import asyncio
 import logging
+from functools import lru_cache
 
 from brownie import chain, convert
 from y import Network
@@ -38,25 +39,23 @@ hashes = {
 }.get(chain.id, {})
 
 
+@lru_cache(maxsize=None)
 def _get_flat_wrappers(partner: Partner):
     loop = asyncio.get_event_loop()
     # A helper function so we can run this sync without either breaking the event loop in our main thread or making this module async
-    wrappers = [] #if loop.is_running() else loop.run_until_complete(partner.flat_wrappers)
+    wrappers = [] if loop.is_running() else loop.run_until_complete(partner.flat_wrappers)
     logger.info("loaded %s wrappers for %s", len(wrappers), partner)
     return wrappers
 
 def is_partner_fees(tx: TreasuryTx) -> bool:
     if tx.from_address.address == constants.YCHAD_MULTISIG and tx.to_address:
         for partner in partners:
-            if not (
-                tx.to_address.address == convert.to_address(partner.treasury) or
-                (hasattr(partner, 'retired_treasuries') and tx.to_address.address in partner.retired_treasuries)
-            ):
+            if tx.to_address.address != partner.treasury and tx.to_address.address not in getattr(partner, 'retired_treasuries', []):
                 continue
-            if any(tx.token.address.address == convert.to_address(wrapper.vault) for wrapper in _get_flat_wrappers(partner)): # gotta somehow async this without asyncing this
+            if any(tx.token.address.address == wrapper.vault for wrapper in _get_flat_wrappers(partner)): # gotta somehow async this without asyncing this
                 return True
             else:
-                logger.warning(f'look at {tx}, seems odd')
+                logger.warning('look at %s, seems odd', tx)
     
     # DEV figure out why these weren't captured by the above
     hashes = {

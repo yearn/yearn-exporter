@@ -4,15 +4,16 @@ from y.networks import Network
 
 from yearn.treasury.accountant.classes import TopLevelTxGroup
 from yearn.treasury.accountant.revenue import (bribes, dinobots, farming, fees,
-                                               keepcoins, seasolver, yacademy)
+                                               keepcoins, seasolver, yteams)
 
 REVENUE_LABEL = "Protocol Revenue"
 revenue_txgroup = TopLevelTxGroup(REVENUE_LABEL)
 
 fees_txgroup = revenue_txgroup.create_child("Fees")
-fees_txgroup.create_child("Vaults V1", fees.is_fees_v1)
+if chain.id == Network.Mainnet:
+    fees_txgroup.create_child("Vaults V1", fees.is_fees_v1)
 fees_txgroup.create_child("Vaults V2", fees.is_fees_v2)
-fees_txgroup.create_child("Factory Vaults V2", fees.is_factory_fees_v2)
+#fees_txgroup.create_child("Factory Vaults V2", fees.is_factory_fees_v2)
 fees_txgroup.create_child("Vaults V3", fees.is_fees_v3)
 
 fees_txgroup.create_child("YearnFed Fees", fees.is_yearn_fed_fees)

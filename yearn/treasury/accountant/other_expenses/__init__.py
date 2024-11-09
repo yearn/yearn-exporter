@@ -36,6 +36,7 @@ if chain.id == Network.Mainnet:
     other_expense_txgroup.create_child("veYFI Launch", general.is_veyfi_launch)
     other_expense_txgroup.create_child("Vyper Donation", general.is_vyper_donation)
     other_expense_txgroup.create_child("Unknown", general.is_unknown)
+    other_expense_txgroup.create_child("yBudget Reward", general.is_ybudget_reward)
 
 # Bugs
 if chain.id == Network.Mainnet:

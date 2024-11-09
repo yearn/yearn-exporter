@@ -72,7 +72,7 @@ if chain.id == Network.Mainnet:
     grants.create_child("Worms", people.is_worms)
     grants.create_child("ySecurity 2 [BR#xxx]", people.is_ysecurity_2)
     grants.create_child("yBudget [BR#xxx]", people.is_ybudget)
-    grants.create_child("ySupport [BR#xxx]", people.is_ysupport)
+    #grants.create_child("ySupport [BR#xxx]", people.is_ysupport)
     grants.create_child("Rantom [BR#xxx]", people.is_rantom)
     grants.create_child("Dinobots [BR#xxx]", people.is_dinobots)
     grants.create_child("TxCreator [BR#xxx]", people.is_tx_creator)

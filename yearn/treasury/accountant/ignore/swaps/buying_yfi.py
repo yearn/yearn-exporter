@@ -2,6 +2,7 @@
 from decimal import Decimal
 
 from brownie import chain
+from y.constants import WRAPPED_GAS_COIN
 from y.networks import Network
 
 from yearn.constants import YCHAD_MULTISIG
@@ -53,3 +54,22 @@ def is_buying_with_buyer(tx: TreasuryTx) -> bool:
             ]):
                 return True
             raise ValueError(f'from node: {tx._events["Buyback"]["yfi"] / Decimal(10**18)} from db: {tx.amount} diff: {tx._events["Buyback"]["yfi"] / Decimal(10**18) - tx.amount}')
+
+YFI_BUYBACK_AUCTIONS = "0x4349ed200029e6Cf38F1455B9dA88981F1806df3"
+
+def is_buying_with_auction(tx: TreasuryTx) -> bool:
+    if tx._symbol == 'YFI' and tx.to_address and tx.to_address.address == YCHAD_MULTISIG and "AuctionTaken" in tx._events:
+        auctions_taken = tx._events['AuctionTaken']
+        if len(auctions_taken) > 1:
+            raise NotImplementedError
+        event = auctions_taken[0]
+        print(event)
+        if event.address != YFI_BUYBACK_AUCTIONS:
+            raise ValueError(event.address)
+        # did the auction contract send weth to tx.sender?
+        for transfer in tx._events['Transfer']:
+            if transfer.address == WRAPPED_GAS_COIN:
+                print(transfer)
+                sender, receiver, amount = transfer.values()
+                if sender == YFI_BUYBACK_AUCTIONS and receiver == tx.from_address.address and amount == event['taken']:
+                    return True

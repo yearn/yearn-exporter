@@ -56,7 +56,10 @@ def should_cache(method, params):
 
 
 def cache_middleware(make_request, w3):
-    make_request_cached = memory.cache(make_request)
+    @memory.cache
+    def make_request_cached(method, params):
+        return make_request(method, params)
+    #make_request_cached = memory.cache(make_request)
     def middleware(method, params):
         logger.debug("%s %s", method, params)
         if should_cache(method, params):

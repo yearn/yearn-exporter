@@ -46,10 +46,12 @@ def main() -> NoReturn:
         to_sort = load_new_txs(start_block, end_block)
         deduplicate_internal_transfers()
         if to_sort > 0:
-            sort()
+            pass
+            #sort()
         else:
             time.sleep(10)
         cached_thru = end_block
+        logger.info('batch done')
 
 
 @a_sync(default='sync')
@@ -88,7 +90,8 @@ async def insert_treasury_tx(entry: LedgerEntry) -> int:
     if txid := await insert_thread.run(insert_to_db, entry, ts):
         if sort_later(entry):
             return 1
-        await sort_thread.run(accountant.sort_tx, txid)
+        return 1
+        #await sort_thread.run(accountant.sort_tx, txid)
     return 0
 
 @db_session

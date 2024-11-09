@@ -69,7 +69,7 @@ _contract = lru_cache(maxsize=None)(Contract)
 @eth_retry.auto_retry
 def contract(address: AddressOrContract) -> Contract:
     with _contract_lock:
-        address = web3.to_checksum_address(str(address))
+        address = web3.toChecksumAddress(str(address))
 
         if chain.id in PREFER_INTERFACE:
             if address in PREFER_INTERFACE[chain.id]:

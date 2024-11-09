@@ -71,6 +71,11 @@ def is_strategist_gas(tx: TreasuryTx) -> bool:
                 ["0xb8bb3728fdfb49d7c86c08dba8e3586e3761f13d2c88fa6fab80227b6a3f4519", Filter('_from_nickname', "Disperse.app")],
                 ["0x76635bffdf8ee07736bf6953611cd93b5f6f10ef9a59f2504661047e834ea4d6", Filter('_from_nickname', "Disperse.app")],
                 "0x76cec8d40341ed064b636530a6ccfdb9fcc0855f6716b592d286e579d6eab433",
+                "0x9c9c342186bfc7232b28a11d3ecea32e6cb417b3c7b41e67e1f5c06ff32c0d9c",
+                "0x038aeb3351b762bc92c5e4274c01520ae08dc314e2282ececc2a19a033d994a8",
+                "0x49a930eeb2a709e162d05d29a5d19b6f71aa5fb63a369395ca869e1961a3bb27",
+                "0x6169de8578935f15e24b1dc0e22c5670c5240505425ab4d71283026d96538381",
+                "",
             ],
         }.get(chain.id, []))
     

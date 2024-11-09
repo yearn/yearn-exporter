@@ -2,10 +2,12 @@
 from decimal import Decimal
 
 from brownie import chain
-from y import Contract, Network
+from pony.orm import commit
+from y import Contract, ContractNotVerified, Network
+from y.contracts import build_name
 
-from yearn.entities import TreasuryTx
-from yearn.treasury.accountant.classes import HashMatcher, TopLevelTxGroup
+from yearn.entities import Address, TreasuryTx
+from yearn.treasury.accountant.classes import HashMatcher, IterFilter, TopLevelTxGroup
 from yearn.treasury.accountant.ignore import (general, maker, passthru,
                                               rescue_missions, staking, vaults,
                                               ygov)
@@ -20,45 +22,39 @@ IGNORE_LABEL = "Ignore"
 
 ignore_txgroup = TopLevelTxGroup(IGNORE_LABEL)
 
+_rkpr_contract_names = ['Keep3rEscrow', 'OracleBondedKeeper', 'Keep3rLiquidityManager']
+
+def _is_kp3r_related(address: Address):
+    return address.is_contract and build_name(address.address) in _rkpr_contract_names
+
 def is_kp3r(tx: TreasuryTx) -> bool:
-    contract_names = [
-        'Keep3rEscrow',
-        'OracleBondedKeeper',
-        'Keep3rLiquidityManager',
-    ]
-
-    hashes = [
-        '0x3efaafc34054dbc50871abef5e90a040688fbddc51ec4c8c45691fb2f21fd495'
-    ]
-
     if tx._symbol == "kLP-KP3R/WETH" and tx._to_nickname == "Contract: Keep3r" and "LiquidityAddition" in tx._events:
         for event in tx._events['LiquidityAddition']:
             _, _, _, amount = event.values()
             if Decimal(amount) / tx.token.scale == tx.amount:
                 return True
-
+            
+    if tx.to_address and tx.to_address.token and tx.to_address.token.symbol == 'KP3R':
+        return True
+    
     try:
-        return (
-            (
-                tx.to_address and tx.to_address.token and tx.to_address.token.symbol == 'KP3R'
-            )
-            or (
-                tx.to_address and tx.to_address.is_contract
-                and Contract(tx.to_address.address)._build['contractName'] in contract_names
-            )
-            or (
-                tx.from_address.is_contract
-                and Contract(tx.from_address.address)._build['contractName'] in contract_names
-            )
-            or HashMatcher(hashes).contains(tx)
-        )
-    except ValueError as e:
-        if not str(e).endswith('has not been verified') and "Contract source code not verified" not in str(e):
-            raise
+        if (tx.to_address and _is_kp3r_related(tx.to_address)) or _is_kp3r_related(tx.from_address):
+            return True
+    except ContractNotVerified:
         return False
+    
+    extra_kp3r_hashes = [
+        '0x3efaafc34054dbc50871abef5e90a040688fbddc51ec4c8c45691fb2f21fd495'
+    ]
+    return tx in HashMatcher(extra_kp3r_hashes)
 
 def is_bridged(tx: TreasuryTx) -> bool:
     """ Cross-chain bridging """
+
+    # NOTE: for some reason we need to flush pony cache
+    commit()
+
+
     # Anyswap out - anyToken part
     if tx._symbol and tx._symbol.startswith("any") and "LogAnySwapOut" in tx._events:
         for event in tx._events["LogAnySwapOut"]:
@@ -86,6 +82,10 @@ def is_bridged(tx: TreasuryTx) -> bool:
             txhash, token, receiver, amount, from_chainid, to_chainid = event.values()
             if to_chainid == chain.id and receiver == tx.to_address.address and tx.token.address.address == Contract(token).underlying() and Decimal(amount) / tx.token.scale == tx.amount:
                 return True
+    
+    # Bridge to Base for veFarming @ multisig 0xcf9fDe11a7Ab556184529442f9fCA37FB6220970
+    if chain.id == Network.Mainnet and tx in HashMatcher([["0x2dd0ed2fdbec7d6eccfda46fc8df710aec94a2add5baab37565c87c1eb5f1e2f", IterFilter('log_index', [440, 449])]]):
+        return True
 
     return tx in HashMatcher({
         Network.Mainnet: [
@@ -137,6 +137,7 @@ ignore_txgroup.create_child("Internal Transfer", general.is_internal_transfer)
 ignore_txgroup.create_child("keepCRV", is_keep_crv)
 
 # Vaults
+ignore_txgroup.create_child("IEarn Withdrawal", vaults.is_iearn_withdrawal)
 ignore_txgroup.create_child("Vault Deposit", vaults.is_vault_deposit)
 ignore_txgroup.create_child("Vault Withdrawal", vaults.is_vault_withdrawal)
 
@@ -171,7 +172,7 @@ ignore_txgroup.create_child("Sent thru Disperse.app", general.is_disperse_dot_ap
 passthru_txgroup = ignore_txgroup.create_child("Pass-Thru to Vaults", passthru.is_pass_thru)
 passthru_txgroup.create_child("Curve Bribes for yveCRV", passthru.is_curve_bribe)
 passthru_txgroup.create_child("Sent to dinobots to dump", passthru.is_sent_to_dinoswap)
-passthru_txgroup.create_child("Factory Vault Yield", passthru.is_factory_yield)
+passthru_txgroup.create_child("Factory Vault Yield", passthru.is_factory_vault_yield)
 if chain.id == Network.Mainnet:
     passthru_txgroup.create_child("Cowswap Migration", passthru.is_cowswap_migration)
     passthru_txgroup.create_child("Single Sided IB", passthru.is_single_sided_ib)
@@ -186,6 +187,7 @@ if chain.id == Network.Mainnet:
     passthru_txgroup.create_child("StrategyAuraUSDClonable", passthru.is_aura)
     passthru_txgroup.create_child("Bribes for yCRV", passthru.is_ycrv)
     passthru_txgroup.create_child("BAL Rewards", passthru.is_bal)
+    passthru_txgroup.create_child("yPrisma Strategy Migration", passthru.is_yprisma_migration)
 
 elif chain.id == Network.Fantom:
     passthru_txgroup.create_child("IB", passthru.is_ib)
@@ -221,6 +223,14 @@ swaps_txgroup.create_child("Synthetix Swap", synthetix.is_synthetix_swap)
 swaps_txgroup.create_child("WOOFY", woofy.is_woofy)
 swaps_txgroup.create_child("OTC", otc.is_otc)
 
+def other(tx: TreasuryTx) -> bool:
+    # TODO: put this somewhere else
+    return tx in HashMatcher([
+        ["0x898ab224087ec7127435a33ee114e6b392e51cdc82a4409fb9db67775bd1edca", IterFilter('log_index', [100, 129])],
+    ])
+
+swaps_txgroup.create_child("Misc Swaps", other)
+
 if chain.id == Network.Mainnet:
     swaps_txgroup.create_child("Gearbox Deposit", gearbox.is_gearbox_deposit)
     swaps_txgroup.create_child("Gearbox Withdrawal", gearbox.is_gearbox_withdrawal)
@@ -243,3 +253,4 @@ buying_yfi_txgroup.create_child("OTC", HashMatcher(buying_yfi.otc_hashes).contai
 buying_yfi_txgroup.create_child("Swap", HashMatcher(buying_yfi.non_otc_hashes).contains)
 buying_yfi_txgroup.create_child("Top-up Buyer Contract", buying_yfi.is_buyer_top_up)
 buying_yfi_txgroup.create_child("Buyer Contract", buying_yfi.is_buying_with_buyer)
+buying_yfi_txgroup.create_child("Buyback Auction Contract", buying_yfi.is_buying_with_auction)

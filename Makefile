@@ -336,8 +336,8 @@ yeth:
 # utils
 fetch-memray:
 	mkdir reports/memray -p
-	sudo cp -r /var/lib/docker/volumes/yearn-exporter-worker-ethereum_memray/_data/ reports/memray/ethereum
-	sudo cp -r /var/lib/docker/volumes/yearn-exporter-worker-fantom_memray/_data/   reports/memray/fantom
-	sudo cp -r /var/lib/docker/volumes/yearn-exporter-worker-arbitrum_memray/_data/ reports/memray/arbitrum
-	sudo cp -r /var/lib/docker/volumes/yearn-exporter-worker-optimism_memray/_data/ reports/memray/optimism
-	sudo cp -r /var/lib/docker/volumes/yearn-exporter-worker-gnosis_memray/_data/   reports/memray/gnosis
+	sudo cp -r /raid/docker/volumes/yearn-exporter-worker-ethereum_memray/_data/ reports/memray/ethereum
+	sudo cp -r /raid/docker/volumes/yearn-exporter-worker-fantom_memray/_data/   reports/memray/fantom
+	sudo cp -r /raid/docker/volumes/yearn-exporter-worker-arbitrum_memray/_data/ reports/memray/arbitrum
+	sudo cp -r /raid/docker/volumes/yearn-exporter-worker-optimism_memray/_data/ reports/memray/optimism
+	sudo cp -r /raid/docker/volumes/yearn-exporter-worker-gnosis_memray/_data/   reports/memray/gnosis

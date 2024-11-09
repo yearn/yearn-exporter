@@ -1,59 +1,70 @@
 
 import asyncio
 import logging
+from functools import lru_cache
+from typing import Optional
 
 from brownie import chain
 from y import Contract, Network
 
 from yearn.entities import TreasuryTx
-from yearn.multicall2 import fetch_multicall
 from yearn.treasury.accountant.constants import treasury, v1, v2
+from yearn.v1.vaults import VaultV1
+
+
+logger = logging.getLogger(__name__)
+
+_vaults = asyncio.get_event_loop().run_until_complete(v2.vaults)
+logger.info('%s v2 vaults loaded', len(_vaults))
+_experiments = asyncio.get_event_loop().run_until_complete(v2.experiments)
+logger.info('%s v2 experiments loaded', len(_experiments))
+_removed = asyncio.get_event_loop().run_until_complete(v2.removed)
+logger.info('%s removed v2 vaults loaded', len(_removed))
+v2_vaults = _vaults + _experiments + _removed
+
+
+# v1 helpers
+_is_y3crv = lambda tx: tx._symbol == "y3Crv" and tx._from_nickname.startswith("Contract: Strategy") and tx._from_nickname.endswith("3pool")
+_is_ypool = lambda tx: tx._symbol == "yyDAI+yUSDC+yUSDT+yTUSD" and tx._from_nickname.startswith("Contract: Strategy") and tx._from_nickname.endswith("ypool")
+
+@lru_cache(maxsize=None)
+def _get_rewards(controller: Contract, block: int) -> str:
+    try:
+        return controller.rewards(block_identifier=block)
+    except ValueError as e:
+        if str(e) == "No data was returned - the call likely reverted":
+            return None
+        raise
 
 
 def is_fees_v1(tx: TreasuryTx) -> bool:
-    if chain.id != Network.Mainnet:
-        return False
-
     if not tx.to_address or tx.to_address.address not in treasury.addresses:
         return False
 
     for vault in v1.vaults:
-        if (
-            tx.token.address.address != vault.token.address
+        if tx.token.address.address != vault.token.address:
             # Fees from single-sided strategies are not denominated in `vault.token`
-            and not (tx._symbol == "y3Crv" and tx._from_nickname.startswith("Contract: Strategy") and tx._from_nickname.endswith("3pool"))
-            and not (tx._symbol == "yyDAI+yUSDC+yUSDT+yTUSD" and tx._from_nickname.startswith("Contract: Strategy") and tx._from_nickname.endswith("ypool"))
-            ):
-            continue
+            if not (_is_y3crv(tx) or _is_ypool(tx)):
+                continue
         
-        try:
-            controller = Contract(vault.vault.controller(block_identifier=tx.block))
-        except Exception as e:
-            known_exceptions = [
-                "No data was returned - the call likely reverted",
-            ]
-
-            if str(e) not in known_exceptions:
-                raise
-
+        rewards = _get_rewards(vault.controller, tx.block)
+        if tx.to_address.address != rewards:
+            logger.debug(f'to address {tx.to_address.address} doesnt match rewards address {rewards}')
             continue
-
-        if [tx.from_address.address, tx.to_address.address] == fetch_multicall([controller, 'strategies',vault.token.address],[controller,'rewards'], block=tx.block):
-            return True
-
+        strategy = vault.controller.strategies(vault.token.address, block_identifier=tx.block)
+        if tx.from_address.address != strategy:
+            print(f'from address {tx.from_address.address} doesnt match strategy {strategy} set on controller {vault.controller}')
+            continue
+        return True
     return False
 
-_vaults = asyncio.get_event_loop().run_until_complete(v2.vaults)
-_experiments = asyncio.get_event_loop().run_until_complete(v2.experiments)
-v2_vaults = _vaults + _experiments
-logger = logging.getLogger(__name__)
-logger.info('%s v2 vaults loaded', len(v2_vaults))
 
 def is_fees_v2(tx: TreasuryTx) -> bool:
+    if tx.to_address.address not in treasury.addresses:
+        return False
     if any(
         tx.from_address.address == vault.vault.address 
         and tx.token.address.address == vault.vault.address
-        and tx.to_address.address in treasury.addresses
         and tx.to_address.address == vault.vault.rewards(block_identifier=tx.block)
         for vault in v2_vaults
     ):
@@ -63,17 +74,6 @@ def is_fees_v2(tx: TreasuryTx) -> bool:
             tx.value_usd *= -1
         return True
     return False
-
-factory_strats = [
-    ["Contract: StrategyCurveBoostedFactoryClonable", ["CRV", "LDO"]],
-    ["Contract: StrategyConvexFactoryClonable", ["CRV", "CVX"]],
-    ["Contract: StrategyConvexFraxFactoryClonable", ["CRV", "CVX", "FXS"]],
-]
-
-def is_factory_fees_v2(tx: TreasuryTx) -> bool:
-    for strategy, tokens in factory_strats:
-        if tx._from_nickname == strategy and tx._symbol in tokens:
-            return True
 
 def is_fees_v3(tx: TreasuryTx) -> bool:
     # Stay tuned...

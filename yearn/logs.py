@@ -40,6 +40,18 @@ def basicConfig(**kwargs) -> None:
         silence_logger('web3.providers.HTTPProvider') # we use AsyncHTTPProvider
         silence_logger('web3.RequestManager') # not really sure lol
         silence_logger('dank_mids.should_batch') # this is only really useful when optimizing dank_mids internals
+        silence_logger("y.prices.BASE")
+        silence_logger("y._db.common")
+        silence_logger("yearn.middleware")
+        silence_logger("dank_mids._requests")
+        silence_logger("y._db.utils.logs")
+        silence_logger("a_sync.primitives.locks.prio_semaphore")
+        silence_logger("a_sync._smart")
+        silence_logger("a_sync.a_sync.function[]")
+        silence_logger("a_sync.a_sync.method")
+        silence_logger("a_sync.utils.iterators")
+        silence_logger("eth_portfolio._ydb.token_transfers")
+        silence_logger("a_sync.executor.AsyncThreadPoolExecutor")
         
 def silence_logger(name: str):
     logging.getLogger(name).setLevel(logging.CRITICAL)

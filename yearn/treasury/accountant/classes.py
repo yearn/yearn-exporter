@@ -1,8 +1,10 @@
 
 import logging
+from requests import HTTPError
 from typing import Any, Callable, Iterable, List, Optional, Tuple, Union
 
 import sentry_sdk
+from pony.orm import TransactionError, TransactionIntegrityError
 from y import ContractNotVerified
 
 from yearn.entities import TreasuryTx, TxGroup
@@ -61,6 +63,13 @@ class ChildTxGroup(_TxGroup):
                 return self.txgroup
         except ContractNotVerified:
             logger.info("ContractNotVerified when sorting %s with %s", tx, self.label)
+        except (AssertionError, AttributeError, TransactionError, HTTPError, NotImplementedError, ValueError) as e:
+            #if isinstance(e, TransactionIntegrityError):
+            #    logger.warning("%s when sorting %s with %s.", e.__repr__(), tx, self.label)
+            #    sentry_sdk.capture_exception(e)
+            #else:
+            logger.exception(e)
+            raise
         except Exception as e:
             logger.warning("%s when sorting %s with %s.", e.__repr__(), tx, self.label)
             sentry_sdk.capture_exception(e)

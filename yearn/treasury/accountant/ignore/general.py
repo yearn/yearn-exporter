@@ -5,14 +5,15 @@ from decimal import Decimal
 from brownie import ZERO_ADDRESS, chain
 from brownie.exceptions import RPCRequestError
 from pony.orm import commit, select
+from requests import HTTPError
 from y import Contract, ContractNotVerified, Network, get_price
 from y.networks import Network
 
 from yearn.constants import ERC20_TRANSFER_EVENT_HASH, TREASURY_WALLETS
 from yearn.entities import TreasuryTx
 from yearn.events import decode_logs, get_logs_asap
-from yearn.outputs.postgres.utils import (cache_address, cache_chain,
-                                          cache_token, cache_txgroup)
+from yearn.outputs.postgres.utils import (address_dbid, chain_dbid,
+                                          cache_txgroup, token_dbid)
 from yearn.prices import constants
 from yearn.treasury.accountant.classes import Filter, HashMatcher
 from yearn.treasury.accountant.constants import (DISPERSE_APP, PENDING_LABEL,
@@ -49,18 +50,21 @@ def is_disperse_dot_app(tx: TreasuryTx) -> bool:
                     amount /= Decimal(tx.token.scale)
                     price = Decimal(get_price(transfer.address, block=tx.block))
                     TreasuryTx(
-                        chain = cache_chain(),
+                        chain = chain_dbid(),
                         timestamp = chain[tx.block].timestamp,
                         block = tx.block,
                         hash = tx.hash,
                         log_index = transfer.logIndex,
-                        token = cache_token(transfer.address),
+                        # NOTE: We pass the entity pk instead of the entity obj so we can avoid the occasional 
+                        #       `TransactionError("An attempt to mix objects belonging to different transactions")`
+                        #       when processing never-before-seen entities.
+                        token = token_dbid(transfer.address),
                         from_address = tx.to_address,
-                        to_address = cache_address(receiver),
+                        to_address = address_dbid(receiver),
                         amount = amount,
                         price = round(price, 18),
                         value_usd = round(amount * price, 18),
-                        txgroup = cache_txgroup(PENDING_LABEL),
+                        txgroup = cache_txgroup(PENDING_LABEL).txgroup_id,
                     )
             commit()
 
@@ -71,25 +75,29 @@ def is_disperse_dot_app(tx: TreasuryTx) -> bool:
         
         if len(query) == 0 and tx.token.address.address == eee_address and tx.to_address:
             # find internal txs and add to pg
-            for int_tx in chain.get_transaction(tx.hash).internal_transfers:
-                if int_tx['from'] == tx.to_address.address:
-                    amount = int_tx['value'] / Decimal(tx.token.scale)
-                    price = Decimal(get_price(eee_address, tx.block))
-                    TreasuryTx(
-                        chain = cache_chain(),
-                        timestamp = chain[tx.block].timestamp,
-                        block = tx.block,
-                        hash = tx.hash,
-                        log_index = None,
-                        token = cache_token("0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE"),
-                        from_address = tx.to_address,
-                        to_address = cache_address(int_tx['to']),
-                        amount = amount,
-                        price = round(price, 18),
-                        value_usd = round(amount * price, 18),
-                        txgroup = cache_txgroup(PENDING_LABEL),
-                    )
-            commit()
+            try:
+                for int_tx in chain.get_transaction(tx.hash).internal_transfers:
+                    if int_tx['from'] == tx.to_address.address:
+                        amount = int_tx['value'] / Decimal(tx.token.scale)
+                        price = Decimal(get_price(eee_address, tx.block))
+                        TreasuryTx(
+                            chain = chain_dbid(),
+                            timestamp = chain[tx.block].timestamp,
+                            block = tx.block,
+                            hash = tx.hash,
+                            log_index = None,
+                            token = token_dbid("0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE"),
+                            from_address = tx.to_address,
+                            to_address = address_dbid(int_tx['to']),
+                            amount = amount,
+                            price = round(price, 18),
+                            value_usd = round(amount * price, 18),
+                            txgroup = cache_txgroup(PENDING_LABEL).txgroup_id,
+                        )
+                commit()
+            except HTTPError as e:
+                print(e.response.__dict__)
+                raise
         
         # Did we already insert the outputs for this disperse tx / token? 
         if len(query) > 0:

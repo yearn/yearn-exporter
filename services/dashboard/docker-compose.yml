@@ -5,8 +5,11 @@ volumes:
   cache: {}
   memray: {}
   ypricemagic: {}
+  #dank_mids: {}
 
 networks:
+  erigon_default:
+    external: true
   yearn-exporter-infra_stack:
     external: true
 
@@ -29,7 +32,7 @@ x-envs: &envs
   - RESOLUTION
   - REORG_BUFFER
   - JSONRPC_BATCH_MAX_SIZE
-  - AIOHTTP_TIMEOUT=${AIOHTTP_TIMEOUT:-1800}
+  - AIOHTTP_TIMEOUT=${AIOHTTP_TIMEOUT:-1200}
   - PROFILE_MEMORY
   # asyncio (optional, debugging)
   - PYTHONASYNCIODEBUG
@@ -37,14 +40,24 @@ x-envs: &envs
   # NOTE: We do this to limit memory consumption, on a big server you can increase for faster performance.
   - DANK_MIDS_BROWNIE_CALL_SEMAPHORE=${DANK_MIDS_BROWNIE_CALL_SEMAPHORE:-250_000}
   # NOTE: This is included as an escape-hatch-of-last-resort and should not actually occur
-  - DANKMIDS_STUCK_CALL_TIMEOUT
+  - DANKMIDS_STUCK_CALL_TIMEOUT${DANKMIDS_AIOHTTP_TIMEOUT:-660}
   # dank-mids (optional)
   - DANKMIDS_MAX_MULTICALL_SIZE=${DANKMIDS_MAX_MULTICALL_SIZE:-5_000}
   - DANKMIDS_MAX_JSONRPC_BATCH_SIZE
+  - DANKMIDS_AIOHTTP_TIMEOUT=${DANKMIDS_AIOHTTP_TIMEOUT:-1200}
+  - DANKMIDS_STREAM_READER_TIMEOUT=${DANKMIDS_STREAM_READER_TIMEOUT:-30}
+  - DANKMIDS_MAX_JSONRPC_BATCH_SIZE=${DANKMIDS_MAX_JSONRPC_BATCH_SIZE:-100}
+  - DANKMIDS_MIN_CONCURRENCY=${DANKMIDS_MIN_CONCURRENCY:-16}
+  - DANKMIDS_MAX_CONCURRENCY=${DANKMIDS_MAX_CONCURRENCY:-256}
   - DANKMIDS_BROWNIE_ENCODER_SEMAPHORE
+  - DANKMIDS_OPERATION_MODE=${DANKMIDS_OPERATION_MODE:-infura}
+  - DANKMIDS_MULTICALL_DECODER_PROCESSES=${DANKMIDS_MULTICALL_DECODER_PROCESSES:-0}
+  - DANKMIDS_BROWNIE_ENCODER_PROCESSES=${DANKMIDS_BROWNIE_ENCODER_PROCESSES:-0}
+  - DANKMIDS_BROWNIE_DECODER_PROCESSES=${DANKMIDS_BROWNIE_DECODER_PROCESSES:-0}
   - DANKMIDS_DEMO_MODE
   - DANKMIDS_ETH_GETTRANSACTION_SEMAPHORE=${DANKMIDS_ETH_GETTRANSACTION_SEMAPHORE:-100}
   - DANKMIDS_USE_FULL_REQUEST=${DANKMIDS_USE_FULL_REQUEST:-1}
+  - DANKMIDS_DEBUG
   # eth-retry (optional)
   - ETH_RETRY_DEBUG
   - ETH_RETRY_DISABLED
@@ -52,7 +65,7 @@ x-envs: &envs
   - MIN_SLEEP_TIME
   - MAX_SLEEP_TIME
   # multicall (optional)
-  - MULTICALL_CALL_SEMAPHORE=${MULTICALL_CALL_SEMAPHORE:-250_000}
+  - MULTICALL_CALL_SEMAPHORE=${MULTICALL_CALL_SEMAPHORE:-100_000}
   # ypriceapi (optional)
   - YPRICEAPI_URL
   - YPRICEAPI_SIGNER
@@ -61,11 +74,10 @@ x-envs: &envs
   - YPRICEAPI_SEMAPHORE
   - SKIP_YPRICEAPI
   # ypricemagic (optional)
-  - DOP
+  - DOP=40
   - YPM_DEEPEST_ROUTER_SEMAPHORE=5
   - YPRICEMAGIC_RECURSION_LOGGER_LEVEL
-  - YPRICEMAGIC_RECURSION_TIMEOUT=${YPRICEMAGIC_RECURSION_TIMEOUT:-1800}  # 0.5 hours
-  - YPRICEMAGIC_CACHE_TTL=${YPRICEMAGIC_CACHE_TTL:-600} # 10 minutes
+  #- YPRICEMAGIC_CACHE_TTL=${YPRICEMAGIC_CACHE_TTL:-3600} # 10 minutes
   # This is a temporary hack that can be removed once deps support eth_hash==0.5.0. Creds to bunny for finding this.
   - ETH_HASH_BACKEND=${ETH_HASH_BACKEND:-pysha3}
 
@@ -91,6 +103,7 @@ x-envs: &envs
   # NETWORK ENVS
   - NETWORK
   - BROWNIE_NETWORK
+  - BROWNIE_NETWORK_ID=$BROWNIE_NETWORK
   - WEB3_PROVIDER
   - MAINNET_PROVIDER
   - EXPLORER
@@ -104,10 +117,12 @@ x-envs: &envs
 
   # POSTGRES ENVS
   - PGHOST=postgres
-  - PGPORT=5432
+  #- PGPORT=5435
   - PGDATABASE=postgres
   - PGUSER=postgres
   - PGPASSWORD=yearn-exporter
+  #- VM_URL=http://51.222.152.244:8428
+  - VM_URL=http://yearn-exporter-infra_victoria-metrics_1:8428
 
   # DOCKER CONTAINER ENVS
   - CONTAINER_NAME
@@ -120,10 +135,16 @@ x-envs: &envs
   - YPRICEMAGIC_DB_DATABASE=${YPRICEMAGIC_DB_DATABASE:-postgres}
 
 x-volumes: &volumes
+  # brownie network-config and contract db are here
   - brownie:/root/.brownie
+  # joblib cache files go here
   - cache:/app/yearn-exporter/cache
+  # memray output files go here, if applicable
   - memray:/app/yearn-exporter/memray
+  # ypricemagic's cache db goes here
   - ypricemagic:/root/.ypricemagic
+  # output files go here when DANKMIDS_DEBUG=true
+  - ./reports/dank_mids:/root/.dank_mids
 
 services:
   exporter:
@@ -132,15 +153,16 @@ services:
     environment: *envs
     networks:
       - yearn-exporter-infra_stack
+      - erigon_default
     external_links:
-      - yearn-exporter-infra-postgres-1:postgres
-      - yearn-exporter-infra-ypostgres-1:ypostgres
+      - yearn-exporter-infra_postgres_1:postgres
+      - yearn-exporter-infra_ypostgres_1:ypostgres
       - yearn-exporter-infra-victoria-metrics-1:victoria-metrics
     logging:
       driver: "json-file"
       options:
         max-size: "100m"
-        max-file: 3
+        max-file: "3"
         env: "NETWORK,CONTAINER_NAME,SENTRY_ENVIRONMENT,SENTRY_RELEASE"
 
     restart: on-failure

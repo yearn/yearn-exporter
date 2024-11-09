@@ -103,7 +103,7 @@ def is_4626_alliance(tx: TreasuryTx) -> bool:
     ])
 
 def is_yeth_bootstrap(tx: TreasuryTx) -> bool:
-    return tx.token == "ETH" and tx.hash == '0x0c59e87027bcdcaa718e322a28bc436106d73ae8623071930437bdb0706c4d65'
+    return tx.token == "ETH" and tx.hash == '0x0c59e87027bcdcaa718e322a28bc436106d73ae8623071930437bdb0706c4d65' and tx._from_nickname == "Yearn yChad Multisig"
 
 def is_warroom_games(tx: TreasuryTx) -> bool:
     return tx.hash == "0x8f17ead9cea87166cf99ed2cdbc46dfdf98c04c261de5b5167caddce5f704cb2" and tx.log_index in [429,430,431]
@@ -145,3 +145,6 @@ def is_unknown(tx: TreasuryTx) -> bool:
 
 def is_vyper_donation(tx: TreasuryTx) -> bool:
     return tx.to_address.address == "0x70CCBE10F980d80b7eBaab7D2E3A73e87D67B775"
+
+def is_ybudget_reward(tx: TreasuryTx) -> bool:
+    return tx.hash == "0xa1b242b2626def6cdbe49d92a06aad96fa018c27b48719a98530c5e5e0ac61c5"

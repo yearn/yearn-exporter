@@ -1,6 +1,6 @@
 
 from brownie import ZERO_ADDRESS, chain
-from y.networks import Network
+from y import Network
 
 from yearn.entities import TreasuryTx
 from yearn.treasury.accountant.classes import Filter, HashMatcher, IterFilter
@@ -243,12 +243,17 @@ def is_bal(tx: TreasuryTx) -> bool:
         "0xf4677cce1a08ecd54272cdc1b23bc64693450f8bb5d6de59b8e58e288ec3b2a7",
     ])
 
-def is_factory_yield(tx: TreasuryTx) -> bool:
-    factory_strats = {
-        "Contract: StrategyConvexFactoryClonable",
-        "Contract: StrategyCurveBoostedFactoryClonable",
-    }
-    if tx._from_nickname in factory_strats and tx._to_nickname == "yMechs Multisig":
+def is_yprisma_migration(tx: TreasuryTx) -> bool:
+    return tx in HashMatcher(["0xed39b66c01e25b053117778c80e544c985d962522233b49ce6f7fe136b1a4474"])
+
+_factory_strat_to_yield_tokens = {
+    "Contract: StrategyCurveBoostedFactoryClonable": ["CRV", "LDO"],
+    "Contract: StrategyConvexFactoryClonable": ["CRV", "CVX"],
+    "Contract: StrategyConvexFraxFactoryClonable": ["CRV", "CVX", "FXS"],
+}
+
+def is_factory_vault_yield(tx: TreasuryTx) -> bool:
+    if tx._to_nickname == "yMechs Multisig" and tx._symbol in _factory_strat_to_yield_tokens.get(tx._from_nickname, []):
         return True
     return tx in HashMatcher({
         # TODO: figure out why these didn't match and update the sort rule
