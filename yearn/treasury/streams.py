@@ -1,18 +1,20 @@
 
 import asyncio
 import logging
-from datetime import date, datetime, timedelta
+from datetime import date, datetime, timedelta, timezone
 from decimal import Decimal
 from functools import lru_cache
 from typing import Awaitable, List, Optional, Tuple
 
 from async_lru import alru_cache
 from brownie import chain
+from eth_portfolio._cache import cache_to_disk
 from pony.orm import db_session, select
 from tqdm.asyncio import tqdm_asyncio
 from y import Contract, Network, get_price
 from y.time import closest_block_after_timestamp_async
 
+from yearn.cache import memory
 from yearn.constants import YCHAD_MULTISIG, YFI
 from yearn.entities import Stream, StreamedFunds, TxGroup
 from yearn.events import decode_logs, get_logs_asap
@@ -144,6 +146,7 @@ def get_start_date(stream_id: str) -> date:
 def is_closed(stream_id: str) -> bool:
     return bool(StreamedFunds.get(stream=Stream[stream_id], is_last_day=True))
 
+@cache_to_disk
 async def start_timestamp(stream_id: str, block: Optional[int] = None) -> int:
     contract = await get_stream_contract(stream_id)
     return int(await contract.streamToStart.coroutine(f'0x{stream_id}', block_identifier=block))
@@ -184,16 +187,20 @@ async def process_stream_for_date(stream_id: str, date: datetime) -> Optional[St
             logger.debug('stream started today, partial day accepted')
         else:
             seconds_active_today = ONE_DAY
-    logger.debug(F"active for {seconds_active_today} seconds on {date.date()}")
+    logger.debug("active for %s seconds on %s", seconds_active_today, date.date())
     if is_last_day:
         logger.debug('is last day')
     
     price = Decimal(await price_fut)
     return await threads.run(StreamedFunds.create_entity, stream_id, date, price, seconds_active_today, is_last_day)
 
+@memory.cache
+def get_ts(block: int) -> datetime:
+    return datetime.fromtimestamp(chain[block].timestamp)
+
 def get_start_and_end(stream: Stream) -> Tuple[datetime, datetime]:
-    start_timestamp = datetime.fromtimestamp(chain[stream.start_block].timestamp)
-    end_timestamp = datetime.fromtimestamp(chain[stream.end_block].timestamp) if stream.end_block else datetime.utcnow()
+    start_timestamp = get_ts(stream.start_block)
+    end_timestamp = get_ts(stream.end_block) if stream.end_block else datetime.now(timezone.utc)
     return start_timestamp, end_timestamp
 
 async def process_stream(stream, run_forever: bool = False) -> None:
