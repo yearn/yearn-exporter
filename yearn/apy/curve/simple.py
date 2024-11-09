@@ -9,7 +9,7 @@ from time import time
 
 import requests
 from brownie import ZERO_ADDRESS, chain
-from eth_abi import encode_single
+from eth_abi import encode
 from eth_utils import function_signature_to_4byte_selector as fourbyte
 from semantic_version import Version
 from y import Contract, Network
@@ -78,7 +78,7 @@ def get_gauge_relative_weight_for_sidechain(gauge_address):
 
     # encode the payload to the ethereum mainnet RPC because we're connected to a sidechain
     function_signature = fourbyte("gauge_relative_weight(address)").hex()
-    address_param = encode_single('address', gauge_address).hex()
+    address_param = encode(['address'], [gauge_address]).hex()
     data = f"0x{function_signature}{address_param}"
 
     # hardcode block to "latest" here so it's resolved on the mainnet node,

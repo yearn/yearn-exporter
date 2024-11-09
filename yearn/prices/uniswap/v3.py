@@ -7,7 +7,7 @@ from itertools import cycle
 from typing import Any, Dict, List, Optional, Tuple, Union
 
 from brownie import Contract, chain, convert
-from eth_abi.packed import encode_abi_packed
+from eth_abi import encode
 from y.contracts import contract_creation_block
 from y.networks import Network
 
@@ -75,7 +75,7 @@ class UniswapV3(metaclass=Singleton):
 
     def encode_path(self, path: Path) -> bytes:
         types = [type for _, type in zip(path, cycle(['address', 'uint24']))]
-        return encode_abi_packed(types, path)
+        return encode(types, path)
 
     def undo_fees(self, path: Path) -> float:
         fees = [1 - fee / FEE_DENOMINATOR for fee in path if isinstance(fee, int)]
