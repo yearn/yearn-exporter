@@ -1,7 +1,6 @@
 
-from brownie import network, chain, web3
+from brownie import network, chain
 from multicall.multicall import batcher
-from web3.middleware.geth_poa import geth_poa_middleware
 
 from yearn.logs import setup_logging
 from yearn.sentry import setup_sentry
