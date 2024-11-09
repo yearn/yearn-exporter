@@ -3,7 +3,7 @@
 from typing import Optional
 
 from brownie import chain
-from y import Contract, Network
+from y import ContractNotVerified, ERC20, Network
 
 from yearn.entities import TreasuryTx, TxGroup
 from yearn.treasury.accountant.constants import treasury
@@ -17,23 +17,21 @@ def is_robovault_share(tx: TreasuryTx) -> Optional[TxGroup]:
         return False
         
     if not (
-        tx.to_address and tx.to_address.address in treasury.addresses
+        tx.to_address.address in treasury.addresses
         and tx._symbol.startswith('rv')
         and tx.from_address.is_contract
     ):
         return False
     
     try:
-        strat = Contract(tx.from_address.address)
-    except ValueError as e:
-        if not "Contract source code not verified" in str(e):
-            raise
+        strat = tx.from_address.contract
+    except ContractNotVerified:
         return False
     
     if not hasattr(strat,'vault'):
         return False
     
-    if strat.vault(block_identifier=tx.block) == tx.token.address.address:
+    if strat.vault(block_identifier=tx.block) == tx.token:
         return True
     
     # For some reason these weren't caught by the above logic. Its inconsequential and not worth investigating to come up with better hueristics.
@@ -43,5 +41,5 @@ def is_robovault_share(tx: TreasuryTx) -> Optional[TxGroup]:
     return all([
         tx._from_nickname == "Contract: Strategy",
         tx._symbol == 'rv3USDCc',
-        Contract(strat.vault(block_identifier = tx.block)).symbol() == 'rv3USDCb'
+        ERC20(strat.vault(block_identifier = tx.block)).symbol == 'rv3USDCb'
     ])

@@ -12,19 +12,13 @@ def is_double_fee_reimbursement(tx: TreasuryTx) -> bool:
         "0x4ce0c829fb46fc1ea03e434599a68af4c6f65f80aff7e934a008c0fe63e9da3f",
         "0x90b54bf0d35621160b5094c263a2684f8e7b37fc6467c8c1ce6a53e2e7acbfa1",
     ]
-    if tx._from_nickname == "Disperse.app" and tx in HashMatcher(hashes):
-        return True
-    return False
+    return tx._from_nickname == "Disperse.app" and tx in HashMatcher(hashes)
 
 def is_ydai_fee_reimbursement(tx: TreasuryTx) -> bool:
-    if tx._from_nickname == "Disperse.app" and tx in HashMatcher(["0x2f667223aaefc4b153c28440d151fdb19333aff5d052c0524f2804fbd5a7964c"]):
-        return True
-    return False
+    return tx._from_nickname == "Disperse.app" and tx in HashMatcher(["0x2f667223aaefc4b153c28440d151fdb19333aff5d052c0524f2804fbd5a7964c"])
 
 def is_yyfi_fee_reimbursement(tx: TreasuryTx) -> bool:
-    if tx._from_nickname == "Disperse.app" and tx in HashMatcher(["0x867b547b67910a08c939978d8071acca28ecc444d7155c0626e87730f67c058c"]):
-        return True
-    return False
+    return tx._from_nickname == "Disperse.app" and tx in HashMatcher(["0x867b547b67910a08c939978d8071acca28ecc444d7155c0626e87730f67c058c"])
 
 def is_lossy_fee_reimbursement(tx: TreasuryTx) -> bool:
     """old vault code doesn't prevent fees from making harvest lossy. so here we airdrop the fee-take back to vault and do some housekeeper to prevent this from happening on other strats."""

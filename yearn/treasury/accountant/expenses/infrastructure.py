@@ -11,14 +11,10 @@ def is_servers(tx: TreasuryTx) -> bool:
     ])
 
 def is_tenderly(tx: TreasuryTx) -> bool:
-    if tx._symbol == "USDT" and tx.from_address.address in treasury.addresses and tx.to_address and tx.to_address.address in ["0xF6060cE3fC3df2640F72E42441355f50F195D96a"]:
-        return True
-    return False
+    return tx._symbol == "USDT" and tx.from_address.address in treasury.addresses and tx.to_address in ["0xF6060cE3fC3df2640F72E42441355f50F195D96a"]
 
 def is_wonderland(tx: TreasuryTx) -> bool:
-    if tx._symbol == "DAI" and tx.from_address.address in treasury.addresses and tx.to_address and tx.to_address.address == '0x8bA72884984f669aBBc9a5a7b441AD8E3D9a4fD3':
-        return True
-    return False
+    return tx._symbol == "DAI" and tx.from_address.address in treasury.addresses and tx.to_address == '0x8bA72884984f669aBBc9a5a7b441AD8E3D9a4fD3'
 
 def is_generic(tx: TreasuryTx) -> bool:
     hashes = [

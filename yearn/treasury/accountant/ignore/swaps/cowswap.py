@@ -1,4 +1,6 @@
 
+from decimal import Decimal
+
 from pony.orm import select
 
 from yearn.entities import TreasuryTx
@@ -17,11 +19,10 @@ def is_cowswap_swap(tx: TreasuryTx) -> bool:
         for trade in tx._events["Trade"]:
             if trade.address == YSWAPS and trade["owner"] in treasury.addresses and trade['buyToken'] not in SKIP_TOKENS:
                 # buy side
-                if tx.token.address.address == trade["buyToken"] and tx.to_address.address in treasury.addresses and round(float(tx.amount), 15) == round(trade['buyAmount'] / tx.token.scale, 15):
+                if tx.token == trade["buyToken"] and tx.to_address.address in treasury.addresses and tx.amount == Decimal(trade['buyAmount']) / tx.token.scale:
                     return True
-
                 # sell side
-                elif tx.token.address.address == trade["sellToken"] and trade['owner'] == tx.from_address.address and round(float(tx.amount), 15) == round(trade['sellAmount'] / tx.token.scale, 15):
+                elif tx.token == trade["sellToken"] and tx.from_address == trade['owner'] and tx.amount == Decimal(trade['sellAmount']) / tx.token.scale:
                     # Did Yearn actually receive the other side of the trade?
                     for address in treasury.addresses:
                         other_side_query = select(

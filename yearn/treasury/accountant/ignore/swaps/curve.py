@@ -12,8 +12,8 @@ from yearn.treasury.accountant.constants import treasury
 
 # curve helpers
 _scale = lambda amount, tx: Decimal(amount) / tx.token.scale
-_is_old_style = lambda tx, pool: hasattr(pool, 'lp_token') and pool.lp_token() == tx.token.address.address
-_is_new_style = lambda tx, pool: hasattr(pool, 'totalSupply') and pool.address == tx.token.address.address
+_is_old_style = lambda tx, pool: hasattr(pool, 'lp_token') and tx.token == pool.lp_token()
+_is_new_style = lambda tx, pool: hasattr(pool, 'totalSupply') and tx.token == pool.address
 def _token_is_curvey(tx: TreasuryTx) -> bool:
     return 'crv' in tx._symbol.lower() or 'curve' in tx.token.name.lower()
 
@@ -21,27 +21,27 @@ def is_curve_deposit(tx: TreasuryTx) -> bool:
     if 'AddLiquidity' in tx._events:
         for event in tx._events['AddLiquidity']:
             # LP Token Side
-            if tx.from_address.address == ZERO_ADDRESS and _token_is_curvey(tx):
+            if tx.from_address == ZERO_ADDRESS and _token_is_curvey(tx):
                 pool = Contract(event.address)
                 if _is_old_style(tx, pool) or _is_new_style(tx, pool):
                     return True
 
             # Tokens sent
-            elif tx.to_address and tx.to_address.address == event.address:
-                print(event)
+            elif tx.to_address == event.address:
+                print(f"AddLiquidity: {event}")
                 for i, amount in enumerate(event["token_amounts"]):
                     if tx.amount == _scale(amount, tx):
                         pool = Contract(event.address)
-                        if tx.token.address.address == pool.coins(i):
+                        if tx.token == pool.coins(i):
                             return True
 
             # What if a 3crv deposit was needed before the real deposit?
-            elif tx.from_address.address in treasury.addresses and tx.to_address and tx.to_address.address == "0xA79828DF1850E8a3A3064576f380D90aECDD3359" and event.address == "0xbEbc44782C7dB0a1A60Cb6fe97d0b483032FF1C7":
-                print(event)
+            elif tx.from_address.address in treasury.addresses and tx.to_address == "0xA79828DF1850E8a3A3064576f380D90aECDD3359" and event.address == "0xbEbc44782C7dB0a1A60Cb6fe97d0b483032FF1C7":
+                print(f"AddLiquidity-3crv: {event}")
                 for i, amount in enumerate(event["token_amounts"]):
                     if tx.amount == _scale(amount, tx):
                         pool = Contract(event.address)
-                        if tx.token.address.address == pool.coins(i):
+                        if tx.token == pool.coins(i):
                             return True
     
     # TODO: see if we can remove these with latest hueristics
@@ -81,29 +81,31 @@ def is_curve_withdrawal_one(tx: TreasuryTx) -> bool:
         return False
     for event in tx._events['RemoveLiquidityOne']:
         # LP Token Side
-        if tx.to_address and tx.to_address.address == ZERO_ADDRESS and _token_is_curvey(tx) and tx.amount == _scale(event['token_amount'], tx):
+        if tx.to_address == ZERO_ADDRESS and _token_is_curvey(tx) and tx.amount == _scale(event['token_amount'], tx):
             return True
         # Tokens rec'd
-        elif tx.from_address.address == event.address and tx.amount == _scale(event['coin_amount'], tx):
+        elif tx.from_address == event.address and tx.amount == _scale(event['coin_amount'], tx):
             return True
+    return False
 
 def is_curve_withdrawal_multi(tx: TreasuryTx) -> bool:
     if 'RemoveLiquidity' not in tx._events:
         return False
     for event in tx._events['RemoveLiquidity']:
         # LP Token side
-        if tx.to_address and tx.to_address.address == ZERO_ADDRESS and _token_is_curvey(tx):
+        if tx.to_address == ZERO_ADDRESS and _token_is_curvey(tx):
             pool = Contract(event.address)
             if _is_old_style(tx, pool) or _is_new_style(tx, pool):
                 return True
-            print('wtf is this')
+            print(f'wtf is this: {tx}')
         # Tokens rec'd
-        elif tx.from_address.address == event.address and tx.to_address and tx.to_address.address in treasury.addresses:
+        elif tx.from_address == event.address and tx.to_address.address in treasury.addresses:
             for i, amount in enumerate(event['token_amounts']):
                 if tx.amount == _scale(amount, tx):
                     pool = Contract(event.address)
                     check_method = getattr(pool, 'underlying_coins', pool.coins)
-                    return tx.token.address.address == check_method(i)
+                    return tx.token == check_method(i)
+    return False
                     
 def _exchange_shaped_correctly(exchange_event) -> bool:
     keys = {"buyer","sold_id","tokens_sold","bought_id","tokens_bought"}
@@ -117,10 +119,10 @@ def is_curve_swap(tx: TreasuryTx) -> bool:
             pool = Contract(exchange.address)
             buy_token, sell_token = fetch_multicall([pool, 'coins', exchange['bought_id']], [pool, 'coins', exchange['sold_id']])
             # Sell side
-            if tx.from_address.address == exchange['buyer'] and tx.to_address and tx.to_address.address == exchange.address and tx.token.address.address == sell_token and tx.amount == _scale(exchange['tokens_sold'], tx):
+            if tx.from_address == exchange['buyer'] and tx.to_address == exchange.address and tx.token == sell_token and tx.amount == _scale(exchange['tokens_sold'], tx):
                 return True
             # Buy side
-            elif tx.from_address.address == exchange.address and tx.to_address and tx.to_address.address == exchange['buyer'] and tx.token.address.address == buy_token and tx.amount == _scale(exchange['tokens_bought'], tx):
+            elif tx.from_address == exchange.address and tx.to_address == exchange['buyer'] and tx.token == buy_token and tx.amount == _scale(exchange['tokens_bought'], tx):
                 return True
     
     return tx in HashMatcher([

@@ -66,13 +66,13 @@ class yTeam(Struct):
                 yield br
         
     def is_team_comp(self, tx: TreasuryTx) -> bool:
-        if tx.to_address.address == self.address:
+        if tx.to_address == self.address:
             # TODO: build hueristics for this if it keeps happening
             if tx.hash == "0xa113223ee1cb2165b4cc01ff0cea0b98b94e3f93eec57b117ecfbac5eea47916":
                 return True
             elif (brs_for_token := list(self.brs_for_token(tx._symbol))):
                 return any(float(tx.amount) == br[tx._symbol] for br in brs_for_token)
-        elif self.refunds and tx.from_address.address == self.address and tx in HashMatcher(self.refunds):
+        elif self.refunds and tx.from_address == self.address and tx in HashMatcher(self.refunds):
             if tx.amount > 0:
                 tx.amount *= -1
             if tx.value_usd > 0:
@@ -90,30 +90,30 @@ class yTeam(Struct):
             if vest.address == "0x200C92Dd85730872Ab6A1e7d5E40A067066257cF":
                 funder, token, recipient, escrow, amount, *_ = vest.values()
                 if not (
-                    funder == tx.from_address.address 
+                    tx.from_address == funder
                     and recipient == self.address 
-                    and escrow == tx.to_address.address 
-                    and token == tx.token.address.address 
+                    and tx.to_address == escrow
+                    and tx.token == token
                 ):
                     continue
             elif vest.address == "0x850De8D7d65A7b7D5bc825ba29543f41B8E8aFd2":
                 # YFI Liquid Locker Vesting Escrow Factory
                 token = "0x0bc529c00C6401aEF6D220BE8C6Ea1667F6Ad93e"  # YFI
                 funder, recipient, index, amount, *_ = vest.values()
-                print(funder)
-                print(recipient)
-                print(amount)
+                print(f"funder: {funder}")
+                print(f"recipient: {recipient}")
+                print(f"amount: {amount}")
                 if not (
-                    funder == tx.from_address.address
+                    tx.from_address == funder
                     and recipient == self.address
-                    and token == tx.token.address.address
+                    and tx.token == token
                 ):
                     continue
             else:
                 continue
 
             token = Contract(token)
-            print(token)
+            print(f"token: {token}")
             if tx.amount != amount / Decimal(10 ** token.decimals()):
                 print('no match')
                 continue
@@ -271,9 +271,7 @@ def is_coordinape(tx: TreasuryTx) -> bool:
 
 def is_ygift_grant(tx: TreasuryTx) -> bool:
     """ Yearn used to use yGift to send team grants but that ended up being too expensive. """
-    if tx._to_nickname == "Contract: yGift" and tx._symbol == "yyDAI+yUSDC+yUSDT+yTUSD":
-        return True
-    return False
+    return tx._to_nickname == "Contract: yGift" and tx._symbol == "yyDAI+yUSDC+yUSDT+yTUSD"
 
 def is_frontend_support(tx: TreasuryTx) -> bool:
     return tx in HashMatcher([
@@ -306,11 +304,12 @@ def is_other_grant(tx: TreasuryTx) -> bool:
         ["0x925d77f797779f087a44b2e871160fb194f9cdf949019b5c3c3617f86a0d97fb", IterFilter('log_index', [150, 151])],
         "0x4bda2a3b21ff999a2ef1cbbaffaa21a713293f8e175adcc4d67e862f0717d6ef",
     ]
-    disperse_hashes = [
-        "0x1e411c81fc83abfe260f58072c74bfa91e38e27e0066da07ea06f75d9c8f4a00",
-        "0xfb2cd663228bb3823445b11e05c4b38b2fcd333230facdb388d403a9d1d8c869",
-    ]
+    
     if tx._from_nickname == "Disperse.app":
+        disperse_hashes = [
+            "0x1e411c81fc83abfe260f58072c74bfa91e38e27e0066da07ea06f75d9c8f4a00",
+            "0xfb2cd663228bb3823445b11e05c4b38b2fcd333230facdb388d403a9d1d8c869",
+        ]
         return tx in HashMatcher(disperse_hashes)
     if tx in HashMatcher(hashes):
         return True
@@ -327,6 +326,7 @@ def is_other_grant(tx: TreasuryTx) -> bool:
         tx.value_usd *= -1
         commit()
         return True
+    return False
 
 def is_0_03_percent(tx: TreasuryTx) -> bool:
     return tx in HashMatcher([["0xe56521d79b0b87425e90c08ed3da5b4fa3329a40fe31597798806db07f68494e", Filter('_from_nickname', 'Disperse.app')]])
@@ -348,7 +348,7 @@ def is_docs_grant(tx: TreasuryTx) -> bool:
     ])
 
 def is_yearn_exporter(tx: TreasuryTx) -> bool:
-    if tx.to_address.address == "0xcD63C69f08bdDa7Fe96a87A2Ca3f56f3a6990a75":
+    if tx.to_address == "0xcD63C69f08bdDa7Fe96a87A2Ca3f56f3a6990a75":
         if tx._symbol == "YFI" and tx.amount == 2.25:
             return True
         elif tx._symbol == "DAI" and tx.amount == 23_025:
@@ -359,7 +359,7 @@ def is_yearn_exporter(tx: TreasuryTx) -> bool:
     return False
 
 def is_xopowo(tx: TreasuryTx) -> bool:
-    if tx.to_address.address == "0x4F909396A75FE9d59F584156A851B3770f3F438a":
+    if tx.to_address == "0x4F909396A75FE9d59F584156A851B3770f3F438a":
         if tx._symbol == "YFI":
             return float(tx.amount) == 5.1 or tx in HashMatcher([
                 # usual amount chunked in two parts
@@ -374,26 +374,27 @@ def is_xopowo(tx: TreasuryTx) -> bool:
 # TODO: Refactor this whole thing
 
 def is_tapir(tx: TreasuryTx) -> bool:
-    return tx.to_address.address == "0x80c9aC867b2D36B7e8D74646E074c460a008C0cb" and tx._symbol == "DAI" and tx.amount == 4_000
+    return tx.to_address == "0x80c9aC867b2D36B7e8D74646E074c460a008C0cb" and tx._symbol == "DAI" and tx.amount == 4_000
 
 def is_hipsterman(tx: TreasuryTx) -> bool:
-    if tx.to_address.address == "0xE53D3f2B99FE0Ed6C05977bC0547127836f0D78d" and tx._symbol == "DAI" and tx.amount in [3_500, 7000]:
+    if tx.to_address == "0xE53D3f2B99FE0Ed6C05977bC0547127836f0D78d" and tx._symbol == "DAI" and tx.amount in [3_500, 7000]:
         return True
     elif tx.hash == "0xfe0ce0947c405f22c99eab63f7e529d95eab4274f2c468deaa1da50adaeb4450":
         tx.value_usd *= -1
         return True
+    return False
 
 def is_worms(tx: TreasuryTx) -> bool:
-    return tx.to_address.address == "0xB1d693B77232D88a3C9467eD5619FfE79E80BCCc"
+    return tx.to_address == "0xB1d693B77232D88a3C9467eD5619FfE79E80BCCc"
 
 def is_ysecurity_2(tx: TreasuryTx) -> bool:
-    return tx.to_address.address == "0x4851C7C7163bdF04A22C9e12Ab77e184a5dB8F0E"
+    return tx.to_address == "0x4851C7C7163bdF04A22C9e12Ab77e184a5dB8F0E"
 
 def is_ydiscount(tx: TreasuryTx) -> bool:
-    return tx.to_address.address == "0x54991866A907891c9B85478CC1Fb0560B17D2b1D"
+    return tx.to_address == "0x54991866A907891c9B85478CC1Fb0560B17D2b1D"
 
 def is_ybudget(tx: TreasuryTx) -> bool:
-    return tx.to_address.address == "0x5E97104F602648aDcB9f75F5F3B852CAc2Dc4576" or tx in HashMatcher([
+    return tx.to_address == "0x5E97104F602648aDcB9f75F5F3B852CAc2Dc4576" or tx in HashMatcher([
         ["0xb01305e2d2c34f1da600d64aea79034b63248a76437e30de986445a9347e554f", IterFilter('log_index', [327, 328, 329, 330, 331, 332, 333])],
     ])
 
@@ -401,16 +402,16 @@ def is_ybudget(tx: TreasuryTx) -> bool:
 def is_ysupport(tx: TreasuryTx) -> bool:
     '''BR #194 and some earlier stuff'''
     return (
-        tx.to_address.address == "0xbd7B3Bc2C4581Fd173362c830AE45fB9506B3dA5"
+        tx.to_address == "0xbd7B3Bc2C4581Fd173362c830AE45fB9506B3dA5"
         # also include payment to this vest contract for #194
-        #or tx.to_address.address == "0x031a6Ae2a336cc838aab4501B32e5C08fA2b23BB"
+        #or tx.to_address == "0x031a6Ae2a336cc838aab4501B32e5C08fA2b23BB"
     )"""
 
 def is_rantom(tx: TreasuryTx) -> bool:
-    return tx.to_address.address == "0x254b42CaCf7290e72e2C84c0337E36E645784Ce1"
+    return tx.to_address == "0x254b42CaCf7290e72e2C84c0337E36E645784Ce1"
 
 def is_tx_creator(tx: TreasuryTx) -> bool:
-    return tx.to_address.address == "0x4007c53A48DefaB0b9D2F05F34df7bd3088B3299" and tx._symbol == "DAI" and tx.amount == 5_000
+    return tx.to_address == "0x4007c53A48DefaB0b9D2F05F34df7bd3088B3299" and tx._symbol == "DAI" and tx.amount == 5_000
 
 def is_dinobots(tx: TreasuryTx) -> bool:
     # NOTE: refactor this out
@@ -425,3 +426,4 @@ def is_dinobots(tx: TreasuryTx) -> bool:
     # br 219?
     elif tx.hash == "0xd7e7abe600aad4a3181a3a410bef2539389579d2ed28f3e75dbbf3a7d8613688" and tx.log_index == 547:
         return True
+    return False
