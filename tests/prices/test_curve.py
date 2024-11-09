@@ -302,7 +302,7 @@ def convex_gauge_map():
 def curve_tvl_api():
     data = requests.get('https://api.curve.fi/api/getTVL').json()
     return {
-        web3.toChecksumAddress(pool['pool_address']): pool['balance']
+        web3.to_checksum_address(pool['pool_address']): pool['balance']
         for pool in data['data']['allPools']
     }
 
@@ -390,8 +390,8 @@ def test_curve_lp_price_oracle_historical(name):
     if name in ['linkusd']:
         pytest.xfail('no active market')
 
-    token = web3.toChecksumAddress(pooldata[name]['lp_token_address'])
-    swap = web3.toChecksumAddress(pooldata[name]['swap_address'])
+    token = web3.to_checksum_address(pooldata[name]['lp_token_address'])
+    swap = web3.to_checksum_address(pooldata[name]['swap_address'])
     deploy = contract_creation_block(swap)
 
     abnormal_start_blocks = {
@@ -423,7 +423,7 @@ def test_curve_total_value(name, curve_tvl_api):
     if name in ['linkusd']:
         pytest.xfail('no active market')
 
-    pool = web3.toChecksumAddress(pooldata[name]['swap_address'])
+    pool = web3.to_checksum_address(pooldata[name]['swap_address'])
     tvl = curve.curve.get_tvl(pool)
     print(name, tvl)
     assert tvl
@@ -435,7 +435,7 @@ def test_curve_total_value(name, curve_tvl_api):
 @pytest.mark.parametrize('name', pooldata)
 def test_get_balances_fallback(name):
     registry_deploy = 12195750
-    pool = web3.toChecksumAddress(pooldata[name]['swap_address'])
+    pool = web3.to_checksum_address(pooldata[name]['swap_address'])
     if contract_creation_block(pool) > registry_deploy:
         pytest.skip('not applicable to pools deployed after test block')
     if curve.curve.get_factory(pool):
