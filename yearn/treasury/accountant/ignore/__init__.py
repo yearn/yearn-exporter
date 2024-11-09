@@ -152,6 +152,8 @@ if chain.id == Network.Mainnet:
     ignore_txgroup.create_child("Transfer to yGov (Deprecated)", ygov.is_sent_to_ygov)
     ignore_txgroup.create_child("Maker CDP Deposit", maker.is_yfi_cdp_deposit)
     ignore_txgroup.create_child("Maker CDP Withdrawal", maker.is_yfi_cdp_withdrawal)
+    ignore_txgroup.create_child("Maker USDC CDP Deposit", maker.is_usdc_cdp_deposit)
+    ignore_txgroup.create_child("Maker USDC CDP Withdrawal", maker.is_usdc_cdp_withdrawal)
     ignore_txgroup.create_child("Minting DAI", maker.is_dai)
     ignore_txgroup.create_child("Replenish Streams", general.is_stream_replenishment)
     ignore_txgroup.create_child("Clawback Vesting Packages", general.is_reclaim_locked_vest)

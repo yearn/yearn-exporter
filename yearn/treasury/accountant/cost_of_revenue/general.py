@@ -1,6 +1,5 @@
 
 import asyncio
-import functools
 import logging
 
 from brownie import chain, convert

@@ -130,6 +130,10 @@ def is_dyfi_launch(tx: TreasuryTx) -> bool:
         "0x066c32f02fc0908d55b6651afcfb20473ec3d99363de222f2e8f4a7e0c66462e",
     ])
 
+def is_dyfi_redemptions(tx: TreasuryTx) -> bool:
+    """YFI going to the dyfi redemptions contract"""
+    return tx._symbol == "YFI" and tx._to_nickname == "dYFI Redemption Contract"
+
 def is_veyfi_launch(tx: TreasuryTx) -> bool:
     return tx in HashMatcher([["0x51202f9e8a9afa84a9a0c37831ca9a18508810175cb95ab7c52691bbe69a56d5", Filter('_symbol', 'YFI')]])
 
@@ -138,3 +142,6 @@ def is_unknown(tx: TreasuryTx) -> bool:
         ["0xdf3e6cf2e50052e4eeb57fb2562b5e1b02701014ce65b60e6c8a850c409b341a", IterFilter('log_index', [121, 122])],
         "0x81fd665147690345100c385d273135dba3b4163b17ccc7d7c7b48fb636297205",
     ])
+
+def is_vyper_donation(tx: TreasuryTx) -> bool:
+    return tx.to_address.address == "0x70CCBE10F980d80b7eBaab7D2E3A73e87D67B775"
