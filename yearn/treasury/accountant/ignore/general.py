@@ -6,7 +6,7 @@ from brownie import ZERO_ADDRESS, chain
 from brownie.exceptions import RPCRequestError
 from pony.orm import commit, select
 from requests import HTTPError
-from y import Contract, ContractNotVerified, Network, get_price
+from y import ContractNotVerified, Network, get_price
 from y.networks import Network
 
 from yearn.constants import ERC20_TRANSFER_EVENT_HASH, TREASURY_WALLETS
@@ -26,27 +26,29 @@ def is_internal_transfer(tx: TreasuryTx) -> bool:
     if chain.id == Network.Mainnet and tx.block > 17162286 and "yMechs Multisig" in [tx._from_nickname, tx._to_nickname]:
         # as of may 1 2023, ymechs wallet split from treasury
         return False
-    return tx.to_address and tx.to_address.address in treasury.addresses and tx.from_address.address in treasury.addresses
+    return tx.to_address.address in treasury.addresses and tx.from_address.address in treasury.addresses
 
 def has_amount_zero(tx: TreasuryTx) -> bool:
     return tx.amount == 0
 
 def is_disperse_dot_app(tx: TreasuryTx) -> bool:
-    if tx._to_nickname == "Disperse.app":
-        eee_address = "0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE"
-        # Make sure the other side of disperse.app txs are in the pg db.
-        query = select(t for t in TreasuryTx if t.hash == tx.hash and t._from_nickname == "Disperse.app" and t.token.address.address == tx.token.address.address)
-        if len(query) == 0 and "Transfer" in tx._events and tx.token.address.address != eee_address:
-            # find transfer events and add txs to pg
-            transfers = [
-                transfer
-                for transfer in get_logs_asap(None, [ERC20_TRANSFER_EVENT_HASH], tx.block, tx.block)
-                if transfer.transactionHash.hex() == tx.hash
-            ]
-            print(f'len logs: {len(tx._events["Transfer"])}')
-            for transfer in transfers:
+    if tx._to_nickname != "Disperse.app":
+        return False
+    eee_address = "0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE"
+    # Make sure the other side of disperse.app txs are in the pg db.
+    query = select(t for t in TreasuryTx if t.hash == tx.hash and t._from_nickname == "Disperse.app" and t.token == tx.token)
+    if len(query) == 0 and "Transfer" in tx._events and tx.token != eee_address:
+        # find transfer events and add txs to pg
+        transfers = [
+            transfer
+            for transfer in get_logs_asap(None, [ERC20_TRANSFER_EVENT_HASH], tx.block, tx.block)
+            if transfer.transactionHash.hex() == tx.hash
+        ]
+        print(f'len logs: {len(tx._events["Transfer"])}')
+        for transfer in transfers:
+            if tx.token == transfer.address:
                 sender, receiver, amount = decode_logs([transfer])["Transfer"][0].values()
-                if sender == DISPERSE_APP and transfer.address == tx.token.address.address:
+                if sender == DISPERSE_APP:
                     amount /= Decimal(tx.token.scale)
                     price = Decimal(get_price(transfer.address, block=tx.block))
                     TreasuryTx(
@@ -66,76 +68,73 @@ def is_disperse_dot_app(tx: TreasuryTx) -> bool:
                         value_usd = round(amount * price, 18),
                         txgroup = cache_txgroup(PENDING_LABEL).txgroup_id,
                     )
-            commit()
+        commit()
 
-            # Only sort the input tx once we are sure we have the output txs
-            # NOTE this only works for ERC20s
-            if len(query) == len(transfers) and len(query) > 0:
-                return True
-        
-        if len(query) == 0 and tx.token.address.address == eee_address and tx.to_address:
-            # find internal txs and add to pg
-            try:
-                for int_tx in chain.get_transaction(tx.hash).internal_transfers:
-                    if int_tx['from'] == tx.to_address.address:
-                        amount = int_tx['value'] / Decimal(tx.token.scale)
-                        price = Decimal(get_price(eee_address, tx.block))
-                        TreasuryTx(
-                            chain = chain_dbid(),
-                            timestamp = chain[tx.block].timestamp,
-                            block = tx.block,
-                            hash = tx.hash,
-                            log_index = None,
-                            token = token_dbid("0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE"),
-                            from_address = tx.to_address,
-                            to_address = address_dbid(int_tx['to']),
-                            amount = amount,
-                            price = round(price, 18),
-                            value_usd = round(amount * price, 18),
-                            txgroup = cache_txgroup(PENDING_LABEL).txgroup_id,
-                        )
-                commit()
-            except HTTPError as e:
-                print(e.response.__dict__)
-                raise
-        
-        # Did we already insert the outputs for this disperse tx / token? 
-        if len(query) > 0:
+        # Only sort the input tx once we are sure we have the output txs
+        # NOTE this only works for ERC20s
+        if len(query) == len(transfers) and len(query) > 0:
             return True
+    
+    if len(query) == 0 and tx.token == eee_address and tx.to_address:
+        # find internal txs and add to pg
+        try:
+            for int_tx in chain.get_transaction(tx.hash).internal_transfers:
+                if tx.to_address == int_tx['from']:
+                    amount = int_tx['value'] / Decimal(tx.token.scale)
+                    price = Decimal(get_price(eee_address, tx.block))
+                    TreasuryTx(
+                        chain = chain_dbid(),
+                        timestamp = chain[tx.block].timestamp,
+                        block = tx.block,
+                        hash = tx.hash,
+                        log_index = None,
+                        token = token_dbid("0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE"),
+                        from_address = tx.to_address,
+                        to_address = address_dbid(int_tx['to']),
+                        amount = amount,
+                        price = round(price, 18),
+                        value_usd = round(amount * price, 18),
+                        txgroup = cache_txgroup(PENDING_LABEL).txgroup_id,
+                    )
+            commit()
+        except HTTPError as e:
+            print(e.response.__dict__)
+            raise
+    
+    # Did we already insert the outputs for this disperse tx / token? 
+    return len(query) > 0
 
 def is_gnosis_execution(tx: TreasuryTx) -> bool:
-    if (
-        tx.amount == 0
-        and tx.to_address
-        and tx.to_address.address in treasury.addresses
-        ):
-        try:
-            con = Contract(tx.to_address.address)
-        except ContractNotVerified:
-            return False
+    if tx.amount != 0 or tx.to_address.address not in treasury.addresses:
+        return False
+    
+    try:
+        con = tx.to_address.contract
+    except ContractNotVerified:
+        return False
 
-        if con._build['contractName'] != "GnosisSafeProxy":
-            return False
-        
-        if tx._transaction.status == 0: # Reverted
-            return True
-        try:
-            events = tx._events
-        except RPCRequestError:
-            return False
-        if "ExecutionSuccess" in events:
-            return True
+    if con._build['contractName'] != "GnosisSafeProxy":
+        return False
+    
+    if tx._transaction.status == 0: # Reverted
+        return True
+    try:
+        events = tx._events
+    except RPCRequestError:
+        return False
+    return "ExecutionSuccess" in events
 
 def is_weth(tx: TreasuryTx) -> bool:
     # Withdrawal
-    if tx.from_address.address == ZERO_ADDRESS and tx.to_address and tx.to_address.address in treasury.addresses and tx.token.address.address == constants.weth:
+    if tx.from_address == ZERO_ADDRESS and tx.to_address.address in treasury.addresses and tx.token == constants.weth:
         return True
-    if tx.from_address.address in treasury.addresses and tx.to_address and tx.to_address.address == constants.weth and tx.token.address.address == "0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE":
+    if tx.from_address.address in treasury.addresses and tx.to_address == constants.weth and tx.token == "0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE":
         return True
-    if tx.from_address.address in treasury.addresses and tx.to_address and tx.to_address.address == ZERO_ADDRESS and tx.token.address.address == constants.weth:
+    if tx.from_address.address in treasury.addresses and tx.to_address == ZERO_ADDRESS and tx.token == constants.weth:
         return True
-    if tx.from_address.address == constants.weth and tx.to_address and tx.to_address.address in treasury.addresses and tx.token.address.address == "0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE":
+    if tx.from_address == constants.weth and tx.to_address.address in treasury.addresses and tx.token == "0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE":
         return True
+    return False
 
 def is_stream_replenishment(tx: TreasuryTx) -> bool:
     if tx._to_nickname in  ["Contract: LlamaPay", "Vesting Escrow Factory"]:
@@ -152,6 +151,7 @@ def is_stream_replenishment(tx: TreasuryTx) -> bool:
         if tx.value_usd > 0:
             tx.value_usd *= -1
         return True
+    return False
 
 def is_scam_airdrop(tx: TreasuryTx) -> bool:
     hashes = {
@@ -161,11 +161,11 @@ def is_scam_airdrop(tx: TreasuryTx) -> bool:
     }.get(chain.id, [])
     return tx in HashMatcher(hashes)
 
+_OTC_TRADER_ADDRESS = "0xfa42022707f02cFfC80557B166d625D52346dd6d"
+
 def is_otc_trader(tx: TreasuryTx) -> bool:
     """ Yearn supplied liquidity so people could convert from YFI <> WOOFY on Fantom. """ 
-    OTC_TRADER_ADDRESS = "0xfa42022707f02cFfC80557B166d625D52346dd6d"
-    if tx.to_address:
-        return OTC_TRADER_ADDRESS in [tx.from_address.address, tx.to_address.address]
+    return tx.to_address is not None and _OTC_TRADER_ADDRESS in [tx.from_address.address, tx.to_address.address]
 
 def is_reclaim_locked_vest(tx: TreasuryTx) -> bool:
     """Unvested portion of vesting packages clawed back to prepare for veYFI"""
@@ -189,15 +189,16 @@ def is_ycrv_for_testing(tx: TreasuryTx) -> bool:
         ["0x85dc73fca1a8ec500bc46cd18782b8bba4c811714597fbdaaa209ac9f0c7f253", Filter('log_index', 279)],
     ])
 
+VESTING_FACTORY = "0x98d3872b4025ABE58C4667216047Fe549378d90f"
+
 def is_vest_factory(tx: TreasuryTx) -> bool:
-    VESTING_FACTORY = "0x98d3872b4025ABE58C4667216047Fe549378d90f"
-    return tx.to_address.address == VESTING_FACTORY
+    return tx.to_address == VESTING_FACTORY
 
 def is_ignore_ymechs(tx: TreasuryTx) -> bool:
     """After may 1 2023 ymechs wallet separated from yearn treasury"""
-    if tx.block > 17162286:
-        if tx._from_nickname == "yMechs Multisig" and tx.to_address.address not in TREASURY_WALLETS:
-            return True
-        if tx._to_nickname == "yMechs Multisig" and tx.from_address.address not in TREASURY_WALLETS:
-            return True
-    return False
+    if tx.block <= 17162286:
+        return False
+    return (
+        (tx._from_nickname == "yMechs Multisig" and tx.to_address not in TREASURY_WALLETS)
+        or (tx._to_nickname == "yMechs Multisig" and tx.from_address not in TREASURY_WALLETS)
+    )

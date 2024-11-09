@@ -20,8 +20,8 @@ class _TxGroup:
     
     def sort(self, tx: TreasuryTx) -> Optional[TxGroup]:
         for child in self.children:
-            txgroup = child.sort(tx)
-            if txgroup:
+            if txgroup := child.sort(tx):
+                print(f'sorted {tx} to {self.label}')
                 return txgroup
     
     def create_child(self, label: str, check: Optional[Callable] = None) -> "ChildTxGroup":
@@ -58,16 +58,18 @@ class ChildTxGroup(_TxGroup):
         return self.parent.top
     
     def sort(self, tx: TreasuryTx) -> Optional[TxGroup]:
+        if not hasattr(self, 'check'):
+            return super().sort(tx)
         try:
-            if hasattr(self, 'check') and self.check(tx):
+            result = self.check(tx)
+            if not isinstance(result, bool):
+                raise TypeError(result, self, self.check)
+            if result:
+                print(f"sorted {tx} to {self.label}")
                 return self.txgroup
         except ContractNotVerified:
             logger.info("ContractNotVerified when sorting %s with %s", tx, self.label)
-        except (AssertionError, AttributeError, TransactionError, HTTPError, NotImplementedError, ValueError) as e:
-            #if isinstance(e, TransactionIntegrityError):
-            #    logger.warning("%s when sorting %s with %s.", e.__repr__(), tx, self.label)
-            #    sentry_sdk.capture_exception(e)
-            #else:
+        except (AssertionError, AttributeError, TransactionError, HTTPError, NotImplementedError, ValueError, TypeError, NameError) as e:
             logger.exception(e)
             raise
         except Exception as e:

@@ -1,6 +1,7 @@
 
+from decimal import Decimal
+
 from brownie import ZERO_ADDRESS
-from y import Contract
 
 from yearn.entities import TreasuryTx
 from yearn.treasury.accountant.classes import HashMatcher
@@ -11,28 +12,25 @@ def is_aave_deposit(tx: TreasuryTx) -> bool:
     # Atoken side
 
     # Underlying side
-    pass
+    # TODO we didnt need this historically??
+    return False
 
 def is_aave_withdrawal(tx: TreasuryTx) -> bool:
     # Atoken side
-    if tx.from_address.address in treasury.addresses and tx.to_address and tx.to_address.address == ZERO_ADDRESS and "RedeemUnderlying" in tx._events and hasattr(Contract(tx.token.address.address), 'underlyingAssetAddress'):
+    if tx.from_address.address in treasury.addresses and tx.to_address == ZERO_ADDRESS and "RedeemUnderlying" in tx._events and hasattr(tx.token.contract, 'underlyingAssetAddress'):
         for event in tx._events['RedeemUnderlying']:
             if (
-                event['_user'] == tx.from_address.address and
-                Contract(tx.token.address.address).underlyingAssetAddress() == event['_reserve'] and
-                round(event['_amount'] / tx.token.scale, 15) == round(float(tx.amount), 15)
+                tx.from_address == event['_user'] and
+                tx.token.contract.underlyingAssetAddress() == event['_reserve'] and
+                Decimal(event['_amount']) / tx.token.scale == tx.amount
             ):
                 return True
 
 
     # Underlying side
-    if tx.to_address and tx.to_address.address in treasury.addresses and "RedeemUnderlying" in tx._events:
+    if tx.to_address.address in treasury.addresses and "RedeemUnderlying" in tx._events:
         for event in tx._events['RedeemUnderlying']:
-            if (
-                tx.token.address.address == event['_reserve'] and
-                event['_user'] == tx.to_address.address and
-                round(event['_amount'] / tx.token.scale, 15) == round(float(tx.amount), 15)
-            ):
+            if tx.token == event['_reserve'] and tx.to_address == event['_user'] and Decimal(event['_amount']) / tx.token.scale == tx.amount:
                 return True
     
     # TODO: If these end up becoming more frequent, figure out sorting hueristics.

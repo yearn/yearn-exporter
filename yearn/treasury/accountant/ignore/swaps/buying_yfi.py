@@ -32,11 +32,10 @@ VYPER_BUYERS = [
 ]
 
 def is_buyer_top_up(tx: TreasuryTx) -> bool:
-    if chain.id == Network.Mainnet and tx._symbol == "DAI" and tx.to_address and tx.to_address.address in VYPER_BUYERS:
-        return True
+    return chain.id == Network.Mainnet and tx._symbol == "DAI" and tx.to_address in VYPER_BUYERS
 
 def is_buying_with_buyer(tx: TreasuryTx) -> bool:
-    if chain.id == Network.Mainnet and tx._symbol == "YFI" and tx.to_address and tx.to_address.address == YCHAD_MULTISIG:
+    if chain.id == Network.Mainnet and tx._symbol == "YFI" and tx.to_address == YCHAD_MULTISIG:
         event_args = {"buyer", "yfi", "dai"}
         if "Buyback" in tx._events and all(arg in tx._events["Buyback"] for arg in event_args):
             if tx.amount == tx._events["Buyback"]["yfi"] / Decimal(10**18):
@@ -54,22 +53,25 @@ def is_buying_with_buyer(tx: TreasuryTx) -> bool:
             ]):
                 return True
             raise ValueError(f'from node: {tx._events["Buyback"]["yfi"] / Decimal(10**18)} from db: {tx.amount} diff: {tx._events["Buyback"]["yfi"] / Decimal(10**18) - tx.amount}')
+    return False
 
 YFI_BUYBACK_AUCTIONS = "0x4349ed200029e6Cf38F1455B9dA88981F1806df3"
 
 def is_buying_with_auction(tx: TreasuryTx) -> bool:
-    if tx._symbol == 'YFI' and tx.to_address and tx.to_address.address == YCHAD_MULTISIG and "AuctionTaken" in tx._events:
-        auctions_taken = tx._events['AuctionTaken']
-        if len(auctions_taken) > 1:
-            raise NotImplementedError
-        event = auctions_taken[0]
-        print(event)
-        if event.address != YFI_BUYBACK_AUCTIONS:
-            raise ValueError(event.address)
-        # did the auction contract send weth to tx.sender?
-        for transfer in tx._events['Transfer']:
-            if transfer.address == WRAPPED_GAS_COIN:
-                print(transfer)
-                sender, receiver, amount = transfer.values()
-                if sender == YFI_BUYBACK_AUCTIONS and receiver == tx.from_address.address and amount == event['taken']:
-                    return True
+    if tx._symbol != 'YFI' or tx.to_address != YCHAD_MULTISIG or "AuctionTaken" not in tx._events:
+        return False
+    auctions_taken = tx._events['AuctionTaken']
+    if len(auctions_taken) > 1:
+        raise NotImplementedError
+    event = auctions_taken[0]
+    if event.address != YFI_BUYBACK_AUCTIONS:
+        raise ValueError(event.address, event)
+    # did the auction contract send weth to tx.sender?
+    for transfer in tx._events['Transfer']:
+        if transfer.address == WRAPPED_GAS_COIN:
+            sender, receiver, amount = transfer.values()
+            if sender == YFI_BUYBACK_AUCTIONS and tx.from_address == receiver and amount == event['taken']:
+                return True
+            print(f"AuctionTaken: {event}")
+            print(f"Transfer: {transfer}")
+    return False

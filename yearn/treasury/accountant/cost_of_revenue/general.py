@@ -2,9 +2,11 @@
 import asyncio
 import logging
 from functools import lru_cache
+from typing import Tuple
 
-from brownie import chain, convert
+from brownie import chain
 from y import Network
+from y.datatypes import Address
 
 from yearn import constants
 from yearn.entities import TreasuryTx
@@ -28,7 +30,7 @@ hashes = {
         'ymechs': [
             '0x1ab9ff3228cf25bf2a7c1eac596e836069f8c0adc46acd46d948eb77743fbb96',
             '0xe2a6bec23d0c73b35e969bc949072f8c1768767b06d57e5602b2b95eddf41a66',
-            ["0xeed864c87f01996ead5a8315cccd0b3f22f384ef3b4e272e4751065f909b4d3d", Filter('to_address.address', "0x966Fa7ACF1b6c732458e4d3264FD2393aec840bA")]
+            ["0xeed864c87f01996ead5a8315cccd0b3f22f384ef3b4e272e4751065f909b4d3d", Filter('to_address', "0x966Fa7ACF1b6c732458e4d3264FD2393aec840bA")]
         ],
         'ykeeper': [
             '0x1ab9ff3228cf25bf2a7c1eac596e836069f8c0adc46acd46d948eb77743fbb96',
@@ -47,18 +49,21 @@ def _get_flat_wrappers(partner: Partner):
     logger.info("loaded %s wrappers for %s", len(wrappers), partner)
     return wrappers
 
+@lru_cache(maxsize=None)
+def _relevant_partners(to_address: Address) -> Tuple[Partner]:
+    return tuple(partner for partner in partners if to_address in [partner.treasury, *partner.retired_treasuries])
+
 def is_partner_fees(tx: TreasuryTx) -> bool:
-    if tx.from_address.address == constants.YCHAD_MULTISIG and tx.to_address:
-        for partner in partners:
-            if tx.to_address.address != partner.treasury and tx.to_address.address not in getattr(partner, 'retired_treasuries', []):
-                continue
-            if any(tx.token.address.address == wrapper.vault for wrapper in _get_flat_wrappers(partner)): # gotta somehow async this without asyncing this
-                return True
-            else:
+    if tx.from_address == constants.YCHAD_MULTISIG and tx.to_address is not None:
+        for partner in _relevant_partners(tx.to_address.address):
+            # gotta somehow async this without asyncing this
+            if wrappers := _get_flat_wrappers(partner):
+                if any(tx.token == wrapper.vault for wrapper in wrappers):
+                    return True
                 logger.warning('look at %s, seems odd', tx)
-    
+
     # DEV figure out why these weren't captured by the above
-    hashes = {
+    return tx in HashMatcher({
         Network.Mainnet: [
             # Thought we automated these... why aren't they sorting successfully? 
             ["0x590b0cc67ba42dbc046b8cbfe2d314fbe8da82f11649ef21cdacc61bc9752d83", IterFilter('log_index',[275,276,278])],
@@ -68,8 +73,4 @@ def is_partner_fees(tx: TreasuryTx) -> bool:
             ["0x9681276a8668f5870551908fc17be3553c82cf6a9fedbd2fdb43f1c05385dca1", Filter('log_index', 173)],
             ["0xa12c99e2f4e5ffec9d280528968d615ab3d58483b37e8b021865163655892ea0", IterFilter('log_index', [223, 228])]
         ],
-    }.get(chain.id, [])
-
-    if tx in HashMatcher(hashes):
-        return True
-    return False
+    }.get(chain.id, []))

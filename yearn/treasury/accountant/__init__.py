@@ -27,7 +27,7 @@ GNOSIS_IMPLEMENTATION = {
     # Version 1.3.0
     Network.Mainnet: "0xDaB5dc22350f9a6Aff03Cf3D9341aAD0ba42d2a6",
     Network.Fantom: "0xd9db270c1b5e3bd161e8c8503c55ceabee709552",
-}.get(chain.id,None)
+}.get(chain.id)
 
 GNOSIS_ABI = Contract(GNOSIS_IMPLEMENTATION).abi if GNOSIS_IMPLEMENTATION else None
 
@@ -42,9 +42,8 @@ def __ensure_topics_are_known(addresses: List[Address]) -> None:
     no_topics = [] 
     for address in tqdm(addresses):
         try:
-            if not Contract(address.address).topics:
-                if not force_gnosis_safe_abi(address):
-                    no_topics.append(address)
+            if not Contract(address.address).topics and not force_gnosis_safe_abi(address):
+                no_topics.append(address)
         except ContractNotFound:
             # This is MOST LIKELY unimportant and not Yearn related.
             logger.debug("%s self destructed", address.address)
@@ -68,9 +67,8 @@ def __ensure_signatures_are_known(addresses: List[Address]) -> None:
     no_sigs = []
     for address in tqdm(addresses):
         try:
-            if not Contract(address.address).signatures:
-                if not force_gnosis_safe_abi(address):
-                    no_sigs.append(address)
+            if not Contract(address.address).signatures and not force_gnosis_safe_abi(address):
+                no_sigs.append(address)
         except ContractNotFound:
             # This is MOST LIKELY unimportant and not Yearn related.
             logger.debug("%s self destructed", address.address)

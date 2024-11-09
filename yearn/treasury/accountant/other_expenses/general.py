@@ -1,37 +1,30 @@
 
-from decimal import Decimal
-
 from yearn.entities import TreasuryTx
 from yearn.treasury.accountant.classes import Filter, HashMatcher, IterFilter
 from yearn.treasury.accountant.constants import treasury
 
 
 def is_strategist_buyout(tx: TreasuryTx) -> bool:
-    hashes = [
+    return tx in HashMatcher([
         ["0x47035f156d4e6144c144b2ac5e91497e353c9a4e23133587bbf3da2f9d7da596", Filter("_symbol", "YFI")]
-    ]
-    return tx in HashMatcher(hashes)
+    ])
 
 def is_gitcoin_matching_donation(tx: TreasuryTx) -> bool:
     gitcoin = "0xde21F729137C5Af1b01d73aF1dC21eFfa2B8a0d6"
-    if tx.from_address.address in treasury.addresses and tx.to_address and tx.to_address.address == gitcoin and tx._symbol in ["DAI", "USDC"]:
-        return True
+    return tx.from_address.address in treasury.addresses and tx.to_address == gitcoin and tx._symbol in ["DAI", "USDC"]
 
 def is_yacademy_fellow_grant(tx: TreasuryTx) -> bool:
-    hashes = [
+    return tx._from_nickname == "Disperse.app" and tx in HashMatcher([
         "0x2b74fb1a5deadbb0885dfa33502304382525a0847350a688b707b3882930eeab",
         "0x028eff213177fbfa170bc9a3227096b1d688a8b6191c8ec06321299a5396949f",
-    ]
-    if tx._from_nickname == "Disperse.app":
-        return tx in HashMatcher(hashes)
+    ])
 
 def is_yfi_story(tx: TreasuryTx) -> bool:
     story_dot_ychad_dot_eth = "0x93C6c14C134C4fF52cbB6BC2f50F19d84874cDD1"
-    if tx.to_address and tx.to_address.address == story_dot_ychad_dot_eth:
-        return True
+    return tx.to_address == story_dot_ychad_dot_eth
     
 def is_aztek_gas_subsidy(tx: TreasuryTx) -> bool:
-    return tx.to_address and tx.to_address.address == "0xABc30E831B5Cc173A9Ed5941714A7845c909e7fA"
+    return tx.to_address == "0xABc30E831B5Cc173A9Ed5941714A7845c909e7fA"
 
 def is_devcon_event(tx: TreasuryTx) -> bool:
     return tx in HashMatcher([
@@ -46,7 +39,6 @@ def is_eth_global(tx: TreasuryTx) -> bool:
 
 def is_veyfi_gas(tx: TreasuryTx) -> bool:
     """ a gas subsidy for contributors to fund their veyfi wallet """
-
     return tx._symbol == "ETH" and tx in HashMatcher([
         "0x8ed7ee716e04096a7274188b5b371bc7c92aff305fa7b47f32ad622374fb23fc",
         "0x9b8f9dfaaedceaeb2b286db92f2aba2d2e519954b47a2d603cd4ce5fd03336fe",
@@ -144,7 +136,7 @@ def is_unknown(tx: TreasuryTx) -> bool:
     ])
 
 def is_vyper_donation(tx: TreasuryTx) -> bool:
-    return tx.to_address.address == "0x70CCBE10F980d80b7eBaab7D2E3A73e87D67B775"
+    return tx.to_address == "0x70CCBE10F980d80b7eBaab7D2E3A73e87D67B775"
 
 def is_ybudget_reward(tx: TreasuryTx) -> bool:
     return tx.hash == "0xa1b242b2626def6cdbe49d92a06aad96fa018c27b48719a98530c5e5e0ac61c5"

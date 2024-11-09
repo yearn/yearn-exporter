@@ -3,12 +3,15 @@ import typing
 from datetime import date, datetime, timedelta
 from decimal import Decimal
 from functools import cached_property, lru_cache
+from typing import Union
 
 from brownie import chain
 from brownie.network.event import _EventItem
 from brownie.network.transaction import TransactionReceipt
 from cachetools.func import ttl_cache
+from eth_portfolio.address import PortfolioAddress
 from pony.orm import *
+from typing_extensions import Self
 from y import Contract, get_price
 from y.time import closest_block_after_timestamp
 from y.contracts import contract_creation_block
@@ -16,6 +19,8 @@ from y.utils.events import decode_logs, get_logs_asap
 
 from yearn.treasury.constants import BUYER
 from yearn.utils import dates_between
+
+Comparable = Union[str, Contract, PortfolioAddress, Self, None]
 
 db = Database()
 
@@ -81,6 +86,22 @@ class Address(db.Entity):
     vesting_escrows = Set("VestingEscrow", reverse="address")
     vests_received = Set("VestingEscrow", reverse="recipient")
     vests_funded = Set("VestingEscrow", reverse="funder")
+    
+    @property
+    def contract(self) -> Contract:
+        return Contract(self.address)
+    
+    def __eq__(self, other: Comparable):
+        if isinstance(other, str):
+            return self.address == other
+        elif isinstance(other, (Contract, PortfolioAddress)):
+            return self.address == other.address
+        elif isinstance(other, Address):
+            return self.chain == other.chain and self.address == other.address
+        return False
+
+    def __hash__(self):
+        return super().__hash__()
 
 
 class Token(db.Entity):
@@ -98,10 +119,26 @@ class Token(db.Entity):
     address = Required(Address, column="address_id")
     streams = Set('Stream', reverse="token")
     vesting_escrows = Set("VestingEscrow", reverse="token")
-
+    
     @property
+    def contract(self) -> Contract:
+        return Contract(self.address.address)
+
+    @cached_property
     def scale(self) -> int:
         return 10 ** self.decimals
+    
+    def __eq__(self, other: Union[Comparable, Address]):
+        if other is None or isinstance(other, str):
+            return self.address == other
+        elif isinstance(other, (Contract, PortfolioAddress)):
+            return self.address == other.address
+        elif isinstance(other, (Address, Token)):
+            return self.chain == other.chain and self.address == other.address
+        raise TypeError(type(other))
+
+    def __hash__(self):
+        return super().__hash__()
 
 
 # Used for wallet exporter and other analysis
@@ -119,11 +156,11 @@ class UserTx(db.Entity):
     type = Required(str, index=True)
     from_address = Required(Address, reverse="user_tx_from", column="from", index=True)
     to_address = Required(Address, reverse="user_tx_to", column="to", index=True)
-    amount = Required(Decimal,38,18)
-    price = Required(Decimal,38,18)
-    value_usd = Required(Decimal,38,18)
-    gas_used = Required(Decimal,38,1)
-    gas_price = Required(Decimal,38,1)
+    amount = Required(Decimal, 38, 18)
+    price = Required(Decimal, 38, 18)
+    value_usd = Required(Decimal, 38, 18)
+    gas_used = Required(Decimal, 38, 1)
+    gas_price = Required(Decimal, 38, 1)
 
 
 
@@ -142,9 +179,7 @@ class TxGroup(db.Entity):
 
     @property
     def top_txgroup(self):
-        if self.parent_txgroup is None:
-            return self
-        return self.parent_txgroup.top_txgroup
+        return self.parent_txgroup.top_txgroup if self.parent_txgroup else self
     
     @property
     def full_string(self):
@@ -174,11 +209,11 @@ class TreasuryTx(db.Entity):
     token = Required(Token, reverse="treasury_tx", column="token_id", index=True)
     from_address = Optional(Address, reverse="treasury_tx_from", column="from", index=True)
     to_address = Optional(Address, reverse="treasury_tx_to", column="to", index=True)
-    amount = Required(Decimal,38,18)
-    price = Optional(Decimal,38,18)
-    value_usd = Optional(Decimal,38,18)
-    gas_used = Optional(Decimal,38,1)
-    gas_price = Optional(Decimal,38,1)
+    amount = Required(Decimal, 38, 18)
+    price = Optional(Decimal, 38, 18)
+    value_usd = Optional(Decimal, 38, 18)
+    gas_used = Optional(Decimal, 38, 1)
+    gas_price = Optional(Decimal, 38, 1)
     txgroup = Required(TxGroup, reverse="treasury_tx", column="txgroup_id", index=True)
     composite_index(chain,txgroup)
 
@@ -192,10 +227,8 @@ class TreasuryTx(db.Entity):
         return get_transaction(self.hash)
     
     @property
-    def _to_nickname(self):
-        if not self.to_address:
-            return None
-        return self.to_address.nickname
+    def _to_nickname(self) -> typing.Optional[str]:
+        return self.to_address.nickname if self.to_address else None
     
     @property
     def _from_nickname(self):
@@ -529,13 +562,13 @@ class PartnerHarvestEvent(db.Entity):
     
     block = Required(int)
     timestamp = Required(int)
-    balance = Required(Decimal,38,18)
-    total_supply = Required(Decimal,38,18)
-    vault_price = Required(Decimal,38,18)
-    balance_usd = Required(Decimal,38,18)
-    share = Required(Decimal,38,18)
-    payout_base = Required(Decimal,38,18)
-    protocol_fee = Required(Decimal,38,18)
+    balance = Required(Decimal, 38, 18)
+    total_supply = Required(Decimal, 38, 18)
+    vault_price = Required(Decimal, 38, 18)
+    balance_usd = Required(Decimal, 38, 18)
+    share = Required(Decimal, 38, 18)
+    payout_base = Required(Decimal, 38, 18)
+    protocol_fee = Required(Decimal, 38, 18)
     wrapper = Required(Address, reverse='partners_tx', index=True) # we use `Address` instead of `Token` because some partner wrappers are unverified
     vault = Required(Token, index=True)
 

@@ -15,10 +15,10 @@ angle_strats_with_non_specific_names = {
 }.get(chain.id, [])
 
 def is_keep_angle(tx: TreasuryTx) -> bool:
-    if tx._symbol == "ANGLE" and tx.to_address and tx.to_address.address in treasury.addresses:
+    if tx._symbol == "ANGLE" and tx.to_address.address in treasury.addresses:
         if tx._from_nickname == "Contract: StrategyAngleUSDC":
             return True
-        return tx.from_address.address in angle_strats_with_non_specific_names
+        return tx.from_address in angle_strats_with_non_specific_names
         
     return False
 
@@ -44,21 +44,10 @@ def is_keep_bal(tx: TreasuryTx) -> bool:
         "0xe614f717b3e8273f38Ed7e0536DfBA60AD021c85",
     ]
 
-    if (
-        tx._symbol == "BAL" and
-        
-        tx.to_address and tx.to_address.address in treasury.addresses and
-        (any(f"Contract: {strat}" == tx._from_nickname for strat in strats) or (any(strat.address == tx.from_address.address) for strat in _strats))
-    ):
-        return True
-    return False
+    return tx._symbol == "BAL" and tx.to_address.address in treasury.addresses and (any(f"Contract: {strat}" == tx._from_nickname for strat in strats) or tx.from_address in _strats)
 
 def is_keep_beets(tx: TreasuryTx) -> bool:
-    if tx._symbol == "BEETS" and tx.to_address and tx.to_address.address in treasury.addresses and tx.hash != "0x1e997aa8c79ece76face8deb8fe7df4cea4f6a1ef7cd28501013ed30dfbe238f":
-        return True
-    return False
+    return tx._symbol == "BEETS" and tx.to_address.address in treasury.addresses and tx.hash != "0x1e997aa8c79ece76face8deb8fe7df4cea4f6a1ef7cd28501013ed30dfbe238f"
 
 def is_keep_pool(tx: TreasuryTx) -> bool:
-    if tx._symbol == "POOL" and tx._from_nickname == "Contract: StrategyPoolTogether" and tx.to_address and tx.to_address.address in treasury.addresses:
-        return True
-    return False
+    return tx._symbol == "POOL" and tx._from_nickname == "Contract: StrategyPoolTogether" and tx.to_address.address in treasury.addresses

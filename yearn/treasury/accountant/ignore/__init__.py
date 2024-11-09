@@ -59,28 +59,28 @@ def is_bridged(tx: TreasuryTx) -> bool:
     if tx._symbol and tx._symbol.startswith("any") and "LogAnySwapOut" in tx._events:
         for event in tx._events["LogAnySwapOut"]:
             token, sender, receiver, amount, from_chainid, to_chainid = event.values()
-            if from_chainid == chain.id and tx.token.address.address == token and Decimal(amount) / tx.token.scale == tx.amount:
+            if from_chainid == chain.id and tx.token == token and Decimal(amount) / tx.token.scale == tx.amount:
                 return True
     
     # Anyswap out - token part
     elif tx.to_address and tx.to_address.token and tx.to_address.token.symbol and tx.to_address.token.symbol.startswith("any") and "LogAnySwapOut" in tx._events:
         for event in tx._events["LogAnySwapOut"]:
             token, sender, receiver, amount, from_chainid, to_chainid = event.values()
-            if from_chainid == chain.id and sender == tx.from_address.address and tx.token.address.address == Contract(token).underlying() and Decimal(amount) / tx.token.scale == tx.amount:
+            if from_chainid == chain.id and tx.from_address == sender and tx.token == Contract(token).underlying() and Decimal(amount) / tx.token.scale == tx.amount:
                 return True
     
     # Anyswap in - anyToken part
     elif tx._symbol and tx._symbol.startswith("any") and "LogAnySwapIn" in tx._events:
         for event in tx._events["LogAnySwapIn"]:
             txhash, token, receiver, amount, from_chainid, to_chainid = event.values()
-            if to_chainid == chain.id and tx.token.address.address == token and Decimal(amount) / tx.token.scale == tx.amount:
+            if to_chainid == chain.id and tx.token == token and Decimal(amount) / tx.token.scale == tx.amount:
                 return True
     
     # Anyswap in - token part
     elif tx.from_address and tx.from_address.token and tx.from_address.token.symbol and tx.from_address.token.symbol.startswith("any") and "LogAnySwapIn" in tx._events:
         for event in tx._events["LogAnySwapIn"]:
             txhash, token, receiver, amount, from_chainid, to_chainid = event.values()
-            if to_chainid == chain.id and receiver == tx.to_address.address and tx.token.address.address == Contract(token).underlying() and Decimal(amount) / tx.token.scale == tx.amount:
+            if to_chainid == chain.id and tx.to_address == receiver and tx.token == Contract(token).underlying() and Decimal(amount) / tx.token.scale == tx.amount:
                 return True
     
     # Bridge to Base for veFarming @ multisig 0xcf9fDe11a7Ab556184529442f9fCA37FB6220970

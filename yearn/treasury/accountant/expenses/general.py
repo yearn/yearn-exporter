@@ -1,4 +1,6 @@
 
+from decimal import Decimal
+
 from brownie import chain
 from y.networks import Network
 
@@ -45,5 +47,4 @@ def is_travel_reimbursement(tx: TreasuryTx) -> bool:
     return tx in HashMatcher(hashes)
 
 def is_sms_discretionary_budget(tx: TreasuryTx) -> bool:
-    if tx.from_address.address in treasury.addresses and tx._to_nickname == "Yearn Strategist Multisig" and tx._symbol == "DAI" and tx.amount == 200_000.0:
-        return True
+    return tx.from_address.address in treasury.addresses and tx._to_nickname == "Yearn Strategist Multisig" and tx._symbol == "DAI" and tx.amount == Decimal(200_000)
