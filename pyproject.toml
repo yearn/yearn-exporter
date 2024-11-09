@@ -9,7 +9,7 @@ authors = ["Your Name <you@example.com>"]
 
 [tool.poetry.dependencies]
 python = ">=3.10,<3.11"
-eth-brownie = "1.19.3"
+eth-brownie = ">=1.20.3,<1.21"
 click = ">=7.1.2"
 tabulate = ">=0.8.7"
 joblib = ">=1.0.1"
