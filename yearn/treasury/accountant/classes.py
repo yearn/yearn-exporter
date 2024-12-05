@@ -69,6 +69,10 @@ class ChildTxGroup(_TxGroup):
                 return self.txgroup
         except ContractNotVerified:
             logger.info("ContractNotVerified when sorting %s with %s", tx, self.label)
+        except KeyError as e:
+            if str(e) != "'components'":
+                # this is some weird brownie thing we dont care about
+                raise
         except (AssertionError, AttributeError, TransactionError, HTTPError, NotImplementedError, ValueError, TypeError, NameError) as e:
             logger.exception(e)
             raise
