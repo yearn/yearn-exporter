@@ -74,6 +74,9 @@ def cache_address(address: str) -> Address:
 def address_dbid(address: str) -> int:
     return cache_address(address).address_id
 
+class BadToken(ValueError):
+    ...
+
 @db_session
 def cache_token(address: str) -> Token:
     if token := Token.get(address=address_dbid(address)):
@@ -92,7 +95,7 @@ def cache_token(address: str) -> Token:
         decimals = 18
     else:
         token = Contract(address)
-        symbol, name, decimals = fetch_multicall([token,'symbol'], [token,'name'], [token,'decimals'])
+        symbol, name, decimals = fetch_multicall([token, 'symbol'], [token, 'name'], [token, 'decimals'])
 
         # MKR contract returns name and symbol as bytes32 which is converted to a brownie HexString
         # try to decode it
@@ -100,6 +103,12 @@ def cache_token(address: str) -> Token:
             name = hex_to_string(name)
         if isinstance(symbol, HexString):
             symbol = hex_to_string(symbol)
+    
+    if not name:
+        raise BadToken(f"name for {address} is {name}")
+    
+    if not symbol:
+        raise BadToken(f"symbol for {address} is {symbol}")
 
     # update address nickname for token
     address_entity = cache_address(address)
@@ -129,7 +138,8 @@ def cache_token(address: str) -> Token:
             logger.warning("%s for %s %s", e, cache_token, address)
         except ValueError as e:
             """ Give us a little more info to help with debugging. """
-            raise ValueError(str(e), token.address, symbol, name, decimals)
+            e.args = *e.args, token.address, symbol, name, decimals
+            raise
 
 @lru_cache(maxsize=None)
 def token_dbid(address: str) -> int:
@@ -154,9 +164,7 @@ def last_recorded_block(Entity: db.Entity) -> int:
     '''
     Returns last block recorded for sql entity type `Entity`
     '''
-    if Entity == UserTx:
-        return select(max(e.block) for e in Entity if e.chain.chainid == chain.id).first()
-    elif Entity == TreasuryTx:
+    if Entity in [UserTx, TreasuryTx]:
         return select(max(e.block) for e in Entity if e.chain.chainid == chain.id).first()
     return select(max(e.block) for e in Entity if e.chainid == chain.id).first()
 
@@ -167,7 +175,7 @@ def fetch_balances(vault_address: str, block=None) -> Dict[str, Decimal]:
         # NOTE: we use `postgres.` instead of `self.` so we can make use of parallelism
         raise Exception('this block has not yet been cached into postgres')
     if block:
-        balances = db.select(f"""
+        balances = db.select("""
             a.wallet, coalesce(amount_in,0) - coalesce(amount_out,0) balance
             from (
                 select "to" wallet, sum(amount) amount_in
@@ -179,7 +187,7 @@ def fetch_balances(vault_address: str, block=None) -> Dict[str, Decimal]:
                 group by "from") b on a.wallet = b.wallet
                 """)
     else:
-        balances = db.select(f"""
+        balances = db.select("""
             a.wallet, coalesce(amount_in,0) - coalesce(amount_out,0) balance
             from (
                 select "to" wallet, sum(amount) amount_in
