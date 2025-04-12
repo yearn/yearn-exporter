@@ -138,7 +138,7 @@ def log_exceptions(func: Callable[..., Awaitable[None]]) -> Callable[..., Awaita
             await func(*args, **kwargs)
         except AttributeError as e:
             # this implies an issue with our code or that the brownie network failed to connect/has disconnected and the container must restart
-            raise e
+            raise
         except Exception as e:
             logger.exception(e)
             if SENTRY_DSN is not None:

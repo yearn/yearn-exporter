@@ -47,7 +47,7 @@ def set_exc(func):
             return await func(self)
         except Exception as e:
             self._done.set()
-            raise e
+            raise
     return wrap
 
 def wait_or_exit_after(func):
