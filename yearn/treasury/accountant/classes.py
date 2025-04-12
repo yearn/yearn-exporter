@@ -1,5 +1,6 @@
 
 import logging
+from operator import attrgetter
 from requests import HTTPError
 from typing import Any, Callable, Iterable, List, Optional, Tuple, Union
 
@@ -91,33 +92,26 @@ class HashMatcher:
         self.hashes = [hash.lower() if isinstance(hash,str) else hash for hash in hashes]
     
     def __contains__(self, tx: TreasuryTx) -> bool:
-        hash = tx.hash.lower()
         for matcher in self.hashes:
             if isinstance(matcher, str):
-                if hash == matcher:
+                if tx.hash.lower() == matcher:
                     return True
             else:
                 matcher, filter = matcher
-                if hash == matcher and tx in filter:
+                if tx.hash.lower() == matcher and tx in filter:
                     return True
         return False
     
     def contains(self, tx: TreasuryTx) -> bool:
         return tx in self
 
-
 class Filter:
     def __init__(self, attribute: str, value: Any = None) -> None:
-        self.attributes = attribute.split('.') if '.' in attribute else [attribute]
+        self.get_attribute = attrgetter(attribute)
         self.value = value
 
-    def __contains__(self, object: Any) -> bool:
+    def __contains__(self, object: TreasuryTx) -> bool:
         return self.get_attribute(object) == self.value
-    
-    def get_attribute(self, object: Any) -> Any:
-        for attr in self.attributes:
-            object = getattr(object, attr)
-        return object
 
 
 class IterFilter(Filter):
