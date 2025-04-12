@@ -1,4 +1,3 @@
-
 import logging
 from operator import attrgetter
 from requests import HTTPError
@@ -106,9 +105,15 @@ class HashMatcher:
     def contains(self, tx: TreasuryTx) -> bool:
         return tx in self
 
+
+@lru_cache_lite
+def _get_getter(attribute: str) -> attrgetter:
+    return attrgetter(attribute)
+
+
 class Filter:
     def __init__(self, attribute: str, value: Any = None) -> None:
-        self.get_attribute = attrgetter(attribute)
+        self.get_attribute = _get_getter(attribute)
         self.value = value
 
     def __contains__(self, object: TreasuryTx) -> bool:
