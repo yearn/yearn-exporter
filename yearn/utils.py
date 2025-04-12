@@ -3,7 +3,6 @@ import json
 import logging
 import threading
 from datetime import datetime, timedelta
-from functools import lru_cache
 from typing import AsyncGenerator, List
 
 import a_sync
@@ -13,6 +12,7 @@ import pandas as pd
 from brownie import Contract, chain, interface, web3
 from brownie.convert.datatypes import HexString
 from brownie.network.contract import _fetch_from_explorer, _resolve_address
+from dank_mids.helpers import lru_cache_lite
 from y.networks import Network
 
 from yearn.typing import AddressOrContract
@@ -30,7 +30,7 @@ BINARY_SEARCH_BARRIER = {
     Network.Base: 0,
 }
 
-_erc20 = lru_cache(maxsize=None)(interface.ERC20)
+_erc20 = lru_cache_lite(interface.ERC20)
 
 PREFER_INTERFACE = {
     Network.Arbitrum: {
@@ -64,7 +64,7 @@ class Singleton(type):
 
 # cached Contract instance, saves about 20ms of init time
 _contract_lock = threading.Lock()
-_contract = lru_cache(maxsize=None)(Contract)
+_contract = lru_cache_lite(Contract)
 
 @eth_retry.auto_retry
 def contract(address: AddressOrContract) -> Contract:
@@ -168,7 +168,7 @@ def _extract_abi_data(address):
     return name, abi, implementation
 
 
-@lru_cache(maxsize=None)
+@lru_cache_lite
 def is_contract(address: str) -> bool:
     '''checks to see if the input address is a contract'''
     return web3.eth.get_code(address) not in ['0x',b'']

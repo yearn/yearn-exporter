@@ -1,8 +1,8 @@
 
 import asyncio
 import logging
-from functools import lru_cache
 
+from dank_mids.helpers import lru_cache_lite
 from y import Contract
 
 from yearn.entities import TreasuryTx
@@ -24,7 +24,7 @@ v2_vaults = _vaults + _experiments + _removed
 _is_y3crv = lambda tx: tx._symbol == "y3Crv" and tx._from_nickname.startswith("Contract: Strategy") and tx._from_nickname.endswith("3pool")
 _is_ypool = lambda tx: tx._symbol == "yyDAI+yUSDC+yUSDT+yTUSD" and tx._from_nickname.startswith("Contract: Strategy") and tx._from_nickname.endswith("ypool")
 
-@lru_cache(maxsize=None)
+@lru_cache_lite
 def _get_rewards(controller: Contract, block: int) -> str:
     try:
         return controller.rewards(block_identifier=block)

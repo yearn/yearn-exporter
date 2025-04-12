@@ -4,6 +4,7 @@ from decimal import Decimal
 from typing import Iterator, List, Optional
 
 from brownie import convert
+from dank_mids.helpers import lru_cache_lite
 from msgspec import UNSET, Struct
 from pony.orm import commit
 from y import Contract
