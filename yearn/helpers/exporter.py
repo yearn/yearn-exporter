@@ -12,7 +12,8 @@ import a_sync
 import eth_retry
 from brownie import chain
 from dank_mids.controller import instances
-from y.networks import Network
+from y import Network
+from y.constants import CHAINID
 from y.time import closest_block_after_timestamp_async
 
 from yearn.helpers.snapshots import (RESOLUTION, Resolution,
@@ -185,6 +186,4 @@ class Exporter:
         return self._get_runtime() / self._snapshots_fetched
     
     def _get_requests_per_snapshot(self) -> float:
-        # TODO: Fix
-        #return round(instances[0].worker.request_uid.latest / self._snapshots_fetched, 2)
-        pass
+        return round(instances[CHAINID][0].request_uid.latest / self._snapshots_fetched, 2)
