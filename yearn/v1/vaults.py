@@ -3,11 +3,11 @@ import logging
 from dataclasses import dataclass
 from typing import TYPE_CHECKING, Optional
 
-import dank_mids
+from async_lru import alru_cache
 from async_property import async_cached_property
 from brownie import ZERO_ADDRESS, interface
 from brownie.network.contract import InterfaceContainer
-from y import Contract, magic
+from y import Address, Contract, magic
 from y._decorators import stuck_coro_debugger
 from y.exceptions import PriceError, yPriceMagicError
 
@@ -22,6 +22,16 @@ if TYPE_CHECKING:
 
 logger = logging.getLogger(__name__)
 
+
+@alru_cache
+async def get_vote_proxy(vote_proxy: Address) -> Contract:
+    vote_proxy = interface.CurveYCRVVoter(vote_proxy)
+    return await Contract.from_abi("CurveYCRVVoter", vote_proxy.address, vote_proxy.abi, sync=False)
+
+@alru_cache
+async def get_ygov(strategy: Contract) -> Contract:
+    ygov = interface.YearnGovernance(await strategy.gov)
+    return await Contract.from_abi("YearnGovernance", ygov.address, ygov.abi, sync=False)
 
 @dataclass
 class VaultV1:
@@ -106,21 +116,23 @@ class VaultV1:
             # guard historical queries where there are no vote_proxy and gauge
             # for block <= 10635293 (2020-08-11)
             if vote_proxy and gauge:
-                vote_proxy = dank_mids.patch_contract(interface.CurveYCRVVoter(vote_proxy))
-                gauge = Contract(gauge)
+                vote_proxy, gauge = await asyncio.gather(
+                    get_vote_proxy(vote_proxy),
+                    Contract.coroutine(gauge),
+                )
                 boost, _apy = await asyncio.gather(
                     curve.calculate_boost(gauge, vote_proxy, block=block),
                     curve.calculate_apy(gauge, self.token, block=block),
                 )
-                info.update(boost)
-                info.update(_apy)
+                info |= boost
+                info |= _apy
                 attrs["earned"] = [gauge, "claimable_tokens", vote_proxy]  # / scale
 
         if hasattr(strategy, "earned"):
             attrs["lifetime earned"] = [strategy, "earned"]  # /scale
 
         if strategy._name == "StrategyYFIGovernance":
-            ygov = dank_mids.patch_contract(interface.YearnGovernance(await strategy.gov.coroutine()))
+            ygov = await get_ygov(strategy)
             attrs["earned"] = [ygov, "earned", strategy]
             attrs["reward rate"] = [ygov, "rewardRate"]
             attrs["ygov balance"] = [ygov, "balanceOf", strategy]
@@ -143,7 +155,7 @@ class VaultV1:
             info["token price"] = float(await self.get_price(block=block)) if info["vault total"] > 0 else 0
 
         info["tvl"] = info["vault balance"] * float(info["token price"])
-            
+
         return info
 
     @stuck_coro_debugger
