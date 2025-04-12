@@ -13,7 +13,7 @@ from y.utils.events import ProcessedEvents
 from yearn.multicall2 import fetch_multicall_async
 from yearn.utils import safe_views
 
-STRATEGY_VIEWS_SCALED = [
+STRATEGY_VIEWS_SCALED = {
     "maxDebtPerHarvest",
     "minDebtPerHarvest",
     "totalDebt",
@@ -23,7 +23,7 @@ STRATEGY_VIEWS_SCALED = [
     "lentTotalAssets",
     "balanceOfPool",
     "balanceOfWant",
-]
+}
 
 STRATEGY_EVENTS = ["Harvested"]
 
