@@ -6,6 +6,7 @@ name = "yearn-exporter"
 version = "1.0.0"
 description = "yearn exporter"
 authors = ["Your Name <you@example.com>"]
+package-mode = false
 
 [tool.poetry.dependencies]
 python = ">=3.10,<3.11"
@@ -24,15 +25,20 @@ matplotlib = ">=3.6.1"
 sqlalchemy = ">=1.4.41"
 sentry-sdk = ">=2.1.1,<2.2"
 pytest-bdd = ">=5.0.0"
-dank_mids = "4.20.98"
+#dank_mids = "4.20.114"
 eth_retry = ">=0.1.19"
 eth-hash = { version = "*", extras = ["pysha3"] }
-ez-a-sync = "^0.22.13"
+ez-a-sync = ">=0.29,<0.31"
 python-telegram-bot = "13.15"
-ypricemagic = "4.0.14"
-eth-portfolio = { git = "https://www.github.com/BobTheBuidler/eth-portfolio", branch = "master" }
+ypricemagic = ">=4.4.4,<4.5"
+
+eth-portfolio = { git = "https://www.github.com/BobTheBuidler/eth-portfolio", branch = "trace-semaphore" }
+#eth-portfolio = { git = "https://www.github.com/BobTheBuidler/eth-portfolio", branch = "refactor" }
+#ypricemagic = { git = "https://www.github.com/BobTheBuidler/ypricemagic", branch = "optimize-pools-for-token" }
 memray = "*"
 numpy = "<2"
+
+uvloop = "*"
 
 [build-system]
 requires = ["poetry-core"]
