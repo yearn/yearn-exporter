@@ -24,8 +24,11 @@ Comparable = Union[str, Contract, PortfolioAddress, Self, None]
 
 db = Database()
 
+# makes type checking work, see below for info:
+# https://pypi.org/project/pony-stubs/
+DbEntity = db.Entity
 
-class Chain(db.Entity):
+class Chain(DbEntity):
     _table_ = "chains"
     chain_dbid = PrimaryKey(int, auto=True)
 
@@ -40,7 +43,7 @@ class Chain(db.Entity):
     partners_txs = Set("PartnerHarvestEvent")
 
 
-class Block(db.Entity):
+class Block(DbEntity):
     _table_ = "blocks"
     block_id = PrimaryKey(int, auto=True)
 
@@ -51,7 +54,7 @@ class Block(db.Entity):
     snapshots = Set("Snapshot")
 
 
-class Snapshot(db.Entity):
+class Snapshot(DbEntity):
     _table_ = "snapshots"
     snapshot_id = PrimaryKey(int, auto=True)
 
@@ -62,7 +65,7 @@ class Snapshot(db.Entity):
     delegated = Optional(float)  # to be filled later
 
 
-class Address(db.Entity):
+class Address(DbEntity):
     _table_ = "addresses"
     address_id = PrimaryKey(int, auto=True)
     chain = Required(Chain, reverse="addresses")
@@ -104,7 +107,7 @@ class Address(db.Entity):
         return super().__hash__()
 
 
-class Token(db.Entity):
+class Token(DbEntity):
     _table_ = "tokens"
     token_id = PrimaryKey(int, auto=True)
     chain = Required(Chain, index=True)
@@ -142,7 +145,7 @@ class Token(db.Entity):
 
 
 # Used for wallet exporter and other analysis
-class UserTx(db.Entity):
+class UserTx(DbEntity):
     _table_ = "user_txs"
     user_tx_id = PrimaryKey(int, auto=True)
     chain = Required(Chain, index=True)
@@ -165,7 +168,7 @@ class UserTx(db.Entity):
 
 
 # Treasury tx exporter
-class TxGroup(db.Entity):
+class TxGroup(DbEntity):
     _table_ = 'txgroups'
     txgroup_id = PrimaryKey(int, auto=True)
 
@@ -196,7 +199,7 @@ class TxGroup(db.Entity):
 def get_transaction(txhash: str) -> TransactionReceipt:
     return chain.get_transaction(txhash)
 
-class TreasuryTx(db.Entity):
+class TreasuryTx(DbEntity):
     _table_ = "treasury_txs"
     treasury_tx_id = PrimaryKey(int, auto=True)
     chain = Required(Chain, index=True)
@@ -241,7 +244,7 @@ class TreasuryTx(db.Entity):
 
 v3_multisig = "0x16388463d60FFE0661Cf7F1f31a7D658aC790ff7"
 
-class Stream(db.Entity):
+class Stream(DbEntity):
     _table_ = 'streams'
     stream_id = PrimaryKey(str)
 
@@ -357,7 +360,7 @@ class Stream(db.Entity):
         print(f'{symbol} per second: {self.amount_per_second / self.scale}')
         print(f'{symbol} per day: {self.amount_per_day / self.scale}')
 
-class StreamedFunds(db.Entity):
+class StreamedFunds(DbEntity):
     """ Each object represents one calendar day of tokens streamed for a particular stream. """
     _table_ = "streamed_funds"
 
@@ -401,7 +404,7 @@ def _get_rug_pull(address: str) -> typing.Optional[_EventItem]:
         if event.name == "RugPull":
             return event
 
-class VestingEscrow(db.Entity):
+class VestingEscrow(DbEntity):
     _table_ = 'vesting_escrows'
     escrow_id = PrimaryKey(int, auto=True)
 
@@ -507,7 +510,7 @@ class VestingEscrow(db.Entity):
 class VestNotActive(Exception):
     ...
 
-class VestedFunds(db.Entity):
+class VestedFunds(DbEntity):
     _table_ = "vested_funds"
     vested_funds_id = PrimaryKey(int, auto=True)
 
@@ -556,7 +559,7 @@ class VestedFunds(db.Entity):
 
 
 # Caching for partners_summary.py
-class PartnerHarvestEvent(db.Entity):
+class PartnerHarvestEvent(DbEntity):
     _table_ = 'partners_txs'
     partner_id = PrimaryKey(int, auto=True)
     
