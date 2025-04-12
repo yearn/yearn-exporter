@@ -1,4 +1,4 @@
-FROM python:3.10.12-slim as builder
+FROM python:3.10.12-slim AS builder
 RUN apt-get update && apt-get install -y gcc git python3-tk
 RUN mkdir -p /app/yearn-exporter
 WORKDIR /app/yearn-exporter
