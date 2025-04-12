@@ -4,7 +4,7 @@ from collections import defaultdict
 from dataclasses import dataclass, field
 from datetime import date, timedelta
 from decimal import Decimal
-from functools import cached_property, lru_cache
+from functools import cached_property
 from pathlib import Path
 from typing import (AsyncGenerator, Callable, Dict, List, Optional, Set, Tuple,
                     Union)
@@ -14,6 +14,7 @@ import pandas as pd
 from async_lru import alru_cache
 from async_property import async_cached_property
 from brownie import chain, convert, web3
+from dank_mids.helpers import lru_cache_lite
 from pandas import DataFrame
 from pandas.core.tools.datetimes import DatetimeScalar
 from pony.orm import OperationalError, commit, db_session
@@ -626,6 +627,6 @@ async def process_harvests(wrapper, protocol_fees) -> Optional[DataFrame]:
             raise
         return None
 
-@lru_cache(maxsize=None)
+@lru_cache_lite
 def _get_cached_total_supply_fn(vault: Contract) -> Callable[[], int]:
     return alru_cache(maxsize=None)(vault.totalSupply.coroutine)

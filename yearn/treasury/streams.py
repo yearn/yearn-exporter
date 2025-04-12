@@ -3,11 +3,11 @@ import asyncio
 import logging
 from datetime import date, datetime, timedelta, timezone
 from decimal import Decimal
-from functools import lru_cache
 from typing import Awaitable, List, Optional, Tuple
 
 from async_lru import alru_cache
 from brownie import chain
+from dank_mids.helpers import lru_cache_lite
 from eth_portfolio._cache import cache_to_disk
 from pony.orm import db_session, select
 from tqdm.asyncio import tqdm_asyncio
@@ -223,7 +223,7 @@ async def process_streams(run_forever: bool = False):
 def _get_stream_contract(stream_id: str) -> str:
     return Stream[stream_id].contract.address
 
-@lru_cache
+@lru_cache_lite
 @db_session
 def _get_token_for_stream(stream_id):
     return Stream[stream_id].token.address.address

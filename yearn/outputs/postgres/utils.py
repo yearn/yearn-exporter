@@ -5,6 +5,7 @@ from typing import Dict, Optional
 
 from brownie import ZERO_ADDRESS, chain, convert
 from brownie.convert.datatypes import HexString
+from dank_mids.helpers import lru_cache_lite
 from pony.orm import IntegrityError, TransactionIntegrityError, db_session, commit, select
 from y import Contract, ContractNotVerified, Network
 
@@ -70,7 +71,7 @@ def cache_address(address: str) -> Address:
             tries += 1
     return entity
 
-@lru_cache(maxsize=None)
+@lru_cache_lite
 def address_dbid(address: str) -> int:
     return cache_address(address).address_id
 
@@ -141,7 +142,7 @@ def cache_token(address: str) -> Token:
             e.args = *e.args, token.address, symbol, name, decimals
             raise
 
-@lru_cache(maxsize=None)
+@lru_cache_lite
 def token_dbid(address: str) -> int:
     return cache_token(address).token_id
 

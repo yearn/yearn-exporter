@@ -9,6 +9,7 @@ from brownie import chain
 from brownie.network.event import _EventItem
 from brownie.network.transaction import TransactionReceipt
 from cachetools.func import ttl_cache
+from dank_mids.helpers import lru_cache_lite
 from eth_portfolio.address import PortfolioAddress
 from pony.orm import *
 from typing_extensions import Self
@@ -446,7 +447,7 @@ class VestingEscrow(DbEntity):
             except VestNotActive as e:
                 print(e)
     
-    @lru_cache
+    @lru_cache_lite
     def get_rug_pull(self) -> typing.Optional[_EventItem]:
         return _get_rug_pull(self.address.address)
     

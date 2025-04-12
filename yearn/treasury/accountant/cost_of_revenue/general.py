@@ -1,10 +1,10 @@
 
 import asyncio
 import logging
-from functools import lru_cache
 from typing import Tuple
 
 from brownie import chain
+from dank_mids.helpers import lru_cache_lite
 from y import Network
 from y.datatypes import Address
 
@@ -41,7 +41,7 @@ hashes = {
 }.get(chain.id, {})
 
 
-@lru_cache(maxsize=None)
+@lru_cache_lite
 def _get_flat_wrappers(partner: Partner):
     loop = asyncio.get_event_loop()
     # A helper function so we can run this sync without either breaking the event loop in our main thread or making this module async
@@ -49,7 +49,7 @@ def _get_flat_wrappers(partner: Partner):
     logger.info("loaded %s wrappers for %s", len(wrappers), partner)
     return wrappers
 
-@lru_cache(maxsize=None)
+@lru_cache_lite
 def _relevant_partners(to_address: Address) -> Tuple[Partner]:
     return tuple(partner for partner in partners if to_address in [partner.treasury, *partner.retired_treasuries])
 
