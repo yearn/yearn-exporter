@@ -11,6 +11,7 @@ from y import Contract
 from y.contracts import contract_creation_block
 from y.time import get_block_timestamp
 
+from yearn.constants import YFI
 from yearn.multicall2 import multicall_matrix
 from yearn.yearn import Yearn
 
@@ -68,7 +69,7 @@ def main():
     tokens = sorted(tokens, key=lambda token: deploy_blocks[token.address])
     version = Version(major=1, minor=len(tokens), patch=0)
     timestamp = datetime.fromtimestamp(get_block_timestamp(max(deploy_blocks.values())), timezone.utc).isoformat()
-    logo = "https://raw.githubusercontent.com/yearn/yearn-assets/master/icons/tokens/0x0bc529c00C6401aEF6D220BE8C6Ea1667F6Ad93e/logo.svg"
+    logo = f"https://raw.githubusercontent.com/yearn/yearn-assets/master/icons/tokens/{YFI}/logo.svg"
 
     print(f"{version=}\n{timestamp=}")
     tokenlist = TokenList("Yearn", timestamp, version, tokens, logoURI=logo)
