@@ -116,8 +116,8 @@ class Filter:
 
 class IterFilter(Filter):
     def __init__(self, attribute: str, values: Iterable) -> None:
-        self.values = values
-        super().__init__(attribute)
+        self.values = set(values)
+        Filter.__init__(self, attribute)
     
     def __contains__(self, tx: Any) -> bool:
         return self.get_attribute(tx) in self.values

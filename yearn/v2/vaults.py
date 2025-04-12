@@ -31,7 +31,7 @@ from yearn.v2.strategies import Strategy
 if TYPE_CHECKING:
     from yearn.apy.common import ApySamples
 
-VAULT_VIEWS_SCALED = [
+VAULT_VIEWS_SCALED = {
     "totalAssets",
     "maxAvailableShares",
     "pricePerShare",
@@ -45,15 +45,15 @@ VAULT_VIEWS_SCALED = [
     "debtLimit",
     "lockedProfit",
     "lockedProfitDegration",
-]
+}
 
 # we are only interested in strategy-related events
-STRATEGY_EVENTS = [
+STRATEGY_EVENTS = {
     "StrategyAdded",
     "StrategyMigrated",
     "StrategyRevoked",
     "StrategyReported",
-]
+}
 
 logger = logging.getLogger(__name__)
 
