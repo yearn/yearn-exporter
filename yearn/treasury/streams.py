@@ -152,13 +152,19 @@ async def start_timestamp(stream_id: str, block: Optional[int] = None) -> int:
     return int(await contract.streamToStart.coroutine(f'0x{stream_id}', block_identifier=block))
 
 
+@alru_cache(maxsize=None)
+@cache_to_disk
+async def closest_block_after_timestamp(ts: int) -> int:
+    return await closest_block_after_timestamp_async(ts)
+
+
 async def process_stream_for_date(stream_id: str, date: datetime) -> Optional[StreamedFunds]:
     if entity := await threads.run(StreamedFunds.get_entity, stream_id, date):
         return entity
     
     stream_token = _get_token_for_stream(stream_id)
     check_at = date + timedelta(days=1) - timedelta(seconds=1)
-    block = await closest_block_after_timestamp_async(int(check_at.timestamp()))
+    block = await closest_block_after_timestamp(int(check_at.timestamp()))
     price_fut = asyncio.create_task(get_price(stream_token, block, sync=False))
     _start_timestamp = await start_timestamp(stream_id, block)
     if _start_timestamp == 0:
