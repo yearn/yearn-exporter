@@ -12,6 +12,7 @@ import inflection
 from async_property import async_cached_property, async_property
 from brownie import chain, web3
 from brownie.network.event import _EventItem
+from eth_typing import ChecksumAddress
 from web3._utils.abi import filter_by_name
 from web3._utils.events import construct_event_topic_set
 from y import Contract, Network, magic
@@ -279,7 +280,7 @@ class Registry(metaclass=Singleton):
             for vault in DEPRECATED_VAULTS[chain.id]:
                 self._remove_vault(vault, save=False)
 
-    def _remove_vault(self, address, save=True):
+    def _remove_vault(self, address: ChecksumAddress, save: bool = True) -> None:
         v = self._vaults.pop(address, None)
         e = self._experiments.pop(address, None)
         self.tags.pop(address, None)
