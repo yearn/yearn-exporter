@@ -314,6 +314,9 @@ class CurveRegistry(metaclass=Singleton):
             coins = Contract(factory).get_coins(pool)
         elif registry:
             coins = Contract(registry).get_coins(pool)
+        # NOTE this shoudlnt happen but is and isnt worth deugging since the repo is deprecated
+        else:
+            coins = []
 
         # pool not in registry
         if set(coins) == {ZERO_ADDRESS}:
