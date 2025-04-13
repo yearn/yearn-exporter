@@ -283,7 +283,7 @@ _COORDINAPE_HASHES = HashMatcher((
     '0xf401d432dcaaea39e1b593379d3d63dcdc82f5f694d83b098bb6110eaa19bbde',
 ))
 
-_COORDINAPE_HASHES_2 = HashMatcher(("0xfd83d667c278a74f0ad9507b8d159e43f893c5067dbd47c05c80e229ec6c3cd4"))
+_COORDINAPE_HASHES_2 = HashMatcher(("0xfd83d667c278a74f0ad9507b8d159e43f893c5067dbd47c05c80e229ec6c3cd4",))
 
 def is_coordinape(tx: TreasuryTx) -> bool:
     if tx._from_nickname == "Disperse.app" and tx._symbol in ("YFI", "yvYFI") and tx in _COORDINAPE_HASHES:
@@ -349,7 +349,7 @@ def is_other_grant(tx: TreasuryTx) -> bool:
         return True
     return False
 
-THE_0_03_PERCENT = HashMatcher((("0xe56521d79b0b87425e90c08ed3da5b4fa3329a40fe31597798806db07f68494e", _FROM_DISPERSE_APP)))
+THE_0_03_PERCENT = HashMatcher((("0xe56521d79b0b87425e90c08ed3da5b4fa3329a40fe31597798806db07f68494e", _FROM_DISPERSE_APP),))
 
 eoy_bonus_hashes = (
     "0xcfc2a4e538584c387ac1eca638de783f1839c2a3b0520352828b309564e23dca",
@@ -361,7 +361,7 @@ def is_ycrv_grant(tx: TreasuryTx) -> bool:
         "0x116a44242ffafd12a8e40a7a2dbc9f6a98580ca4d72e626ddb60d09417cab15d",
     ))
 
-IS_DOCS_GRANT = HashMatcher(("0x99f8e351a15e7ce7f0acbae2dea52c56cd93ef97b0a5981f79a68180ff777f00"))
+IS_DOCS_GRANT = HashMatcher(("0x99f8e351a15e7ce7f0acbae2dea52c56cd93ef97b0a5981f79a68180ff777f00",))
 """https://github.com/yearn/budget/issues/105"""
 
 def is_yearn_exporter(tx: TreasuryTx) -> bool:
