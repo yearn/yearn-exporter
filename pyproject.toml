@@ -25,7 +25,7 @@ matplotlib = ">=3.6.1"
 sqlalchemy = ">=1.4.41"
 sentry-sdk = ">=2.1.1,<2.2"
 pytest-bdd = ">=5.0.0"
-#dank_mids = "4.20.114"
+dank_mids = "4.20.120"
 eth_retry = ">=0.1.19"
 eth-hash = { version = "*", extras = ["pysha3"] }
 ez-a-sync = ">=0.29,<0.31"

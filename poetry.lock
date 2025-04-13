@@ -955,13 +955,13 @@ cython = ["cython"]
 
 [[package]]
 name = "dank-mids"
-version = "4.20.119"
+version = "4.20.120"
 description = "Multicall batching middleware for asynchronous scripts using web3.py"
 optional = false
 python-versions = "<3.13,>=3.8"
 files = [
-    {file = "dank_mids-4.20.119-py3-none-any.whl", hash = "sha256:00620df7bb159b0e06ea6ec8846f4295c597897291a8438dcb8136808b1ff8f0"},
-    {file = "dank_mids-4.20.119.tar.gz", hash = "sha256:1c37cb8775616848083f930548120698d66d69c802d087e49a118a88fe3f3c22"},
+    {file = "dank_mids-4.20.120-py3-none-any.whl", hash = "sha256:5ed363d7a671d308d148f25b0bc083a1bd7f493f1b750f4f9c09ab6827578c92"},
+    {file = "dank_mids-4.20.120.tar.gz", hash = "sha256:2ca0849de73e8e7ba1a562f54d1a26ad6ea55d808a0ef2c36efe56f80aaca1d9"},
 ]
 
 [package.dependencies]
@@ -4735,4 +4735,4 @@ testing = ["big-O", "jaraco.functools", "jaraco.itertools", "more-itertools", "p
 [metadata]
 lock-version = "2.0"
 python-versions = ">=3.10,<3.11"
-content-hash = "524ef96597e6e28176b94578a2e7b8c547bf822617e101860eed8b10d402500f"
+content-hash = "c036a934e5b51713766e4fab0a90c3f143a3711e3cac9a5d80ad76cd1ab4dc90"
