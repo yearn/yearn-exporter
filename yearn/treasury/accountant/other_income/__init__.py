@@ -17,6 +17,7 @@ if chain.id == Network.Mainnet:
     other_income_txgroup.create_child("Lido Grant", other.is_lido_grant)
     other_income_txgroup.create_child("Cowswap Gas Reimbursement", other.is_cowswap_gas_reimbursement)
     other_income_txgroup.create_child("yvUSDN Shutdown", other.is_usdn_shutdown)
+    other_income_txgroup.create_child("USDS Referral Code", other.is_usds_referral_code)
     other_income_txgroup.create_child("Other", other.is_other)
 elif chain.id == Network.Fantom:
     other_income_txgroup.create_child("RoboVault Thank You", robovault.is_robovault_share)

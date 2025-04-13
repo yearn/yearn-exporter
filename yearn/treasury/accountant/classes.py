@@ -1,4 +1,5 @@
 import logging
+from functools import lru_cache
 from operator import attrgetter
 from requests import HTTPError
 from typing import Any, Callable, Iterable, List, Optional, Tuple, Union
@@ -88,17 +89,30 @@ class HashMatcher:
     """
     Used to match a TreasuryTx against a list of hash strings without needing to worry about checksums. Can apply filter functions if necessary for code cleanliness.
     """
-    def __init__(self, hashes: Iterable[Union[str,Tuple[str,"Filter"]]]) -> None:
-        self.hashes = [hash.lower() if isinstance(hash,str) else hash for hash in hashes]
+    filter: Optional["Filter"] = None
+
+    def __init__(
+        self, 
+        hashes: Iterable[Union[str, Tuple[str, "Filter"]]], 
+        filter: Optional["Filter"] = None,
+    ) -> None:
+        if filter is None:
+            self.hashes = tuple(hash.lower() if isinstance(hash, str) else hash for hash in hashes)
+        else:
+            self.filter = filter
+            assert all(isinstance(hash, str) for hash in hashes)
+            self.hashes = tuple(map(str.lower, hashes))
     
     def __contains__(self, tx: TreasuryTx) -> bool:
+        if self.filter is not None:
+            return tx in self.filter and tx.hash in self.hashes
         for matcher in self.hashes:
             if isinstance(matcher, str):
-                if tx.hash.lower() == matcher:
+                if tx.hash == matcher:
                     return True
             else:
                 matcher, filter = matcher
-                if tx.hash.lower() == matcher and tx in filter:
+                if tx.hash == matcher and tx in filter:
                     return True
         return False
     
@@ -116,8 +130,8 @@ class Filter:
         self.get_attribute = _get_getter(attribute)
         self.value = value
 
-    def __contains__(self, object: TreasuryTx) -> bool:
-        return self.get_attribute(object) == self.value
+    def __contains__(self, tx: TreasuryTx) -> bool:
+        return self.get_attribute(tx) == self.value
 
 
 class IterFilter(Filter):
@@ -125,5 +139,8 @@ class IterFilter(Filter):
         self.values = set(values)
         Filter.__init__(self, attribute)
     
-    def __contains__(self, tx: Any) -> bool:
+    def __contains__(self, tx: TreasuryTx) -> bool:
         return self.get_attribute(tx) in self.values
+
+
+_FROM_DISPERSE_APP = Filter('_from_nickname', 'Disperse.app')

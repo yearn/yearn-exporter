@@ -29,6 +29,14 @@ def is_usdn_shutdown(tx: TreasuryTx) -> bool:
     """The USDN vault was shut down but the pool was so rekt they coulnd't even swap for want. Trace amounts of yield sent to yChad."""
     return tx in HashMatcher(["0x12b3687f4bfbc73c11dccbd61d18c3f785e6f0f91cb46280d7df08143162ceed"])
 
+def is_usds_referral_code(tx: TreasuryTx) -> bool:
+    """The USDN vault was shut down but the pool was so rekt they coulnd't even swap for want. Trace amounts of yield sent to yChad."""
+    return tx in HashMatcher([
+        "0x736ff378e6d7929717b119e1ab6bdcab5f006ad2c2dfa2316a3d97a32bab1765",
+        "0xc5e350dc8cfd2d69a013b5d9d3a8441dd1df0ee5d24c74df9864895c052ccb36",
+        "0xe99cac9cabb1b7d2eac682babca18c73fec5920519f2cf8fac89eff79c01d8ba",
+    ])
+
 def is_other(tx: TreasuryTx) -> bool:
     """Some tokens showed up and nobody knew where they came from. Lucky Yearn."""
     return tx in HashMatcher(["0x5be236c49e5c5481fc9169dbdd5759cb1542d5d8fe047083ecf2403584468e1a"])

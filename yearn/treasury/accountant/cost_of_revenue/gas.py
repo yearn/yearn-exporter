@@ -3,7 +3,7 @@ from pony.orm import commit
 from y.networks import Network
 
 from yearn.entities import TreasuryTx
-from yearn.treasury.accountant.classes import Filter, HashMatcher
+from yearn.treasury.accountant.classes import _FROM_DISPERSE_APP, Filter, HashMatcher
 
 
 strategist_gas_hashes = {
@@ -60,22 +60,25 @@ strategist_gas_hashes = {
         "0x96be538314a6547063a5b81ded9bda38a067528d4bcfc558eee976a684e5b44a",
         ["0xebfff9a2fd6103d73f417c675db2dc43742bdb6f496f04d3cfd1938046001d70", Filter("_symbol", "ETH")],
         "0x269bcda1327da47fc0be53e044540f199ffb4c3f15146e0cb61348093b43b66e",
-        # NOTE: don't think we need these filters due to the if check above. 
+        "0x54c0a1c6fa29f1886ca8d307b06a93bd3fd9d86b62b301cadc8d4665f86715f5",
+        "0x51202f9e8a9afa84a9a0c37831ca9a18508810175cb95ab7c52691bbe69a56d5",
+        # NOTE: don't think we need these filters due to the if check at the first line in `is_strategist_gas`. 
         # TODO: refactor out
-        ["0x96728585c7b1720f2e94a3a2ff339ed6433bd6687cd680dd2534e6837271111a", Filter('_from_nickname', "Disperse.app")],
-        ["0xecbc1474610b31046124aa6323863f47d6e348385056ab80c3cc1f6b963f5d68", Filter('_from_nickname', "Disperse.app")],
-        ["0x5fb3320fdc41aba54743559cd4248e5cdfd8ffc67bd329c13cd3b66ce4976144", Filter('_from_nickname', "Disperse.app")],
-        ["0x7afceac28536b9b2c177302c3cfcba449e408b47ff2f0a8a3c4b0e668a4d5d4e", Filter('_from_nickname', "Disperse.app")],
-        ["0xb8bb3728fdfb49d7c86c08dba8e3586e3761f13d2c88fa6fab80227b6a3f4519", Filter('_from_nickname', "Disperse.app")],
-        ["0x76635bffdf8ee07736bf6953611cd93b5f6f10ef9a59f2504661047e834ea4d6", Filter('_from_nickname', "Disperse.app")],
+        ["0x96728585c7b1720f2e94a3a2ff339ed6433bd6687cd680dd2534e6837271111a", _FROM_DISPERSE_APP],
+        ["0xecbc1474610b31046124aa6323863f47d6e348385056ab80c3cc1f6b963f5d68", _FROM_DISPERSE_APP],
+        ["0x5fb3320fdc41aba54743559cd4248e5cdfd8ffc67bd329c13cd3b66ce4976144", _FROM_DISPERSE_APP],
+        ["0x7afceac28536b9b2c177302c3cfcba449e408b47ff2f0a8a3c4b0e668a4d5d4e", _FROM_DISPERSE_APP],
+        ["0xb8bb3728fdfb49d7c86c08dba8e3586e3761f13d2c88fa6fab80227b6a3f4519", _FROM_DISPERSE_APP],
+        ["0x76635bffdf8ee07736bf6953611cd93b5f6f10ef9a59f2504661047e834ea4d6", _FROM_DISPERSE_APP],
         "0x76cec8d40341ed064b636530a6ccfdb9fcc0855f6716b592d286e579d6eab433",
         "0x9c9c342186bfc7232b28a11d3ecea32e6cb417b3c7b41e67e1f5c06ff32c0d9c",
         "0x038aeb3351b762bc92c5e4274c01520ae08dc314e2282ececc2a19a033d994a8",
         "0x49a930eeb2a709e162d05d29a5d19b6f71aa5fb63a369395ca869e1961a3bb27",
         "0x6169de8578935f15e24b1dc0e22c5670c5240505425ab4d71283026d96538381",
-        "",
+        "0x3d3b714d3cacef6dca14b8abff10d882af62209d389d4225761e461f10b47e39",
+        "0x3efe08a7dc37ad120d61eb52d7ffcec5e2699f62ee1bd9bd55ece3dfb7ec4441",
     ],
-}.get(chain.id, [])
+}.get(chain.id, ())
 
 def is_strategist_gas(tx: TreasuryTx) -> bool:
     if tx._from_nickname == "Disperse.app":
@@ -83,26 +86,27 @@ def is_strategist_gas(tx: TreasuryTx) -> bool:
     
     # Returned gas
     if tx in HashMatcher({
-        Network.Mainnet: [
+        Network.Mainnet: (
             '0x86fee63ec8efb0e7320a6d48ac3890b1089b77a3d9ed74cade389f512471c299',
             '0xa77c4f7596968fef96565a0025cc6f9881622f62cc4c823232f9c9000ba5f981',
             '0xac2253f1d8f78680411b353d65135d58bc880cdf9507ea7848daf05925e1443f',
             '0xd27d4a732dd1a9ac93c7db1695a6d2aff40e007627d710da91f328b246be44bc',
             '0x5a828e5bde96cd8745223fe32daefaa9140a09acc69202c33f6f789228c8134b',
             '0x110ef82ec16eb53bf71b073aca4a37d4fbfaa74166c687a726211392a02f0059',
-        ],
-    }.get(chain.id, [])):
+            '0xaad012505975dd13a57599a28d33c979f72084ae56ccba76997f05822a5497f5',
+        ),
+    }.get(chain.id, ())):
         tx.amount *= -1
         tx.value_usd *= -1
         commit()
         return True
         
     return tx in HashMatcher({
-        Network.Mainnet: [
+        Network.Mainnet: (
             "0x420cfbc7856f64e8949d4dd6d4ce9570f8270def1380ebf381376fbcd0b0d5bf",
             "0xc7bca93dc6bfa37e45bebb030a2ce1198fc402176ba0b3a5553a0580299df5e7",
-        ],
-    }.get(chain.id, []))
+        ),
+    }.get(chain.id, ()))
 
 def is_multisig_reimbursement(tx: TreasuryTx) -> bool:
     return tx._symbol == "ETH" and tx in HashMatcher([

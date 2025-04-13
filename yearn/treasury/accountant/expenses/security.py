@@ -15,7 +15,11 @@ def is_chainsec_audit(tx: TreasuryTx) -> bool:
     """Expense for an audit performed by chainsec"""
     if chain.id == Network.Mainnet and tx._symbol in ["USDC", "USDT"] and tx.to_address == "0x8bAf5eaF92E37CD9B1FcCD676918A9B3D4F87Dc7":
         return True
-    return tx in HashMatcher(["0x83ec212072f82f4aba4b512051d52c5f016de79a620a580622a0f051e3473a78"])
+    return tx in HashMatcher((
+        "0x83ec212072f82f4aba4b512051d52c5f016de79a620a580622a0f051e3473a78",
+        # https://github.com/yearn/budget/issues/246
+        ("0xd0fa31ccf6bf7577a533366955bb528d6d17c928bba1ff13ab273487a27d9602", Filter('log_index', 254)),
+    ))
 
 def is_debaub_audit(tx: TreasuryTx) -> bool:
     """Expense for an audit performed by debaub"""

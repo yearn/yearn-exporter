@@ -139,4 +139,11 @@ def is_vyper_donation(tx: TreasuryTx) -> bool:
     return tx.to_address == "0x70CCBE10F980d80b7eBaab7D2E3A73e87D67B775"
 
 def is_ybudget_reward(tx: TreasuryTx) -> bool:
-    return tx.hash == "0xa1b242b2626def6cdbe49d92a06aad96fa018c27b48719a98530c5e5e0ac61c5"
+    return tx in HashMatcher((
+        # Epoch 1
+        "0xa1b242b2626def6cdbe49d92a06aad96fa018c27b48719a98530c5e5e0ac61c5",
+        # Epoch 2
+        ("0xae7d281b8a093da60d39179452d230de2f1da4355df3aea629d969782708da5d", Filter('_symbol', "YFI")),
+        # Epoch 3
+        "0x6ba3f2bed8b766ed2185df1a492b3ecab0251747c619a5d60e7401908120c9c8",
+    ))

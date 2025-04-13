@@ -15,7 +15,7 @@ if chain.id == Network.Mainnet:
     team = expenses_txgroup.create_child("Team Payments", people.is_team_payment)
 
     expenses_txgroup.create_child("Coordinape", people.is_coordinape)
-    expenses_txgroup.create_child("The 0.03%", people.is_0_03_percent)
+    expenses_txgroup.create_child("The 0.03%", people.THE_0_03_PERCENT.contains)
     expenses_txgroup.create_child("SMS Discretionary Budget", general.is_sms_discretionary_budget)
     expenses_txgroup.create_child("Travel Reimbursements", general.is_travel_reimbursement)
 
@@ -46,7 +46,7 @@ if chain.id == Network.Mainnet:
     grants.create_child("Frontend Support", people.is_frontend_support)
     grants.create_child("yGift Team Grant", people.is_ygift_grant)
     grants.create_child("yCRV Dev Grant", people.is_ycrv_grant)
-    grants.create_child("Docs Grant", people.is_docs_grant)
+    grants.create_child("Docs Grant", people.IS_DOCS_GRANT.contains)
     grants.create_child("Other Grants", people.is_other_grant)
     grants.create_child("Automation", HashMatcher([['0xacc27a97d4014107d77e14ffafdc3e9517bc5c9213fc2ba723c6737ba6cae514', Filter('log_index', 121)]]).contains)
     grants.create_child("Creative Studio (req. 77)", HashMatcher([["0xe397d5682ef780b5371f8c80670e0cd94b4f945c7b432319b24f65c288995a17", Filter('log_index', 356)]]).contains)
