@@ -7,8 +7,8 @@ from brownie import chain, web3
 from brownie.exceptions import ContractNotFound
 from brownie.network.event import (EventDict, _add_deployment_topics,
                                    _decode_logs)
+from eth_utils.toolz import groupby
 from joblib import Parallel, delayed
-from toolz import groupby
 from web3.middleware.filter import block_ranges
 from web3.types import LogReceipt, RPCEndpoint
 from y import Contract

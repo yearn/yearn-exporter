@@ -4,9 +4,9 @@ from pathlib import Path
 
 import requests
 import sentry_sdk
+from eth_utils.toolz import unique
 from semantic_version import Version
 from tokenlists import TokenInfo, TokenList
-from toolz import unique
 from y import Contract
 from y.contracts import contract_creation_block
 from y.time import get_block_timestamp

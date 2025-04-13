@@ -3,8 +3,8 @@ import warnings
 import sentry_sdk
 from brownie.exceptions import BrownieEnvironmentWarning
 from click import style
+from eth_utils.toolz import groupby
 from tabulate import tabulate
-from toolz import groupby
 from yearn.yearn import Yearn
 
 sentry_sdk.set_tag('script','tvl')

@@ -4,8 +4,8 @@ from math import ceil
 from a_sync import AsyncThreadPoolExecutor
 from async_lru import alru_cache
 from brownie import chain
+from eth_utils.toolz import last
 from joblib import Parallel, delayed
-from toolz import last
 from y import Contract, Network
 
 from yearn.events import decode_logs, get_logs_asap
