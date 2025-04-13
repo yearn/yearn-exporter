@@ -955,13 +955,13 @@ cython = ["cython"]
 
 [[package]]
 name = "dank-mids"
-version = "4.20.120"
+version = "4.20.121"
 description = "Multicall batching middleware for asynchronous scripts using web3.py"
 optional = false
 python-versions = "<3.13,>=3.8"
 files = [
-    {file = "dank_mids-4.20.120-py3-none-any.whl", hash = "sha256:5ed363d7a671d308d148f25b0bc083a1bd7f493f1b750f4f9c09ab6827578c92"},
-    {file = "dank_mids-4.20.120.tar.gz", hash = "sha256:2ca0849de73e8e7ba1a562f54d1a26ad6ea55d808a0ef2c36efe56f80aaca1d9"},
+    {file = "dank_mids-4.20.121-py3-none-any.whl", hash = "sha256:e55a5f682ed79b65d7b086e775d5033f6cc911d2b76dc85a7ee6baa89a3ca8d0"},
+    {file = "dank_mids-4.20.121.tar.gz", hash = "sha256:54bb412e639a6ca3e37efbd8768d29e289de65117d70fc1760b7be1e8db94372"},
 ]
 
 [package.dependencies]
@@ -1356,13 +1356,13 @@ test = ["hypothesis (>=4.43.0)", "mypy (==0.971)", "pytest (>=7.0.0)", "pytest-x
 
 [[package]]
 name = "evmspec"
-version = "0.2.7"
+version = "0.2.8"
 description = "A collection of msgspec.Struct definitions for use with the Ethereum Virtual Machine"
 optional = false
 python-versions = "<3.13,>=3.8"
 files = [
-    {file = "evmspec-0.2.7-py3-none-any.whl", hash = "sha256:c9fcf9faed85a7596d5f08fe900ef5a368c1771364131beba0a174e09659faed"},
-    {file = "evmspec-0.2.7.tar.gz", hash = "sha256:a135bf48b0257f0610b9be1dad29e2044c9942207096cde3d80a433a1b3ea741"},
+    {file = "evmspec-0.2.8-py3-none-any.whl", hash = "sha256:9457a92a1bf45db4e1ef299907f559ea86866d2bd42e8152c0a5749a968da151"},
+    {file = "evmspec-0.2.8.tar.gz", hash = "sha256:c92077fa0293deb447a3e818ad36b6b88627990b165042836577bf21548b4037"},
 ]
 
 [package.dependencies]
@@ -4735,4 +4735,4 @@ testing = ["big-O", "jaraco.functools", "jaraco.itertools", "more-itertools", "p
 [metadata]
 lock-version = "2.0"
 python-versions = ">=3.10,<3.11"
-content-hash = "c036a934e5b51713766e4fab0a90c3f143a3711e3cac9a5d80ad76cd1ab4dc90"
+content-hash = "d408b76e920fde2e025044758b2948ff15b17b19384fbbfaa5e243b443bf29a7"
