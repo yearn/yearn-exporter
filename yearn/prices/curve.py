@@ -25,6 +25,7 @@ from brownie.convert import to_address
 from brownie.convert.datatypes import EthAddress
 from cachetools.func import lru_cache
 from y import Contract, Network, get_price
+from y.constants import CHAINID
 from y.exceptions import NodeNotSynced
 
 from yearn import constants
@@ -101,11 +102,11 @@ class CurveRegistry(metaclass=Singleton):
     # NOTE: before deprecating, figure out why this loads more pools than ypm
     @wait_or_exit_after
     def __init__(self) -> None:
-        if chain.id not in curve_contracts:
+        if CHAINID not in curve_contracts:
             raise UnsupportedNetwork("curve is not supported on this network")
 
-        addrs = curve_contracts[chain.id]
-        if chain.id == Network.Mainnet:
+        addrs = curve_contracts[CHAINID]
+        if CHAINID == Network.Mainnet:
             self.voting_escrow = Contract(addrs['voting_escrow'])
             self.gauge_controller = Contract(addrs['gauge_controller'])
 
@@ -128,7 +129,7 @@ class CurveRegistry(metaclass=Singleton):
 
     @sentry_catch_all
     def watch_events(self) -> None:
-        if chain.id == Network.Base:
+        if CHAINID == Network.Base:
             # No curve pool
             return
         sleep_time = 600
@@ -163,7 +164,7 @@ class CurveRegistry(metaclass=Singleton):
             else:
                 registry_logs = get_logs_asap(registries, None, from_block=from_block, to_block=height)
             
-            registry_logs = [log for log in registry_logs if chain.id != Network.Gnosis or log.address != "0x8A4694401bE8F8FCCbC542a3219aF1591f87CE17"]
+            registry_logs = [log for log in registry_logs if CHAINID != Network.Gnosis or log.address != "0x8A4694401bE8F8FCCbC542a3219aF1591f87CE17"]
 
             # fetch pools from the latest registries
             for event in decode_logs(registry_logs):
@@ -283,7 +284,7 @@ class CurveRegistry(metaclass=Singleton):
         self.ensure_loaded()
         pool = to_address(pool)
         lp_token = to_address(lp_token)
-        if chain.id == Network.Mainnet:
+        if CHAINID == Network.Mainnet:
         # for ethereum mainnet: gauges can be retrieved from the pool factory
             factory = self.get_factory(pool)
             registry = self.get_registry(pool)
