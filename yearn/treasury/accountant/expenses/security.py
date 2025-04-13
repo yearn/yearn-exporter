@@ -63,6 +63,9 @@ def is_bug_bounty(tx: TreasuryTx) -> bool:
         
         # Immunefi
         ["0x5deca5d6c934372c174bbef8be9a1e103e06d8b93fd3bf8d77865dfeb34fe3be", IterFilter('log_index', [100, 101])],
+
+        # Sherlock
+        ["0x3e045ced19590db8905d8a69c2f0fd0acd4f90301cf6356742e735cd7caa0964", Filter('log_index', 327)]
     ]
     return tx in HashMatcher(hashes)
 

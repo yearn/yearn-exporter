@@ -69,8 +69,14 @@ def is_v1_or_v2_vault_deposit(tx: TreasuryTx) -> bool:
     # token side
     for vault in vaults:
         if tx.token == vault.token.address:
-            if "Transfer" not in tx._events:
-                return False
+            try:
+                if "Transfer" not in tx._events:
+                    return False
+            except KeyError as e:
+                # This happens sometimes from a busted abi, shouldnt impact us
+                if str(e) == "'components'":
+                    return False
+                raise
 
             for event in tx._events["Transfer"]:
                 if tx.token == event.address:
@@ -90,8 +96,14 @@ def is_v1_or_v2_vault_deposit(tx: TreasuryTx) -> bool:
 _v3_deposit_keys = 'sender', 'owner', 'assets', 'shares'
 
 def is_v3_vault_deposit(tx: TreasuryTx) -> bool:
-    if "Deposit" not in tx._events:
-        return False
+    try:
+        if "Deposit" not in tx._events:
+            return False
+    except KeyError as e:
+        # This happens sometimes due to a busted abi, shouldnt impact us
+        if str(e) == "'components'":
+            return False
+        raise
 
     if deposits := [event for event in tx._events['Deposit'] if all(key in event for key in _v3_deposit_keys)]:
         # Vault side
@@ -146,9 +158,17 @@ def is_vault_withdrawal(tx: TreasuryTx) -> bool:
 
     if tx.to_address not in list(treasury.addresses) + [ZERO_ADDRESS]:
         return False
+        
+    try:
+        if 'Transfer' not in tx._events:
+            return False
+    except KeyError as e:
+        if str(e) == "'components'":
+            return False
+        raise
 
     # vault side
-    if any(tx.token == vault.vault.address for vault in vaults) and 'Transfer' in tx._events:
+    if any(tx.token == vault.vault.address for vault in vaults):
         for event in tx._events['Transfer']:
             if tx.token == event.address:
                 sender, receiver, value = event.values()
@@ -160,7 +180,7 @@ def is_vault_withdrawal(tx: TreasuryTx) -> bool:
                             return True
     # token side
     for vault in vaults:
-        if tx.token == vault.token.address and "Transfer" in tx._events:
+        if tx.token == vault.token.address:
             for event in tx._events["Transfer"]:
                 if tx.token == event.address:
                     sender, receiver, value = event.values()

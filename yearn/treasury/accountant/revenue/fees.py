@@ -7,7 +7,7 @@ from y import Contract
 
 from yearn.entities import TreasuryTx
 from yearn.treasury.accountant.constants import treasury, v1, v2
-
+#raise Exception('loaded constants')
 
 logger = logging.getLogger(__name__)
 

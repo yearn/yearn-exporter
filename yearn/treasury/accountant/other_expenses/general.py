@@ -60,7 +60,11 @@ def is_strategist_buyout(tx: TreasuryTx) -> bool:
     ])
 
 def one_yfi_for_signers(tx: TreasuryTx) -> bool:
-    return tx in HashMatcher(["0x86700207761cdca82a0ad4e04b49b749913de63c8bd933b4f3f9a145d9b2c1fa"])
+    return tx in HashMatcher([
+        "0x86700207761cdca82a0ad4e04b49b749913de63c8bd933b4f3f9a145d9b2c1fa",
+        # https://snapshot.box/#/s:veyfi.eth/proposal/0xc7ded2863a10154b6b520921af4ada48d64d74e5b7989f98cdf073542b2e4411
+        "0x5ed4ce821cb09b4c6929cc9a6b5e0a23515f9bb97d9b5916819a6986f6c89f09",
+    ])
 
 def send_one_yfi_get_two_back(tx: TreasuryTx) -> bool:
     """ yearn asked for donations once and instead of using them, repaid them x2 """ 
