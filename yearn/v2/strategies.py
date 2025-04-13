@@ -1,11 +1,11 @@
 import logging
 from functools import cached_property
-from typing import Any, AsyncIterator, List
+from itertools import chain
+from typing import AsyncIterator
 
 from async_property import async_property
 from brownie.network.event import _EventItem
 from eth_utils import encode_hex, event_abi_to_log_topic
-from multicall.utils import run_in_subprocess
 from y import Contract
 from y._decorators import stuck_coro_debugger
 from y.utils.events import ProcessedEvents
@@ -65,14 +65,25 @@ class Strategy:
     @stuck_coro_debugger
     async def describe(self, block=None):
         results = await fetch_multicall_async(*self._calls, block=block)
-        return await self._unpack_results(results)
+        
+        # unpack self.vault.vault.strategies(self.strategy)
+        results = chain(zip(self._views, results), results[-1].dict().items())
+        
+        scale = self.vault.scale
+        return {
+            view: (
+                # scale views
+                (result or 0) / scale if view in STRATEGY_VIEWS_SCALED else 
+                # unwrap structs
+                result.dict() if hasattr(result, '_dict') else 
+                result
+            ) 
+            for view, result in results
+        }
 
     @cached_property
     def _calls(self):
         return *[[self.strategy, view] for view in self._views], [self.vault.vault, "strategies", self.strategy],
-    
-    async def _unpack_results(self, results):
-        return await run_in_subprocess(_unpack_results, self._views, results, self.vault.scale)
 
 
 class Harvests(ProcessedEvents[int]):
@@ -96,13 +107,3 @@ class Harvests(ProcessedEvents[int]):
         block = event.block_number
         logger.debug("%s harvested on %d", self.strategy.name, block)
         return block
-    
-
-def _unpack_results(views: List[str], results: List[Any], scale: int):
-    # unpack self.vault.vault.strategies(self.strategy)
-    info = dict(zip(views, results))
-    info.update(results[-1].dict())
-    # scale views
-    info = {view: (result or 0) / scale if view in STRATEGY_VIEWS_SCALED else result for view, result in info.items()}
-    # unwrap structs
-    return {view: result.dict() if hasattr(info[view], '_dict') else result for view, result in info.items()}
