@@ -17,12 +17,12 @@ from typing import Union
 import boto3
 import requests
 import sentry_sdk
-from brownie import chain
 from brownie.exceptions import BrownieEnvironmentWarning
 from telegram.error import BadRequest
 from tqdm.asyncio import tqdm_asyncio
 from y import ERC20, Contract, Network
 from y.contracts import contract_creation_block_async
+from y.constants import CHAINID
 from y.exceptions import yPriceMagicError
 
 from yearn import logs
@@ -111,7 +111,7 @@ async def wrap_vault(
         "migration": migration,
     }
 
-    if chain.id == 1 and any([isinstance(vault, t) for t in [Backscratcher, YveCRVJar]]):
+    if CHAINID == 1 and any([isinstance(vault, t) for t in [Backscratcher, YveCRVJar]]):
         data["special"] = True
 
     logger.info(f"done wrapping vault [{pos}/{total}]: {vault.name} {str(vault.vault)}")
@@ -167,29 +167,29 @@ async def get_assets_dynamic(registry_adapter: Contract, addresses: list) -> lis
 
 
 async def get_registry_adapter():
-    if chain.id == Network.Mainnet:
+    if CHAINID == Network.Mainnet:
         # TODO Fix ENS resolution for lens.ychad.eth
         registry_adapter_address = "0x240315db938d44bb124ae619f5Fd0269A02d1271"
-    elif chain.id == Network.Fantom:
+    elif CHAINID == Network.Fantom:
         registry_adapter_address = "0xF628Fb7436fFC382e2af8E63DD7ccbaa142E3cd1"
-    elif chain.id == Network.Arbitrum:
+    elif CHAINID == Network.Arbitrum:
         registry_adapter_address = "0x57AA88A0810dfe3f9b71a9b179Dd8bF5F956C46A"
-    elif chain.id == Network.Optimism:
+    elif CHAINID == Network.Optimism:
         registry_adapter_address = "0xBcfCA75fF12E2C1bB404c2C216DBF901BE047690"
-    elif chain.id == Network.Base:
+    elif CHAINID == Network.Base:
         registry_adapter_address = "0xACd0CEa837A6E6f5824F4Cac6467a67dfF4B0868"
     return await Contract.coroutine(registry_adapter_address)
 
 
 async def get_factory_address_provider():
-    if chain.id == Network.Mainnet:
+    if CHAINID == Network.Mainnet:
         return await Contract.coroutine("0xA654Be30cb4A1E25d18DA0629e48b13fb970d5bE")
     else:
         return None
 
 
 async def get_factory_registry_adapter():
-    if chain.id == Network.Mainnet:
+    if CHAINID == Network.Mainnet:
         return await Contract.coroutine("0x984550cE9e58A8f76184e1b41Dd08Fbf7B6d2762")
     else:
         return None
@@ -208,7 +208,7 @@ def _get_export_mode():
   
 async def _main():
     export_mode = _get_export_mode()
-    metric_tags = {"chain": chain.id, "export_mode": export_mode}
+    metric_tags = {"chain": CHAINID, "export_mode": export_mode}
     aliases_repo_url = "https://api.github.com/repos/yearn/yearn-assets/git/refs/heads/master"
     aliases_repo = requests.get(aliases_repo_url).json()
     
@@ -217,7 +217,7 @@ async def _main():
     
     commit = aliases_repo["object"]["sha"]
 
-    icon_url = f"https://rawcdn.githack.com/yearn/yearn-assets/{commit}/icons/multichain-tokens/{chain.id}/%s/logo-128.png"
+    icon_url = f"https://rawcdn.githack.com/yearn/yearn-assets/{commit}/icons/multichain-tokens/{CHAINID}/%s/logo-128.png"
 
     aliases_url = "https://raw.githubusercontent.com/yearn/yearn-assets/master/icons/aliases.json"
     aliases = requests.get(aliases_url).json()
@@ -227,7 +227,7 @@ async def _main():
 
     registry_v2 = RegistryV2(include_experimental=(export_mode == "experimental"))
 
-    if chain.id == Network.Mainnet:
+    if CHAINID == Network.Mainnet:
         special = [YveCRVJar(), Backscratcher()]
         registry_v1 = RegistryV1()
         vaults = list(itertools.chain(special, registry_v1.vaults, await registry_v2.vaults, await registry_v2.experiments))
@@ -235,14 +235,14 @@ async def _main():
         vaults = await registry_v2.vaults
 
     if len(vaults) == 0:
-        raise ValueError(f"No vaults found for chain_id: {chain.id}")
+        raise ValueError(f"No vaults found for chain_id: {CHAINID}")
 
     assets_metadata = await get_assets_metadata(await registry_v2.vaults)
 
     data = await tqdm_asyncio.gather(*[wrap_vault(vault, samples, aliases, icon_url, assets_metadata, i + 1, len(vaults)) for i, vault in enumerate(vaults)])
 
     if len(data) == 0:
-        raise ValueError(f"Data is empty for chain_id: {chain.id}")
+        raise ValueError(f"Data is empty for chain_id: {CHAINID}")
 
     to_export = []
     suffix = None
@@ -320,7 +320,7 @@ def _get_export_paths(suffix):
         shutil.rmtree(out)
     os.makedirs(out, exist_ok=True)
 
-    vaults_api_path = os.path.join("v1", "chains", f"{chain.id}", "vaults")
+    vaults_api_path = os.path.join("v1", "chains", f"{CHAINID}", "vaults")
 
     file_base_path = os.path.join(out, vaults_api_path)
     os.makedirs(file_base_path, exist_ok=True)

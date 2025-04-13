@@ -5,10 +5,11 @@ from time import sleep, time
 
 import requests
 import sentry_sdk
-from brownie import ZERO_ADDRESS, chain
+from brownie import ZERO_ADDRESS
 from brownie.exceptions import ContractNotFound
 from multicall.utils import await_awaitable
 from y import Contract, Network
+from y.constants import CHAINID
 from y.exceptions import ContractNotVerified
 
 from yearn.apy import Apy, ApyFees, ApyPoints, get_samples
@@ -123,8 +124,8 @@ def _extract_gauge(v):
 
 
 def _get_gauges():
-    if chain.id in chains:
-        url = f"{CURVE_API_URL}?blockChainId={chains[chain.id]}"
+    if CHAINID in chains:
+        url = f"{CURVE_API_URL}?blockChainId={chains[CHAINID]}"
         attempts = 0
         while attempts < 5:
             response = requests.get(url)
@@ -137,7 +138,7 @@ def _get_gauges():
             attempts += 1
             sleep(.1)
     else:
-        raise ValueError(f"can't get curve gauges for unsupported network: {chain.id}")
+        raise ValueError(f"can't get curve gauges for unsupported network: {CHAINID}")
     
 def with_monitoring():
     telegram.run_job_with_monitoring('Curve Previews API', main)

@@ -2,9 +2,9 @@ import asyncio
 from typing import List, Tuple
 
 import sentry_sdk
-from brownie import chain
 from eth_portfolio.buckets import get_token_bucket
 from pandas import DataFrame
+from y.constants import CHAINID
 from y.networks import Network
 from y.time import closest_block_after_timestamp
 
@@ -26,7 +26,7 @@ def main():
         Network.Mainnet: 1611017667,
         # 2021-10-26 block time of earliest block with partner_tx for Fantom network
         Network.Fantom: 1635263041,
-    }[chain.id]
+    }[CHAINID]
     
     exporter = Exporter(
         name = 'partners',

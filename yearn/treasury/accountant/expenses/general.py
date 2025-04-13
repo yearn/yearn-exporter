@@ -1,8 +1,8 @@
 
 from decimal import Decimal
 
-from brownie import chain
-from y.networks import Network
+from y import Network
+from y.constants import CHAINID
 
 from yearn.entities import TreasuryTx
 from yearn.treasury.accountant.classes import _FROM_DISPERSE_APP, Filter, HashMatcher, IterFilter
@@ -24,7 +24,7 @@ hashes = {
             },
         },
     },
-}.get(chain.id, {})
+}.get(CHAINID, {})
 
 def is_travel_reimbursement(tx: TreasuryTx) -> bool:
     hashes = [

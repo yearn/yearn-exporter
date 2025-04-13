@@ -1,9 +1,8 @@
 from typing import Any, List, Literal, Optional
 
-from brownie import chain
 from cachetools.func import ttl_cache
-from y import Contract, Network
-from y.prices import magic
+from y import Contract, Network, magic
+from y.constants import CHAINID
 
 from yearn.cache import memory
 from yearn.exceptions import UnsupportedNetwork
@@ -21,7 +20,7 @@ def is_balancer_pool_cached(address: Address) -> bool:
 
 class BalancerV1(metaclass=Singleton):
     def __init__(self) -> None:
-        if chain.id not in networks:
+        if CHAINID not in networks:
             raise UnsupportedNetwork('Balancer is not supported on this network')
 
     def __contains__(self, token: Any) -> Literal[False]:

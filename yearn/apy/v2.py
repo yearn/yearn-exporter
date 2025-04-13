@@ -4,9 +4,9 @@ from bisect import bisect_left
 from datetime import datetime, timedelta
 from pprint import pformat
 
-from brownie import chain
 from semantic_version.base import Version
 from y import Network
+from y.constants import CHAINID
 
 from yearn.apy.common import (Apy, ApyBlocks, ApyError, ApyFees, ApyPoints,
                               ApySamples, SharePricePoint, calculate_roi)
@@ -80,7 +80,7 @@ async def simple(vault, samples: ApySamples) -> Apy:
     # For everything that isn't ETH, prioritize the weekly APY over the monthly. 
     # APYs on other networks are vary quickly and harvests are more frequent than on mainnet, 
     # where infrequent harvests mean showing the weekly APY results in misleading spikes
-    if chain.id != Network.Mainnet:
+    if CHAINID != Network.Mainnet:
         apys = [week_ago_apy, month_ago_apy, inception_apy]
     else:
         apys = [month_ago_apy, week_ago_apy, inception_apy]
@@ -172,7 +172,7 @@ async def average(vault, samples: ApySamples) -> Apy:
     # For everything that isn't ETH, prioritize the weekly APY over the monthly. 
     # APYs on other networks are vary quickly and harvests are more frequent than on mainnet, 
     # where infrequent harvests mean showing the weekly APY results in misleading spikes
-    if chain.id != Network.Mainnet:
+    if CHAINID != Network.Mainnet:
         apys = [week_ago_apy, month_ago_apy]
     else:
         apys = [month_ago_apy, week_ago_apy]

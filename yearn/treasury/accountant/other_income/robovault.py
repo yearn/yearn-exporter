@@ -2,8 +2,8 @@
 
 from typing import Optional
 
-from brownie import chain
 from y import ContractNotVerified, ERC20, Network
+from y.constants import CHAINID
 
 from yearn.entities import TreasuryTx, TxGroup
 from yearn.treasury.accountant.constants import treasury
@@ -13,7 +13,7 @@ def is_robovault_share(tx: TreasuryTx) -> Optional[TxGroup]:
     """
     After Yearn devs helped robovault with a vulnerability, robovault committed to sending Yearn a portion of their fees.
     """
-    if chain.id != Network.Fantom:
+    if CHAINID != Network.Fantom:
         return False
         
     if not (

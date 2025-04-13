@@ -1,6 +1,6 @@
 
 import eth_portfolio
-from brownie import chain
+from y.constants import CHAINID
 from y.networks import Network
 from y.prices.utils import ypriceapi
 
@@ -107,8 +107,8 @@ skip_tokens = {
 }
 
 def customize_eth_portfolio() -> None:
-    for token in skip_tokens.get(chain.id, []):
-        eth_portfolio.SHITCOINS[chain.id].add(token)
+    for token in skip_tokens.get(CHAINID, []):
+        eth_portfolio.SHITCOINS[CHAINID].add(token)
 
 
 skip_ypriceapi = {
@@ -132,5 +132,5 @@ skip_ypriceapi = {
         
 def customize_ypricemagic() -> None:
     """We just do this to reduce unnecessary and ugly logging.""" 
-    for token in skip_ypriceapi.get(chain.id, []):
+    for token in skip_ypriceapi.get(CHAINID, []):
         ypriceapi.skip_ypriceapi.add(token)

@@ -1,6 +1,7 @@
 
-from brownie import network, chain
+from brownie import network
 from multicall.multicall import batcher
+from y.constants import CHAINID
 
 from yearn.logs import setup_logging
 
@@ -18,7 +19,7 @@ if network.is_connected():
     from yearn.middleware.middleware import setup_middleware
     
     # needed for base
-    if chain.id == Network.Base:
+    if CHAINID == Network.Base:
         batcher.step = 2000
 
     setup_middleware()

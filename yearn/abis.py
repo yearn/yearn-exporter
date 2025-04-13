@@ -3,8 +3,9 @@
 
 from typing import Dict, List
 
-from brownie import chain, interface
+from brownie import interface
 from y import Contract, ContractNotVerified, Network
+from y.constants import CHAINID
 from y.prices.lending import compound
 
 
@@ -16,7 +17,7 @@ non_verified_contracts: Dict[str,str] = {
     Network.Fantom: {
         "0x154eA0E896695824C87985a52230674C2BE7731b": "0xbcab7d083Cf6a01e0DdA9ed7F8a02b47d125e682",
     },
-}.get(chain.id,{})
+}.get(CHAINID,{})
 
 def _fix_problematic_abis() -> None:
     __force_non_verified_contracts()
@@ -97,5 +98,5 @@ abis_to_fix = {
 }
 
 def __set_abis_with_interfaces():
-    for address, interface in abis_to_fix.get(chain.id, {}).items():
+    for address, interface in abis_to_fix.get(CHAINID, {}).items():
         Contract.from_abi(interface._name, address, interface.abi)

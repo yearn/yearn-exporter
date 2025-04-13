@@ -5,6 +5,7 @@ from typing import Optional
 from brownie import chain
 from cachetools.func import ttl_cache
 from y import magic
+from y.constants import CHAINID
 from y.datatypes import AnyAddressType
 from y.exceptions import PriceError
 from y.networks import Network
@@ -29,7 +30,7 @@ logger = logging.getLogger(__name__)
 async def _get_price(token: AnyAddressType, block: Optional[Block]) -> Decimal:
     """ Performs some checks before deferring to ypricemagic. """ 
 
-    if chain.id == Network.Mainnet:
+    if CHAINID == Network.Mainnet:
         # fixes circular import
         from yearn.special import Backscratcher
 
@@ -68,13 +69,13 @@ def unwrap_token(token: AddressOrContract) -> AddressString:
     if token == "0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE":
         return constants.weth
 
-    if chain.id == Network.Mainnet:
+    if CHAINID == Network.Mainnet:
         if token == "0x4da27a545c0c5B758a6BA100e3a049001de870f5":
             return "0x7fc66500c84a76ad7e9c93437bfc5ac33e2ddae9"  # stkAAVE -> AAVE
         elif token == "0x27D22A7648e955E510a40bDb058333E9190d12D4":
             return "0x0cec1a9154ff802e7934fc916ed7ca50bde6844e"  # PPOOL -> POOL
 
-    if chain.id in [ Network.Mainnet, Network.Fantom ]:
+    if CHAINID in [ Network.Mainnet, Network.Fantom ]:
         if aave:
             asset = contract(token)
             # wrapped aDAI -> aDAI
@@ -114,14 +115,14 @@ def find_price(
         logger.debug("yearn -> %s", price)
 
     # token-specific overrides
-    if chain.id == Network.Fantom:
+    if CHAINID == Network.Fantom:
         # xcredit
         if token == '0xd9e28749e80D867d5d14217416BFf0e668C10645':
             logger.debug('xcredit -> unwrap')
             wrapper = contract(token)
             price = magic.get_price(wrapper.token(), block=block, sync=False) * wrapper.getShareValue(block_identifier=block) / 1e18
 
-    elif chain.id == Network.Mainnet:
+    elif CHAINID == Network.Mainnet:
         # no liquid market for yveCRV-DAO -> return CRV token price
         if token == Backscratcher().vault.address and block < 11786563:
             if CRV:
@@ -187,11 +188,11 @@ def _describe_err(token: Address, block: Optional[Block]) -> str:
 
     if block is None:
         if symbol:
-            return f"{symbol} {token} on {Network(chain.id).name}"
+            return f"{symbol} {token} on {Network(CHAINID).name}"
 
-        return f"malformed token {token} on {Network(chain.id).name}"
+        return f"malformed token {token} on {Network(CHAINID).name}"
 
     if symbol:
-        return f"{symbol} {token} on {Network(chain.id).name} at {block}"
+        return f"{symbol} {token} on {Network(CHAINID).name} at {block}"
 
-    return f"malformed token {token} on {Network(chain.id).name} at {block}"
+    return f"malformed token {token} on {Network(CHAINID).name} at {block}"

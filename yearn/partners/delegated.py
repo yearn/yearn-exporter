@@ -3,10 +3,10 @@ from math import ceil
 
 from a_sync import AsyncThreadPoolExecutor
 from async_lru import alru_cache
-from brownie import chain
 from eth_utils.toolz import last
 from joblib import Parallel, delayed
 from y import Contract, Network
+from y.constants import CHAINID
 
 from yearn.events import decode_logs, get_logs_asap
 
@@ -16,7 +16,7 @@ YEARN_PARTNER_TRACKER = Contract({
     Network.Arbitrum: "0x0e5b46E4b2a05fd53F5a4cD974eb98a9a613bcb7",
     Network.Optimism: "0x7E08735690028cdF3D81e7165493F1C34065AbA2",
     Network.Base: "0xD0F08E42A40569fF83D28AA783a5b6537462667c",
-}[chain.id])
+}[CHAINID])
 
 class AsOfDict(dict):
     """

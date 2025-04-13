@@ -1,5 +1,5 @@
 
-from brownie import chain
+from y.constants import CHAINID
 from y.networks import Network
 
 from yearn.constants import YFI
@@ -8,7 +8,7 @@ from yearn.prices.constants import weth
 # The buyback contract
 BUYER = {
     Network.Mainnet: "0x6903223578806940bd3ff0C51f87aa43968424c8",
-}.get(chain.id, None)
+}.get(CHAINID, None)
 
 YFI_LIKE = {
     Network.Mainnet: {
@@ -19,7 +19,7 @@ YFI_LIKE = {
         YFI,
         '0xD0660cD418a64a1d44E9214ad8e459324D8157f1',  # WOOFY
     },
-}.get(chain.id, set())
+}.get(CHAINID, set())
 
 ETH_LIKE = {
     Network.Mainnet: {
@@ -31,7 +31,7 @@ ETH_LIKE = {
         "0x9559Aaa82d9649C7A7b220E7c461d2E74c9a3593", # reth
         "0xE95A203B1a91a908F9B9CE46459d101078c2c3cb", # ankreth
     },
-}.get(chain.id, set())
+}.get(CHAINID, set())
 
 BTC_LIKE = {
     Network.Mainnet: {
@@ -47,7 +47,7 @@ BTC_LIKE = {
     Network.Fantom: {
         "0x321162Cd933E2Be498Cd2267a90534A804051b11", # wbtc
     },
-}.get(chain.id, set())
+}.get(CHAINID, set())
 
 INTL_STABLECOINS = {
     Network.Mainnet: {
@@ -63,7 +63,7 @@ INTL_STABLECOINS = {
     Network.Arbitrum: {
         '0xFa247d0D55a324ca19985577a2cDcFC383D87953',  # PHP Philippine Peso
     },
-}.get(chain.id, set())
+}.get(CHAINID, set())
 
 OTHER_LONG_TERM_ASSETS = {
     # Non-YFI long term hodls
@@ -71,4 +71,4 @@ OTHER_LONG_TERM_ASSETS = {
         '0x1cEB5cB57C4D4E2b2433641b95Dd330A33185A44',  # KP3R
         '0xaf988afF99d3d0cb870812C325C588D8D8CB7De8',  # SLP (KP3R/ETH)
     },
-}.get(chain.id, set())
+}.get(CHAINID, set())

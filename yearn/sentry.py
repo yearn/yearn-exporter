@@ -10,10 +10,11 @@ from typing import Awaitable, Callable
 
 import eth_retry
 import sentry_sdk.client
-from brownie import chain, web3
+from brownie import web3
 from sentry_sdk import Hub, capture_message, init, push_scope, set_tag, utils
 from sentry_sdk.integrations.asyncio import AsyncioIntegration
 from sentry_sdk.integrations.threading import ThreadingIntegration
+from y.constants import CHAINID
 from y.networks import Network
 
 SENTRY_DSN = os.getenv('SENTRY_DSN')
@@ -29,8 +30,8 @@ def before_send(event, hint):
 
 @eth_retry.auto_retry
 def set_custom_tags():
-    set_tag("chain_id", chain.id)
-    set_tag("network", Network(chain.id).name())
+    set_tag("chain_id", CHAINID)
+    set_tag("network", Network(CHAINID).name())
     set_tag("web3_client_version", web3.clientVersion)
     set_tag("provider", _clean_creds_from_uri(web3.provider.endpoint_uri))
 

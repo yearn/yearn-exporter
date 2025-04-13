@@ -7,6 +7,7 @@ from brownie.exceptions import RPCRequestError
 from pony.orm import commit, select
 from requests import HTTPError
 from y import ContractNotVerified, Network, get_price
+from y.constants import CHAINID
 from y.networks import Network
 
 from yearn.constants import ERC20_TRANSFER_EVENT_HASH, TREASURY_WALLETS
@@ -23,7 +24,7 @@ logger = logging.getLogger(__name__)
 
 
 def is_internal_transfer(tx: TreasuryTx) -> bool:
-    if chain.id == Network.Mainnet and tx.block > 17162286 and "yMechs Multisig" in [tx._from_nickname, tx._to_nickname]:
+    if CHAINID == Network.Mainnet and tx.block > 17162286 and "yMechs Multisig" in [tx._from_nickname, tx._to_nickname]:
         # as of may 1 2023, ymechs wallet split from treasury
         return False
     return tx.to_address.address in treasury.addresses and tx.from_address.address in treasury.addresses
@@ -145,7 +146,7 @@ def is_stream_replenishment(tx: TreasuryTx) -> bool:
         Network.Mainnet: [
             ["0x1621ba5c9b57930c97cc43d5d6d401ee9c69fed435b0b458ee031544a10bfa75", Filter('log_index', 487)],
         ],
-    }.get(chain.id, [])) or tx._from_nickname == "Contract: LlamaPay":
+    }.get(CHAINID, [])) or tx._from_nickname == "Contract: LlamaPay":
         if tx.amount > 0:
             tx.amount *= -1
         if tx.value_usd > 0:
@@ -158,7 +159,7 @@ def is_scam_airdrop(tx: TreasuryTx) -> bool:
         Network.Mainnet: [
             "0x9db063448c75a204148f4ede546223342463e288bcce7ebf1ed476e296f62824",
         ]
-    }.get(chain.id, [])
+    }.get(CHAINID, [])
     return tx in HashMatcher(hashes)
 
 _OTC_TRADER_ADDRESS = "0xfa42022707f02cFfC80557B166d625D52346dd6d"

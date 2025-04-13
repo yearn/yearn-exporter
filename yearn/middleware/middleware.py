@@ -1,7 +1,6 @@
 import logging
 
 import eth_retry
-from brownie import chain
 from brownie import web3 as w3
 from eth_utils import encode_hex
 from eth_utils import function_signature_to_4byte_selector as fourbyte
@@ -9,7 +8,8 @@ from requests import Session
 from requests.adapters import HTTPAdapter
 from web3 import HTTPProvider
 from web3.middleware import filter
-from y.networks import Network
+from y import Network
+from y.constants import CHAINID
 
 from yearn.cache import memory
 from yearn.middleware import yearn_filter
@@ -34,7 +34,7 @@ def _get_batch_size() -> int:
     for provider, provider_max_batch_size in PROVIDER_MAX_BATCH_SIZE.items():
         if provider in w3.provider.endpoint_uri:
             return provider_max_batch_size
-    return CHAIN_MAX_BATCH_SIZE[chain.id]
+    return CHAIN_MAX_BATCH_SIZE[CHAINID]
 
 BATCH_SIZE = _get_batch_size()
 

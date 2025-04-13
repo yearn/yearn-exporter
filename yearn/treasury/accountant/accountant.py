@@ -4,11 +4,12 @@ import os
 from time import time
 from typing import Any, Dict, Iterable, List, Optional
 
-from brownie import chain
 from joblib import Parallel, delayed
 from pony.orm import Set, commit, db_session, select
 from pony.orm.core import Entity
 from tqdm import tqdm
+from y.constants import CHAINID
+
 from yearn.entities import Chain, TreasuryTx, TxGroup
 from yearn.outputs.postgres.utils import cache_txgroup
 from yearn.treasury.accountant.constants import PENDING_LABEL
@@ -42,7 +43,7 @@ def pending_txgroup() -> TxGroup:
 @db_session
 def unsorted_txs() -> List[TreasuryTx]:
     """ Returns all unsorted txs for the current chain. """
-    return select(tx for tx in TreasuryTx if tx.chain.chainid == chain.id and tx.txgroup.name == PENDING_LABEL)
+    return select(tx for tx in TreasuryTx if tx.chain.chainid == CHAINID and tx.txgroup.name == PENDING_LABEL)
 
 
 @db_session
@@ -55,7 +56,7 @@ def all_txs(all_chains: bool = False) -> List[TreasuryTx]:
     if all_chains:
         txs = select(tx for tx in TreasuryTx)
     else:
-        txs = select(tx for tx in TreasuryTx if tx.chain.chainid == chain.id)
+        txs = select(tx for tx in TreasuryTx if tx.chain.chainid == CHAINID)
     logger.info(f"Loaded {len(txs)} in {round(time()-start,2)}s")
     return txs
 

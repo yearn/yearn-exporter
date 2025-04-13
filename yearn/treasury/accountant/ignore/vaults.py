@@ -1,8 +1,9 @@
 
 from decimal import Decimal
 
-from brownie import ZERO_ADDRESS, chain
+from brownie import ZERO_ADDRESS
 from y import Network
+from y.constants import CHAINID
 
 from yearn.iearn import Registry
 from yearn.entities import TreasuryTx
@@ -11,7 +12,7 @@ from yearn.treasury.accountant.constants import treasury, v1
 from yearn.treasury.accountant.revenue.fees import v2_vaults
 
 vaults = (v1.vaults + v2_vaults) if v1 else v2_vaults
-if chain.id == Network.Mainnet:
+if CHAINID == Network.Mainnet:
     iearn = Registry().vaults
 
 def is_vault_deposit(tx: TreasuryTx) -> bool:
@@ -25,7 +26,7 @@ def is_vault_deposit(tx: TreasuryTx) -> bool:
             "0x248e896eb732dfe40a0fa49131717bb7d2c1721743a2945ab9680787abcf9c50",
             "0x2ce0240a08c8cc8d35b018995862711eb660a24d294b1aa674fbc467af4e621b",
         ],
-    }.get(chain.id, [])
+    }.get(CHAINID, [])
     
     # TODO Figure out hueristics for ETH deposit to yvWETH
     # TODO build hueristics for v3 vaults - I did this, now just make sure these sort on a fresh pull
@@ -39,7 +40,7 @@ def is_vault_deposit(tx: TreasuryTx) -> bool:
     #        ["0xd7e7abe600aad4a3181a3a410bef2539389579d2ed28f3e75dbbf3a7d8613688", IterFilter('log_index', [532, 533])],
     #        ["0x6c2debddbc13ca7ec2ae434e8f245c59b4286ce95048b57acf96d0e9253f4e8d", IterFilter('log_index', [285, 286])],
     #    ],
-    #}.get(chain.id, [])):
+    #}.get(CHAINID, [])):
     #    return True
 
     return tx in HashMatcher(zap_hashes) or is_v3_vault_deposit(tx)
@@ -153,7 +154,7 @@ def is_vault_withdrawal(tx: TreasuryTx) -> bool:
             ("0x3efe08a7dc37ad120d61eb52d7ffcec5e2699f62ee1bd9bd55ece3dfb7ec4441", IterFilter('log_index', (385, 393))),
             ("0xd55f6cedd7a08d91f99e8ceb384ffd0892f3dbee450879af33d54dda5bd18915", IterFilter('log_index', (26, 75))),
         ),
-    }.get(chain.id, ())):
+    }.get(CHAINID, ())):
         return True
 
     if tx.to_address not in list(treasury.addresses) + [ZERO_ADDRESS]:

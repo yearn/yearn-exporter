@@ -1,4 +1,4 @@
-from brownie import chain
 from joblib import Memory
+from y.constants import CHAINID
 
-memory = Memory(f'cache/{chain.id}', verbose=0)
+memory = Memory(f'cache/{CHAINID}', verbose=0)

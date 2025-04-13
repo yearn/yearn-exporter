@@ -9,10 +9,10 @@ from typing import Optional, AsyncIterator
 
 import dank_mids
 import eth_retry
-from brownie import chain
 from brownie.network.event import _EventItem
 from y import (Block, Contract, Network, contract_creation_block_async, 
                get_block_timestamp_async, get_block_at_timestamp, get_price)
+from y.constants import CHAINID
 from y.exceptions import PriceError, yPriceMagicError
 from y.utils.events import Events
 
@@ -26,7 +26,7 @@ from yearn.utils import Singleton
 
 logger = logging.getLogger("yearn.yeth")
 
-if chain.id == Network.Mainnet:
+if CHAINID == Network.Mainnet:
     YETH_POOL = Contract("0x2cced4ffA804ADbe1269cDFc22D7904471aBdE63")
     RATE_PROVIDER = Contract("0x4e322aeAf355dFf8fb9Fd5D18F3D87667E8f8316")
     STAKING_CONTRACT = Contract("0x583019fF0f430721aDa9cfb4fac8F06cA104d0B4") # st-yETH

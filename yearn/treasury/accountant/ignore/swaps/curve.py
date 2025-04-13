@@ -1,8 +1,9 @@
 
 from decimal import Decimal
 
-from brownie import ZERO_ADDRESS, chain
+from brownie import ZERO_ADDRESS
 from y import Contract, Network
+from y.constants import CHAINID
 
 from yearn.entities import TreasuryTx
 from yearn.multicall2 import fetch_multicall
@@ -72,7 +73,7 @@ def is_curve_withdrawal(tx: TreasuryTx) -> bool:
             "0x5d0be661f67d39999b8107e1ecb3eb3e9c8eceefbd7002da0fa1ea865f58324b",
             "0x5956b391625f0121b18118f8e665c6668b36cf5f929fda6348971b57cbee6e55",
         ],
-    }.get(chain.id, [])
+    }.get(CHAINID, [])
     return tx in HashMatcher(hashes)
 
 

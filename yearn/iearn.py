@@ -1,10 +1,9 @@
 from asyncio import gather
 from collections import defaultdict
 
-from brownie import chain
-from y import Contract, get_price
+from y import Contract, Network, get_price
+from y.constants import CHAINID
 from y.contracts import contract_creation_block_async
-from y.networks import Network
 
 from yearn.exceptions import UnsupportedNetwork
 from yearn.multicall2 import fetch_multicall_async, multicall_matrix_async
@@ -39,7 +38,7 @@ class Earn:
 
 class Registry:
     def __init__(self):
-        if chain.id != Network.Mainnet:
+        if CHAINID != Network.Mainnet:
             raise UnsupportedNetwork()
         self.vaults = [Earn(name, vault) for name, vault in IEARN.items()]
 

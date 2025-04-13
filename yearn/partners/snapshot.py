@@ -13,7 +13,7 @@ import a_sync
 import pandas as pd
 from async_lru import alru_cache
 from async_property import async_cached_property
-from brownie import chain, convert, web3
+from brownie import convert, web3
 from dank_mids.helpers import lru_cache_lite
 from pandas import DataFrame
 from pandas.core.tools.datetimes import DatetimeScalar
@@ -23,6 +23,7 @@ from tqdm.asyncio import tqdm_asyncio
 from web3._utils.abi import filter_by_name
 from web3._utils.events import construct_event_topic_set
 from y import Contract, ERC20, Network, contract_creation_block_async, get_price
+from y.constants import CHAINID
 from y.exceptions import continue_if_call_reverted
 from y.time import get_block_timestamp_async, last_block_on_date
 from y.utils.events import BATCH_SIZE, Events
@@ -108,7 +109,7 @@ class Wrapper:
     
     @db_session
     def read_cache(self) -> DataFrame:
-        entities = PartnerHarvestEvent.select(lambda e: e.vault.address.address == self.vault and e.wrapper.address == self.wrapper and e.chain.chainid == chain.id)[:]
+        entities = PartnerHarvestEvent.select(lambda e: e.vault.address.address == self.vault and e.wrapper.address == self.wrapper and e.chain.chainid == CHAINID)[:]
         cache = [
             {
                 'block': e.block,
@@ -181,7 +182,7 @@ class BentoboxWrapper(Wrapper):
     """
     @async_cached_property
     async def bentobox(self) -> Contract:
-        if chain.id in [Network.Mainnet, Network.Fantom]:
+        if CHAINID in [Network.Mainnet, Network.Fantom]:
             return await Contract.coroutine("0xF5BCE5077908a1b7370B9ae04AdC565EBd643966")
         raise UnsupportedNetwork()
 
@@ -203,7 +204,7 @@ class DegenboxWrapper(Wrapper):
     """
     @async_cached_property
     async def degenbox(self) -> Contract:
-        if chain.id == Network.Mainnet:
+        if CHAINID == Network.Mainnet:
             return await Contract.coroutine("0xd96f48665a1410C0cd669A88898ecA36B9Fc2cce")
         raise UnsupportedNetwork()
 

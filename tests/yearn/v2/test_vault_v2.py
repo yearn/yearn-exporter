@@ -3,8 +3,8 @@ from random import randint
 import pytest
 from brownie import chain
 from multicall.utils import await_awaitable
-from y.networks import Network
-from y.contracts import contract_creation_block
+from y import Network, contract_creation_block
+from y.constants import CHAINID
 
 from yearn.v2.registry import Registry
 from yearn.v2.vaults import Vault
@@ -45,7 +45,7 @@ def test_active_vaults_at_v2_current():
     MIN_CT_VAULTS = {
         Network.Mainnet: 92,
         Network.Fantom: 18,
-    }[chain.id]
+    }[CHAINID]
 
     assert len(await_awaitable(registry.active_vaults_at())) >= MIN_CT_VAULTS, "One or more vaults are missing from v2.Registry().active_vaults_at(None)"
 

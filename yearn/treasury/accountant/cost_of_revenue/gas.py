@@ -1,5 +1,5 @@
-from brownie import chain
 from pony.orm import commit
+from y.constants import CHAINID
 from y.networks import Network
 
 from yearn.entities import TreasuryTx
@@ -78,7 +78,7 @@ strategist_gas_hashes = {
         "0x3d3b714d3cacef6dca14b8abff10d882af62209d389d4225761e461f10b47e39",
         "0x3efe08a7dc37ad120d61eb52d7ffcec5e2699f62ee1bd9bd55ece3dfb7ec4441",
     ],
-}.get(chain.id, ())
+}.get(CHAINID, ())
 
 def is_strategist_gas(tx: TreasuryTx) -> bool:
     if tx._from_nickname == "Disperse.app":
@@ -95,7 +95,7 @@ def is_strategist_gas(tx: TreasuryTx) -> bool:
             '0x110ef82ec16eb53bf71b073aca4a37d4fbfaa74166c687a726211392a02f0059',
             '0xaad012505975dd13a57599a28d33c979f72084ae56ccba76997f05822a5497f5',
         ),
-    }.get(chain.id, ())):
+    }.get(CHAINID, ())):
         tx.amount *= -1
         tx.value_usd *= -1
         commit()
@@ -106,7 +106,7 @@ def is_strategist_gas(tx: TreasuryTx) -> bool:
             "0x420cfbc7856f64e8949d4dd6d4ce9570f8270def1380ebf381376fbcd0b0d5bf",
             "0xc7bca93dc6bfa37e45bebb030a2ce1198fc402176ba0b3a5553a0580299df5e7",
         ),
-    }.get(chain.id, ()))
+    }.get(CHAINID, ()))
 
 def is_multisig_reimbursement(tx: TreasuryTx) -> bool:
     return tx._symbol == "ETH" and tx in HashMatcher([

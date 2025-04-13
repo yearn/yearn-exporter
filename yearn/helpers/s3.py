@@ -3,7 +3,7 @@ import shutil, json
 from typing import List, TypedDict, Any
 
 import boto3
-from brownie import chain
+from y.constants import CHAINID
 
 print(boto3.__dict__)
 
@@ -40,7 +40,7 @@ def get_export_paths(path_presufix: str, path_suffix: str):
         shutil.rmtree(out)
     os.makedirs(out, exist_ok=True)
 
-    api_path = os.path.join("v1", "chains", f"{chain.id}", path_presufix)
+    api_path = os.path.join("v1", "chains", f"{CHAINID}", path_presufix)
 
     file_base_path = os.path.join(out, api_path)
     os.makedirs(file_base_path, exist_ok=True)

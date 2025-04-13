@@ -1,7 +1,7 @@
 from datetime import date
 
-from brownie import chain
-from y.networks import Network
+from y import Network
+from y.constants import CHAINID
 
 from yearn.partners.snapshot import (BentoboxWrapper, DegenboxWrapper,
                                      DelegatedDepositWildcardWrapper,
@@ -685,4 +685,4 @@ partners = {
             ],
         )
     ],
-}.get(chain.id, [])
+}.get(CHAINID, [])

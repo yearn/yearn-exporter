@@ -3,6 +3,7 @@ from decimal import Decimal
 
 from brownie import ZERO_ADDRESS, chain
 from y import Network, Contract
+from y.constants import CHAINID
 
 from yearn.constants import WRAPPED_GAS_COIN
 from yearn.entities import TreasuryTx
@@ -64,7 +65,7 @@ def is_uniswap_deposit(tx: TreasuryTx) -> bool:
         Network.Mainnet: [
             "0x3a000d3aa5d0d83a3ff359de261bfcecdc62cd13500b8ab517802742ac918627",  # uni v3
         ],
-    }.get(chain.id, []))
+    }.get(CHAINID, []))
 
 def is_uniswap_withdrawal(tx: TreasuryTx) -> bool:
     if tx.to_address and "Burn" in tx._events and "Transfer" in tx._events:
@@ -126,7 +127,7 @@ def is_uniswap_withdrawal(tx: TreasuryTx) -> bool:
             "0xf0723677162cdf8105c0f752a8c03c53803cb9dd9a6649f3b9bc5d26822d531f",
             "0xaf1b7f138fb8bf3f5e13a680cb4a9b7983ec71a75836111c03dee6ae530db176",  # v3
         ],
-    }.get(chain.id, []))
+    }.get(CHAINID, []))
 
 def is_uniswap_swap(tx: TreasuryTx) -> bool:
     # The LP for dumping solidSEX is not verified :( devs blz do something
@@ -142,7 +143,7 @@ def is_uniswap_swap(tx: TreasuryTx) -> bool:
             Network.Mainnet: [
                 "0x490245ef6e3c60127491415afdea23c13f4ca1a8c04de4fb3a498e7f7574b724", # uni v3
             ],
-        }.get(chain.id, [])
+        }.get(CHAINID, [])
     ):
         return True
     

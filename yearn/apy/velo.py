@@ -5,8 +5,9 @@ from time import time
 from typing import TYPE_CHECKING, Optional
 
 from async_lru import alru_cache
-from brownie import ZERO_ADDRESS, chain
+from brownie import ZERO_ADDRESS
 from y import Contract, Network, get_price
+from y.constants import CHAINID
 from y.time import get_block_timestamp_async
 
 from yearn.apy.common import SECONDS_PER_YEAR, Apy, ApyFees, ApyPoints, ApySamples
@@ -19,11 +20,11 @@ logger = logging.getLogger(__name__)
 
 COMPOUNDING = 365
 
-voter = Contract("0x41c914ee0c7e1a5edcd0295623e6dc557b5abf3c") if Network(chain.id) == Network.Optimism else None
+voter = Contract("0x41c914ee0c7e1a5edcd0295623e6dc557b5abf3c") if Network(CHAINID) == Network.Optimism else None
 
 @alru_cache
 async def get_staking_pool(underlying: str) -> Optional[Contract]:
-    if Network(chain.id) == Network.Optimism:
+    if Network(CHAINID) == Network.Optimism:
         staking_pool = await voter.gauges.coroutine(underlying)
         return None if staking_pool == ZERO_ADDRESS else await Contract.coroutine(staking_pool)
         

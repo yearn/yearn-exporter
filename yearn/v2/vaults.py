@@ -10,13 +10,13 @@ from typing import (TYPE_CHECKING, Any, AsyncIterator, Dict, List, NoReturn,
 import a_sync
 import dank_mids
 from async_property import async_cached_property, async_property
-from brownie import chain
 from brownie.network.event import _EventItem
 from eth_utils import encode_hex, event_abi_to_log_topic
 from semantic_version.base import Version
 from y import ERC20, Contract, Network, magic, get_price
 from y.contracts import contract_creation_block_async
 from y._decorators import stuck_coro_debugger
+from y.constants import CHAINID
 from y.exceptions import ContractNotVerified, PriceError, yPriceMagicError
 from y.utils.events import ProcessedEvents
 
@@ -70,7 +70,7 @@ BORKED = {
         "0xc5F3D11580c41cD07104e9AF154Fc6428bb93c73",
         "0x4213458C69c19E6792510E1153cb0c5834665fdC",
     ]
-}.get(chain.id, [])
+}.get(CHAINID, [])
 
 def _unpack_results(
     vault: Address, 
@@ -304,8 +304,8 @@ class Vault:
             ]
         }
         needs_simple = True
-        if chain.id in curve_simple_excludes:
-            needs_simple = self.vault.address not in curve_simple_excludes[chain.id]
+        if CHAINID in curve_simple_excludes:
+            needs_simple = self.vault.address not in curve_simple_excludes[CHAINID]
 
         return needs_simple and magic.curve and await magic.curve.get_pool(self.token.address)
     
@@ -323,7 +323,7 @@ class VaultEvents(ProcessedEvents[_EventItem]):
     def _process_event(self, event: _EventItem) -> _EventItem:
         # some issues during the migration of this strat prevented it from being verified so we skip it here...
         try:
-            if chain.id == Network.Optimism:
+            if CHAINID == Network.Optimism:
                 failed_migration = False
                 for key in ["newVersion", "oldVersion", "strategy"]:
                     failed_migration |= (key in event and event[key] == "0x4286a40EB3092b0149ec729dc32AD01942E13C63")

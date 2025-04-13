@@ -5,10 +5,10 @@ from dataclasses import dataclass
 from functools import cached_property
 from typing import List
 
-from brownie import chain
 from brownie.network.contract import InterfaceContainer
 from cachetools.func import ttl_cache
 from y import Contract, Network, get_price
+from y.constants import CHAINID
 
 from yearn.exceptions import UnsupportedNetwork
 from yearn.multicall2 import multicall_matrix, multicall_matrix_async
@@ -41,7 +41,7 @@ class IronbankMarket:
 
 class Registry:
     def __init__(self, exclude_ib_tvl: bool = True):
-        if chain.id not in addresses:
+        if CHAINID not in addresses:
             raise UnsupportedNetwork('iron bank is not supported on this network')
         self.exclude_ib_tvl = exclude_ib_tvl
         self._vaults: List[IronbankMarket] = []
@@ -82,7 +82,7 @@ class Registry:
 
     @cached_property
     def ironbank(self):
-        addr = addresses[chain.id]
+        addr = addresses[CHAINID]
         return Contract(addr) if isinstance(addr, str) else addr()
 
     async def describe(self, block=None):

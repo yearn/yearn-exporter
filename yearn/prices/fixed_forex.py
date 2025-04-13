@@ -1,11 +1,11 @@
 import logging
 from typing import List, Optional
 
-from brownie import Contract, chain
+from brownie import Contract
 from brownie.convert.datatypes import EthAddress
 from cachetools.func import ttl_cache
-from y.contracts import contract_creation_block
-from y.networks import Network
+from y import Network, contract_creation_block
+from y.constants import CHAINID
 
 from yearn.exceptions import UnsupportedNetwork
 from yearn.typing import AddressOrContract, Block
@@ -20,11 +20,11 @@ addresses = {
 
 class FixedForex(metaclass=Singleton):
     def __init__(self) -> None:
-        if chain.id not in addresses:
+        if CHAINID not in addresses:
             raise UnsupportedNetwork("fixed forex is not supported on this network")
 
-        self.registry: Contract = contract(addresses[chain.id])
-        self.registry_deploy_block = contract_creation_block(addresses[chain.id])
+        self.registry: Contract = contract(addresses[CHAINID])
+        self.registry_deploy_block = contract_creation_block(addresses[CHAINID])
         self.markets: List[EthAddress] = self.registry.forex()
         logger.info(f'loaded {len(self.markets)} fixed forex markets')
 

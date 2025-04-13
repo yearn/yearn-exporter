@@ -6,8 +6,9 @@ from functools import cached_property
 from itertools import cycle
 from typing import Any, Dict, List, Optional, Tuple, Union
 
-from brownie import Contract, chain, convert
+from brownie import Contract, convert
 from eth_abi import encode
+from y.constants import CHAINID
 from y.contracts import contract_creation_block
 from y.networks import Network
 
@@ -58,20 +59,20 @@ addresses = {
 
 class UniswapV3(metaclass=Singleton):
     def __init__(self) -> None:
-        if chain.id not in addresses:
+        if CHAINID not in addresses:
             raise UnsupportedNetwork('uniswap v3 is not supported on this network')
 
-        conf = addresses[chain.id]
+        conf = addresses[CHAINID]
         self.factory: Contract = contract(conf['factory'])
         self.quoter: Contract = Contract.from_abi(
             name='Quoter',
-            address=addresses[chain.id]['quoter'],
+            address=addresses[CHAINID]['quoter'],
             abi=json.load(open('interfaces/uniswap/UniswapV3Quoter.json'))
         ) # use direct abi from etherscan because the quoter is not verified on all chains (opti)
         self.fee_tiers = [FeeTier(fee) for fee in conf['fee_tiers']]
 
     def __contains__(self, asset: Any) -> bool:
-        return chain.id in addresses
+        return CHAINID in addresses
 
     def encode_path(self, path: Path) -> bytes:
         types = [type for _, type in zip(path, cycle(['address', 'uint24']))]

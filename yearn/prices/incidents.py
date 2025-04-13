@@ -1,7 +1,8 @@
 from collections import defaultdict
 
 from brownie import chain
-from y.networks import Network
+from y import Network
+from y.constants import CHAINID
 
 INCIDENTS = defaultdict(list)
 
@@ -45,4 +46,4 @@ INCIDENTS.update({
             {"start":12868930,"end":chain.height,"result":0},
         ],
     },
-}.get(chain.id, {}))
+}.get(CHAINID, {}))
