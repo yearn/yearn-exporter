@@ -130,11 +130,18 @@ def is_iearn_withdrawal(tx: TreasuryTx) -> bool:
 def is_vault_withdrawal(tx: TreasuryTx) -> bool:
     # This is a strange tx that won't sort the usual way and isn't worth determining sorting hueristics for.
     if tx in HashMatcher({
-        Network.Mainnet: [
+        Network.Mainnet: (
             "0xfa8652a888039183770ae766b855160c5e962b2963745ba0b67334dae9605348",
-            ["0x6b3ede4a134198ab6139d019be3c303755aaa5c0502ba6e469adb934471fe23f", IterFilter('log_index', [291, 292])]
-        ],
-    }.get(chain.id, [])):
+            ("0x6b3ede4a134198ab6139d019be3c303755aaa5c0502ba6e469adb934471fe23f", IterFilter('log_index', (291, 292))),
+            ("0x6a1996554455945f9ba5f58b831c86f9afaeb1a5c36b9166099a7d3ac0106803", Filter('log_index', 388)),
+            ("0xe94b63c325861d615a773e8baba7521293c739927e23d0227405714a88e6f567", Filter('log_index', 496)),
+            ("0xebe8d138728be8f0b7fdce7614a6be4c161f38bd2b63221b55071b6ddc52d280", Filter('log_index', 520)),
+            ("0xd0fa31ccf6bf7577a533366955bb528d6d17c928bba1ff13ab273487a27d9602", Filter('log_index', 253)),
+            ("0xae7d281b8a093da60d39179452d230de2f1da4355df3aea629d969782708da5d", Filter('log_index', 283)),
+            ("0x3efe08a7dc37ad120d61eb52d7ffcec5e2699f62ee1bd9bd55ece3dfb7ec4441", IterFilter('log_index', (385, 393))),
+            ("0xd55f6cedd7a08d91f99e8ceb384ffd0892f3dbee450879af33d54dda5bd18915", IterFilter('log_index', (26, 75))),
+        ),
+    }.get(chain.id, ())):
         return True
 
     if tx.to_address not in list(treasury.addresses) + [ZERO_ADDRESS]:

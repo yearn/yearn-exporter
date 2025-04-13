@@ -10,14 +10,17 @@ from yearn.treasury.accountant.constants import treasury
 
 
 _pass_thru_hashes = {
-    Network.Mainnet: [
+    Network.Mainnet: (
         "0xf662c68817c56a64b801181a3175c8a7e7a5add45f8242990c695d418651e50d",
-    ],
-    Network.Fantom: [
+    ),
+    Network.Fantom: (
         "0x411d0aff42c3862d06a0b04b5ffd91f4593a9a8b2685d554fe1fbe5dc7e4fc04",
         "0xa347da365286cc912e4590fc71e97a5bcba9e258c98a301f85918826538aa021",
-    ],
-}.get(chain.id, [])
+    ),
+}.get(chain.id, ())
+
+_CRV_CVX = 'CRV', 'CVX'
+_SYMBOL_IS_CRV_OR_CVX = IterFilter('_symbol', _CRV_CVX)
 
 def is_pass_thru(tx: TreasuryTx) -> bool:
     # skipped the hashmatcher to do strange things... there is probably a better way to do this
@@ -36,37 +39,44 @@ def is_pass_thru(tx: TreasuryTx) -> bool:
             return True
 
     return tx in HashMatcher({
-        Network.Mainnet: [
-            ["0x51baf41f9daa68ac7be8024125852f1e21a3bb954ea32e686ac25a72903a1c8e", IterFilter('_symbol',['CRV','CVX'])],
-            ["0xdc4e0045901cfd5ef4c6327b846a8bd229abdbf289547cd0e969874b47124342", IterFilter('log_index',[28,29,30,31])],
+        Network.Mainnet: (
+            ("0x51baf41f9daa68ac7be8024125852f1e21a3bb954ea32e686ac25a72903a1c8e", _SYMBOL_IS_CRV_OR_CVX),
+            ("0xdc4e0045901cfd5ef4c6327b846a8bd229abdbf289547cd0e969874b47124342", IterFilter('log_index',(28,29,30,31))),
             "0xae6797ad466de75731117df46ccea5c263265dd6258d596b9d6d8cf3a7b1e3c2",
             "0x2a6191ba8426d3ae77e2a6c91de10a6e76d1abdb2d0f831c6c5aad52be3d6246",
             "0x25b54e113e58a3a4bbffc011cdfcb8c07a0424f33b0dbda921803d82b88f1429",  # https://github.com/yearn/chief-multisig-officer/pull/924
             "0xcb000dd2b623f9924fe0234831800950a3269b2d412ce9eeabb0ec65cd737059",
-            ["0xd782e3923961ea7462584d61e0e37cf10289158a8cc338adb77b3ad38c72c459", Filter("_symbol", "COW")],
-        ],
-        Network.Fantom: [
+            ("0xd782e3923961ea7462584d61e0e37cf10289158a8cc338adb77b3ad38c72c459", Filter("_symbol", "COW")),
+            ("0xae7d281b8a093da60d39179452d230de2f1da4355df3aea629d969782708da5d", IterFilter("_symbol", ("CRV", "CVX", "yPRISMA"))),
+            ("0xae7d281b8a093da60d39179452d230de2f1da4355df3aea629d969782708da5d", Filter("log_index", 254)),
+        ),
+        Network.Fantom: (
             "0x14faeac8ee0734875611e68ce0614eaf39db94a5ffb5bc6f9739da6daf58282a",
-        ],
-    }.get(chain.id, []))
+        ),
+    }.get(chain.id, ()))
 
-_cvx_hashes = [
-    ["0xf6f04b4832b70b09b089884a749115d4e77691b94625c38b227eb74ffc882121", IterFilter('_symbol', ['CVX','CRV'])],
-    ["0xdc552229f5bd25c411b1bf51d19f5b40809094306b8790e34ba5ad3ef28be56c", IterFilter('_symbol', ['CVX','CRV'])],
-]
+_CVX_HASHES = HashMatcher(
+    filter=_SYMBOL_IS_CRV_OR_CVX,
+    hashes=(
+        "0xf6f04b4832b70b09b089884a749115d4e77691b94625c38b227eb74ffc882121",
+        "0xdc552229f5bd25c411b1bf51d19f5b40809094306b8790e34ba5ad3ef28be56c",
+    )
+)
 
-def is_cvx(tx: TreasuryTx) -> bool:
-    return tx in HashMatcher(_cvx_hashes)
+is_cvx = _CVX_HASHES.__contains__
 
-_ib_hashes = [
-    ["0x71daf54660d038c5c4ed047c8e6c4bfda7e798fbb0628903e4810b39b57260b2", Filter('_symbol', 'IB')],
-    ["0x7a21623b630e2429715cf3af0732bef79098f9354983c936a41a1831dab71306", Filter('_symbol', 'IB')],
-    ["0x8fb5bb391c47a3c45b36562ffbce03d76edf11795477cae45e5a7393aac71bec", Filter('_symbol', 'IB')],
-    ["0x773037a85ddafc5e30b62097932c3a35232e3d055cd1acdf5ef63dc2ce6f2c7c", Filter('_symbol', 'IB')],
-]
 
-def is_ib(tx: TreasuryTx) -> bool:
-    return tx in HashMatcher(_ib_hashes)
+_IB_HASHES = HashMatcher(
+    filter=Filter('_symbol', 'IB'),
+    hashes=(
+        "0x71daf54660d038c5c4ed047c8e6c4bfda7e798fbb0628903e4810b39b57260b2", 
+        "0x7a21623b630e2429715cf3af0732bef79098f9354983c936a41a1831dab71306", 
+        "0x8fb5bb391c47a3c45b36562ffbce03d76edf11795477cae45e5a7393aac71bec", 
+        "0x773037a85ddafc5e30b62097932c3a35232e3d055cd1acdf5ef63dc2ce6f2c7c", 
+    ),
+)
+
+is_ib = _IB_HASHES.__contains__
 
 def is_curve_bribe(tx: TreasuryTx) -> bool:
     """ All present and future curve bribes are committed to yveCRV holders. """
@@ -90,7 +100,7 @@ def is_curve_bribe(tx: TreasuryTx) -> bool:
         "0xce45da7e3a7616ed0c0d356d6dfa8a784606c9a8034bae9faa40abf7b52be114",
     ])
     
-_yvboost_hashes = [
+_YVBOOST_HASHES = HashMatcher((
     "0x9eabdf110efbfb44aab7a50eb4fe187f68deae7c8f28d78753c355029f2658d3",
     "0x5a80f5ff90fc6f4f4597290b2432adbb62ab4154ead68b515accdf19b01c1086",
     "0x848b4d629e137ad8d8eefe5db40eab895c9959b9c210d0ae0fef16a04bfaaee1",
@@ -99,7 +109,7 @@ _yvboost_hashes = [
     "0x169aab84b408fce76e0b776ebf412c796240300c5610f0263d5c09d0d3f1b062",
     "0xe6fefbf061f4489cd967cdff6aa8aca616f0c709e08c3696f12b0027e9e166c9",
     "0x10be8a3345660f3c51b695e8716f758b1a91628bd612093784f0516a604f79c1",
-]
+))
 
 def is_buying_yvboost(tx: TreasuryTx) -> bool:
     """ Bought back yvBoost is unwrapped and sent back to holders. """
@@ -107,7 +117,7 @@ def is_buying_yvboost(tx: TreasuryTx) -> bool:
     if tx._symbol == 'SPELL' and tx.from_address.address in treasury.addresses and tx.to_address == yswap:
         return True
     
-    elif tx._symbol == "yveCRV-DAO" and tx.from_address.address in treasury.addresses and tx.to_address in ["0xd7240B32d24B814fE52946cD44d94a2e3532E63d","0x7fe508eE30316e3261079e2C81f4451E0445103b"]:
+    elif tx._symbol == "yveCRV-DAO" and tx.from_address.address in treasury.addresses and tx.to_address in ("0xd7240B32d24B814fE52946cD44d94a2e3532E63d","0x7fe508eE30316e3261079e2C81f4451E0445103b"):
         return True
     
     elif tx._symbol == "3Crv" and tx.from_address == "0xd7240B32d24B814fE52946cD44d94a2e3532E63d" and tx.to_address.address in treasury.addresses:
@@ -115,10 +125,10 @@ def is_buying_yvboost(tx: TreasuryTx) -> bool:
     
     # SPELL bribe handling
     elif tx._symbol == "SPELL":
-        if tx._to_nickname in ["Abracadabra Treasury", "Contract: BribeSplitter"]:
+        if tx._to_nickname in ("Abracadabra Treasury", "Contract: BribeSplitter"):
             return True
         
-    return tx in HashMatcher(_yvboost_hashes)
+    return tx in _YVBOOST_HASHES
 
 _more_yvboost_hashes = [
     "0x9366b851b5d84f898962fce62356f1d020f3220ec794476eb19cd8106ca08283",
@@ -180,19 +190,23 @@ def is_stg(tx: TreasuryTx) -> bool:
         "0x192f445df3058c214802ab79ea6d20b8549212fe60f27025ea139d780b04c900",
     ])
 
-def is_idle(tx: TreasuryTx) -> bool:
-    return tx in HashMatcher([
-        "0x59595773ee4304ba4e7e06d2c02541781d93867f74c6c83056e7295b684036c7",
-        "0x4c7685aa3dfa9f375c612a2773951b9edbe059102b505423ed28a97d2692e75a",
-        "0xb17317686b57229aeb7f06103097b47dc2eafa34489c40af70d2ac57bcf8f455",
-        "0xfd9e6fd303fdbb358207bf3ba069b7f6a21f82f6b082605056d54948127e81e8",
-        "0x41c8428fd361c54bb80cdac752e31622915ac626dd1e9270f02af1dc2c84d1f9",
-    ])
+_IDLE_HASHES = HashMatcher((
+    "0x59595773ee4304ba4e7e06d2c02541781d93867f74c6c83056e7295b684036c7",
+    "0x4c7685aa3dfa9f375c612a2773951b9edbe059102b505423ed28a97d2692e75a",
+    "0xb17317686b57229aeb7f06103097b47dc2eafa34489c40af70d2ac57bcf8f455",
+    "0xfd9e6fd303fdbb358207bf3ba069b7f6a21f82f6b082605056d54948127e81e8",
+    "0x41c8428fd361c54bb80cdac752e31622915ac626dd1e9270f02af1dc2c84d1f9",
+    "0x9c0d169c7362a7fe436ae852c1aee58a5905d10569abbd50261f65cb0574dc3a",
+    "0x55d89a5890cfe80da06f6831fdfa3a366c0ed9cf9b7f1b4d53f5007bb9698fa0",
+    "0x6c6fc43dca1841af82b517bc5fc53ea8607e3f95512e4dd3009c0dbb425669f7",
+))
+
+is_idle = _IDLE_HASHES.__contains__
 
 def is_convex_strat(tx: TreasuryTx) -> bool:
-    return tx in HashMatcher([
-        ["0x1621ba5c9b57930c97cc43d5d6d401ee9c69fed435b0b458ee031544a10bfa75", IterFilter("_symbol", ["CRV", "CVX"])],
-    ])
+    return tx in HashMatcher((
+        ("0x1621ba5c9b57930c97cc43d5d6d401ee9c69fed435b0b458ee031544a10bfa75", _SYMBOL_IS_CRV_OR_CVX),
+    ))
 
 def is_aura(tx: TreasuryTx) -> bool:
     return tx in HashMatcher([
@@ -246,9 +260,9 @@ def is_yprisma_migration(tx: TreasuryTx) -> bool:
     return tx in HashMatcher(["0xed39b66c01e25b053117778c80e544c985d962522233b49ce6f7fe136b1a4474"])
 
 _factory_strat_to_yield_tokens = {
-    "Contract: StrategyCurveBoostedFactoryClonable": ["CRV", "LDO"],
-    "Contract: StrategyConvexFactoryClonable": ["CRV", "CVX"],
-    "Contract: StrategyConvexFraxFactoryClonable": ["CRV", "CVX", "FXS"],
+    "Contract: StrategyCurveBoostedFactoryClonable": ("CRV", "LDO"),
+    "Contract: StrategyConvexFactoryClonable": _CRV_CVX,
+    "Contract: StrategyConvexFraxFactoryClonable": ("CRV", "CVX", "FXS"),
 }
 
 def is_factory_vault_yield(tx: TreasuryTx) -> bool:
@@ -260,5 +274,6 @@ def is_factory_vault_yield(tx: TreasuryTx) -> bool:
             "0xefea7be3abc943d0aa0eedfbc9e3db4677e1bd92511265ad0cb619bea1763d14",
             "0x2f9fefebde546c00a5c519e370e1205058aad8a3881d0bbd2b3d433ed9da6cb3",
             "0x3d0624e984904f9a77ad83453ab01841e870804bfd96fadaced62fcad6fc1507",
+            ["0x6a1996554455945f9ba5f58b831c86f9afaeb1a5c36b9166099a7d3ac0106803", IterFilter('_symbol', ["CRV", "CVX", "FXS"])]
         ],
     }.get(chain.id, []))

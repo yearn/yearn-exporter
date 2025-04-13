@@ -5,7 +5,7 @@ from brownie import chain
 from y.networks import Network
 
 from yearn.entities import TreasuryTx
-from yearn.treasury.accountant.classes import Filter, HashMatcher, IterFilter
+from yearn.treasury.accountant.classes import _FROM_DISPERSE_APP, Filter, HashMatcher, IterFilter
 from yearn.treasury.accountant.constants import treasury
 
 hashes = {
@@ -36,7 +36,7 @@ def is_travel_reimbursement(tx: TreasuryTx) -> bool:
         ["0x08ef1aacdf7d0f16be5e6fd0a64ebd0ba3b0c3dd0a7884a9a470aa89a7fe1a06", Filter('log_index', 221)],
         ["0x7a9e8649fdd346f96aa979f2aae252af1eb7852ba61dec08510c1f217c180fca", Filter('log_index', 55)],
         ["0xba8e44da6c6b6a27d575657bf01110d77afcc5b7820023d1f2cb3034201b027f", Filter('log_index', 269)],
-        ["0x4adad1e3cff3410d50fb11ca31fa7029d8533b79192f120c2a445e1241711320", Filter('_from_nickname', "Disperse.app")],
+        ["0x4adad1e3cff3410d50fb11ca31fa7029d8533b79192f120c2a445e1241711320", _FROM_DISPERSE_APP],
         ["0xde196619d5ba63655f8cb3c84f1e7b0e2a23231804d52661f37062ffa8d97a32", Filter('_symbol', "DAI")],
         ["0x36bae3823953df3d2eae7f504349554a04972a147bb837a5d8e2e8f9abfc5fa8", IterFilter('log_index', [74,75,76,78])],
         # This tx is for a budget request TODO curate the budget requests somewhere in this repo.
