@@ -292,6 +292,7 @@ class Registry(metaclass=Singleton):
             else:
                 raise NotImplementedError(v, e, address)
         logger.debug('removed %s', address)
+        logger.debug("Removed vault %s", address)
 
 
 class RegistryEvents(ProcessedEvents[_EventItem]):
@@ -334,7 +335,6 @@ class RegistryEvents(ProcessedEvents[_EventItem]):
         if event.name == "VaultTagged":
             if event["tag"] == "Removed":
                 self._registry._remove_vault(event["vault"])
-                logger.debug("Removed vault %s", event["vault"])
             else:
                 self._registry.tags[event["vault"]] = event["tag"]
 
