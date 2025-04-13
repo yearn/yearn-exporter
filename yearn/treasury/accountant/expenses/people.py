@@ -1,13 +1,12 @@
 
 from contextlib import suppress
-from decimal import Decimal
 from typing import Iterator, List, Optional
 
 from brownie import convert
 from dank_mids.helpers import lru_cache_lite
 from msgspec import UNSET, Struct
 from pony.orm import commit
-from y import Contract
+from y import Address, Contract
 
 from yearn.constants import YFI
 from yearn.entities import TreasuryTx
@@ -46,6 +45,27 @@ class BudgetRequest(Struct):
 
 
 TransactionHash = str
+
+@lru_cache_lite
+def get_scale(token: Address):
+    token = Contract(token)
+    return 10**token.decimals()
+
+@lru_cache_lite
+def get_symbol(token: Contract):
+    return token.symbol()
+
+def is_v2(token: Contract) -> bool:
+    return hasattr(token, 'token')
+
+def is_v3(token: Contract) -> bool:
+    return hasattr(token, 'asset')
+
+def get_underlying(token: Contract) -> Contract:
+    if is_v3(token):
+        return Contract(token.asset())
+    elif is_v2(token):
+        return Contract(token.token())
 
 class yTeam(Struct):
     label: str
@@ -114,28 +134,25 @@ class yTeam(Struct):
             else:
                 continue
 
-            token = Contract(token)
-            print(f"token: {token}")
-            if tx.amount != amount / Decimal(10 ** token.decimals()):
-                print('no match')
+            if tx.amount != amount / get_scale(token):
                 continue
 
             # token sent raw
             if any(float(tx.amount) == br[tx._symbol] for br in self.brs_for_token(tx._symbol)):
                 return True
             
-            # token sent in vault form
-            elif hasattr(token, 'asset'):  # v3
-                underlying = Contract(token.asset())
-                underlying_amount = token.convertToAssets(amount, block_identifier=tx.block) / Decimal(10 ** underlying.decimals())
-            elif hasattr(token, 'token'):  # v2
-                underlying = Contract(token.token())
-                underlying_amount = amount * token.pricePerShare(block_identifier=tx.block) / Decimal(10 ** underlying.decimals())
+            token = Contract(token)
+            underlying = get_underlying(token)
+            
+            if is_v3(token):
+                underlying_amount = token.convertToAssets(amount, block_identifier=tx.block) / get_scale(underlying)
+            elif is_v2(token):
+                underlying_amount = amount * token.pricePerShare(block_identifier=tx.block) / get_scale(underlying)
             else:
                 return False
-                #raise NotImplementedError(token, tx, tx.__dict__, [b for b in self.brs_for_token(tx._symbol)], tx.amount, float(tx.amount))
             
-            symbol = underlying.symbol()
+            print(f"token: {token}")
+            symbol = get_symbol(token)
             underlying_amount = float(underlying_amount)
             for br in self.brs_for_token(symbol):
                 # TODO: should we debug this rounding? I think its fine
