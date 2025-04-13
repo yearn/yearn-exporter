@@ -228,7 +228,6 @@ def is_ycrv(tx: TreasuryTx) -> bool:
                     owner, sell_token, buy_token, sell_amount, buy_amount, fee_amount, order_uid = trade.values()
                     if tx.from_address == owner and tx.token == sell_token and buy_token == ycrv and Decimal(sell_amount) / 10 ** 18 == tx.amount:
                         return True
-                    print(f"Trade: {trade}")
             else:
                 print(f"no Trade event in {tx.hash}")
     
