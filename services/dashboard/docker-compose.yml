@@ -6,8 +6,8 @@ volumes:
   #dank_mids: {}
 
 networks:
-  erigon_default:
-    external: true
+  #erigon_default:
+  #  external: true
   yearn-exporter-infra_stack:
     external: true
 
@@ -111,8 +111,7 @@ x-envs: &envs
   - PGDATABASE=postgres
   - PGUSER=postgres
   - PGPASSWORD=yearn-exporter
-  #- VM_URL=http://51.222.152.244:8428
-  - VM_URL=http://yearn-exporter-infra_victoria-metrics_1:8428
+  - VM_URL=http://victoria-metrics:8428
 
   # DOCKER CONTAINER ENVS
   - CONTAINER_NAME
@@ -143,11 +142,7 @@ services:
     environment: *envs
     networks:
       - yearn-exporter-infra_stack
-      - erigon_default
-    external_links:
-      - yearn-exporter-infra_postgres_1:postgres
-      - yearn-exporter-infra_ypostgres_1:ypostgres
-      - yearn-exporter-infra-victoria-metrics-1:victoria-metrics
+      #- erigon_default
     logging:
       driver: "json-file"
       options:
