@@ -23,7 +23,6 @@ class _TxGroup:
     def sort(self, tx: TreasuryTx) -> Optional[TxGroup]:
         for child in self.children:
             if txgroup := child.sort(tx):
-                print(f'sorted {tx} to {self.label}')
                 return txgroup
     
     def create_child(self, label: str, check: Optional[Callable] = None) -> "ChildTxGroup":
@@ -64,11 +63,11 @@ class ChildTxGroup(_TxGroup):
             return super().sort(tx)
         try:
             result = self.check(tx)
-            if not isinstance(result, bool):
-                raise TypeError(result, self, self.check)
-            if result:
+            if result is True:
                 print(f"sorted {tx} to {self.label}")
                 return self.txgroup
+            elif result is not False:
+                raise TypeError(result, self, self.check)
         except ContractNotVerified:
             logger.info("ContractNotVerified when sorting %s with %s", tx, self.label)
         except KeyError as e:
