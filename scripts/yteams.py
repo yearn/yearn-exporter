@@ -1,6 +1,6 @@
 
-import asyncio
 import logging
+from asyncio import gather, get_event_loop
 from datetime import datetime, timedelta, timezone
 from decimal import Decimal
 from functools import lru_cache
@@ -39,7 +39,7 @@ while next <= now:
         next = datetime(next.year, next.month+1, 1, tzinfo=timezone.utc)
 
 def main():
-    asyncio.get_event_loop().run_until_complete(_main())
+    get_event_loop().run_until_complete(_main())
 
 async def _main():
     for dt, data in zip(dts, await a_sync.gather(
@@ -81,7 +81,7 @@ async def sum_expenditures(wallet: str, timestamp: datetime) -> Decimal:
     return exp
 
 async def total(wallet: str, timestamp: datetime) -> Decimal:
-    rev, exp = await asyncio.gather(sum_inbound_transfers(wallet, timestamp), sum_expenditures(wallet, timestamp))
+    rev, exp = await gather(sum_inbound_transfers(wallet, timestamp), sum_expenditures(wallet, timestamp))
     t = rev - exp
     print(f'{name_mapping[wallet]} total thru {timestamp}: {t}')
     return t

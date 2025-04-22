@@ -1,5 +1,5 @@
-import asyncio
 import logging
+from asyncio import gather
 from collections import defaultdict
 from dataclasses import dataclass
 from functools import cached_property
@@ -98,9 +98,9 @@ class Registry:
             "supplyRatePerBlock",
             "borrowRatePerBlock",
         ]
-        results, prices = await asyncio.gather(
+        results, prices = await gather(
             multicall_matrix_async(contracts, methods, block=block),
-            asyncio.gather(*[get_price(market.underlying, block=block, sync=False) for market in markets]),
+            gather(*(get_price(market.underlying, block=block, sync=False) for market in markets)),
         )
         output = defaultdict(dict)
         for m, price in zip(markets, prices):
@@ -140,9 +140,9 @@ class Registry:
             ["getCash", "totalBorrows", "totalReserves", "totalSupply"],
             block=block,
         )
-        data, prices = await asyncio.gather(
+        data, prices = await gather(
             data_coro,
-            asyncio.gather(*[get_price(market.vault, block=block, sync=False) for market in markets]),
+            gather(*(get_price(market.vault, block=block, sync=False) for market in markets)),
         )
         results = [data[market.vault] for market in markets]
         return {

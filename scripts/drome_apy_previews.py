@@ -3,10 +3,10 @@
 This script produces a list of velodrome/aerodrome gauges for which vaults can be created
 """
 
-import asyncio
 import dataclasses
 import logging
 import os
+from asyncio import gather
 from decimal import InvalidOperation
 from pprint import pformat
 from time import time
@@ -80,7 +80,7 @@ def main():
 async def _build_data():
     start = int(time())
     block = get_samples().now
-    data = [d for d in await tqdm_asyncio.gather(*[_build_data_for_lp(lp, block) for lp in await _get_lps_with_vault_potential()]) if d]
+    data = [d for d in await tqdm_asyncio.gather(*(_build_data_for_lp(lp, block) for lp in await _get_lps_with_vault_potential())) if d]
     for d in data:
         d['updated'] = start
     print(data)
@@ -131,12 +131,12 @@ async def _load_gauge(lp: dict, block: Optional[int] = None) -> Gauge:
     lp_address = lp[0]
     gauge_address = lp[11]
     voter = await Contract.coroutine(drome.voter)
-    pool, gauge, weight = await asyncio.gather(
+    pool, gauge, weight = await gather(
         Contract.coroutine(lp_address), 
         Contract.coroutine(gauge_address),
         voter.weights.coroutine(lp_address, block_identifier=block),
     )
-    inflation_rate, working_supply = await asyncio.gather(
+    inflation_rate, working_supply = await gather(
         gauge.rewardRate.coroutine(block_identifier=block),
         gauge.totalSupply.coroutine(block_identifier=block),
     )
@@ -145,7 +145,7 @@ async def _load_gauge(lp: dict, block: Optional[int] = None) -> Gauge:
 async def _staking_apy(lp: dict, staking_rewards: Contract, block: Optional[int]=None) -> float:
     query_at_time = time() if block is None else await get_block_timestamp_async(block)
     
-    reward_token, rate, total_supply, end = await asyncio.gather(
+    reward_token, rate, total_supply, end = await gather(
         staking_rewards.rewardToken.coroutine(block_identifier=block),
         staking_rewards.rewardRate.coroutine(block_identifier=block),
         staking_rewards.totalSupply.coroutine(block_identifier=block),
@@ -157,7 +157,7 @@ async def _staking_apy(lp: dict, staking_rewards: Contract, block: Optional[int]
     if end < query_at_time or total_supply == 0 or rate == 0:
         return Apy(f"v2:{drome.label}_unpopular", gross_apr=0, net_apy=0, fees=fees)
     
-    pool_price, token_price = await asyncio.gather(
+    pool_price, token_price = await gather(
         get_price(lp[0], block=block, sync=False),
         get_price(reward_token, block=block, sync=False),
     )

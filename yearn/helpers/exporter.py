@@ -3,6 +3,7 @@ import logging
 import os
 import time
 import sentry_sdk
+from asyncio import gather
 from datetime import datetime, timedelta, timezone
 from functools import cached_property
 from typing import (Awaitable, Callable, Literal, NoReturn, Optional, TypeVar,
@@ -105,7 +106,7 @@ class Exporter:
     async def export_full(self) -> NoReturn:
         """ Exports all present, historical and future data. This coroutine will run forever. """
         # the history and future exports are run concurrently
-        await asyncio.gather(self.export_history(), self.export_future())
+        await gather(self.export_history(), self.export_future())
 
     async def export_future(self) -> NoReturn:
         """ Exports all future data. This coroutine will run forever. """
@@ -136,7 +137,7 @@ class Exporter:
             data = await self._data_fn(block, timestamp)
             duration = time.time() - start
             logger.info(f"produced {self.full_name} snapshot %s block=%d took=%.3fs", snapshot, block, duration)
-            await asyncio.gather(self._export_data(data), self._export_duration(duration, snapshot.timestamp()))
+            await gather(self._export_data(data), self._export_duration(duration, snapshot.timestamp()))
             #logger.info(f"exported {self.full_name} snapshot %s block=%d took=%.3fs", snapshot, block, time.time() - start)
             self._record_stats()
 

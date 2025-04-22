@@ -1,4 +1,4 @@
-import asyncio
+from asyncio import gather
 from collections import Counter
 
 from brownie import chain
@@ -23,7 +23,7 @@ class RegistryWalletDescriber:
         
     async def describe_wallets(self, registry: tuple, block=None):
         active_vaults = await self.active_vaults_at(registry, block=block)
-        data = await asyncio.gather(*[self.vault_describer.describe_wallets(vault.vault.address, block=block) for vault in active_vaults])
+        data = await gather(*(self.vault_describer.describe_wallets(vault.vault.address, block=block) for vault in active_vaults))
         data = {vault.name: desc for vault, desc in zip(active_vaults, data) if desc}
 
         wallet_balances = Counter()

@@ -206,9 +206,9 @@ class UniswapV2:
             logger.debug("Oh no! looks like your node can't look back that far. Checking for the missing pools...")
             poolids_your_node_couldnt_get = [i for i in range(all_pairs_len) if i not in pairs]
             logger.debug('missing poolids: %s', poolids_your_node_couldnt_get)
-            pools_your_node_couldnt_get = fetch_multicall(*[[self.factory,'allPairs',i] for i in poolids_your_node_couldnt_get])
-            token0s = fetch_multicall(*[[contract(pool), 'token0'] for pool in pools_your_node_couldnt_get if pool not in self.excluded_pools()])
-            token1s = fetch_multicall(*[[contract(pool), 'token1'] for pool in pools_your_node_couldnt_get if pool not in self.excluded_pools()])
+            pools_your_node_couldnt_get = fetch_multicall(*([self.factory,'allPairs',i] for i in poolids_your_node_couldnt_get))
+            token0s = fetch_multicall(*([contract(pool), 'token0'] for pool in pools_your_node_couldnt_get if pool not in self.excluded_pools()))
+            token1s = fetch_multicall(*([contract(pool), 'token1'] for pool in pools_your_node_couldnt_get if pool not in self.excluded_pools()))
             additional_pools = {
                 convert.to_address(pool): {
                     'token0':convert.to_address(token0),
@@ -245,7 +245,7 @@ class UniswapV2:
         if token_address == weth or token_address in stablecoins:
             return self.deepest_stable_pool(token_address)
         pools = self.pools_for_token(token_address)
-        reserves = fetch_multicall(*[[contract(pool),'getReserves'] for pool in pools], block=block, require_success=False)
+        reserves = fetch_multicall(*([contract(pool),'getReserves'] for pool in pools), block=block, require_success=False)
 
         deepest_pool = None
         deepest_pool_balance = 0
@@ -264,7 +264,7 @@ class UniswapV2:
     def deepest_stable_pool(self, token_address: AddressOrContract, block: Optional[Block] = None) -> Optional[EthAddress]:
         token_address = convert.to_address(token_address)
         pools = {pool: paired_with for pool, paired_with in self.pools_for_token(token_address).items() if paired_with in stablecoins}
-        reserves = fetch_multicall(*[[contract(pool), 'getReserves'] for pool in pools], block=block, require_success=False)
+        reserves = fetch_multicall(*([contract(pool), 'getReserves'] for pool in pools), block=block, require_success=False)
 
         deepest_stable_pool = None
         deepest_stable_pool_balance = 0
@@ -352,7 +352,7 @@ class UniswapV2Multiplexer(metaclass=Singleton):
     def deepest_uniswap(self, token_in: AddressOrContract, block: Optional[Block] = None) -> Optional[UniswapV2]:
         token_in = convert.to_address(token_in)
         pool_to_uniswap = {pool: uniswap for uniswap in self.uniswaps for pool in uniswap.pools_for_token(token_in)}
-        reserves = fetch_multicall(*[[interface.UniswapPair(pool), 'getReserves'] for pool in pool_to_uniswap], block=block)
+        reserves = fetch_multicall(*([interface.UniswapPair(pool), 'getReserves'] for pool in pool_to_uniswap), block=block)
         
         deepest_uniswap = None
         deepest_uniswap_balance = 0

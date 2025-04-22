@@ -3,6 +3,7 @@ import dataclasses
 import json
 import logging
 import warnings
+from asyncio import gather
 
 import sentry_sdk
 from brownie.exceptions import BrownieEnvironmentWarning
@@ -36,9 +37,9 @@ async def _main():
     v1_registry = RegistryV1()
     v2_registry = RegistryV2()
 
-    v1_data, v2_data = await asyncio.gather(
-        asyncio.gather(*[vault.apy(samples) for vault in v1_registry.vaults]),
-        asyncio.gather(*[_get_v2_data(vault, samples) for vault in v2_registry.vaults]),
+    v1_data, v2_data = await gather(
+        gather(*(vault.apy(samples) for vault in v1_registry.vaults)),
+        gather(*(_get_v2_data(vault, samples) for vault in v2_registry.vaults)),
     )
     
     data.extend([

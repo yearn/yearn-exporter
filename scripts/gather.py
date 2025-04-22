@@ -1,8 +1,8 @@
 import pandas as pd
-import asyncio
 import logging
 import os
 import time
+from asyncio import gather, get_event_loop
 from datetime import datetime
 from brownie import convert
 from eth_portfolio import Portfolio, SHITCOINS
@@ -86,8 +86,8 @@ if repull_data:
 
     port = Portfolio(treasury_wallets, load_prices=False)
 
-    coros = asyncio.gather(port.describe(begin_block, sync=False), port.describe(end_block, sync=False))
-    start_portfolio, end_portfolio = asyncio.get_event_loop().run_until_complete(coros)
+    coros = gather(port.describe(begin_block, sync=False), port.describe(end_block, sync=False))
+    start_portfolio, end_portfolio = get_event_loop().run_until_complete(coros)
 
     # yay, easy!
     start_df = start_portfolio.dataframe

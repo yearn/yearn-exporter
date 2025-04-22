@@ -1,5 +1,5 @@
-import asyncio
 import os
+from asyncio import gather
 from collections import defaultdict
 from itertools import count, product
 from operator import itemgetter
@@ -120,7 +120,7 @@ async def fetch_multicall_async(*calls, block: Optional[Block] = None, require_s
         except AttributeError as e:
             raise AttributeError(e, contract, fn_name)
 
-    results = await asyncio.gather(*coros, return_exceptions=True)
+    results = await gather(*coros, return_exceptions=True)
     for i, result in enumerate(results):
         if isinstance(result, Exception):
             if require_success:
