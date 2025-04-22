@@ -13,7 +13,6 @@ from async_property import async_cached_property, async_property
 from brownie import chain
 from brownie.network.event import _EventItem
 from eth_utils import encode_hex, event_abi_to_log_topic
-from multicall.utils import run_in_subprocess
 from semantic_version.base import Version
 from y import ERC20, Contract, Network, magic, get_price
 from y.contracts import contract_creation_block_async
@@ -73,7 +72,16 @@ BORKED = {
     ]
 }.get(chain.id, [])
 
-def _unpack_results(vault: Address, is_experiment: bool, _views: List[str], results: List[Any], scale: int, price_or_exception: Union[float, BaseException], strategies: List[str], strategy_descs: List[Dict]) -> Dict[str,Any]:
+def _unpack_results(
+    vault: Address, 
+    is_experiment: bool, 
+    _views: List[str], 
+    results: List[Any], 
+    scale: int, 
+    price_or_exception: Union[float, BaseException], 
+    strategies: List[str], 
+    strategy_descs: List[Dict],
+) -> Dict[str,Any]:
     try:
         info = dict(zip(_views, results))
         for name in info:
@@ -139,7 +147,7 @@ class Vault:
         strategies = "..."  # don't block if we don't have the strategies loaded
         with suppress(RuntimeError): # NOTE on RuntimeError, event loop isnt running and task doesn't exist. can't be created, is not complete. no need to check strats.
             if self._task.done():
-                strategies = ", ".join(f"{strategy}" for strategy in self._strategies)
+                strategies = ", ".join(map(str, self._strategies))
         return f'<Vault {self.vault} name="{self.name}" token={self.token} strategies=[{strategies}]>'
 
     def __hash__(self) -> int:
@@ -234,12 +242,21 @@ class Vault:
     @stuck_coro_debugger
     async def describe(self, block=None):
         block = block or await dank_mids.eth.block_number
-        results = await asyncio.gather(
+        results, strategy_descs, price = await asyncio.gather(
             fetch_multicall_async(*self._calls, block=block),
             self._describe_strategies(block),
             get_price_return_exceptions(self.token, block=block),
         )
-        return await self._unpack_results(results)
+        return _unpack_results(
+            self.vault.address,
+            await self.is_experiment,
+            self._views,
+            results,
+            self.scale,
+            price,
+            await asyncio.gather(*(strategy.unique_name for strategy in await self.strategies)),
+            strategy_descs,
+        )
         
     @stuck_coro_debugger
     async def apy(self, samples: "ApySamples"):
@@ -295,22 +312,6 @@ class Vault:
     @stuck_coro_debugger
     async def _describe_strategies(self, block: int) -> List[dict]:
         return await asyncio.gather(*[asyncio.create_task(strategy.describe(block=block)) async for strategy in self.strategies_at_block(block)])
-    
-    @stuck_coro_debugger
-    async def _unpack_results(self, results):
-        # TODO: get rid of this
-        results, strategy_descs, price = results
-        return await run_in_subprocess(
-            _unpack_results,
-            self.vault.address,
-            await self.is_experiment,
-            self._views,
-            results,
-            self.scale,
-            price,
-            await asyncio.gather(*[strategy.unique_name for strategy in await self.strategies]),
-            strategy_descs,
-        )
     
     
 class VaultEvents(ProcessedEvents[_EventItem]):
