@@ -1,5 +1,3 @@
-version: "3.7"
-
 volumes:
   grafana_data: {}
   victoria_metrics_data: {}
