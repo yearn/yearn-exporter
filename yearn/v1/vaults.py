@@ -7,7 +7,7 @@ from async_lru import alru_cache
 from async_property import async_cached_property
 from brownie import ZERO_ADDRESS, interface
 from brownie.network.contract import InterfaceContainer
-from y import Address, Contract, magic
+from y import Address, Contract, magic, get_price
 from y._decorators import stuck_coro_debugger
 from y.exceptions import PriceError, yPriceMagicError
 
@@ -59,8 +59,8 @@ class VaultV1:
     async def get_price(self, block=None):
         if self.name == "aLINK":
             underlying = await self.vault.underlying.coroutine()
-            return await magic.get_price(underlying, block=block, sync=False)
-        return await magic.get_price(self.token, block=block, sync=False)
+            return await get_price(underlying, block=block, sync=False)
+        return await get_price(self.token, block=block, sync=False)
 
     @stuck_coro_debugger
     async def get_strategy(self, block=None):
@@ -171,7 +171,7 @@ class VaultV1:
     async def tvl(self, block=None):
         total_assets = await self.vault.balance.coroutine(block_identifier=block)
         try:
-            price = float(await magic.get_price(self.token, block=block, sync=False))
+            price = float(await get_price(self.token, block=block, sync=False))
         except yPriceMagicError as e:
             if not isinstance(e.exception, PriceError):
                 raise e

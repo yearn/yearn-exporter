@@ -6,7 +6,7 @@ from typing import TYPE_CHECKING, Optional
 
 from async_lru import alru_cache
 from brownie import ZERO_ADDRESS, chain
-from y import Contract, Network, magic
+from y import Contract, Network, get_price
 from y.time import get_block_timestamp_async
 
 from yearn.apy.common import SECONDS_PER_YEAR, Apy, ApyFees, ApyPoints, ApySamples
@@ -45,10 +45,10 @@ async def staking(vault: "Vault", staking_rewards: Contract, samples: ApySamples
     if end < current_time or total_supply == 0 or rate == 0:
         return Apy("v2:velo_unpopular", gross_apr=0, net_apy=0, fees=fees)
 
-    pool_price = float(await magic.get_price(vault.token.address, block=block, sync=False))
+    pool_price = float(await get_price(vault.token.address, block=block, sync=False))
     reward_token = await staking_rewards.rewardToken.coroutine(block_identifier=block)
     token = reward_token
-    token_price = float(await magic.get_price(token, block=block, sync=False))
+    token_price = float(await get_price(token, block=block, sync=False))
     
     gross_apr = (SECONDS_PER_YEAR * (rate / 1e18) * token_price) / (pool_price * (total_supply / 1e18))
     

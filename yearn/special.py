@@ -6,7 +6,7 @@ from typing import TYPE_CHECKING, Tuple
 import dank_mids
 import eth_retry
 import requests
-from y import ERC20, Contract, magic
+from y import ERC20, Contract, get_price
 from y.contracts import contract_creation_block_async
 from y.exceptions import PriceError, yPriceMagicError
 
@@ -73,7 +73,7 @@ class Backscratcher(metaclass = Singleton):
     async def _locked(self, block=None) -> Tuple[float,float]:
         crv_locked, crv_price = await asyncio.gather(
             curve.voting_escrow.balanceOf["address"].coroutine(self.proxy, block_identifier=block),
-            magic.get_price(constants.CRV, block=block, sync=False),
+            get_price(constants.CRV, block=block, sync=False),
         )
         crv_locked /= 1e18
         return crv_locked, crv_price
@@ -105,8 +105,8 @@ class Backscratcher(metaclass = Singleton):
         epoch = math.floor(time() / week) * week - week
         voter = "0xF147b8125d2ef93FB6965Db97D6746952a133934"
         crv_price, yvecrv_price, total_vecrv, yearn_vecrv, vault_supply, tokens_per_week, virtual_price = await asyncio.gather(
-            magic.get_price("0xD533a949740bb3306d119CC777fa900bA034cd52", sync=False),
-            magic.get_price("0xc5bDdf9843308380375a611c18B50Fb9341f502A", sync=False),
+            get_price("0xD533a949740bb3306d119CC777fa900bA034cd52", sync=False),
+            get_price("0xc5bDdf9843308380375a611c18B50Fb9341f502A", sync=False),
             curve_voting_escrow.totalSupply.coroutine(),
             curve_voting_escrow.balanceOf.coroutine(voter),
             self.vault.totalSupply.coroutine(),
@@ -131,7 +131,7 @@ class Backscratcher(metaclass = Singleton):
     async def tvl(self, block=None) -> Tvl:
         total_assets = await self.vault.totalSupply.coroutine(block_identifier=block)
         try:
-            price = await magic.get_price(self.token, block=block, sync=False)
+            price = await get_price(self.token, block=block, sync=False)
         except yPriceMagicError as e:
             if not isinstance(e.exception, PriceError):
                 raise e
@@ -148,7 +148,7 @@ class Ygov(metaclass = Singleton):
     async def _locked(self, block=None):
         yfi_locked, yfi_price = await asyncio.gather(
             self.token.balanceOf.coroutine(self.vault, block_identifier=block),
-            magic.get_price(str(self.token), block=block, sync=False)
+            get_price(str(self.token), block=block, sync=False)
         )
         yfi_locked /= 1e18
         return yfi_locked, yfi_price

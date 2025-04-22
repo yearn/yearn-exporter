@@ -8,8 +8,7 @@ from typing import List
 from brownie import chain
 from brownie.network.contract import InterfaceContainer
 from cachetools.func import ttl_cache
-from y import Contract, Network
-from y.prices import magic
+from y import Contract, Network, get_price
 
 from yearn.exceptions import UnsupportedNetwork
 from yearn.multicall2 import multicall_matrix, multicall_matrix_async
@@ -101,7 +100,7 @@ class Registry:
         ]
         results, prices = await asyncio.gather(
             multicall_matrix_async(contracts, methods, block=block),
-            asyncio.gather(*[magic.get_price(market.underlying, block=block, sync=False) for market in markets]),
+            asyncio.gather(*[get_price(market.underlying, block=block, sync=False) for market in markets]),
         )
         output = defaultdict(dict)
         for m, price in zip(markets, prices):
@@ -143,7 +142,7 @@ class Registry:
         )
         data, prices = await asyncio.gather(
             data_coro,
-            asyncio.gather(*[magic.get_price(market.vault, block=block, sync=False) for market in markets]),
+            asyncio.gather(*[get_price(market.vault, block=block, sync=False) for market in markets]),
         )
         results = [data[market.vault] for market in markets]
         return {

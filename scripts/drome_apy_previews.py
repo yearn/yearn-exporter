@@ -17,7 +17,7 @@ from brownie import ZERO_ADDRESS, chain
 from msgspec import Struct
 from multicall.utils import await_awaitable
 from tqdm.asyncio import tqdm_asyncio
-from y import Contract, Network, magic
+from y import Contract, Network, get_price
 from y.exceptions import ContractNotVerified
 from y.time import get_block_timestamp_async
 
@@ -158,8 +158,8 @@ async def _staking_apy(lp: dict, staking_rewards: Contract, block: Optional[int]
         return Apy(f"v2:{drome.label}_unpopular", gross_apr=0, net_apy=0, fees=fees)
     
     pool_price, token_price = await asyncio.gather(
-        magic.get_price(lp[0], block=block, sync=False),
-        magic.get_price(reward_token, block=block, sync=False),
+        get_price(lp[0], block=block, sync=False),
+        get_price(reward_token, block=block, sync=False),
     )
     
     gross_apr = (SECONDS_PER_YEAR * (rate / 1e18) * token_price) / (pool_price * (total_supply / 1e18))
