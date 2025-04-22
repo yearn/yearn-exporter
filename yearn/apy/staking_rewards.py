@@ -1,8 +1,7 @@
 import asyncio
 import time
 
-from y import ERC20, Contract
-from y.prices import magic
+from y import ERC20, Contract, get_price
 
 from yearn.apy.common import SECONDS_PER_YEAR, ApySamples
 from yearn.v1.vaults import VaultV1
@@ -35,8 +34,8 @@ async def get_staking_rewards_apr(vault, samples: ApySamples):
         ERC20(rewards_vault.vault, asynchronous=True).scale,
         staking_pool.totalSupply.coroutine(),
         ERC20(vault.vault, asynchronous=True).scale,
-        magic.get_price(vault_address, sync=False),
-        magic.get_price(rewards_vault.vault, sync=False),
+        get_price(vault_address, sync=False),
+        get_price(rewards_vault.vault, sync=False),
     )
     if total_supply_staked == 0:
         return 0

@@ -12,8 +12,7 @@ from brownie import ZERO_ADDRESS, chain
 from eth_abi import encode
 from eth_utils import function_signature_to_4byte_selector as fourbyte
 from semantic_version import Version
-from y import Contract, Network
-from y.prices import magic
+from y import Contract, Network, get_price
 from y.prices.stable_swap.curve import curve as y_curve
 from y.time import get_block_timestamp_async
 
@@ -153,12 +152,12 @@ async def simple(vault, samples: ApySamples) -> Apy:
 async def calculate_simple(vault, gauge: Gauge, samples: ApySamples) -> Apy:
     block = samples.now
 
-    base_asset_price = await magic.get_price(gauge.lp_token, block=block, sync=False)
+    base_asset_price = await get_price(gauge.lp_token, block=block, sync=False)
     if not base_asset_price:
         raise ValueError(f"Error! Could not find price for {gauge.lp_token} at block {block}")
 
     crv_price, pool_price = await asyncio.gather(
-        magic.get_price(constants.CRV, block=block, sync=False),
+        get_price(constants.CRV, block=block, sync=False),
         gauge.pool.get_virtual_price.coroutine(block_identifier=block)
     )
     gauge_weight = gauge.gauge_weight
@@ -221,7 +220,7 @@ async def calculate_simple(vault, gauge: Gauge, samples: ApySamples) -> Apy:
         else:
             reward_data, token_price, total_supply = await asyncio.gather(
                 gauge.gauge.reward_data.coroutine(gauge_reward_token),
-                magic.get_price(gauge_reward_token, block=samples.now, sync=False),
+                get_price(gauge_reward_token, block=samples.now, sync=False),
                 gauge.gauge.totalSupply.coroutine(),
             )
             rate = reward_data['rate']
@@ -457,7 +456,7 @@ class _ConvexVault:
     async def _get_cvx_emissions_converted_to_crv(self) -> float:
         """The amount of CVX emissions at the current block for a given pool, converted to CRV (from a pricing standpoint) to ease calculation of total APY."""
         crv_price, cvx = await asyncio.gather(
-            magic.get_price(constants.CRV, block=self.block, sync=False),
+            get_price(constants.CRV, block=self.block, sync=False),
             Contract.coroutine(addresses[chain.id]['cvx']),
         )
         total_cliff = 1e3 # the total number of cliffs to happen
@@ -468,7 +467,7 @@ class _ConvexVault:
         if supply <= max_supply:
             reduction = total_cliff - cliff
             cvx_minted = reduction / total_cliff
-            cvx_price = await magic.get_price(cvx, block=self.block, sync=False)
+            cvx_price = await get_price(cvx, block=self.block, sync=False)
             converted_cvx = cvx_price / crv_price
             return cvx_minted * converted_cvx
         else:
@@ -511,7 +510,7 @@ class _ConvexVault:
         if await virtual_rewards_pool.periodFinish.coroutine() > current_time:
             reward_token = await virtual_rewards_pool.rewardToken.coroutine()
             reward_token_price, reward_rate, total_supply = await asyncio.gather(
-                magic.get_price(reward_token, block=block, sync=False),
+                get_price(reward_token, block=block, sync=False),
                 # NOTE: shouldn't these have block numbers?
                 virtual_rewards_pool.rewardRate.coroutine(),
                 virtual_rewards_pool.totalSupply.coroutine(),

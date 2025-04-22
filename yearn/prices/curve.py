@@ -24,7 +24,7 @@ from brownie import ZERO_ADDRESS, chain, convert, interface
 from brownie.convert import to_address
 from brownie.convert.datatypes import EthAddress
 from cachetools.func import lru_cache
-from y import Contract, Network, magic
+from y import Contract, Network, get_price
 from y.exceptions import NodeNotSynced
 
 from yearn import constants
@@ -112,7 +112,7 @@ class CurveRegistry(metaclass=Singleton):
         self.identifiers = defaultdict(list)  # id -> versions
         self.registries = defaultdict(set)  # registry -> pools
         self.factories = defaultdict(set)  # factory -> pools
-        self.token_to_pool = dict()  # lp_token -> pool
+        self.token_to_pool = {}  # lp_token -> pool
         self.coin_to_pools = defaultdict(list)
         self.address_provider = Contract(addrs['address_provider'])
 
@@ -143,7 +143,7 @@ class CurveRegistry(metaclass=Singleton):
             for event in decode_logs(address_logs):
                 if event.name == 'NewAddressIdentifier':
                     self.identifiers[Ids(event['id'])].append(event['addr'])
-                if event.name == 'AddressModified':
+                elif event.name == 'AddressModified':
                     self.identifiers[Ids(event['id'])].append(event['new_address'])
             
             # NOTE: Gnosis chain's address provider fails to provide registry via events.
@@ -393,8 +393,8 @@ class CurveRegistry(metaclass=Singleton):
             block=block,
         )
         crv_price, token_price, results = await asyncio.gather(
-            magic.get_price(constants.CRV, block=block, sync=False),
-            magic.get_price(lp_token, block=block, sync=False),
+            get_price(constants.CRV, block=block, sync=False),
+            get_price(lp_token, block=block, sync=False),
             results
         )
         results = [x / 1e18 for x in results]
@@ -418,8 +418,7 @@ class CurveRegistry(metaclass=Singleton):
         }
 
 
-curve = None
 try:
     curve = CurveRegistry()
 except UnsupportedNetwork:
-    pass
+    curve = None

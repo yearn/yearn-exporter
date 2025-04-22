@@ -11,7 +11,8 @@ import dank_mids
 import eth_retry
 from brownie import chain
 from brownie.network.event import _EventItem
-from y import Block, Contract, Network, magic, contract_creation_block_async, get_block_timestamp_async, get_block_at_timestamp
+from y import (Block, Contract, Network, contract_creation_block_async, 
+               get_block_timestamp_async, get_block_at_timestamp, get_price)
 from y.exceptions import PriceError, yPriceMagicError
 from y.utils.events import Events
 
@@ -55,7 +56,7 @@ class StYETH(metaclass = Singleton):
 
     async def get_price(self, block: Optional[Block] = None) -> Optional[float]:
         try:
-            return float(await magic.get_price(YETH_TOKEN, block=block, sync=False))
+            return float(await get_price(YETH_TOKEN, block=block, sync=False))
         except yPriceMagicError as e:
             if not isinstance(e.exception, PriceError):
                 raise e
@@ -176,7 +177,7 @@ class YETHLST():
 
     async def describe(self, block=None):
         weth_price, data = await asyncio.gather(
-            magic.get_price(weth, block=block, sync=False),
+            get_price(weth, block=block, sync=False),
             self._get_lst_data(block=block),
         )
 
@@ -244,7 +245,7 @@ class Registry(metaclass = Singleton):
             volume_in_eth[asset_in] += amount_in * rates[asset_in]
             volume_out_eth[asset_out] += amount_out * rates[asset_out]
 
-        weth_price = float(await magic.get_price(weth, block=from_block, sync=False))
+        weth_price = float(await get_price(weth, block=from_block, sync=False))
         for i, value in enumerate(volume_in_eth):
             volume_in_usd[i] = value * weth_price
 

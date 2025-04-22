@@ -15,7 +15,7 @@ from brownie.network.event import _EventItem
 from eth_utils import encode_hex, event_abi_to_log_topic
 from multicall.utils import run_in_subprocess
 from semantic_version.base import Version
-from y import ERC20, Contract, Network, magic
+from y import ERC20, Contract, Network, magic, get_price
 from y.contracts import contract_creation_block_async
 from y._decorators import stuck_coro_debugger
 from y.exceptions import ContractNotVerified, PriceError, yPriceMagicError
@@ -59,7 +59,7 @@ logger = logging.getLogger(__name__)
 
 async def get_price_return_exceptions(token, block=None):
     try:
-        return await magic.get_price(token, block=block, silent=True, sync=False)
+        return await get_price(token, block=block, silent=True, sync=False)
     except Exception as e:
         return e
 
@@ -261,9 +261,9 @@ class Vault:
         try:
             # hardcode frxETH-sfrxETH to frxETH-WETH price for now
             if self.vault.address == "0xc2626aCEdc27cFfB418680d0307C9178955A4743":
-                price = await magic.get_price("0x3f42Dc59DC4dF5cD607163bC620168f7FF7aB970", block=block, sync=False) 
+                price = await get_price("0x3f42Dc59DC4dF5cD607163bC620168f7FF7aB970", block=block, sync=False) 
             else:
-                price = await magic.get_price(self.token, block=None, sync=False)
+                price = await get_price(self.token, block=None, sync=False)
         except yPriceMagicError as e:
             if not isinstance(e.exception, PriceError):
                 raise e

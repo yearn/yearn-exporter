@@ -15,7 +15,7 @@ from brownie.network.event import _EventItem
 from eth_typing import ChecksumAddress
 from web3._utils.abi import filter_by_name
 from web3._utils.events import construct_event_topic_set
-from y import Contract, Network, magic
+from y import Contract, Network, get_price
 from y._decorators import stuck_coro_debugger
 from y.utils.events import Events, ProcessedEvents
 
@@ -221,7 +221,7 @@ class Registry(metaclass=Singleton):
     async def total_value_at(self, block=None):
         vaults = await self.active_vaults_at(block)
         prices, results = await asyncio.gather(
-            asyncio.gather(*[magic.get_price(str(vault.token), block=block, sync=False) for vault in vaults]),
+            asyncio.gather(*[get_price(str(vault.token), block=block, sync=False) for vault in vaults]),
             fetch_multicall_async(*[[vault.vault, "totalAssets"] for vault in vaults], block=block),
         )
         return {vault.name: assets * price / vault.scale for vault, assets, price in zip(vaults, results, prices)}
