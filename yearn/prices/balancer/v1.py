@@ -42,7 +42,7 @@ class BalancerV1(metaclass=Singleton):
         pool = Contract(token)
         tokens, supply = fetch_multicall([pool, "getCurrentTokens"], [pool, "totalSupply"], block=block)
         supply = supply / 1e18
-        balances = fetch_multicall(*[[pool, "getBalance", token] for token in tokens], block=block)
+        balances = fetch_multicall(*([pool, "getBalance", token] for token in tokens), block=block)
         balances = [balance / 10 ** Contract(token).decimals() for balance, token in zip(balances, tokens)]
         total = sum(balance * magic.get_price(token, block=block) for balance, token in zip(balances, tokens))
         return total / supply

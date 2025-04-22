@@ -1,5 +1,5 @@
-import asyncio
 import logging
+from asyncio import gather
 from functools import cached_property
 from typing import Dict, List, Optional
 
@@ -38,23 +38,23 @@ class Registry:
     @stuck_coro_debugger
     async def describe(self, block: Optional[Block] = None) -> Dict[str, Dict]:
         vaults = await self.active_vaults_at(block)
-        share_prices = await fetch_multicall_async(*[[vault.vault, "getPricePerFullShare"] for vault in vaults], block=block)
+        share_prices = await fetch_multicall_async(*([vault.vault, "getPricePerFullShare"] for vault in vaults), block=block)
         vaults = [vault for vault, share_price in zip(vaults, share_prices) if share_price]
-        data = await asyncio.gather(*[vault.describe(block=block) for vault in vaults])
+        data = await gather(*(vault.describe(block=block) for vault in vaults))
         return {vault.name: desc for vault, desc in zip(vaults, data)}
 
     @stuck_coro_debugger
     async def total_value_at(self, block: Optional[Block] = None) -> Dict[str, float]:
         vaults = await self.active_vaults_at(block)
-        balances = await fetch_multicall_async(*[[vault.vault, "balance"] for vault in vaults], block=block)
+        balances = await fetch_multicall_async(*([vault.vault, "balance"] for vault in vaults), block=block)
         # skip vaults with zero or erroneous balance
         vaults = [(vault, balance) for vault, balance in zip(vaults, balances) if balance]
-        prices = await asyncio.gather(*[vault.get_price(block) for (vault, balance) in vaults])
+        prices = await gather(*(vault.get_price(block) for (vault, balance) in vaults))
         return {vault.name: balance * price / 10 ** vault.decimals for (vault, balance), price in zip(vaults, prices)}
 
     @stuck_coro_debugger
     async def active_vaults_at(self, block: Optional[Block] = None) -> List[VaultV1]:
         if block:
-            blocks = await asyncio.gather(*[contract_creation_block_async(str(vault.vault)) for vault in self.vaults])
+            blocks = await gather(*(contract_creation_block_async(str(vault.vault)) for vault in self.vaults))
             return [vault for vault, deploy_block in zip(self.vaults, blocks) if deploy_block < block]
         return self.vaults

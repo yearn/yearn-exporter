@@ -1,5 +1,5 @@
-import asyncio
 import time
+from asyncio import gather
 
 from y import ERC20, Contract, get_price
 
@@ -29,7 +29,7 @@ async def get_staking_rewards_apr(vault, samples: ApySamples):
         vault_scale, 
         vault_price, 
         rewards_asset_price
-    ) = await asyncio.gather(
+    ) = await gather(
         staking_pool.rewardRate.coroutine(),
         ERC20(rewards_vault.vault, asynchronous=True).scale,
         staking_pool.totalSupply.coroutine(),

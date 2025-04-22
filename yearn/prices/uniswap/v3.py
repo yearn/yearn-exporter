@@ -144,7 +144,7 @@ class UniswapV3(metaclass=Singleton):
         '''
         token_contract = contract(token)
         pools = self.pool_mapping[token_contract.address]
-        reserves = fetch_multicall(*[[token_contract,'balanceOf',pool] for pool in pools], block=block)
+        reserves = fetch_multicall(*([token_contract,'balanceOf',pool] for pool in pools), block=block)
 
         deepest_pool_balance = 0
         for pool, balance in zip(pools, reserves):

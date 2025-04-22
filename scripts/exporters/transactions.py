@@ -1,7 +1,7 @@
-import asyncio
 import logging
 import time
 import warnings
+from asyncio import gather
 from decimal import Decimal
 from typing import Optional
 
@@ -84,12 +84,12 @@ async def process_and_cache_user_txs(last_saved_block=None):
     if start_block and start_block > end_block:
         end_block = start_block
     vaults = await yearn.active_vaults_at(end_block)
-    df = pd.concat(await asyncio.gather(*[get_token_transfers(vault.vault, start_block, end_block) for vault in vaults])) if vaults else pd.DataFrame()
+    df = pd.concat(await gather(*(get_token_transfers(vault.vault, start_block, end_block) for vault in vaults))) if vaults else pd.DataFrame()
     if len(df):
         # NOTE: We want to insert txs in the order they took place, so wallet exporter
         #       won't have issues in the event that transactions exporter fails mid-run.
         df = df.sort_values('block')  
-        await asyncio.gather(*(insert_user_tx(row) for index, row in df.iterrows()))
+        await gather(*(insert_user_tx(row) for index, row in df.iterrows()))
         if start_block == end_block:
             logger.info(f'{len(df)} user txs exported to postrges [block {start_block}]')
         else:
@@ -97,7 +97,7 @@ async def process_and_cache_user_txs(last_saved_block=None):
 
 async def insert_user_tx(row) -> None:
     chain_pk = chain_dbid()
-    vault_dbid, from_address_dbid, to_address_dbid = await asyncio.gather(threads.run(token_dbid, row.token), threads.run(address_dbid, row['from']), threads.run(address_dbid, row['to']))
+    vault_dbid, from_address_dbid, to_address_dbid = await gather(threads.run(token_dbid, row.token), threads.run(address_dbid, row['from']), threads.run(address_dbid, row['to']))
     # this addresses one tx with a crazy price due to yvpbtc v1 pricePerFullShare bug.
     price = row.price if len(str(round(row.price))) <= 20 else 99999999999999999999
     usd = row.value_usd if len(str(round(row.value_usd))) <= 20 else 99999999999999999999
@@ -127,14 +127,14 @@ async def get_token_transfers(token, start_block, end_block) -> pd.DataFrame:
         web3.codec,
     )
     logs = await get_logs_asap(token.address, topics, from_block=start_block, to_block=end_block, sync=False)
-    transfers = await asyncio.gather(*[_process_transfer_event(event) for event in decode_logs(logs)])
+    transfers = await gather(*map(_process_transfer_event, decode_logs(logs)))
     return pd.DataFrame(transfers)
 
 
 async def _process_transfer_event(event: _EventItem) -> dict:
     sender, receiver, amount = event.values()
     txhash = event.transaction_hash.hex()
-    gas_price, gas_used, timestamp, token_dbid, price, scale = await asyncio.gather(
+    gas_price, gas_used, timestamp, token_dbid, price, scale = await gather(
         _get_gas_price(txhash),
         _get_gas_used(txhash),
         get_block_timestamp_async(event.block_number),
