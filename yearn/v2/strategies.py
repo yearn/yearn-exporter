@@ -6,6 +6,7 @@ from typing import AsyncIterator
 from async_property import async_property
 from brownie.network.event import _EventItem
 from eth_utils import encode_hex, event_abi_to_log_topic
+from web3.exceptions import ContractLogicError
 from y import Contract
 from y._decorators import stuck_coro_debugger
 from y.utils.events import ProcessedEvents
@@ -36,7 +37,7 @@ class Strategy:
         self.vault = vault
         try:
             self.name = self.strategy.name()
-        except ValueError:
+        except (ValueError, ContractLogicError):
             self.name = strategy[:10]
         self._views = safe_views(self.strategy.abi)
         self._events = Harvests(self)
