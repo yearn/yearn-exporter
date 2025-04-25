@@ -16,10 +16,10 @@ supported_networks := ethereum fantom arbitrum optimism base
 ###############################################
 exporter_scripts := exporters/vaults,exporters/treasury,exporters/treasury_transactions,exporters/sms,exporters/transactions,exporters/wallets,exporters/partners
 
-# docker-compose commands
-compose_command := docker-compose --file services/dashboard/docker-compose.yml --project-directory .
-tvl_command 		:= docker-compose --file services/tvl/docker-compose.yml --project-directory .
-test_command 		:= docker-compose --file services/dashboard/docker-compose.test.yml --project-directory .
+# docker compose commands
+compose_command := docker compose --file services/dashboard/docker-compose.yml --project-directory .
+tvl_command 		:= docker compose --file services/tvl/docker-compose.yml --project-directory .
+test_command 		:= docker compose --file services/dashboard/docker-compose.test.yml --project-directory .
 
 # TODO integrate tvl exporters into BASE recipes below
 # tvl recipes
@@ -40,7 +40,7 @@ tvl-build:
 
 # postgres, grafana, victoria
 infra:
-	docker-compose --file services/dashboard/docker-compose.infra.yml --project-directory . -p yearn-exporter-infra up --detach
+	docker compose --file services/dashboard/docker-compose.infra.yml --project-directory . -p yearn-exporter-infra up --detach
 
 # exporter specifc scripts
 .ONESHELL:
