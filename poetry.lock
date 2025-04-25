@@ -586,12 +586,12 @@ test = ["coverage (>=7)", "hypothesis", "pytest"]
 
 [[package]]
 name = "cchecksum"
-version = "0.2.2"
+version = "0.2.6"
 description = "A ~8x faster drop-in replacement for eth_utils.to_checksum_address. Raises the exact same Exceptions. Implemented in C."
 optional = false
 python-versions = "<4,>=3.8"
 files = [
-    {file = "cchecksum-0.2.2.tar.gz", hash = "sha256:dee5b7a139043824c341580ee6ece01fa8334e651fc78531a017f581565fa366"},
+    {file = "cchecksum-0.2.6.tar.gz", hash = "sha256:d3f8c71ef52811496ae7e0e6209fcac15fe89985ce1933f52fc0a95949097b13"},
 ]
 
 [package.dependencies]
@@ -958,13 +958,13 @@ cython = ["cython"]
 
 [[package]]
 name = "dank-mids"
-version = "4.20.125"
+version = "4.20.130"
 description = "Multicall batching middleware for asynchronous scripts using web3.py"
 optional = false
 python-versions = "<3.13,>=3.8"
 files = [
-    {file = "dank_mids-4.20.125-py3-none-any.whl", hash = "sha256:2a2b537c2b4b205eba87ad6fbf664845c298dfa41d819f87733960b78481f6f1"},
-    {file = "dank_mids-4.20.125.tar.gz", hash = "sha256:9256ec74201b51e2ca2ad134e005ab16be24922be89b0071c7432a78bcc16f86"},
+    {file = "dank_mids-4.20.130-py3-none-any.whl", hash = "sha256:45cc47bab0e932dc488a5c59756f3da02f5e8bec406850a5a3169d1b85a901b3"},
+    {file = "dank_mids-4.20.130.tar.gz", hash = "sha256:a56a36ad3e1b94455684a1e69036e8c43438e5b352e356c885965be7a0437c86"},
 ]
 
 [package.dependencies]
@@ -1280,13 +1280,13 @@ resolved_reference = "3dd6b978db7fcbfc3990f7609d706dcce9e65953"
 
 [[package]]
 name = "eth-retry"
-version = "0.2.2"
+version = "0.3.0"
 description = "Provides a decorator that automatically catches known transient exceptions that are common in the Ethereum/EVM ecosystem and reattempts to evaluate your decorated function"
 optional = false
-python-versions = "*"
+python-versions = "<3.14,>=3.8"
 files = [
-    {file = "eth_retry-0.2.2-py3-none-any.whl", hash = "sha256:32d22aac3987a7244ba1a43bbb3b14abac0f916630e54a095ec23c2b43fbdb4b"},
-    {file = "eth_retry-0.2.2.tar.gz", hash = "sha256:34326c4629b8bf5cd6221589c9e2e8c2157ff0d9fb0c0d07e5f5821665bdd42e"},
+    {file = "eth_retry-0.3.0-py3-none-any.whl", hash = "sha256:9a2fb6837f93e44c821f04b5caf75e7ff7ad038d0d2478637fd5cc84529ed01f"},
+    {file = "eth_retry-0.3.0.tar.gz", hash = "sha256:6c6b2d5b853f54c80910d34bb4d83a0a334986e3d1da57d295cc88d8ffe09a88"},
 ]
 
 [package.dependencies]
@@ -1670,13 +1670,13 @@ test = ["objgraph", "psutil"]
 
 [[package]]
 name = "h11"
-version = "0.14.0"
+version = "0.16.0"
 description = "A pure-Python, bring-your-own-I/O implementation of HTTP/1.1"
 optional = false
-python-versions = ">=3.7"
+python-versions = ">=3.8"
 files = [
-    {file = "h11-0.14.0-py3-none-any.whl", hash = "sha256:e3fe4ac4b851c468cc8363d500db52c2ead036020723024a109d37346efaa761"},
-    {file = "h11-0.14.0.tar.gz", hash = "sha256:8f19fbbe99e72420ff35c00b27a34cb9937e902a8b810e2c88300c6f0a3b699d"},
+    {file = "h11-0.16.0-py3-none-any.whl", hash = "sha256:63cf8bbe7522de3bf65932fda1d9c2772064ffb3dae62d55932da54b31cb6c86"},
+    {file = "h11-0.16.0.tar.gz", hash = "sha256:4e35b956cf45792e4caa5885e69fba00bdbc6ffafbfa020300e549b208ee5ff1"},
 ]
 
 [[package]]
@@ -3846,13 +3846,13 @@ tornado = ["tornado (>=5)"]
 
 [[package]]
 name = "setuptools"
-version = "79.0.0"
+version = "79.0.1"
 description = "Easily download, build, install, upgrade, and uninstall Python packages"
 optional = false
 python-versions = ">=3.9"
 files = [
-    {file = "setuptools-79.0.0-py3-none-any.whl", hash = "sha256:b9ab3a104bedb292323f53797b00864e10e434a3ab3906813a7169e4745b912a"},
-    {file = "setuptools-79.0.0.tar.gz", hash = "sha256:9828422e7541213b0aacb6e10bbf9dd8febeaa45a48570e09b6d100e063fc9f9"},
+    {file = "setuptools-79.0.1-py3-none-any.whl", hash = "sha256:e147c0549f27767ba362f9da434eab9c5dc0045d5304feb602a0af001089fc51"},
+    {file = "setuptools-79.0.1.tar.gz", hash = "sha256:128ce7b8f33c3079fd1b067ecbb4051a66e8526e7b65f6cec075dfc650ddfa88"},
 ]
 
 [package.extras]
@@ -4676,13 +4676,13 @@ multidict = ">=4.0"
 
 [[package]]
 name = "ypricemagic"
-version = "4.4.5"
+version = "4.4.11"
 description = "Use this tool to extract historical on-chain price data from an archive node. Shoutout to @bantg and @nymmrx for their awesome work on yearn-exporter that made this library possible."
 optional = false
 python-versions = "*"
 files = [
-    {file = "ypricemagic-4.4.5-py3-none-any.whl", hash = "sha256:418fc930e62bcb000f89593e78efbea67c92145173276668b3d93bba029309a9"},
-    {file = "ypricemagic-4.4.5.tar.gz", hash = "sha256:65824ac7482026e78f41aae5e53ed4e89d68fdd619e7926588cf275bd040d541"},
+    {file = "ypricemagic-4.4.11-py3-none-any.whl", hash = "sha256:d5cb05dd2694a282b7be527121189e955f7faf1bfe6c1a6a317b4d5ab39f349f"},
+    {file = "ypricemagic-4.4.11.tar.gz", hash = "sha256:04cc6d90e8cdec3fdbe5e5fe65795593a61fd1f738e7a580f58660c5ddf40c03"},
 ]
 
 [package.dependencies]
@@ -4720,4 +4720,4 @@ testing = ["big-O", "jaraco.functools", "jaraco.itertools", "more-itertools", "p
 [metadata]
 lock-version = "2.0"
 python-versions = ">=3.10,<3.11"
-content-hash = "0c517036ed5348aa9671df49cbece9162ba56b60acf734702e28e94af4e054b2"
+content-hash = "bea96d63ee76d3fa4b1ffedd0cc78143c205040b24172ee627d688a2654b0359"
