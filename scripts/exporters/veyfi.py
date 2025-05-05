@@ -4,8 +4,8 @@ from datetime import datetime, timezone
 from typing import List
 
 import sentry_sdk
-from brownie import chain
 from y import Contract, Network
+from y.constants import CHAINID
 from y.datatypes import Block
 from y.time import closest_block_after_timestamp
 
@@ -29,7 +29,7 @@ def main():
         data_query = 'veyfi{network="ETH"}',
         data_fn = VotingYFI().metrics_for_export,
         export_fn = _post,
-        start_block = closest_block_after_timestamp(start[chain.id]),
+        start_block = closest_block_after_timestamp(start[CHAINID]),
         concurrency=constants.CONCURRENCY,
     ).run()
 
@@ -42,12 +42,12 @@ VEYFI = {
 # TODO: Move this into special module rather than its own exporter
 class VotingYFI:
     def __init__(self):
-        if chain.id not in VEYFI:
+        if CHAINID not in VEYFI:
             raise NotImplementedError(f"Only supports {VEYFI.keys()}")
 
         self.veyfi = Contract.from_abi(
             name='VotingYFI',
-            address=VEYFI[chain.id],
+            address=VEYFI[CHAINID],
             abi=json.load(open('interfaces/veyfi/VotingYFI.json'))
         )
         self._views = safe_views(self.veyfi.abi)

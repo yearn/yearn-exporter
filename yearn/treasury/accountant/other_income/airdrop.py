@@ -1,6 +1,6 @@
 
-from brownie import chain
-from y.networks import Network
+from y import Network
+from y.constants import CHAINID
 
 from yearn.entities import TreasuryTx
 from yearn.treasury.accountant.classes import Filter, HashMatcher
@@ -23,5 +23,5 @@ def is_airdrop(tx: TreasuryTx) -> bool:
             "0xc12ded505ea158717890e4ae6e7ab5eb5cb61edbc13dfd125dd0e6f9b1af9477", # Gnosis SAFE airdrop
             "0x7c086a82b43b2f49db93b76a0698cf86a9c620b3bf924f0003175b04a17455ad", # PRISMA
         ],
-    }.get(chain.id, [])
+    }.get(CHAINID, [])
     return tx in HashMatcher(hashes)

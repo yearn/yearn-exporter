@@ -2,8 +2,9 @@ import logging
 import os
 from typing import Any, Dict, Optional, Union
 
-from brownie import chain, convert
+from brownie import convert
 from y import Contract, Network
+from y.constants import CHAINID
 
 from yearn.constants import WRAPPED_GAS_COIN
 from yearn.prices import constants
@@ -62,7 +63,7 @@ class UniswapVersionMultiplexer:
             Network.Mainnet: "uniswap",
             Network.Fantom: "spookyswap",
             Network.Gnosis: "sushiswap",
-        }[chain.id]
+        }[CHAINID]
         for uni in self.uniswaps['v2'].uniswaps:
             if uni.name != best_market:
                 continue

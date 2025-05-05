@@ -19,6 +19,7 @@ from pony.orm import db_session
 from web3._utils.abi import filter_by_name
 from web3._utils.events import construct_event_topic_set
 from y import ERC20, Network, get_block_timestamp_async
+from y.constants import CHAINID
 from y.utils.events import get_logs_asap
 
 from yearn.entities import UserTx
@@ -45,7 +46,7 @@ BATCH_SIZE = {
     Network.Arbitrum: 50_000_000,
     Network.Optimism: 4_000_000,
     Network.Base: 2_000_000,
-}[chain.id]
+}[CHAINID]
 
 FIRST_END_BLOCK = {
     Network.Mainnet: 9_480_000, # NOTE block some arbitrary time after iearn's first deployment
@@ -54,7 +55,7 @@ FIRST_END_BLOCK = {
     Network.Arbitrum: 4_837_859,
     Network.Optimism: 18_111_485,
     Network.Base: 3_571_971,
-}[chain.id]
+}[CHAINID]
 
 STARTED_BLOCK = chain.height
 
@@ -144,7 +145,7 @@ async def _process_transfer_event(event: _EventItem) -> dict:
     )
     if (
         # NOTE magic.get_price() returns erroneous price due to erroneous ppfs
-        chain.id == Network.Mainnet
+        CHAINID == Network.Mainnet
         and event.address == '0x7F83935EcFe4729c4Ea592Ab2bC1A32588409797'
         and event.block_number == 12869164
     ):
@@ -154,7 +155,7 @@ async def _process_transfer_event(event: _EventItem) -> dict:
     price = Decimal(price)
 
     return {
-        'chainid': chain.id,
+        'chainid': CHAINID,
         'block': event.block_number,
         'timestamp': int(timestamp),
         'hash': txhash,

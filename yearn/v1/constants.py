@@ -1,6 +1,6 @@
+from y import Network
+from y.constants import CHAINID
 
-from brownie import chain
-from y.networks import Network
 
 VAULT_ALIASES = {
     Network.Mainnet: {
@@ -39,4 +39,4 @@ VAULT_ALIASES = {
         "0x1B5eb1173D2Bf770e50F10410C9a96F7a8eB6e75": "curve.fi/usdp",
         "0x96Ea6AF74Af09522fCB4c28C269C26F59a31ced6": "curve.fi/link",
     },
-}.get(chain.id, {})
+}.get(CHAINID, {})

@@ -1,8 +1,9 @@
 
 from decimal import Decimal
 
-from brownie import ZERO_ADDRESS, chain
+from brownie import ZERO_ADDRESS
 from y import Network
+from y.constants import CHAINID
 
 from yearn.entities import TreasuryTx
 from yearn.treasury.accountant.classes import Filter, HashMatcher, IterFilter
@@ -17,7 +18,7 @@ _pass_thru_hashes = {
         "0x411d0aff42c3862d06a0b04b5ffd91f4593a9a8b2685d554fe1fbe5dc7e4fc04",
         "0xa347da365286cc912e4590fc71e97a5bcba9e258c98a301f85918826538aa021",
     ),
-}.get(chain.id, ())
+}.get(CHAINID, ())
 
 _CRV_CVX = 'CRV', 'CVX'
 _SYMBOL_IS_CRV_OR_CVX = IterFilter('_symbol', _CRV_CVX)
@@ -28,7 +29,7 @@ def is_pass_thru(tx: TreasuryTx) -> bool:
         return True
     
     # Passing thru to yvWFTM
-    if chain.id == Network.Fantom and tx._symbol == 'WFTM' and tx.from_address.address in treasury.addresses and tx.to_address == "0x0DEC85e74A92c52b7F708c4B10207D9560CEFaf0":
+    if CHAINID == Network.Fantom and tx._symbol == 'WFTM' and tx.from_address.address in treasury.addresses and tx.to_address == "0x0DEC85e74A92c52b7F708c4B10207D9560CEFaf0":
         # dont want to accidenally sort a vault deposit here
         is_deposit = None
         for event in tx._events['Transfer']:
@@ -53,7 +54,7 @@ def is_pass_thru(tx: TreasuryTx) -> bool:
         Network.Fantom: (
             "0x14faeac8ee0734875611e68ce0614eaf39db94a5ffb5bc6f9739da6daf58282a",
         ),
-    }.get(chain.id, ()))
+    }.get(CHAINID, ()))
 
 _CVX_HASHES = HashMatcher(
     filter=_SYMBOL_IS_CRV_OR_CVX,
@@ -166,7 +167,7 @@ def is_cowswap_migration(tx: TreasuryTx) -> bool:
         Network.Mainnet: [
             "0xb50341d3db2ff4a39b9bfa21753893035554ae44abb7d104ab650753db1c4855",
         ],
-    }.get(chain.id, []))
+    }.get(CHAINID, []))
 
 def is_usdc_stabeet(tx: TreasuryTx) -> bool:
     """ USDC is sent from a strategy to fchad for unwrapping, then back to the strategy. """
@@ -245,7 +246,7 @@ def is_ycrv(tx: TreasuryTx) -> bool:
         
 def is_sent_to_dinoswap(tx: TreasuryTx) -> bool:
     """ These tokens are dumpped and the proceeds sent back to the origin strategy. """
-    return chain.id == Network.Mainnet and tx._from_nickname == "Contract: Strategy" and tx._to_nickname == "yMechs Multisig"
+    return CHAINID == Network.Mainnet and tx._from_nickname == "Contract: Strategy" and tx._to_nickname == "yMechs Multisig"
 
 def is_dola_bribe(tx: TreasuryTx) -> bool:
     return tx._from_nickname == "ySwap Multisig" and tx._to_nickname == "Contract: GPv2Settlement" and tx._symbol == "DOLA"
@@ -275,4 +276,4 @@ def is_factory_vault_yield(tx: TreasuryTx) -> bool:
             "0x3d0624e984904f9a77ad83453ab01841e870804bfd96fadaced62fcad6fc1507",
             ["0x6a1996554455945f9ba5f58b831c86f9afaeb1a5c36b9166099a7d3ac0106803", IterFilter('_symbol', ["CRV", "CVX", "FXS"])]
         ],
-    }.get(chain.id, []))
+    }.get(CHAINID, []))

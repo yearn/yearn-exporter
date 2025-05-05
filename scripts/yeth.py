@@ -12,10 +12,10 @@ from time import time
 import boto3
 import requests
 import sentry_sdk
-from brownie import chain
 from brownie.exceptions import BrownieEnvironmentWarning
 from telegram.error import BadRequest
 from y import Network
+from y.constants import CHAINID
 from y.contracts import contract_creation_block_async
 from y.exceptions import yPriceMagicError
 
@@ -98,7 +98,7 @@ async def _main():
 
     commit = aliases_repo["object"]["sha"]
 
-    icon_url = f"https://rawcdn.githack.com/yearn/yearn-assets/{commit}/icons/multichain-tokens/{chain.id}/%s/logo-128.png"
+    icon_url = f"https://rawcdn.githack.com/yearn/yearn-assets/{commit}/icons/multichain-tokens/{CHAINID}/%s/logo-128.png"
 
     aliases_url = "https://raw.githubusercontent.com/yearn/yearn-assets/master/icons/aliases.json"
     aliases = requests.get(aliases_url).json()
@@ -172,7 +172,7 @@ def _get_export_paths():
         shutil.rmtree(out)
     os.makedirs(out, exist_ok=True)
 
-    yeth_api_path = os.path.join("v1", "chains", f"{chain.id}", "yeth")
+    yeth_api_path = os.path.join("v1", "chains", f"{CHAINID}", "yeth")
     file_base_path = os.path.join(out, yeth_api_path)
     os.makedirs(file_base_path, exist_ok=True)
 

@@ -12,10 +12,11 @@ from typing import List
 import boto3
 import requests
 import sentry_sdk
-from brownie import ZERO_ADDRESS, chain
+from brownie import ZERO_ADDRESS
 from brownie.exceptions import ContractNotFound
 from multicall.utils import await_awaitable
 from y import Contract, Network, PriceError
+from y.constants import CHAINID
 from y.exceptions import ContractNotVerified
 
 from yearn.apy import Apy, ApyFees, ApyPoints, ApySamples, get_samples
@@ -130,9 +131,9 @@ def _extract_gauge(v):
 
 
 def _get_gauges() -> List[str]:
-    if chain.id not in chains:
-        raise ValueError(f"can't get velo gauges for unsupported network: {chain.id}")
-    gauge_factory = Contract(chains[chain.id])
+    if CHAINID not in chains:
+        raise ValueError(f"can't get velo gauges for unsupported network: {CHAINID}")
+    gauge_factory = Contract(chains[CHAINID])
     return [pool for pool in pools]
 
 
@@ -176,7 +177,7 @@ def _get_export_paths(suffix):
         shutil.rmtree(out)
     os.makedirs(out, exist_ok=True)
 
-    api_path = os.path.join("v1", "chains", f"{chain.id}", "apy-previews")
+    api_path = os.path.join("v1", "chains", f"{CHAINID}", "apy-previews")
 
     file_base_path = os.path.join(out, api_path)
     os.makedirs(file_base_path, exist_ok=True)

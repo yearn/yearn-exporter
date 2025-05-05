@@ -2,9 +2,9 @@ import dataclasses
 import json
 
 import sentry_sdk
-from brownie import chain
 from multicall.utils import await_awaitable
-from y.networks import Network
+from y import Network
+from y.constants import CHAINID
 
 from yearn.apy import get_samples
 from yearn.v2.vaults import Vault as VaultV2
@@ -27,7 +27,7 @@ def mim():
     fetch_apy("0x0A0b23D9786963DE69CB2447dC125c49929419d8")
 
 def fetch_apy(vault_address):
-    if chain.id != Network.Fantom:
+    if CHAINID != Network.Fantom:
         raise Exception("run on fantom")
     samples = get_samples()
     vault = VaultV2.from_address(vault_address)

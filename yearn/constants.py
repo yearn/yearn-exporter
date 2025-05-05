@@ -1,6 +1,7 @@
 import os
 
-from brownie import chain, convert
+from brownie import convert
+from y.constants import CHAINID
 from y.networks import Network
 
 CONCURRENCY = int(os.environ.get("CONCURRENCY", 1))
@@ -10,7 +11,7 @@ YFI = {
     Network.Fantom: "0x29b0Da86e484E1C0029B56e817912d778aC0EC69",
     Network.Arbitrum: "0x82e3A8F066a6989666b031d916c43672085b1582",
     Network.Polygon: "0xDA537104D6A5edd53c6fBba9A898708E465260b6",
-}.get(chain.id, None)
+}.get(CHAINID, None)
 
 WRAPPED_GAS_COIN = {
     Network.Mainnet:            "0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2",
@@ -20,7 +21,7 @@ WRAPPED_GAS_COIN = {
     Network.Optimism:           "0x4200000000000000000000000000000000000006",
     Network.Polygon:            "0x0d500B1d8E8eF31E21C99d1Db9A6444d3ADf1270",
     Network.Base:               "0x4200000000000000000000000000000000000006"
-}.get(chain.id, None)
+}.get(CHAINID, None)
 
 YEARN_ADDRESSES_PROVIDER = "0x9be19Ee7Bc4099D62737a7255f5c227fBcd6dB93"
 CURVE_ADDRESSES_PROVIDER = "0x0000000022D53366457F9d5E68Ec105046FC4383"
@@ -49,7 +50,7 @@ STRATEGIST_MULTISIG = {
     Network.Base: {
         "0x01fE3347316b2223961B20689C65eaeA71348e93",
     },
-}.get(chain.id,set())
+}.get(CHAINID,set())
 
 STRATEGIST_MULTISIG = {convert.to_address(address) for address in STRATEGIST_MULTISIG}
 
@@ -60,7 +61,7 @@ YCHAD_MULTISIG = {
     Network.Arbitrum:   "0xb6bc033d34733329971b938fef32fad7e98e56ad",
     Network.Optimism:   "0xF5d9D6133b698cE29567a90Ab35CfB874204B3A7",
     Network.Base:       "0xbfAABa9F56A39B814281D68d2Ad949e88D06b02E",
-}.get(chain.id, None)
+}.get(CHAINID, None)
 
 if YCHAD_MULTISIG:
     YCHAD_MULTISIG = convert.to_address(YCHAD_MULTISIG)
@@ -71,7 +72,7 @@ TREASURY_MULTISIG = {
     Network.Arbitrum:   "0x1deb47dcc9a35ad454bf7f0fcdb03c09792c08c1",
     Network.Optimism:   "0x84654e35E504452769757AAe5a8C7C6599cBf954",
     Network.Base:       "0x02ff746D8cb62709aEEc611CeC9B17d7dD1D3480",
-}.get(chain.id, None)
+}.get(CHAINID, None)
 
 if TREASURY_MULTISIG:
     TREASURY_MULTISIG = convert.to_address(TREASURY_MULTISIG)
@@ -108,7 +109,7 @@ TREASURY_WALLETS = {
         YCHAD_MULTISIG,
         TREASURY_MULTISIG, 
     }
-}.get(chain.id,set())
+}.get(CHAINID,set())
 
 TREASURY_WALLETS = {convert.to_address(address) for address in TREASURY_WALLETS}
 
@@ -120,4 +121,4 @@ CRV = {
     Network.Fantom: "0x1E4F97b9f9F913c46F1632781732927B9019C68b",
     Network.Arbitrum: "0x11cDb42B0EB46D95f990BeDD4695A6e3fA034978",
     Network.Optimism: "0x0994206dfE8De6Ec6920FF4D779B0d950605Fb53",
-}.get(chain.id, None)
+}.get(CHAINID, None)

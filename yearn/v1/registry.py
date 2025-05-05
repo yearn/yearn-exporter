@@ -3,9 +3,10 @@ from asyncio import gather
 from functools import cached_property
 from typing import Dict, List, Optional
 
-from brownie import chain, interface
+from brownie import interface
 import dank_mids
 from y import Contract, Network, contract_creation_block_async
+from y.constants import CHAINID
 from y._decorators import stuck_coro_debugger
 
 from yearn.exceptions import UnsupportedNetwork
@@ -18,7 +19,7 @@ logger = logging.getLogger(__name__)
 
 class Registry:
     def __init__(self) -> None:
-        if chain.id != Network.Mainnet:
+        if CHAINID != Network.Mainnet:
             raise UnsupportedNetwork("Vaults V1 registry is only available on Mainnet.")
 
         # TODO Fix ENS resolution for registry.ychad.eth

@@ -1,9 +1,8 @@
 
 from decimal import Decimal
 
-from brownie import chain
-from y.constants import WRAPPED_GAS_COIN
-from y.networks import Network
+from y import Network
+from y.constants import CHAINID, WRAPPED_GAS_COIN
 
 from yearn.constants import YCHAD_MULTISIG
 from yearn.entities import TreasuryTx
@@ -17,14 +16,14 @@ otc_hashes = {
         "0x4f28e5ecf84b84304cc6a211b17b2232113567c6ea1bfb38dd4ea9504eaaba8f",
         ["0xe635d5df793030cd185e78c0dc275311002ceeb9a7d315ad0ed0c7d0d8c375db", IterFilter('log_index', [248,249])]
     ]
-}.get(chain.id, [])
+}.get(CHAINID, [])
 
 non_otc_hashes = {
     Network.Mainnet: [
         "0x941b047380e5021b52335695fb6891302bc732bca178a21db32e9a80f688c3be",
         "0x02d39311a2d5fa9b9a4c06dbe1c87b95423bbfe19d179c59455bc68cbe077eed",
     ]
-}.get(chain.id, [])
+}.get(CHAINID, [])
 
 VYPER_BUYERS = [
     "0xdf5e4E54d212F7a01cf94B3986f40933fcfF589F",
@@ -32,10 +31,10 @@ VYPER_BUYERS = [
 ]
 
 def is_buyer_top_up(tx: TreasuryTx) -> bool:
-    return chain.id == Network.Mainnet and tx._symbol == "DAI" and tx.to_address in VYPER_BUYERS
+    return CHAINID == Network.Mainnet and tx._symbol == "DAI" and tx.to_address in VYPER_BUYERS
 
 def is_buying_with_buyer(tx: TreasuryTx) -> bool:
-    if chain.id == Network.Mainnet and tx._symbol == "YFI" and tx.to_address == YCHAD_MULTISIG:
+    if CHAINID == Network.Mainnet and tx._symbol == "YFI" and tx.to_address == YCHAD_MULTISIG:
         event_args = {"buyer", "yfi", "dai"}
         if "Buyback" in tx._events and all(arg in tx._events["Buyback"] for arg in event_args):
             if tx.amount == tx._events["Buyback"]["yfi"] / Decimal(10**18):

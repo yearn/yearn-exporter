@@ -1,9 +1,9 @@
 from typing import Optional
 
-from brownie import chain
 from brownie.exceptions import VirtualMachineError
 from cachetools.func import ttl_cache
-from y.networks import Network
+from y import Network
+from y.constants import CHAINID
 
 from yearn.exceptions import UnsupportedNetwork
 from yearn.typing import Address, AddressOrContract, Block
@@ -40,12 +40,12 @@ supported_assets = {
 
 class Band(metaclass=Singleton):
     def __init__(self) -> None:
-        if chain.id not in addresses:
+        if CHAINID not in addresses:
             raise UnsupportedNetwork('band is not supported on this network')
-        self.oracle = contract(addresses[chain.id])
+        self.oracle = contract(addresses[CHAINID])
 
     def __contains__(self, asset: AddressOrContract) -> bool:
-        return chain.id in addresses and asset in supported_assets[chain.id]
+        return CHAINID in addresses and asset in supported_assets[CHAINID]
 
     @ttl_cache(maxsize=None, ttl=600)
     def get_price(self, asset: Address, block: Optional[Block] = None) -> Optional[float]:

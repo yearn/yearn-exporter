@@ -1,6 +1,6 @@
 import pytest
-from brownie import chain
-from y.networks import Network
+from y import Network
+from y.constants import CHAINID
 
 from tests.fixtures.decorators import ff_chains_only
 from yearn.prices.fixed_forex import fixed_forex
@@ -14,11 +14,11 @@ MARKETS = {
         "0x96E61422b6A9bA0e068B6c5ADd4fFaBC6a4aae27",
         "0x95dFDC8161832e4fF7816aC4B6367CE201538253",
     ],
-}.get(chain.id, [])
+}.get(CHAINID, [])
 
 REGISTRY_DEPLOY_BLOCK = {
     Network.Mainnet: 13145626,
-}.get(chain.id, None)
+}.get(CHAINID, None)
 
 
 @ff_chains_only

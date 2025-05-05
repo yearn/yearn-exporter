@@ -3,14 +3,13 @@ import json
 import logging
 import os
 
-from brownie import chain
 from y import Contract, Contract_erc20
-from y.constants import STABLECOINS
+from y.constants import CHAINID, STABLECOINS
 from y.networks import Network
 
 
 def force_init_problematic_contracts() -> None:
-    if chain.id == Network.Mainnet:
+    if CHAINID == Network.Mainnet:
         # LINK abi from etherscan crashes event parsing, use a compiled one
         Contract.from_abi(
             name="ChainLink Token",
@@ -44,7 +43,7 @@ def force_init_problematic_contracts() -> None:
             abi=json.load(open("interfaces/curve/tricrypto-ng/LiquidityGauge.json"))
         )
         
-    elif chain.id == Network.Arbitrum:
+    elif CHAINID == Network.Arbitrum:
         # PHP Philippine Peso stablecoin is not verified. Force init it with ERC20 abi.
         Contract_erc20("0xFa247d0D55a324ca19985577a2cDcFC383D87953")
 
@@ -69,7 +68,7 @@ def customize_ypricemagic() -> None:
         Network.Fantom: {
             "0xd652776dE7Ad802be5EC7beBfafdA37600222B48": "anyDAI",
         },
-    }.get(chain.id, {})
+    }.get(CHAINID, {})
 
     for k, v in additional_stablecoins.items():
         STABLECOINS[k] = v

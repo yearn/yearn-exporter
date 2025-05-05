@@ -1,9 +1,9 @@
 
 from decimal import Decimal
 
-from brownie import chain
 from pony.orm import commit
 from y import Contract, ContractNotVerified, Network
+from y.constants import CHAINID
 from y.contracts import build_name
 
 from yearn.entities import Address, TreasuryTx
@@ -59,32 +59,32 @@ def is_bridged(tx: TreasuryTx) -> bool:
     if tx._symbol and tx._symbol.startswith("any") and "LogAnySwapOut" in tx._events:
         for event in tx._events["LogAnySwapOut"]:
             token, sender, receiver, amount, from_chainid, to_chainid = event.values()
-            if from_chainid == chain.id and tx.token == token and Decimal(amount) / tx.token.scale == tx.amount:
+            if from_chainid == CHAINID and tx.token == token and Decimal(amount) / tx.token.scale == tx.amount:
                 return True
     
     # Anyswap out - token part
     elif tx.to_address and tx.to_address.token and tx.to_address.token.symbol and tx.to_address.token.symbol.startswith("any") and "LogAnySwapOut" in tx._events:
         for event in tx._events["LogAnySwapOut"]:
             token, sender, receiver, amount, from_chainid, to_chainid = event.values()
-            if from_chainid == chain.id and tx.from_address == sender and tx.token == Contract(token).underlying() and Decimal(amount) / tx.token.scale == tx.amount:
+            if from_chainid == CHAINID and tx.from_address == sender and tx.token == Contract(token).underlying() and Decimal(amount) / tx.token.scale == tx.amount:
                 return True
     
     # Anyswap in - anyToken part
     elif tx._symbol and tx._symbol.startswith("any") and "LogAnySwapIn" in tx._events:
         for event in tx._events["LogAnySwapIn"]:
             txhash, token, receiver, amount, from_chainid, to_chainid = event.values()
-            if to_chainid == chain.id and tx.token == token and Decimal(amount) / tx.token.scale == tx.amount:
+            if to_chainid == CHAINID and tx.token == token and Decimal(amount) / tx.token.scale == tx.amount:
                 return True
     
     # Anyswap in - token part
     elif tx.from_address and tx.from_address.token and tx.from_address.token.symbol and tx.from_address.token.symbol.startswith("any") and "LogAnySwapIn" in tx._events:
         for event in tx._events["LogAnySwapIn"]:
             txhash, token, receiver, amount, from_chainid, to_chainid = event.values()
-            if to_chainid == chain.id and tx.to_address == receiver and tx.token == Contract(token).underlying() and Decimal(amount) / tx.token.scale == tx.amount:
+            if to_chainid == CHAINID and tx.to_address == receiver and tx.token == Contract(token).underlying() and Decimal(amount) / tx.token.scale == tx.amount:
                 return True
     
     # Bridge to Base for veFarming @ multisig 0xcf9fDe11a7Ab556184529442f9fCA37FB6220970
-    if chain.id == Network.Mainnet and tx in HashMatcher([["0x2dd0ed2fdbec7d6eccfda46fc8df710aec94a2add5baab37565c87c1eb5f1e2f", IterFilter('log_index', [440, 449])]]):
+    if CHAINID == Network.Mainnet and tx in HashMatcher([["0x2dd0ed2fdbec7d6eccfda46fc8df710aec94a2add5baab37565c87c1eb5f1e2f", IterFilter('log_index', [440, 449])]]):
         return True
 
     return tx in HashMatcher({
@@ -117,11 +117,11 @@ def is_bridged(tx: TreasuryTx) -> bool:
             "0xc3922feed46d566829360dc2c7d8a78b51ad1eea71969e5e39ae069bc3c135c2",
             "0xc1ffb3d9f2907e075bd2c79b09d4020843296b0ed7bbd6b865307f44ecf56235",
         ],
-    }.get(chain.id, []))
+    }.get(CHAINID, []))
 
 def is_keep_crv(tx: TreasuryTx) -> bool:
     """ keepCRV is not considered income as 100% of the CRV is locked forever and the benefits go to yveCRV holders."""
-    if not (chain.id == Network.Mainnet and tx._symbol == "CRV"):
+    if not (CHAINID == Network.Mainnet and tx._symbol == "CRV"):
         return False
     # keepCRV received
     if tx._from_nickname == "Contract: StrategyCurveYCRVVoter" and tx._to_nickname == "Yearn Treasury":
@@ -149,7 +149,7 @@ ignore_txgroup.create_child("Gnosis Safe Execution", general.is_gnosis_execution
 ignore_txgroup.create_child("Bridged to Other Chain", is_bridged)
 ignore_txgroup.create_child("Wrapping/Unwrapping Gas Tokens", general.is_weth)
 ignore_txgroup.create_child("Scam Airdrop", general.is_scam_airdrop)
-if chain.id == Network.Mainnet:
+if CHAINID == Network.Mainnet:
     ignore_txgroup.create_child("Transfer to yGov (Deprecated)", ygov.is_sent_to_ygov)
     ignore_txgroup.create_child("Maker CDP Deposit", maker.is_yfi_cdp_deposit)
     ignore_txgroup.create_child("Maker CDP Withdrawal", maker.is_yfi_cdp_withdrawal)
@@ -163,7 +163,7 @@ if chain.id == Network.Mainnet:
     ignore_txgroup.create_child("Deploy Vesting Package", general.is_vest_factory)
     ignore_txgroup.create_child("Ignore yMechs", general.is_ignore_ymechs)
     ignore_txgroup.create_child("Maker DSR", maker.is_dsr)
-elif chain.id == Network.Fantom:
+elif CHAINID == Network.Fantom:
     ignore_txgroup.create_child("OTCTrader", general.is_otc_trader)
 
 ignore_txgroup.create_child("Sent thru Disperse.app", general.is_disperse_dot_app)
@@ -173,7 +173,7 @@ passthru_txgroup = ignore_txgroup.create_child("Pass-Thru to Vaults", passthru.i
 passthru_txgroup.create_child("Curve Bribes for yveCRV", passthru.is_curve_bribe)
 passthru_txgroup.create_child("Sent to dinobots to dump", passthru.is_sent_to_dinoswap)
 passthru_txgroup.create_child("Factory Vault Yield", passthru.is_factory_vault_yield)
-if chain.id == Network.Mainnet:
+if CHAINID == Network.Mainnet:
     passthru_txgroup.create_child("Cowswap Migration", passthru.is_cowswap_migration)
     passthru_txgroup.create_child("Single Sided IB", passthru.is_single_sided_ib)
     passthru_txgroup.create_child("StrategyConvex3CrvRewardsClonable", passthru.is_cvx)
@@ -189,16 +189,16 @@ if chain.id == Network.Mainnet:
     passthru_txgroup.create_child("BAL Rewards", passthru.is_bal)
     passthru_txgroup.create_child("yPrisma Strategy Migration", passthru.is_yprisma_migration)
 
-elif chain.id == Network.Fantom:
+elif CHAINID == Network.Fantom:
     passthru_txgroup.create_child("IB", passthru.is_ib)
     passthru_txgroup.create_child("yvUSDC STABEET", passthru.is_usdc_stabeet)
 # other pass-thru
-if chain.id == Network.Mainnet:
+if CHAINID == Network.Mainnet:
     passthru_txgroup.create_child("Inverse-earned YearnFed Fees", passthru.is_inverse_fees_from_yearn_fed)
 
 
 # Rescue Missions
-if chain.id == Network.Fantom:
+if CHAINID == Network.Fantom:
     ignore_txgroup.create_child("scDAI Salvage Mission", rescue_missions.is_scdai_salvage)
 
 # Swaps
@@ -231,7 +231,7 @@ def other(tx: TreasuryTx) -> bool:
 
 swaps_txgroup.create_child("Misc Swaps", other)
 
-if chain.id == Network.Mainnet:
+if CHAINID == Network.Mainnet:
     swaps_txgroup.create_child("Gearbox Deposit", gearbox.is_gearbox_deposit)
     swaps_txgroup.create_child("Gearbox Withdrawal", gearbox.is_gearbox_withdrawal)
     swaps_txgroup.create_child("Idle Withdrawal", idle.is_idle_withdrawal)
@@ -240,12 +240,12 @@ if chain.id == Network.Mainnet:
     swaps_txgroup.create_child("YLA", yla.is_yla_withdrawal)
     swaps_txgroup.create_child("Unwrapper", unwrapper.is_unwrapper)
     swaps_txgroup.create_child("yCRV", ycrv.is_minting_ycrv)
-elif chain.id == Network.Fantom:
+elif CHAINID == Network.Fantom:
     swaps_txgroup.create_child("Reaper Vault Withdrawl", robovault.is_reaper_withdrawal)
 
 staking_txgroup = ignore_txgroup.create_child("Staking")
 staking_txgroup.create_child("Curve Gauges", staking.is_curve_gauge)
-if chain.id == Network.Fantom:
+if CHAINID == Network.Fantom:
     staking_txgroup.create_child("Solidex", staking.is_solidex_staking)
 
 buying_yfi_txgroup = swaps_txgroup.create_child("Buying YFI")

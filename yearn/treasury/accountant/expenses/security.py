@@ -1,6 +1,6 @@
 
-from brownie import chain
-from y.networks import Network
+from y import Network
+from y.constants import CHAINID
 
 from yearn.entities import TreasuryTx
 from yearn.treasury.accountant.classes import Filter, HashMatcher, IterFilter
@@ -13,7 +13,7 @@ def is_yacademy_audit(tx: TreasuryTx) -> bool:
 
 def is_chainsec_audit(tx: TreasuryTx) -> bool:
     """Expense for an audit performed by chainsec"""
-    if chain.id == Network.Mainnet and tx._symbol in ["USDC", "USDT"] and tx.to_address == "0x8bAf5eaF92E37CD9B1FcCD676918A9B3D4F87Dc7":
+    if CHAINID == Network.Mainnet and tx._symbol in ["USDC", "USDT"] and tx.to_address == "0x8bAf5eaF92E37CD9B1FcCD676918A9B3D4F87Dc7":
         return True
     return tx in HashMatcher((
         "0x83ec212072f82f4aba4b512051d52c5f016de79a620a580622a0f051e3473a78",

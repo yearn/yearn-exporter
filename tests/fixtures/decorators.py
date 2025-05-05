@@ -1,6 +1,6 @@
 
 import pytest
-from brownie import chain
+from y.constants import CHAINID
 from y.networks import Network
 
 from yearn import ironbank
@@ -8,26 +8,26 @@ from yearn.prices import aave, fixed_forex
 from yearn.prices.uniswap import v3
 
 mainnet_only = pytest.mark.skipif(
-    chain.id != Network.Mainnet,
+    CHAINID != Network.Mainnet,
     reason="Only applicable on Mainnet."
 )
 
 aave_chains_only = pytest.mark.skipif(
-    chain.id not in aave.address_providers,
+    CHAINID not in aave.address_providers,
     reason='Not applicable on chains without an Aave deployment.'
 )
 
 ib_chains_only = pytest.mark.skipif(
-    chain.id not in ironbank.addresses,
+    CHAINID not in ironbank.addresses,
     reason='Not applicable on chains without IronBank deployments.'
 )
 
 ff_chains_only = pytest.mark.skipif(
-    chain.id not in fixed_forex.addresses,
+    CHAINID not in fixed_forex.addresses,
     reason='Not applicable on chains without a Fixed Forex deployment.'
 )
 
 uni_v3_chains_only = pytest.mark.skipif(
-    chain.id not in v3.addresses,
+    CHAINID not in v3.addresses,
     reason='Not applicable on chains without a Uniswap V3 deployment.'
 )

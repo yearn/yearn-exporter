@@ -1,6 +1,7 @@
 
-from brownie import ZERO_ADDRESS, chain
+from brownie import ZERO_ADDRESS
 from y import Network
+from y.constants import CHAINID
 
 from yearn.entities import TreasuryTx
 from yearn.treasury.accountant.classes import HashMatcher
@@ -51,5 +52,5 @@ def is_curve_gauge(tx: TreasuryTx) -> bool:
             "0xfb9fbe6e6c1d6e3dbeae81f80f0ff7729c556b08afb6ce1fa8ab04d3ecb56788",
             "0x832eb508906baf2c00dfec7a2d3f7b856fdee683921a5fff206cf6b0c997cb32",
         ],
-    }.get(chain.id, [])
+    }.get(CHAINID, [])
     return tx in HashMatcher(hashes)

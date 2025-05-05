@@ -3,9 +3,9 @@ import asyncio
 import logging
 from typing import Tuple
 
-from brownie import chain
 from dank_mids.helpers import lru_cache_lite
 from y import Network
+from y.constants import CHAINID
 from y.datatypes import Address
 
 from yearn import constants
@@ -38,7 +38,7 @@ hashes = {
             '0x140246e693445b448f8e9baaad1872fe44f3982cba44e7d652bf1c2235c7ac4a',
         ],
     }
-}.get(chain.id, {})
+}.get(CHAINID, {})
 
 
 @lru_cache_lite
@@ -73,4 +73,4 @@ def is_partner_fees(tx: TreasuryTx) -> bool:
             ["0x9681276a8668f5870551908fc17be3553c82cf6a9fedbd2fdb43f1c05385dca1", Filter('log_index', 173)],
             ["0xa12c99e2f4e5ffec9d280528968d615ab3d58483b37e8b021865163655892ea0", IterFilter('log_index', [223, 228])]
         ],
-    }.get(chain.id, []))
+    }.get(CHAINID, []))

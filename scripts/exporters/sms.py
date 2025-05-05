@@ -2,8 +2,8 @@
 import logging
 
 import sentry_sdk
-from brownie import chain
 from y import Network
+from y.constants import CHAINID
 
 from yearn import constants
 from yearn.helpers.exporter import Exporter
@@ -26,6 +26,6 @@ exporter = Exporter(
 )
 
 def main():
-    if chain.id == Network.Base:
+    if CHAINID == Network.Base:
         return
     exporter.run()

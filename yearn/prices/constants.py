@@ -1,5 +1,6 @@
-from brownie import chain, convert
-from y.networks import Network
+from brownie import convert
+from y import Network
+from y.constants import CHAINID
 
 tokens_by_network = {
     Network.Mainnet: {
@@ -112,8 +113,8 @@ ib_snapshot_block_by_network = {
 }
 
 # We convert to checksum address here to prevent minor annoyances. It's worth it.
-weth = convert.to_address(tokens_by_network[chain.id]['weth'])
-usdc = convert.to_address(tokens_by_network[chain.id]['usdc'])
-dai  = convert.to_address(tokens_by_network[chain.id]['dai'])
-stablecoins = {convert.to_address(coin): symbol for coin, symbol in stablecoins_by_network[chain.id].items()}
-ib_snapshot_block = ib_snapshot_block_by_network[chain.id]
+weth = convert.to_address(tokens_by_network[CHAINID]['weth'])
+usdc = convert.to_address(tokens_by_network[CHAINID]['usdc'])
+dai  = convert.to_address(tokens_by_network[CHAINID]['dai'])
+stablecoins = {convert.to_address(coin): symbol for coin, symbol in stablecoins_by_network[CHAINID].items()}
+ib_snapshot_block = ib_snapshot_block_by_network[CHAINID]

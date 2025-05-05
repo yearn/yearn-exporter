@@ -3,12 +3,11 @@ from dataclasses import dataclass
 from functools import cached_property
 from typing import Any, Callable, List, Optional, Union
 
-from brownie import chain
 from brownie.convert.datatypes import EthAddress
 from brownie.network.contract import ContractContainer
 from cachetools.func import ttl_cache
-from y import Contract
-from y.networks import Network
+from y import Contract, Network
+from y.constants import CHAINID
 
 from yearn.exceptions import UnsupportedNetwork
 from yearn.prices.constants import usdc, weth
@@ -165,11 +164,11 @@ class Compound:
 
 class CompoundMultiplexer(metaclass=Singleton):
     def __init__(self) -> None:
-        if chain.id not in addresses:
+        if CHAINID not in addresses:
             raise UnsupportedNetwork('compound is not supported on this network')
         self.compounds = [
             Compound(conf.name, conf.address, conf.oracle_base)
-            for conf in addresses[chain.id]
+            for conf in addresses[CHAINID]
         ]
 
     def __contains__(self, token: AddressOrContract) -> bool:

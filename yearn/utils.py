@@ -9,10 +9,11 @@ import a_sync
 import dank_mids
 import eth_retry
 import pandas as pd
-from brownie import Contract, chain, interface, web3
+from brownie import Contract, interface, web3
 from brownie.convert.datatypes import HexString
 from brownie.network.contract import _fetch_from_explorer, _resolve_address
 from dank_mids.helpers import lru_cache_lite
+from y.constants import CHAINID
 from y.networks import Network
 
 from yearn.typing import AddressOrContract
@@ -71,11 +72,10 @@ def contract(address: AddressOrContract) -> Contract:
     with _contract_lock:
         address = web3.to_checksum_address(str(address))
 
-        if chain.id in PREFER_INTERFACE:
-            if address in PREFER_INTERFACE[chain.id]:
-                _interface = PREFER_INTERFACE[chain.id][address]
-                i = _interface(address)
-                return _squeeze(dank_mids.patch_contract(i))
+        if CHAINID in PREFER_INTERFACE and address in PREFER_INTERFACE[CHAINID]:
+            _interface = PREFER_INTERFACE[CHAINID][address]
+            i = _interface(address)
+            return _squeeze(dank_mids.patch_contract(i))
 
         # autofetch-sources: false
         # Try to fetch the contract from the local sqlite db.
@@ -94,7 +94,7 @@ FORCE_IMPLEMENTATION = {
     Network.Mainnet: {
         "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48": "0xa2327a938Febf5FEC13baCFb16Ae10EcBc4cbDCF", # USDC as of 2022-08-10
     },
-}.get(chain.id, {})
+}.get(CHAINID, {})
 
 @eth_retry.auto_retry
 def _resolve_proxy(address):

@@ -1,6 +1,6 @@
 
-from brownie import chain
-from y.networks import Network
+from y import Network
+from y.constants import CHAINID
 
 from yearn.entities import TreasuryTx
 from yearn.treasury.accountant.classes import HashMatcher
@@ -12,4 +12,4 @@ def is_synthetix_swap(tx: TreasuryTx) -> bool:
         Network.Mainnet: [
             "0x5a55121911d9a3992fc1ea9504da9b86331da2148822d88c16f805b2c6b2c753",
         ]
-    }.get(chain.id, []))
+    }.get(CHAINID, []))

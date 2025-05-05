@@ -8,11 +8,12 @@ from pprint import pformat
 from time import time
 
 import requests
-from brownie import ZERO_ADDRESS, chain
+from brownie import ZERO_ADDRESS
 from eth_abi import encode
 from eth_utils import function_signature_to_4byte_selector as fourbyte
 from semantic_version import Version
 from y import Contract, Network, get_price
+from y.constants import CHAINID
 from y.prices.stable_swap.curve import curve as y_curve
 from y.time import get_block_timestamp_async
 
@@ -55,6 +56,8 @@ addresses = {
         'convex_booster': '0xF403C135812408BFbE8713b5A23a04b3D48AAE31',
     }
 }
+
+ADDRESSES = addresses[CHAINID]
 
 COMPOUNDING = 52
 MAX_BOOST = 2.5
@@ -122,7 +125,7 @@ async def simple(vault, samples: ApySamples) -> Apy:
 
     block = samples.now
     gauge = await Contract.coroutine(gauge_address)
-    if chain.id == Network.Mainnet:
+    if CHAINID == Network.Mainnet:
         try:
             controller = await gauge.controller.coroutine()
             controller = await Contract.coroutine(controller)
@@ -162,8 +165,8 @@ async def calculate_simple(vault, gauge: Gauge, samples: ApySamples) -> Apy:
     )
     gauge_weight = gauge.gauge_weight
 
-    if chain.id == Network.Mainnet:
-        yearn_voter = addresses[chain.id]['yearn_voter_proxy']
+    if CHAINID == Network.Mainnet:
+        yearn_voter = ADDRESSES['yearn_voter_proxy']
         y_working_balance, y_gauge_balance = await asyncio.gather(
             gauge.gauge.working_balances.coroutine(yearn_voter, block_identifier=block),
             gauge.gauge.balanceOf.coroutine(yearn_voter, block_identifier=block),
@@ -193,7 +196,7 @@ async def calculate_simple(vault, gauge: Gauge, samples: ApySamples) -> Apy:
     if y_gauge_balance > 0:
         y_boost = y_working_balance / (PER_MAX_BOOST * y_gauge_balance)
     else:
-        y_boost = BOOST[chain.id]
+        y_boost = BOOST[CHAINID]
 
     # FIXME: The HBTC v1 vault is currently still earning yield, but it is no longer boosted.
     if vault and vault.vault.address == "0x46AFc2dfBd1ea0c0760CAD8262A5838e803A37e5":
@@ -437,7 +440,7 @@ class _ConvexVault:
             # uselLocalCRV nor keepCRV
             cvx_keep_crv = 0
 
-        cvx_booster = await Contract.coroutine(addresses[chain.id]['convex_booster'])
+        cvx_booster = await Contract.coroutine(ADDRESSES['convex_booster'])
         cvx_fee, convex_reward_apr, cvx_boost, cvx_printed_as_crv = await asyncio.gather(
             self._get_convex_fee(cvx_booster, self.block),
             self._get_reward_apr(self._cvx_strategy, cvx_booster, base_asset_price, pool_price, self.block),
@@ -457,7 +460,7 @@ class _ConvexVault:
         """The amount of CVX emissions at the current block for a given pool, converted to CRV (from a pricing standpoint) to ease calculation of total APY."""
         crv_price, cvx = await asyncio.gather(
             get_price(constants.CRV, block=self.block, sync=False),
-            Contract.coroutine(addresses[chain.id]['cvx']),
+            Contract.coroutine(ADDRESSES['cvx']),
         )
         total_cliff = 1e3 # the total number of cliffs to happen
         max_supply = 1e2 * 1e6 * 1e18 # the maximum amount of CVX that will be minted
@@ -475,7 +478,7 @@ class _ConvexVault:
 
     async def _get_cvx_boost(self) -> float:
         """The Curve boost (1-2.5x) being applied to this pool thanks to veCRV locked in Convex's voter proxy."""
-        convex_voter = addresses[chain.id]['convex_voter_proxy']
+        convex_voter = ADDRESSES['convex_voter_proxy']
         cvx_working_balance, cvx_gauge_balance = await asyncio.gather(
             self.gauge.working_balances.coroutine(convex_voter, block_identifier=self.block),
             self.gauge.balanceOf.coroutine(convex_voter, block_identifier=self.block), 
@@ -484,7 +487,7 @@ class _ConvexVault:
         if cvx_gauge_balance > 0:
             return cvx_working_balance / (PER_MAX_BOOST * cvx_gauge_balance) or 1
         else:
-            return BOOST[chain.id]
+            return BOOST[CHAINID]
 
     async def _get_reward_apr(self, cvx_strategy, cvx_booster, base_asset_price, pool_price, block=None) -> float:
         """The cumulative apr of all extra tokens that are emitted by depositing 

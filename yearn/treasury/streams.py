@@ -12,6 +12,7 @@ from eth_portfolio._cache import cache_to_disk
 from pony.orm import db_session, select
 from tqdm.asyncio import tqdm_asyncio
 from y import Contract, Network, get_price
+from y.constants import CHAINID
 from y.time import closest_block_after_timestamp_async
 
 from yearn.cache import memory
@@ -27,7 +28,7 @@ ONE_DAY = 60 * 60 * 24
 
 dai = "0x6B175474E89094C44Da98b954EedeAC495271d0F"
 
-if chain.id == Network.Mainnet:
+if CHAINID == Network.Mainnet:
     streams_dai = Contract('0x60c7B0c5B3a4Dc8C690b074727a17fF7aA287Ff2')
     streams_yfi = Contract('0xf3764eC89B1ad20A31ed633b1466363FAc1741c4')
 
@@ -35,7 +36,7 @@ logger = logging.getLogger(__name__)
 
 class YearnStreams:
     def __init__(self):
-        assert chain.id == 1
+        assert CHAINID == 1
         self.stream_contracts = [streams_dai, streams_yfi]
         self.skipped_events = ["PayerDeposit", "PayerWithdraw", "Withdraw"]
         self.handled_events = ["StreamCreated", "StreamCreatedWithReason", "StreamModified", "StreamPaused", "StreamCancelled"]
@@ -126,7 +127,7 @@ class YearnStreams:
                 if stream.txgroup is None:
                     stream.txgroup = team_payments_txgroup
 
-if chain.id == Network.Mainnet:
+if CHAINID == Network.Mainnet:
     streams = YearnStreams()
 
 @db_session

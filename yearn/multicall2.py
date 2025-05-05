@@ -7,11 +7,12 @@ from typing import Any, List, Optional
 
 import eth_retry
 import requests
-from brownie import chain, web3
+from brownie import web3
 from brownie.exceptions import VirtualMachineError
 from dank_mids.brownie_patch.types import DankContractMethod
 from eth_abi.exceptions import InsufficientDataBytes
 from y import Contract, Network, contract_creation_block
+from y.constants import CHAINID
 
 from yearn.exceptions import MulticallError
 from yearn.typing import Block
@@ -26,7 +27,7 @@ MULTICALL2 = {
     Network.Optimism: '0xcA11bde05977b3631167028862bE2a173976CA11', # Multicall 3
     Network.Base: '0xcA11bde05977b3631167028862bE2a173976CA11' # MC3
 }
-multicall2 = Contract(MULTICALL2[chain.id])
+multicall2 = Contract(MULTICALL2[CHAINID])
 # TODO: move this bug fix somewhere more appropriate
 multicall2.tryAggregate.abi['outputs'] = [dict(x) for x in multicall2.tryAggregate.abi['outputs']]
 
@@ -55,7 +56,7 @@ def fetch_multicall(*calls, block: Optional[Block] = None, require_success: bool
             raise
 
     try:
-        if isinstance(block, int) and block < contract_creation_block(MULTICALL2[chain.id]):
+        if isinstance(block, int) and block < contract_creation_block(MULTICALL2[CHAINID]):
             # use state override to resurrect the contract prior to deployment
             data = multicall2.tryAggregate.encode_input(False, multicall_input)
             call = web3.eth.call(

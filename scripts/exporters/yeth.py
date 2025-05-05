@@ -4,8 +4,8 @@ from datetime import datetime, timezone
 from typing import List
 
 import sentry_sdk
-from brownie import chain
-from y import Contract, Network
+from y import Network
+from y.constants import CHAINID
 from y.datatypes import Block
 from y.time import closest_block_after_timestamp
 
@@ -30,13 +30,13 @@ def main():
         data_query = 'yeth{network="ETH"}',
         data_fn = YETH().metrics_for_export,
         export_fn = _post,
-        start_block = closest_block_after_timestamp(start[chain.id]),
+        start_block = closest_block_after_timestamp(start[CHAINID]),
         concurrency=constants.CONCURRENCY
     ).run()
 
 class YETH:
     def __init__(self):
-        if chain.id != Network.Mainnet:
+        if CHAINID != Network.Mainnet:
             raise NotImplementedError(f"Only supports Ethereum Mainnet")
         self.registry = Registry()
 

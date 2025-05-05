@@ -3,11 +3,12 @@ from decimal import Decimal
 from functools import lru_cache
 from typing import Dict, Optional
 
-from brownie import ZERO_ADDRESS, chain, convert
+from brownie import ZERO_ADDRESS, convert
 from brownie.convert.datatypes import HexString
 from dank_mids.helpers import lru_cache_lite
 from pony.orm import IntegrityError, TransactionIntegrityError, db_session, commit, select
 from y import Contract, ContractNotVerified, Network
+from y.constants import CHAINID
 
 from yearn.entities import (Address, Chain, Token, TreasuryTx, TxGroup, UserTx,
                             db)
@@ -18,14 +19,14 @@ logger = logging.getLogger(__name__)
 
 UNI_V3_POS = {
     Network.Mainnet: "0xC36442b4a4522E871399CD717aBDD847Ab11FE88",
-}.get(chain.id, 'not on this chain')
+}.get(CHAINID, 'not on this chain')
 
 @lru_cache(maxsize=1)
 @db_session
 def cache_chain() -> Chain:
-    entity = Chain.get(chainid=chain.id) or Chain(
+    entity = Chain.get(chainid=CHAINID) or Chain(
         chain_name=Network.name(),
-        chainid=chain.id,
+        chainid=CHAINID,
         victoria_metrics_label=Network.label(),
     )
     commit()
@@ -92,7 +93,7 @@ def cache_token(address: str) -> Token:
             Network.Fantom: ("FTM","Fantom"),
             Network.Arbitrum: ("ETH", "Ethereum"),
             Network.Optimism: ("ETH", "Ethereum"),
-        }[chain.id]
+        }[CHAINID]
         decimals = 18
     else:
         token = Contract(address)
@@ -166,12 +167,12 @@ def last_recorded_block(Entity: db.Entity) -> int:
     Returns last block recorded for sql entity type `Entity`
     '''
     if Entity in [UserTx, TreasuryTx]:
-        return select(max(e.block) for e in Entity if e.chain.chainid == chain.id).first()
-    return select(max(e.block) for e in Entity if e.chainid == chain.id).first()
+        return select(max(e.block) for e in Entity if e.chain.chainid == CHAINID).first()
+    return select(max(e.block) for e in Entity if e.chainid == CHAINID).first()
 
 @db_session
 def fetch_balances(vault_address: str, block=None) -> Dict[str, Decimal]:
-    token_dbid = select(t.token_id for t in Token if t.chain.chainid == chain.id and t.address.address == vault_address).first()
+    token_dbid = select(t.token_id for t in Token if t.chain.chainid == CHAINID and t.address.address == vault_address).first()
     if block and block > last_recorded_block(UserTx):
         # NOTE: we use `postgres.` instead of `self.` so we can make use of parallelism
         raise Exception('this block has not yet been cached into postgres')

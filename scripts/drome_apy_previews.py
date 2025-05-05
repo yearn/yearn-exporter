@@ -13,11 +13,12 @@ from time import time
 from typing import List, Optional
 
 import sentry_sdk
-from brownie import ZERO_ADDRESS, chain
+from brownie import ZERO_ADDRESS
 from msgspec import Struct
 from multicall.utils import await_awaitable
 from tqdm.asyncio import tqdm_asyncio
 from y import Contract, Network, get_price
+from y.constants import CHAINID
 from y.exceptions import ContractNotVerified
 from y.time import get_block_timestamp_async
 
@@ -59,9 +60,9 @@ try:
             voter='0x16613524e02ad97eDfeF371bC883F2F5d6C480A5',
             fee_checker='0xEcFc1e5BDa4d4191c9Cab053ec704347Db87Be5d',
         ),
-    }[chain.id]
+    }[CHAINID]
 except KeyError:
-    raise ValueError(f"there is no drome on unsupported network: {chain.id}")
+    raise ValueError(f"there is no drome on unsupported network: {CHAINID}")
 
 fee_checker = Contract(drome.fee_checker)
 performance_fee = fee_checker.performanceFee() / 1e4

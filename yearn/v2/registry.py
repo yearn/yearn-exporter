@@ -18,6 +18,7 @@ from web3._utils.abi import filter_by_name
 from web3._utils.events import construct_event_topic_set
 from y import Contract, Network, get_price
 from y._decorators import stuck_coro_debugger
+from y.constants import CHAINID
 from y.utils.events import Events, ProcessedEvents
 
 from yearn.decorators import set_exc, wait_or_exit_before
@@ -60,21 +61,21 @@ class Registry(metaclass=Singleton):
     @async_cached_property
     @stuck_coro_debugger
     async def registries(self) -> List[Contract]:
-        if chain.id == Network.Mainnet:
+        if CHAINID == Network.Mainnet:
             registries = await self.load_from_ens()
-        elif chain.id == Network.Gnosis:
+        elif CHAINID == Network.Gnosis:
             registries = [await Contract.coroutine('0xe2F12ebBa58CAf63fcFc0e8ab5A61b145bBA3462')]
-        elif chain.id == Network.Fantom:
+        elif CHAINID == Network.Fantom:
             registries = [await Contract.coroutine('0x727fe1759430df13655ddb0731dE0D0FDE929b04')]
-        elif chain.id == Network.Arbitrum:
+        elif CHAINID == Network.Arbitrum:
             registries = [await Contract.coroutine('0x3199437193625DCcD6F9C9e98BDf93582200Eb1f')]
-        elif chain.id == Network.Optimism:
+        elif CHAINID == Network.Optimism:
             registries = await asyncio.gather(*[
                 Contract.coroutine('0x79286Dd38C9017E5423073bAc11F53357Fc5C128'),
                 Contract.coroutine('0x81291ceb9bB265185A9D07b91B5b50Df94f005BF'),
                 Contract.coroutine('0x8ED9F6343f057870F1DeF47AaE7CD88dfAA049A8'), # StakingRewardsRegistry
             ])
-        elif chain.id == Network.Base:
+        elif CHAINID == Network.Base:
             registries = [await Contract.coroutine('0xF3885eDe00171997BFadAa98E01E167B53a78Ec5')]
         else:
             raise UnsupportedNetwork('yearn v2 is not available on this network')
@@ -141,7 +142,7 @@ class Registry(metaclass=Singleton):
         return self._staking_pools
 
     def __repr__(self) -> str:
-        return f"<Registry chain={chain.id} releases={len(self.releases)} vaults={len(self._vaults)} experiments={len(self._experiments)}>"
+        return f"<Registry chain={CHAINID} releases={len(self.releases)} vaults={len(self._vaults)} experiments={len(self._experiments)}>"
     
     @set_exc
     async def load_events(self) -> NoReturn:
@@ -155,7 +156,7 @@ class Registry(metaclass=Singleton):
                 logger.info("loaded v2 registry in %.3fs", time.time() - start)
 
     def process_events(self, events):
-        temp_rekt_vaults = TEMP_REKT_VAULTS.get(chain.id, [])
+        temp_rekt_vaults = TEMP_REKT_VAULTS.get(CHAINID, [])
 
         for event in events:
             if "vault" in event and event["vault"] in temp_rekt_vaults:
@@ -283,8 +284,8 @@ class Registry(metaclass=Singleton):
         return asyncio.create_task(self.load_events())
     
     def _filter_vaults(self) -> None:
-        if chain.id in DEPRECATED_VAULTS:
-            for vault in DEPRECATED_VAULTS[chain.id]:
+        if CHAINID in DEPRECATED_VAULTS:
+            for vault in DEPRECATED_VAULTS[CHAINID]:
                 self._remove_vault(vault, save=False)
 
     def _remove_vault(self, address: ChecksumAddress, save: bool = True) -> None:

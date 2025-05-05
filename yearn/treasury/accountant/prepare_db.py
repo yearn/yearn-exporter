@@ -1,7 +1,8 @@
-from brownie import ZERO_ADDRESS, chain
+from brownie import ZERO_ADDRESS
 from brownie.exceptions import CompilerError
 from pony.orm import db_session, select
 from tqdm import tqdm
+from y.constants import CHAINID
 from y.networks import Network
 
 from yearn import constants
@@ -34,7 +35,7 @@ def cache_ychad() -> None:
     label = {
         Network.Mainnet: "yChad",
         Network.Fantom: "fChad",
-    }.get(chain.id)
+    }.get(CHAINID)
 
     if label:
         cache_address(constants.YCHAD_MULTISIG).nickname = f"Yearn {label} Multisig"
@@ -42,17 +43,17 @@ def cache_ychad() -> None:
 
 def cache_ykp3r() -> None:
     """ Label yKP3R in pg. """
-    if chain.id == Network.Mainnet:
+    if CHAINID == Network.Mainnet:
         cache_address("0x8d12a197cb00d4747a1fe03395095ce2a5cc6819").nickname = "Yearn KP3R Wallet"
         db.commit()
 
 def cache_yswaps() -> None:
-    if chain.id == Network.Mainnet:
+    if CHAINID == Network.Mainnet:
         cache_address("0x7d2aB9CA511EBD6F03971Fb417d3492aA82513f0").nickname = "ySwap Multisig"
         db.commit()
 
 def cache_ymechs() -> None:
-    if chain.id == Network.Mainnet:
+    if CHAINID == Network.Mainnet:
         cache_address("0x2C01B4AD51a67E2d8F02208F54dF9aC4c0B778B6").nickname = "yMechs Multisig"
         db.commit()
 
@@ -68,7 +69,7 @@ def cache_treasury() -> None:
         cache_address(constants.TREASURY_MULTISIG).nickname = "Yearn Treasury"
         db.commit()
 
-    if chain.id == Network.Mainnet:
+    if CHAINID == Network.Mainnet:
         treasury_v1_andres_wallet = "0xb99a40fcE04cb740EB79fC04976CA15aF69AaaaE"
         cache_address(treasury_v1_andres_wallet).nickname = "Yearn Treasury V1"
         db.commit()
@@ -93,11 +94,11 @@ def cache_bridge_assistooor() -> None:
         cache_address(BRIDGE_ASSISTOOOR).nickname = "Bridge Assistooor EOA"
 
 def cache_stream_factory() -> None:
-    if chain.id == Network.Mainnet:
+    if CHAINID == Network.Mainnet:
         cache_address('0xB93427b83573C8F27a08A909045c3e809610411a').nickname = "Vesting Escrow Factory"
 
 def cache_cowswap_msig() -> None:
-    if chain.id == Network.Mainnet:
+    if CHAINID == Network.Mainnet:
         cache_address('0xA03be496e67Ec29bC62F01a428683D7F9c204930').nickname = "Cowswap Multisig"
 
 def cache_address_nicknames_for_tokens() -> None:
@@ -110,6 +111,6 @@ def cache_token_dumper() -> None:
     cache_address('0xC001d00d425Fa92C4F840baA8f1e0c27c4297a0B').nickname = "Token Dumper Multisig"
 
 def cache_dyfi_redemptions() -> None:
-    if chain.id == Network.Mainnet:
+    if CHAINID == Network.Mainnet:
         cache_address('0x7dC3A74F0684fc026f9163C6D5c3C99fda2cf60a').nickname = "dYFI Redemption Contract"
     

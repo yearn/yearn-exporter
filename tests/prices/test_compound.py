@@ -1,8 +1,8 @@
 from typing import List
 
 import pytest
-from brownie import chain
-from y.networks import Network
+from y import Network
+from y.constants import CHAINID
 
 from yearn.prices.compound import Compound, CompoundMarket, compound
 
@@ -11,7 +11,7 @@ markets: List[CompoundMarket] = [market for comp in comps for market in comp.mar
 
 @pytest.mark.parametrize('market',markets)
 def test_compound_pricing(market):
-    if chain.id == Network.Mainnet and str(market.ctoken) == '0x892B14321a4FCba80669aE30Bd0cd99a7ECF6aC0':
+    if CHAINID == Network.Mainnet and str(market.ctoken) == '0x892B14321a4FCba80669aE30Bd0cd99a7ECF6aC0':
         pytest.skip('creth is broken.')
 
     print(market)
@@ -28,7 +28,7 @@ def test_compound_cap(compound):
     print(compound.name)
     total = 0
     for market in compound.markets:
-        if chain.id == Network.Mainnet and str(market.ctoken) == '0x892B14321a4FCba80669aE30Bd0cd99a7ECF6aC0':
+        if CHAINID == Network.Mainnet and str(market.ctoken) == '0x892B14321a4FCba80669aE30Bd0cd99a7ECF6aC0':
             continue  # creth is broken
         
         price = compound.get_price(market.token)

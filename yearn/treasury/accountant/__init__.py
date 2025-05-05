@@ -27,14 +27,14 @@ GNOSIS_IMPLEMENTATION = {
     # Version 1.3.0
     Network.Mainnet: "0xDaB5dc22350f9a6Aff03Cf3D9341aAD0ba42d2a6",
     Network.Fantom: "0xd9db270c1b5e3bd161e8c8503c55ceabee709552",
-}.get(chain.id)
+}.get(CHAINID)
 
 GNOSIS_ABI = Contract(GNOSIS_IMPLEMENTATION).abi if GNOSIS_IMPLEMENTATION else None
 
 
 @db_session
 def __get_contracts() -> List[Address]:
-    return select(a for a in Address if a.is_contract and a.chain.chainid == chain.id)
+    return select(a for a in Address if a.is_contract and a.chain.chainid == CHAINID)
 
 
 @db_session

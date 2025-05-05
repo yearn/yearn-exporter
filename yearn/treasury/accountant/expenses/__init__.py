@@ -1,6 +1,5 @@
-
-from brownie import chain
-from y.networks import Network
+from y import Network
+from y.constants import CHAINID
 
 from yearn.treasury.accountant.classes import (Filter, HashMatcher,
                                                TopLevelTxGroup)
@@ -11,7 +10,7 @@ OPEX_LABEL = "Operating Expenses"
 
 expenses_txgroup = TopLevelTxGroup(OPEX_LABEL)
 
-if chain.id == Network.Mainnet:
+if CHAINID == Network.Mainnet:
     team = expenses_txgroup.create_child("Team Payments", people.is_team_payment)
 
     expenses_txgroup.create_child("Coordinape", people.is_coordinape)

@@ -1,8 +1,9 @@
 from typing import Dict, List, Literal, Optional
 
-from brownie import Contract, chain, web3
+from brownie import Contract
 from brownie.convert.datatypes import EthAddress
 from cachetools.func import ttl_cache
+from y.constants import CHAINID
 from y.networks import Network
 
 from yearn.exceptions import UnsupportedNetwork
@@ -26,7 +27,7 @@ address_providers = {
 
 class Aave(metaclass=Singleton):
     def __init__(self) -> None:
-        if chain.id not in address_providers:
+        if CHAINID not in address_providers:
             raise UnsupportedNetwork("aave is not supported on this network")
 
     def __contains__(self, token: AddressOrContract) -> bool:
@@ -39,7 +40,7 @@ class Aave(metaclass=Singleton):
     @ttl_cache(ttl=3600)
     def markets(self) -> Dict[EthAddress,EthAddress]:
         atoken_to_token = {}
-        for version, provider in address_providers[chain.id].items():
+        for version, provider in address_providers[CHAINID].items():
             lending_pool, tokens = self.get_tokens(contract(contract(provider).getLendingPool()), version)
 
             reserves = fetch_multicall(

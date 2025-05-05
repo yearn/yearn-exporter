@@ -1,5 +1,5 @@
 
-from brownie import chain
+from y.constants import CHAINID
 from y.networks import Network
 
 from yearn.treasury.accountant.classes import TopLevelTxGroup
@@ -9,7 +9,7 @@ OTHER_EXPENSE_LABEL = "Other Operating Expense"
 
 other_expense_txgroup = TopLevelTxGroup(OTHER_EXPENSE_LABEL)
 
-if chain.id == Network.Mainnet:
+if CHAINID == Network.Mainnet:
     other_expense_txgroup.create_child("yAcademy Fellows Grant", general.is_yacademy_fellow_grant)
     other_expense_txgroup.create_child("Strategists' Buyout", general.is_strategist_buyout)
     other_expense_txgroup.create_child("Gitcoin Donation for Matching", general.is_gitcoin_matching_donation)
@@ -39,7 +39,7 @@ if chain.id == Network.Mainnet:
     other_expense_txgroup.create_child("yBudget Reward", general.is_ybudget_reward)
 
 # Bugs
-if chain.id == Network.Mainnet:
+if CHAINID == Network.Mainnet:
     bug_reimbursements_txgroup = other_expense_txgroup.create_child("Bug Reimbursements")
 
     bug_reimbursements_txgroup.create_child("yDAI Fee Calculation Bug", bugs.is_double_fee_reimbursement)
@@ -51,7 +51,7 @@ if chain.id == Network.Mainnet:
     bug_reimbursements_txgroup.create_child("Reimburse Opti Zap Bug", bugs.is_opti_zap_bug)
     bug_reimbursements_txgroup.create_child("Reimburse Discord Link Bug", bugs.is_reimburse_discord_link_bug)
 
-if chain.id == Network.Mainnet:
+if CHAINID == Network.Mainnet:
     revshare_txgroup = other_expense_txgroup.create_child("Revshare")
 
     revshare_txgroup.create_child("yAudit Revshare", revshare.is_yaudit_revshare)

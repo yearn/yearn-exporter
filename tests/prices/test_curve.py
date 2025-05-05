@@ -6,9 +6,9 @@ import pytest
 import requests
 from brownie import ZERO_ADDRESS, chain, multicall, web3
 from tabulate import tabulate
-from y.contracts import contract_creation_block
+from y import Network, contract_creation_block
+from y.constants import CHAINID
 from y.exceptions import PriceError, yPriceMagicError
-from y.networks import Network
 from y.prices.magic import get_price
 
 # This import fixes a circular import issue with the curve import below.
@@ -16,7 +16,7 @@ from y.prices.magic import get_price
 from yearn.prices import curve, magic
 from yearn.utils import contract
 
-if chain.id == Network.Mainnet:
+if CHAINID == Network.Mainnet:
     pooldata = json.load(open('tests/fixtures/pooldata.json'))
 else:
     pooldata = {}
@@ -26,7 +26,7 @@ registries = {
         'v1': '0x7D86446dDb609eD0F5f8684AcF30380a356b2B4c',
         'v2': '0x90E00ACe148ca3b23Ac1bC8C240C2a7Dd9c2d7f5',
     },
-}.get(chain.id, {})
+}.get(CHAINID, {})
 
 # contract(address_provider).get_address(3)
 meta_factories = { 
@@ -37,7 +37,7 @@ meta_factories = {
     Network.Fantom: {
         'v2': '0x686d67265703D1f124c45E33d47d794c566889Ba',
     }
-}.get(chain.id, {})
+}.get(CHAINID, {})
 
 new_metapools = {
     Network.Mainnet: [
@@ -165,7 +165,7 @@ new_metapools = {
         '0xeCf64ba816C75e595fF212391E80B5CD9071E7D5',
         '0xee6Cc45B3c937DdBa9FAdD44eBA3Ea4dcceE05f1',
     ],
-}.get(chain.id, [])
+}.get(CHAINID, [])
 
 old_metapools = {
     Network.Mainnet: [
@@ -276,7 +276,7 @@ old_metapools = {
         "0x87650D7bbfC3A9F10587d7778206671719d9910D",
         "0x6eC80df362d7042c50D4469bcfbc174C9dd9109a",
     ],
-}.get(chain.id, [])
+}.get(CHAINID, [])
 
 metapools = new_metapools + old_metapools
 
@@ -285,7 +285,7 @@ eur_usd_crypto_pool_tokens = {
         "0x3b6831c0077a1e44ED0a21841C3bC4dC11bCE833",
         "0x3D229E1B4faab62F621eF2F6A610961f7BD7b23B"
     ],
-}.get(chain.id, [])
+}.get(CHAINID, [])
 
 
 @pytest.fixture(scope='session')
@@ -361,7 +361,7 @@ def test_curve_meta_gauge(i):
     }
 
     pool = new_metapools[i]
-    if i in no_gauge[chain.id]:
+    if i in no_gauge[CHAINID]:
         assert not curve.curve.get_gauge(pool)
     else:
         gauge = curve.curve.get_gauge(pool)

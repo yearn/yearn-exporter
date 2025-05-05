@@ -1,6 +1,6 @@
-from brownie import chain
 from eth_utils.toolz import concat
 from y import Network
+from y.constants import CHAINID
 
 from tests.fixtures.decorators import mainnet_only
 from yearn.partners import snapshot
@@ -18,7 +18,7 @@ def test_wildcard_wrapper_unwrap_single():
             "wrapper": "0x20dd72Ed959b6147912C2e529F0a0C651c33c9ce",
             "len": 7,
         },
-    }[chain.id]
+    }[CHAINID]
 
     wild = snapshot.WildcardWrapper(
         name=test_details["name"],

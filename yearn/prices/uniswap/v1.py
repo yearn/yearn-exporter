@@ -1,11 +1,12 @@
 from functools import lru_cache
 from typing import Any, Optional
 
-from brownie import ZERO_ADDRESS, Contract, chain, interface
+from brownie import ZERO_ADDRESS, Contract, interface
 from brownie.convert.datatypes import EthAddress
 from brownie.exceptions import ContractNotFound
 from cachetools.func import ttl_cache
-from y.networks import Network
+from y import Network
+from y.constants import CHAINID
 
 from yearn.exceptions import UnsupportedNetwork
 from yearn.prices.constants import usdc
@@ -28,13 +29,13 @@ def _get_exchange(factory: Contract, token: AddressOrContract) -> EthAddress:
 
 class UniswapV1(metaclass=Singleton):
     def __init__(self) -> None:
-        if chain.id not in addresses:
+        if CHAINID not in addresses:
             raise UnsupportedNetwork('uniswap v1 is not supported on this network')
         
-        self.factory = contract(addresses[chain.id])
+        self.factory = contract(addresses[CHAINID])
 
     def __contains__(self, asset: Any) -> bool:
-        return chain.id in addresses
+        return CHAINID in addresses
 
     @ttl_cache(ttl=600)
     def get_price(self, asset: Address, block: Optional[Block] = None) -> Optional[float]:

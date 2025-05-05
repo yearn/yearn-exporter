@@ -7,6 +7,7 @@ from brownie import Contract, chain, convert, interface
 from brownie.convert.datatypes import EthAddress
 from brownie.exceptions import EventLookupError, VirtualMachineError
 from cachetools.func import lru_cache, ttl_cache
+from y.constants import CHAINID
 from y.networks import Network
 
 from yearn.events import decode_logs, get_logs_asap
@@ -172,8 +173,8 @@ class UniswapV2:
 
 
     def excluded_pools(self):
-        if chain.id in EXCLUDED_POOLS:
-            return EXCLUDED_POOLS[chain.id]
+        if CHAINID in EXCLUDED_POOLS:
+            return EXCLUDED_POOLS[CHAINID]
         else:
             return []
 
@@ -313,15 +314,15 @@ class UniswapV2:
 
 class UniswapV2Multiplexer(metaclass=Singleton):
     def __init__(self) -> None:
-        if chain.id not in addresses:
+        if CHAINID not in addresses:
             raise UnsupportedNetwork('uniswap v2 is not supported on this network')
         self.uniswaps = [
             UniswapV2(conf['name'], conf['factory'], conf['router'])
-            for conf in addresses[chain.id]
+            for conf in addresses[CHAINID]
         ]
 
     def __contains__(self, asset: Any) -> bool:
-        return chain.id in addresses
+        return CHAINID in addresses
 
     def get_price(self, token: AddressOrContract, block: Optional[Block] = None) -> Optional[float]:
         deepest_uniswap = self.deepest_uniswap(token, block)

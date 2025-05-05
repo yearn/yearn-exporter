@@ -1,9 +1,9 @@
 import logging
 from typing import Dict, List, Optional
 
-from brownie import chain
 from brownie.convert.datatypes import EthAddress
 from cachetools.func import ttl_cache
+from y.constants import CHAINID
 from y.networks import Network
 
 from yearn.exceptions import MulticallError, UnsupportedNetwork
@@ -39,19 +39,19 @@ addresses = {
 
 class YearnLens(metaclass=Singleton):
     def __init__(self, force_init: bool = False) -> None:
-        if chain.id not in addresses and not force_init:
+        if CHAINID not in addresses and not force_init:
             raise UnsupportedNetwork('yearn is not supported on this network')
         self.markets
 
     @property
     @ttl_cache(ttl=3600)
     def markets(self) -> Dict[VaultVersion,List[EthAddress]]:
-        if chain.id not in addresses:
+        if CHAINID not in addresses:
             return {}
 
         markets = {
             name: list(contract(addr).assetsAddresses())
-            for name, addr in addresses[chain.id].items()
+            for name, addr in addresses[CHAINID].items()
             if name in ['v1', 'v2']
         }
         log_counts = ', '.join(f'{len(markets[name])} {name}' for name in markets)

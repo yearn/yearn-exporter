@@ -1,6 +1,6 @@
 import pytest
-from brownie import chain
-from y.networks import Network
+from y import Network
+from y.constants import CHAINID
 
 from tests.fixtures.decorators import mainnet_only, uni_v3_chains_only
 from yearn.prices import magic
@@ -36,7 +36,7 @@ V2_TOKENS = {
         '0x0bc529c00C6401aEF6D220BE8C6Ea1667F6Ad93e',
         '0xE41d2489571d322189246DaFA5ebDe1F4699F498',
     ],
-}.get(chain.id, [])
+}.get(CHAINID, [])
 
 
 @mainnet_only
