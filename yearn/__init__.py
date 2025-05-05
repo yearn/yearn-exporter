@@ -3,9 +3,12 @@ from brownie import network, chain
 from multicall.multicall import batcher
 
 from yearn.logs import setup_logging
+
+# must be called before importing sentry
+setup_logging()
+
 from yearn.sentry import setup_sentry
 
-setup_logging()
 setup_sentry()
 
 if network.is_connected():
