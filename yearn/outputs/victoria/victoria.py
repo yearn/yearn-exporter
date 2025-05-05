@@ -34,6 +34,7 @@ class Response(Struct):
 async def has_data(ts: float, data_query: str) -> bool:
     # sourcery skip: use-contextlib-suppress
     # query for a metric which should be present
+    # TODO: update this so it only checks data exists, doesnt need to return data
     url = f'{BASE_URL}/api/v1/query?query={data_query}&time={int(ts)}'
     async with ClientSession() as session:
         while True:

@@ -6,6 +6,7 @@ RUN pip3 install poetry
 ADD pyproject.toml ./
 ADD poetry.lock  ./
 RUN poetry install
+RUN poetry run pip install git+https://github.com/BobTheBuidler/eth-utils@novalidate
 # 0.5.1 is faster than 0.5.0 due to parsimonius 0.10 but won't install with brownie at the moment
 #RUN poetry run pip3 install "eth-abi>=5.1,<6"
 ADD . /app/yearn-exporter
