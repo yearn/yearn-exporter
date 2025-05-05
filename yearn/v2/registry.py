@@ -12,6 +12,7 @@ import inflection
 from async_property import async_cached_property, async_property
 from brownie import chain, web3
 from brownie.network.event import _EventItem
+from dank_mids import dank_web3
 from eth_typing import ChecksumAddress
 from web3._utils.abi import filter_by_name
 from web3._utils.events import construct_event_topic_set
@@ -203,10 +204,16 @@ class Registry(metaclass=Singleton):
 
 
     def vault_from_event(self, event):
+        api_version = event["api_version"]
+        contract = Contract.from_abi(
+            "Vault", 
+            event["vault"], 
+            self.releases[api_version].abi,
+        )
         return Vault(
-            vault=dank_mids.patch_contract(Contract.from_abi("Vault", event["vault"], self.releases[event["api_version"]].abi)),
+            vault=dank_mids.patch_contract(contract, dank_web3),
             token=event["token"],
-            api_version=event["api_version"],
+            api_version=api_version,
             registry=self,
         )
 
