@@ -283,7 +283,7 @@ class Vault:
                 price = await get_price(self.token, block=None, sync=False)
         except yPriceMagicError as e:
             if not isinstance(e.exception, PriceError):
-                raise e
+                raise
             price = 0
             
         tvl = total_assets * price / await ERC20(self.vault, asynchronous=True).scale if price else None
@@ -353,4 +353,4 @@ class VaultEvents(ProcessedEvents[_EventItem]):
             return event
         except Exception as e:
             logger.exception(e)
-            raise e
+            raise
