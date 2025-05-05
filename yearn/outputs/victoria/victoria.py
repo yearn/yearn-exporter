@@ -31,7 +31,7 @@ class Response(Struct):
     data: Data
 
 @eth_retry.auto_retry
-async def has_data(ts, data_query):
+async def has_data(ts: float, data_query: str) -> bool:
     # sourcery skip: use-contextlib-suppress
     # query for a metric which should be present
     url = f'{BASE_URL}/api/v1/query?query={data_query}&time={int(ts)}'
