@@ -52,6 +52,7 @@ skip_tokens = {
         "0x3B809ABd5a7597F8d1cf7dEB2747A1e1580C1488", # ERC20?
 
         "0x5bb38F4899797f03141782E9d2130C12769c0CCc",
+        "0x570EC272F07c563860477DCAfB04a04FFd2979a1",
 
         # a bunch of silly AI related spam tokens
 
