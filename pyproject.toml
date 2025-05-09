@@ -25,16 +25,15 @@ matplotlib = ">=3.6.1"
 sqlalchemy = ">=1.4.41"
 sentry-sdk = ">=2.1.1,<2.2"
 pytest-bdd = ">=5.0.0"
-dank_mids = "4.20.130"
-eth_retry = ">=0.1.19"
+dank_mids = "4.20.144"
+eth_retry = ">=0.3.3"
 eth-hash = { version = "*", extras = ["pysha3"] }
-ez-a-sync = ">=0.29,<0.32"
+ez-a-sync = ">=0.32.12,<0.33"
 python-telegram-bot = "13.15"
-ypricemagic = ">=4.4.11,<4.5"
+ypricemagic = ">=4.5.5,<4.6"
 multicall = ">=0.11.0"
 
 eth-portfolio = { git = "https://www.github.com/BobTheBuidler/eth-portfolio", branch = "master" }
-#ypricemagic = { git = "https://www.github.com/BobTheBuidler/ypricemagic", branch = "optimize-pools-for-token" }
 memray = "*"
 numpy = "<2"
 
