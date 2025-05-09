@@ -57,7 +57,7 @@ addresses = {
     }
 }
 
-ADDRESSES = addresses[CHAINID]
+ADDRESSES = addresses.get(CHAINID)
 
 COMPOUNDING = 52
 MAX_BOOST = 2.5
