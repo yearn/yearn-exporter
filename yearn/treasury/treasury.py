@@ -40,17 +40,17 @@ class ExportablePortfolio(Portfolio):
         metrics_to_export = []
         data = await self.describe(block)
 
-        for wallet, wallet_data in data.items():
+        for wallet, wallet_data in dict.items(data):
             for section, section_data in wallet_data.items():
                 if isinstance(section_data, TokenBalances):
-                    for token, bals in section_data.items():
+                    for token, bals in dict.items(section_data):
                         if items := await self._process_token(ts, section, wallet, token, bals):
                             metrics_to_export.extend(items)
                 elif isinstance(section_data, RemoteTokenBalances):
                     if section == 'external':
                         section = 'assets'
                     for protocol, token_bals in section_data.items():
-                        for token, bals in token_bals.items():
+                        for token, bals in dict.items(token_bals):
                             if items := await self._process_token(ts, section, wallet, token, bals, protocol=protocol):
                                 metrics_to_export.extend(items)
                 else:
