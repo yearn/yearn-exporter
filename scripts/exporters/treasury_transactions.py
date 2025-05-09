@@ -52,7 +52,7 @@ def main() -> NoReturn:
             pass
             #sort()
         else:
-            time.sleep(10)
+            time.sleep(30)
         cached_thru = end_block
         logger.info('batch done')
 
