@@ -13,7 +13,7 @@ import a_sync
 import pandas as pd
 from async_lru import alru_cache
 from async_property import async_cached_property
-from brownie import convert, web3
+from brownie import convert, chain, web3
 from dank_mids.helpers import lru_cache_lite
 from pandas import DataFrame
 from pandas.core.tools.datetimes import DatetimeScalar
@@ -159,7 +159,7 @@ class Wrapper:
             while start_block and logs_start_block + BATCH_SIZE <= start_block:
                 logs_start_block += BATCH_SIZE
         
-        async for event in Events(addresses=self.vault, topics=topics, from_block=logs_start_block):
+        async for event in Events(addresses=self.vault, topics=topics, from_block=logs_start_block).events(chain.height):
             if should_include(event):
                 yield {event.block_number: Decimal(event['value']) / Decimal(vault.scale)}
 
@@ -243,7 +243,7 @@ class WildcardWrapper:
 
         # wrapper -> {vaults}
         deposits = defaultdict(set)
-        async for event in Events(addresses=addresses, topics=topics, from_block=from_block):
+        async for event in Events(addresses=addresses, topics=topics, from_block=from_block).events(chain.height):
             deposits[event['receiver']].add(event.address)
 
         return [
