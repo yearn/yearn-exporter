@@ -29,6 +29,7 @@ def prepare_db() -> None:
     cache_address_nicknames_for_tokens()
     cache_token_dumper()
     cache_dyfi_redemptions()
+    cache_vefarming_wallet()
 
 def cache_ychad() -> None:
     """ Label yChad in pg. """
@@ -113,4 +114,7 @@ def cache_token_dumper() -> None:
 def cache_dyfi_redemptions() -> None:
     if CHAINID == Network.Mainnet:
         cache_address('0x7dC3A74F0684fc026f9163C6D5c3C99fda2cf60a').nickname = "dYFI Redemption Contract"
-    
+
+def cache_vefarming_wallet() -> None:
+    if CHAINID == Network.Mainnet:
+        cache_address("0x4fc1b14cD213e7B6212145Ba4f180C3d53d1A11e").nickname = "Yearn veFarming Multisig"

@@ -87,6 +87,7 @@ TREASURY_WALLETS = {
         "0x2C01B4AD51a67E2d8F02208F54dF9aC4c0B778B6", # yMechs Multisig
         "0xE376e8e8E3B0793CD61C6F1283bA18548b726C2e", # Fee Reimbursement Stash
         "0xC001d00d425Fa92C4F840baA8f1e0c27c4297a0B", # New token dumping wallet
+        "0x4fc1b14cD213e7B6212145Ba4f180C3d53d1A11e", # veFarming wallet
     },
     Network.Fantom: {
         TREASURY_MULTISIG,
