@@ -169,9 +169,9 @@ class CurveRegistry(metaclass=Singleton):
             # fetch pools from the latest registries
             for event in decode_logs(registry_logs):
                 if event.name == 'PoolAdded':
-                    self.registries[event.address].add(event['pool'])
-                    lp_token = Contract(event.address).get_lp_token(event['pool'])
                     pool = event['pool']
+                    self.registries[event.address].add(pool)
+                    lp_token = Contract(event.address).get_lp_token(pool)
                     self.token_to_pool[lp_token] = pool
                     for coin in self.get_coins(pool):
                         if pool not in self.coin_to_pools[coin]:
@@ -385,7 +385,8 @@ class CurveRegistry(metaclass=Singleton):
         }
 
     async def calculate_apy(self, gauge: Contract, lp_token: AddressOrContract, block: Optional[Block] = None) -> Dict[str,float]:
-        pool = await Contract.coroutine(self.get_pool(lp_token))
+        pool_address = self.get_pool(lp_token)
+        pool = await Contract.coroutine(pool_address)
         results = fetch_multicall_async(
             [gauge, "working_supply"],
             [self.gauge_controller, "gauge_relative_weight", gauge],
