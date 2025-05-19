@@ -15,6 +15,8 @@ sentry_sdk.set_tag('script','vaults_exporter')
 
 logger = logging.getLogger('yearn.vaults_exporter')
 
+logging.getLogger("y._db.utils.logs").setLevel(logging.NOTSET)
+
 yearn = Yearn()
 
 if Network(CHAINID) == Network.Fantom:
