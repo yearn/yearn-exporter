@@ -211,12 +211,15 @@ class GasUser(Struct):
     """This tiny struct allows us to only decode the gasUsed field and ignore the rest of the receipt bytes."""
     gasUsed: uint
 
+_decode_gas_priced = json.Decoder(type=GasPriced, dec_hook=uint._decode_hook).decode
+_decode_gas_user = json.Decoder(type=GasUser, dec_hook=uint._decode_hook).decode
+
 @alru_cache(maxsize=1024)
 async def _get_gas_price(txhash: str) -> int:
     tx_bytes = await dank_mids.eth._get_transaction_raw(txhash)
-    return int(json.decode(tx_bytes, type=GasPriced, dec_hook=uint._decode_hook).gasPrice)
+    return int(_decode_gas_priced(tx_bytes).gasPrice)
 
 @alru_cache(maxsize=1024)
 async def _get_gas_used(txhash: str) -> int:
     receipt_bytes = await dank_mids.eth._get_transaction_receipt_raw(txhash)
-    return int(json.decode(receipt_bytes, type=GasUser, dec_hook=uint._decode_hook).gasUsed)
+    return int(_decode_gas_user(receipt_bytes).gasUsed)
