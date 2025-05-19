@@ -2,6 +2,7 @@ import asyncio
 import itertools
 import logging
 import time
+from asyncio import create_task
 from collections import OrderedDict
 from functools import cached_property
 from typing import AsyncIterator, Awaitable, Dict, List, NoReturn, overload
@@ -9,6 +10,7 @@ from typing import AsyncIterator, Awaitable, Dict, List, NoReturn, overload
 import a_sync
 import dank_mids
 import inflection
+from a_sync import cgather, igather
 from async_property import async_cached_property, async_property
 from brownie import chain, web3
 from brownie.network.event import _EventItem
@@ -70,11 +72,11 @@ class Registry(metaclass=Singleton):
         elif CHAINID == Network.Arbitrum:
             registries = [await Contract.coroutine('0x3199437193625DCcD6F9C9e98BDf93582200Eb1f')]
         elif CHAINID == Network.Optimism:
-            registries = await asyncio.gather(*[
+            registries = await cgather(
                 Contract.coroutine('0x79286Dd38C9017E5423073bAc11F53357Fc5C128'),
                 Contract.coroutine('0x81291ceb9bB265185A9D07b91B5b50Df94f005BF'),
                 Contract.coroutine('0x8ED9F6343f057870F1DeF47AaE7CD88dfAA049A8'), # StakingRewardsRegistry
-            ])
+            )
         elif CHAINID == Network.Base:
             registries = [await Contract.coroutine('0xF3885eDe00171997BFadAa98E01E167B53a78Ec5')]
         else:
@@ -84,8 +86,8 @@ class Registry(metaclass=Singleton):
             if hasattr(r, 'releaseRegistry') and "ReleaseRegistryUpdated" in r.topics:
                 # Add all past and present Release Registries
                 events = Events(addresses=r, topics=[r.topics['ReleaseRegistryUpdated']])
-                for rr in set(await asyncio.gather(*[
-                    asyncio.create_task(Contract.coroutine(list(event.values())[0]))
+                for rr in set(await igather([
+                    create_task(Contract.coroutine(list(event.values())[0]))
                     async for event in events.events(to_block=await dank_mids.eth.block_number)
                 ])):
                     registries.append(rr)
@@ -112,7 +114,7 @@ class Registry(metaclass=Singleton):
             async for event in events.events(to_block = await dank_mids.eth.block_number)
         ]            
         if registries:
-            registries = await asyncio.gather(*registries)
+            registries = await igather(registries)
         logger.info('loaded %d registry versions', len(registries))
         events._task.cancel()
         return registries
@@ -228,9 +230,9 @@ class Registry(metaclass=Singleton):
     @stuck_coro_debugger
     async def total_value_at(self, block=None):
         vaults = await self.active_vaults_at(block)
-        prices, results = await asyncio.gather(
-            asyncio.gather(*[get_price(str(vault.token), block=block, sync=False) for vault in vaults]),
-            fetch_multicall_async(*[[vault.vault, "totalAssets"] for vault in vaults], block=block),
+        prices, results = await cgather(
+            igather(get_price(str(vault.token), block=block, sync=False) for vault in vaults),
+            fetch_multicall_async(*([vault.vault, "totalAssets"] for vault in vaults), block=block),
         )
         return {vault.name: assets * price / vault.scale for vault, assets, price in zip(vaults, results, prices)}
 
@@ -251,7 +253,7 @@ class Registry(metaclass=Singleton):
         await events.events(to_block = block or events._init_block)
         self._filter_vaults()
         vaults = list(itertools.chain(self._vaults.values(), self._experiments.values()))
-        return [vault for vault, active in zip(vaults, await asyncio.gather(*[vault.is_active(block) for vault in vaults])) if active]
+        return [vault for vault, active in zip(vaults, await igather(vault.is_active(block) for vault in vaults)) if active]
     
     async def _active_vaults_at_iter(self, block=None) -> AsyncIterator[Vault]:
         # ensure loader task is running

@@ -1,11 +1,11 @@
 import math
-from asyncio import gather
 from time import time
 from typing import TYPE_CHECKING, Tuple
 
 import dank_mids
 import eth_retry
 import requests
+from a_sync import cgather, igather
 from y import ERC20, Contract, get_price
 from y.contracts import contract_creation_block_async
 from y.exceptions import PriceError, yPriceMagicError
@@ -71,7 +71,7 @@ class Backscratcher(metaclass = Singleton):
         self.proxy = Contract("0xF147b8125d2ef93FB6965Db97D6746952a133934")
     
     async def _locked(self, block=None) -> Tuple[float,float]:
-        crv_locked, crv_price = await gather(
+        crv_locked, crv_price = await cgather(
             curve.voting_escrow.balanceOf["address"].coroutine(self.proxy, block_identifier=block),
             get_price(constants.CRV, block=block, sync=False),
         )
@@ -95,7 +95,7 @@ class Backscratcher(metaclass = Singleton):
         return []
 
     async def apy(self, _: "ApySamples") -> "Apy":
-        curve_3_pool, curve_reward_distribution, curve_voting_escrow = await gather(
+        curve_3_pool, curve_reward_distribution, curve_voting_escrow = await cgather(
             Contract.coroutine("0xbEbc44782C7dB0a1A60Cb6fe97d0b483032FF1C7"),
             Contract.coroutine("0xA464e6DCda8AC41e03616F95f4BC98a13b8922Dc"),
             Contract.coroutine("0x5f3b5DfEb7B28CDbD7FAba78963EE202a494e2A2"),
@@ -104,7 +104,7 @@ class Backscratcher(metaclass = Singleton):
         week = 7 * 86400
         epoch = math.floor(time() / week) * week - week
         voter = "0xF147b8125d2ef93FB6965Db97D6746952a133934"
-        crv_price, yvecrv_price, total_vecrv, yearn_vecrv, vault_supply, tokens_per_week, virtual_price = await gather(
+        crv_price, yvecrv_price, total_vecrv, yearn_vecrv, vault_supply, tokens_per_week, virtual_price = await cgather(
             get_price("0xD533a949740bb3306d119CC777fa900bA034cd52", sync=False),
             get_price("0xc5bDdf9843308380375a611c18B50Fb9341f502A", sync=False),
             curve_voting_escrow.totalSupply.coroutine(),
@@ -146,7 +146,7 @@ class Ygov(metaclass = Singleton):
         self.token = Contract(constants.YFI)
     
     async def _locked(self, block=None):
-        yfi_locked, yfi_price = await gather(
+        yfi_locked, yfi_price = await cgather(
             self.token.balanceOf.coroutine(self.vault, block_identifier=block),
             get_price(str(self.token), block=block, sync=False)
         )
@@ -173,17 +173,17 @@ class Registry(metaclass = Singleton):
     async def describe(self, block=None):
         # not supported yet
         vaults = await self.active_vaults_at(block)
-        data = await gather(*(vault.describe(block=block) for vault in vaults))
+        data = await igather(vault.describe(block=block) for vault in vaults)
         return {vault.name: desc for vault, desc in zip(vaults, data)}
 
     async def total_value_at(self, block=None):
         vaults = await self.active_vaults_at(block)
-        tvls = await gather(*(vault.total_value_at(block=block) for vault in vaults))
+        tvls = await igather(vault.total_value_at(block=block) for vault in vaults)
         return {vault.name: tvl for vault, tvl in zip(vaults, tvls)}
 
     async def active_vaults_at(self, block=None):
         vaults = list(self.vaults)
         if block:
-            blocks = await gather(*(contract_creation_block_async(str(vault.vault)) for vault in self.vaults))
+            blocks = await igather(contract_creation_block_async(str(vault.vault)) for vault in self.vaults)
             vaults = [vault for vault, deploy_block in zip(self.vaults, blocks) if deploy_block <= block]
         return vaults

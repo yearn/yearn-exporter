@@ -1,9 +1,10 @@
-import asyncio
+import itertools
 import logging
 from collections import Counter
 from time import time
 from typing import List
 
+from a_sync import igather
 from brownie import chain
 from y.contracts import contract_creation_block_async
 from y._decorators import stuck_coro_debugger
@@ -56,8 +57,9 @@ class Yearn:
 
     @stuck_coro_debugger
     async def active_vaults_at(self, block=None):
-        active_vaults_by_registry = await asyncio.gather(*[registry.active_vaults_at(block) for registry in self.registries.values()])
+        active_vaults_by_registry = await igather(registry.active_vaults_at(block) for registry in self.registries.values())
         active = [vault for registry in active_vaults_by_registry for vault in registry]
+        active = list(itertools.chain(*active_vaults_by_registry))
         
         # [yGov] Doesn't count for this context
         if chain.id == Network.Mainnet and (
@@ -71,15 +73,15 @@ class Yearn:
     async def describe(self, block=None):
         if block is None:
             block = chain.height
-        desc = await asyncio.gather(*[self.registries[key].describe(block=block) for key in self.registries])
+        desc = await igather(self.registries[key].describe(block=block) for key in self.registries)
         return dict(zip(self.registries, desc))
 
     @stuck_coro_debugger
     async def describe_wallets(self, block=None):
         from yearn.outputs.describers.registry import RegistryWalletDescriber
         describer = RegistryWalletDescriber()
-        data = await asyncio.gather(*[describer.describe_wallets(registry, block=block) for registry in self.registries.items()])
-        data = {registry:desc for registry,desc in zip(self.registries,data)}
+        data = await igather(describer.describe_wallets(registry, block=block) for registry in self.registries.items())
+        data = dict(zip(self.registries,data))
 
         wallet_balances = Counter()
         for registry, reg_desc in data.items():
@@ -100,7 +102,7 @@ class Yearn:
 
     @stuck_coro_debugger
     async def total_value_at(self, block=None):
-        desc = await asyncio.gather(*[self.registries[key].total_value_at(block=block) for key in self.registries])
+        desc = await igather(self.registries[key].total_value_at(block=block) for key in self.registries)
         return dict(zip(self.registries, desc))
         
     @stuck_coro_debugger

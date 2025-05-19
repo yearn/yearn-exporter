@@ -1,6 +1,6 @@
-from asyncio import gather
 from collections import Counter
 
+from a_sync import igather
 from y import Contract, Network
 from y.constants import CHAINID
 
@@ -23,7 +23,7 @@ class RegistryWalletDescriber:
         
     async def describe_wallets(self, registry: tuple, block=None):
         active_vaults = await self.active_vaults_at(registry, block=block)
-        data = await gather(*(self.vault_describer.describe_wallets(vault.vault.address, block=block) for vault in active_vaults))
+        data = await igather(self.vault_describer.describe_wallets(vault.vault.address, block=block) for vault in active_vaults)
         data = {vault.name: desc for vault, desc in zip(active_vaults, data) if desc}
 
         wallet_balances = Counter()

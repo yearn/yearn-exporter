@@ -2,6 +2,7 @@ import asyncio
 import logging
 import re
 import time
+from asyncio import create_task
 from contextlib import suppress
 from functools import cached_property
 from typing import (TYPE_CHECKING, Any, AsyncIterator, Dict, List, NoReturn,
@@ -9,6 +10,7 @@ from typing import (TYPE_CHECKING, Any, AsyncIterator, Dict, List, NoReturn,
 
 import a_sync
 import dank_mids
+from a_sync import cgather, igather
 from async_property import async_cached_property, async_property
 from brownie.network.event import _EventItem
 from eth_utils import encode_hex, event_abi_to_log_topic
@@ -242,7 +244,7 @@ class Vault:
     @stuck_coro_debugger
     async def describe(self, block=None):
         block = block or await dank_mids.eth.block_number
-        results, strategy_descs, price = await asyncio.gather(
+        results, strategy_descs, price = await cgather(
             fetch_multicall_async(*self._calls, block=block),
             self._describe_strategies(block),
             get_price_return_exceptions(self.token, block=block),
@@ -254,7 +256,7 @@ class Vault:
             results,
             self.scale,
             price,
-            await asyncio.gather(*(strategy.unique_name for strategy in await self.strategies)),
+            await igather(strategy.unique_name for strategy in await self.strategies),
             strategy_descs,
         )
         
@@ -311,7 +313,12 @@ class Vault:
     
     @stuck_coro_debugger
     async def _describe_strategies(self, block: int) -> List[dict]:
-        return await asyncio.gather(*[asyncio.create_task(strategy.describe(block=block)) async for strategy in self.strategies_at_block(block)])
+        return await cgather(
+            *[
+                create_task(strategy.describe(block=block)) 
+                async for strategy in self.strategies_at_block(block)
+            ]
+        )
     
     
 class VaultEvents(ProcessedEvents[_EventItem]):
@@ -325,7 +332,7 @@ class VaultEvents(ProcessedEvents[_EventItem]):
         try:
             if CHAINID == Network.Optimism:
                 failed_migration = False
-                for key in ["newVersion", "oldVersion", "strategy"]:
+                for key in ("newVersion", "oldVersion", "strategy"):
                     failed_migration |= (key in event and event[key] == "0x4286a40EB3092b0149ec729dc32AD01942E13C63")
                 if failed_migration:
                     return event

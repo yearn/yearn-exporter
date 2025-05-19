@@ -1,10 +1,10 @@
 import logging
-from asyncio import gather
 from collections import defaultdict
 from dataclasses import dataclass
 from functools import cached_property
 from typing import List
 
+from a_sync import cgather, igather
 from brownie.network.contract import InterfaceContainer
 from cachetools.func import ttl_cache
 from y import Contract, Network, get_price
@@ -60,10 +60,10 @@ class Registry:
     
     def load_new_markets(self) -> List[IronbankMarket]:
         new_markets = self.__all_markets[len(self._vaults):]
-        new_markets = [Contract(market) for market in new_markets]
-        cdata = multicall_matrix(new_markets, ["symbol", "underlying", "decimals"])
+        new_markets = list(map(Contract, new_markets))
+        cdata = multicall_matrix(new_markets, ("symbol", "underlying", "decimals"))
         underlying = [Contract(cdata[x]["underlying"]) for x in new_markets]
-        data = multicall_matrix(underlying, ["symbol", "decimals"])
+        data = multicall_matrix(underlying, ("symbol", "decimals"))
         new_markets = [
             IronbankMarket(
                 cdata[market]["symbol"],
@@ -98,9 +98,9 @@ class Registry:
             "supplyRatePerBlock",
             "borrowRatePerBlock",
         ]
-        results, prices = await gather(
+        results, prices = await cgather(
             multicall_matrix_async(contracts, methods, block=block),
-            gather(*(get_price(market.underlying, block=block, sync=False) for market in markets)),
+            igather(get_price(market.underlying, block=block, sync=False) for market in markets),
         )
         output = defaultdict(dict)
         for m, price in zip(markets, prices):
@@ -140,9 +140,9 @@ class Registry:
             ["getCash", "totalBorrows", "totalReserves", "totalSupply"],
             block=block,
         )
-        data, prices = await gather(
+        data, prices = await cgather(
             data_coro,
-            gather(*(get_price(market.vault, block=block, sync=False) for market in markets)),
+            igather(get_price(market.vault, block=block, sync=False) for market in markets),
         )
         results = [data[market.vault] for market in markets]
         return {

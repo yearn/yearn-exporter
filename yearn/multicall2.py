@@ -1,5 +1,4 @@
 import os
-from asyncio import gather
 from collections import defaultdict
 from itertools import count, product
 from operator import itemgetter
@@ -7,6 +6,7 @@ from typing import Any, List, Optional
 
 import eth_retry
 import requests
+from a_sync import igather
 from brownie import web3
 from brownie.exceptions import VirtualMachineError
 from dank_mids.brownie_patch.types import DankContractMethod
@@ -105,28 +105,28 @@ def fetch_multicall(*calls, block: Optional[Block] = None, require_success: bool
 async def fetch_multicall_async(*calls, block: Optional[Block] = None, require_success: bool = False) -> List[Any]:
     # https://github.com/makerdao/multicall
     attribute_errors = []
-    coros = []
 
-    for i, (contract, fn_name, *fn_inputs) in enumerate(calls):
-        try:
-            fn = _get_fn(contract, fn_name, fn_inputs)
-        except AttributeError as e:
-            if require_success:
-                raise AttributeError(e, contract, fn_name)
-            attribute_errors.append(i)
-            continue
+    def get_coros():
+        for i, (contract, fn_name, *fn_inputs) in enumerate(calls):
+            try:
+                try:
+                    fn = _get_fn(contract, fn_name, fn_inputs)
+                except AttributeError as e:
+                    if require_success:
+                        raise
+                    attribute_errors.append(i)
+                    continue
+                yield fn.coroutine(*fn_inputs, block_identifier=block)
+            except AttributeError as e:
+                raise AttributeError(str(e), contract, fn_name) from e.__cause__
 
-        try:
-            coros.append(fn.coroutine(*fn_inputs, block_identifier=block))
-        except AttributeError as e:
-            raise AttributeError(e, contract, fn_name)
+    if require_success:
+        results = await igather(get_coros())
 
-    results = await gather(*coros, return_exceptions=True)
-    for i, result in enumerate(results):
-        if isinstance(result, Exception):
-            if require_success:
-                raise result
-            else:
+    else:
+        results = await igather(get_coros(), return_exceptions=True)
+        for i, result in enumerate(results):
+            if isinstance(result, Exception):
                 results[i] = None
 
     # NOTE this will only run if `require_success` is True
@@ -163,7 +163,6 @@ async def multicall_matrix_async(contracts, params, block="latest"):
     output = defaultdict(dict)
     for (contract, param), value in zip(matrix, results):
         output[contract][param] = value
-
     return dict(output)
 
 @eth_retry.auto_retry
