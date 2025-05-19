@@ -232,7 +232,7 @@ class Registry(metaclass=Singleton):
         vaults = await self.active_vaults_at(block)
         prices, results = await cgather(
             igather(get_price(str(vault.token), block=block, sync=False) for vault in vaults),
-            fetch_multicall_async(*([vault.vault, "totalAssets"] for vault in vaults), block=block),
+            fetch_multicall_async(([vault.vault, "totalAssets"] for vault in vaults), block=block),
         )
         return {vault.name: assets * price / vault.scale for vault, assets, price in zip(vaults, results, prices)}
 

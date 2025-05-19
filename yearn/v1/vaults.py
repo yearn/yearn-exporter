@@ -109,8 +109,10 @@ class VaultV1:
         # new curve voter proxy vaults
         if await self.is_curve_vault and hasattr(strategy, "proxy"):
             vote_proxy, gauge = await fetch_multicall_async(
-                [strategy, "voter"],  # voter is static, can pin
-                [strategy, "gauge"],  # gauge is static per strategy, can cache
+                (
+                    [strategy, "voter"],  # TODO: voter is static, can pin
+                    [strategy, "gauge"],  # TODO: gauge is static per strategy, can cache
+                ),
                 block=block,
             )
             # guard historical queries where there are no vote_proxy and gauge
@@ -139,11 +141,12 @@ class VaultV1:
             attrs["ygov total"] = [ygov, "totalSupply"]
 
         # fetch attrs as multicall
-        results = await fetch_multicall_async(*attrs.values(), block=block)
+        results = await fetch_multicall_async(attrs.values(), block=block)
         scale_overrides = {"share price": 1e18}
+        self_scale = self.scale
         for name, attr in zip(attrs, results):
             if attr is not None:
-                info[name] = attr / scale_overrides.get(name, self.scale)
+                info[name] = attr / scale_overrides.get(name, self_scale)
             else:
                 logger.warning("attr %s rekt %s", name, attr)
 
@@ -178,3 +181,41 @@ class VaultV1:
             price = None
         tvl = total_assets * price / 10 ** await self.vault.decimals.coroutine(block_identifier=block) if price else None
         return Tvl(total_assets, price, tvl) 
+
+
+from queue import SimpleQueue
+from collections import deque
+
+class unzip:
+    def __init__(self, iterable):
+        self.iterable = iterable
+        self.queues = []
+        for val in next(iter(iterable)):
+            queue = deque()
+            queue.append(val)
+            self.queues.append(queue)
+    
+    def __iter__(self):
+        iterator = iter(self.iterable)
+        queues = self.queues
+        iterating = True
+        
+        def _iterator(i):
+            my_queue = queues[i]
+            other_queues = {_i: queue for _i, queue in enumerate(queues) if _i != i}
+            nonlocal iterating
+            while iterating:
+                while my_queue:
+                    yield my_queue.popleft()
+                try:
+                    tup = next(iterator)
+                except StopIteration:
+                    iterating = False
+                    return
+                yield tup[i]
+                for _i, queue in other_queues.items():
+                    queue.append(tup[_i])
+            while my_queue:
+                yield my_queue.popleft()
+        
+        return tuple(map(_iterator, range(len(queues))))

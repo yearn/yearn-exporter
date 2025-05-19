@@ -65,7 +65,7 @@ class Strategy:
     
     @stuck_coro_debugger
     async def describe(self, block=None):
-        results = await fetch_multicall_async(*self._calls, block=block)
+        results = await fetch_multicall_async(self._calls, block=block)
         
         # unpack self.vault.vault.strategies(self.strategy)
         results = chain(zip(self._views, results), results[-1].dict().items())

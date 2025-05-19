@@ -245,7 +245,7 @@ class Vault:
     async def describe(self, block=None):
         block = block or await dank_mids.eth.block_number
         results, strategy_descs, price = await cgather(
-            fetch_multicall_async(*self._calls, block=block),
+            fetch_multicall_async(self._calls, block=block),
             self._describe_strategies(block),
             get_price_return_exceptions(self.token, block=block),
         )

@@ -328,14 +328,16 @@ class CurveRegistry(metaclass=Singleton):
     
     async def calculate_boost(self, gauge: Contract, addr: Address, block: Optional[Block] = None) -> Dict[str,float]:
         results = await fetch_multicall_async(
-            [gauge, "balanceOf", addr],
-            [gauge, "totalSupply"],
-            [gauge, "working_balances", addr],
-            [gauge, "working_supply"],
-            [self.voting_escrow, "balanceOf", addr],
-            [self.voting_escrow, "totalSupply"],
+            (
+                [gauge, "balanceOf", addr],
+                [gauge, "totalSupply"],
+                [gauge, "working_balances", addr],
+                [gauge, "working_supply"],
+                [self.voting_escrow, "balanceOf", addr],
+                [self.voting_escrow, "totalSupply"],
+            ),
             block=block,
-            require_success=True
+            require_success=True,
         )
         #old_results = results
         #results = []
@@ -388,10 +390,12 @@ class CurveRegistry(metaclass=Singleton):
         pool_address = self.get_pool(lp_token)
         pool = await Contract.coroutine(pool_address)
         results = fetch_multicall_async(
-            [gauge, "working_supply"],
-            [self.gauge_controller, "gauge_relative_weight", gauge],
-            [gauge, "inflation_rate"],
-            [pool, "get_virtual_price"],
+            (
+                [gauge, "working_supply"],
+                [self.gauge_controller, "gauge_relative_weight", gauge],
+                [gauge, "inflation_rate"],
+                [pool, "get_virtual_price"],
+            ),
             block=block,
         )
         crv_price, token_price, results = await asyncio.gather(

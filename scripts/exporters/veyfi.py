@@ -57,7 +57,7 @@ class VotingYFI:
         #       will need to parse events & transactions
         try:
             results = await fetch_multicall_async(
-                *[[self.veyfi, view] for view in self._views], block=block
+                ([self.veyfi, view] for view in self._views), block=block
             )
             info = dict(zip(self._views, results))
         except ValueError as e:
