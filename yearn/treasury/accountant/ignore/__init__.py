@@ -1,6 +1,3 @@
-
-from decimal import Decimal
-
 from pony.orm import commit
 from y import Contract, ContractNotVerified, Network
 from y.constants import CHAINID
@@ -31,7 +28,7 @@ def is_kp3r(tx: TreasuryTx) -> bool:
     if tx._symbol == "kLP-KP3R/WETH" and tx._to_nickname == "Contract: Keep3r" and "LiquidityAddition" in tx._events:
         for event in tx._events['LiquidityAddition']:
             _, _, _, amount = event.values()
-            if Decimal(amount) / tx.token.scale == tx.amount:
+            if tx.token.scale_value(amount) == tx.amount:
                 return True
             
     if tx.to_address and tx.to_address.token and tx.to_address.token.symbol == 'KP3R':
@@ -59,28 +56,28 @@ def is_bridged(tx: TreasuryTx) -> bool:
     if tx._symbol and tx._symbol.startswith("any") and "LogAnySwapOut" in tx._events:
         for event in tx._events["LogAnySwapOut"]:
             token, sender, receiver, amount, from_chainid, to_chainid = event.values()
-            if from_chainid == CHAINID and tx.token == token and Decimal(amount) / tx.token.scale == tx.amount:
+            if from_chainid == CHAINID and tx.token == token and tx.token.scale_value(amount) == tx.amount:
                 return True
     
     # Anyswap out - token part
     elif tx.to_address and tx.to_address.token and tx.to_address.token.symbol and tx.to_address.token.symbol.startswith("any") and "LogAnySwapOut" in tx._events:
         for event in tx._events["LogAnySwapOut"]:
             token, sender, receiver, amount, from_chainid, to_chainid = event.values()
-            if from_chainid == CHAINID and tx.from_address == sender and tx.token == Contract(token).underlying() and Decimal(amount) / tx.token.scale == tx.amount:
+            if from_chainid == CHAINID and tx.from_address == sender and tx.token == Contract(token).underlying() and tx.token.scale_value(amount) == tx.amount:
                 return True
     
     # Anyswap in - anyToken part
     elif tx._symbol and tx._symbol.startswith("any") and "LogAnySwapIn" in tx._events:
         for event in tx._events["LogAnySwapIn"]:
             txhash, token, receiver, amount, from_chainid, to_chainid = event.values()
-            if to_chainid == CHAINID and tx.token == token and Decimal(amount) / tx.token.scale == tx.amount:
+            if to_chainid == CHAINID and tx.token == token and tx.token.scale_value(amount) == tx.amount:
                 return True
     
     # Anyswap in - token part
     elif tx.from_address and tx.from_address.token and tx.from_address.token.symbol and tx.from_address.token.symbol.startswith("any") and "LogAnySwapIn" in tx._events:
         for event in tx._events["LogAnySwapIn"]:
             txhash, token, receiver, amount, from_chainid, to_chainid = event.values()
-            if to_chainid == CHAINID and tx.to_address == receiver and tx.token == Contract(token).underlying() and Decimal(amount) / tx.token.scale == tx.amount:
+            if to_chainid == CHAINID and tx.to_address == receiver and tx.token == Contract(token).underlying() and tx.token.scale_value(amount) == tx.amount:
                 return True
     
     # Bridge to Base for veFarming @ multisig 0xcf9fDe11a7Ab556184529442f9fCA37FB6220970

@@ -1,6 +1,3 @@
-
-from decimal import Decimal
-
 from brownie import ZERO_ADDRESS, chain
 from y import Network, Contract
 from y.constants import CHAINID
@@ -123,10 +120,10 @@ def is_uniswap_withdrawal(tx: TreasuryTx) -> bool:
             elif tx.from_address == burn.address:
                 return True
     return tx in HashMatcher({
-        Network.Mainnet: [
+        Network.Mainnet: (
             "0xf0723677162cdf8105c0f752a8c03c53803cb9dd9a6649f3b9bc5d26822d531f",
             "0xaf1b7f138fb8bf3f5e13a680cb4a9b7983ec71a75836111c03dee6ae530db176",  # v3
-        ],
+        ),
     }.get(CHAINID, []))
 
 def is_uniswap_swap(tx: TreasuryTx) -> bool:
@@ -140,10 +137,10 @@ def is_uniswap_swap(tx: TreasuryTx) -> bool:
     
     elif tx in HashMatcher(
         {
-            Network.Mainnet: [
+            Network.Mainnet: (
                 "0x490245ef6e3c60127491415afdea23c13f4ca1a8c04de4fb3a498e7f7574b724", # uni v3
-            ],
-        }.get(CHAINID, [])
+            ),
+        }.get(CHAINID, ())
     ):
         return True
     
@@ -163,10 +160,10 @@ def is_uniswap_swap(tx: TreasuryTx) -> bool:
                     continue
                     
                 if tx.token == token0:
-                    if Decimal(swap['amount0In']) / tx.token.scale == tx.amount:
+                    if tx.token.scale_value(swap['amount0In']) == tx.amount:
                         return True
                 elif tx.token == token1:
-                    if Decimal(swap['amount1In']) / tx.token.scale == tx.amount:
+                    if tx.token.scale_value(swap['amount1In']) == tx.amount:
                         return True
 
             # Buy side
@@ -177,9 +174,9 @@ def is_uniswap_swap(tx: TreasuryTx) -> bool:
                     # This will be recorded elsewhere
                     continue
                 if tx.token == token0:
-                    if Decimal(swap['amount0Out']) / tx.token.scale == tx.amount:
+                    if tx.token.scale_value(swap['amount0Out']) == tx.amount:
                         return True
                 elif tx.token == token1:
-                    if Decimal(swap['amount1Out']) / tx.token.scale == tx.amount:
+                    if tx.token.scale_value(swap['amount1Out']) == tx.amount:
                         return True
     return False

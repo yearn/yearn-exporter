@@ -1,6 +1,3 @@
-
-from decimal import Decimal
-
 from brownie import ZERO_ADDRESS
 
 from yearn.entities import TreasuryTx
@@ -22,7 +19,7 @@ def is_aave_withdrawal(tx: TreasuryTx) -> bool:
             if (
                 tx.from_address == event['_user'] and
                 tx.token.contract.underlyingAssetAddress() == event['_reserve'] and
-                Decimal(event['_amount']) / tx.token.scale == tx.amount
+                tx.token.scale_value(event['_amount']) == tx.amount
             ):
                 return True
 
@@ -30,7 +27,7 @@ def is_aave_withdrawal(tx: TreasuryTx) -> bool:
     # Underlying side
     if tx.to_address.address in treasury.addresses and "RedeemUnderlying" in tx._events:
         for event in tx._events['RedeemUnderlying']:
-            if tx.token == event['_reserve'] and tx.to_address == event['_user'] and Decimal(event['_amount']) / tx.token.scale == tx.amount:
+            if tx.token == event['_reserve'] and tx.to_address == event['_user'] and tx.token.scale_value(event['_amount']) == tx.amount:
                 return True
     
     # TODO: If these end up becoming more frequent, figure out sorting hueristics.

@@ -143,6 +143,9 @@ class Token(DbEntity):
 
     def __hash__(self):
         return super().__hash__()
+    
+    def scale_value(self, value: int) -> Decimal:
+        return Decimal(value) / self.scale
 
 
 # Used for wallet exporter and other analysis
