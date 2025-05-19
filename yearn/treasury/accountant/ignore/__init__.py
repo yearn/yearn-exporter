@@ -10,19 +10,18 @@ from yearn.treasury.accountant.ignore import (general, maker, passthru,
                                               ygov)
 from yearn.treasury.accountant.ignore.swaps import (aave, balancer, buying_yfi,
                                                     compound, cowswap, curve,
-                                                    gearbox, idle, otc, rkper,
+                                                    gearbox, idle, otc, 
+                                                    pooltogether, rkper,
                                                     robovault, synthetix,
                                                     uniswap, unwrapper, woofy,
-                                                    ycrv, yla)
+                                                    ycrv, yla, zapper)
 
 IGNORE_LABEL = "Ignore"
 
 ignore_txgroup = TopLevelTxGroup(IGNORE_LABEL)
 
-_rkpr_contract_names = ['Keep3rEscrow', 'OracleBondedKeeper', 'Keep3rLiquidityManager']
-
 def _is_kp3r_related(address: Address):
-    return address.is_contract and build_name(address.address) in _rkpr_contract_names
+    return address.is_contract and build_name(address.address) in ('Keep3rEscrow', 'OracleBondedKeeper', 'Keep3rLiquidityManager')
 
 def is_kp3r(tx: TreasuryTx) -> bool:
     if tx._symbol == "kLP-KP3R/WETH" and tx._to_nickname == "Contract: Keep3r" and "LiquidityAddition" in tx._events:
@@ -40,10 +39,7 @@ def is_kp3r(tx: TreasuryTx) -> bool:
     except ContractNotVerified:
         return False
     
-    extra_kp3r_hashes = [
-        '0x3efaafc34054dbc50871abef5e90a040688fbddc51ec4c8c45691fb2f21fd495'
-    ]
-    return tx in HashMatcher(extra_kp3r_hashes)
+    return tx in HashMatcher(('0x3efaafc34054dbc50871abef5e90a040688fbddc51ec4c8c45691fb2f21fd495',))
 
 def is_bridged(tx: TreasuryTx) -> bool:
     """ Cross-chain bridging """
@@ -160,6 +156,7 @@ if CHAINID == Network.Mainnet:
     ignore_txgroup.create_child("Deploy Vesting Package", general.is_vest_factory)
     ignore_txgroup.create_child("Ignore yMechs", general.is_ignore_ymechs)
     ignore_txgroup.create_child("Maker DSR", maker.is_dsr)
+    ignore_txgroup.create_child("Returned Funds", general.is_returned_fundus)
 elif CHAINID == Network.Fantom:
     ignore_txgroup.create_child("OTCTrader", general.is_otc_trader)
 
@@ -219,6 +216,8 @@ swaps_txgroup.create_child("Balancer Swap", balancer.is_balancer_swap)
 swaps_txgroup.create_child("Synthetix Swap", synthetix.is_synthetix_swap)
 swaps_txgroup.create_child("WOOFY", woofy.is_woofy)
 swaps_txgroup.create_child("OTC", otc.is_otc)
+swaps_txgroup.create_child("Zapper", zapper.is_zapper_swap)
+swaps_txgroup.create_child("PoolTogether", pooltogether.is_pooltogether_deposit)
 
 def other(tx: TreasuryTx) -> bool:
     # TODO: put this somewhere else
@@ -234,9 +233,11 @@ if CHAINID == Network.Mainnet:
     swaps_txgroup.create_child("Idle Withdrawal", idle.is_idle_withdrawal)
     swaps_txgroup.create_child("ySwaps Swap", cowswap.is_cowswap_swap)
     swaps_txgroup.create_child("rKP3R Redemption", rkper.is_rkp3r_redemption)
-    swaps_txgroup.create_child("YLA", yla.is_yla_withdrawal)
+    swaps_txgroup.create_child("YLA Deposit", yla.is_yla_deposit)
+    swaps_txgroup.create_child("YLA Withdrawal", yla.is_yla_withdrawal)
     swaps_txgroup.create_child("Unwrapper", unwrapper.is_unwrapper)
     swaps_txgroup.create_child("yCRV", ycrv.is_minting_ycrv)
+
 elif CHAINID == Network.Fantom:
     swaps_txgroup.create_child("Reaper Vault Withdrawl", robovault.is_reaper_withdrawal)
 

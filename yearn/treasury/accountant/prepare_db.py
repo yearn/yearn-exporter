@@ -30,6 +30,8 @@ def prepare_db() -> None:
     cache_token_dumper()
     cache_dyfi_redemptions()
     cache_vefarming_wallet()
+    cache_crv_buyer()
+    cache_yfi_buyers()
 
 def cache_ychad() -> None:
     """ Label yChad in pg. """
@@ -118,3 +120,13 @@ def cache_dyfi_redemptions() -> None:
 def cache_vefarming_wallet() -> None:
     if CHAINID == Network.Mainnet:
         cache_address("0x4fc1b14cD213e7B6212145Ba4f180C3d53d1A11e").nickname = "Yearn veFarming Multisig"
+
+def cache_crv_buyer() -> None:
+    if CHAINID == Network.Mainnet:
+        cache_address('0x0000000000007F150Bd6f54c40A34d7C3d5e9f56').nickname = "CRV Buyer Contract (DAI)"
+        cache_address('0x0000000000005117Dd3A72E64a705198753FDD54').nickname = "CRV Buyer Contract (USDT)"
+
+def cache_yfi_buyers() -> None:
+    if CHAINID == Network.Mainnet:
+        for addr in ("0x0000000000884A0E1fB44F9E24Fa3BDB19514fAE", "0x0000000000051666BBfBB42925C3eE5d50cF6B10"):
+            cache_address(addr).nickname = "YFI Buyer Contract"

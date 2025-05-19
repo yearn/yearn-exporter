@@ -75,6 +75,8 @@ if CHAINID == Network.Mainnet:
     grants.create_child("Rantom [BR#xxx]", people.is_rantom)
     grants.create_child("Dinobots [BR#xxx]", people.is_dinobots)
     grants.create_child("TxCreator [BR#xxx]", people.is_tx_creator)
+    grants.create_child("G-Team [BR#xxx]", people.is_gteam)
+    grants.create_child("yHAAS Trinity [BR#xxx]", people.is_yhaas_trinity_ii)
 
     for team in people.yteams:
         grants.create_child(team.txgroup_name, team.is_team_comp)

@@ -1,22 +1,24 @@
 
 from contextlib import suppress
+from decimal import Decimal
 from typing import Iterator, List, Optional
 
 from brownie import convert
 from dank_mids.helpers import lru_cache_lite
+from eth_typing import BlockNumber, ChecksumAddress
 from msgspec import UNSET, Struct
 from pony.orm import commit
 from y import Address, Contract
 
 from yearn.constants import YFI
-from yearn.entities import TreasuryTx
+from yearn.entities import Token, TreasuryTx
 from yearn.treasury.accountant.classes import _FROM_DISPERSE_APP, Filter, HashMatcher, IterFilter
 
 
 # TODO: add rejected BRs
 _budget_requests = {}
 
-class BudgetRequest(Struct):
+class BudgetRequest(Struct, repr_omit_defaults=True):
     number: int = 0
     dai: Optional[float] = UNSET
     yfi: Optional[float] = UNSET
@@ -24,11 +26,14 @@ class BudgetRequest(Struct):
     
     def __post_init__(self) -> None:
         if self.number:
+            if self.number in _budget_requests:
+                raise ValueError("can only have 1 BR for each id")
             _budget_requests[self.number] = self
     
     def __contains__(self, symbol: str) -> bool:
         """Returns True if there is a portion of comp denominated in token `symbol` for this BR, False otherwise."""
-        return hasattr(self, symbol.lower()) and getattr(self, symbol.lower()) != UNSET
+        symbol = symbol.lower()
+        return hasattr(self, symbol) and getattr(self, symbol) is not UNSET
 
     def __getitem__(self, symbol: str) -> float:
         with suppress(AttributeError):
@@ -48,12 +53,11 @@ TransactionHash = str
 
 @lru_cache_lite
 def get_scale(token: Address):
-    token = Contract(token)
-    return 10**token.decimals()
+    return 10 ** Contract(token).decimals()
 
 @lru_cache_lite
-def get_symbol(token: Contract):
-    return token.symbol()
+def get_symbol(token: Address):
+    return Contract(token).symbol()
 
 def is_v2(token: Contract) -> bool:
     return hasattr(token, 'token')
@@ -61,11 +65,44 @@ def is_v2(token: Contract) -> bool:
 def is_v3(token: Contract) -> bool:
     return hasattr(token, 'asset')
 
-def get_underlying(token: Contract) -> Contract:
+
+@lru_cache_lite
+def get_underlying(token: Contract) -> ChecksumAddress:
     if is_v3(token):
-        return Contract(token.asset())
+        return token.asset()
     elif is_v2(token):
-        return Contract(token.token())
+        return token.token()
+
+
+def convert_amount_to_underlying(token: Token, amount: int, block: BlockNumber) -> Optional[Decimal]:
+    token_contract = token.contract
+
+    if is_v3(token_contract):
+        print(f"token: {token.symbol} {token_contract} is v3 vault")
+        underlying_amount = token_contract.convertToAssets(amount, block_identifier=block)
+    elif is_v2(token_contract):
+        print(f"token: {token.symbol} {token_contract} is v2 vault")
+        underlying_amount = token.scale_value(amount * token_contract.pricePerShare(block_identifier=block))
+    else:
+        print(f"token: {token.symbol} {token_contract} is neither v2 or v3, moving on")
+        return None
+    
+    underlying = get_underlying(token_contract)
+    underlying_amount_scaled = Decimal(underlying_amount) / get_scale(underlying)
+    print(f"{token.scale_value(amount)} {token.symbol} is {underlying_amount_scaled} {get_symbol(underlying)}")
+    return underlying_amount_scaled
+
+
+def within_rounding_tolerance(br: BudgetRequest, br_amount: float, underlying_amount: float, tolerance: float):
+    # TODO: should we debug this rounding? I think its fine
+    range_lo = br_amount / (1 + tolerance)
+    range_hi = br_amount / (1 - tolerance)
+    if range_lo <= underlying_amount <= range_hi:
+        print(f'underlying amount in range for br {br}')
+        return True
+    print(f'underlying amount {underlying_amount} not in range of {br_amount} ({range_hi} - {range_lo})')
+    return False
+
 
 class yTeam(Struct):
     label: str
@@ -93,7 +130,8 @@ class yTeam(Struct):
             if tx.hash == "0xa113223ee1cb2165b4cc01ff0cea0b98b94e3f93eec57b117ecfbac5eea47916":
                 return True
             elif (brs_for_token := list(self.brs_for_token(tx._symbol))):
-                return any(float(tx.amount) == br[tx._symbol] for br in brs_for_token)
+                float_amount = float(tx.amount)
+                return any(float_amount == br[tx._symbol] for br in brs_for_token)
         elif self.refunds and tx.from_address == self.address and tx in HashMatcher(self.refunds):
             if tx.amount > 0:
                 tx.amount *= -1
@@ -111,54 +149,81 @@ class yTeam(Struct):
         for vest in tx._events["VestingEscrowCreated"]:
             if vest.address == "0x200C92Dd85730872Ab6A1e7d5E40A067066257cF":
                 funder, token, recipient, escrow, amount, *_ = vest.values()
-                if not (
-                    tx.from_address == funder
-                    and recipient == self.address 
-                    and tx.to_address == escrow
-                    and tx.token == token
+                if (
+                    tx.from_address != funder
+                    or recipient != self.address 
+                    or tx.to_address != escrow
+                    or tx.token != token
                 ):
                     continue
-            elif vest.address == "0x850De8D7d65A7b7D5bc825ba29543f41B8E8aFd2":
-                # YFI Liquid Locker Vesting Escrow Factory
-                token = "0x0bc529c00C6401aEF6D220BE8C6Ea1667F6Ad93e"  # YFI
-                funder, recipient, index, amount, *_ = vest.values()
                 print(f"funder: {funder}")
                 print(f"recipient: {recipient}")
-                print(f"amount: {amount}")
-                if not (
-                    tx.from_address == funder
-                    and recipient == self.address
-                    and tx.token == token
-                ):
+            elif vest.address == "0x850De8D7d65A7b7D5bc825ba29543f41B8E8aFd2" and tx.token == YFI:
+                # YFI Liquid Locker Vesting Escrow Factory
+                funder, recipient, index, amount, *_ = vest.values()
+                if tx.from_address != funder:
+                    # not sent from ychad
+                    print(f"LL funder: {funder} is not yChad")
                     continue
+                elif recipient != self.address:
+                    # deployed for another yTeam
+                    continue
+                print(f"LL recipient: {recipient} match")
             else:
                 continue
 
-            if tx.amount != amount / get_scale(token):
+            event_amount_scaled = tx.token.scale_value(amount)
+            tx_amount = tx.amount
+            if tx_amount != event_amount_scaled:
+                print(f"amount: {tx_amount} != {event_amount_scaled}")
                 continue
+            print(f"amount: {tx_amount} == {event_amount_scaled}")
+
+            token_address = tx.token.address.address
+            symbol = tx._symbol
 
             # token sent raw
-            if any(float(tx.amount) == br[tx._symbol] for br in self.brs_for_token(tx._symbol)):
-                return True
-            
-            token = Contract(token)
-            underlying = get_underlying(token)
-            
-            if is_v3(token):
-                underlying_amount = token.convertToAssets(amount, block_identifier=tx.block) / get_scale(underlying)
-            elif is_v2(token):
-                underlying_amount = amount * token.pricePerShare(block_identifier=tx.block) / get_scale(underlying)
-            else:
-                return False
-            
-            print(f"token: {token}")
-            symbol = get_symbol(token)
-            underlying_amount = float(underlying_amount)
             for br in self.brs_for_token(symbol):
-                # TODO: should we debug this rounding? I think its fine
-                if underlying_amount * 0.999 <= br[symbol] <= underlying_amount * 1.001:
+                if float(tx_amount) == br[symbol]:
+                    print(f"matched token {symbol} {token_address} amount to BR")
                     return True
+                else:
+                    print(f"{tx_amount} does not match {br}")
+            print(f"{symbol} {token_address} amount does not match any known BR")
+            if self.matches_for_underlying(tx.token, amount, tx.block):
+                return True
         return False
+
+    def matches_for_underlying(self, token: Token, amount: int, block: BlockNumber) -> bool:
+        print("checking if token is a vault token denominated in underlying")
+        underlying_amount = convert_amount_to_underlying(token, amount, block)
+        if underlying_amount is None:
+            return False
+
+        token_contract = token.contract
+        underlying_amount = float(underlying_amount)
+        underlying = get_underlying(token_contract)
+        underlying_symbol = get_symbol(underlying)
+        return any(
+            within_rounding_tolerance(br, br[underlying_symbol], underlying_amount, 0.002)
+            for br in self.brs_for_underlying(token_contract)
+        )
+    
+    def brs_for_underlying(self, vault_contract: Contract) -> Iterator[BudgetRequest]:
+        """Given a vault token, yield the BRs denominated in its underlying"""
+        underlying = get_underlying(vault_contract)
+        underlying_symbol = get_symbol(underlying)
+        brs = self.brs_for_token(underlying_symbol)
+        try:
+            yield next(brs)
+        except StopIteration:
+            print(f"no BRs found for {underlying_symbol} for {self}")
+            return
+        try:
+            while True:
+                yield next(brs)
+        except StopIteration:
+            return
 
 
 # TODO: add BR numbers
@@ -175,17 +240,17 @@ yteams = [
             BudgetRequest(usdc=65_000),
         ]
     ),
-    yTeam("V3 Development", "0x33333333D5eFb92f19a5F94a43456b3cec2797AE", brs=[BudgetRequest(200, dai=120_000), BudgetRequest(222, dai=105_000)], refunds=["0xf0410c1eaf2048a9d5472151cf733be41ba9c995d0825bb5d1629f9062a16f85"]),
+    yTeam("V3 Development", "0x33333333D5eFb92f19a5F94a43456b3cec2797AE", brs=[BudgetRequest(170, dai=135_000), BudgetRequest(187, dai=120_000), BudgetRequest(200, dai=120_000), BudgetRequest(222, dai=105_000), BudgetRequest(235, usdc=105_000), BudgetRequest(251, usdc=75_000)], refunds=["0xf0410c1eaf2048a9d5472151cf733be41ba9c995d0825bb5d1629f9062a16f85"]),
     yTeam("S2 Team", "0x00520049162aa47AdA264E2f77DA6749dfaa6218", brs=[BudgetRequest(dai=39_500, yfi=2.25)]),
-    yTeam("yCreative", "0x402449F51afbFC864D44133A975980179C6cD24C", brs=[BudgetRequest(dai=15_500, yfi=1.65), BudgetRequest(dai=46_500, yfi=4.95)]),
-    yTeam("Corn", "0xF6411852b105042bb8bbc6Dd50C0e8F30Af63337", brs=[BudgetRequest(dai=10_000, yfi=1.5), BudgetRequest(dai=30_000, yfi=4.5)]),
+    yTeam("yCreative", "0x402449F51afbFC864D44133A975980179C6cD24C", brs=[BudgetRequest(dai=15_500, yfi=1.65), BudgetRequest(dai=46_500, yfi=4.95), BudgetRequest(186, dai=74_250)]),
+    yTeam("Corn", "0xF6411852b105042bb8bbc6Dd50C0e8F30Af63337", brs=[BudgetRequest(dai=10_000, yfi=1.5), BudgetRequest(147, dai=30_000, yfi=4.5), BudgetRequest(184, dai=60_000)], refunds=["0x5eafc16c46f1c840be081b5bf94e45e4ad3fb367843c0cd2d52fe1281bee2839"]),
     # NOTE: can I do this double? 
-    yTeam("Corn", "0x8973B848775a87a0D5bcf262C555859b87E6F7dA", brs=[BudgetRequest(199, usdc=60_000), BudgetRequest(221, dai=60_000)]),
-    yTeam("ySecurity", "0x4851C7C7163bdF04A22C9e12Ab77e184a5dB8F0E", brs=[BudgetRequest(dai=20_667, yfi=2.5)]),
-    yTeam("Zootroop", "0xBd5CA40C66226F53378AE06bc71784CAd6016087", brs=[BudgetRequest(dai=34_500, yfi=1.5), BudgetRequest(dai=36_500, yfi=2), BudgetRequest(202, dai=172_500), BudgetRequest(224, dai=162_000)]),
+    yTeam("Corn", "0x8973B848775a87a0D5bcf262C555859b87E6F7dA", brs=[BudgetRequest(199, usdc=60_000), BudgetRequest(221, dai=60_000), BudgetRequest(238, usdc=15_000), BudgetRequest(254, usdc=60_000)]),
+    yTeam("ySecurity", "0x4851C7C7163bdF04A22C9e12Ab77e184a5dB8F0E", brs=[BudgetRequest(dai=20_667, yfi=2.5), BudgetRequest(172, dai=136_740), BudgetRequest(192, dai=85_990)]),
+    yTeam("Zootroop", "0xBd5CA40C66226F53378AE06bc71784CAd6016087", brs=[BudgetRequest(dai=34_500, yfi=1.5), BudgetRequest(dai=36_500, yfi=2), BudgetRequest(171, dai=164_250), BudgetRequest(190, dai=170_550), BudgetRequest(202, dai=172_500), BudgetRequest(224, dai=162_000), BudgetRequest(236, usdc=126_750), BudgetRequest(259, usdc=13_500), BudgetRequest(260, usdc=34_500), BudgetRequest(261, usdc=30_000)]),
     yTeam("yETH", "0xeEEEEeeeEe274C3CCe13f77C85d8eBd9F7fd4479", brs=[BudgetRequest(dai=20_000, yfi=4.5)]),
-    yTeam("yLockers", "0xAAAA00079535300dDba84A89eb92434250f83ea7", brs=[BudgetRequest(dai=20_600, yfi=2), BudgetRequest(dai=60_500, yfi=6)], refunds=["0xa9613960b6c657b3ebc67798b5bb4b3b51c5d4b3bbbde2eb8f6a61a9ab4657c4"]),
-    yTeam("yLockers", "0x4444AAAACDBa5580282365e25b16309Bd770ce4a", brs=[BudgetRequest(195, dai=35_000), BudgetRequest(205, dai=35_000), BudgetRequest(206, dai=90_840), BudgetRequest(226, dai=120_840)]),
+    yTeam("yLockers", "0xAAAA00079535300dDba84A89eb92434250f83ea7", brs=[BudgetRequest(dai=20_600, yfi=2), BudgetRequest(dai=60_500, yfi=6), BudgetRequest(166, dai=91_440)], refunds=["0xa9613960b6c657b3ebc67798b5bb4b3b51c5d4b3bbbde2eb8f6a61a9ab4657c4"]),
+    yTeam("yLockers", "0x4444AAAACDBa5580282365e25b16309Bd770ce4a", brs=[BudgetRequest(191, dai=141_840), BudgetRequest(195, dai=35_000), BudgetRequest(205, dai=35_000), BudgetRequest(206, dai=90_840), BudgetRequest(226, dai=120_840), BudgetRequest(234, usdc=120_840), BudgetRequest(250, usdc=128_340)]),
     yTeam("yDiscount", "0x54991866A907891c9B85478CC1Fb0560B17D2b1D", brs=[BudgetRequest(yfi=1)]),
     yTeam("Dudesahn", "0x4444AAAACDBa5580282365e25b16309Bd770ce4a", brs=[BudgetRequest(179, dai=15_000), BudgetRequest(196, dai=15_000)]),
     # NOTE: not sure if this works with the existing ySupport matcher... lets see...
@@ -195,8 +260,11 @@ yteams = [
         "0xbd7B3Bc2C4581Fd173362c830AE45fB9506B3dA5", 
         brs=[
             BudgetRequest(yfi=1.14), 
+            BudgetRequest(176, dai=18_000),
             BudgetRequest(194, dai=18_375),
             BudgetRequest(212, dai=24_000),
+            BudgetRequest(243, usdc=16_500),
+            BudgetRequest(265, usdc=17_400),
             # This was 1 br in 2 pmts
             BudgetRequest(dai=2_000),
             BudgetRequest(dai=4_000),
@@ -209,13 +277,17 @@ yteams = [
     yTeam("Korin", "0x66bDEfA7Abf210d1240C9EC00000AafcFc80a235", brs=[BudgetRequest(yfi=40)]),
     yTeam("Schlag", "0x88a3354e5e7A34A7901e1b64557992E85Aa1B5eb", brs=[BudgetRequest(yfi=40)]),
     yTeam("DevDocs", "0x88c868B1024ECAefDc648eb152e91C57DeA984d0", brs=[BudgetRequest(204, dai=7_500, yfi=0.3), BudgetRequest(223, dai=21_900, yfi=1.2)]),
+    yTeam("DevDocs", "0xA7b6f3d18db39F65C8056d0892Af76c07d15Fc5a", brs=[BudgetRequest(241, usdc=24_000), BudgetRequest(256, usdc=27_200)]),
+    yTeam("yShip", "0xA7b6f3d18db39F65C8056d0892Af76c07d15Fc5a", brs=[BudgetRequest(257, usdc=18_000)]),
     yTeam("Tapir", "0x80c9aC867b2D36B7e8D74646E074c460a008C0cb", brs=[BudgetRequest(217, dai=36_000)]),
-    yTeam("yRoboTreasury", "0xABCDEF0028B6Cc3539C2397aCab017519f8744c8", brs=[BudgetRequest(215, 30_000)]),
+    yTeam("yRoboTreasury", "0xABCDEF0028B6Cc3539C2397aCab017519f8744c8", brs=[BudgetRequest(215, dai=30_000), BudgetRequest(233, usdc=22_500)]),
     yTeam("yReporting", "0x28eD70032Adc7575d45A0869CfDcCEcdE88C1a74", brs=[BudgetRequest(dai=63_000)]),
-    yTeam("CatHerder", "0x63E02F93622541CfE41aFedCF96a114DB71Ba4EE", brs=[BudgetRequest(213, dai=30_000)]),
-    yTeam("MOM", "0x789330A9F15bbC61B524714528C1cE72237dC731", brs=[BudgetRequest(225, dai=365_250)]),
-    yTeam("SAM", "0xe5e2Baf96198c56380dDD5E992D7d1ADa0e989c0", brs=[BudgetRequest(218, dai=78_000)]),
-    yTeam("veYFI", "0x555555550955A916D9bF6DbCeA0e874cDfE77c70", brs=[BudgetRequest(220, dai=10_000)])
+    yTeam("yReporting", "0xf30802Ca7728c044e9d24Ac9Ba3553FA95b8C642", brs=[BudgetRequest(269, usdc=45_000)]),
+    yTeam("CatHerder", "0x63E02F93622541CfE41aFedCF96a114DB71Ba4EE", brs=[BudgetRequest(213, dai=30_000), BudgetRequest(239, usdc=11_542), BudgetRequest(248, usdc=15_000)]),
+    yTeam("MOM", "0x789330A9F15bbC61B524714528C1cE72237dC731", brs=[BudgetRequest(225, dai=365_250), BudgetRequest(231, usdc=365_250), BudgetRequest(247, usdc=180_000)]),
+    yTeam("SAM", "0xe5e2Baf96198c56380dDD5E992D7d1ADa0e989c0", brs=[BudgetRequest(218, dai=78_000), BudgetRequest(237, usdc=60_000), BudgetRequest(252, usdc=72_000)]),
+    yTeam("veYFI", "0x555555550955A916D9bF6DbCeA0e874cDfE77c70", brs=[BudgetRequest(178, dai=60_000), BudgetRequest(220, dai=10_000)]),
+    yTeam("veYFI", "0x93689E482aFC0e2D3215b47806c1555399F3755A", brs=[BudgetRequest(255, usdc=15_000)]),
 ]
 
 # old
@@ -447,3 +519,18 @@ def is_dinobots(tx: TreasuryTx) -> bool:
     elif tx.hash == "0xd55f6cedd7a08d91f99e8ceb384ffd0892f3dbee450879af33d54dda5bd18915" and tx.log_index == 33:
         return True
     return False
+
+def is_gteam(tx: TreasuryTx) -> bool:
+    """https://github.com/yearn/budget/issues/267"""
+    return tx.hash == "0xd35c30664f3241ea2ec3df1c70261086247025eb72c2bc919108dfef9b08a450" and tx.to_address.address == "0x63E02F93622541CfE41aFedCF96a114DB71Ba4EE"
+
+
+def is_yhaas_trinity_ii(tx: TreasuryTx) -> bool:
+    """https://github.com/yearn/budget/issues/263"""
+    return tx.hash == "0xd35c30664f3241ea2ec3df1c70261086247025eb72c2bc919108dfef9b08a450" and tx.to_address.address in (
+        # TODO: figure out better way to handle team with both stream and one-off pmnts
+        # team
+        "0x35a83D4C1305451E0448fbCa96cAb29A7cCD0811",
+        # stream 
+        "0xEC83C8c3156e4f6b95B048066F3b308C93cb5848",
+    )
