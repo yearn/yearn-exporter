@@ -11,6 +11,7 @@ from typing import (AsyncGenerator, Callable, Dict, List, Optional, Set, Tuple,
 
 import a_sync
 import pandas as pd
+from a_sync import igather
 from async_lru import alru_cache
 from async_property import async_cached_property
 from brownie import convert, chain, web3
@@ -164,13 +165,16 @@ class Wrapper:
                 yield {event.block_number: Decimal(event['value']) / Decimal(vault.scale)}
 
     async def balances(self, blocks: Tuple[int,...]) -> List[Decimal]:
-        balances = await asyncio.gather(*[self.vault_contract.balanceOf.coroutine(self.wrapper, block_identifier=block) for block in blocks])
-        return [Decimal(balance) / Decimal(self.scale) for balance in balances]
+        balanceOf = self.vault_contract.balanceOf.coroutine
+        balances = await igather(balanceOf(self.wrapper, block_identifier=block) for block in blocks)
+        scale = self.scale
+        return [Decimal(balance) / scale for balance in balances]
 
     async def total_supplies(self, blocks: Tuple[int,...]) -> List[Decimal]:
         total_supply_cached = _get_cached_total_supply_fn(self.vault_contract)
-        supplies = await asyncio.gather(*[total_supply_cached(block_identifier = block) for block in blocks])
-        return [Decimal(supply) / Decimal(self.scale) for supply in supplies]
+        supplies = await igather(total_supply_cached(block_identifier = block) for block in blocks)
+        scale = self.scale
+        return [Decimal(supply) / scale for supply in supplies]
 
     async def vault_prices(self, blocks: Tuple[int,...]) -> List[Decimal]:
         return [Decimal(price) for price in await asyncio.gather(*[get_price(self.vault, block=block, sync=False) for block in blocks])]
@@ -276,9 +280,9 @@ class YApeSwapFactoryWrapper(WildcardWrapper):
 
     async def unwrap(self) -> List[Wrapper]:
         factory = await Contract.coroutine(self.wrapper)
-        pairs = await asyncio.gather(*[factory.allPairs.coroutine(i) for i in range(await factory.allPairsLength.coroutine())])
-        pairs = await asyncio.gather(*[Contract.coroutine(pair) for pair in pairs])
-        ratios = await asyncio.gather(*[pair.farmingRatio.coroutine() for pair in pairs])
+        pairs: List[Address] = await gather(*map(factory.allPairs.coroutine, range(await factory.allPairsLength)))
+        pair_contracts: List[Contract] = await gather(*map(Contract.coroutine, pairs))
+        ratios: List[int] = await gather(*(pair.farmingRatio for pair in pair_contracts))
         # pools with ratio.min > 0 deploy to yearn vaults
         farming = [str(pair) for pair, ratio in zip(pairs, ratios) if ratio['min'] > 0]
         return await WildcardWrapper(self.name, farming).unwrap()

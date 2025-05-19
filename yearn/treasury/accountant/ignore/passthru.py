@@ -257,7 +257,12 @@ def is_bal(tx: TreasuryTx) -> bool:
     ])
 
 def is_yprisma_migration(tx: TreasuryTx) -> bool:
-    return tx in HashMatcher(["0xed39b66c01e25b053117778c80e544c985d962522233b49ce6f7fe136b1a4474"])
+    # strategies were changed a few times
+    return tx in HashMatcher([
+        "0x4c19259ff9e23c2f23653b7560526c2dbd5adef2d53c297b63d8c1fa6f4906f1",
+        ("0x45bb5d7c25393c5bb8ad9647ae60ff39ddc39d695f0e427eb45f91b04f42c636", Filter("_symbol", "yPRISMA")),
+        "0xed39b66c01e25b053117778c80e544c985d962522233b49ce6f7fe136b1a4474",
+    ])
 
 _factory_strat_to_yield_tokens = {
     "Contract: StrategyCurveBoostedFactoryClonable": ("CRV", "LDO"),

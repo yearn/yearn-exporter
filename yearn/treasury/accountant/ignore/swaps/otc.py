@@ -36,5 +36,14 @@ _OTC_HASHES = HashMatcher(
         "0xac1f2a5e2960577e54c4a9cd096763cb6df614aa28eff221aeb4159097d9fa0f",
         # ~8112 USDC returned to treasury
         "0x015cdac2a021a44404c56600a96acfe2cb768e8789031b150be51db18874ec77",
+
+        # one-off dumping 1INCH (on 1INCH not otc but this works)
+        "0x037477c516652437004050e955edb6bc0de82a6b0f03e7665009e802c196516f",
+
+        # not otc swap, but swapped by 0x444 so close enough
+        ("0xd7e7abe600aad4a3181a3a410bef2539389579d2ed28f3e75dbbf3a7d8613688", IterFilter('log_index', (558, 559))),
+
+        "0x5a65d5299864ae6db364ee6a459a4f50d19e6fa8892f4f4c0221372b6c9b3ca2",
+        "0x71bd987e89940185b1131a6b73b981f5716c767ac12d106bf226a1aa8880f7c8",
     ),
 )

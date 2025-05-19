@@ -45,3 +45,14 @@ def is_opti_zap_bug(tx: TreasuryTx) -> bool:
 def is_reimburse_discord_link_bug(tx: TreasuryTx) -> bool:
     "https://github.com/yearn/chief-multisig-officer/pull/1201"
     return tx in HashMatcher(["0x2201d33e1050a0c2639a6dc88c2faebc99fe60c2210713cd95ab1424d7e7df1c"])
+
+def is_gusd_vault_bug_reimbursement(tx: TreasuryTx) -> bool:
+    return (
+        tx._symbol == "GUSD"
+        and tx.hash == "0x22f62d0922c430232aa402296055d79a6cf5c36a8b6253a7f1f46f1e1f66e277"
+        and tx.log_index != 65
+    )
+
+def is_dai_vault_reimbursement(tx: TreasuryTx) -> bool:
+    # this is from very early days, I'm not sure if it's documented anywhere
+    return tx.hash == "0x61ad3697ab56316ffdc7b8eaaeee57d0b3f8d4fed3e283eee35c6c38eed594e0" and tx.log_index == 202

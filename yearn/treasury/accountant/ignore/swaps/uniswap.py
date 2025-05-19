@@ -138,7 +138,9 @@ def is_uniswap_swap(tx: TreasuryTx) -> bool:
     elif tx in HashMatcher(
         {
             Network.Mainnet: (
-                "0x490245ef6e3c60127491415afdea23c13f4ca1a8c04de4fb3a498e7f7574b724", # uni v3
+                # uni v3
+                "0x490245ef6e3c60127491415afdea23c13f4ca1a8c04de4fb3a498e7f7574b724", 
+                "0xf2c6ff1863c60ca9924b611dad5548ffc4fecbab2fee34e2601dd16f0aa8e333",
             ),
         }.get(CHAINID, ())
     ):

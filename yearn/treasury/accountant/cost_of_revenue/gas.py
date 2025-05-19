@@ -77,6 +77,7 @@ strategist_gas_hashes = {
         "0x6169de8578935f15e24b1dc0e22c5670c5240505425ab4d71283026d96538381",
         "0x3d3b714d3cacef6dca14b8abff10d882af62209d389d4225761e461f10b47e39",
         "0x3efe08a7dc37ad120d61eb52d7ffcec5e2699f62ee1bd9bd55ece3dfb7ec4441",
+        "0xe94b63c325861d615a773e8baba7521293c739927e23d0227405714a88e6f567", 
     ],
 }.get(CHAINID, ())
 
@@ -94,6 +95,8 @@ def is_strategist_gas(tx: TreasuryTx) -> bool:
             '0x5a828e5bde96cd8745223fe32daefaa9140a09acc69202c33f6f789228c8134b',
             '0x110ef82ec16eb53bf71b073aca4a37d4fbfaa74166c687a726211392a02f0059',
             '0xaad012505975dd13a57599a28d33c979f72084ae56ccba76997f05822a5497f5',
+            '0xd10e8eb19b9493b32daf880da40e8e80ae96e9947ebd372562504e376c253731',
+            '0xa937f94cd93e07e5a1abf3010267b213caf8fbefb5d56e417ab057de39c697a5',
         ),
     }.get(CHAINID, ())):
         tx.amount *= -1

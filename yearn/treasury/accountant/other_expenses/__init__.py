@@ -3,7 +3,7 @@ from y.constants import CHAINID
 from y.networks import Network
 
 from yearn.treasury.accountant.classes import TopLevelTxGroup
-from yearn.treasury.accountant.other_expenses import bugs, general, revshare
+from yearn.treasury.accountant.other_expenses import boost, bugs, general, revshare
 
 OTHER_EXPENSE_LABEL = "Other Operating Expense"
 
@@ -37,6 +37,8 @@ if CHAINID == Network.Mainnet:
     other_expense_txgroup.create_child("Vyper Donation", general.is_vyper_donation)
     other_expense_txgroup.create_child("Unknown", general.is_unknown)
     other_expense_txgroup.create_child("yBudget Reward", general.is_ybudget_reward)
+    other_expense_txgroup.create_child("EthDenver", general.is_eth_denver)
+    other_expense_txgroup.create_child("Buying CRV For Boosties", boost.is_buying_crv_for_boost)
 
 # Bugs
 if CHAINID == Network.Mainnet:
@@ -50,6 +52,8 @@ if CHAINID == Network.Mainnet:
     bug_reimbursements_txgroup.create_child("Slippage Bug", bugs.is_slippage_bug_reimbursement)
     bug_reimbursements_txgroup.create_child("Reimburse Opti Zap Bug", bugs.is_opti_zap_bug)
     bug_reimbursements_txgroup.create_child("Reimburse Discord Link Bug", bugs.is_reimburse_discord_link_bug)
+    bug_reimbursements_txgroup.create_child("Reimburse GUSD Vault Bug", bugs.is_gusd_vault_bug_reimbursement)
+    bug_reimbursements_txgroup.create_child("Reimburse DAI Vault Bug", bugs.is_dai_vault_reimbursement)
 
 if CHAINID == Network.Mainnet:
     revshare_txgroup = other_expense_txgroup.create_child("Revshare")
