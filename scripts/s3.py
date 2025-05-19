@@ -1,4 +1,3 @@
-import asyncio
 import dataclasses
 import itertools
 import json
@@ -7,6 +6,7 @@ import os
 import shutil
 import traceback
 import warnings
+from asyncio import Lock, create_task, gather, get_event_loop
 from contextlib import suppress
 from datetime import datetime
 from decimal import Decimal
@@ -61,9 +61,9 @@ async def wrap_vault(
     logger.info(f"wrapping vault [{pos}/{total}]: {vault.name} {str(vault.vault)}")
 
     # We don't need results for these right away but they take a while so lets start them now
-    inception_fut = asyncio.create_task(contract_creation_block_async(str(vault.vault)))
-    apy_fut = asyncio.create_task(get_apy(vault, samples))
-    tvl_fut = asyncio.create_task(vault.tvl())
+    inception_fut = create_task(contract_creation_block_async(str(vault.vault)))
+    apy_fut = create_task(get_apy(vault, samples))
+    tvl_fut = create_task(vault.tvl())
 
     if isinstance(vault, VaultV1):
         strategies = [
@@ -140,12 +140,12 @@ async def get_assets_metadata(vault_v2: list) -> dict:
     vault_addresses = [str(vault.vault) for vault in vault_v2]
     assets_dynamic_data = []
     # if we have an address provider and factory_registry_adapter, we can split the vaults
-    factory_address_provider, factory_registry_adapter = await asyncio.gather(
+    factory_address_provider, factory_registry_adapter = await gather(
         get_factory_address_provider(), get_factory_registry_adapter(),
     )
     if factory_address_provider and factory_registry_adapter:
         # factory vaults
-        factories = await asyncio.gather(*[Contract.coroutine(c) for c in await factory_address_provider.assetsAddresses.coroutine()])
+        factories = await gather(*map(Contract.coroutine, await factory_address_provider.assetsAddresses.coroutine()))
         factory_addresses = [str(factory) for factory in factories]
         assets_dynamic_data += await get_assets_dynamic(factory_registry_adapter, factory_addresses)
         # non-factory vaults
@@ -163,7 +163,8 @@ async def get_assets_metadata(vault_v2: list) -> dict:
 
 
 async def get_assets_dynamic(registry_adapter: Contract, addresses: list) -> list:
-    return await asyncio.gather(*[registry_adapter.assetDynamic.coroutine(address) for address in addresses])
+    assetDynamic = registry_adapter.assetDynamic.coroutine
+    return await gather(*map(assetDynamic, addresses))
 
 
 async def get_registry_adapter():
@@ -196,7 +197,7 @@ async def get_factory_registry_adapter():
 
 
 def main():
-    asyncio.get_event_loop().run_until_complete(_main())
+    get_event_loop().run_until_complete(_main())
 
 
 def _get_export_mode():
@@ -239,7 +240,9 @@ async def _main():
 
     assets_metadata = await get_assets_metadata(await registry_v2.vaults)
 
-    data = await tqdm_asyncio.gather(*[wrap_vault(vault, samples, aliases, icon_url, assets_metadata, i + 1, len(vaults)) for i, vault in enumerate(vaults)])
+    data = await tqdm_asyncio.gather(
+        *(wrap_vault(vault, samples, aliases, icon_url, assets_metadata, i + 1, len(vaults)) for i, vault in enumerate(vaults))
+    )
 
     if len(data) == 0:
         raise ValueError(f"Data is empty for chain_id: {CHAINID}")
@@ -370,6 +373,6 @@ def _dedecimal(dct: dict):
     return dct
 
 @lru_cache
-def _get_debug_lock() -> asyncio.Lock:
+def _get_debug_lock() -> Lock:
     # we use this helper function to ensure the lock is always on the right loop
-    return asyncio.Lock()
+    return Lock()

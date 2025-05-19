@@ -27,14 +27,14 @@ class GenericAmm:
     
     def get_price(self, lp_token_address: Address, block: Optional[Block] = None) -> float:
         lp_token_contract = contract(lp_token_address)
-        total_supply, decimals = fetch_multicall(*[[lp_token_contract, attr] for attr in ['totalSupply','decimals']], block=block)
+        total_supply, decimals = fetch_multicall(*([lp_token_contract, attr] for attr in ['totalSupply','decimals']), block=block)
         total_supply_readable = total_supply / 10 ** decimals
         return self.get_tvl(lp_token_address, block) / total_supply_readable
 
     @lru_cache(maxsize=None)
     def get_tokens(self, lp_token_address: Address) -> List[EthAddress]:
         lp_token_contract = contract(lp_token_address)
-        return fetch_multicall(*[[lp_token_contract,attr] for attr in ['token0', 'token1']])
+        return fetch_multicall(*([lp_token_contract,attr] for attr in ('token0', 'token1')))
     
     def get_tvl(self, lp_token_address: Address, block: Optional[Block] = None) -> float:
         lp_token_contract = contract(lp_token_address)

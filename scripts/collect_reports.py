@@ -1,10 +1,10 @@
 from lib2to3.pgen2 import token
-import asyncio
 import logging
 import os
 import time
 import warnings
 import telebot
+from asyncio import Task, create_task, gather, get_event_loop, sleep
 from datetime import datetime, timezone
 from functools import lru_cache
 from typing import List, Union, Tuple, Callable
@@ -214,7 +214,7 @@ transaction_hashes: List[str] = []
 def main():
     logging.basicConfig(level=logging.DEBUG)
     logging.getLogger('a_sync.utils.iterators').disabled = True
-    asyncio.get_event_loop().run_until_complete(_main())
+    get_event_loop().run_until_complete(_main())
 	
 async def _main(dynamically_find_multi_harvest=False):
     print(f"dynamic multi_harvest detection is enabled: {dynamically_find_multi_harvest}")
@@ -234,9 +234,9 @@ async def _main(dynamically_find_multi_harvest=False):
         filters.append(StrategyReportedEventsV030(last_reported_block030+1, dynamically_find_multi_harvest))
     
     # while True: # Keep this as a long-running script # <--- disabled this since ypm issues
-    tasks: List[asyncio.Task] = []
+    tasks: List[Task] = []
     async for strategy_report_event in a_sync.as_yielded(*filters):
-        new_task = asyncio.create_task(handle_event(strategy_report_event.event, strategy_report_event.multi_harvest))
+        new_task = create_task(handle_event(strategy_report_event.event, strategy_report_event.multi_harvest))
         tasks.append(new_task)
         clear_finished_tasks(tasks)
 
@@ -273,10 +273,10 @@ async def handle_event(event, multi_harvest):
     r.strategy_address, *event_values = list(event.values())
 
     # we create some tasks early so they can start processing before we need the results
-    strategy_task = asyncio.create_task(Contract.coroutine(r.strategy_address))
-    receipt_task = asyncio.create_task(get_transaction_receipt(txn_hash))
-    t_task = asyncio.create_task(get_db_transaction(txn_hash, r.block))
-    time_task = asyncio.create_task(set_time_attrs(r))
+    strategy_task = create_task(Contract.coroutine(r.strategy_address))
+    receipt_task = create_task(get_transaction_receipt(txn_hash))
+    t_task = create_task(get_db_transaction(txn_hash, r.block))
+    time_task = create_task(set_time_attrs(r))
 
     # now we cache this so we don't need to call it for every event with `vault.decimals()`
     r.vault_decimals = await ERC20(event.address, asynchronous=True).decimals 
@@ -284,7 +284,7 @@ async def handle_event(event, multi_harvest):
     
     strategy = await strategy_task
     
-    r.want_token, tx_receipt = await asyncio.gather(get_want(strategy), receipt_task)
+    r.want_token, tx_receipt = await gather(get_want(strategy), receipt_task)
 
     (
         r.vault_symbol,
@@ -294,7 +294,7 @@ async def handle_event(event, multi_harvest):
         r.strategist,
         r.want_price_at_block, 
         (r.gov_fee_in_want, r.strategist_fee_in_want),
-    ) = await asyncio.gather(
+    ) = await gather(
         # all of these are cached
         get_symbol(event.address),
         get_symbol(r.want_token),
@@ -333,7 +333,7 @@ async def handle_event(event, multi_harvest):
                 if tfr.address == YVECRV and _from == ZERO_ADDRESS:
                     r.yvecrv_minted = _val/1e18
     
-    await asyncio.gather(time_task)
+    await gather(time_task)
 
     r.updated_timestamp = datetime.now()
 
@@ -348,7 +348,7 @@ async def handle_event(event, multi_harvest):
         checks = 1
         while previous_report is None:
             print('no previous report found on {checks}th check')
-            await asyncio.sleep(60)
+            await sleep(60)
             previous_report = session.exec(query).first()
             checks += 1
 
@@ -402,7 +402,7 @@ def get_date_string(timestamp: int) -> str:
 @alru_cache(maxsize=None)
 async def get_name_and_version(address: str) -> Tuple[str, str]:
     contract = await Contract.coroutine(address)
-    return await asyncio.gather(ERC20(address, asynchronous=True).name, contract.apiVersion.coroutine())
+    return await gather(ERC20(address, asynchronous=True).name, contract.apiVersion.coroutine())
 
 @alru_cache(maxsize=None)
 async def get_symbol(token: str) -> str:
@@ -414,7 +414,7 @@ async def get_db_transaction(txhash: str, block: int) -> Transactions:
     if t := await sync_threads.run(transaction_record_exists, txhash):
         return t
     t = Transactions(chain_id=chain.id, txn_hash=txhash, block=block)
-    await asyncio.gather(*[setter(t) for setter in _t_attr_setters])
+    await gather(*(setter(t) for setter in _t_attr_setters))
     t.updated_timestamp = datetime.now()
     await db_insert(t)
     return t
@@ -425,7 +425,7 @@ async def set_time_attrs(o: Union[Transactions, Reports]) -> None:
     o.date_string = get_date_string(o.timestamp)
 
 async def set_gas_attrs(t: Transactions) -> None:
-    price_task = asyncio.create_task(get_price(constants.weth, t.block, sync=False))
+    price_task = create_task(get_price(constants.weth, t.block, sync=False))
     tx = await get_transaction(t.txn_hash)
     gas_price = tx.gasPrice
     t.txn_gas_price = gas_price / 10 ** 9 # Use gwei
@@ -436,7 +436,7 @@ async def set_gas_attrs(t: Transactions) -> None:
 
 async def set_receipt_attrs(t: Transactions) -> None:
     if chain.id == 1:
-        kp3r_price_task = asyncio.create_task(
+        kp3r_price_task = create_task(
             get_price(KP3R_TOKEN, t.block, sync=False)
         )
 
@@ -446,7 +446,7 @@ async def set_receipt_attrs(t: Transactions) -> None:
     t.txn_gas_used = receipt.gasUsed
 
     if chain.id == 1:
-        t.kp3r_price_at_block, t.kp3r_paid = await asyncio.gather(kp3r_price_task, get_keeper_payment(receipt))
+        t.kp3r_price_at_block, t.kp3r_paid = await gather(kp3r_price_task, get_keeper_payment(receipt))
         t.kp3r_paid /= 10 ** 18
         t.kp3r_paid_usd = float(t.kp3r_paid) * float(t.kp3r_price_at_block)
         t.keeper_called = t.kp3r_paid > 0
@@ -502,7 +502,7 @@ def last_harvest_block():
 
 async def get_keeper_payment(receipt):
     amount = 0
-    decoder, denominator = await asyncio.gather(get_transfer_decoder(KP3R_TOKEN), ERC20(KP3R_TOKEN, asynchronous=True).scale)
+    decoder, denominator = await gather(get_transfer_decoder(KP3R_TOKEN), ERC20(KP3R_TOKEN, asynchronous=True).scale)
     decoded_events = decoder(receipt)
     for e in decoded_events:
         if e.address == KP3R_TOKEN:
@@ -524,7 +524,7 @@ async def compute_apr(report: Reports, previous_report):
     post_fee_apr = 0
 
     if report.vault_address == '0x27B5739e22ad9033bcBf192059122d163b60349D':
-        vault, vault_scale = await asyncio.gather(
+        vault, vault_scale = await gather(
             Contract.coroutine(report.vault_address),
             ERC20(report.vault_address, asynchronous=True).scale,
         )
@@ -803,7 +803,7 @@ class StrategyReportedEventsV030(StrategyReportedEvents):
     topics = topics_v030
     is_v030 = True
 
-def clear_finished_tasks(tasks: List[asyncio.Task]) -> None:
+def clear_finished_tasks(tasks: List[Task]) -> None:
     for t in tasks[:]:
         if t.done():
             if e := t.exception():

@@ -1,8 +1,7 @@
-import asyncio
 import logging
 import re
 import time
-from asyncio import create_task
+from asyncio import Task, create_task, sleep
 from contextlib import suppress
 from functools import cached_property
 from typing import (TYPE_CHECKING, Any, AsyncIterator, Dict, List, NoReturn,
@@ -188,13 +187,13 @@ class Vault:
             for address in self._strategies:
                 if address in working:
                     continue
-                working[address] = asyncio.create_task(contract_creation_block_async(address, when_no_history_return_0=True))
+                working[address] = create_task(contract_creation_block_async(address, when_no_history_return_0=True))
         async for address, deploy_block in a_sync.as_completed(working, aiter=True):
             if deploy_block > block:
                 continue
             while address not in self._strategies:
                 logger.info('%s not in %s._strategies', address, self)
-                await asyncio.sleep(5)
+                await sleep(5)
             yield self._strategies[address]
 
     @async_property
@@ -292,9 +291,9 @@ class Vault:
         return Tvl(total_assets, price, tvl)
 
     @cached_property
-    def _task(self) -> asyncio.Task:
+    def _task(self) -> Task:
         """The daemon task that loads events for this vault. Starts when first accessed."""
-        return asyncio.create_task(self.watch_events())
+        return create_task(self.watch_events())
         
     @async_cached_property
     @stuck_coro_debugger

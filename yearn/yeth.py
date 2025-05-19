@@ -1,8 +1,7 @@
-import asyncio
-import logging
 import os
 import re
 import logging
+from asyncio import gather
 from datetime import datetime, timezone, timedelta
 from pprint import pformat
 from typing import Optional, AsyncIterator
@@ -31,6 +30,7 @@ if CHAINID == Network.Mainnet:
     RATE_PROVIDER = Contract("0x4e322aeAf355dFf8fb9Fd5D18F3D87667E8f8316")
     STAKING_CONTRACT = Contract("0x583019fF0f430721aDa9cfb4fac8F06cA104d0B4") # st-yETH
     YETH_TOKEN = Contract("0x1BED97CBC3c24A4fb5C069C6E311a967386131f7") # yETH
+    get_rate = RATE_PROVIDER.rate.coroutine
 
 class StYETH(metaclass = Singleton):
     def __init__(self):
@@ -67,11 +67,11 @@ class StYETH(metaclass = Singleton):
         now = await get_block_timestamp_async(block)
         seconds_til_eow = SECONDS_PER_WEEK - now % SECONDS_PER_WEEK
 
-        data = STAKING_CONTRACT.get_amounts(block_identifier=block)
+        data = await STAKING_CONTRACT.get_amounts.coroutine(block_identifier=block)
         streaming = data[1]
         unlocked = data[2]
         apr = streaming * SECONDS_PER_YEAR / seconds_til_eow / unlocked
-        performance_fee = STAKING_CONTRACT.performance_fee_rate(block_identifier=block) / 1e4
+        performance_fee = await STAKING_CONTRACT.performance_fee_rate.coroutine(block_identifier=block) / 1e4
 
         if os.getenv("DEBUG", None):
             logger.info(pformat(Debug().collect_variables(locals())))
@@ -81,16 +81,18 @@ class StYETH(metaclass = Singleton):
 
     @eth_retry.auto_retry
     async def tvl(self, block=None) -> Tvl:
-        supply, price = await asyncio.gather(self.get_supply(block), self.get_price(block))
+        supply, price = await gather(self.get_supply(block), self.get_price(block))
         tvl = supply * price if price else None
         return Tvl(supply, price, tvl)
 
 
     async def describe(self, block=None):
-        supply, price = await asyncio.gather(self.get_supply(block), self.get_price(block))
+        supply, price = await gather(self.get_supply(block), self.get_price(block))
         try:
-            pool_supply = YETH_POOL.supply(block_identifier=block)
-            total_assets = STAKING_CONTRACT.totalAssets(block_identifier=block)
+            pool_supply, total_assets = await gather(
+                YETH_POOL.supply.coroutine(block_identifier=block),
+                STAKING_CONTRACT.totalAssets.coroutine(block_identifier=block),
+            )
             boost = total_assets / pool_supply
         except Exception as e:
             logger.error(e)
@@ -115,7 +117,7 @@ class StYETH(metaclass = Singleton):
 
 
     async def total_value_at(self, block=None):
-        supply, price = await asyncio.gather(self.get_supply(block), self.get_price(block))
+        supply, price = await gather(self.get_supply(block), self.get_price(block))
         return supply * price
 
 
@@ -138,10 +140,10 @@ class YETHLST():
         return re.sub(r"([\d]+)\.[\d]*", r"\1", name)
 
     async def _get_lst_data(self, block=None):
-        virtual_balance, weights, rate = await asyncio.gather(
+        virtual_balance, weights, rate = await gather(
             YETH_POOL.virtual_balance.coroutine(self.asset_id, block_identifier=block),
             YETH_POOL.weight.coroutine(self.asset_id, block_identifier=block),
-            RATE_PROVIDER.rate.coroutine(str(self.lst), block_identifier=block)
+            get_rate(str(self.lst), block_identifier=block)
         )
         virtual_balance /= 1e18
         weight = weights[0] / 1e18
@@ -157,9 +159,9 @@ class YETHLST():
 
     @eth_retry.auto_retry
     async def apy(self, samples: ApySamples) -> Apy:
-        now_rate, week_ago_rate = await asyncio.gather(
-            RATE_PROVIDER.rate.coroutine(str(self.lst), block_identifier=samples.now),
-            RATE_PROVIDER.rate.coroutine(str(self.lst), block_identifier=samples.week_ago),
+        now_rate, week_ago_rate = await gather(
+            get_rate(str(self.lst), block_identifier=samples.now),
+            get_rate(str(self.lst), block_identifier=samples.week_ago),
         )
         now_rate /= 1e18
         week_ago_rate /= 1e18
@@ -176,7 +178,7 @@ class YETHLST():
         return Tvl(data["virtual_balance"], data["rate"], tvl)
 
     async def describe(self, block=None):
-        weth_price, data = await asyncio.gather(
+        weth_price, data = await gather(
             get_price(weth, block=block, sync=False),
             self._get_lst_data(block=block),
         )
@@ -235,7 +237,7 @@ class Registry(metaclass = Singleton):
         volume_in_usd = [0] * num_assets
         volume_out_usd = [0] * num_assets
 
-        rates = [r / 1e18 for r in await asyncio.gather(*[RATE_PROVIDER.rate.coroutine(str(self.st_yeth.lsts[i].lst), block_identifier=from_block) for i in range(num_assets)])]
+        rates = [r / 1e18 for r in await gather(*(get_rate(str(self.st_yeth.lsts[i].lst), block_identifier=from_block) for i in range(num_assets)))]
 
         async for swap in self._get_swaps(from_block, to_block):
             asset_in = swap["asset_in"]
@@ -268,22 +270,22 @@ class Registry(metaclass = Singleton):
         else:
             to_block = await dank_mids.eth.block_number
             now_time = datetime.today()
-        products, self.swap_volumes = await asyncio.gather(
+        products, self.swap_volumes = await gather(
             self.active_vaults_at(block),
             self._get_swap_volumes(await self._get_from_block(now_time), to_block),
         )
-        data = await asyncio.gather(*[product.describe(block=block) for product in products])
+        data = await gather(*(product.describe(block=block) for product in products))
         return {product.name: desc for product, desc in zip(products, data)}
 
     async def total_value_at(self, block=None):
         products = await self.active_vaults_at(block)
-        tvls = await asyncio.gather(*[product.total_value_at(block=block) for product in products])
+        tvls = await gather(*(product.total_value_at(block=block) for product in products))
         return {product.name: tvl for product, tvl in zip(products, tvls)}
 
     async def active_vaults_at(self, block=None):
         products = [self.st_yeth] + self.st_yeth.lsts
         if block:
-            blocks = await asyncio.gather(*[contract_creation_block_async(str(product.address)) for product in products])
+            blocks = await gather(*(contract_creation_block_async(str(product.address)) for product in products))
             products = [product for product, deploy_block in zip(products, blocks) if deploy_block <= block]
         return products
 

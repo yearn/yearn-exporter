@@ -1,6 +1,5 @@
-
-import asyncio
 import logging
+from asyncio import gather
 from typing import Dict, List, Optional
 
 from eth_portfolio import Portfolio
@@ -64,7 +63,7 @@ class ExportablePortfolio(Portfolio):
         if protocol is not None:
             wallet = f'{protocol} | {wallet}'
 
-        symbol, bucket = await asyncio.gather(_get_symbol(token), _get_bucket(token))
+        symbol, bucket = await gather(_get_symbol(token), _get_bucket(token))
         
         return [
             _build_item(f"{self.label}_{section}", _label_names, ["balance", wallet, token, symbol, bucket], bal.balance, ts),

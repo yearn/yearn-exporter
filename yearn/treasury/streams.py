@@ -217,7 +217,7 @@ async def process_stream(stream, run_forever: bool = False) -> None:
             return
     
 async def process_streams(run_forever: bool = False):
-    await tqdm_asyncio.gather(*[process_stream(stream, run_forever=run_forever) for stream in streams.streams(include_inactive=True)], desc='Loading streams')
+    await tqdm_asyncio.gather(*(process_stream(stream, run_forever=run_forever) for stream in streams.streams(include_inactive=True)), desc='Loading streams')
 
 
 @db_session

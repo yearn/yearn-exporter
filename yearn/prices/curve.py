@@ -12,10 +12,10 @@ Metapool Factory (id 3)
     v1 = 0x0959158b6040D32d04c301A72CBFD6b39E21c9AE
     v2 = 0xB9fC157394Af804a3578134A6585C0dc9cc990d4
 """
-import asyncio
 import logging
 import threading
 import time
+from asyncio import gather
 from collections import defaultdict
 from enum import IntEnum
 from typing import Dict, List, Optional
@@ -321,7 +321,7 @@ class CurveRegistry(metaclass=Singleton):
 
         # pool not in registry
         if set(coins) == {ZERO_ADDRESS}:
-            coins = fetch_multicall(*[[Contract(pool), 'coins', i] for i in range(8)])
+            coins = fetch_multicall(*([Contract(pool), 'coins', i] for i in range(8)))
 
         return [coin for coin in coins if coin not in {None, ZERO_ADDRESS}]
 
@@ -398,7 +398,7 @@ class CurveRegistry(metaclass=Singleton):
             ),
             block=block,
         )
-        crv_price, token_price, results = await asyncio.gather(
+        crv_price, token_price, results = await gather(
             get_price(constants.CRV, block=block, sync=False),
             get_price(lp_token, block=block, sync=False),
             results
