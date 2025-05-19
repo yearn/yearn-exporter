@@ -92,9 +92,9 @@ def _clean_creds_from_uri(endpoint: str) -> str:
 
 def _capture_event_redefined(
         self,
-        event: "sentry_sdk.client.Event",
-        hint: "sentry_sdk.client.Hint",  # type: Hint
-        scope: sentry_sdk.Scope,  # type: Optional[Scope]
+        event, # type: sentry_sdk.client.Event
+        hint, # type: sentry_sdk.client.Hint
+        scope, # type: sentry_sdk.Scope
     ):
     """We monkey patch sentry_sdk.capture_exception to capture additional info."""
     if scope is None:

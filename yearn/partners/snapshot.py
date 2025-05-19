@@ -59,14 +59,20 @@ async def get_timestamps(blocks: Tuple[int,...]) -> DatetimeScalar:
     return pd.to_datetime([x * 1e9 for x in data])
 
 
-@dataclass
+@dataclass(frozen=True)
 class Wrapper:
     def __init__(self, name: str, vault: str, wrapper: str) -> None:
-        self.name = name
-        self.vault = convert.to_address(vault)
-        self.wrapper = convert.to_address(wrapper)
-        # NOTE: We need to use a queue here to ensure at most one active coroutine is populating the db for this wrapper
-        self.get_data = a_sync.ProcessingQueue(self._get_data, 1)
+        # Format attributes
+        attrs = {
+            'name': name,
+            'vault': convert.to_address(vault),
+            'wrapper': convert.to_address(wrapper),
+            # NOTE: We need to use a queue here to ensure at most one active coroutine is populating the db for this wrapper
+            'get_data': a_sync.ProcessingQueue(self._get_data, 1),
+        }
+        # Set attributes using super() to avoid FrozenInstanceError
+        for k, v in attrs.items():
+            super().__setattr__(k, v)
     
     @cached_property
     def _vault(self) -> Vault:
@@ -97,8 +103,8 @@ class Wrapper:
             start_block = partner.start_block
         
         futs = []
-        async for protocol_fees in self.protocol_fees(start_block=start_block):
-            futs.append(asyncio.create_task(process_harvests(self, protocol_fees)))
+        async for block, fee in self.protocol_fees(start_block=start_block):
+            futs.append(asyncio.create_task(process_harvests(self, block, fee)))
         data = [data for data in await asyncio.gather(*futs) if data is not None]
         data = pd.concat(data) if data else DataFrame()
         
@@ -128,7 +134,7 @@ class Wrapper:
         ]
         return DataFrame(cache)
 
-    async def protocol_fees(self, start_block: int = None) -> AsyncGenerator[Dict[int,Decimal], None]:
+    async def protocol_fees(self, start_block: int = None) -> AsyncGenerator[Dict[Block, Decimal], None]:
         """
         Get all protocol fee payouts for a given vault.
 
@@ -162,7 +168,7 @@ class Wrapper:
         
         async for event in Events(addresses=self.vault, topics=topics, from_block=logs_start_block).events(chain.height):
             if should_include(event):
-                yield {event.block_number: Decimal(event['value']) / Decimal(vault.scale)}
+                yield {event.block_number: Decimal(event['value']) / vault.scale}
 
     async def balances(self, blocks: Tuple[int,...]) -> List[Decimal]:
         balanceOf = self.vault_contract.balanceOf.coroutine
@@ -192,7 +198,7 @@ class BentoboxWrapper(Wrapper):
 
     async def balances(self, blocks) -> List[Decimal]:
         balances = await asyncio.gather(*[self.get_balance(block) for block in blocks])
-        return [Decimal(balance or 0) / Decimal(self.scale) for balance in balances]
+        return [Decimal(balance or 0) / self.scale for balance in balances]
     
     async def get_balance(self, block) -> Optional[int]:
         bento = await self.bentobox
@@ -214,7 +220,7 @@ class DegenboxWrapper(Wrapper):
 
     async def balances(self, blocks) -> List[Decimal]:
         balances = await asyncio.gather(*[self.get_balance(block) for block in blocks])
-        return [Decimal(balance or 0) / Decimal(self.scale) for balance in balances]
+        return [Decimal(balance or 0) / self.scale for balance in balances]
     
     async def get_balance(self, block) -> Optional[int]:
         degenbox = await self.degenbox
@@ -224,7 +230,7 @@ class DegenboxWrapper(Wrapper):
             continue_if_call_reverted(e)
 
 
-@dataclass
+@dataclass(frozen=True)
 class WildcardWrapper:
     """
     Automatically find and generate all valid (wrapper, vault) pairs.
@@ -232,6 +238,11 @@ class WildcardWrapper:
 
     name: str
     wrapper: Union[str, List[str]]  # can unpack multiple wrappers
+
+    def __post_init__(self):
+        # If multiple wrappers, ensure tuple for hashability
+        if not isinstance(self.wrapper, str):
+            super().__setattr__('wrapper', tuple(self.wrapper))
 
     async def unwrap(self) -> List[Wrapper]:
         registry = Registry()
@@ -273,18 +284,17 @@ class ElementWrapper(WildcardWrapper):
         return [Wrapper(name=name, vault=vault, wrapper=wrapper) for wrapper, (name, vault) in zip(wrappers, info)]
 
 
-@dataclass
 class YApeSwapFactoryWrapper(WildcardWrapper):
     name: str
     wrapper: str
 
     async def unwrap(self) -> List[Wrapper]:
         factory = await Contract.coroutine(self.wrapper)
-        pairs: List[Address] = await gather(*map(factory.allPairs.coroutine, range(await factory.allPairsLength)))
-        pair_contracts: List[Contract] = await gather(*map(Contract.coroutine, pairs))
-        ratios: List[int] = await gather(*(pair.farmingRatio for pair in pair_contracts))
+        pairs: List[Address] = await igather(map(factory.allPairs.coroutine, range(await factory.allPairsLength)))
+        pair_contracts: List[Contract] = await igather(map(Contract.coroutine, pairs))
+        ratios: List[int] = await igather(pair.farmingRatio for pair in pair_contracts)
         # pools with ratio.min > 0 deploy to yearn vaults
-        farming = [str(pair) for pair, ratio in zip(pairs, ratios) if ratio['min'] > 0]
+        farming = [pair.address for pair, ratio in zip(pair_contracts, ratios) if ratio['min'] > 0]
         return await WildcardWrapper(self.name, farming).unwrap()
 
 
@@ -332,7 +342,7 @@ class GearboxWrapper(Wrapper):
         return Events(addresses=self.vault, topics=[ERC20_TRANSFER_EVENT_HASH], from_block=from_block)
 
     async def _get_balance(self, credit_account: Address, block: int) -> Decimal:
-        return await self.vault_contract.balanceOf.coroutine(credit_account, block_identifier=block) / Decimal(self.scale)
+        return Decimal(await self.vault_contract.balanceOf.coroutine(credit_account, block_identifier=block)) / self.scale
     
     async def get_vault_depositors(self, block: int) -> Set[Address]:
         transfers = await self._transfers_container
@@ -356,7 +366,7 @@ class InverseWrapper(Wrapper):
     
     async def _get_balance(self, escrow: Address, block: int) -> Decimal:
         escrow = await Contract.coroutine(escrow)
-        return await escrow.balance.coroutine(block_identifier=block) / Decimal(self.scale)
+        return Decimal(await escrow.balance.coroutine(block_identifier=block)) / self.scale
     
     async def get_escrows(self, block) -> AsyncGenerator[Address, None]:
         wrapper_contract = await Contract.coroutine(self.wrapper)
@@ -370,9 +380,7 @@ class DelegatedDepositWrapper(Wrapper):
     """
 
     async def balances(self, blocks: List[Block]) -> List[Decimal]:
-        balances = await asyncio.gather(*[self.get_balance_at_block(block) for block in blocks])
-        scale = Decimal(self.scale)
-        return [balance / scale for balance in balances]
+        return await asyncio.gather(*[self.get_balance_at_block(block) for block in blocks])
             
     async def get_balance_at_block(self, block: Block) -> Decimal:
         balances = await delegated_deposit_balances()
@@ -384,7 +392,7 @@ class DelegatedDepositWrapper(Wrapper):
             for partnerId, asofdict in vault_balances[depositor].items()
             if partnerId == wrapper
         )
-        return Decimal(total)
+        return Decimal(total) / self.scale
         
 
 @dataclass
@@ -413,27 +421,36 @@ NO_START_DATE = [
     "qidao", "shapeshiftdao", "sturdy", "tempus", "wido", "yapeswap", "yieldster"
 ]
 
-@dataclass
+@dataclass(frozen=True)
 class Partner:
     name: str
-    start_date: date
-    wrappers: List[Wrapper]
+    start_date: Optional[date]
+    wrappers: Tuple[Wrapper]
     treasury: str = None
-    retired_treasuries: List[str] = field(default_factory=list)
+    retired_treasuries: Tuple[str] = field(default_factory=tuple)
 
     def __post_init__(self) -> None:
-        # Format attributes as desired
-        self.name = self.name.lower()
-        if self.start_date is None and self.name in NO_START_DATE:
-            self.start_block = None
+        # Format attributes consistently
+        name = self.name.lower()
+        attrs = {'name': name}
+        if self.start_date is None and name in NO_START_DATE:
+            attrs['start_block'] = None
         elif self.start_date is None:
             raise ValueError("You must provide a `start_date`.")
         elif isinstance(self.start_date, date):
-            self.start_block = last_block_on_date(self.start_date - timedelta(days=1)) + 1
+            attrs['start_block'] = last_block_on_date(self.start_date - timedelta(days=1)) + 1
         else:
             raise TypeError("`start_date` must be a `datetime.date` object.")
+        # Ensure tuple for hashability
+        attrs['wrappers'] = tuple(self.wrappers)
+        # Checksum addresses
         if self.treasury:
-            self.treasury = convert.to_address(self.treasury)
+            attrs['treasury'] = convert.to_address(self.treasury)
+        if self.retired_treasuries:
+            attrs['retired_treasuries'] = tuple(convert.to_address(addr) for addr in self.retired_treasuries)
+        # Set attributes using super() to avoid FrozenInstanceError
+        for k, v in attrs.items():
+            super().__setattr__(k, v)
             
 
     @async_cached_property
@@ -445,7 +462,7 @@ class Partner:
             if isinstance(wrapper, Wrapper):
                 flat_wrappers.append(wrapper)
                 logger.info("loaded %s wrapper %s", self, wrapper)
-            elif isinstance(wrapper, WildcardWrapper) or isinstance(wrapper, DelegatedDepositWildcardWrapper):
+            elif isinstance(wrapper, (WildcardWrapper, DelegatedDepositWildcardWrapper)):
                 flat_wrappers.extend(await wrapper.unwrap())
                 logger.info("loaded %s wrapper %s", self, wrapper)
         return flat_wrappers
@@ -468,7 +485,7 @@ class Partner:
             wrappers.append(data)
 
         # if nothing to report, move to next partner
-        if len(wrappers) == 0:
+        if not wrappers:
             return DataFrame(), DataFrame()
 
         # calculate partner fee tier from cummulative wrapper balances
@@ -601,36 +618,34 @@ def cache_data(wrap: DataFrame) -> None:
         )
         commit()
 
-async def process_harvests(wrapper, protocol_fees) -> Optional[DataFrame]:
-    try:
-        blocks, protocol_fees = zip(*protocol_fees.items())
-        timestamps, balances, total_supplys, vault_prices = await asyncio.gather(
-            get_timestamps(blocks),
-            wrapper.balances(blocks),
-            wrapper.total_supplies(blocks),
-            wrapper.vault_prices(blocks),
-        )
-        wrap = DataFrame(
-            {
-                'block': blocks,
-                'timestamp': timestamps,
-                'protocol_fee': protocol_fees,
-                'balance': balances,
-                'total_supply': total_supplys,
-                'vault_price': vault_prices,
-            }
-        )
-        wrap['balance_usd'] = wrap.balance * wrap.vault_price
-        wrap['share'] = wrap.balance / wrap.total_supply
-        wrap['payout_base'] = wrap.share * wrap.protocol_fee * Decimal(1 - OPEX_COST)
-        wrap['protocol_fee'] = wrap.protocol_fee
-        wrap['wrapper'] = wrapper.wrapper
-        wrap['vault'] = wrapper.vault
-        return wrap
-    except ValueError as e:
-        if str(e) != 'not enough values to unpack (expected 2, got 0)':
-            raise
-        return None
+async def process_harvests(wrapper, block, fee) -> Optional[DataFrame]:
+    # legacy uglyness to avoid refactoring code below
+    blocks = [block]
+    protocol_fees = [fee]
+
+    timestamps, balances, total_supplys, vault_prices = await asyncio.gather(
+        get_timestamps(blocks),
+        wrapper.balances(blocks),
+        wrapper.total_supplies(blocks),
+        wrapper.vault_prices(blocks),
+    )
+    wrap = DataFrame(
+        {
+            'block': blocks,
+            'timestamp': timestamps,
+            'protocol_fee': protocol_fees,
+            'balance': balances,
+            'total_supply': total_supplys,
+            'vault_price': vault_prices,
+        }
+    )
+    wrap['balance_usd'] = wrap.balance * wrap.vault_price
+    wrap['share'] = wrap.balance / wrap.total_supply
+    wrap['payout_base'] = wrap.share * wrap.protocol_fee * Decimal(1 - OPEX_COST)
+    wrap['protocol_fee'] = wrap.protocol_fee
+    wrap['wrapper'] = wrapper.wrapper
+    wrap['vault'] = wrapper.vault
+    return wrap
 
 @lru_cache_lite
 def _get_cached_total_supply_fn(vault: Contract) -> Callable[[], int]:

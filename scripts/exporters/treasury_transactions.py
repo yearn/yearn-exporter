@@ -1,9 +1,8 @@
 import asyncio
-import contextlib
 import logging
 import time
 import warnings
-from typing import NoReturn
+from typing import NoReturn, Optional
 
 import sentry_sdk
 from a_sync import AsyncThreadPoolExecutor, a_sync
@@ -87,22 +86,20 @@ sort_later = lambda entry: isinstance(entry, TokenTransfer)
 
 async def insert_treasury_tx(entry: LedgerEntry) -> int:
     ts = int(await get_block_timestamp_async(entry.block_number))
-    with contextlib.suppress(BadToken):
-        if txid := await insert_thread.run(insert_to_db, entry, ts):
-            if sort_later(entry):
-                return 1
-        return 1
-        #await sort_thread.run(accountant.sort_tx, txid)
+    if txid := await insert_thread.run(insert_to_db, entry, ts):
+        if sort_later(entry):
+            return 1
+        await sort_thread.run(accountant.sort_tx, txid)
     return 0
 
 
 @db_session
-def insert_to_db(entry: LedgerEntry, ts: int) -> int:
+def insert_to_db(entry: LedgerEntry, ts: int) -> Optional[int]:
     if isinstance(entry, TokenTransfer):
         try:
             token = token_dbid(entry.token_address)
-        except ContractNotVerified:
-            return 0
+        except (ContractNotVerified, BadToken):
+            return None
         log_index = entry.log_index
         gas = None
     else:
@@ -138,6 +135,7 @@ def insert_to_db(entry: LedgerEntry, ts: int) -> int:
             return entity.treasury_tx_id
         except TransactionIntegrityError:
             _validate_integrity_error(entry, log_index)
+    return None
 
 
 @db_session
