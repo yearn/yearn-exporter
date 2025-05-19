@@ -1,6 +1,3 @@
-
-from decimal import Decimal
-
 from yearn.entities import TreasuryTx
 
 

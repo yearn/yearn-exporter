@@ -1,6 +1,3 @@
-
-from decimal import Decimal
-
 from brownie import ZERO_ADDRESS
 from y import Network
 from y.constants import CHAINID
@@ -115,7 +112,7 @@ def is_v3_vault_deposit(tx: TreasuryTx) -> bool:
                 if tx.to_address != deposit['owner']:
                     print('wrong owner')
                     continue
-                elif tx.amount == Decimal(deposit['shares']) / tx.token.scale:
+                elif tx.amount == tx.token.scale_value(deposit['shares']):
                     return True
                 print('wrong amount')
             print('no matching deposit')
@@ -128,7 +125,7 @@ def is_v3_vault_deposit(tx: TreasuryTx) -> bool:
                 if tx.from_address != deposit['sender']:
                     print('sender doesnt match')
                     continue
-                if tx.amount == Decimal(deposit['assets']) / tx.token.scale:
+                if tx.amount == tx.token.scale_value(deposit['assets']):
                     return True
                 print('amount doesnt match')
     return False
