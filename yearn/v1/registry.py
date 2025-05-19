@@ -1,10 +1,10 @@
-import logging
-from asyncio import gather
 from functools import cached_property
+from logging import getLogger
 from typing import Dict, List, Optional
 
 from brownie import interface
 import dank_mids
+from a_sync import igather
 from y import Contract, Network, contract_creation_block_async
 from y.constants import CHAINID
 from y._decorators import stuck_coro_debugger
@@ -14,7 +14,7 @@ from yearn.multicall2 import fetch_multicall_async
 from yearn.typing import Block
 from yearn.v1.vaults import VaultV1
 
-logger = logging.getLogger(__name__)
+logger = getLogger(__name__)
 
 
 class Registry:
@@ -23,7 +23,9 @@ class Registry:
             raise UnsupportedNetwork("Vaults V1 registry is only available on Mainnet.")
 
         # TODO Fix ENS resolution for registry.ychad.eth
-        self.registry = dank_mids.patch_contract(interface.YRegistry("0x3eE41C098f9666ed2eA246f4D2558010e59d63A0"))
+        self.registry = dank_mids.patch_contract(
+            interface.YRegistry("0x3eE41C098f9666ed2eA246f4D2558010e59d63A0")
+        )
     
     @cached_property
     def vaults(self) -> List[VaultV1]:
@@ -41,7 +43,7 @@ class Registry:
         vaults = await self.active_vaults_at(block)
         share_prices = await fetch_multicall_async(*([vault.vault, "getPricePerFullShare"] for vault in vaults), block=block)
         vaults = [vault for vault, share_price in zip(vaults, share_prices) if share_price]
-        data = await gather(*(vault.describe(block=block) for vault in vaults))
+        data = await igather(vault.describe(block=block) for vault in vaults)
         return {vault.name: desc for vault, desc in zip(vaults, data)}
 
     @stuck_coro_debugger
@@ -50,12 +52,12 @@ class Registry:
         balances = await fetch_multicall_async(*([vault.vault, "balance"] for vault in vaults), block=block)
         # skip vaults with zero or erroneous balance
         vaults = [(vault, balance) for vault, balance in zip(vaults, balances) if balance]
-        prices = await gather(*(vault.get_price(block) for (vault, balance) in vaults))
+        prices = await igather(vault.get_price(block) for (vault, balance) in vaults)
         return {vault.name: balance * price / 10 ** vault.decimals for (vault, balance), price in zip(vaults, prices)}
 
     @stuck_coro_debugger
     async def active_vaults_at(self, block: Optional[Block] = None) -> List[VaultV1]:
         if block:
-            blocks = await gather(*(contract_creation_block_async(str(vault.vault)) for vault in self.vaults))
+            blocks = await igather(contract_creation_block_async(str(vault.vault)) for vault in self.vaults)
             return [vault for vault, deploy_block in zip(self.vaults, blocks) if deploy_block < block]
         return self.vaults

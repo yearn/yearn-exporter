@@ -1,6 +1,6 @@
-from asyncio import gather
 from collections import defaultdict
 
+from a_sync import cgather, igather
 from y import Contract, Network, get_price
 from y.constants import CHAINID
 from y.contracts import contract_creation_block_async
@@ -48,9 +48,9 @@ class Registry:
     async def describe(self, block=None) -> dict:
         vaults = await self.active_vaults_at(block)
         contracts = [vault.vault for vault in vaults]
-        results, prices = await gather(
+        results, prices = await cgather(
             multicall_matrix_async(contracts, ("totalSupply", "pool", "getPricePerFullShare", "balance"), block=block),
-            gather(*(get_price(vault.token, block=block, sync=False) for vault in vaults))
+            igather(get_price(vault.token, block=block, sync=False) for vault in vaults),
         )
         output = defaultdict(dict)
         for vault, price in zip(vaults, prices):
@@ -75,8 +75,8 @@ class Registry:
 
     async def total_value_at(self, block=None):
         vaults = await self.active_vaults_at(block)
-        prices, results = await gather(
-            gather(*(get_price(vault.token, block=block, sync=False) for vault in vaults)),
+        prices, results = await cgather(
+            igather(get_price(vault.token, block=block, sync=False) for vault in vaults),
             fetch_multicall_async(*([vault.vault, "pool"] for vault in vaults), block=block),
         )
         return {vault.name: assets * price / vault.scale for vault, assets, price in zip(vaults, results, prices)}
@@ -84,5 +84,5 @@ class Registry:
     async def active_vaults_at(self, block=None):
         if block is None:
             return self.vaults
-        blocks = await gather(*(contract_creation_block_async(str(vault.vault)) for vault in self.vaults))
+        blocks = await igather(contract_creation_block_async(str(vault.vault)) for vault in self.vaults)
         return [vault for vault, deployed in zip(self.vaults, blocks) if deployed < block]

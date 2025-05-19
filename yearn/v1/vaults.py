@@ -1,8 +1,8 @@
 import logging
-from asyncio import gather
 from dataclasses import dataclass
 from typing import TYPE_CHECKING, Optional
 
+from a_sync import cgather
 from async_lru import alru_cache
 from async_property import async_cached_property
 from brownie import ZERO_ADDRESS, interface
@@ -116,11 +116,11 @@ class VaultV1:
             # guard historical queries where there are no vote_proxy and gauge
             # for block <= 10635293 (2020-08-11)
             if vote_proxy and gauge:
-                vote_proxy, gauge = await gather(
+                vote_proxy, gauge = await cgather(
                     get_vote_proxy(vote_proxy),
                     Contract.coroutine(gauge),
                 )
-                boost, _apy = await gather(
+                boost, _apy = await cgather(
                     curve.calculate_boost(gauge, vote_proxy, block=block),
                     curve.calculate_apy(gauge, self.token, block=block),
                 )
