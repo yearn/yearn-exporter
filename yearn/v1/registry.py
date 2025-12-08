@@ -41,7 +41,7 @@ class Registry:
     @stuck_coro_debugger
     async def describe(self, block: Optional[Block] = None) -> Dict[str, Dict]:
         vaults = await self.active_vaults_at(block)
-        share_prices = await fetch_multicall_async(*([vault.vault, "getPricePerFullShare"] for vault in vaults), block=block)
+        share_prices = await fetch_multicall_async(([vault.vault, "getPricePerFullShare"] for vault in vaults), block=block)
         vaults = [vault for vault, share_price in zip(vaults, share_prices) if share_price]
         data = await igather(vault.describe(block=block) for vault in vaults)
         return {vault.name: desc for vault, desc in zip(vaults, data)}
@@ -49,7 +49,7 @@ class Registry:
     @stuck_coro_debugger
     async def total_value_at(self, block: Optional[Block] = None) -> Dict[str, float]:
         vaults = await self.active_vaults_at(block)
-        balances = await fetch_multicall_async(*([vault.vault, "balance"] for vault in vaults), block=block)
+        balances = await fetch_multicall_async(([vault.vault, "balance"] for vault in vaults), block=block)
         # skip vaults with zero or erroneous balance
         vaults = [(vault, balance) for vault, balance in zip(vaults, balances) if balance]
         prices = await igather(vault.get_price(block) for (vault, balance) in vaults)
