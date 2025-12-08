@@ -153,3 +153,7 @@ services:
         env: "NETWORK,CONTAINER_NAME,SENTRY_ENVIRONMENT,SENTRY_RELEASE"
 
     restart: on-failure
+    deploy:
+      resources:
+        limits:
+          memory: 14g
