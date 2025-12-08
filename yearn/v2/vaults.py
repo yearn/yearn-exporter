@@ -71,6 +71,8 @@ BORKED = {
         # price borked
         "0xc5F3D11580c41cD07104e9AF154Fc6428bb93c73",
         "0x4213458C69c19E6792510E1153cb0c5834665fdC",
+        # yETH exploit
+        "0x58900d761Ae3765B75DDFc235c1536B527F25d8F",
     ]
 }.get(CHAINID, [])
 
