@@ -152,8 +152,8 @@ class Exporter:
         with sentry_sdk.start_transaction(op="task", name="_has_data"):
             ts = snapshot.timestamp()
             response = await has_data(ts, self.data_query)
-            if response:
-                has_data_logger.info(f"data already present for {self.full_name} snapshot {snapshot}, ts {ts}")
+            #if response:
+            #    has_data_logger.info(f"data already present for {self.full_name} snapshot {snapshot}, ts {ts}")
             return bool(response)
 
     async def _export_data(self, data: T) -> None:
