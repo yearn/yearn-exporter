@@ -78,6 +78,7 @@ class Yearn:
 
     @stuck_coro_debugger
     async def describe_wallets(self, block=None):
+        # sourcery skip: replace-dict-items-with-values
         from yearn.outputs.describers.registry import RegistryWalletDescriber
         describer = RegistryWalletDescriber()
         data = await igather(describer.describe_wallets(registry, block=block) for registry in self.registries.items())
@@ -87,7 +88,7 @@ class Yearn:
         for registry, reg_desc in data.items():
             for wallet, usd_bal in reg_desc['wallet balances usd'].items():
                 wallet_balances[wallet] += usd_bal
-        
+
         agg_stats = {
             "agg_stats": {
                 "total wallets": len(wallet_balances),

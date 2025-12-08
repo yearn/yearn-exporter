@@ -1,8 +1,7 @@
-import asyncio
 import itertools
 import logging
 import time
-from asyncio import create_task
+from asyncio import Task, create_task, sleep
 from collections import OrderedDict
 from functools import cached_property
 from typing import AsyncIterator, Awaitable, Dict, List, NoReturn, overload
@@ -107,7 +106,7 @@ class Registry(metaclass=Singleton):
         )
         events = Events(addresses=resolver, topics=topics)
         registries = [
-            asyncio.create_task(
+            create_task(
                 coro=Contract.coroutine(event['newAddress'].hex()),
                 name=f"load registry {event['newAddress']}",
             )
@@ -223,7 +222,7 @@ class Registry(metaclass=Singleton):
     @stuck_coro_debugger
     async def describe(self, block=None) -> Dict[VaultName, Dict]:
         return await a_sync.gather({
-            vault.name: asyncio.create_task(vault.describe(block=block)) 
+            vault.name: create_task(vault.describe(block=block)) 
             async for vault in self.active_vaults_at(block, iter=True)
         })
 
@@ -267,7 +266,7 @@ class Registry(metaclass=Singleton):
         
         i = 0  # TODO figure out why we need this here
         while len(vaults) == 0:
-            await asyncio.sleep(6)
+            await sleep(6)
             vaults = list(itertools.chain(self._vaults.values(), self._experiments.values()))
             i += 1  
             if i >= 20:
@@ -282,8 +281,8 @@ class Registry(metaclass=Singleton):
         return RegistryEvents(self, await self.registries)
     
     @cached_property
-    def _task(self) -> asyncio.Task:
-        return asyncio.create_task(self.load_events())
+    def _task(self) -> Task:
+        return create_task(self.load_events())
     
     def _filter_vaults(self) -> None:
         if CHAINID in DEPRECATED_VAULTS:

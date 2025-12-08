@@ -1,5 +1,5 @@
-import asyncio
 import logging
+from asyncio import gather
 from collections import defaultdict
 from dataclasses import dataclass, field
 from datetime import date, timedelta
@@ -55,7 +55,7 @@ logger = logging.getLogger(__name__)
 threads = a_sync.AsyncThreadPoolExecutor(8)
 
 async def get_timestamps(blocks: Tuple[int,...]) -> DatetimeScalar:
-    data = await asyncio.gather(*[get_block_timestamp_async(block) for block in blocks])
+    data = await gather(*map(get_block_timestamp_async, blocks))
     return pd.to_datetime([x * 1e9 for x in data])
 
 
@@ -105,7 +105,7 @@ class Wrapper:
         futs = []
         async for block, fee in self.protocol_fees(start_block=start_block):
             futs.append(asyncio.create_task(process_harvests(self, block, fee)))
-        data = [data for data in await asyncio.gather(*futs) if data is not None]
+        data = [data for data in await gather(*futs) if data is not None]
         data = pd.concat(data) if data else DataFrame()
         
         if use_postgres_cache:
@@ -183,7 +183,7 @@ class Wrapper:
         return [Decimal(supply) / scale for supply in supplies]
 
     async def vault_prices(self, blocks: Tuple[int,...]) -> List[Decimal]:
-        return [Decimal(price) for price in await asyncio.gather(*[get_price(self.vault, block=block, sync=False) for block in blocks])]
+        return [Decimal(price) for price in await gather(*(get_price(self.vault, block=block, sync=False) for block in blocks))]
 
 
 class BentoboxWrapper(Wrapper):
@@ -197,7 +197,7 @@ class BentoboxWrapper(Wrapper):
         raise UnsupportedNetwork()
 
     async def balances(self, blocks) -> List[Decimal]:
-        balances = await asyncio.gather(*[self.get_balance(block) for block in blocks])
+        balances = await gather(*map(self.get_balance, blocks))
         return [Decimal(balance or 0) / self.scale for balance in balances]
     
     async def get_balance(self, block) -> Optional[int]:
@@ -219,7 +219,7 @@ class DegenboxWrapper(Wrapper):
         raise UnsupportedNetwork()
 
     async def balances(self, blocks) -> List[Decimal]:
-        balances = await asyncio.gather(*[self.get_balance(block) for block in blocks])
+        balances = await gather(*map(self.get_balance, blocks))
         return [Decimal(balance or 0) / self.scale for balance in balances]
     
     async def get_balance(self, block) -> Optional[int]:
@@ -254,7 +254,7 @@ class WildcardWrapper:
             {'receiver': wrappers},
         )
         addresses = [str(vault.vault) for vault in vaults]
-        from_block = min(await asyncio.gather(*[contract_creation_block_async(address) for address in addresses]))
+        from_block = min(await gather(*map(contract_creation_block_async, addresses)))
 
         # wrapper -> {vaults}
         deposits = defaultdict(set)
@@ -279,8 +279,10 @@ class ElementWrapper(WildcardWrapper):
 
     async def unwrap(self) -> List[Wrapper]:
         registry = await Contract.coroutine(self.wrapper)
-        wrappers = await asyncio.gather(*[Contract.coroutine(wrapper) for wrapper in await registry.viewRegistry.coroutine()])
-        info = await asyncio.gather(*[asyncio.gather(ERC20(wrapper, asynchronous=True).name, wrapper.vault.coroutine()) for wrapper in wrappers])
+        wrappers = await gather(*map(Contract.coroutine, await registry.viewRegistry.coroutine()))
+        info = await gather(
+            *(gather(ERC20(wrapper, asynchronous=True).name, wrapper.vault.coroutine()) for wrapper in wrappers)
+        )
         return [Wrapper(name=name, vault=vault, wrapper=wrapper) for wrapper, (name, vault) in zip(wrappers, info)]
 
 
@@ -318,15 +320,15 @@ class GearboxWrapper(Wrapper):
         return await factory.creditAccounts.coroutine(ix)
 
     async def balances(self, blocks) -> List[Decimal]:
-        return await asyncio.gather(*[self.get_tvl(block) for block in blocks])
+        return await gather(*map(self.get_tvl, blocks))
     
     async def get_tvl(self, block: int) -> Decimal:
         if ct := await self.count_credit_accounts(block):
-            credit_accounts, depositors = await asyncio.gather(
-                asyncio.gather(*[self.get_credit_account(i) for i in range(ct)]),
+            credit_accounts, depositors = await gather(
+                gather(*map(self.get_credit_account, range(ct))),
                 self.get_vault_depositors(block),
             )
-            return sum(await asyncio.gather(*[self.get_balance(ca, block) for ca in credit_accounts if ca in depositors]))
+            return sum(await gather(*(self.get_balance(ca, block) for ca in credit_accounts if ca in depositors)))
         return Decimal(0)
     
     async def count_credit_accounts(self, block: int) -> int:
@@ -357,12 +359,12 @@ class InverseWrapper(Wrapper):
         return hash(self.vault + self.wrapper)
     
     async def balances(self, blocks) -> List[Decimal]:
-        return await asyncio.gather(*[self.get_tvl(block) for block in blocks])
+        return await gather(*map(self.get_tvl, blocks))
     
     async def get_tvl(self, block: int) -> Decimal:
         # We use futs instead of gather here so we can process logs as they come in vs waiting for all of them before proceeding
         futs = [self.get_balance(escrow, block) async for escrow in self.get_escrows(block)]
-        return sum(await asyncio.gather(*futs))
+        return sum(await gather(*futs))
     
     async def _get_balance(self, escrow: Address, block: int) -> Decimal:
         escrow = await Contract.coroutine(escrow)
@@ -380,7 +382,7 @@ class DelegatedDepositWrapper(Wrapper):
     """
 
     async def balances(self, blocks: List[Block]) -> List[Decimal]:
-        return await asyncio.gather(*[self.get_balance_at_block(block) for block in blocks])
+        return await gather(*map(self.get_balance_at_block, blocks))
             
     async def get_balance_at_block(self, block: Block) -> Decimal:
         balances = await delegated_deposit_balances()
@@ -471,8 +473,9 @@ class Partner:
         # TODO Optimize this a bit better.
         # snapshot wrapper share at each harvest
         wrappers = []
-        gather = tqdm_asyncio.gather if verbose else asyncio.gather
-        data = await gather(*[wrapper.get_data(self, use_postgres_cache, verbose=verbose) for wrapper in await self.flat_wrappers])
+        if verbose:
+            gather = tqdm_asyncio.gather
+        data = await gather(*(wrapper.get_data(self, use_postgres_cache, verbose=verbose) for wrapper in await self.flat_wrappers))
         for wrapper, data in zip(await self.flat_wrappers, data):
             try:
                 data = data.set_index('block')
@@ -572,7 +575,7 @@ def process_partners(partners: List[Partner], use_postgres_cache: bool = USE_POS
         logger.warning('To enable caching without running the exporter, run `make postgres` from project root.')
 
     partners_data: List[Tuple[DataFrame, DataFrame]] = asyncio.get_event_loop().run_until_complete(
-        tqdm_asyncio.gather(*[partner.process(use_postgres_cache=use_postgres_cache, verbose=verbose) for partner in partners])
+        tqdm_asyncio.gather(*(partner.process(use_postgres_cache=use_postgres_cache, verbose=verbose) for partner in partners))
     )
     for partner, (result, payout) in zip(partners, partners_data):
         if len(result) == len(payout) == 0:
@@ -623,7 +626,7 @@ async def process_harvests(wrapper, block, fee) -> Optional[DataFrame]:
     blocks = [block]
     protocol_fees = [fee]
 
-    timestamps, balances, total_supplys, vault_prices = await asyncio.gather(
+    timestamps, balances, total_supplys, vault_prices = await gather(
         get_timestamps(blocks),
         wrapper.balances(blocks),
         wrapper.total_supplies(blocks),

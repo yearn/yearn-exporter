@@ -11,7 +11,7 @@ from y.time import closest_block_after_timestamp
 from yearn import constants
 from yearn.helpers.exporter import Exporter
 from yearn.outputs.victoria.victoria import _build_item, _post
-from yearn.partners.partners import partners
+from yearn.partners.partners import Partner, partners
 from yearn.treasury.treasury import _get_symbol
 
 sentry_sdk.set_tag('script','partners_exporter')
@@ -41,7 +41,7 @@ def main():
 
 async def export_partners(block, ts):
     # collect payout data
-    partners_data: List[Tuple[DataFrame, DataFrame]] = await asyncio.gather(*[partner.process() for partner in partners])
+    partners_data: List[Tuple[DataFrame, DataFrame]] = await asyncio.gather(*map(Partner.process, partners))
 
     # export wrapper data
     metrics_to_export = []
