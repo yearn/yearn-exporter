@@ -49,7 +49,7 @@ services:
     restart: always
 
   postgres:
-    image: postgres:14
+    image: postgres:18
     ports:
       - 5435:5432
     environment:
@@ -59,11 +59,11 @@ services:
     networks:
       - stack
     volumes:
-      - postgres_data:/var/lib/postgresql/data
+      - postgres_data:/var/lib/postgresql
     restart: always
     
   ypostgres:
-    image: postgres:14
+    image: postgres:18
     command: -c 'max_connections=${PGCONNECTIONS:-5000}'
     ports:
       - 5420:5432
@@ -74,5 +74,5 @@ services:
     networks:
       - stack
     volumes:
-      - ypostgres_data:/var/lib/postgresql/data
+      - ypostgres_data:/var/lib/postgresql
     restart: always
