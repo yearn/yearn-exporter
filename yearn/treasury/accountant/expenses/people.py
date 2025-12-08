@@ -156,18 +156,17 @@ class yTeam(Struct):
                     or tx.token != token
                 ):
                     continue
-            elif vest.address == "0x850De8D7d65A7b7D5bc825ba29543f41B8E8aFd2":
-                # YFI Liquid Locker Vesting Escrow Factory
-                funder, recipient, index, amount, *_ = vest.values()
                 print(f"funder: {funder}")
                 print(f"recipient: {recipient}")
-                print(f"amount: {amount}")
-                token = YFI
-                if not (
-                    tx.from_address == funder
-                    and recipient == self.address
-                    and tx.token == YFI
-                ):
+            elif vest.address == "0x850De8D7d65A7b7D5bc825ba29543f41B8E8aFd2" and tx.token == YFI:
+                # YFI Liquid Locker Vesting Escrow Factory
+                funder, recipient, index, amount, *_ = vest.values()
+                if tx.from_address != funder:
+                    # not sent from ychad
+                    print(f"LL funder: {funder} is not yChad")
+                    continue
+                elif recipient != self.address:
+                    # deployed for another yTeam
                     continue
                 print(f"LL recipient: {recipient} match")
             else:
