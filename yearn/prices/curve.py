@@ -18,12 +18,13 @@ import time
 from asyncio import gather
 from collections import defaultdict
 from enum import IntEnum
-from typing import Dict, List, Optional
+from typing import Dict, List, Optional, Tuple
 
 from brownie import ZERO_ADDRESS, chain, convert, interface
 from brownie.convert import to_address
 from brownie.convert.datatypes import EthAddress
 from cachetools.func import lru_cache
+from eth_typing import BlockNumber, ChecksumAddress
 from y import Contract, Network, get_price
 from y.constants import CHAINID
 from y.exceptions import NodeNotSynced
@@ -121,6 +122,7 @@ class CurveRegistry(metaclass=Singleton):
         self._thread = threading.Thread(target=self.watch_events, daemon=True)
         self._thread.start()
         self._has_exception = False
+        self._boost_calls: Dict[Tuple[Contract, ChecksumAddress], Tuple[list]] = {}
     
     def ensure_loaded(self):
         if not self._thread._started.is_set():
@@ -325,20 +327,23 @@ class CurveRegistry(metaclass=Singleton):
 
         return [coin for coin in coins if coin not in {None, ZERO_ADDRESS}]
 
-    
-    async def calculate_boost(self, gauge: Contract, addr: Address, block: Optional[Block] = None) -> Dict[str,float]:
-        results = await fetch_multicall_async(
-            (
+    async def calculate_boost(
+        self, 
+        gauge: Contract, 
+        addr: ChecksumAddress, 
+        block: Optional[BlockNumber] = None,
+    ) -> Dict[str, float]:
+        # sourcery skip: use-or-for-fallback
+        calls = self._boost_calls.get((gauge, addr))
+        if not calls:
+            calls = self._boost_calls[(gauge, addr)] = (
                 [gauge, "balanceOf", addr],
                 [gauge, "totalSupply"],
                 [gauge, "working_balances", addr],
                 [gauge, "working_supply"],
                 [self.voting_escrow, "balanceOf", addr],
                 [self.voting_escrow, "totalSupply"],
-            ),
-            block=block,
-            require_success=True,
-        )
+            )
         #old_results = results
         #results = []
         #for i, result in enumerate(old_results):
