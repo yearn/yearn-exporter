@@ -26,8 +26,8 @@ non_otc_hashes = {
 }.get(CHAINID, [])
 
 VYPER_BUYERS = [
-    "0xdf5e4E54d212F7a01cf94B3986f40933fcfF589F",
-    "0x6903223578806940bd3ff0C51f87aa43968424c8",
+    "0xdf5e4E54d212F7a01cf94B3986f40933fcfF589F",  # buys YFI for DAI at the current chainlink price
+    "0x6903223578806940bd3ff0C51f87aa43968424c8",  # buys YFI for DAI at the current chainlink price. Can be funded via llamapay stream.
 ]
 
 def is_buyer_top_up(tx: TreasuryTx) -> bool:
@@ -47,6 +47,8 @@ NOTE: i think we can delete this extra elif now that the changes on line 43 have
 
 
 def is_buying_with_buyer(tx: TreasuryTx) -> bool:
+    # The buy side of these transactions is in :func:`is_buyer_top_up`.
+    # The buyer is topped up with funds regularly and people sell it YFI via its mechanism
     if CHAINID == Network.Mainnet and tx._symbol == "YFI" and tx.to_address == YCHAD_MULTISIG and "Buyback" in tx._events:
         buyback_event = tx._events["Buyback"]
         if all(arg in buyback_event for arg in ("buyer", "yfi", "dai")):
