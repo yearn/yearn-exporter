@@ -165,7 +165,7 @@ async def multicall_matrix_async(contracts, params, block="latest"):
         output[contract][param] = value
     return dict(output)
 
-@eth_retry.auto_retry
+@eth_retry.auto_retry(min_sleep_time=1, max_sleep_time=3)
 def batch_call(calls):
     """
     Similar interface but block height as last param. Uses JSON-RPC batch.

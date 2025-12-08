@@ -75,7 +75,7 @@ class Exporter:
         self._resolution = resolution
 
         self._data_fn = data_fn
-        self._export_fn = eth_retry.auto_retry(export_fn)
+        self._export_fn = eth_retry.auto_retry(func=export_fn, min_sleep_time=1, max_sleep_time=3)
         self._snapshots_fetched = 0
         self._snapshots_exported = 0
         self._historical_queue = a_sync.ProcessingQueue(self.export_historical_snapshot, concurrency, return_data=False)

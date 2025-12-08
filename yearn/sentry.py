@@ -28,7 +28,7 @@ def before_send(event, hint):
     # NOTE: We can't add our tag logic here because this is not called in the same thread where the Exception occurred.
     return event
 
-@eth_retry.auto_retry
+@eth_retry.auto_retry(min_sleep_time=1, max_sleep_time=3)
 def set_custom_tags():
     set_tag("chain_id", CHAINID)
     set_tag("network", Network(CHAINID).name())

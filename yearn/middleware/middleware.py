@@ -69,7 +69,7 @@ def cache_middleware(make_request, w3):
 
 
 def catch_and_retry_middleware(make_request, w3):
-    return eth_retry.auto_retry(make_request)
+    return eth_retry.auto_retry(func=make_request, min_sleep_time=1, max_sleep_time=3)
 
 
 def setup_middleware():
