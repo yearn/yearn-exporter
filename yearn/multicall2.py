@@ -10,7 +10,9 @@ from a_sync import igather
 from brownie import web3
 from brownie.exceptions import VirtualMachineError
 from dank_mids.brownie_patch.types import DankContractMethod
+from dank_mids.exceptions import Revert
 from eth_abi.exceptions import InsufficientDataBytes
+from web3.exceptions import ContractLogicError
 from y import Contract, Network, contract_creation_block
 from y.constants import CHAINID
 
@@ -102,23 +104,24 @@ def fetch_multicall(*calls, block: Optional[Block] = None, require_success: bool
 
     return decoded
 
+
+async def __fail(exc: Optional[Exception] = None) -> None:
+    return exc
+
+
 async def fetch_multicall_async(calls, block: Optional[Block] = None, require_success: bool = False) -> List[Any]:
     # https://github.com/makerdao/multicall
-    attribute_errors = []
-
     def get_coros():
         for i, (contract, fn_name, *fn_inputs) in enumerate(calls):
             try:
-                try:
-                    fn = _get_fn(contract, fn_name, fn_inputs)
-                except AttributeError as e:
-                    if require_success:
-                        raise
-                    attribute_errors.append(i)
-                    continue
-                yield fn.coroutine(*fn_inputs, block_identifier=block)
+                fn = _get_fn(contract, fn_name, fn_inputs)
             except AttributeError as e:
-                raise AttributeError(str(e), contract, fn_name) from e.__cause__
+                e.args = *e.args, contract, fn_name
+                if require_success:
+                    raise
+                yield __fail(e)
+            else:
+                yield fn.coroutine(*fn_inputs, block_identifier=block)
 
     if require_success:
         results = await igather(get_coros())
@@ -126,12 +129,8 @@ async def fetch_multicall_async(calls, block: Optional[Block] = None, require_su
     else:
         results = await igather(get_coros(), return_exceptions=True)
         for i, result in enumerate(results):
-            if isinstance(result, Exception):
+            if isinstance(result, (AttributeError, TypeError, ContractLogicError, Revert)):
                 results[i] = None
-
-    # NOTE this will only run if `require_success` is True
-    for i in attribute_errors:
-        results.insert(i, None)
 
     return results
 
