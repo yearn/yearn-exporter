@@ -30,7 +30,7 @@ class Response(Struct):
     status: str
     data: Data
 
-@eth_retry.auto_retry
+@eth_retry.auto_retry(min_sleep_time=1, max_sleep_time=2)
 async def has_data(ts: float, data_query: str) -> bool:
     # sourcery skip: use-contextlib-suppress
     # query for a metric which should be present

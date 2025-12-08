@@ -67,7 +67,7 @@ class Singleton(type):
 _contract_lock = threading.Lock()
 _contract = lru_cache_lite(Contract)
 
-@eth_retry.auto_retry
+@eth_retry.auto_retry(min_sleep_time=1, max_sleep_time=3)
 def contract(address: AddressOrContract) -> Contract:
     with _contract_lock:
         address = web3.to_checksum_address(str(address))
@@ -96,7 +96,7 @@ FORCE_IMPLEMENTATION = {
     },
 }.get(CHAINID, {})
 
-@eth_retry.auto_retry
+@eth_retry.auto_retry(min_sleep_time=1, max_sleep_time=3)
 def _resolve_proxy(address):
     name, abi, implementation = _extract_abi_data(address)
     as_proxy_for = None

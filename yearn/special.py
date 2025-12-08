@@ -40,7 +40,7 @@ class YveCRVJar(metaclass = Singleton):
     def symbol(self):
         return 'pSLP'
 
-    @eth_retry.auto_retry
+    @eth_retry.auto_retry(min_sleep_time=1, max_sleep_time=3)
     async def apy(self, _: ApySamples) -> Apy:
         try:
             data = requests.get("https://api.pickle.finance/prod/protocol/pools").json()
@@ -54,7 +54,7 @@ class YveCRVJar(metaclass = Singleton):
         blocks = ApyBlocks(block, block, block, inception_block)
         return Apy("yvecrv-jar", apy, apy, ApyFees(), points=points, blocks=blocks)
 
-    @eth_retry.auto_retry
+    @eth_retry.auto_retry(min_sleep_time=1, max_sleep_time=3)
     async def tvl(self, block=None) -> Tvl:
         try:
             data = requests.get("https://api.pickle.finance/prod/protocol/value").json()

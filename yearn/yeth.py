@@ -61,7 +61,7 @@ class StYETH(metaclass = Singleton):
             if not isinstance(e.exception, PriceError):
                 raise e
 
-    @eth_retry.auto_retry
+    @eth_retry.auto_retry(min_sleep_time=1, max_sleep_time=3)
     async def apy(self, samples: ApySamples) -> Apy:
         block = samples.now
         now = await get_block_timestamp_async(block)
@@ -79,7 +79,7 @@ class StYETH(metaclass = Singleton):
         return Apy("yETH", gross_apr=apr, net_apy=apr, fees=ApyFees(performance=performance_fee))
 
 
-    @eth_retry.auto_retry
+    @eth_retry.auto_retry(min_sleep_time=1, max_sleep_time=3)
     async def tvl(self, block=None) -> Tvl:
         supply, price = await asyncio.gather(self.get_supply(block), self.get_price(block))
         tvl = supply * price if price else None
@@ -155,7 +155,7 @@ class YETHLST():
           "rate": rate
         }
 
-    @eth_retry.auto_retry
+    @eth_retry.auto_retry(min_sleep_time=1, max_sleep_time=3)
     async def apy(self, samples: ApySamples) -> Apy:
         now_rate, week_ago_rate = await asyncio.gather(
             RATE_PROVIDER.rate.coroutine(str(self.lst), block_identifier=samples.now),
@@ -169,7 +169,7 @@ class YETHLST():
 
         return Apy("yETH", gross_apr=apy, net_apy=apy, fees=ApyFees())
 
-    @eth_retry.auto_retry
+    @eth_retry.auto_retry(min_sleep_time=1, max_sleep_time=3)
     async def tvl(self, block=None) -> Tvl:
         data = await self._get_lst_data(block=block)
         tvl = data["virtual_balance"] * data["rate"]
