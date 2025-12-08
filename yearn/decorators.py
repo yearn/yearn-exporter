@@ -27,17 +27,23 @@ def wait_or_exit_before(func):
     async def wrap(self):
         task: asyncio.Task = self._task
         logger.debug("waiting for %s", self)
-        while not self._done.is_set() and not task.done():
-            await asyncio.sleep(10)
-            logger.debug("%s not done", self)
+        #while not self._done.is_set() and not task.done():
+        #    await asyncio.sleep(10)
+
+        # SOMEHOW JUST DIES IN HERE
+        while not task.done():
+            try:
+                await asyncio.wait_for(self._done.wait(), 0.1)
+                break
+            except asyncio.TimeoutError:
+                logger.debug("%s not done", self)
+        # END
         logger.debug("loading %s complete", self)
         if task.done() and (e := task.exception()):
             logger.debug('task %s has exception %s, awaiting', task, e)
             raise e
         return await func(self)
     return wrap
-
-_main_thread_loop = asyncio.get_event_loop()
 
 def set_exc(func):
     @functools.wraps(func)
