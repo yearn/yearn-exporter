@@ -11,15 +11,40 @@ on:
         required: true
         default: ethereum
 
+permissions:
+  contents: read
+
 jobs:
   deployment:
     runs-on: ubuntu-latest
     steps:
+      - name: Validate inputs
+        id: inputs
+        env:
+          DOCKER_IMAGE_TAG: ${{ github.event.inputs.docker_image_tag }}
+          NETWORK: ${{ github.event.inputs.network }}
+        run: |
+          tag="${DOCKER_IMAGE_TAG:-latest}"
+          network="${NETWORK:-ethereum}"
+          if [[ ! "$tag" =~ ^[A-Za-z0-9][A-Za-z0-9_.-]{0,127}$ ]]; then
+            echo "Invalid docker image tag: $tag" >&2
+            exit 1
+          fi
+          if [[ ! "$network" =~ ^[A-Za-z0-9][A-Za-z0-9_.-]{0,63}$ ]]; then
+            echo "Invalid network: $network" >&2
+            exit 1
+          fi
+          echo "docker_image_tag=$tag" >> "$GITHUB_OUTPUT"
+          echo "network=$network" >> "$GITHUB_OUTPUT"
       - name: Debug APY on production
         uses: appleboy/ssh-action@master
+        env:
+          DOCKER_IMAGE_TAG: ${{ steps.inputs.outputs.docker_image_tag }}
+          NETWORK: ${{ steps.inputs.outputs.network }}
         with:
           host: ${{ secrets.APY_PRODUCTION_HOST }}
           username: ${{ secrets.APY_PRODUCTION_USERNAME }}
           key: ${{ secrets.APY_PRODUCTION_KEY }}
           port: ${{ secrets.APY_PRODUCTION_PORT }}
-          script: curl "https://raw.githubusercontent.com/yearn/yearn-exporter/master/debug_apy.sh" -o debug_apy.sh && chmod +x debug_apy.sh && ./debug_apy.sh "${{ github.event.inputs.docker_image_tag }}" "${{ github.event.inputs.network }}"
+          envs: DOCKER_IMAGE_TAG,NETWORK
+          script: curl "https://raw.githubusercontent.com/yearn/yearn-exporter/master/debug_apy.sh" -o debug_apy.sh && chmod +x debug_apy.sh && ./debug_apy.sh "$DOCKER_IMAGE_TAG" "$NETWORK"

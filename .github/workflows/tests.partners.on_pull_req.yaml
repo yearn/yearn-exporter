@@ -1,7 +1,7 @@
 
 name: Test Partners
 on:
-  pull_request_target:
+  pull_request:
     branches: [ master ]
     types: [ labeled ]
     paths:
@@ -13,9 +13,12 @@ on:
       - '**/middleware.py'
       - '**/requirements.txt'
 
+permissions:
+  contents: read
+
 jobs:
   test_partners:
-    if: ${{ github.event.label.name == 'safe to test' }}
+    if: ${{ github.event.label.name == 'safe to test' && github.event.pull_request.head.repo.full_name == github.repository }}
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
@@ -28,18 +31,12 @@ jobs:
           path: ~/Library/Caches/pip
         - os: windows-latest
           path: ~\AppData\Local\pip\Cache
-        # Providers for all chains.
-        - network: mainnet
-          provider: WEB3_PROVIDER
-        - network: ftm-main
-          provider: FTM_WEB3_PROVIDER
       fail-fast: false
 
     steps:
       - name: Check out repository code
         uses: actions/checkout@v3
         with:
-          ref: ${{github.event.pull_request.head.sha}}
           persist-credentials: false
 
       - name: Setup Python (faster than using Python container)
@@ -75,8 +72,19 @@ jobs:
       - name: Install dependencies
         run: pip install -r requirements.txt
       
-      - name: Setup brownie networks
-        run: brownie networks modify ${{ matrix.network }} host=${{ secrets[matrix.provider] }}
+      - name: Setup mainnet brownie network
+        if: ${{ matrix.network == 'mainnet' }}
+        env:
+          WEB3_PROVIDER: ${{ secrets.WEB3_PROVIDER }}
+        run: brownie networks modify mainnet host="$WEB3_PROVIDER"
+        # continue-on-error is needed because this step will raise an exception on Windows, but will still correctly set the host.
+        continue-on-error: true
+
+      - name: Setup Fantom brownie network
+        if: ${{ matrix.network == 'ftm-main' }}
+        env:
+          FTM_WEB3_PROVIDER: ${{ secrets.FTM_WEB3_PROVIDER }}
+        run: brownie networks modify ftm-main host="$FTM_WEB3_PROVIDER"
         # continue-on-error is needed because this step will raise an exception on Windows, but will still correctly set the host.
         continue-on-error: true
 
