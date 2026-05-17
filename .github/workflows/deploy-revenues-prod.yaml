@@ -11,20 +11,32 @@ on:
     types:
       - completed
 
+permissions:
+  contents: read
+
 jobs:
   deployment:
     runs-on: ubuntu-latest
     steps:
-      - name: extract docker image tag
-        id: extract_tag
+      - name: Validate docker image tag
+        id: inputs
+        env:
+          DOCKER_IMAGE_TAG: ${{ github.event.inputs.docker_image_tag }}
         run: |
-          TAG=${{ github.event.inputs.docker_image_tag }}
-          echo "value=${TAG:-latest}" >> $GITHUB_OUTPUT
+          tag="${DOCKER_IMAGE_TAG:-latest}"
+          if [[ ! "$tag" =~ ^[A-Za-z0-9][A-Za-z0-9_.-]{0,127}$ ]]; then
+            echo "Invalid docker image tag: $tag" >&2
+            exit 1
+          fi
+          echo "docker_image_tag=$tag" >> "$GITHUB_OUTPUT"
       - name: Deploy to revenues production
         uses: appleboy/ssh-action@master
+        env:
+          DOCKER_IMAGE_TAG: ${{ steps.inputs.outputs.docker_image_tag }}
         with:
           host: ${{ secrets.REVENUES_PRODUCTION_HOST }}
           username: ${{ secrets.REVENUES_PRODUCTION_USERNAME }}
           key: ${{ secrets.REVENUES_PRODUCTION_KEY }}
           port: ${{ secrets.REVENUES_PRODUCTION_PORT }}
-          script: docker pull ghcr.io/yearn/yearn-exporter:${{ steps.extract_tag.outputs.value }}
+          envs: DOCKER_IMAGE_TAG
+          script: docker pull "ghcr.io/yearn/yearn-exporter:$DOCKER_IMAGE_TAG"
