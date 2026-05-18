@@ -37,7 +37,7 @@ jobs:
           echo "docker_image_tag=$tag" >> "$GITHUB_OUTPUT"
           echo "network=$network" >> "$GITHUB_OUTPUT"
       - name: Debug APY on production
-        uses: appleboy/ssh-action@master
+        uses: appleboy/ssh-action@1530429296e979861824d74fb800013190b5dee0
         env:
           DOCKER_IMAGE_TAG: ${{ steps.inputs.outputs.docker_image_tag }}
           NETWORK: ${{ steps.inputs.outputs.network }}
